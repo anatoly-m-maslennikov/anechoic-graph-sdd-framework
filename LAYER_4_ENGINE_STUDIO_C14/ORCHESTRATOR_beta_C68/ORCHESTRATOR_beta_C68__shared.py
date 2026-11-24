@@ -2,10 +2,6 @@
 from __future__ import annotations
 
 import http.client
-import json
-import os
-import subprocess
-import sys
 import tempfile
 import threading
 import time
@@ -14,30 +10,29 @@ from pathlib import Path
 from .abort import AbortJobs, WorkerAborted
 from .flow import Flow, safe_target
 from .generation import (
-    MAX_WARM_DELTA_PATHS,
     DeltaRequiresReconciliation,
     GenerationBaseChanged,
     WorkerIngestionFailure,
     admit_generation,
     confirm_reuse,
-    parse_worker_result,
     read_reuse,
     replace_ingestion_issues,
     ticket_delta_paths,
     wait_build,
-    worker_failure,
-    worker_request,
 )
-from .jobs import ENGINE, FIELDS, Jobs
+from .archive_jobs import ArchiveJobs
+from .generation_worker import GenerationWorker
+from .jobs import FIELDS, Jobs, operation_timeout
 from .lifecycle import LifecycleJobs
-from .retry import CurrentnessRetry
+from .retry import CurrentnessRetry, source_changed
 from .server import Handler, Server, main
-from .warm_worker import validated_result as warm_result
+from .startup_checkpoint import CHECKPOINT_FIELDS
+from .watcher_diagnostics import FOREGROUND_FENCE_MESSAGE, emit_record
 
 __all__ = ["GenerationJobs", "Handler", "Server"]
 
 
-class GenerationJobs(AbortJobs, LifecycleJobs, Jobs):
+class GenerationJobs(ArchiveJobs, GenerationWorker, AbortJobs, LifecycleJobs, Jobs):
     def __init__(self, instance_id, binding, database_socket, watch_code=False,
                  worker_socket=None, worker_load_seconds=None):
         super().__init__(instance_id)
@@ -56,17 +51,20 @@ class GenerationJobs(AbortJobs, LifecycleJobs, Jobs):
         self.aborted_run = None
         from .watcher import SourceWatcher
         root = Path(binding["root"])
-        self.watcher = SourceWatcher(root, root / binding["control_root"], watch_code=watch_code)
+        self.watcher = SourceWatcher(root, root / binding["control_root"], watch_code=watch_code,
+                                     defer_archives=True)
         self.thread = None
         self.pending = None
         self.inflight = None
-        self.lifecycle_job = None
         self.generation_reuse = None
         self.flow = None
         self.flow_context = None
+        self.startup_capture = False
+        self._initialize_archive()
 
     def start(self):
         self.watcher.start()
+        self.startup_capture = True
         self.thread = threading.Thread(target=self._watch, daemon=True)
         self.thread.start()
 
@@ -77,6 +75,7 @@ class GenerationJobs(AbortJobs, LifecycleJobs, Jobs):
                 if job is not None:
                     job["event"].set()
         self.watcher.close()
+        self._close_archive()
         with self.lock:
             try:
                 self._stop_worker()
@@ -121,8 +120,9 @@ class GenerationJobs(AbortJobs, LifecycleJobs, Jobs):
         self.generation_reuse = read_reuse(self.database_socket, self.instance_id)
         self.flow_context = {"startup": True}
         retry.observe(self._generate(startup=True))
+        self._run_archive()
         while not self.stopping.is_set():
-            changes = self.watcher.changes(0.1)
+            changes = self._partition_archive_changes(self.watcher.changes(0.1))
             due = retry.ready()
             if changes or due:
                 with self.lock:
@@ -156,6 +156,7 @@ class GenerationJobs(AbortJobs, LifecycleJobs, Jobs):
                         flow, self.flow = self.flow, None
                     if flow is not None:
                         flow.finish(outcome)
+            self._run_archive()
 
     def _flow_effect(self, name, **values):
         if self.flow is not None:
@@ -164,94 +165,59 @@ class GenerationJobs(AbortJobs, LifecycleJobs, Jobs):
                        "generation_reuse_write": "C68.generation_reuse"}
             self.flow.add("effect", name, target=targets[name], **values)
 
-    def _run_worker(self, directory, reuse, paths):
-        if self.worker_socket and paths is not None and len(paths) <= MAX_WARM_DELTA_PATHS:
-            try:
-                result = self._run_warm_worker(reuse, paths)
-            except Exception:
-                self._flow_effect("worker_request", outcome="failed")
-                raise
-            self._flow_effect("worker_request", outcome="succeeded" if result is not None else "unavailable")
-            if result is not None:
-                self.worker_mode = "warm"
-                return result
-        request = worker_request(self.binding, self.database_socket, self.instance_id, reuse, paths)
-        env = {key: value for key, value in os.environ.items() if key != "PYTHONHOME"}
-        env["PYTHONPATH"] = str(ENGINE)
-        env["ANECHOIC_BETA_WORKER_PARENT_PID"] = str(os.getpid())
-        with self.lock:
-            if self.stopping.is_set():
-                raise RuntimeError("Orchestrator is stopping")
-            try:
-                process = subprocess.Popen(
-                [sys.executable, "-B", "-P", "-m", "WORKERS_beta_C69.WORKERS_beta_C69__shared",
-                 "--generation-dir", directory], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE, text=True, cwd=ENGINE, env=env, start_new_session=True)
-            except Exception:
-                self._flow_effect("worker_started", outcome="failed")
-                raise
-            self._flow_effect("worker_started", outcome="succeeded")
-            self.process = process
-        try:
-            stdout, stderr = process.communicate(json.dumps(request))
-        finally:
-            with self.lock:
-                self.process = None
-                aborted = self.active is not None and self.aborted_run == self.active.get("run_id")
-        if aborted:
-            raise WorkerAborted("Worker aborted")
-        if stderr:
-            print(stderr[-8192:].rstrip(), file=sys.stderr, flush=True)
-        if process.returncode:
-            detail = stderr.rstrip().rsplit("\n", 1)[-1][-2048:] or f"exit status {process.returncode}"
-            raise worker_failure(stdout, detail)
-        result = parse_worker_result(stdout, reuse, paths, request.get("structure"))
-        self.worker_mode = "cold"
-        return result
-
-    def _run_warm_worker(self, reuse, paths):
-        try:
-            return warm_result(self.worker_socket, self.worker_load_seconds, self.binding,
-                               reuse, paths, self._register_warm_capture)
-        finally:
-            with self.lock:
-                self.warm_capture = None
-                if self.aborted_run is not None:
-                    self.worker_mode = "warm"
-                    raise WorkerAborted("Worker aborted")
-
-    def _attempt_generation(self, target, reuse, paths=None):
+    def _attempt_generation(self, target, reuse, paths=None, *, reconciliation=False):
         with tempfile.TemporaryDirectory(prefix="anechoic-generation-") as temporary:
             directory = str(Path(temporary).resolve(strict=True))
             started = time.monotonic()
-            result = self._run_worker(directory, reuse, paths)
+            explicit = target is not None or self.inflight is not None
+            if explicit:
+                reuse = paths = None
+            options, epoch = (({}, None) if reconciliation and self.startup_capture else
+                              self._capture_options(reuse, paths, explicit=explicit))
+            if self.startup_capture and not options.get("incremental") and not reconciliation:
+                reuse = None
+            result = self._run_worker(directory, reuse, paths, **options)
+            if epoch is not None and self.watcher.capture_fence(
+                    epoch, timeout=operation_timeout(45), run_id=(self.active or {}).get("run_id")) is not True:
+                raise ValueError(FOREGROUND_FENCE_MESSAGE)
+            deferred = result.pop("deferred_archive", None)
+            if deferred is None and options.get("incremental"):
+                deferred = self._restart_archive(reuse, result)
+            if deferred and (deferred["roots"] or deferred["snapshot"]["atoms"] or "checkpoint" in deferred):
+                result["archive_pending"] = True
+            if self.deferred_archive and paths is not None and deferred is None and self._needs_foreground(result):
+                raise DeltaRequiresReconciliation("Archive paths require foreground capture")
             captured = time.monotonic()
             witness = result.get("reuse", reuse)
             if result.get("reuse", True) is None:
                 del result["reuse"]
-            effect = "generation_reuse_check" if "unchanged" in result else "generation_admission"
-            try:
-                admitted = (confirm_reuse(self.database_socket, self.instance_id, result) if "unchanged" in result
-                            else admit_generation(self.database_socket, self.instance_id, directory, result, target))
-            except Exception:
-                self._flow_effect(effect, outcome="failed")
-                raise
-            if effect == "generation_admission":
-                self._flow_effect(effect, outcome="succeeded", detail={"reuse_proof_present": witness is not None})
-            else:
-                self._flow_effect(effect, outcome="succeeded")
-                for source in ("atom", "build"):
-                    self._record_ingestion_issues(source, [])
+            admitted = self._admit_live_result(directory, result, target, witness)
             admitted.update(worker_seconds=captured - started, admission_seconds=time.monotonic() - captured)
             if "paths" in result:
                 admitted["delta_path_count"] = len(result["paths"])
-        if "snapshot" in result and "paths" not in result:
-            self.unconfirmed_lifecycle_write = False
+        self._accept_live_generation(admitted["generation"], result, deferred)
         if witness is not None:
-            self.generation_reuse = {key: value for key, value in witness.items() if key != "carrier_hashes"}
+            self.generation_reuse = {key: value for key, value in witness.items() if key not in CHECKPOINT_FIELDS}
             self.generation_reuse["base_generation"] = admitted["generation"]
             self._flow_effect("generation_reuse_write", outcome="succeeded", detail={"state": "stored"})
         return {"state": "succeeded", **admitted}
+
+    def _admit_live_result(self, directory, result, target, witness):
+        unchanged = "unchanged" in result
+        effect = "generation_reuse_check" if unchanged else "generation_admission"
+        try:
+            admitted = (confirm_reuse(self.database_socket, self.instance_id, result) if unchanged
+                        else admit_generation(self.database_socket, self.instance_id, directory, result, target))
+        except Exception:
+            self._flow_effect(effect, outcome="failed")
+            raise
+        if unchanged:
+            self._flow_effect(effect, outcome="succeeded")
+            for source in ("atom", "build"):
+                self._record_ingestion_issues(source, [])
+        else:
+            self._flow_effect(effect, outcome="succeeded", detail={"reuse_proof_present": witness is not None})
+        return admitted
 
     def _start_flow(self, target, changes, startup):
         self.flow = Flow(self.instance_id, self.database_socket)
@@ -282,29 +248,39 @@ class GenerationJobs(AbortJobs, LifecycleJobs, Jobs):
             self.flow.input("lifecycle_refresh")
         return job
 
+    def _generation_reuse(self, target, changes, startup):
+        reuse = self.generation_reuse if target is None and (startup or any(changes)) else None
+        if self.startup_capture and not startup and target is None and self.inflight is None and reuse is None:
+            return read_reuse(self.database_socket, self.instance_id)
+        return reuse
+
     def _generate(self, target=None, *, changes=(), startup=False):
         with self.lock:
             job = self._start_flow(target, changes, startup)
             self.active = {"state": "running", "started_at": time.time(), "run_id": self.flow.run_id}
             self.aborted_run = None
             self.worker_mode = None
-        reuse = self.generation_reuse if target is None and (startup or any(changes)) else None
+        reuse = self._generation_reuse(target, changes, startup)
         self.generation_reuse = None
         self._flow_effect("generation_reuse_write", outcome="succeeded", detail={"state": "cleared"})
         outcome = {"state": "failed", "code": "generation_failed"}
         try:
-            paths = ticket_delta_paths(self.binding, changes) if reuse is not None else None
+            paths = ticket_delta_paths(self.binding, changes) if reuse is not None and not self.startup_capture else None
             try:
                 outcome = self._attempt_generation(target, reuse, paths)
             except GenerationBaseChanged:
                 outcome = self._attempt_generation(target, None)
             except DeltaRequiresReconciliation:
-                outcome = self._attempt_generation(target, {key: value for key, value in reuse.items()
-                                                            if key != "carrier_hashes"})
+                if reuse is None:
+                    raise
+                witness = {key: value for key, value in reuse.items() if key not in CHECKPOINT_FIELDS}
+                outcome = self._attempt_generation(target, witness, reconciliation=True)
         except WorkerAborted:
             outcome = {"state": "aborted", "code": "worker_aborted", "message": "Worker aborted"}
         except (OSError, ValueError, TypeError, KeyError, RuntimeError, http.client.HTTPException) as error:
             outcome["message"] = str(error)[-2048:]
+            if self.startup_capture and source_changed(outcome):
+                outcome["retrying"] = True
             self._record_ingestion_failure(error)
         finally:
             with self.lock:
@@ -320,11 +296,13 @@ class GenerationJobs(AbortJobs, LifecycleJobs, Jobs):
         return outcome
 
     def _record_ingestion_failure(self, error):
+        message = str(error)[-8192:] or type(error).__name__
+        if message != FOREGROUND_FENCE_MESSAGE:
+            severity = "ERROR" if self.startup_capture and not isinstance(error, (ValueError, WorkerIngestionFailure)) else "WARNING"
+            emit_record(severity, "generation_failed", "generation", "failed", (self.active or {}).get("run_id"))
         if isinstance(error, WorkerIngestionFailure):
             self._record_ingestion_issues(error.diagnostic["source"], error.diagnostic["issues"])
             return
-        message = str(error)[-8192:] or type(error).__name__
-        print(f"Ingestion failed: {message}", file=sys.stderr, flush=True)
         self._record_ingestion_issues("build", [{
             "relative_path": None, "code": "generation_failed", "message": message,
             "atom_ref": None, "related_paths": [],
@@ -333,7 +311,8 @@ class GenerationJobs(AbortJobs, LifecycleJobs, Jobs):
     def _record_ingestion_issues(self, source, issues):
         try:
             replace_ingestion_issues(self.database_socket, self.instance_id, source, issues)
-        except (OSError, RuntimeError, http.client.HTTPException) as error:
-            print(f"Recording {source} ingestion issues failed: {error}", file=sys.stderr, flush=True)
+        except (OSError, RuntimeError, http.client.HTTPException):
+            emit_record("WARNING", "ingestion_issues_unavailable", "record_ingestion_issues", "degraded",
+                        (self.active or {}).get("run_id"), details={"source": source})
 if __name__ == "__main__":
     raise SystemExit(main())

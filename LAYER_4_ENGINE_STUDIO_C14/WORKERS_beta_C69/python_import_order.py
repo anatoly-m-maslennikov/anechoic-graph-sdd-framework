@@ -5,7 +5,6 @@ from collections import defaultdict
 
 
 def _binding(node):
-    # Evaluate only definitions whose creation cannot run arbitrary Python.
     if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
         args = node.args
         if not node.decorator_list and not node.returns and not args.defaults and not any(args.kw_defaults) and not any(a.annotation for a in (*args.posonlyargs, *args.args, *args.kwonlyargs, *([args.vararg] if args.vararg else []), *([args.kwarg] if args.kwarg else []))):
@@ -19,7 +18,6 @@ def _binding(node):
             except (ValueError, TypeError, SyntaxError, MemoryError, RecursionError):
                 pass
             else:
-                # Annotations can execute arbitrary expressions.
                 if not isinstance(node, ast.AnnAssign):
                     return {t.id for t in targets}
     if isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant):
@@ -82,7 +80,6 @@ class _Traversal:
         return (path, node.lineno, node.col_offset, 'python_import_order', 'confirmed', detail)
 
     def visit(self, path):
-        # Package initializers can execute before the captured module.
         if '/' in path or path.endswith('__init__.py') or len(self.stack) >= 64 or path in self.active:
             return None
         self.active.add(path)

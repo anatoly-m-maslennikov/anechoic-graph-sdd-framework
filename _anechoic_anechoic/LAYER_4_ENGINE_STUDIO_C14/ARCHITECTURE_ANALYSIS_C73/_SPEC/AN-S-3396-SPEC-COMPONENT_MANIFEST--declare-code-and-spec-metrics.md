@@ -47,6 +47,7 @@ declare_entity(
                     'metrics__shared.is_measurement_input': {'shared': ['C61', 'C68']},
                 },
             },
+            'state': {'reads': ['captured code inventory and Current Spec measurements'], 'writes': []},
         },
     ),
 )

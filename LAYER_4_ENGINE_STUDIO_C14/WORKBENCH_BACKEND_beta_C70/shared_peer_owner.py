@@ -14,6 +14,7 @@ import sys
 from threading import Thread
 
 from .project_admission import AdmissionClient, _selection
+from .http_logging import runtime_log_level
 from .shared_host_config import load
 from .shared_project_pool import SharedProjectPool
 from .warm_worker import open_warm_worker
@@ -163,7 +164,6 @@ async def _hold(pool, selection, start, writer):
 
 
 async def _lease(pool, selection, start, reader, writer):
-    # Watch the socket while startup and readiness checks hold the pool lease.
     stopped = asyncio.create_task(reader.read(1))
     lease = asyncio.create_task(_hold(pool, selection, start, writer))
     try:
@@ -275,7 +275,9 @@ def main():
     parser.add_argument("--host-settings", required=True)
     args = parser.parse_args()
     os.umask(0o077)
-    asyncio.run(_run(socket_path(args.socket), load(args.host_settings)))
+    config = load(args.host_settings)
+    os.environ.setdefault("ANECHOIC_LOG_LEVEL", runtime_log_level(config.log_level))
+    asyncio.run(_run(socket_path(args.socket), config))
 
 
 if __name__ == "__main__":

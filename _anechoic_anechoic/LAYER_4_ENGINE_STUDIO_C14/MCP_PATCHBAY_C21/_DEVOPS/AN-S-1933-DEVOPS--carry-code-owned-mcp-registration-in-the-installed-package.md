@@ -7,7 +7,7 @@ tier: 3
 context:
   lens: DevOps
 state:
-  status: "active"
+  status: active
   version: 8
   updated_at: "2026-11-23T01:48:06.181628+00:00"
 ---

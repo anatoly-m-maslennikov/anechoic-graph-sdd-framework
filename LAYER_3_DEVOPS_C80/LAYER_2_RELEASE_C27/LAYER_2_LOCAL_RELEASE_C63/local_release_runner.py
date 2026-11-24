@@ -96,11 +96,11 @@ class LocalReleaseRun:
         self.cleanup_note = 'No proven superseded Project-owned image identity was available; none was removed.'
         self.cleanup_pending = False
         self.cleanup = None
-        self.test_scope = 'static and unit'
+        self.test_scope = 'static and functional'
         self.selected_test_modules = None
         self.test_selection = 'configured required tests'
         self.phases = ('validate inputs',
-                        'bump candidate version', 'static tests', 'unit tests', 'copy active sources', 'build package',
+                        'bump candidate version', 'static tests', 'functional tests', 'copy active sources', 'build package',
                         'prepare candidate image', 'verify candidate image',
                         'copy product to installed framework', 'install project runtime', 'start mcp', 'final')
         self.checkpoint_paths = {'validate inputs': ('.',), 'static tests': ('version.toml',), 'build package': ('LAYER_1_META_ONTOLOGY_C9', 'LAYER_2_META_METHODOLOGY_C58'), 'install project runtime': (self.installed.relative_to(self.root).as_posix(),), 'start mcp': ('.agents/skills/ane',)}
@@ -135,7 +135,7 @@ class LocalReleaseRun:
             self._validate_inputs(phase)
         elif phase == 'bump candidate version':
             self._bump_version(phase)
-        elif phase in {'static tests', 'unit tests', 'verify candidate image'}:
+        elif phase in {'static tests', 'functional tests', 'verify candidate image'}:
             self._run_tests(phase)
         elif phase == 'copy active sources':
             self._copy_sources(phase)

@@ -94,7 +94,6 @@ def _web_inputs(root, sources, items, probe):
         for item in row.get("sites", ()):
             site = ImportSite(item["module"], item.get("anchor"), item["level"], item["line"],
                               item["column"], item["type_only"])
-            # Local resolution also probes assets outside the authored-source inventory.
             resolution.append(lookup_web(root, site, PurePosixPath(path), sources, {}, probe=probe))
     return runtime, rows, resolution
 
@@ -118,7 +117,6 @@ def graph_input_signature(root: Path, config: dict) -> str | None:
                         raise ValueError("Unwitnessed symbolic link in resolution path")
                     probes[name] = _stat_signature(current)
 
-        # A directory identity also detects an input created and removed between captures.
         for path in _iter_files(root, observe_directory=probe):
             if path.name in _RESOLUTION_INPUTS or is_measurement_input(path.relative_to(root)):
                 probe(path)
@@ -132,7 +130,6 @@ def graph_input_signature(root: Path, config: dict) -> str | None:
             identities.append((relative, language, signature, sha256(data).hexdigest()))
             if language in _WEB:
                 items.append({"path": relative, "language": language, "text": data.decode("utf-8")})
-        # A Lean executable can be a launcher for a mutable, external toolchain.
         if any(source.language in {"python", "javascript", "typescript"} for source in sources.values()):
             if shutil.which("lean") is not None:
                 return None

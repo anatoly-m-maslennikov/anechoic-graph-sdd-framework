@@ -1,3 +1,4 @@
+import subprocess
 import json
 import os
 import socket
@@ -85,8 +86,8 @@ class WarmWorkerTests(unittest.TestCase):
             result = {"base_generation": "old", "snapshot": {}, "snapshot_sha256": "hash", "paths": expected}
             ColdWorker.result = result
             jobs = module.GenerationJobs("test", binding, "unused", worker_socket="unused", worker_load_seconds=1)
-            with (patch.object(module, "warm_result", side_effect=AssertionError("warm worker called")),
-                  patch.object(module.subprocess, "Popen", return_value=ColdWorker()) as process,
+            with (patch("ORCHESTRATOR_beta_C68.generation_worker.warm_result", side_effect=AssertionError("warm worker called")),
+                  patch.object(subprocess, "Popen", return_value=ColdWorker()) as process,
                   patch.object(ColdWorker, "communicate", return_value=(json.dumps(result), "")) as communicate):
                 self.assertEqual(result, jobs._run_worker(directory, reuse, paths))
             self.assertEqual("cold", jobs.worker_mode)
@@ -110,14 +111,14 @@ class WarmWorkerTests(unittest.TestCase):
                                        (b'{"accepted":false}\n', "cold"),
                                        (b'{"accepted":true,"pid":123}\n{"result":null}\n', "cold"), ("wait", "cold")):
                 thread = broker(jobs.worker_socket, requests, response)
-                with patch.object(module.subprocess, "Popen", ColdWorker):
+                with patch.object(subprocess, "Popen", ColdWorker):
                     self.assertEqual(result, jobs._run_worker(directory, reuse, [path]))
                 thread.join(1)
                 self.assertEqual(expected, jobs.worker_mode)
                 (root / "broker").unlink()
             self.assertEqual({"kind", "start_by", "binding", "reuse", "paths"}, set(requests[0]))
             self.assertEqual("ticket_delta", requests[0]["kind"])
-            with patch.object(module.subprocess, "Popen", ColdWorker):
+            with patch.object(subprocess, "Popen", ColdWorker):
                 self.assertEqual(result, jobs._run_worker(directory, reuse, [path]))
             self.assertEqual("cold", jobs.worker_mode)
 

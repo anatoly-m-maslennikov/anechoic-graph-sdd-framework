@@ -168,7 +168,6 @@ def _finding(source, action, case, result, *, graph_mode):
     for event in (*events, *violations):
         if event.get('sourcePath') is None:
             event.pop('sourcePath', None)
-    # A quiet module load is not an action that handles an input.
     if action == "<module>" and status == "deadEnd":
         return None
     return (f"module:{path}", path, source.language, action, case["line"], witness, status,

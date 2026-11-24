@@ -7,7 +7,7 @@ priority: 2
 context:
   template: task
 state:
-  status: "done"
+  status: done
   version: 4
   updated_at: "2026-11-22T16:55:34.701567+00:00"
 ---

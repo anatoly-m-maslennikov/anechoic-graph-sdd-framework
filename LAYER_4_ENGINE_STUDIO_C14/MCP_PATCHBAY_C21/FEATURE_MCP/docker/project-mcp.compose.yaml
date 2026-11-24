@@ -27,6 +27,7 @@ services:
     environment:
       ANECHOIC_FRAMEWORK_DB_ROOT: /var/lib/anechoic
       ANECHOIC_RUNTIME_NAMESPACE: docker
+      ANECHOIC_LOG_LEVEL: ${ANECHOIC_LOG_LEVEL-INFO}
       ANECHOIC_CONTROL_ROOT: ${ANECHOIC_CONTROL_ROOT:?Selected control root is required}
       ANECHOIC_PROJECT_INSTANCE_ID: ${ANECHOIC_PROJECT_INSTANCE_ID:?Selected identity is required}
       ANECHOIC_HOST_PROJECT_ROOT: ${ANECHOIC_PROJECT_ROOT:?Selected Project root is required}

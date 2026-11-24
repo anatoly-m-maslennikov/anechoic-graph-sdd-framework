@@ -55,9 +55,20 @@ class HostRuntimeConfigTests(unittest.TestCase):
         self.assertEqual(path, config.source_path)
         self.assertEqual(self.projects, config.projects_root)
         self.assertEqual(2, config.max_loaded_projects)
+        self.assertEqual("INFO", config.log_level)
         self.assertEqual(hashlib.sha256(path.read_bytes()).hexdigest(), config.raw_sha256)
         self.assertEqual(64, len(config.shared_runtime_id))
         self.assertTrue(config.shared_runtime_id == config.shared_runtime_id)
+
+    def test_logging_levels_are_exact_and_the_table_has_no_other_keys(self):
+        original = self._write_config().read_text()
+        for level in ("DEBUG", "INFO", "WARNING", "ERROR"):
+            with self.subTest(level=level):
+                path = self._write_config(original + f'[logging]\nlevel="{level}"\n')
+                self.assertEqual(level, load_host_runtime_config(path).log_level)
+        for suffix in ('level="ERROR "\n', 'level=""\n', 'level=20\n', 'other="DEBUG"\n'):
+            with self.subTest(suffix=suffix), self.assertRaisesRegex(HostRuntimeConfigError, "logging"):
+                load_host_runtime_config(self._write_config(original + "[logging]\n" + suffix))
 
     def test_optional_capacity_and_default_xdg_path_do_not_write(self):
         path = self._write_config(

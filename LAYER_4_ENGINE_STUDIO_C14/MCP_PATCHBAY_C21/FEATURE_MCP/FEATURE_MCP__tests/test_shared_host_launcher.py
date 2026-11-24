@@ -47,8 +47,21 @@ class SharedHostLauncherTests(unittest.TestCase):
         self.assertEqual("dry-run", result["mode"])
         self.assertEqual("shared-mcp", result["service"])
         self.assertEqual("54321", result["environment"]["ANECHOIC_MCP_HTTP_PORT"])
+        self.assertEqual("INFO", result["environment"]["ANECHOIC_LOG_LEVEL"])
         self.assertNotIn("ANECHOIC_PROJECT_ROOT", result["environment"])
         self.assertEqual([], runner.call_args_list)
+
+    def test_shared_launch_uses_file_logging_level_and_refuses_invalid_level(self):
+        existing = self.settings.read_text()
+        self.settings.write_text(existing + '[logging]\nlevel="DEBUG"\n')
+        runner = unittest.mock.Mock()
+        with patch.dict("os.environ", {"ANECHOIC_LOG_LEVEL": "WARNING"}):
+            prepared = SharedMcpLauncher(runner=runner).prepare(self.settings, IMAGE)
+        self.assertEqual("DEBUG", prepared["environment"]["ANECHOIC_LOG_LEVEL"])
+        self.settings.write_text(existing + '[logging]\nlevel="log-level-value"\n')
+        with self.assertRaisesRegex(ValueError, "^invalid_host_settings$"):
+            SharedMcpLauncher(runner=runner).apply(self.settings, IMAGE)
+        runner.assert_not_called()
 
     def test_single_project_mount_and_cold_start_budget(self):
         root = self.projects / "alpha"

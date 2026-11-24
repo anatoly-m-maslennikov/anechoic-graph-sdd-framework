@@ -56,7 +56,6 @@ def grid_page(rows, count, offset, size, grid, columns=None):
         return [], 0, [] if group else None
     if not sort and not filters and group is None:
         return rows[offset:offset + size], len(rows), None
-    # Internal aliases are positional: duplicate public column names remain distinct.
     names = [f'"c{i}"' for i in range(count)]
     values = ",".join("(" + ",".join("?" for _ in range(count + 1)) + ")" for _ in rows)
     parameters = [value for index, row in enumerate(rows) for value in (index, *row)]

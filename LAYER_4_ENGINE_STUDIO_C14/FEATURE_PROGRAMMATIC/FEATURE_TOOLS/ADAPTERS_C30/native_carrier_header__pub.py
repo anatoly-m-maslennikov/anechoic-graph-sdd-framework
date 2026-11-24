@@ -28,6 +28,29 @@ def _container(value):
             and next(iter(value)) in {"atom", "component"} and _text(next(iter(value.values()))))
 
 
+def _locator(value):
+    return isinstance(value, dict) and set(value) == set(_CONCERN_LOCATOR) and all(
+        _text(value[name]) for name in _CONCERN_LOCATOR)
+
+
+def _ticket_ref(value):
+    return (isinstance(value, str) and re.fullmatch(r"[a-z][a-z0-9_]*\(id=[A-Za-z0-9_-]+\)", value)
+            and (not value.startswith("component(") or re.fullmatch(r"component\(id=C[0-9]+\)", value)))
+
+
+def _validate_ticket_concern(concern):
+    if not isinstance(concern, list) or not concern:
+        raise ValueError("Native Ticket Concern requires a nonempty list of locators")
+    seen = set()
+    for ref in concern:
+        if not (_locator(ref) or _ticket_ref(ref)):
+            raise ValueError("Native Ticket Concern requires complete locators or legacy references")
+        key = tuple(ref[name] for name in _CONCERN_LOCATOR) if isinstance(ref, dict) else ref
+        if key in seen:
+            raise ValueError("Native Ticket Concern requires distinct entries")
+        seen.add(key)
+
+
 def _validate_context_state(family, context, state):
     incomplete_draft = family == "PROJECT_CONFIG" and isinstance(state, dict) and state.get("status") == "draft"
     if (not isinstance(context, dict) or set(context) - set(_CONTEXT)
@@ -54,18 +77,17 @@ def _validate_concern(metadata, family):
     if "concern" in metadata:
         concern = metadata["concern"]
         if family == "TKT" and "structure" not in metadata and not isinstance(concern, list):
-            raise ValueError("Native Ticket Concern requires a list of typed references")
+            raise ValueError("Native Ticket Concern requires a list of locators")
         if family == "TKT" and isinstance(concern, list):
-            if (not concern or any(not isinstance(ref, str) or not re.fullmatch(r"[a-z][a-z0-9_]*\(id=[A-Za-z0-9_-]+\)", ref) for ref in concern)
-                    or len(concern) != len(set(concern))
-                    or any(ref.startswith("component(") and not re.fullmatch(r"component\(id=C[0-9]+\)", ref) for ref in concern)):
-                raise ValueError("Native Ticket Concern requires distinct typed references")
+            _validate_ticket_concern(concern)
         elif not isinstance(concern, dict) or not concern or set(concern) - set(_CONCERN):
             raise ValueError("Native Concern requires Components or a Subject, Path, and Relation")
         if isinstance(concern, dict) and any(name in concern for name in _CONCERN_LOCATOR) and not all(
                 _text(concern.get(name)) for name in _CONCERN_LOCATOR):
             raise ValueError("Native Concern requires Subject, Path, and Relation together")
         if isinstance(concern, dict) and "components" in concern:
+            if family != "TKT" and metadata.get("state", {}).get("status") != "archived":
+                raise ValueError("Component Concern is only available for Tickets")
             components = concern["components"]
             if (not isinstance(components, list) or not components
                     or any(not isinstance(value, str) or not re.fullmatch(r"C[0-9]+", value) for value in components)
@@ -109,12 +131,7 @@ def native_header_view(metadata):
         return metadata
     _validate_header(metadata)
     structure = metadata.get("structure", {name: metadata[name] for name in ("container", "tier", "priority") if name in metadata})
-    concern = metadata.get("concern")
-    if isinstance(concern, list):
-        components = [ref[13:-1] for ref in concern if re.fullmatch(r"component\(id=C[0-9]+\)", ref)]
-        concern = {"components": components} if components else {}
     return {**metadata, "atom_family": _family(metadata["atom_id"]),
-            **({"concern": concern} if concern is not None else {}),
             "identity": {"atom_id": metadata["atom_id"]},
             "context": {**structure, **metadata["context"]}}
 
@@ -128,31 +145,50 @@ def native_header_model_fields(metadata):
     fields.update({key: context[key] for key in (*_CONTEXT, "tier") if key in context})
     if family == "TKT":
         fields["priority"] = context.get("priority", 2)
-    concern = view.get("concern", {})
-    fields.update({name: concern.get(name) for name in _CONCERN_LOCATOR})
-    if "components" in concern:
-        fields["components"] = concern["components"]
+    concern = view.get("concern")
+    if family == "TKT":
+        if concern is not None:
+            fields["concern"] = _canonical_concern(view, family)
+    else:
+        fields.update({name: (concern or {}).get(name) for name in _CONCERN_LOCATOR})
     if "relations" in view:
         fields["relations"] = view["relations"]
     return fields
+
+
+def _canonical_ticket_concern(concern):
+    if isinstance(concern, dict):
+        if set(concern) != {"components"}:
+            raise ValueError("Ticket Concern locator cannot be converted to typed references")
+        components = concern["components"]
+        if (not isinstance(components, list) or not components
+                or any(not isinstance(value, str) or not re.fullmatch(r"C[0-9]+", value) for value in components)
+                or len(components) != len(set(components))):
+            raise ValueError("Native Concern requires a nonempty list of distinct Component IDs")
+        concern = [f"component(id={component})" for component in components]
+    if not isinstance(concern, list):
+        raise ValueError("Native Ticket Concern requires a list of locators")
+    result = []
+    for ref in concern:
+        if _locator(ref):
+            result.append({name: ref[name] for name in _CONCERN_LOCATOR})
+        elif isinstance(ref, str) and re.fullmatch(r"component\(id=C[0-9]+\)", ref):
+            result.append({"subject": ref[13:-1], "path": "Project Structure.components", "relation": "affects"})
+        else:
+            raise ValueError("Ticket Concern reference cannot be converted to a locator")
+    return result
 
 
 def _canonical_concern(metadata, family):
     if "concern" in metadata:
         concern = metadata["concern"]
         if family == "TKT":
-            if isinstance(concern, dict):
-                if set(concern) != {"components"}:
-                    raise ValueError("Ticket Concern locator cannot be converted to typed references")
-                components = concern["components"]
-                if (not isinstance(components, list) or not components
-                        or any(not isinstance(value, str) or not re.fullmatch(r"C[0-9]+", value) for value in components)
-                        or len(components) != len(set(components))):
-                    raise ValueError("Native Concern requires a nonempty list of distinct Component IDs")
-                concern = [f"component(id={component})" for component in components]
-            return concern
-        else:
-            return {name: concern[name] for name in _CONCERN if name in concern}
+            return _canonical_ticket_concern(concern)
+        if isinstance(concern, dict) and "components" in concern:
+            raise ValueError("Component Concern is only available for Tickets")
+        if not isinstance(concern, dict) or set(concern) - set(_CONCERN_LOCATOR):
+            raise ValueError("Non-Ticket Concern requires only Subject, Path, and Relation")
+        return {name: concern[name] for name in _CONCERN_LOCATOR if name in concern}
 
 
 def canonical_native_header(metadata):

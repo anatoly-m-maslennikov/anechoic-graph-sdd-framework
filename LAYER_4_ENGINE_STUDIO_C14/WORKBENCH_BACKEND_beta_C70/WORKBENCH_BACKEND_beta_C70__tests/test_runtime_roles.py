@@ -1,6 +1,8 @@
 """Check the packaged single-Project roles through their real CLI and sockets."""
 
+import asyncio
 from hashlib import sha256
+import json
 import os
 from pathlib import Path
 import signal
@@ -9,9 +11,11 @@ import sys
 from tempfile import TemporaryDirectory
 from time import monotonic, sleep
 import unittest
+from unittest.mock import patch
 
 import httpx2
 
+from .. import WORKBENCH_BACKEND_beta_C70__shared as backend
 from .WORKBENCH_BACKEND_beta_C70__tests__shared import process_env, write_project
 
 
@@ -36,6 +40,47 @@ def _stop(process):
     except subprocess.TimeoutExpired:
         process.kill()
         process.wait(timeout=5)
+
+
+class DirectManifestAdmissionTests(unittest.IsolatedAsyncioTestCase):
+    async def test_stale_readiness_and_writes_are_blocked_while_accepted_call_finishes(self):
+        root = Path(self.enterContext(TemporaryDirectory())).resolve()
+        manifest, gate = root / "manifest.md", root / "api.draining"
+        manifest.write_text("original")
+        info = manifest.lstat()
+        version = (info.st_dev, info.st_ino, info.st_mode, info.st_size, info.st_mtime_ns, info.st_ctime_ns)
+        binding = json.dumps({"path": str(manifest), "version": version, "gate": str(gate)})
+        with patch.dict(os.environ, {"ANECHOIC_BETA_DIRECT_MANIFEST": binding}):
+            app = backend.create_app("instance", "digest", str(root), "db", "jobs")
+        client = await self.enterAsyncContext(httpx2.AsyncClient(transport=httpx2.ASGITransport(app=app),
+                                                                 base_url="http://private"))
+        admitted, finish = asyncio.Event(), asyncio.Event()
+
+        async def execute(*args, **kwargs):
+            admitted.set()
+            await finish.wait()
+            return {"result": {"value": {"outcome": "completed"}, "text": None}}
+
+        envelope = {"name": "atom_lifecycle_create_draft", "arguments": {}, "instance_id": "instance",
+                    "session_id": None, "public_base_url": None, "asserted_project_root": None}
+        with patch.object(backend, "execute_tool", side_effect=execute) as tool:
+            accepted = asyncio.create_task(client.post("/tools", json=envelope))
+            try:
+                await asyncio.wait_for(admitted.wait(), 5)
+                manifest.write_text("changed")
+                self.assertEqual(503, (await client.get("/health")).status_code)
+                blocked = await client.post("/tools", json=envelope)
+                self.assertEqual("project_manifest_reloading", blocked.json()["error"]["code"])
+                gate.write_text("project_manifest_invalid")
+                unready = await client.get("/health")
+                self.assertEqual((503, False), (unready.status_code, unready.json()["ready"]))
+                blocked = await client.post("/tools", json=envelope)
+                self.assertEqual("project_manifest_invalid", blocked.json()["error"]["code"])
+            finally:
+                finish.set()
+                completed = await asyncio.wait_for(accepted, 5)
+            self.assertEqual("completed", completed.json()["result"]["value"]["outcome"])
+            self.assertEqual(1, tool.await_count)
 
 
 class RuntimeRoleTests(unittest.TestCase):
@@ -116,8 +161,10 @@ class RuntimeRoleTests(unittest.TestCase):
         self.assertEqual(peers, same_peers)
         page = self._call(api, "query_page", {"query_id": query["query_id"], "result_delivery": "inline"})
         self.assertEqual([[42]], page["rows"])
-        _stop(second)
-        self.assertEqual(0, second.returncode)
+        second.stdin.close()
+        self.assertEqual(0, second.wait(timeout=10))
+        self.assertFalse(self.socket.exists())
+        self.assertIsNone(owner.poll())
         os.kill(peers[1], signal.SIGKILL)
         self.assertNotEqual(0, owner.wait(timeout=10))
         self.assertFalse(self.ready.exists())

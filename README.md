@@ -308,9 +308,10 @@ been reconciled or that an installed runtime has been replaced.
 The Release uv Project provides three host commands in the `release` environment.
 
 - **Local Release** checkpoints eligible changes and runs static checks and
-  required unit tests before the build. The image suite runs end-to-end and
-  canary checks on the exact candidate before Local Release installs the package
-  and project-local `ane` and starts and verifies production MCP.
+  configured host functional checks before the build. The image suite runs
+  end-to-end and canary checks on the exact candidate before Local Release
+  installs the package and project-local `ane` and starts and verifies
+  production MCP.
 - **Public Release** reads completed Task and Epic evidence at pinned Git commits.
   A second run with the reviewed JSON changes returns drafts for the pull request
   description and Version History entry. The Operator handles publication.

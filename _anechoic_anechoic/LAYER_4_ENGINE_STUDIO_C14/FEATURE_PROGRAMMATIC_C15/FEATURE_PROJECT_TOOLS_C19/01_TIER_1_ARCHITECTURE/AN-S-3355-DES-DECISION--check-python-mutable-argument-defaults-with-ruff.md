@@ -11,7 +11,7 @@ relations:
   IS_REFERENCE:
   - AN-S-3346@1
 state:
-  status: "active"
+  status: active
   version: 1
   updated_at: "2026-11-22T18:38:16.552745+00:00"
 ---

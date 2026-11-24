@@ -15,8 +15,6 @@ def _collect(path, body, units, definitions, prefix=(), in_class=False):
             definitions[id(node)] = key
             _collect(path, node.body, units, definitions, (*prefix, node.name), isinstance(node, ast.ClassDef))
         else:
-            # Definitions under control flow are still useful units, but are
-            # never treated as guaranteed bindings.
             for field in ('body', 'orelse', 'finalbody'):
                 value = getattr(node, field, None)
                 if isinstance(value, list):
@@ -113,12 +111,10 @@ class _Calls(ast.NodeVisitor):
     def function(self, node):
         old_source, old_scopes = self.source, self.scopes
         local_counts = _bindings(node.body, node.args)
-        # Nested nonlocal declarations may rebind a closure's definitions.
         for child in ast.walk(node):
             if isinstance(child, ast.Nonlocal):
                 local_counts.update(child.names)
         local = {name: None for name in local_counts}
-        # Nested definitions are available only if uniquely bound and plain.
         for child in node.body:
             if (isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef))
                     and local_counts[child.name] == 1 and not child.decorator_list):
@@ -131,7 +127,6 @@ class _Calls(ast.NodeVisitor):
     visit_FunctionDef = function
     visit_AsyncFunctionDef = function
     def visit_ClassDef(self, node):
-        # Class bodies do not form a lexical scope for method bodies.
         for child in node.body:
             if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
                 self.visit(child)

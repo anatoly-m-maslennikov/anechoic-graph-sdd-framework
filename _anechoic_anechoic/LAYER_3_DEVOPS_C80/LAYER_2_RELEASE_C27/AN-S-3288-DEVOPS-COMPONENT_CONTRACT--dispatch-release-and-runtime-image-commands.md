@@ -1,12 +1,6 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-3288
-concern:
-  components:
-  - C27
-  - C81
-  - C63
-  - C64
 container:
   component: C27
 tier: 0

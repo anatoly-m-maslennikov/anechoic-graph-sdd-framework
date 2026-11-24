@@ -206,7 +206,6 @@ class PeerOwnerTests(unittest.IsolatedAsyncioTestCase):
             with self.subTest(killed=("kernel", "orchestrator")[index]):
                 old = current[first]
                 os.kill(old[index], signal.SIGKILL)
-                # Observe teardown before sending any more owner requests.
                 await self._wait_for_exit(old[1 - index])
                 current = await self._wait_for_pair(first, old)
                 self.assertEqual({first, second}, set(current))

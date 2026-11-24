@@ -11,7 +11,7 @@ relations:
   ANSWERS:
   - AN-S-3088
 state:
-  status: "active"
+  status: active
   version: 4
   updated_at: '2026-11-22T22:21:58.190550+00:00'
 ---

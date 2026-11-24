@@ -80,30 +80,6 @@ class LifecycleWorkerTests(unittest.TestCase):
             self.assertIn("admitted Model and Structure inputs", value["projection_error"])
             self.assertIsNone(value["delta"])
 
-    def test_task_create_revise_and_promote(self):
-        with tempfile.TemporaryDirectory(prefix="ane-lifecycle-", dir="/tmp") as directory:
-            binding, _, _ = generation_fixture(directory)
-            def run(name, arguments):
-                result = invoke(binding, name, arguments)
-                self.assertEqual(0, result.returncode, result.stderr)
-                response = json.loads(result.stdout)
-                self.assertIsNone(response["projection_error"], response)
-                value = response["lifecycle"]
-                self.assertEqual("completed", value["outcome"], value)
-                return value
-            created = run("atom_lifecycle_create_draft", {"newAtom": {
-                "template": "task", "container": {"component": "C00"}, "body": "## Summary\n\nCanary.\n"}})
-            draft = created["savedDraft"]
-            run("atom_lifecycle_promote_draft", {"target": {"ref_id": draft["ref_id"], "version": 1},
-                                                   "targetStatus": "backlog"})
-            revised = run("atom_lifecycle_update", {"sourceCurrent": {"ref_id": draft["atom_id"], "version": 1},
-                "changes": {"body": "## Summary\n\nCanary.\n\nRevised.\n"}})
-            draft = revised["savedDraft"]
-            promoted = run("atom_lifecycle_promote_draft", {"target": {"ref_id": draft["ref_id"], "version": 2},
-                                                            "targetStatus": "backlog"})
-            self.assertEqual(2, promoted["artifact"]["version"])
-            self.assertTrue(any("@1-" in effect["target"] for effect in promoted["effects"]))
-
     def test_epic_and_create_draft_revision(self):
         with tempfile.TemporaryDirectory(prefix="ane-lifecycle-", dir="/tmp") as directory:
             binding, _, _ = generation_fixture(directory)

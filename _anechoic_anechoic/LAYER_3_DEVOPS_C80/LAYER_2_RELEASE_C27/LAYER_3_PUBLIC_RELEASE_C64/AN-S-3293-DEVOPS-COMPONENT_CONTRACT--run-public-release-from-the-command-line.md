@@ -1,10 +1,6 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-3293
-concern:
-  components:
-  - C64
-  - C27
 container:
   component: C64
 tier: 0
@@ -15,7 +11,7 @@ relations:
   ANSWERS:
   - AN-S-3291
 state:
-  status: "active"
+  status: active
   version: 7
   updated_at: '2026-11-23T14:32:18.783461+00:00'
 ---

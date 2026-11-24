@@ -76,7 +76,7 @@ function record(tree, file, node, parents) {
   ts.forEachChild(node, child => record(tree, file, child, next));
 }
 for (const [file, tree] of trees) record(tree, names.get(file), tree, []);
-// A reassigned binding or method cannot be resolved safely from its declaration alone.
+
 function markWrites(node) {
   let target;
   if (ts.isBinaryExpression(node) && node.operatorToken.kind >= ts.SyntaxKind.FirstAssignment && node.operatorToken.kind <= ts.SyntaxKind.LastAssignment) target = node.left;

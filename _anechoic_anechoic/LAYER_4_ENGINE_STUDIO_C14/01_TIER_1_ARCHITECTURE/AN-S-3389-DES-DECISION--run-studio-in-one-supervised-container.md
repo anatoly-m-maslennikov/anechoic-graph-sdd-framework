@@ -7,6 +7,9 @@ tier: 1
 context:
   template: DECISION
   lens: DES
+relations:
+  IS_SOLUTION_FOR:
+  - AN-S-4800
 state:
   status: active
   version: 2
@@ -40,6 +43,45 @@ flowchart LR
 Web and MCP use Backend's API with zero cross-Component imports. The Codex Hook returns its Project assertion to the host with zero cross-Component imports or outbound calls. Tools may import across Components only from Adapters. Adapters import no other Component. Declare Code Access, calls, and state in Manifests. Bind exact Contracts to the owning Packages.
 
 Use one `stack` selector in `LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/project.toml`. The parallel Components use `<name>_beta_<id>`. Compare the two immutable images with the same fixture and check each discrepancy against its Contract. The verified Beta stack is the production selection.
+
+Studio starts the watcher before capture and uses its completed
+observations to guard admission. Incremental Startup is the default
+with a compatible, verified projection checkpoint. Compare the
+deterministic folder and path inventory and carrier content hashes.
+Reuse the unchanged projection and apply only additions, edits, moves,
+and deletions.
+
+Use a full reload when the projection database or checkpoint is missing,
+the checkpoint is incompatible or cannot be verified, or a Model,
+Structure, or compiler schema input changed. When only Realization
+Graph inputs changed, rebuild the Graph with the admitted Model and
+Structure.
+
+Finish Current and Draft catch-up before Studio reports readiness.
+Reconcile Archive in a background Worker. Archive from a previous
+checkpoint may remain visible with an explicit pending status. On
+cold startup, expose Archive after its admission. Require complete
+Archive before admitting lifecycle writes.
+
+Detect live Project Manifest edits through the source watcher. Validate
+the new binding and reload the affected Project in the running
+container. Preserve admitted artifacts after a formatting-only edit
+when compatibility is verified. Rebuild only the artifacts affected
+by a settings or schema change.
+
+Report an invalid Manifest explicitly. Mark the affected Project as
+unready while the Manifest is invalid, and block affected writes.
+
+### Formal Claim
+
+This claim covers only the readiness condition for a pair, not runtime conformance.
+
+```lean
+theorem pair_ready_requires_both (kernel orchestrator : Bool)
+    (h : (kernel && orchestrator) = true) :
+    kernel = true ∧ orchestrator = true := by
+  cases kernel <;> cases orchestrator <;> simp_all
+```
 
 ## References
 

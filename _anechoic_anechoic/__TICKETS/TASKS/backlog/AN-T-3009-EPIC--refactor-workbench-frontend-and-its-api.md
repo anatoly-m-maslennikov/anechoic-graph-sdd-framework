@@ -8,7 +8,7 @@ context:
   template: task
   label: Epic
 state:
-  status: "backlog"
+  status: backlog
   version: 1
   updated_at: "2026-11-23T04:12:02.947926+00:00"
 ---

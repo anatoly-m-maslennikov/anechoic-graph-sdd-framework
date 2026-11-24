@@ -20,7 +20,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 def _arguments(argv: list[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="operation", required=True)
-    for operation in ("local", "public", "build-image"):
+    for operation in ("local", "public", "build-image", "prepare-local"):
         command = commands.add_parser(operation)
         command.add_argument("--project-root", type=Path, default=REPOSITORY)
         command.add_argument("--run-id", required=True)
@@ -30,6 +30,11 @@ def _arguments(argv: list[str] | None) -> argparse.Namespace:
             command.add_argument(
                 "--content-draft", type=Path, help="UTF-8 JSON with the reviewed change entries"
             )
+        elif operation == "prepare-local":
+            command.add_argument("--base", required=True, help="exact base commit")
+            command.add_argument("--changed-path", action="append", required=True, dest="changed_paths",
+                                 metavar="PATH", help="literal repository-relative file addition, edit, or deletion")
+            command.add_argument("--port", required=True, type=int, help="isolated loopback MCP port")
         elif operation == "local":
             command.add_argument(
                 "--image-mode",
@@ -83,6 +88,15 @@ def _invoke(arguments: argparse.Namespace) -> dict[str, object]:
     )
     if re.fullmatch(pattern, arguments.run_id) is None:
         raise ValueError("release-run-id-invalid")
+    if arguments.operation == "prepare-local":
+        from LAYER_2_LOCAL_RELEASE_C63.LAYER_2_LOCAL_RELEASE_C63__shared import prepare_local
+
+        try:
+            return prepare_local(root, run_id=arguments.run_id, base=arguments.base,
+                                 changed_paths=arguments.changed_paths, port=arguments.port)
+        except (OSError, ValueError, RuntimeError) as error:
+            return {"outcome": "failed", "run_id": arguments.run_id, "failed_step": "prepare_local",
+                    "error_type": type(error).__name__, "error": str(error)}
     if arguments.operation == "build-image":
         from LAYER_1_RUNTIME_IMAGES_C81.LAYER_1_RUNTIME_IMAGES_C81__shared import build_image
 

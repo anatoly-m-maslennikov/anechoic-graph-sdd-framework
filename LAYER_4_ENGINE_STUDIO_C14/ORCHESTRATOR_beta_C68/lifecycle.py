@@ -74,6 +74,8 @@ class LifecycleJobs:
         with self.lock:
             if self.stopping.is_set():
                 return 503, {"error": {"code": "orchestrator_stopping", "message": "Orchestrator is stopping"}}
+            if self.startup_capture or self.deferred_archive is not None:
+                return 409, {"error": {"code": "archive_pending", "message": "Archived Atom history is incomplete"}}
             if self.lifecycle_job is not None:
                 return 409, {"error": {"code": "lifecycle_active", "message": "Another lifecycle operation is active"}}
             job = self.lifecycle_job = {"event": threading.Event(), "outcome": None,
@@ -136,6 +138,8 @@ class LifecycleJobs:
         return json.loads(stdout)
 
     def _lifecycle_inputs(self, job):
+        if self.startup_capture or self.deferred_archive is not None:
+            raise ValueError("Archived Atom history is incomplete")
         reuse = self.generation_reuse
         if reuse is None:
             raise ValueError("An admitted generation is required for lifecycle writes")
@@ -167,6 +171,7 @@ class LifecycleJobs:
                     "projection": self._projection_failure(error)}
         try:
             canonical = json.dumps(structure, sort_keys=True, separators=(",", ":")).encode()
+            archive_epoch = self.watcher.capture_epoch(archive=True)
             reply = self._run_lifecycle(job, base, sha256(canonical).hexdigest(), facts)
         except WarmLifecycleUnavailable as error:
             return {"lifecycle": {"outcome": "failed"}, "write_state": "known",
@@ -182,7 +187,7 @@ class LifecycleJobs:
         elif reply["delta"] is not None:
             projection = self._admit_lifecycle_delta(reply["delta"], base)
             if projection["state"] == "ready":
-                self.watcher.acknowledge(lifecycle.get("effects", []))
+                self.watcher.acknowledge(lifecycle.get("effects", []), archive_epoch=archive_epoch)
         uncertain = any(error.get("code") == "effect_uncertain" for error in lifecycle.get("errors", []))
         if projection["state"] != "ready" and (uncertain or lifecycle.get("effects")):
             self.unconfirmed_lifecycle_write = True

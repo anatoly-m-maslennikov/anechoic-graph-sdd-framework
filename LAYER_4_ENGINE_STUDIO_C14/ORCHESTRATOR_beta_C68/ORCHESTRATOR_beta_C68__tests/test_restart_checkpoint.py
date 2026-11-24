@@ -1,3 +1,4 @@
+import subprocess
 import importlib
 import json
 import sys
@@ -7,6 +8,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from ORCHESTRATOR_beta_C68.generation import parse_worker_result, worker_request
 module = importlib.import_module("ORCHESTRATOR_beta_C68.ORCHESTRATOR_beta_C68__shared")
 
 
@@ -86,13 +88,15 @@ class RestartCheckpointTests(unittest.TestCase):
                 jobs._attempt_generation(None, None)
             effect.assert_called_once_with("generation_reuse_check", outcome="succeeded")
 
-    def test_startup_loads_reuse_before_initial_revalidation(self):
+    def test_startup_reconciles_persisted_pending_after_archive_tree_removed(self):
         root = Path(self.enterContext(tempfile.TemporaryDirectory())).resolve()
         (root / "control").mkdir()
         binding = {"root": str(root), "control_root": "control", "manifest_path": "manifest.md",
                    "manifest_sha256": "a" * 64, "project_prefix": "AN"}
         jobs = module.GenerationJobs("test id", binding, "socket")
-        reuse = {"base_generation": "old", "inputs": {}, "graph_config": None, "endpoints": {}, "carrier_hashes": {"control/a.md": "a" * 64}}
+        witness = {"base_generation": "old", "inputs": {}, "graph_config": None, "endpoints": {},
+                   "carrier_hashes": {"control/a.md": "a" * 64}}
+        reuse = witness | {"archive_pending": True}
         calls = []
         class Connection:
             def __init__(self, path): pass
@@ -107,6 +111,9 @@ class RestartCheckpointTests(unittest.TestCase):
             self.assertTrue(jobs.watcher.started)
             self.assertEqual(reuse, jobs.generation_reuse)
             self.assertEqual({"startup": True}, kwargs)
+            self.assertFalse(jobs.watcher.has_archive_roots())
+            self.assertTrue(jobs._capture_options(reuse, None)[0]["foreground"])
+            self.assertEqual(witness, worker_request(binding, "socket", "test id", reuse, None)["reuse"])
             jobs.stopping.set()
             return {"state": "succeeded"}
         with patch("ORCHESTRATOR_beta_C68.generation.UnixConnection", Connection), \
@@ -187,7 +194,7 @@ class RestartCheckpointTests(unittest.TestCase):
             def close(self): pass
         requests = []
         with patch("ORCHESTRATOR_beta_C68.generation.UnixConnection", Connection), \
-                patch.object(module.subprocess, "Popen", graph_worker(graph_result, requests)):
+                patch.object(subprocess, "Popen", graph_worker(graph_result, requests)):
             outcome = jobs._attempt_generation(None, reuse)
         self.assertEqual({"binding": binding, "reuse": reuse, "structure": {"nodes": []}}, requests[0])
         self.assertEqual(("GET", "/structure?instance_id=test+id"), calls[0][:2])
@@ -203,19 +210,19 @@ class RestartCheckpointTests(unittest.TestCase):
         hashes = {"control/a.md": "a" * 64}
         delta = {"base_generation": "old", "snapshot": {}, "snapshot_sha256": "s",
                  "paths": [["control/__TKT", "AN-T-1--a.md"]], "carrier_hashes": hashes}
-        self.assertEqual(delta, module.parse_worker_result(json.dumps(delta), reuse, None))
+        self.assertEqual(delta, parse_worker_result(json.dumps(delta), reuse, None))
         unchanged = {"base_generation": "old", "unchanged": True}
-        self.assertEqual(unchanged, module.parse_worker_result(json.dumps(unchanged), reuse, None))
+        self.assertEqual(unchanged, parse_worker_result(json.dumps(unchanged), reuse, None))
         for paths in ([], [["../outside", "a"]], [["control", "../a"]], [["/root", "a"]],
                       [["control", "a"], ["control", "a"]]):
             with self.assertRaises(ValueError):
-                module.parse_worker_result(json.dumps(delta | {"paths": paths}), reuse, None)
+                parse_worker_result(json.dumps(delta | {"paths": paths}), reuse, None)
         for invalid in (unchanged | {"unchanged": False}, unchanged | {"carrier_hashes": {}},
                         unchanged | {"base_generation": "stale"}):
             with self.assertRaises(ValueError):
-                module.parse_worker_result(json.dumps(invalid), reuse, None)
+                parse_worker_result(json.dumps(invalid), reuse, None)
         with self.assertRaises(ValueError):
-            module.parse_worker_result(json.dumps(unchanged), {"base_generation": "old"}, None)
+            parse_worker_result(json.dumps(unchanged), {"base_generation": "old"}, None)
 
     def test_unchanged_confirms_base_and_drops_checkpoint(self):
         root = Path(self.enterContext(tempfile.TemporaryDirectory())).resolve()
@@ -237,6 +244,7 @@ class RestartCheckpointTests(unittest.TestCase):
             def close(self): pass
         result = {"base_generation": "old", "unchanged": True}
         with patch("ORCHESTRATOR_beta_C68.generation.UnixConnection", Connection), \
+                patch.object(jobs, "_record_ingestion_issues"), \
                 patch.object(jobs, "_run_worker", return_value=result):
             outcome = jobs._attempt_generation(None, reuse)
         self.assertEqual("reused", outcome["kind"])
@@ -256,9 +264,9 @@ class RestartCheckpointTests(unittest.TestCase):
         for invalid in (graph_result | {"reuse": None}, graph_result | {"reuse": witness | {"extra": 1}},
                         graph_result | {"base_generation": "other"}):
             with self.assertRaises(ValueError):
-                module.parse_worker_result(json.dumps(invalid), reuse, None, {})
+                parse_worker_result(json.dumps(invalid), reuse, None, {})
         with self.assertRaises(ValueError):
-            module.parse_worker_result(json.dumps(graph_result), reuse, None)
+            parse_worker_result(json.dumps(graph_result), reuse, None)
 
     def test_structure_fallback_for_unavailable_or_invalid_artifact(self):
         root = Path(self.enterContext(tempfile.TemporaryDirectory())).resolve()
@@ -287,7 +295,7 @@ class RestartCheckpointTests(unittest.TestCase):
                 return json.dumps({"base_generation": "old", "snapshot": {}, "snapshot_sha256": "s"}), ""
         response = Response()
         with patch("ORCHESTRATOR_beta_C68.generation.UnixConnection", Connection), \
-                patch.object(module.subprocess, "Popen", Worker):
+                patch.object(subprocess, "Popen", Worker):
             jobs._run_worker(str(root), reuse, None)
             self.assertEqual({}, requests[-1]["structure"])
             for status, header, body in ((409, "old", b'{}'), (200, "other", b'{}'),
@@ -298,7 +306,7 @@ class RestartCheckpointTests(unittest.TestCase):
             jobs._run_worker(str(root), reuse | {"graph_config": None}, None)
             self.assertNotIn("structure", requests[-1])
         with patch("ORCHESTRATOR_beta_C68.generation.UnixConnection", side_effect=OSError("offline")), \
-                patch.object(module.subprocess, "Popen", Worker):
+                patch.object(subprocess, "Popen", Worker):
             jobs._run_worker(str(root), reuse, None)
             self.assertNotIn("structure", requests[-1])
 

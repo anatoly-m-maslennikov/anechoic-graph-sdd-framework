@@ -12,7 +12,7 @@ relations:
   - AN-S-3159@2
   - AN-S-3179@2
 state:
-  status: "active"
+  status: active
   version: 6
   updated_at: "2026-11-22T09:00:09.215152+00:00"
 ---

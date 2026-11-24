@@ -1,9 +1,12 @@
 """Build a Realization Graph snapshot from a JSON request on standard input."""
 
+from dataclasses import fields
+from datetime import datetime, timezone
 import json
 import keyword
 from functools import cache
 from pathlib import Path
+import re
 import sys
 
 from ARCHITECTURE_ANALYSIS_C73.CODE_AND_SPEC_METRICS_C76.metrics__shared import is_measurement_input
@@ -18,6 +21,48 @@ from .code_access_occurrences import code_access_occurrences
 from .resolution import resolve_realization
 from .source import _iter_files, _RESOLUTION_INPUTS, _stat_signature, capture
 from .state_effects import _read, analyze_state
+
+
+_CONSISTENCY_CODE = "realization_graph_inputs_changed"
+_SAFE_PATH = re.compile(r"[A-Za-z0-9_./-]{1,256}")
+_PRIVATE_PATH = re.compile(r"\.env\b|\.ssh\b|password|passwd|secret|token|api[_-]?key|authorization|bearer", re.I)
+
+
+class _ChangedInputs(RuntimeError):
+    def __init__(self, details):
+        super().__init__("Project source or dependency inputs changed during capture")
+        self.details = details
+
+
+def _first_difference(before, after):
+    for path, old in before.items():
+        if path not in after:
+            return _difference(path, "removed")
+        new = after[path]
+        if old != new:
+            changed = (["stat_signature"] if isinstance(old, str) else
+                       [field.name for field in fields(old) if getattr(old, field.name) != getattr(new, field.name)])
+            return _difference(path, "changed", changed)
+    return _difference(next(path for path in after if path not in before), "added")
+
+
+def _difference(path, change, changed=()):
+    report = {"change": change}
+    if (_SAFE_PATH.fullmatch(path) and not path.startswith("/") and ".." not in path.split("/")
+            and not _PRIVATE_PATH.search(path)):
+        report["path"] = path
+    if changed:
+        report["fields"] = changed
+    return report
+
+
+def _require_stable(before, manifests, sources, after):
+    details = {}
+    for name, left, right in (("resolution_inputs", before, manifests), ("sources", sources, after)):
+        if left != right:
+            details[name] = _first_difference(left, right)
+    if details:
+        raise _ChangedInputs(details)
 
 
 def _options(root, config):
@@ -124,8 +169,7 @@ def _build(request, derive_rows=None, measure=None):
     if measure is not None:
         extra.update(_measure(root, (nodes, test_edges), sources, snapshot, ownership, components, measure))
     after = capture(root, sources, include)
-    if before != _manifests(root) or sources != after:
-        raise RuntimeError("Project source or dependency inputs changed during capture")
+    _require_stable(before, _manifests(root), sources, after)
     rows = {
         **extra,
         "nodes": nodes,
@@ -140,6 +184,12 @@ def _build(request, derive_rows=None, measure=None):
 def main(derive_rows=None, measure=None):
     try:
         result = _build(json.load(sys.stdin), derive_rows, measure)
+    except _ChangedInputs as error:
+        record = {"timestamp": datetime.now(timezone.utc).isoformat(timespec="milliseconds"), "severity": "ERROR",
+                  "code": _CONSISTENCY_CODE, "event": _CONSISTENCY_CODE, "component": "C61",
+                  "operation": "verify_realization_graph", "outcome": "failed", "details": error.details}
+        print(json.dumps(record, ensure_ascii=True, separators=(",", ":")), file=sys.stderr, flush=True)
+        return 1
     except (ValueError, OSError, RuntimeError) as error:
         print(f"realization graph: {error}", file=sys.stderr)
         return 1

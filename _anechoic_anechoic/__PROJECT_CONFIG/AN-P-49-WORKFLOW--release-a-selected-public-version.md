@@ -7,7 +7,7 @@ structure:
 context:
   template: workflow
 state:
-  status: "active"
+  status: active
   version: 25
   updated_at: "2026-11-23T13:45:02.528686+00:00"
 ---

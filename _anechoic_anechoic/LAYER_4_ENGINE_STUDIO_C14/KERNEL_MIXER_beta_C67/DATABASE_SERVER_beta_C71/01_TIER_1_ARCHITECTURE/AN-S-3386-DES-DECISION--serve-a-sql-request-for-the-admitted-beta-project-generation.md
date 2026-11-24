@@ -12,11 +12,11 @@ relations:
   - AN-S-3361@2
   - AN-S-3387@2
   IS_SOLUTION_FOR:
-  - AN-S-3335@28
+  - AN-S-3335@30
 state:
   status: active
-  version: 3
-  updated_at: '2026-11-23T03:50:52.802684+00:00'
+  version: 4
+  updated_at: '2026-11-23T23:25:17+00:00'
 ---
 ## Summary
 
@@ -26,9 +26,9 @@ Serve a SQL request for the admitted Beta Project generation.
 
 ### Prose Claim
 
-The Database Server checks the Project binding and accepted generation,
-then executes and retains the query result before returning it. A query can
-also append to history.
+For a successful new read-only SQL Run, the Database Server checks the
+Project binding and accepted generation, then executes and retains the result
+before returning it. A query can also append to history.
 
 ### Formal Claim
 
@@ -64,5 +64,6 @@ component_workflow(
 
 ## Details
 
-This Solution defines the expected event sequence for the selected workflow.
-Trace conformance requires recorded evidence.
+This Solution models a successful new SQL Run independently of checkpoint,
+Archive, incremental admission, and delta behavior. Paging and failure
+outcomes are outside this model. Trace conformance requires recorded evidence.

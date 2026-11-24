@@ -9,7 +9,7 @@ context:
   lens: DES
 relations:
   IS_SOLUTION_FOR:
-  - AN-S-3339@20
+  - AN-S-3339@24
   IS_REFERENCE:
   - AN-S-3361@2
   - AN-S-3387@2

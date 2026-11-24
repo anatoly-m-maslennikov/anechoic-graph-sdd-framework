@@ -16,6 +16,8 @@ from starlette.responses import JSONResponse
 from starlette.routing import Route
 
 from . import delivery_tools, lifecycle_tools, projection_tools, saved_sql_tools, schema_tools, workspace_tools
+from .direct_admission import direct_admission
+from .http_logging import http_log_config, runtime_log_level
 from .peer_transport import tool_failure, upstream
 from .warm_worker import open_warm_worker as open_warm_worker
 
@@ -190,7 +192,7 @@ async def execute_tool(database_socket, instance_id, name, args, *, session_id=N
 
 
 def _tool_route(database_socket, instance_id, project_root, host_root, blacklist, project_name,
-                orchestrator_socket, worker_binding, workbench_public_url):
+                orchestrator_socket, worker_binding, workbench_public_url, admission):
     async def invoke(request):
         try:
             data = await read_tool_request(request)
@@ -203,6 +205,8 @@ def _tool_route(database_socket, instance_id, project_root, host_root, blacklist
                 raise ValueError("project_root does not match the bound Project")
             if data["name"] not in TOOLS or data["name"] in blacklist:
                 return JSONResponse(tool_failure("tool_unavailable", "Unknown Tool"))
+            if failure := admission():
+                return JSONResponse(failure, status_code=503)
             return JSONResponse(await execute_tool(database_socket, instance_id, data["name"], data["arguments"],
                 session_id=data["session_id"], project_name=project_name, public_base_url=data["public_base_url"],
                 project_root=data["asserted_project_root"], orchestrator_socket=orchestrator_socket,
@@ -214,18 +218,29 @@ def _tool_route(database_socket, instance_id, project_root, host_root, blacklist
 
 def create_app(instance_id, manifest_sha256, project_root, database_socket, orchestrator_socket,
                *, host_root=None, blacklist=(), project_name=None, worker_binding=None, workbench_public_url=None):
+    admission = direct_admission()
+
+    def unready(failure=None):
+        return JSONResponse({"ready": False, "instance_id": instance_id, "manifest_sha256": manifest_sha256,
+                             "pid": os.getpid(), "kernel_pid": None, **(failure or {})}, status_code=503)
+
     async def health(_request):
+        if failure := admission():
+            return unready(failure)
         try:
             data = await upstream(database_socket, "GET", "/health")
             result = data.get("result", {})
             if (result.get("instance_id") != instance_id or result.get("manifest_sha256") != manifest_sha256
-                    or type(result.get("pid")) is not int or result.get("ready") is not True):
+                    or type(result.get("pid")) is not int or result.get("ready") is not True
+                    or type(result.get("archive_pending", False)) is not bool):
                 raise ValueError("Invalid Kernel binding")
+            if failure := admission():
+                return unready(failure)
             return JSONResponse({"ready": True, "instance_id": instance_id, "manifest_sha256": manifest_sha256,
-                                 "pid": os.getpid(), "kernel_pid": result["pid"], "generation": result["generation"]})
+                                 "pid": os.getpid(), "kernel_pid": result["pid"], "generation": result["generation"],
+                                 "archive_pending": result.get("archive_pending", False)})
         except (httpx2.HTTPError, ValueError, TypeError, AttributeError):
-            return JSONResponse({"ready": False, "instance_id": instance_id, "manifest_sha256": manifest_sha256,
-                                 "pid": os.getpid(), "kernel_pid": None}, status_code=503)
+            return unready()
 
     def bound(request):
         return list(request.query_params.multi_items()) == [("instance_id", instance_id)]
@@ -246,7 +261,7 @@ def create_app(instance_id, manifest_sha256, project_root, database_socket, orch
             return JSONResponse(tool_failure("workbench_unavailable", "Orchestrator unavailable"))
 
     invoke = _tool_route(database_socket, instance_id, project_root, host_root, blacklist, project_name,
-                         orchestrator_socket, worker_binding, workbench_public_url)
+                         orchestrator_socket, worker_binding, workbench_public_url, admission)
     return Starlette(routes=[Route("/health", health), Route("/tools", catalog),
                              Route("/tools", invoke, methods=["POST"]), Route("/jobs/worker-runs", worker_runs)])
 
@@ -282,7 +297,9 @@ def main():
 
 
 def serve(path, app, *, shutdown_timeout=None):
-    server = uvicorn.Server(uvicorn.Config(app, log_level="warning", timeout_graceful_shutdown=shutdown_timeout))
+    server = uvicorn.Server(uvicorn.Config(app, log_level=runtime_log_level().lower(), access_log=False,
+                                           log_config=http_log_config(),
+                                           timeout_graceful_shutdown=shutdown_timeout))
     app.state.shutdown_requested = lambda: server.should_exit
     def watch_parent():
         while os.read(sys.stdin.fileno(), 4096):

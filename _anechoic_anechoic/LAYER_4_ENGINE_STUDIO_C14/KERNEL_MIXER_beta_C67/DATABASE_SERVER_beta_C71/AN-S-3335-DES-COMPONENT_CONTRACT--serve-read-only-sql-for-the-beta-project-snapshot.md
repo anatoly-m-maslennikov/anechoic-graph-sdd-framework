@@ -11,7 +11,7 @@ relations:
   ANSWERS:
   - AN-S-3333
 state:
-  status: "active"
+  status: active
   version: 30
   updated_at: "2026-11-23T10:26:33.104737+00:00"
 ---
@@ -34,11 +34,15 @@ Unpinned results expire after the configured startup lifetime of 3,600
 seconds by default. View result IDs and rows are transient.
 
 When Workbench selects disk storage, retain the accepted generation in a
-private database bound to the Project instance and Manifest digest. Restore
-it when that binding reopens. Commit the input proof and the native
-carrier paths and content hashes with the accepted generation.
-On a Ticket delta, replace the affected checkpoints and remove
-paths that are absent. Expose the current proof to Orchestrator.
+private database bound to the Project instance and Manifest digest. Offer
+the compatible persisted checkpoint when that binding reopens. Commit
+the input proof, carrier inventory and content hashes, and Archive
+pending state with the accepted generation.
+
+Confirm the named base before reusing the projection or accepting
+Incremental Startup changes. Update affected rows and their checkpoints
+together. Remove checkpoints for paths that are absent, including the
+previous paths of moves. Expose the current proof to Orchestrator.
 Expose DuckPGQ queries for admitted imports
 and Package and Component test relationships.
 
@@ -101,6 +105,16 @@ Module on propagated effects.
 
 Serve structural cycles, Package coupling, and antipattern evidence
 through `import_cycles`, `package_coupling`, and `antipattern_findings`.
+
+Mark Archive pending until background reconciliation succeeds. During
+Incremental Startup, prior checkpoint Archive rows may remain visible
+with that marker. On cold startup, expose no Archive rows before
+admission.
+
+Admit Archive additions, edits, moves, and deletions with their relations
+and carrier hashes against the latest live generation in one transaction.
+Preserve Current and Draft rows and the Realization Graph. Clear the
+pending marker only when Archive admission succeeds.
 
 Accept a native-only refresh against the named current generation.
 Validate the native snapshot against the admitted Model. Replace Atom

@@ -10,7 +10,6 @@ from tempfile import TemporaryDirectory
 import unittest
 
 
-# Both aliases observe one local array. The return exposes each observation.
 SOURCE = '''function indexTrace(a, b) {
   let state = [];
   state.push(a);

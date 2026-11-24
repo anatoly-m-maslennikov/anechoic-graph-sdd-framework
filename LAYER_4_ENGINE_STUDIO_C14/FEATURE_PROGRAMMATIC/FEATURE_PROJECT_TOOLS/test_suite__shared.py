@@ -163,7 +163,7 @@ def run_full_suite(root: Path, test_modules: tuple[str, ...] | None = None, *,
     if not valid_test_request(phase, candidate_image, test_modules, required):
         print("Invalid test phase or candidate image selection", file=sys.stderr)
         return 1
-    if phase in ("full", "static", "functional") and test_modules is None:
+    if phase in ("full", "static") and test_modules is None:
         report["step"] = "static_checks"
         status = _run_static_checks(root)
         if status:
@@ -184,7 +184,7 @@ def run_full_suite(root: Path, test_modules: tuple[str, ...] | None = None, *,
     if test_modules is not None:
         selection = ", ".join(test_modules)
     elif host_gate:
-        selection = "required unit modules"
+        selection = ", ".join(module.relative_to(root).as_posix() for module in modules)
     else:
         selection = "all discovered modules" if phase == "full" else f"{phase} modules"
     print(f"Test scope: {scope}; selected modules: {selection}")
@@ -276,8 +276,8 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--project-root", type=Path, default=Path.cwd())
     parser.add_argument("--test-module", action="append", dest="test_modules", metavar="PATH")
-    parser.add_argument("--phase", choices=("static", "unit", "image"), default="unit")
-    parser.add_argument("--required", action="store_true", help="run the configured required unit selection")
+    parser.add_argument("--phase", choices=("static", "functional", "unit", "image"), default="unit")
+    parser.add_argument("--required", action="store_true", help="run the configured required host selection with the unit phase")
     parser.add_argument("--candidate-image")
     parser.add_argument("--canary-package", type=Path)
     parser.add_argument("--canary-selection")

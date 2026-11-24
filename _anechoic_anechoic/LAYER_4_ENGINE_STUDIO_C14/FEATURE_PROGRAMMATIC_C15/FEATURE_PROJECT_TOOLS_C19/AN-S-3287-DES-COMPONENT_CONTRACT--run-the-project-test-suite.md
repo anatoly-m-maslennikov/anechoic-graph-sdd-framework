@@ -15,7 +15,7 @@ relations:
   ANSWERS:
   - AN-S-3055
   IS_REFERENCE:
-  - AN-S-3346@1
+  - AN-S-3346
 ---
 
 ## Summary
@@ -30,7 +30,7 @@ Report each Module's result and the suite totals on the output streams.
 
 Return zero when the selected suite passes. Return a nonzero status when
 selection, the required test environment, or a test Module fails. A
-skipped required integration test fails the suite.
+skipped required test fails the suite.
 
 ## Static checks
 
@@ -40,11 +40,18 @@ When `enforce_source_size` is enabled, refuse modules above 300 nonblank
 lines or functions above 45 nonblank lines in Python, JavaScript, and
 TypeScript source. Use the locked frontend parser for web functions.
 
-## Unit tests
+## Host functional checks
 
-Run `--phase unit` for source-side tests. Use `--test-module` for a focused run. Use `--required` for the host test Modules configured in `tool.anechoic.test_suite.functional_test_modules`.
+Use `--phase functional` to run the required host Modules configured in
+`tool.anechoic.test_suite.functional_test_modules`. Run them in fresh
+interpreters. Report the selected Modules and results through the normal
+Test Suite output.
 
-Refuse empty, invalid, duplicate, or undiscovered selections. A skipped selected test fails the gate. Report the selected Modules and results through the normal Test Suite output.
+Refuse empty, invalid, duplicate, or undiscovered selections. A skipped
+required test fails the gate.
+
+Use `--phase unit` to run source-side diagnostic tests and
+`--test-module` to focus that run.
 
 ## Image tests
 
@@ -60,4 +67,4 @@ on success and clean up the disposable candidate resources.
 
 ## References
 
-AN-S-3055, AN-T-2944, and AN-T-2958.
+AN-S-3055, AN-S-4734, AN-T-2944, and AN-T-2958.

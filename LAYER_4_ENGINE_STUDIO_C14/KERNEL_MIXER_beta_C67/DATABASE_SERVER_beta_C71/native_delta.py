@@ -76,18 +76,20 @@ def _stage(connection, table, rows, width):
         connection.execute(f"INSERT INTO {table} VALUES {placeholders}", [value for row in batch for value in row])
 
 
-def _old_rows(connection, paths):
+def _old_rows(connection, paths, *, archive=False):
     connection.execute("CREATE TEMP TABLE int_delta_paths (relative_path VARCHAR, filename VARCHAR)")
     _stage(connection, "int_delta_paths", list(paths), 2)
-    rows = connection.execute("""SELECT n.reference, n.exact_ref, n.relative_path, n.filename
+    rows = connection.execute("""SELECT n.reference, n.exact_ref, n.relative_path, n.filename, n.status_group
         FROM main.mrt_atom_references n JOIN int_delta_paths p USING (relative_path, filename)""").fetchall()
     if (len({(row[2], row[3]) for row in rows}) != len(rows)
             or len({row[0] for row in rows}) != len(rows) or len({row[1] for row in rows}) != len(rows)):
         raise DeltaReconciliationRequired("Ambiguous Ticket path or identities; full reconciliation required")
+    if archive and any(row[4] != "Archived" for row in rows):
+        raise ValueError("Archive delta cannot replace live Atoms")
     return [(row[0], row[1]) for row in rows]
 
 
-def _validate_delta(connection, data, model, manifest_sha256):
+def _validate_delta(connection, data, model, manifest_sha256, *, archive=False):
     paths = _paths(data["paths"])
     snapshot = data["snapshot"]
     digest_data = {"paths": data["paths"], "snapshot": snapshot}
@@ -96,6 +98,10 @@ def _validate_delta(connection, data, model, manifest_sha256):
     if _digest(digest_data) != data["snapshot_sha256"]:
         raise ValueError("Native delta digest mismatch")
     validate_native_snapshot(snapshot, manifest_sha256)
+    if archive and (any("09_archived" not in PurePosixPath(parent).parts for parent, _ in paths)
+                    or any(atom["status_group"] != "Archived" for atom in snapshot["atoms"])
+                    or snapshot.get("spec_sizes") or snapshot.get("lifecycle_lenses")):
+        raise ValueError("Archive delta requires canonical Archived carriers")
     inverse = _inverse(model, snapshot["relation_types"])
     for atom in snapshot["atoms"]:
         path = (atom["relative_path"], atom["filename"])
@@ -103,7 +109,7 @@ def _validate_delta(connection, data, model, manifest_sha256):
         if (path not in paths or not match or match.group(1) != atom["reference"].split("@")[0]
                 or match.group(2) and match.group(1) + match.group(2) != atom["exact_ref"]):
             raise ValueError("Atom does not belong to an addressed native path")
-    old = _old_rows(connection, paths)
+    old = _old_rows(connection, paths, archive=archive)
     stage_atom_rows(connection, snapshot["atoms"])
     conflict = connection.execute("""SELECT 1 FROM (
         SELECT relative_path, filename FROM main.mrt_atom_references WHERE reference IN (SELECT reference FROM int_admission_atoms)
@@ -183,17 +189,23 @@ def _write_lenses(connection, snapshot):
             connection.execute("DROP VIEW IF EXISTS main.lifecycle_lenses")
 
 
-def apply_native_delta(connection, data, manifest_sha256):
+def apply_native_delta(connection, data, manifest_sha256, *, archive=False):
+    from .archive_generation import archive_pending
+
+    if "archive_pending" in data and (data["archive_pending"] is not True or "carrier_hashes" not in data):
+        raise ValueError("Invalid startup archive transition")
     connection.execute("BEGIN TRANSACTION")
     try:
         rows = connection.execute("SELECT id, model, structure FROM ops_generation").fetchall()
         if (len(rows) != 1 or rows[0][0] != data["base_generation"]
-                or not has_table(connection, "native_graph", "int_labels") or not has_table(connection, "main", "mrt_atom_graph_relations")):
+                or not has_table(connection, "native_graph", "int_labels")
+                or not has_table(connection, "main", "mrt_atom_graph_relations")
+                or (archive and not archive_pending(connection))):
             raise GenerationBaseChanged("Generation base changed or is not native")
         base, model, structure = rows[0]
-        snapshot, old, new_edges, inverse = _validate_delta(connection, data, model, manifest_sha256)
+        snapshot, old, new_edges, inverse = _validate_delta(connection, data, model, manifest_sha256, archive=archive)
         update_checkpoint(connection, data, delta=True)
-        clear_issues(connection, "atom", [str(PurePosixPath(parent) / name) for parent, name in data["paths"]])
+        _finish_delta(connection, data, archive)
         if not old and not snapshot["atoms"]:
             connection.execute("DROP TABLE int_delta_paths")
             connection.execute("DROP TABLE int_admission_atoms")
@@ -201,10 +213,11 @@ def apply_native_delta(connection, data, manifest_sha256):
             return base
         _stage_owned_edges(connection, old, inverse)
         components = {"C00", *json.loads(structure)["components"]}
-        _write_lenses(connection, snapshot)
+        if not archive:
+            _write_lenses(connection, snapshot)
         _write_atoms(connection)
         _write_relations(connection, new_edges)
-        if has_table(connection, "main", "biz_architecture_spec_metrics"):
+        if not archive and has_table(connection, "main", "biz_architecture_spec_metrics"):
             apply_spec_delta(connection, [exact for _, exact in old if "-S-" in exact], snapshot_sizes(snapshot))
         _write_graph(connection, components)
         generation = _digest({"kind": "native_ticket_delta", "base_generation": base,
@@ -220,6 +233,18 @@ def apply_native_delta(connection, data, manifest_sha256):
     return generation
 
 
+def _finish_delta(connection, data, archive):
+    from .archive_generation import set_archive_pending
+
+    if archive:
+        set_archive_pending(connection, False)
+        clear_issues(connection, "archive")
+    else:
+        if data.get("archive_pending"):
+            set_archive_pending(connection, True)
+        clear_issues(connection, "atom", [str(PurePosixPath(parent) / name) for parent, name in data["paths"]])
+
+
 def native_generation_route(connection, instance_id, manifest_sha256, lock, read_object, error_response):
     async def admit_native(request):
         try:
@@ -229,6 +254,8 @@ def native_generation_route(connection, instance_id, manifest_sha256, lock, read
             alternatives = (allowed,) if delta else (allowed, allowed | {"graph", "graph_sha256"},
                                                  allowed | {"graph", "graph_sha256", "reuse"})
             alternatives += tuple(fields | {"carrier_hashes"} for fields in alternatives)
+            if delta:
+                alternatives += (allowed | {"carrier_hashes", "archive_pending"},)
             data = await read_object(request, 64 * 1024 * 1024, *alternatives)
             if data["instance_id"] != instance_id:
                 return error_response("foreign_instance", "Instance does not match", 403)

@@ -1,5 +1,6 @@
 """Bound all reads, reject protected paths, and fingerprint actual inputs."""
 
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 import hashlib
@@ -25,29 +26,10 @@ CEILINGS = dict(
 )
 
 
-class TemporaryBoundaryError(RuntimeError):
-    """A disposable Carrier cannot be placed in the required Project Temporary State."""
-
-
-def validate_directory_components(root: Path, directory: Path) -> None:
-    """Reject existing symlink or non-directory components below a Project root."""
-
-    try:
-        relative = directory.relative_to(root)
-    except ValueError as error:
-        raise TemporaryBoundaryError(
-            f"temporary state path is outside Project root: {directory}"
-        ) from error
-    current = root
-    for component in relative.parts:
-        current /= component
-        if current.is_symlink():
-            raise TemporaryBoundaryError(
-                f"temporary state path contains symlinked directory: {current}"
-            )
-        if current.exists() and not current.is_dir():
-            raise TemporaryBoundaryError(f"temporary state path is not a directory: {current}")
-
+if __package__:
+    from .temporary_boundary import TemporaryBoundaryError, validate_directory_components
+else:
+    from temporary_boundary import TemporaryBoundaryError, validate_directory_components
 
 class ReadFailure(OSError):
     pass
@@ -94,6 +76,7 @@ class ReadContext:
     versions: dict[str, tuple[int, ...]] = field(default_factory=dict)
     metadata_inputs: set[str] = field(default_factory=set)
     inventories: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    inventory_prunes: dict[str, Callable[[Path], bool]] = field(default_factory=dict, init=False)
     shallow_inventories: dict[str, tuple[str, ...]] = field(default_factory=dict)
     candidates: set[str] = field(default_factory=set)
     _read_budget: Lock = field(default_factory=Lock, init=False, repr=False, compare=False)
@@ -179,29 +162,32 @@ class ReadContext:
         if self.bytes_read + size > self.limits["max_total_read_bytes"]:
             raise LimitReached("max_total_read_bytes")
 
+    def _inspect_inventory(self, path, versions):
+        self.checkpoint()
+        try:
+            return path, path.lstat()
+        except OSError:
+            if versions is not None:
+                raise
+            return path, None
+
     def inventory(self, root: Path, *, remember: bool = True,
-                  versions: dict[str, tuple[int, ...]] | None = None) -> list[Path]:
+                  versions: dict[str, tuple[int, ...]] | None = None,
+                  prune: Callable[[Path], bool] | None = None) -> list[Path]:
         root = self.allowed(root)
         pending = [root]
         found: list[Path] = []
-
-        def inspect(path):
-            self.checkpoint()
-            try:
-                return path, path.lstat()
-            except OSError:
-                if versions is not None:
-                    raise
-                return path, None
 
         with ThreadPoolExecutor(max_workers=8) as pool:
             while pending:
                 batch = pending[-128:]
                 del pending[-128:]
                 inspected = pool.map if len(batch) >= 16 else map
-                for path, info in inspected(inspect, reversed(batch)):
+                for path, info in inspected(lambda path: self._inspect_inventory(path, versions), reversed(batch)):
                     mode = info.st_mode if info is not None else 0
                     if stat.S_ISDIR(mode):
+                        if prune is not None and prune(path):
+                            continue
                         self.allowed(path)
                         descriptor = open_regular(path, directory=True)
                         try:
@@ -223,6 +209,10 @@ class ReadContext:
         names = tuple(sorted(str(path) for path in found))
         if remember:
             self.inventories[str(root)] = names
+            if prune is not None:
+                self.inventory_prunes[str(root)] = prune
+            else:
+                self.inventory_prunes.pop(str(root), None)
         return [Path(name) for name in names]
 
     def discover(self, roots: list[str]) -> list[Path]:
@@ -266,7 +256,9 @@ class ReadContext:
                 affected.append({"path": name})
         for root, members in sorted(self.inventories.items()):
             try:
-                names = tuple(str(path) for path in self.inventory(Path(root), remember=False))
+                names = tuple(str(path) for path in self.inventory(
+                    Path(root), remember=False, prune=self.inventory_prunes.get(root),
+                ))
             except OSError:
                 names = None
             if names != members:

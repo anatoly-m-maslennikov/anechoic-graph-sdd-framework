@@ -1,12 +1,6 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-3292
-concern:
-  components:
-  - C63
-  - C19
-  - C21
-  - C81
 container:
   component: C63
 tier: 0
@@ -22,8 +16,9 @@ relations:
   - AN-S-3290
   IS_REFERENCE:
   - AN-S-4733
-  - AN-S-3346@1
-  - AN-S-3287@6
+  - AN-S-4734
+  - AN-S-3346
+  - AN-S-3287
 ---
 
 ## Summary
@@ -33,9 +28,13 @@ Run Local Release from the command line
 ## Guarantee
 
 Use `local --run-id <id>` with the host command in AN-S-3288. Local Release
-checkpoints Git, bumps the candidate version, selects Active source Atoms, and
-runs the static and required host test gates before building the image.
-`--test-module` leaves the required gate in force.
+checkpoints Git, bumps the candidate version, and selects Active source Atoms.
+Run Static first and then the required host functional checks before building
+the candidate image. `--test-module` leaves both required gates in force.
+
+Use `prepare-local` with an exact base commit, literal changed paths, and
+an isolated loopback port to prepare a private checkout for Local Release.
+Report its exact revision. Installation belongs to the subsequent Local Release.
 
 Run end-to-end and canary checks on the exact candidate image before installing
 the verified package and its `ane` Skill. Preserve authoring sources and
@@ -54,4 +53,4 @@ If Project selection fails before execution, report
 
 ## References
 
-AN-S-3290.
+AN-S-3290 and AN-S-4734.

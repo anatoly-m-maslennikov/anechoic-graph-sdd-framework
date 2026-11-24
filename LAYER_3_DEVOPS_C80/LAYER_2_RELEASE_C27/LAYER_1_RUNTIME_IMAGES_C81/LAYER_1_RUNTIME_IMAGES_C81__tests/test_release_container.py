@@ -1,10 +1,12 @@
 """Production container startup and ownership checks."""
 
 import json
+import os
 from pathlib import Path
 import subprocess
 from types import SimpleNamespace
 import unittest
+from unittest.mock import patch
 
 from LAYER_1_RUNTIME_IMAGES_C81.release_container import start_container
 from LAYER_1_RUNTIME_IMAGES_C81.release_assets import LocalReleaseError
@@ -49,6 +51,15 @@ class ContainerTests(unittest.TestCase):
         self.assertIn('ANECHOIC_MCP_HTTP_HEALTHCHECK=1', command)
         self.assertEqual(command[-2:], (self.image, 'mcp-http'))
         self.assertEqual(len(self.calls), 2)
+
+    def test_direct_release_passes_valid_logging_level_and_rejects_invalid_level(self):
+        with patch.dict(os.environ, {'ANECHOIC_LOG_LEVEL': 'DEBUG'}):
+            self.start()
+        self.assertIn('ANECHOIC_LOG_LEVEL=DEBUG', self.calls[0])
+        self.calls.clear()
+        with patch.dict(os.environ, {'ANECHOIC_LOG_LEVEL': 'debug'}), self.assertRaisesRegex(LocalReleaseError, 'invalid_log_level'):
+            self.start()
+        self.assertEqual([], self.calls)
 
     def test_wrong_image_or_binding_cleans_only_candidate(self):
         for field in ('image', 'binding'):

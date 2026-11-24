@@ -22,7 +22,7 @@ export default defineConfig(({ mode }) => {
         const report = bundle[fileName];
         if (report?.type !== 'asset') this.error(`Missing bundle license report ${fileName}`);
 
-        // Vite's license report skips virtual modules, including generated build helpers.
+
         const moduleIds = new Set(Object.values(bundle).flatMap((output) => output.type === 'chunk' ? output.moduleIds : []));
         const usedNotices = Object.entries(helperNotices).filter(([id]) => moduleIds.has(id)).map(([, notice]) => notice);
         if (usedNotices.length) report.source = `${report.source}\n## Build helpers (MIT)\n\n${usedNotices.join('\n\n')}\n\n${helperLicense}`;

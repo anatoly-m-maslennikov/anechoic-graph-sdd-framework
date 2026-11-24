@@ -18,6 +18,7 @@ class PythonBoundaryTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
         self.engine, self.release, self.setup = boundaries.PYTHON_CHILD_ROOTS
+        self.release_module = self.release.replace("/", ".")
 
     def write(self, name, text):
         path = self.root / name
@@ -32,7 +33,7 @@ class PythonBoundaryTests(unittest.TestCase):
 
     def test_qualified_and_sibling_local_imports_are_reported(self):
         self.write(f"{self.release}/ship.py", "VALUE = 1\n")
-        self.write(f"{self.engine}/app.py", f"import {self.release}.ship\nfrom ship import VALUE\n")
+        self.write(f"{self.engine}/app.py", f"import {self.release_module}.ship\nfrom ship import VALUE\n")
         count, output = self.run_check()
         self.assertEqual(count, 2)
         self.assertIn(f"{self.engine}/app.py:1", output)
@@ -45,7 +46,7 @@ class PythonBoundaryTests(unittest.TestCase):
         self.assertEqual(self.run_check()[0], 0)
 
     def test_dynamic_literals_and_relative_cross_child(self):
-        self.write(f"{self.engine}/app.py", f"import importlib\nimportlib.import_module('{self.setup}.run')\nfrom ..{self.release} import ship\n")
+        self.write(f"{self.engine}/app.py", f"import importlib\nimportlib.import_module('{self.setup}.run')\nfrom ..{self.release_module} import ship\n")
         count, output = self.run_check()
         self.assertEqual(count, 2)
         self.assertIn("app.py:2", output)

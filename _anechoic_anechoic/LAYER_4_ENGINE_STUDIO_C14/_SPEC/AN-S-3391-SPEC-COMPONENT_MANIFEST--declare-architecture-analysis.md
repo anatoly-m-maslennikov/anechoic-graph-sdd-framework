@@ -20,7 +20,9 @@ Declare Architecture Analysis
 
 Measure the size of code and the Spec it realizes. Use ownership and dependency evidence to help maintainers review Package boundaries.
 
-Delegate measuring code and Spec and reviewing Package boundaries to Code and Spec Metrics. Delegate modeling behavior from implementation evidence to Code-to-Lean.
+Delegate measuring code and Spec and reviewing Package boundaries to Code and Spec Metrics. Delegate checking implementation behavior against its formal Spec to Implementation Verification.
+
+This Component delegates implementation to its child Components.
 
 ## Formal manifest
 
@@ -34,6 +36,7 @@ declare_entity(
         component_id='C73',
         name='Architecture Analysis',
         lens_whitelist=['DES', 'SPEC'],
+        boundaries={'code': {'imports': [], 'exports': {}}},
     ),
 )
 ```

@@ -29,6 +29,12 @@ declare_entity(
         component_id='C23',
         name='SKILLS',
         lens_whitelist=['DES', 'DevOps', 'QA', 'SWD'],
+        boundaries={'code': {'imports': {'only': []}, 'exports': {}},
+                    'state': {'reads': [], 'writes': []}},
     ),
 )
 ```
+
+## Boundary scope
+
+This definition covers the ane skill carrier. It provides instructions for a consumer; it performs no MCP calls or state effects.

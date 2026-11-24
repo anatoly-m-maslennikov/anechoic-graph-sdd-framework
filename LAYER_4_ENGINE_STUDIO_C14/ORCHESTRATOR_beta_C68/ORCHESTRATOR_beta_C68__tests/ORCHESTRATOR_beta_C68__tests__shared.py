@@ -35,6 +35,11 @@ def project(root):
 class Kernel(BaseHTTPRequestHandler):
     def do_PUT(self):
         payload = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+        if self.path == '/ingestion/issues':
+            self.send_response(200)
+            self.send_header('Content-Length', '0')
+            self.end_headers()
+            return
         self.server.payloads.append(payload)
         self.server.paths.append(self.path)
         self.server.generations.append(time.monotonic())
@@ -66,6 +71,21 @@ class Server(socketserver.UnixStreamServer):
     admit_release = None
     reject = False
     delta_error = None
+
+
+@contextmanager
+def kernel_server(root):
+    with Server(str(root / 'kernel.sock'), Kernel) as kernel:
+        kernel.generations = []
+        kernel.payloads = []
+        kernel.paths = []
+        thread = threading.Thread(target=kernel.serve_forever)
+        thread.start()
+        try:
+            yield kernel
+        finally:
+            kernel.shutdown()
+            thread.join()
 
 
 class Connection(http.client.HTTPConnection):
@@ -108,12 +128,7 @@ def watch_project(root, *, watch_code=False):
                'manifest_sha256': sha256(manifest.read_bytes()).hexdigest(), 'project_prefix': 'AN'}
     binding_file = root / 'binding.json'
     binding_file.write_text(json.dumps(binding))
-    with Server(str(root / 'kernel.sock'), Kernel) as kernel:
-        kernel.generations = []
-        kernel.payloads = []
-        kernel.paths = []
-        thread = threading.Thread(target=kernel.serve_forever)
-        thread.start()
+    with kernel_server(root) as kernel:
         socket_path = root / 'orch.sock'
         env = {**os.environ, 'PYTHONPATH': str(ENGINE)}
         command = [sys.executable, '-B', '-P', '-m', 'ORCHESTRATOR_beta_C68.ORCHESTRATOR_beta_C68__shared',
@@ -121,14 +136,10 @@ def watch_project(root, *, watch_code=False):
                    '--database-socket', str(root / 'kernel.sock')]
         if watch_code:
             command.append('--watch-code')
-        try:
-            with subprocess.Popen(command, cwd=ENGINE, env=env) as process:
-                try:
-                    wait_for(lambda: (latest(socket_path) or {}).get('generation') == '1', process)
-                    yield control, manifest, socket_path, kernel, process
-                finally:
-                    process.terminate()
-                    process.wait(timeout=10)
-        finally:
-            kernel.shutdown()
-            thread.join()
+        with subprocess.Popen(command, cwd=ENGINE, env=env) as process:
+            try:
+                wait_for(lambda: (latest(socket_path) or {}).get('generation') == '1', process)
+                yield control, manifest, socket_path, kernel, process
+            finally:
+                process.terminate()
+                process.wait(timeout=10)

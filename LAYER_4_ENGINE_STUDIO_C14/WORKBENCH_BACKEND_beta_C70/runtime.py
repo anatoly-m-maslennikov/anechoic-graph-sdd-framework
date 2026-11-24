@@ -60,7 +60,6 @@ def _peer(module, path, instance_id, stop, *args):
         yield peer
     finally:
         _stop(peer)
-        # The peer may die before it can remove its socket.
         path.unlink(missing_ok=True)
 
 
@@ -99,7 +98,8 @@ class ProjectPeers:
             latest = state["latest"]
             if health["result"]["ready"] and latest and latest["state"] == "succeeded":
                 return
-            if latest and state.get("active") is None and latest["state"] in ("failed", "aborted"):
+            if (latest and state.get("active") is None and latest["state"] in ("failed", "aborted")
+                    and not latest.get("retrying")):
                 message = str(latest.get("message", latest.get("code")))[:2048]
                 raise RuntimeError("Initial Beta build failed: " + message)
             await asyncio.sleep(0.1)

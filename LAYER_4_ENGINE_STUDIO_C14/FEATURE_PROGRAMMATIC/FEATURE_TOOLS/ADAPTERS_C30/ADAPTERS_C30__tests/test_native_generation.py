@@ -1,4 +1,5 @@
 from hashlib import sha256
+from pathlib import Path
 from time import monotonic
 import unittest
 from unittest.mock import patch
@@ -12,6 +13,100 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__tests.ADAPTER
 
 
 class NativeGenerationTests(NativeCaptureFixture, unittest.TestCase):
+    def test_staged_capture_reads_archives_without_reopening_foreground_carriers(self):
+        binding = {"root": str(self.root), "control_root": self.control.name,
+                   "manifest_path": self.manifest.relative_to(self.root).as_posix(),
+                   "manifest_sha256": self.selection.manifest_sha256, "project_prefix": "AN"}
+        current = self.write("AN-S-2--current.md", "AN-S-2", "active", 2)
+        draft = self.write("01_draft/AN-S-2@3-draft--draft.md", "AN-S-2", "draft", 3)
+        off_path = self.write("AN-S-3@1--off-path.md", "AN-S-3", "archived", 1)
+        archived = self.write("09_archived/AN-S-4@1--archived.md", "AN-S-4", "archived", 1,
+                              {"atom": "AN-S-2"})
+        installed = self.write("000_ANECHOIC_framework/09_archived/AN-S-5@1--installed.md",
+                               "AN-S-5", "archived", 1)
+        endpoints = {"CONTAINED_BY": [{"inverse_alias": "CONTAINS"}, False], "CONTAINS": [{}, True]}
+        reads, stats = [], []
+        read, lstat = ReadContext.read, Path.lstat
+
+        def record_read(reader, path, **options):
+            reads.append(path)
+            return read(reader, path, **options)
+
+        def record_lstat(path):
+            stats.append(path)
+            return lstat(path)
+
+        with (patch.object(ReadContext, "read", record_read), patch.object(Path, "lstat", record_lstat),
+              patch("FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_snapshot_cli._graph_config",
+                    return_value={})):
+            _, finish = prepare_generation_snapshot(binding, archive_stage="foreground")
+            foreground, hashes, roots, off_path_snapshot, off_path_hashes = finish(endpoints)
+            self.assertEqual({"AN-S-001", "AN-S-2", "AN-S-2@3-draft"},
+                             {row["reference"] for row in foreground["atoms"]})
+            self.assertEqual({self.manifest, current, draft}, {self.root / path for path in hashes})
+            self.assertEqual(["AN-S-3@1"], [row["reference"] for row in off_path_snapshot["atoms"]])
+            self.assertEqual({off_path}, {self.root / path for path in off_path_hashes})
+            self._assert_foreground_reads(archived, installed, off_path, roots, reads, stats)
+
+            reads.clear()
+            graph, finish = prepare_generation_snapshot(
+                binding, include_hashes=True, archive_stage="archive", archive_roots=roots,
+            )
+            archive_snapshot, archive_hashes = finish(endpoints)
+            self.assertIsNone(graph)
+            self.assertEqual({archived, self.manifest}, set(reads))
+            self.assertEqual({archived}, {self.root / path for path in archive_hashes})
+            self.assertEqual(["AN-S-4@1"], [row["reference"] for row in archive_snapshot["atoms"]])
+            self.assertIn({"source_kind": "Atom", "source_ref": "AN-S-2", "target_kind": "Atom",
+                           "target_ref": "AN-S-4@1", "relation_type": "CONTAINS", "derived": True},
+                          archive_snapshot["relations"])
+
+    def _assert_foreground_reads(self, archived, installed, off_path, roots, reads, stats):
+        self.assertEqual([archived.parent.relative_to(self.root).as_posix()], roots)
+        self.assertIn(off_path, reads)
+        self.assertNotIn(archived, reads)
+        self.assertNotIn(archived, stats)
+        self.assertNotIn(installed, stats)
+
+    def test_archive_stage_validates_roots_and_reports_non_archived_carriers(self):
+        binding = {"root": str(self.root), "control_root": self.control.name,
+                   "manifest_path": self.manifest.relative_to(self.root).as_posix(),
+                   "manifest_sha256": self.selection.manifest_sha256, "project_prefix": "AN"}
+        path = self.write("09_archived/AN-S-2--active.md", "AN-S-2", "active", 1)
+        relative = path.relative_to(self.root).as_posix()
+        with self.assertRaisesRegex(ValueError, "outside the selected native archive trees"):
+            prepare_generation_snapshot(binding, archive_stage="archive", archive_roots=["09_archived"])
+        with self.assertRaisesRegex(ValueError, "non-Archived Atom") as error:
+            prepare_generation_snapshot(binding, archive_stage="archive",
+                                        archive_roots=[path.parent.relative_to(self.root).as_posix()])
+        self.assertEqual(relative, error.exception.ingestion_issues[0]["relative_path"])
+
+    def test_scoped_hashes_exclude_deferred_archives_and_keep_off_path_revisions(self):
+        binding = {"root": str(self.root), "control_root": self.control.name,
+                   "manifest_path": self.manifest.relative_to(self.root).as_posix(),
+                   "manifest_sha256": self.selection.manifest_sha256, "project_prefix": "AN"}
+        live = self.write("AN-S-2--current.md", "AN-S-2", "active", 1)
+        off_path = self.write("AN-S-3@1--off-path.md", "AN-S-3", "archived", 1)
+        archived = self.write("09_archived/AN-S-4@1--archived.md", "AN-S-4", "archived", 1)
+        roots = [archived.parent.relative_to(self.root).as_posix()]
+        with patch.object(ReadContext, "currentness") as currentness:
+            foreground = native_carrier_hashes(binding, foreground=True, watcher_guarded=True)
+            background = native_carrier_hashes(binding, archive_roots=roots, watcher_guarded=True)
+        currentness.assert_not_called()
+        self.assertEqual({self.manifest, live, off_path}, {self.root / path for path in foreground})
+        self.assertEqual({archived}, {self.root / path for path in background})
+
+    def test_managed_snapshot_can_delegate_final_currentness_to_watcher(self):
+        binding = {"root": str(self.root), "control_root": self.control.name,
+                   "manifest_path": self.manifest.relative_to(self.root).as_posix(),
+                   "manifest_sha256": self.selection.manifest_sha256, "project_prefix": "AN"}
+        endpoints = {"CONTAINED_BY": [{"inverse_alias": "CONTAINS"}, False], "CONTAINS": [{}, True]}
+        with patch("FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_snapshot_cli._graph_config",
+                   return_value={}), patch.object(ReadContext, "currentness") as currentness:
+            _, finish = prepare_generation_snapshot(binding, watcher_guarded=True)
+            self.assertTrue(finish(endpoints)["atoms"])
+        currentness.assert_not_called()
+
     def test_snapshot_and_ticket_delta_optional_hashes(self):
         binding = {"root": str(self.root), "control_root": self.control.name,
                    "manifest_path": self.manifest.relative_to(self.root).as_posix(),

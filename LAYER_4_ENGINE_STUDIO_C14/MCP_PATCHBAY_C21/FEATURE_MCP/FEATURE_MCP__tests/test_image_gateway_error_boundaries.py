@@ -5,6 +5,7 @@ from .native_query_test_support import local_gateway
 from contextlib import redirect_stderr
 import io
 import json
+import os
 from pathlib import Path
 from types import SimpleNamespace
 import unittest
@@ -111,6 +112,17 @@ class HTTPBoundaryTests(unittest.IsolatedAsyncioTestCase):
 
 
 class ProcessBoundaryTests(unittest.TestCase):
+    def test_invalid_log_level_refuses_stdio_without_echoing_the_value(self):
+        with (
+            patch.dict(os.environ, ANECHOIC_LOG_LEVEL="private-invalid-level"),
+            patch.object(server, "_serve_stdio") as serve,
+            redirect_stderr(io.StringIO()) as stderr,
+        ):
+            self.assertEqual(2, server.main(["--project-root", self.tempdir.name]))
+        serve.assert_not_called()
+        self.assertNotIn("private-invalid-level", stderr.getvalue())
+        self.assertEqual("invalid_log_level", json.loads(stderr.getvalue())["event"])
+
     def test_process_boundary_emits_one_sanitized_fallback(self):
         with (
             patch.object(server, "_serve_stdio", side_effect=ValueError("token=private")),

@@ -1,12 +1,6 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-3310
-concern:
-  components:
-  - C72
-  - C14
-  - C27
-  - C65
 container:
   component: C72
 tier: 1

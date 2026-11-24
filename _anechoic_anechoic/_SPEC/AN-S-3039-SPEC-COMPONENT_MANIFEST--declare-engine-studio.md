@@ -21,6 +21,8 @@ Declare Engine Studio
 
 Consume Environments. DevOps builds Engine Studio.
 
+This Component delegates implementation to its child Components.
+
 ## Formal manifest
 
 ```python
@@ -34,6 +36,7 @@ declare_entity(
         name='Engine Studio',
         layer=4,
         lens_whitelist=['DES', 'DevOps', 'QA', 'SPEC', 'SWD'],
+        boundaries={'code': {'imports': [], 'exports': {}}},
     ),
 )
 ```

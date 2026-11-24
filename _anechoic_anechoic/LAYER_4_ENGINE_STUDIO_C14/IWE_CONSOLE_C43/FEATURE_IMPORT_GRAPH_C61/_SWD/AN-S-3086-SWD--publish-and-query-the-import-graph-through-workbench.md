@@ -12,7 +12,7 @@ relations:
   - AN-S-3083
   - AN-T-2928@1-draft
 state:
-  status: "active"
+  status: active
   version: 9
   updated_at: "2026-11-22T10:36:42.735857+00:00"
 ---

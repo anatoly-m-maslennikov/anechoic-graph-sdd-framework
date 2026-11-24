@@ -1,4 +1,4 @@
-"""INFO timing for lifecycle steps, with no input or carrier data in logs."""
+"""DEBUG timing for lifecycle steps, with no input or carrier data in logs."""
 
 from contextlib import contextmanager
 from contextvars import ContextVar
@@ -21,7 +21,7 @@ def _logger(selection):
     settings = getattr(selection, 'settings', None)
     if settings is None:
         return None
-    logger, _ = make_technical_logger(settings, selection.root, stream=sys.stdout, component='ATOM_LIFECYCLE')
+    logger, _ = make_technical_logger(settings, selection.root, stream=sys.stderr, component='ATOM_LIFECYCLE')
     return logger
 
 
@@ -34,7 +34,7 @@ def span(step, *, tool=None, selection=None):
         yield None
         return
     state = {'failed': False}
-    fields = dict(severity='INFO', event='lifecycle_step', operation=name, code=step,
+    fields = dict(severity='DEBUG', event='lifecycle_step', operation=name, code=step,
                   relative_path='', reason='')
     start = time.monotonic()
     logger.emit(**fields, outcome='started')

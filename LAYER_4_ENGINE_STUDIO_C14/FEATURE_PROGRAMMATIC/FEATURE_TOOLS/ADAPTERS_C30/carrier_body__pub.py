@@ -3,6 +3,9 @@ from pathlib import Path
 import re
 
 
+_CLOSING_DELIMITER = re.compile(rb"\r?\n---\r?\n")
+
+
 def frontmatter_bounds(raw: bytes) -> tuple[int, int, int] | None:
     if raw.startswith(b"---\n"):
         opening_end = len(b"---\n")
@@ -10,7 +13,7 @@ def frontmatter_bounds(raw: bytes) -> tuple[int, int, int] | None:
         opening_end = len(b"---\r\n")
     else:
         return None
-    closing = re.search(rb"\r?\n---\r?\n", raw, opening_end - 1)
+    closing = _CLOSING_DELIMITER.search(raw, pos=opening_end - 1)
     return None if closing is None else (opening_end, closing.start(), closing.end())
 
 

@@ -23,4 +23,4 @@ Measure code and Spec and explain Package review candidates
 
 For an admitted Project snapshot, provide read-only Component and Package measurements with their populations, units, and ownership. Show the reasons and supporting evidence for each Package review candidate. Keep the published Spec-to-Realization measurements available.
 
-Delegate the derivation of Lean models from implementation to Code-to-Lean. Preserve its source evidence and unresolved coverage.
+Delegate checking implementation behavior against its formal Spec to Implementation Verification. Preserve source evidence and report unresolved coverage.

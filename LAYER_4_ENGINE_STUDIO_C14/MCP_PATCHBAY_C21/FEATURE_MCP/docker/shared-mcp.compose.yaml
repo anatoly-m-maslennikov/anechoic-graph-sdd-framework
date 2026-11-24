@@ -30,6 +30,7 @@ services:
       ANECHOIC_MCP_HTTP_PORT: ${ANECHOIC_MCP_HTTP_PORT:?Shared HTTP port is required}
       ANECHOIC_MAX_LOADED_PROJECTS: ${ANECHOIC_MAX_LOADED_PROJECTS:?Shared context limit is required}
       ANECHOIC_SHARED_RUNTIME_ID: ${ANECHOIC_SHARED_RUNTIME_ID:?Shared runtime identity is required}
+      ANECHOIC_LOG_LEVEL: ${ANECHOIC_LOG_LEVEL-INFO}
     volumes:
       - type: volume
         source: framework-db

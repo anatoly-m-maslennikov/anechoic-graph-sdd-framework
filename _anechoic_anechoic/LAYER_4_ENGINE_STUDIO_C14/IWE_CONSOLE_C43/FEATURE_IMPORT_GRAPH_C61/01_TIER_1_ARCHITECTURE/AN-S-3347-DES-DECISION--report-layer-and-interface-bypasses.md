@@ -11,7 +11,7 @@ relations:
   IS_REFERENCE:
   - AN-S-3083@6
 state:
-  status: "active"
+  status: active
   version: 2
   updated_at: "2026-11-23T01:48:06.201550+00:00"
 ---

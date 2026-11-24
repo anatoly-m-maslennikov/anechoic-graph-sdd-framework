@@ -14,6 +14,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from ORCHESTRATOR_beta_C68.generation import parse_worker_result
 module = importlib.import_module("ORCHESTRATOR_beta_C68.ORCHESTRATOR_beta_C68__shared")
 from ORCHESTRATOR_beta_C68.ORCHESTRATOR_beta_C68__tests.ORCHESTRATOR_beta_C68__tests__shared import (
     project,
@@ -31,19 +32,76 @@ class UnixConnection(http.client.HTTPConnection):
 
 
 class OrchestratorTests(unittest.TestCase):
-    def test_generation_worker_logs_traceback_on_failure(self):
+    def test_generation_worker_does_not_relay_raw_traceback(self):
         with tempfile.TemporaryDirectory() as directory:
             binding = {"root": directory, "control_root": "control", "manifest_path": "manifest.md",
                        "manifest_sha256": "a" * 64, "project_prefix": "AN"}
             jobs = module.GenerationJobs("test", binding, directory + "/kernel.sock")
             stderr = StringIO()
-            with patch.object(module.subprocess, "Popen") as popen, redirect_stderr(stderr):
+            with patch.object(subprocess, "Popen") as popen, redirect_stderr(stderr):
                 process = popen.return_value
                 process.communicate.return_value = ("", "Traceback in inventory\nLimitReached: timeout_seconds\n")
                 process.returncode = 1
                 with self.assertRaisesRegex(RuntimeError, "^Worker failed: LimitReached: timeout_seconds$"):
                     jobs._run_worker(directory, None, None)
-            self.assertIn("Traceback in inventory", stderr.getvalue())
+            self.assertNotIn("Traceback in inventory", stderr.getvalue())
+
+    def test_graph_restart_exhaustion_logs_safe_records_and_stops_automatic_retry(self):
+        with tempfile.TemporaryDirectory() as directory:
+            binding = {"root": directory, "control_root": "control", "manifest_path": "manifest.md",
+                       "manifest_sha256": "a" * 64, "project_prefix": "AN"}
+            jobs = module.GenerationJobs("test", binding, directory + "/kernel.sock")
+            jobs.startup_capture = True
+            message = "Project source or dependency inputs changed during capture after one Realization Graph restart"
+            payload = {"ingestion_failure": {"source": "build", "issues": [{"code": "realization_scan_failed"}]},
+                       "graph_consistency": {
+                           "sources": {"change": "changed", "path": "app/main.py", "fields": ["status", "imports"]},
+                           "resolution_inputs": {"change": "added", "path": "/absolute/token=private.txt"},
+                       }}
+            stderr = StringIO()
+            first = {"sources": {"change": "removed", "path": "app/first.py"}}
+            restart = "anechoic-realization-graph-restart " + json.dumps(first)
+            with (patch.object(subprocess, "Popen") as popen, redirect_stderr(stderr),
+                  patch.object(jobs, "_record_ingestion_failure") as record_failure):
+                process = popen.return_value
+                process.communicate.return_value = (json.dumps(payload), f"{restart}\nPrivate traceback\n{message}\n")
+                process.returncode = 1
+                outcome = jobs._generate(startup=True)
+            self.assertEqual("failed", outcome["state"])
+            self.assertIn(message, outcome["message"])
+            self.assertNotIn("retrying", outcome)
+            retry = module.CurrentnessRetry()
+            retry.observe(outcome)
+            self.assertIsNone(retry.due)
+            popen.assert_called_once()
+            self.assertEqual(payload["ingestion_failure"], record_failure.call_args.args[0].diagnostic)
+            warning, record = (item for item in map(json.loads, stderr.getvalue().splitlines())
+                               if item["code"] == "realization_graph_inputs_changed")
+            self.assertEqual(("WARNING", "restarting", first), (warning["severity"], warning["outcome"], warning["details"]))
+            self.assertEqual(jobs.latest["run_id"], warning["correlation_id"])
+            self.assertEqual(("ERROR", "realization_graph_inputs_changed", jobs.latest["run_id"]),
+                             (record["severity"], record["code"], record["correlation_id"]))
+            self.assertEqual({"sources": payload["graph_consistency"]["sources"],
+                              "resolution_inputs": {"change": "added"}}, record["details"])
+            self.assertNotIn("private", stderr.getvalue().lower())
+
+    def test_worker_success_relays_first_graph_difference_with_run_id(self):
+        with tempfile.TemporaryDirectory() as directory:
+            binding = {"root": directory, "control_root": "control", "manifest_path": "manifest.md",
+                       "manifest_sha256": "a" * 64, "project_prefix": "AN"}
+            jobs = module.GenerationJobs("test", binding, directory + "/kernel.sock")
+            jobs.active = {"run_id": "a" * 32}
+            details = {"sources": {"change": "added", "path": "app/main.py"}}
+            restart = "anechoic-realization-graph-restart " + json.dumps(details)
+            stderr = StringIO()
+            with patch.object(subprocess, "Popen") as popen, redirect_stderr(stderr):
+                process = popen.return_value
+                process.communicate.return_value = ("{}", f"\n{restart}\n")
+                process.returncode = 0
+                self.assertEqual("{}", jobs._communicate_worker(directory, {}))
+            record = json.loads(stderr.getvalue())
+            self.assertEqual(("WARNING", "restarting", "a" * 32, details),
+                             (record["severity"], record["outcome"], record["correlation_id"], record["details"]))
 
     def test_http_and_real_worker_failure(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -64,6 +122,7 @@ class OrchestratorTests(unittest.TestCase):
             status, health = call("GET", "/health")
             self.assertEqual(200, status)
             self.assertEqual("test", health["result"]["instance_id"])
+            self.assertIs(False, health["result"]["lifecycle_active"])
             self.assertEqual(409, call("GET", "/jobs/worker-runs?instance_id=other")[0])
             self.assertEqual(400, call("POST", "/jobs/build", "{}")[0])
             binding = {key: "bad" for key in module.FIELDS}
@@ -75,6 +134,17 @@ class OrchestratorTests(unittest.TestCase):
             self.assertEqual(200, status)
             self.assertIsNone(result["result"]["active"])
             self.assertEqual("failed", result["result"]["latest"]["state"])
+
+    def test_health_reports_lifecycle_between_admission_and_completion(self):
+        jobs = module.GenerationJobs("test", {"root": "/tmp", "control_root": ".",
+            "manifest_path": "manifest.md", "manifest_sha256": "a" * 64, "project_prefix": "AN"}, "socket")
+        self.assertIs(False, jobs.health()["lifecycle_active"])
+        with jobs.lock:
+            jobs.lifecycle_job = {}
+        self.assertIs(True, jobs.health()["lifecycle_active"])
+        with jobs.lock:
+            jobs.lifecycle_job = None
+        self.assertIs(False, jobs.health()["lifecycle_active"])
 
     def test_real_worker_success(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -120,11 +190,11 @@ class OrchestratorTests(unittest.TestCase):
                     return Response()
                 def close(self):
                     pass
-            with patch.object(module.subprocess, "Popen", side_effect=OSError("broken")):
+            with patch.object(subprocess, "Popen", side_effect=OSError("broken")):
                 jobs._generate()
             self.assertEqual("failed", jobs.status()["latest"]["state"])
             self.assertIn("broken", jobs.status()["latest"]["message"])
-            with patch.object(module.subprocess, "Popen", Worker), patch(
+            with patch.object(subprocess, "Popen", Worker), patch(
                     "ORCHESTRATOR_beta_C68.generation.UnixConnection", Connection):
                 jobs._generate()
             self.assertEqual("g1", jobs.status()["latest"]["generation"])
@@ -145,7 +215,7 @@ class OrchestratorTests(unittest.TestCase):
             release.wait(5)
             return subprocess.CompletedProcess([], 0, '{"atoms": []}', '')
         result = []
-        with patch.object(module.subprocess, "run", side_effect=worker):
+        with patch.object(subprocess, "run", side_effect=worker):
             thread = threading.Thread(target=lambda: result.append(jobs.build(request)))
             thread.start()
             self.assertTrue(started.wait(5))
@@ -154,7 +224,7 @@ class OrchestratorTests(unittest.TestCase):
             release.set()
             thread.join(5)
         self.assertEqual((200, {"result": {"atoms": []}}), result[0])
-        with patch.object(module.subprocess, "run", side_effect=subprocess.TimeoutExpired("worker", 1)):
+        with patch.object(subprocess, "run", side_effect=subprocess.TimeoutExpired("worker", 1)):
             self.assertEqual(504, jobs.build(request)[0])
         self.assertEqual("worker_timeout", jobs.status()["latest"]["code"])
 
@@ -192,12 +262,12 @@ class OrchestratorTests(unittest.TestCase):
         reuse = {"base_generation": "old"}
         result = {"base_generation": "old", "paths": [["_anechoic_fixture/__TKT", "AN-T-1--task.md"]],
                   "snapshot": {}, "snapshot_sha256": "ignored"}
-        self.assertEqual(result, module.parse_worker_result(json.dumps(result), reuse, [path]))
+        self.assertEqual(result, parse_worker_result(json.dumps(result), reuse, [path]))
         for invalid in (result | {"base_generation": "new"}, result | {"paths": [path]}):
             with self.assertRaises(ValueError):
-                module.parse_worker_result(json.dumps(invalid), reuse, [path])
+                parse_worker_result(json.dumps(invalid), reuse, [path])
         with self.assertRaises(ValueError):
-            module.parse_worker_result(json.dumps(result), reuse, None)
+            parse_worker_result(json.dumps(result), reuse, None)
 
 
 if __name__ == "__main__":

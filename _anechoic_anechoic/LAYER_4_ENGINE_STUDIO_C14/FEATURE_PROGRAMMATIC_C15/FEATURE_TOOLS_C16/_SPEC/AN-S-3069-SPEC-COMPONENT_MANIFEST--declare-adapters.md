@@ -8,7 +8,7 @@ context:
   template: component_manifest
   lens: SPEC
 state:
-  status: "active"
+  status: active
   version: 55
   updated_at: "2026-11-23T10:26:33.104737+00:00"
 ---
@@ -41,7 +41,8 @@ declare_entity(
                                      'ADAPTERS_C30__shared.prepare_generation_snapshot',
                                      'ADAPTERS_C30__shared.capture_carrier_delta', 'ADAPTERS_C30__shared.capture_ticket_delta',
                                      'ADAPTERS_C30__shared.ReadContext', 'ADAPTERS_C30__shared.revalidate_native',
-                                     'ADAPTERS_C30__shared.atomic_tempfile', 'ADAPTERS_C30__shared.TEMPORARY_DIRECTORY']},
+                                     'ADAPTERS_C30__shared.atomic_tempfile', 'ADAPTERS_C30__shared.TEMPORARY_DIRECTORY',
+                                     'ADAPTERS_C30__shared.frontmatter_bounds', 'ADAPTERS_C30__shared.source_body']},
                 'exports': {
                     'ADAPTERS_C30__shared.TEMPORARY_DIRECTORY': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ADAPTERS_C30/ADAPTERS_C30__tests']},
                     'ADAPTERS_C30__shared.MAX_DATABASE_EVENT_BYTES': {'private': ['C59']},
@@ -63,7 +64,7 @@ declare_entity(
                     'ADAPTERS_C30__shared.json_value': {'private': ['C59']},
                     'ADAPTERS_C30__shared.module_visibility': {'private': ['C59']},
                     'ADAPTERS_C30__shared.native_header_view': 'public',
-                    'ADAPTERS_C30__shared.parse_component_manifest': {'private': ['C59']},
+                    'ADAPTERS_C30__shared.parse_component_manifest': {'private': ['C59', 'C74']},
                     'ADAPTERS_C30__shared.pending_database_journal': {'private': ['C59']},
                     'ADAPTERS_C30__shared.read_component_contract': {'private': ['C59']},
                     'ADAPTERS_C30__shared.read_component_seed_manifest': {'private': ['C59']},

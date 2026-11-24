@@ -11,7 +11,7 @@ relations:
   ANSWERS:
   - AN-S-3338
 state:
-  status: "active"
+  status: active
   version: 27
   updated_at: "2026-11-23T04:35:09.584613+00:00"
 ---
@@ -38,9 +38,10 @@ within the configured capacity. Evict the least recently used idle
 Project to admit another when capacity is full.
 
 Pass the Project's Workbench storage choice or the host default to its
-Kernel. Wait for startup verification and any offline changes to be
-admitted before advertising the Project as ready. Return a startup
-failure if Kernel and Orchestrator cannot complete catch-up.
+Kernel. Wait for verified Current and Draft admission before advertising
+the Project as ready. Return a startup failure when live admission fails.
+Serve queries while archive loading continues. Expose incomplete history
+in health and the Archive Worker outcome in Workbench status.
 
 Expose Workspace open, list, and get and View create, duplicate, list,
 get, update, focus, rename, and remove. Send changes to the owning Kernel.

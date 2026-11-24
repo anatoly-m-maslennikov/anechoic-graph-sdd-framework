@@ -99,11 +99,15 @@ def _write_reuse(connection, data, model):
     witness = data.get("reuse")
     if witness is not None:
         if (not isinstance(witness, dict) or set(witness) != {"inputs", "graph_config", "endpoints"}
-                or not isinstance(witness["inputs"], dict) or set(witness["inputs"]) != {"manifest", "graph"}
+                or not isinstance(witness["inputs"], dict)
+                or set(witness["inputs"]) - {"carrier_schema"} != {"manifest", "graph"}
                 or not isinstance(witness["inputs"]["manifest"], str)
                 or _HEX.fullmatch(witness["inputs"]["manifest"]) is None
                 or not isinstance(witness["inputs"]["graph"], str)
                 or (witness["inputs"]["graph"] != "disabled" and _HEX.fullmatch(witness["inputs"]["graph"]) is None)
+                or ("carrier_schema" in witness["inputs"] and
+                    (not isinstance(witness["inputs"]["carrier_schema"], str)
+                     or _HEX.fullmatch(witness["inputs"]["carrier_schema"]) is None))
                 or not (witness["graph_config"] is None or isinstance(witness["graph_config"], dict))
                 or not isinstance(witness["endpoints"], dict)
                 or witness["endpoints"] != json.loads(model, object_pairs_hook=_unique)["bindings"].get("endpoints")):
@@ -130,7 +134,14 @@ def _native_graph_payload(data, components, identity):
 
 def replace_generation(connection, data, manifest_sha256, *, stage_refresh=None):
     native, snapshot, model, structure, graph, components = _validate_generation(data, manifest_sha256)
-    generation = _digest({"receipt": data["receipt"], "snapshot": snapshot})
+    pending = data.get("archive_pending", False)
+    if type(pending) is not bool or (pending and (not native or "carrier_hashes" not in data
+            or any(row["status_group"] == "Archived" for row in snapshot["atoms"]))):
+        raise ValueError("Invalid pending archive generation")
+    identity = {"receipt": data["receipt"], "snapshot": snapshot}
+    if pending:
+        identity["archive_pending"] = True
+    generation = _digest(identity)
     if not native and has_table(connection, "main", "mrt_atom_graph_relations"):
         raise ValueError("Cannot replace a native generation with the legacy snapshot format")
     connection.execute("BEGIN TRANSACTION")
@@ -148,6 +159,8 @@ def replace_generation(connection, data, manifest_sha256, *, stage_refresh=None)
             replace_spec(connection, snapshot_sizes(snapshot))
         connection.execute("DELETE FROM ops_generation")
         connection.execute("INSERT INTO ops_generation VALUES (?, ?, ?)", [generation, model, structure])
+        from .archive_generation import set_archive_pending
+        set_archive_pending(connection, pending)
         _write_reuse(connection, data, model)
         update_checkpoint(connection, data)
         clear_issues(connection, "atom")
@@ -164,6 +177,15 @@ def replace_generation(connection, data, manifest_sha256, *, stage_refresh=None)
 
 class GenerationBaseChanged(ValueError):
     """The conditional native update no longer has its accepted base."""
+
+
+def _finish_native_checkpoint(connection, data):
+    from .archive_generation import set_archive_pending
+
+    set_archive_pending(connection, False)
+    update_checkpoint(connection, data)
+    for source in ("archive", "atom", "build"):
+        clear_issues(connection, source)
 
 
 def replace_native_generation(connection, data, manifest_sha256):
@@ -199,9 +221,7 @@ def replace_native_generation(connection, data, manifest_sha256):
             _write_reuse(connection, data, model)
         if has_table(connection, "main", "biz_architecture_spec_metrics"):
             replace_spec(connection, snapshot_sizes(snapshot))
-        update_checkpoint(connection, data)
-        clear_issues(connection, "atom")
-        clear_issues(connection, "build")
+        _finish_native_checkpoint(connection, data)
         connection.execute("UPDATE ops_generation SET id = ?", [generation])
         sync_query_views(connection)
         connection.execute("COMMIT")

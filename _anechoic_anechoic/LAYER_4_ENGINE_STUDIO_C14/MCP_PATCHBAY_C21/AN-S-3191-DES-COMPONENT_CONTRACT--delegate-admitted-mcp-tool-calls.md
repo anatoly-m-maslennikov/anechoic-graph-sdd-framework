@@ -11,7 +11,7 @@ relations:
   ANSWERS:
   - AN-S-3044
 state:
-  status: "active"
+  status: active
   version: 5
   updated_at: "2026-11-23T00:35:11.081959+00:00"
 ---

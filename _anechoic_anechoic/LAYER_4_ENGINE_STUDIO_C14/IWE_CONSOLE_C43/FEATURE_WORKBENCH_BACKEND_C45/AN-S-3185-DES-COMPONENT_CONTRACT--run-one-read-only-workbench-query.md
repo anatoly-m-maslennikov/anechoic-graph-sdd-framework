@@ -11,7 +11,7 @@ relations:
   ANSWERS:
   - AN-S-3059
 state:
-  status: "active"
+  status: active
   version: 11
   updated_at: '2026-11-22T22:21:57.567683+00:00'
 ---

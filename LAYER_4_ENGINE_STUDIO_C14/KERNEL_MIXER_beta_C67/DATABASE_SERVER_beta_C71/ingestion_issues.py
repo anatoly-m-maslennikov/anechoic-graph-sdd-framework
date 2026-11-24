@@ -1,6 +1,9 @@
 """Durable operational issues from source ingestion."""
 
-SOURCES = frozenset({"atom", "realization", "build"})
+import duckdb
+from starlette.responses import JSONResponse
+
+SOURCES = frozenset({"atom", "archive", "realization", "build"})
 FIELDS = ("relative_path", "code", "message", "atom_ref", "related_paths")
 
 
@@ -59,3 +62,29 @@ def replace_issues(connection, source, issues):
 def rows(connection):
     values = connection.execute("SELECT source, relative_path, code, message, atom_ref, related_paths FROM main.ops_ingestion_issues ORDER BY source, relative_path NULLS FIRST, code, message LIMIT 1000").fetchall()
     return [dict(zip(('source', *FIELDS), row)) for row in values]
+
+
+def route(connection, instance_id, lock, read_object, error_response):
+    async def issues(request):
+        if request.method == "GET":
+            if list(request.query_params.multi_items()) != [("instance_id", instance_id)]:
+                return error_response("foreign_instance", "Instance does not match", 403)
+            with lock:
+                return JSONResponse({"result": {"rows": rows(connection)}})
+        try:
+            data = await read_object(request, 64 * 1024 * 1024, {"instance_id", "source", "issues"})
+            if data["instance_id"] != instance_id:
+                return error_response("foreign_instance", "Instance does not match", 403)
+            validate(data["source"], data["issues"])
+            with lock:
+                connection.execute("BEGIN TRANSACTION")
+                try:
+                    replace_issues(connection, data["source"], data["issues"])
+                    connection.execute("COMMIT")
+                except BaseException:
+                    connection.execute("ROLLBACK")
+                    raise
+            return JSONResponse({"result": {"source": data["source"], "count": len(data["issues"])}})
+        except (ValueError, TypeError, UnicodeError, duckdb.Error) as error:
+            return error_response("invalid_ingestion_issues", str(error), 400)
+    return issues

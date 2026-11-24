@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+from functools import partial
 from hashlib import sha256
 import json
 import os
@@ -15,18 +16,30 @@ from .managed_parent import watch_managed_parent
 from .python_code_units import python_code_units as python_code_units
 from .python_context_restoration import python_context_restoration as python_context_restoration
 from .python_import_order import python_import_order as python_import_order
-from .native_refresh import artifact_inputs, digest, refresh
+from .native_refresh import _ticket_delta, artifact_inputs, digest, refresh, startup_incremental
 
 sys.dont_write_bytecode = True
 
 
 class _BuildFailure(ValueError):
-    def __init__(self, module, message):
+    def __init__(self, module, message, graph_consistency=None):
         super().__init__(message)
+        self.graph_consistency = graph_consistency
         self.issue_code = {
             "manifest_build_CS4__shared": "manifest_build_failed",
             "realization_graph": "realization_scan_failed",
         }.get(module, "build_failed")
+
+
+def _graph_consistency(stderr):
+    try:
+        record = json.loads(stderr[-4096:].rstrip().rsplit("\n", 1)[-1])
+        if (record["code"] == "realization_graph_inputs_changed" and record["component"] == "C61"
+                and record["severity"] == "ERROR" and isinstance(record["details"], dict)):
+            return record["details"]
+    except (ValueError, TypeError, KeyError):
+        pass
+    return None
 
 
 def _run_job(module, payload, *arguments):
@@ -37,17 +50,20 @@ def _run_job(module, payload, *arguments):
                             text=True, capture_output=True, cwd=engine, env=env)
     if result.returncode:
         job = module.rsplit(".", 1)[-1]
+        if job == "realization_graph" and (details := _graph_consistency(result.stderr)) is not None:
+            raise _BuildFailure(job, "realization_graph failed: Project source or dependency inputs changed during capture",
+                                graph_consistency=details)
         raise _BuildFailure(job, f"{job} failed: " + result.stderr[-2048:])
     if result.stderr:
         sys.stderr.write(result.stderr[-8192:])
     return json.loads(result.stdout)
 
 
-def _capture(binding, endpoints=None):
+def _capture(binding, endpoints=None, *, watcher_guarded=False):
     if endpoints is not None:
         from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import prepare_generation_snapshot
 
-        config, finish = prepare_generation_snapshot(binding, include_hashes=True)
+        config, finish = prepare_generation_snapshot(binding, include_hashes=True, watcher_guarded=watcher_guarded)
         snapshot, hashes = finish(endpoints)
         return {"snapshot": snapshot, "graph_config": config, "carrier_hashes": hashes}
     request = binding
@@ -64,17 +80,33 @@ def build(binding):
 def _build_graph(binding, config, structure):
     if config is None:
         return None
-    return _run_job("WORKERS_beta_C69.realization_graph",
-                    {"root": binding["root"], "config": config, "control_root": binding["control_root"],
-                     "structure": structure})
+    module = "WORKERS_beta_C69.realization_graph"
+    payload = {"root": binding["root"], "config": config, "control_root": binding["control_root"],
+               "structure": structure}
+    try:
+        return _run_job(module, payload)
+    except _BuildFailure as error:
+        if error.graph_consistency is None:
+            raise
+        evidence = json.dumps(error.graph_consistency, ensure_ascii=True, separators=(",", ":"))
+        if len(evidence) < 4096:
+            print("\nanechoic-realization-graph-restart " + evidence, file=sys.stderr)
+    try:
+        return _run_job(module, payload)
+    except _BuildFailure as error:
+        if error.graph_consistency is None:
+            raise
+        raise _BuildFailure("realization_graph", f"{error} after one Realization Graph restart",
+                            graph_consistency=error.graph_consistency) from None
 
 
-def _rebuild_graph(binding, config, structure, endpoints):
+def _rebuild_graph(binding, config, structure, endpoints, *, watcher_guarded=False):
     from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
         prepare_generation_snapshot,
     )
 
-    current_config, finish_snapshot = prepare_generation_snapshot(binding, include_hashes=True)
+    current_config, finish_snapshot = prepare_generation_snapshot(
+        binding, include_hashes=True, watcher_guarded=watcher_guarded)
     if current_config != config:
         return None
     graph = _build_graph(binding, config, structure)
@@ -99,7 +131,7 @@ def _compile(binding, stage):
     return receipt, json.loads(structure), json.loads(model)["bindings"]["endpoints"]
 
 
-def build_generation(binding, output, *, managed=False):
+def build_generation(binding, output, *, managed=False, watcher_guarded=False, foreground=False):
     from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
         prepare_generation_snapshot,
     )
@@ -108,23 +140,29 @@ def build_generation(binding, output, *, managed=False):
     if (not output.is_absolute() or output.is_symlink() or not output.is_dir()
             or output.resolve(strict=True) != output or any(output.iterdir())):
         raise ValueError("Generation directory must be an existing empty canonical directory")
-    config, finish_snapshot = prepare_generation_snapshot(binding, include_hashes=True)
+    config, finish_snapshot = prepare_generation_snapshot(
+        binding, include_hashes=True, watcher_guarded=watcher_guarded,
+        archive_stage="foreground" if foreground else None)
     control = Path(binding["root"]) / binding["control_root"]
     if output == control or control in output.parents:
         raise ValueError("Generation directory must be outside the Project control root")
     identity = output.stat()
-    inputs = artifact_inputs(binding, config) if managed else None
+    inputs = artifact_inputs(binding, config, watcher_guarded=watcher_guarded) if managed else None
     with tempfile.TemporaryDirectory(prefix=".beta-job-", dir=output.parent) as temporary:
         stage = Path(temporary) / "generation"
         stage.mkdir()
         receipt, structure, endpoints = _compile(binding, stage)
         graph = _build_graph(binding, config, structure)
         receipt["graph_sha256"] = digest(graph)
-        snapshot, hashes = finish_snapshot(endpoints)
+        snapshot, hashes, *deferred = finish_snapshot(endpoints)
         receipt["snapshot_sha256"] = digest(snapshot)
         result = {"snapshot": snapshot, "receipt": receipt, "graph": graph, "carrier_hashes": hashes}
+        if foreground:
+            roots, archived, archive_hashes = deferred
+            result["deferred_archive"] = {"roots": roots, "snapshot": archived,
+                                          "carrier_hashes": archive_hashes, "endpoints": endpoints}
         if managed:
-            reusable = inputs is not None and artifact_inputs(binding, config) == inputs
+            reusable = inputs is not None and artifact_inputs(binding, config, watcher_guarded=watcher_guarded) == inputs
             result["reuse"] = {"inputs": inputs, "graph_config": config, "endpoints": endpoints} if reusable else None
         if (output.is_symlink() or not output.is_dir() or output.stat() != identity or any(output.iterdir())):
             raise ValueError("Generation directory changed during build")
@@ -135,11 +173,44 @@ def build_generation(binding, output, *, managed=False):
 def _run(request, output):
     if output is None:
         return build(request)
-    if not isinstance(request, dict) or set(request) not in ({"binding", "reuse"}, {"binding", "reuse", "paths"}, {"binding", "reuse", "structure"}):
+    if not isinstance(request, dict) or "binding" not in request or "reuse" not in request:
         return build_generation(request, output)
+    fields = set(request) - {"watcher_guarded", "foreground", "incremental"}
+    incremental = request.get("incremental", False)
+    if any(type(request.get(key, False)) is not bool for key in ("incremental", "foreground", "watcher_guarded")):
+        raise ValueError("Invalid managed Worker option")
+    if fields == {"binding", "reuse", "archive"}:
+        if incremental:
+            return startup_incremental(request["binding"], request["reuse"], archive_roots=request["archive"]["roots"],
+                                       watcher_guarded=request.get("watcher_guarded", False))
+        return _capture_archive(request["binding"], request["archive"], request.get("watcher_guarded", False))
+    if fields not in ({"binding", "reuse"}, {"binding", "reuse", "paths"}, {"binding", "reuse", "structure"}):
+        raise ValueError("Invalid managed Worker fields")
     binding = request["binding"]
-    native = refresh(binding, request["reuse"], _capture, request.get("paths"), request.get("structure"), _rebuild_graph)
-    return native if native is not None else build_generation(binding, output, managed=True)
+    guarded = request.get("watcher_guarded", False)
+    foreground = request.get("foreground", False)
+    if foreground and request.get("paths") is not None:
+        native = _ticket_delta(binding, request["reuse"], request["paths"])
+        if native is not None:
+            return native
+    elif not foreground or incremental:
+        native = refresh(binding, request["reuse"], partial(_capture, watcher_guarded=guarded),
+                         request.get("paths"), request.get("structure"),
+                         partial(_rebuild_graph, watcher_guarded=guarded and not incremental),
+                         watcher_guarded=guarded, incremental=incremental, foreground=foreground)
+        if native is not None:
+            return native
+    return build_generation(binding, output, managed=True, watcher_guarded=guarded, foreground=foreground)
+
+
+def _capture_archive(binding, archive, watcher_guarded):
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import prepare_generation_snapshot
+
+    _, finish = prepare_generation_snapshot(
+        binding, include_hashes=True, archive_stage="archive", archive_roots=archive["roots"],
+        watcher_guarded=watcher_guarded)
+    snapshot, hashes = finish(archive["endpoints"])
+    return {"snapshot": snapshot, "carrier_hashes": hashes}
 
 
 def _ingestion_failure(error):
@@ -168,7 +239,10 @@ def main():
         else:
             traceback.print_exc()
             if isinstance(request, dict) and {"binding", "reuse"} <= request.keys():
-                print(json.dumps({"ingestion_failure": _ingestion_failure(error)}, ensure_ascii=False))
+                failure = {"ingestion_failure": _ingestion_failure(error)}
+                if isinstance(error, _BuildFailure) and error.graph_consistency is not None:
+                    failure["graph_consistency"] = error.graph_consistency
+                print(json.dumps(failure, ensure_ascii=False))
         return 1
     return 0
 

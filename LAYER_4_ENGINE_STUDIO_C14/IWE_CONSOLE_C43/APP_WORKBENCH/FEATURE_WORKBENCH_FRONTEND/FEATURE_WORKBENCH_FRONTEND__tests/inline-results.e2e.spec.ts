@@ -29,7 +29,7 @@ test('keeps the save refusal visible when the completed result is paged', async 
   await page.route('**/interface', async (route) => {
     const input = route.request().postDataJSON();
     if (input.operation !== 'view_run' || !input.arguments.save) return route.continue();
-    // Exercise result paging without creating a permanent saved item on either backend.
+
     delete input.arguments.save;
     delete input.arguments.name;
     const response = await route.fetch({ postData: input });

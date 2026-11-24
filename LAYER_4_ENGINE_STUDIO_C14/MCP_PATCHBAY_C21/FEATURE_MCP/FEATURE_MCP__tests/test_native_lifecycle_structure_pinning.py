@@ -86,6 +86,7 @@ declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Te
         class Capture:
             versions = capture.versions
             errors = capture.errors
+            ingestion_issues = capture.ingestion_issues
             containment = capture.containment
 
             @property

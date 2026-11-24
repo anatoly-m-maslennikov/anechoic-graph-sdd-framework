@@ -11,7 +11,7 @@ relations:
   IS_REFERENCE:
   - AN-S-3354@1
 state:
-  status: "done"
+  status: done
   version: 1
   updated_at: "2026-11-22T18:55:53.630533+00:00"
 ---

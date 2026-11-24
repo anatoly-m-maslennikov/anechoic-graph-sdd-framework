@@ -1,6 +1,26 @@
 import { expect, test, type Page } from '@playwright/test';
+import { replaceSql } from './workbench-fixture';
 
 const url = process.env.WORKBENCH_E2E_URL!;
+
+async function runWithTerminalDiagnostics(page: Page) {
+  const error = page.locator('.editor-panel p.error[role="alert"]').first();
+  const uiFailure = error.waitFor({ state: 'visible', timeout: 0 }).then(async () => {
+    throw new Error(`Workbench query failed: ${await error.innerText()}`);
+  });
+  const response = page.waitForResponse((reply) => {
+    const request = reply.request();
+    if (request.method() !== 'POST' || !new URL(reply.url()).pathname.endsWith('/interface')) return false;
+    try { return request.postDataJSON()?.operation === 'view_run'; } catch { return false; }
+  }, { timeout: 0 });
+  const terminal = Promise.race([response, uiFailure]);
+  const [reply] = await Promise.all([terminal, page.getByRole('button', { name: 'Run Cmd+Enter' }).click()]);
+  const body = await reply.text();
+  expect(reply.ok(), `Workbench view_run HTTP ${reply.status()}: ${body}`).toBeTruthy();
+  const result = JSON.parse(body) as { status?: string; error?: string };
+  expect(result.status, `Workbench view_run failed: ${body}`).toBe('success');
+  await Promise.race([expect(page.getByRole('columnheader')).toHaveText(/in_memory/), uiFailure]);
+}
 
 async function openWorkspace(page: Page, sessionId: string) {
   const workbench = new URL(url);
@@ -54,11 +74,9 @@ for (const method of ['getItem', 'setItem']) {
     const warning = page.getByRole('alert').filter({ hasText: 'Browser storage is unavailable' });
     await expect(warning).toHaveText('Browser storage is unavailable. Reloading or closing Workbench may lose unsaved edits.');
     const editor = page.getByRole('textbox', { name: 'Query editor' });
-    await expect(editor).toBeEditable();
-    await editor.click();
-    await page.keyboard.insertText('SELECT 7 AS in_memory');
-    await page.getByRole('button', { name: 'Run Cmd+Enter' }).click();
-    await expect(page.getByRole('columnheader')).toHaveText(/in_memory/);
+    await replaceSql(page, 'SELECT 7 AS in_memory');
+    await expect(editor).toHaveText('SELECT 7 AS in_memory');
+    await runWithTerminalDiagnostics(page);
     await expect(editor).toHaveText('SELECT 7 AS in_memory');
     await expect(warning).toBeVisible();
   });

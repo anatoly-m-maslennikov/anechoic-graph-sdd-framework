@@ -164,7 +164,7 @@ class ComponentContractLifecycleTests(fixtures.ComponentContractLifecycleTests, 
         _, header, body = draft.read_text().split('---', 2)
         metadata = yaml.safe_load(header)
         metadata['state']['status'] = 'archived'
-        metadata['tier'] = 1  # Historical revisions retain their authored Tier.
+        metadata['tier'] = 1
         occupied = draft.parent.parent / '09_archived' / draft.name.replace('@1-draft-', '@1-')
         occupied.parent.mkdir()
         occupied.write_text('---\n' + yaml.safe_dump(metadata) + '---' + body)

@@ -10,7 +10,6 @@ import re
 import subprocess
 import sys
 
-# This file is also the bootstrap entry point in an installed package.
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 try:

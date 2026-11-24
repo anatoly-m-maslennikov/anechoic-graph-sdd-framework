@@ -29,6 +29,11 @@ declare_entity(
         component_id='C20',
         name='APPS',
         lens_whitelist=['DES', 'DevOps', 'QA', 'SPEC', 'SWD'],
+        boundaries={'code': {'imports': [], 'exports': {}}},
     ),
 )
 ```
+
+## Details
+
+C20 is a grouping placeholder. Its current App directories contain no executable entry point; it declares no code, IO, or state boundary.

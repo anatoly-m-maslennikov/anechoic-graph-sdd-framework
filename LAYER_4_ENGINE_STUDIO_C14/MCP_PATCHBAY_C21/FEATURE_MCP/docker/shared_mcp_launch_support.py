@@ -12,6 +12,7 @@ from types import SimpleNamespace
 from typing import Any, Callable, Mapping
 
 from MCP_PATCHBAY_C21.FEATURE_MCP.docker.mcp_paths import HEALTH_PATH
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_log_level import LOG_LEVELS
 
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -42,12 +43,12 @@ def _config(path):
         )
         value = json.loads(result.stdout)
         expected = {"source_path", "projects_root", "http_port", "max_loaded_projects",
-                    "shared_runtime_id", "single_project", "workbench_storage", "journal_storage"}
+                    "shared_runtime_id", "single_project", "workbench_storage", "journal_storage", "log_level"}
         if (not isinstance(value, dict) or set(value) != expected
                 or any(not isinstance(value[key], str) for key in (
                     "source_path", "projects_root", "shared_runtime_id", "workbench_storage", "journal_storage"))
                 or any(type(value[key]) is not int for key in ("http_port", "max_loaded_projects"))
-                or type(value["single_project"]) is not bool):
+                or type(value["single_project"]) is not bool or value["log_level"] not in LOG_LEVELS):
             raise ValueError("Invalid backend settings response")
         value["source_path"] = Path(value["source_path"])
         value["projects_root"] = Path(value["projects_root"])
@@ -78,6 +79,7 @@ def _environment(config, image):
         "ANECHOIC_MCP_HTTP_PORT": str(config.http_port),
         "ANECHOIC_MAX_LOADED_PROJECTS": str(getattr(config, "max_loaded_projects", 2)),
         "ANECHOIC_SHARED_RUNTIME_ID": config.shared_runtime_id,
+        "ANECHOIC_LOG_LEVEL": config.log_level,
     }
 
 

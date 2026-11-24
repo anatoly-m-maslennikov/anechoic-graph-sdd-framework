@@ -12,7 +12,7 @@ relations:
   - AN-S-3083@6
   - AN-S-3016@1-draft
 state:
-  status: "active"
+  status: active
   version: 1
   updated_at: "2026-11-22T18:38:16.543046+00:00"
 ---

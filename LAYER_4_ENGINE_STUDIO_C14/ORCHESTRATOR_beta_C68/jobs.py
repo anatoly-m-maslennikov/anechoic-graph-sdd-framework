@@ -25,6 +25,11 @@ class Jobs:
         self.lock = threading.Lock()
         self.active = None
         self.latest = None
+        self.lifecycle_job = None
+
+    def health(self):
+        with self.lock:
+            return {"instance_id": self.instance_id, "pid": os.getpid(), "lifecycle_active": self.lifecycle_job is not None}
 
     def status(self):
         with self.lock:

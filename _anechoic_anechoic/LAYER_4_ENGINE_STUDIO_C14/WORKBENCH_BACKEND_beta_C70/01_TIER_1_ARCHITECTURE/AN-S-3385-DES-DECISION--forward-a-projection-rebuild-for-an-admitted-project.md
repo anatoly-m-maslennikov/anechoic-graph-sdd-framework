@@ -12,7 +12,7 @@ relations:
   - AN-S-3361@2
   - AN-S-3387@2
   IS_SOLUTION_FOR:
-  - AN-S-3340@26
+  - AN-S-3340@27
 state:
   status: active
   version: 3
@@ -26,8 +26,9 @@ Forward a projection rebuild for an admitted Project.
 
 ### Prose Claim
 
-The Backend validates a projection target, asks the Project Orchestrator to
-build, and returns replacement result IDs.
+For an `all` or projection table target, the Backend validates the target,
+asks the Project Orchestrator to build, and returns replacement result IDs.
+For result and flow-history targets, it forwards the rebuild to Kernel.
 
 ### Formal Claim
 
@@ -59,5 +60,6 @@ component_workflow(
 
 ## Details
 
-This Solution defines the expected event sequence for the selected workflow.
+The Formal Claim covers the Orchestrator path only. Its event names describe
+an expected sequence; the Backend does not record them as flow events.
 Trace conformance requires recorded evidence.

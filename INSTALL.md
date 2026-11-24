@@ -49,6 +49,7 @@ To set up multiple Project repositories under one containing folder, use `--proj
 
 - Add `--agent codex` (or `--codex`) to install the user-wide hook and register the loopback MCP endpoint. Ask the user to review and trust the hook in Codex with `/hooks`. See the [Codex hooks documentation](https://learn.chatgpt.com/docs/hooks).
 - Add `--host-settings PATH` to select a settings file. By default, it is `anechoic/runtime.toml` under `XDG_CONFIG_HOME`, or `~/.config/anechoic/runtime.toml` when `XDG_CONFIG_HOME` is unset. See the [settings example](LAYER_5_USER_SETUP_C65/runtime.example.toml).
+- Set `level` in `[logging]` to choose the machine-wide Studio log level for the next Shared runtime launch. Accepted values are `DEBUG`, `INFO`, `WARNING`, and `ERROR`. The default is `INFO`.
 - For new Projects, select storage with `--workbench-storage disk|memory` and `--journal-storage files|duckdb`. The defaults are `disk` and `files`.
 
 For example, add `--agent codex` to the install command if the user selected Codex. Do not change an existing endpoint or another service automatically to resolve a conflict.

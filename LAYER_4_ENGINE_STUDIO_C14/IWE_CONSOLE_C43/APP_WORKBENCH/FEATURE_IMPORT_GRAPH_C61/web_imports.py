@@ -76,7 +76,6 @@ def _dependency_file(root, site, file, probe=None):
 
 def _lookup_local(root, spec, site, file, dependency_file, sources, written, probe=None):
     if spec.startswith('/'):
-        # Only the framework's reviewed Vite root is known without executing config.
         try:
             frontend = _FRONTEND.relative_to(root).as_posix()
         except ValueError:

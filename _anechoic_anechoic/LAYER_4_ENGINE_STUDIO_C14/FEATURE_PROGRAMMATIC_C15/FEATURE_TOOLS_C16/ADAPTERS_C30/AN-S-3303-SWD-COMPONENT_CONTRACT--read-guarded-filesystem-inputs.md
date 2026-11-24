@@ -11,7 +11,7 @@ relations:
   ANSWERS:
   - AN-S-3069
 state:
-  status: "active"
+  status: active
   version: 15
   updated_at: '2026-11-22T22:21:56.771011+00:00'
 ---
@@ -76,6 +76,59 @@ names, unresolved derivations, and Relations that derive from themselves.
 Read Current legacy carriers with their exact source bytes and pins.
 Select Model Declarations and verify any explicit Draft overlay against
 its predecessor and revision pins.
+
+## Claim
+
+### Formal Claim
+
+The following Lean claim covers only `frontmatter_bounds` and `source_body`
+in `carrier_body__pub.py`. Each `Nat` in an input list denotes one byte
+(0 through 255). `missingDelimiter` represents no bounds or the explicit
+unsupported-delimiter error; the `path` supplied to `source_body` is used
+for the error message. It is not read as a file.
+
+```lean
+import Lean
+
+namespace CarrierBodyContract
+
+-- Byte offsets are zero-based; the separator belongs to the closing boundary.
+def openingEnd (raw : List Nat) : Option Nat :=
+  if raw.take 4 == [45,45,45,10] then some 4
+  else if raw.take 5 == [45,45,45,13,10] then some 5
+  else none
+
+-- A closing line is exactly three hyphens with an LF or CRLF terminator.
+def closingEnd (raw : List Nat) (separator : Nat) : Option Nat := do
+  let afterSep ← if (raw.drop separator).take 2 == [13,10] then some (separator + 2)
+    else if (raw.drop separator).take 1 == [10] then some (separator + 1)
+    else none
+  if (raw.drop afterSep).take 3 != [45,45,45] then none
+  else if (raw.drop (afterSep + 3)).take 2 == [13,10] then some (afterSep + 5)
+  else if (raw.drop (afterSep + 3)).take 1 == [10] then some (afterSep + 4)
+  else none
+
+def bounds (raw : List Nat) : Option (Nat × Nat × Nat) := do
+  let opening ← openingEnd raw
+  let start ← ((List.range raw.length).drop (opening - 1)).find? (fun i => (closingEnd raw i).isSome)
+  let stop ← closingEnd raw start
+  some (opening, start, stop)
+
+inductive Outcome where
+  | missingDelimiter
+  | body (bytes : List Nat)
+  deriving Repr, BEq, DecidableEq
+
+def body (raw : List Nat) : Outcome :=
+  match bounds raw with
+  | none => .missingDelimiter
+  | some (_, _, stop) => .body (raw.drop stop)
+
+-- Project-level effect guarantee: these operations make no Project state changes,
+-- filesystem accesses, or network accesses. This is an implementation obligation;
+-- the pure definitions above do not establish it for the Python implementation.
+end CarrierBodyContract
+```
 
 ## References
 

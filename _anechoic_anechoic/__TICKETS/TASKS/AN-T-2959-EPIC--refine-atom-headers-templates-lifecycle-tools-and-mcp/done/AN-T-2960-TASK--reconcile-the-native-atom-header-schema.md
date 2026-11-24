@@ -8,7 +8,7 @@ context:
   template: task
   label: Task
 state:
-  status: "done"
+  status: done
   version: 2
   updated_at: "2026-11-21T20:36:01.207868+00:00"
 ---

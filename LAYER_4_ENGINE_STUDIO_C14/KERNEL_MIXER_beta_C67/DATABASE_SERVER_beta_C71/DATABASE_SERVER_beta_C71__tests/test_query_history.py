@@ -60,7 +60,7 @@ class QueryHistoryTest(unittest.TestCase):
                 self.assertEqual(400, self.call(client, "query_log_get", {"log_id": "expired"}).status_code)
 
     def run_attempts(self, client):
-        self.value(_query(client, "SELECT 33"))  # Check and schema reads do not retain results.
+        self.value(_query(client, "SELECT 33"))
         sql = "SELECT 42\n"
         self.value(_query(client, sql, page_size=1))
         view = self.value(self.call(client, "workspace_open", {"session_id": "query-log-test"}))

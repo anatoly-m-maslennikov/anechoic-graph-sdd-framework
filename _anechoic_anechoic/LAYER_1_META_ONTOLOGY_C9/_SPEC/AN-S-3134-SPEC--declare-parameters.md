@@ -7,7 +7,7 @@ tier: 2
 context:
   lens: SPEC
 state:
-  status: "active"
+  status: active
   version: 7
   updated_at: '2026-11-22T12:51:17.372084+00:00'
 ---

@@ -207,7 +207,6 @@ class _Lower:
                 self.complete = False
             self.target(node.target)
         elif isinstance(node, ast.AugAssign):
-            # Python reads the target before evaluating the right-hand side.
             state = self.state(node.target)
             if state and state != ('ambient', 'ENV'):
                 self.event('read', *state, node.target)

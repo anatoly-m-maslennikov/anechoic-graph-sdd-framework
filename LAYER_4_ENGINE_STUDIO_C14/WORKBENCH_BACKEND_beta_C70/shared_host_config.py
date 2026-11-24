@@ -25,6 +25,7 @@ class Config:
     maximum: int
     workbench_storage: str = "disk"
     journal_storage: str = "files"
+    log_level: str = "INFO"
 
     @property
     def runtime_id(self):
@@ -55,7 +56,8 @@ def load(path=None):
     finally:
         os.close(fd)
     doc = tomllib.loads(raw.decode('utf-8'))
-    if set(doc) - {'schema_version', 'shared_mcp', 'project_defaults'} or type(doc.get('schema_version')) is not int or doc['schema_version'] != 1:
+    allowed = {'schema_version', 'shared_mcp', 'project_defaults', 'logging'}
+    if set(doc) - allowed or type(doc.get('schema_version')) is not int or doc['schema_version'] != 1:
         raise ValueError('host_configuration_invalid')
     shared = doc.get('shared_mcp')
     if not isinstance(shared, dict) or set(shared) - {'project_root', 'projects_root', 'http_port', 'max_loaded_projects'} or len({'project_root', 'projects_root'} & shared.keys()) != 1:
@@ -70,5 +72,11 @@ def load(path=None):
             or defaults.get('workbench_storage', 'disk') not in ('disk', 'memory')
             or defaults.get('journal_storage', 'files') not in ('files', 'duckdb')):
         raise ValueError('host_configuration_invalid')
+    logging = doc.get('logging', {})
+    if not isinstance(logging, dict) or logging.keys() - {'level'}:
+        raise ValueError('host_configuration_invalid')
+    level = logging.get('level', 'INFO')
+    if level not in ('DEBUG', 'INFO', 'WARNING', 'ERROR'):
+        raise ValueError('host_configuration_invalid')
     return Config(source, sha256(raw).hexdigest(), root, single, maximum,
-                  defaults.get("workbench_storage", "disk"), defaults.get("journal_storage", "files"))
+                  defaults.get('workbench_storage', 'disk'), defaults.get('journal_storage', 'files'), level)

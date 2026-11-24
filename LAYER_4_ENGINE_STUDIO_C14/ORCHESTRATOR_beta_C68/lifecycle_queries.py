@@ -74,8 +74,6 @@ def lifecycle_sql(prefix, name, arguments):
     if not isinstance(target, str) or not isinstance(owner, str):
         raise ValueError("Invalid lifecycle selector")
     target_id = target.split('@', 1)[0]
-    # Inputs are SQL literals, not SQL syntax. Invalid selectors produce no matches;
-    # the lifecycle validator remains responsible for user-facing input errors.
     target_lit, exact_lit, owner_lit = map(_literal, (target_id, target, owner))
     is_create = name in {'atom_lifecycle_create_draft', 'atom_lifecycle_create_asset'} and isinstance(new, dict) and bool(new)
     sources = "('AN-S-1928','AN-S-1834','AN-S-1831')" if name == 'atom_lifecycle_change_status' else "('')"

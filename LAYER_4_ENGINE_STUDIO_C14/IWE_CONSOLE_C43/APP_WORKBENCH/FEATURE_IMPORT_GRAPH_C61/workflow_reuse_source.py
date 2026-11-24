@@ -30,7 +30,6 @@ def _functions(source):
         raise UnsupportedReuse("The module must contain only top-level function definitions")
     if len({node.name for node in body}) != len(body):
         raise UnsupportedReuse("Module function bindings must be unique")
-    # A declaration with a decorator or evaluated annotation can rebind other functions.
     return {(node.name, node.lineno, node.col_offset): (node, _parameters(node))
             for node in body}, scope
 

@@ -170,6 +170,32 @@ class NativeRefreshTest(unittest.TestCase):
                 self.assertEqual(200, legacy.status_code, legacy.text)
                 self.assertNotIn("carrier_hashes", client.get("/generation/reuse", params=BINDING).json()["result"])
 
+    def test_reuse_proof_includes_persisted_pending_archive(self):
+        with TemporaryDirectory(dir="/tmp") as directory:
+            database = Path(directory).resolve() / "projection.duckdb"
+            data = graph_payload()
+            snapshot = data["snapshot"]
+            snapshot["atoms"].pop()
+            data["receipt"]["snapshot_sha256"] = _digest(snapshot)
+            atom = snapshot["atoms"][0]
+            hashes = {f'{atom["relative_path"]}/{atom["filename"]}': "c" * 64}
+            witness = {"inputs": {"manifest": "a" * 64, "graph": "b" * 64}, "graph_config": {},
+                       "endpoints": json.loads(data["model"])["bindings"]["endpoints"]}
+            data.update(reuse=witness, carrier_hashes=hashes)
+            with _server(database) as client:
+                response = client.put("/generation", json=data | {"archive_pending": True})
+                self.assertEqual(200, response.status_code, response.text)
+                base = response.json()["result"]["generation"]
+            with _server(database) as client:
+                proof = client.get("/generation/reuse", params=BINDING).json()["result"]
+                self.assertEqual({"base_generation": base, **witness, "carrier_hashes": hashes,
+                                  "archive_pending": True}, proof)
+                response = client.put("/generation", json=data)
+                self.assertEqual(200, response.status_code, response.text)
+                proof = client.get("/generation/reuse", params=BINDING).json()["result"]
+                self.assertEqual({"base_generation": response.json()["result"]["generation"],
+                                  **witness, "carrier_hashes": hashes}, proof)
+
     def test_legacy_base_is_refused_and_absent_graph_stays_absent(self):
         with _server() as client:
             legacy = client.put("/generation", json=_generation())

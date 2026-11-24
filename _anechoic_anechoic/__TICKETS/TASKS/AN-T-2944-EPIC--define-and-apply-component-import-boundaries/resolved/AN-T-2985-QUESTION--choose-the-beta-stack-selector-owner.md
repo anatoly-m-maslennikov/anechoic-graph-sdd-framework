@@ -7,7 +7,7 @@ priority: 2
 context:
   template: question
 state:
-  status: "resolved"
+  status: resolved
   version: 3
   updated_at: "2026-11-22T11:46:04.570866+00:00"
 ---

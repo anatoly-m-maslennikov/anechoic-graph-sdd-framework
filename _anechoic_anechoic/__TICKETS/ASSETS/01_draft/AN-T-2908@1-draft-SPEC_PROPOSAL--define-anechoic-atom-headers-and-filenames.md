@@ -26,10 +26,8 @@ The Header is the frontmatter. Use this order for SPEC and TKT:
 2. `atom_id` is required. Store the stable ID at the top level. Its S or T
    marker must agree with Atom Family. Preserve the numeric suffix,
    including leading zeros.
-3. `concern` is optional. A SPEC Concern can state a Subject with its
-   Path and Relation, affected Components, or both. A TKT Concern uses a
-   single list of typed references such as `[component(id=C51)]`.
-   Reference kinds share this list. Reserve `@` for eDSL function calls.
+3. `concern` is optional. SPEC and Project Config use one locator with
+   Subject, Path, and Relation. TKT uses a list of these locators.
 4. `container` is required at the top level. Use one mapping with exactly
    one `component` or `atom` key and the owner's ID.
 5. SPEC requires top-level integer `tier`. TKT requires top-level integer
@@ -104,7 +102,9 @@ state:
 atom_family: TKT
 atom_id: AN-T-2960
 concern:
-  - component(id=C51)
+  - subject: C51
+    path: Project Structure.components
+    relation: affects
 container:
   atom: AN-T-2959
 priority: 2

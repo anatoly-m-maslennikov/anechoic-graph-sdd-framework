@@ -23,6 +23,7 @@ class Settings:
     port: int
     workbench_storage: str
     journal_storage: str
+    log_level: str = "INFO"
 
 
 def _path(supplied: Path | None) -> Path:
@@ -61,6 +62,8 @@ def _validate(values: Settings) -> Settings:
         raise ValueError("The HTTP port must be between 1 and 65535")
     if values.workbench_storage not in ("disk", "memory") or values.journal_storage not in ("files", "duckdb"):
         raise ValueError("Invalid Project storage defaults")
+    if values.log_level not in ("DEBUG", "INFO", "WARNING", "ERROR"):
+        raise ValueError("Invalid runtime logging level")
     return values
 
 
@@ -69,11 +72,12 @@ def _existing(path: Path, document: dict) -> Settings:
         raise ValueError("Runtime settings require schema_version = 1")
     shared = document.get("shared_mcp")
     defaults = document.get("project_defaults", {})
-    if not isinstance(shared, dict) or not isinstance(defaults, dict):
+    logging = document.get("logging", {})
+    if not isinstance(shared, dict) or not isinstance(defaults, dict) or not isinstance(logging, dict):
         raise ValueError("Invalid runtime settings sections")
-    if (document.keys() - {"schema_version", "shared_mcp", "project_defaults"}
+    if (document.keys() - {"schema_version", "shared_mcp", "project_defaults", "logging"}
             or shared.keys() - {"project_root", "projects_root", "http_port", "max_loaded_projects"}
-            or defaults.keys() - {"workbench_storage", "journal_storage"}):
+            or defaults.keys() - {"workbench_storage", "journal_storage"} or logging.keys() - {"level"}):
         raise ValueError("Unrecognized runtime settings keys")
     maximum = shared.get("max_loaded_projects", 2)
     if type(maximum) is not int or not 1 <= maximum <= 64:
@@ -88,6 +92,7 @@ def _existing(path: Path, document: dict) -> Settings:
     return _validate(Settings(
         path, _folder(value), key == "project_root", shared.get("http_port"),
         defaults.get("workbench_storage", "disk"), defaults.get("journal_storage", "files"),
+        logging.get("level", "INFO"),
     ))
 
 
@@ -115,12 +120,14 @@ def select_settings(arguments: argparse.Namespace) -> tuple[Settings, bool]:
 
 
 def write_settings(values: Settings) -> None:
+    _validate(values)
     key = "project_root" if values.single_project else "projects_root"
     content = (
         "schema_version = 1\n\n"
         f"[shared_mcp]\n{key} = {json.dumps(str(values.folder), ensure_ascii=False)}\nhttp_port = {values.port}\n\n"
         f'[project_defaults]\nworkbench_storage = "{values.workbench_storage}"\n'
         f'journal_storage = "{values.journal_storage}"\n'
+        f'\n[logging]\nlevel = "{values.log_level}"\n'
     )
     if len(content.encode()) > _MAX_SETTINGS_BYTES:
         raise ValueError("The settings path values exceed the size limit")

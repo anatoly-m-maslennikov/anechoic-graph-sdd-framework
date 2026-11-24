@@ -140,12 +140,14 @@ class ImageOutputSafetyTests(unittest.TestCase):
         selection = SimpleNamespace(root=APP.parents[2], control_relative=Path(".anechoic_fixture"),
                                     instance_id="c" * 64)
         caller = dict(PROXY_ROUTING, PATH="/synthetic-bin",
+                      ANECHOIC_LOG_LEVEL="WARNING",
                       ANECHOIC_MCP_HTTP_SECRET_TOKEN=PRIVATE_MARKER,
                       AWS_SECRET_ACCESS_KEY=PRIVATE_MARKER, GITHUB_TOKEN=PRIVATE_MARKER)
         with patch.dict(os.environ, caller, clear=True):
             client = ProjectMcpBackend._docker_client_environment()
             service = ProjectMcpBackend._environment(selection, IMAGE_ID, "b" * 64, 56317)
         self.assertEqual(dict(PROXY_ROUTING, PATH="/synthetic-bin"), client)
+        self.assertEqual("WARNING", service["ANECHOIC_LOG_LEVEL"])
         for name, value in PROXY_ROUTING.items():
             self.assertEqual(value, service[name])
         self.assertNotIn("ANECHOIC_MCP_HTTP_SECRET_TOKEN", service)

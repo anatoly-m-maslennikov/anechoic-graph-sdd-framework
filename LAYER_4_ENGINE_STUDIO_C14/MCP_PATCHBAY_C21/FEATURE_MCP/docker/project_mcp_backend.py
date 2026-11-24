@@ -15,6 +15,7 @@ from urllib.parse import urlsplit
 from MCP_PATCHBAY_C21.FEATURE_MCP.docker.mcp_paths import MCP_PATH
 from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import ImageError, ImageManager
 from MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_docker_command import BackendError, _bounded_run
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_log_level import direct_log_level
 
 
 _DIRECTORY = Path(__file__).resolve().parent
@@ -141,6 +142,7 @@ class ProjectMcpBackend:
             "ANECHOIC_PROJECT_INSTANCE_ID": ProjectMcpBackend._safe_instance(selection),
             "ANECHOIC_RUNTIME_FINGERPRINT": fingerprint,
             "ANECHOIC_MCP_HTTP_PORT": str(port),
+            "ANECHOIC_LOG_LEVEL": direct_log_level(),
         }
         for name in _DOCKER_CLIENT_ENV:
             if name in os.environ:

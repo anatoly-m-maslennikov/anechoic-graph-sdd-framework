@@ -140,7 +140,6 @@ def _normalize_states(source):
 
 
 def compile_workflow(config):
-    # The workflow is a JSON model even when called directly from Python.
     encoded = json.dumps(config, allow_nan=False)
     if len(encoded) > 1_000_000:
         raise ValueError("input exceeds 1 MB")

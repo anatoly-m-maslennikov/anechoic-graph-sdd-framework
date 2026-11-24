@@ -11,7 +11,7 @@ from types import SimpleNamespace
 
 from .ADAPTERS_C30__pub import CEILINGS, ReadContext
 from .carrier_read__pub import parse_carrier
-from .native_carrier_placement__pub import TICKET_DIRECTORY, project_goal_filename
+from .native_carrier_placement__pub import ARCHIVE_DIRECTORY, TICKET_DIRECTORY, project_goal_filename
 from .native_generation_snapshot import row_summary, snapshot
 from .native_source_rows__pub import (
     NativeCapture,
@@ -64,6 +64,10 @@ def _selection(binding, *, manifest_admitted=False):
                            manifest_sha256=digest, project_prefix=prefix)
 
 
+class UnrepresentableCarrierDelta(ValueError):
+    pass
+
+
 class NativeCaptureError(ValueError):
     def __init__(self, capture):
         super().__init__("Native capture failed: " + json.dumps(capture.errors, sort_keys=True))
@@ -88,32 +92,74 @@ def _capture(binding):
     return capture, _graph_config(selection)
 
 
-def native_carrier_hashes(binding):
-    """Hash the raw selected native carrier inventory without parsing carriers."""
-    return _native_carrier_hashes(_selection(binding))
+def native_carrier_hashes(binding, *, foreground=False, archive_roots=None, watcher_guarded=False):
+    """Hash selected native carriers without parsing them."""
+    if foreground and archive_roots is not None:
+        raise ValueError("Conflicting native inventory scopes")
+    selection = _selection(binding)
+    roots = _archive_directories(selection, archive_roots) if archive_roots is not None else None
+    return _native_carrier_hashes(selection, foreground=foreground, archive_roots=roots,
+                                  watcher_guarded=watcher_guarded)
 
 
 def _carrier_hashes(capture):
     return {row["source_path"]: row["_source_sha256"] for row in capture.atoms}
 
 
-def prepare_generation_snapshot(binding, *, include_hashes=False):
-    """Capture carriers once and recheck their versions and membership before use."""
+def _archive_directories(selection, directories):
+    if not isinstance(directories, (list, tuple)):
+        raise ValueError("Invalid deferred archive directories")
+    installed = selection.control_root / "000_ANECHOIC_framework"
+    paths = {selection.root / _relative(path) for path in directories}
+    for path in paths:
+        if (path == selection.control_root or not path.is_relative_to(selection.control_root)
+                or path.is_relative_to(installed) or path.name != ARCHIVE_DIRECTORY):
+            raise ValueError("Deferred archive directory is outside the selected native archive trees")
+    return tuple(sorted(paths))
+
+
+def _partition_archived(capture):
+    foreground, archived = NativeCapture([], [], {}), NativeCapture([], [], {})
+    for row, edge in zip(capture.atoms, capture.containment, strict=True):
+        target = archived if row["status_group"] == "Archived" else foreground
+        target.atoms.append(row)
+        target.containment.append(edge)
+    return foreground, archived
+
+
+def prepare_generation_snapshot(
+    binding, *, include_hashes=False, watcher_guarded=False, archive_stage=None, archive_roots=(),
+):
+    """Capture carriers once and recheck their versions and membership before use.
+
+    A managed caller with continuous watcher coverage can own reconciliation.
+    Startup can defer canonical archive directories and retain parsed off-path Archives.
+    """
+    if archive_stage not in (None, "foreground", "archive") or (archive_roots and archive_stage != "archive"):
+        raise ValueError("Invalid generation archive stage")
     selection = _selection(binding)
     reader = ReadContext(roots=[str(selection.root)], limits=dict(CEILINGS))
+    deferred = set() if archive_stage == "foreground" else None
+    directories = _archive_directories(selection, archive_roots) if archive_stage == "archive" else None
     capture = capture_native(selection, reader=reader, defer_currentness=True,
-                             include_content_properties="archive-summary")
+                             include_content_properties="archive-summary",
+                             defer_archives=deferred, archive_roots=directories)
     _check_capture(capture)
+    foreground, archived = _partition_archived(capture) if deferred is not None else (capture, None)
 
     def finish(endpoints):
-        result = snapshot(binding, capture, endpoints)
-        # Verify the captured inputs in a separate bounded read phase.
-        reader.started = monotonic()
-        if reader.currentness()["state"] != "unchanged":
-            raise ValueError("Native Project carriers changed during generation")
-        return (result, _carrier_hashes(capture)) if include_hashes else result
+        result = snapshot(binding, foreground, endpoints)
+        if not watcher_guarded:
+            reader.started = monotonic()
+            if reader.currentness()["state"] != "unchanged":
+                raise ValueError("Native Project carriers changed during generation")
+        if deferred is not None:
+            return (result, _carrier_hashes(foreground),
+                    sorted(path.relative_to(selection.root).as_posix() for path in deferred),
+                    snapshot(binding, archived, endpoints), _carrier_hashes(archived))
+        return (result, _carrier_hashes(foreground)) if include_hashes else result
 
-    return _graph_config(selection), finish
+    return (None if archive_stage == "archive" else _graph_config(selection)), finish
 
 
 def _ticket_paths(selection, paths):
@@ -175,7 +221,7 @@ def _capture_delta(binding, selection, relatives, endpoints, *, include_hashes, 
         header = row["header_json"]
         if not ticket_only and (header.get("atom_family") not in {"SPEC", "TKT", "PROJECT_CONFIG"}
                                 or header.get("context", {}).get("template") == "project_manifest"):
-            raise ValueError("Carrier delta contains a non-canonical carrier or Project Manifest")
+            raise UnrepresentableCarrierDelta("Carrier delta contains a non-canonical carrier or Project Manifest")
         captured_paths.add(str(selection.root / row["source_path"]))
     if captured_paths != versions.keys():
         raise ValueError("Ticket delta rows do not match the changed paths")

@@ -1,11 +1,6 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-3380
-concern:
-  components:
-  - C63
-  - C19
-  - C81
 container:
   component: C63
 tier: 1
@@ -32,8 +27,9 @@ Gate and install a local Framework release.
 
 ### Prose Claim
 
-Local Release validates inputs, gates the candidate through tests, installs
-the verified runtime and reports completion or failure with evidence.
+Local Release validates inputs and runs Static and required host functional
+checks before building the candidate. It verifies the exact image before
+installation and reports completion or failure with evidence.
 
 ### Formal Claim
 
@@ -56,7 +52,7 @@ component_workflow(
                     {'kind': 'output', 'outcome': 'failed'}}},
             }},
             'testing': {'on': {
-                'static_and_unit_tests_passed': {'target': 'building', 'guard': {'type': 'matchesTrace', 'params':
+                'static_and_host_functional_tests_passed': {'target': 'building', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'effect', 'target': 'C19', 'outcome': 'passed'}}},
                 'tests_failed': {'target': 'failed', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'output', 'outcome': 'failed'}}},

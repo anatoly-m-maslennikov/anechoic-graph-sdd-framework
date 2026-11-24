@@ -12,8 +12,14 @@ import sys
 import tempfile
 import time
 import unittest
+from unittest.mock import patch
+
+from watchdog.events import DirCreatedEvent, DirDeletedEvent, DirMovedEvent, FileCreatedEvent
+from watchdog.utils.dirsnapshot import DirectorySnapshot
 
 from ..ORCHESTRATOR_beta_C68__shared import GenerationJobs
+from ..watcher import SourceWatcher
+from ..watcher_poll import PollComplete
 from .ORCHESTRATOR_beta_C68__tests__shared import project
 
 
@@ -29,6 +35,74 @@ class Connection(http.client.HTTPConnection):
 
 
 class LifecycleSocketTests(unittest.TestCase):
+    def archive_receipts(self):
+        root = Path(self.enterContext(tempfile.TemporaryDirectory())).resolve()
+        control = root / "control"
+        archive = control / "09_archived"
+        archive.mkdir(parents=True)
+        owned = archive / "owned.md"
+        owned.write_text("admitted")
+        watcher = SourceWatcher(root, control, defer_archives=True)
+        effects = [
+            {"target": "control/09_archived", "operation": "create", "state": "known", "evidence": "directory"},
+            {"target": "control/09_archived/owned.md", "operation": "create", "state": "known",
+             "evidence": sha256(owned.read_bytes()).hexdigest()},
+        ]
+        return watcher, archive, owned, effects
+
+    def archive_poll(self, watcher):
+        control = str(watcher.control_root)
+        started = time.monotonic_ns()
+        watcher._proof.remember_archive_sample(control, started, DirectorySnapshot(control))
+        self.assertIsNone(watcher._proof.sampled_archive_carriers(started, ()))
+        watcher.on_poll_complete(PollComplete(control, started=started, clean=True, archive=True))
+
+    def test_admitted_archive_creation_filters_only_its_directory_and_files(self):
+        watcher, archive, owned, effects = self.archive_receipts()
+        external = archive / "external.md"
+        external.write_text("independent")
+        before = (object(), 0, 0)
+        with patch.object(watcher, "capture_epoch", return_value=(before[0], 1, 0)):
+            watcher.acknowledge(effects, archive_epoch=before)
+            for event in (DirCreatedEvent(str(archive)), FileCreatedEvent(str(owned)),
+                          DirCreatedEvent(str(archive)), FileCreatedEvent(str(external))):
+                watcher.dispatch(event)
+            self.assertEqual([str(external)], [change["old_path"] for change in watcher.changes(0.1)])
+            self.archive_poll(watcher)
+            self.assertEqual([], watcher.changes(0.1))
+            watcher.dispatch(DirDeletedEvent(str(archive)))
+            watcher.dispatch(DirMovedEvent(str(archive), str(archive.parent / "moved")))
+            self.assertEqual(["deleted", "moved"], [change["event_type"] for change in watcher.changes(0.1)])
+            archive.rename(watcher.root / "old")
+            archive.mkdir()
+            watcher.dispatch(DirCreatedEvent(str(archive)))
+            self.assertEqual(["created"], [change["event_type"] for change in watcher.changes(0.1)])
+
+    def test_archive_directory_receipts_require_continuous_watcher_coverage(self):
+        watcher, archive, _, effects = self.archive_receipts()
+        observer = object()
+        cases = [
+            (None, (observer, 0, 0)),
+            ((observer, 0, 0), (observer, 0, 1)),
+            ((observer, 0, 0), (object(), 0, 0)),
+        ]
+        for before, after in cases:
+            with self.subTest(before=before, after=after), patch.object(watcher, "capture_epoch", return_value=after):
+                watcher.acknowledge(effects, archive_epoch=before)
+                watcher.dispatch(DirCreatedEvent(str(archive)))
+                self.assertEqual(["created"], [change["event_type"] for change in watcher.changes(0.1)])
+
+    def test_archive_directory_create_survives_removal_before_first_carrier_event(self):
+        watcher, archive, owned, effects = self.archive_receipts()
+        before = (object(), 0, 0)
+        with patch.object(watcher, "capture_epoch", return_value=(before[0], 1, 0)):
+            watcher.acknowledge(effects, archive_epoch=before)
+            watcher.dispatch(DirCreatedEvent(str(archive)))
+            self.assertEqual([], watcher.changes(0.1))
+            owned.unlink()
+            self.archive_poll(watcher)
+            self.assertEqual(["created"], [change["event_type"] for change in watcher.changes(0.1)])
+
     def test_lifecycle_receipts_cover_delayed_watcher_events(self):
         root = Path(self.enterContext(tempfile.TemporaryDirectory())).resolve()
         binding = {"root": str(root), "control_root": "control", "manifest_path": "manifest.md",
@@ -87,6 +161,7 @@ class LifecycleSocketTests(unittest.TestCase):
                     "--database-socket", db, "--worker-socket", str(root / "worker.sock"),
                     "--worker-load-seconds", "1"], cwd=engine, env=env)
                 self.wait_socket(jobs, orchestrator)
+                self.wait_for_archive(db)
                 self.assert_lifecycle(jobs, binding, "AN-T-101")
                 self.assert_lifecycle(jobs, binding, "AN-T-102")
                 self.assert_visible(db, ["AN-T-101@1-draft", "AN-T-102@1-draft"])
@@ -102,6 +177,17 @@ class LifecycleSocketTests(unittest.TestCase):
         while not Path(path).exists() and process.poll() is None and time.monotonic() < deadline:
             time.sleep(.03)
         self.assertTrue(Path(path).exists())
+
+    def wait_for_archive(self, path):
+        deadline = time.monotonic() + 10
+        while time.monotonic() < deadline:
+            with closing(Connection(path)) as connection:
+                connection.request("GET", "/health")
+                result = json.loads(connection.getresponse().read())["result"]
+            if result["ready"] and not result["archive_pending"]:
+                return
+            time.sleep(.03)
+        self.fail("Archive admission did not complete")
 
     def write_archived_tickets(self, control):
         archive = control / "__TICKETS/TASKS/09_archived"

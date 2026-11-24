@@ -8,7 +8,7 @@ context:
   template: task
   label: Epic
 state:
-  status: "canceled"
+  status: canceled
   version: 6
   updated_at: "2026-11-22T16:24:07.885866+00:00"
 ---

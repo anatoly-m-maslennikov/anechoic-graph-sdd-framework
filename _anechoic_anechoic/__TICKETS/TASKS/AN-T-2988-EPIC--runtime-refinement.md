@@ -8,7 +8,7 @@ context:
   template: task
   label: Epic
 state:
-  status: "in_queue"
+  status: in_queue
   version: 1
   updated_at: "2026-11-22T18:26:50.927221+00:00"
 ---
@@ -25,12 +25,25 @@ Give the delivered framework, each Project, and the host runtime clear storage b
 - Framework database. Keep a shared DuckDB file on a named Docker volume mounted at `/var/lib/anechoic` inside the container. Use the same mount on every supported host. Build or refresh `framework.duckdb` from the delivered Active Meta-Ontology and Meta-Methodology Atoms when their content changes. The Markdown Atoms remain the source of truth.
 - Project database. Keep one host-backed DuckDB file per Project at `.anechoic_runtime/db/project.duckdb`. Store Project projections and the Journal there when the Project Manifest selects DuckDB Journal storage. Preserve existing databases and Journal records during migration and restart.
 - Host runtime settings. Reuse `$XDG_CONFIG_HOME/anechoic/runtime.toml`, with `~/.config/anechoic/runtime.toml` as the fallback and `--host-settings` for an explicit path. Keep host listener, served Projects, and runtime limits there. Project choices stay in that Project's Manifest.
+- Incremental Startup. Reuse a compatible persisted projection checkpoint and apply source changes made while Studio was offline. Finish Current and Draft catch-up before readiness. Reconcile Archive in the background and wait for complete history before enabling lifecycle writes.
+- Project Manifest hot reload. Watch the live Project Manifest and reload the affected Project in the running container after validating the new binding.
 
 ## Done when
 
 Verify on macOS with Docker Desktop and on Linux with Docker Engine. On Windows, run Setup in WSL 2 with Docker Desktop integration and Linux containers. Verify Projects on the Windows drive and in the WSL filesystem.
 
 On each platform, verify that Setup loads the host settings and mounts the Project directory. Verify that a replacement container and a host reboot preserve the framework database and reopen the same Project databases. Two Projects can query the shared framework database and retain separate Project data. The migration preserves saved state and Journal records.
+
+Verify an unchanged restart and offline additions, edits, moves, and deletions.
+Verify full reload with no projection database or a changed Model, Structure,
+or compiler schema input. Verify that a Graph-only change reuses Model and
+Structure. Record time to live readiness and Archive completion separately.
+Verify that pending Archive state keeps lifecycle writes blocked.
+
+At live Project entry points, verify that a formatting-only Manifest
+edit preserves compatible artifacts and that a semantic edit applies
+the new settings. Verify that an invalid edit reports the error and
+blocks affected writes.
 
 ## Progress
 

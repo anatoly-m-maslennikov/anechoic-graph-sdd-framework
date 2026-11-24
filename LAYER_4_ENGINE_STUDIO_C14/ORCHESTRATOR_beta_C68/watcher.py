@@ -1,5 +1,4 @@
 """Poll the selected control tree and root files for source changes."""
-from hashlib import file_digest
 from pathlib import Path
 from queue import Empty, Queue
 import os
@@ -9,11 +8,12 @@ import time
 
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
-from watchdog.observers.polling import PollingObserverVFS
 
 from ARCHITECTURE_ANALYSIS_C73.CODE_AND_SPEC_METRICS_C76.metrics__shared import is_measurement_input
 
 from .generation import TICKET_ROOTS
+from .watcher_poll import ArchiveCoverage, PollingProof, polling_observer
+from .watcher_receipts import WriteReceipts
 
 
 SOURCE_SUFFIXES = frozenset(""".py .sh .js .mjs .cjs .ts .svelte .bash .bat .c .cc .cljs .clj .cpp
@@ -29,7 +29,7 @@ target temp tmp vendor venv""".split())
 
 
 class SourceWatcher(FileSystemEventHandler):
-    def __init__(self, root, control_root, watch_code=False):
+    def __init__(self, root, control_root, watch_code=False, *, defer_archives=False):
         super().__init__()
         self.root = Path(root).absolute()
         self.control_root = Path(control_root).absolute()
@@ -37,14 +37,20 @@ class SourceWatcher(FileSystemEventHandler):
                 or not self.control_root.resolve().is_relative_to(self.root.resolve())):
             raise ValueError("Workbench sources must be inside the selected repository")
         self.watch_code = watch_code
+        self.defer_archives = defer_archives
         self.known_code = set()
         self.queue = Queue()
         self.observer = None
+        self.archive_observer = None
         self.ticket_observer = None
+        self._proof = PollingProof(self.root)
+        self._archive_lock = Lock()
+        self._archives = ArchiveCoverage(self.root, self.control_root, self._proof, defer_archives)
         self._ticket_lock = Lock()
         self._ticket_versions = {}
         self._ticket_inodes = {}
-        self._handled_writes = {}
+        self._seeded_tickets = set()
+        self._receipts = WriteReceipts(self.root, self._archives, MAX_TRACKED_TICKETS)
 
     def start(self):
         if self.observer is not None:
@@ -57,7 +63,7 @@ class SourceWatcher(FileSystemEventHandler):
                     path = base / name
                     if self._code_path(path):
                         self.known_code.add(path)
-        observer = PollingObserverVFS(os.lstat, self._visible_entries, polling_interval=0.25)
+        observer = polling_observer(self._visible_entries, self._archives)
         try:
             observer.schedule(self, str(self.root if self.watch_code else self.control_root), recursive=True)
             if not self.watch_code and self.control_root != self.root:
@@ -69,7 +75,51 @@ class SourceWatcher(FileSystemEventHandler):
                 observer.join()
             raise
         self.observer = observer
-        self.ticket_observer = self._start_ticket_observer()
+        if not self.defer_archives:
+            self.start_ticket_watch()
+
+    def start_ticket_watch(self):
+        """Start optional native notifications after the foreground in phased mode."""
+        with self._archive_lock:
+            if not self._proof.closed and self.ticket_observer is None:
+                self.ticket_observer = self._start_ticket_observer()
+
+    def archive_roots(self):
+        return self._proof.archive_roots()
+
+    def has_archive_roots(self):
+        return bool(self.archive_roots())
+
+    def watch_archives(self):
+        """Start the archive baseline on the background lane before it captures."""
+        with self._archive_lock:
+            if self._proof.closed or not self.defer_archives:
+                return False
+            if self.archive_observer is not None:
+                return self._proof.ready(self.archive_observer, archive=True)
+            observer = polling_observer(self._archives.entries, self._archives, archive=True)
+            try:
+                observer.schedule(self, str(self.control_root), recursive=True)
+                observer.start()
+            except (OSError, RuntimeError):
+                observer.stop()
+                if observer.is_alive():
+                    observer.join()
+                return False
+            self.archive_observer = observer
+            return self._proof.ready(observer, archive=True)
+
+    def capture_epoch(self, *, archive=False, trace=False):
+        observer = self.archive_observer if archive else self.observer
+        return self._proof.epoch(observer, archive=archive, trace=trace)
+
+    def capture_fence(self, epoch, *, archive=False, timeout=45, run_id=None):
+        """Wait for a normal poll that began after capture and dispatched its changes."""
+        observer = self.archive_observer if archive else self.observer
+        return self._proof.fence(observer, epoch, archive=archive, timeout=timeout, run_id=run_id)
+
+    def on_poll_complete(self, event):
+        self._proof.complete(event)
 
     def _start_ticket_observer(self):
         roots = [self.control_root / name for name in TICKET_ROOTS]
@@ -79,6 +129,8 @@ class SourceWatcher(FileSystemEventHandler):
         observer = Observer()
         try:
             self._index_existing_tickets(roots)
+            if self._proof.closed:
+                return None
             for root in roots:
                 observer.schedule(self, str(root), recursive=True)
             observer.start()
@@ -90,17 +142,24 @@ class SourceWatcher(FileSystemEventHandler):
         return observer
 
     def _index_existing_tickets(self, roots):
-        with self._ticket_lock:
-            for root in roots:
-                for directory, _, files in os.walk(root, followlinks=False):
-                    for name in files:
-                        path = Path(directory) / name
-                        if self._ticket_path(path):
-                            version = self._ticket_version(path)
-                            if version is not None:
+        for root in roots:
+            for directory, folders, files in os.walk(root, followlinks=False):
+                if self._proof.closed:
+                    return
+                if self.defer_archives and "09_archived" in folders:
+                    folders.remove("09_archived")
+                for name in files:
+                    path = Path(directory) / name
+                    if self._ticket_path(path) and (version := self._ticket_version(path)) is not None:
+                        with self._ticket_lock:
+                            if path not in self._ticket_versions:
                                 self._remember_ticket(path, version)
+                                if self.defer_archives:
+                                    self._seeded_tickets.add(path)
 
     def _visible_entries(self, directory):
+        if self._proof.closed:
+            return
         with os.scandir(directory) as entries:
             for entry in entries:
                 path = Path(entry.path)
@@ -144,11 +203,13 @@ class SourceWatcher(FileSystemEventHandler):
             return path in self.known_code
 
     def on_any_event(self, event):
-        if (event.event_type not in {"created", "deleted", "modified", "moved"}
-                or (event.is_directory and event.event_type == "modified")):
+        if event.event_type not in {"created", "deleted", "modified", "moved"}:
             return
         paths = [Path(value).absolute() for value in
                  (event.src_path, getattr(event, "dest_path", None)) if value]
+        self._archives.source_change(event, paths)
+        if event.is_directory and event.event_type == "modified":
+            return
         relevant = False
         for path in paths:
             markdown = (not event.is_directory and path.suffix.casefold() == ".md" and
@@ -158,7 +219,8 @@ class SourceWatcher(FileSystemEventHandler):
                 self.known_code.add(path)
             if event.is_directory and self.watch_code:
                 code = any(known.is_relative_to(path) for known in self.known_code)
-            relevant |= markdown or code
+            boundary = event.is_directory and (path == self.control_root or path == self._archives.root_for(path))
+            relevant |= markdown or code or boundary
         ticket = not event.is_directory and bool(paths) and all(self._ticket_path(path) for path in paths)
         if not relevant:
             return
@@ -186,7 +248,8 @@ class SourceWatcher(FileSystemEventHandler):
                         kind = "moved"
             except OSError:
                 return kind, paths
-            if all(path in self._ticket_versions and self._ticket_versions[path] == version
+            if all(path not in self._seeded_tickets and path in self._ticket_versions
+                   and self._ticket_versions[path] == version
                    for path, version in current.items()):
                 return None
             for path, version in current.items():
@@ -202,6 +265,7 @@ class SourceWatcher(FileSystemEventHandler):
         return info.st_dev, info.st_ino, info.st_mode, info.st_size, info.st_mtime_ns, info.st_ctime_ns
 
     def _remember_ticket(self, path, version):
+        self._seeded_tickets.discard(path)
         previous = self._ticket_versions.pop(path, None)
         if previous and self._ticket_inodes.get(previous[:2]) == path:
             self._ticket_inodes.pop(previous[:2])
@@ -210,56 +274,32 @@ class SourceWatcher(FileSystemEventHandler):
             self._ticket_inodes[version[:2]] = path
         if len(self._ticket_versions) > MAX_TRACKED_TICKETS:
             oldest = next(iter(self._ticket_versions))
+            self._seeded_tickets.discard(oldest)
             previous = self._ticket_versions.pop(oldest)
             if previous and self._ticket_inodes.get(previous[:2]) == oldest:
                 self._ticket_inodes.pop(previous[:2])
 
-    def acknowledge(self, effects):
-        for effect in effects:
-            if (effect["state"] == "known" and effect["operation"] in {"create", "modify", "remove"}
-                    and Path(effect["target"]).suffix == ".md"):
-                path = str(self.root / effect["target"])
-                self._handled_writes.pop(path, None)
-                self._handled_writes[path] = None if effect["operation"] == "remove" else effect["evidence"]
-        while len(self._handled_writes) > MAX_TRACKED_TICKETS:
-            del self._handled_writes[next(iter(self._handled_writes))]
-
-    def _handled(self, value):
-        if value not in self._handled_writes:
-            return False
-        expected = self._handled_writes[value]
-        path = Path(value)
-        try:
-            if not path.is_relative_to(self.root) or path.resolve() != path:
-                return False
-            if not stat.S_ISREG(path.lstat().st_mode):
-                return False
-            with path.open("rb") as stream:
-                return file_digest(stream, "sha256").hexdigest() == expected
-        except FileNotFoundError:
-            return expected is None
-        except OSError:
-            return False
+    def acknowledge(self, effects, *, archive_epoch=None):
+        self._receipts.acknowledge(effects, archive_epoch)
 
     def changes(self, timeout):
         try:
             batch = [self.queue.get(timeout=timeout)]
         except Empty:
-            return []
+            batch = []
         deadline = time.monotonic() + min(timeout, 0.02)
-        while True:
+        while batch:
             try:
                 batch.append(self.queue.get(timeout=max(0, deadline - time.monotonic())))
             except Empty:
-                return [change for change in batch if not change or change["is_directory"] or not all(
-                    self._handled(path) for path in (change["old_path"], change["new_path"]) if path)]
+                break
+        return self._receipts.filter(batch, self.capture_epoch(archive=True))
 
     def close(self):
-        if self.ticket_observer is not None:
-            self.ticket_observer.stop()
-            self.ticket_observer.join()
-            self.ticket_observer = None
-        if self.observer is not None:
-            self.observer.stop()
-            self.observer.join()
-            self.observer = None
+        self._proof.close()
+        with self._archive_lock:
+            for name in ("ticket_observer", "archive_observer", "observer"):
+                if (observer := getattr(self, name)) is not None:
+                    observer.stop()
+                    observer.join()
+                    setattr(self, name, None)

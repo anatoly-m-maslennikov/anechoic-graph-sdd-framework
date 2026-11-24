@@ -5,8 +5,11 @@ import time
 _CURRENTNESS = (
     "Native Project carriers changed during capture",
     "Native Project carriers changed during generation",
-    "Project source or dependency inputs changed during capture",
 )
+
+
+def source_changed(outcome):
+    return any(text in outcome.get("message", "") for text in _CURRENTNESS)
 
 
 class CurrentnessRetry:
@@ -17,7 +20,7 @@ class CurrentnessRetry:
     def observe(self, outcome):
         if outcome.get("state") == "succeeded":
             self.due, self.delay = None, .25
-        elif any(text in outcome.get("message", "") for text in _CURRENTNESS):
+        elif source_changed(outcome):
             self.due = time.monotonic() + self.delay
             self.delay = min(self.delay * 2, 5.0)
         else:

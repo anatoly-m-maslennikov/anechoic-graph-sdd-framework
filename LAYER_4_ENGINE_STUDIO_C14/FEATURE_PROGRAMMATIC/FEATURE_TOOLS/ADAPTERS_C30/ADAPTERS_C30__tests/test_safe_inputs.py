@@ -15,10 +15,17 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
 sys.path.insert(0, str(HERE.parent.parent))
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_read__pub import CarrierError, parse_carrier  # noqa: E402
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import ReadContext, ReadFailure, LimitReached  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import ReadContext, ReadFailure, LimitReached, frontmatter_bounds, source_body  # noqa: E402
 
 
 class CarrierTests(unittest.TestCase):
+    def test_body_adapter_uses_search_position_and_preserves_error(self):
+        raw = b"---\r\n---\r\n\xffbody"
+        self.assertEqual((5, 4, 10), frontmatter_bounds(raw))
+        self.assertEqual(b"\xffbody", source_body(raw, Path("case.md")))
+        with self.assertRaisesRegex(ValueError, "case.md: unsupported frontmatter delimiter"):
+            source_body(b"plain", Path("case.md"))
+
     def test_valid_and_no_identity_inference(self) -> None:
         parsed = parse_carrier(b"---\nstatus: Active\n---\n# Summary\n\nHi\n", Path("/CA-R-001.md"))
         self.assertEqual(parsed._view["status"], "Active")

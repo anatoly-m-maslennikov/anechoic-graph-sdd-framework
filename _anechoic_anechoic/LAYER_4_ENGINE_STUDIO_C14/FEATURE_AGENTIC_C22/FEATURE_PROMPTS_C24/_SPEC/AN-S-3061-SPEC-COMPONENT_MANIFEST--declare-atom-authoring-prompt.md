@@ -29,6 +29,12 @@ declare_entity(
         component_id='C54',
         name='ATOM_AUTHORING_PROMPT',
         lens_whitelist=['DES'],
+        boundaries={'code': {'imports': {'only': []}, 'exports': {}},
+                    'state': {'reads': [], 'writes': []}},
     ),
 )
 ```
+
+## Boundary scope
+
+This definition covers atom_authoring.prompt.md. The carrier instructs a consumer; it does not perform the described lifecycle calls or state effects.

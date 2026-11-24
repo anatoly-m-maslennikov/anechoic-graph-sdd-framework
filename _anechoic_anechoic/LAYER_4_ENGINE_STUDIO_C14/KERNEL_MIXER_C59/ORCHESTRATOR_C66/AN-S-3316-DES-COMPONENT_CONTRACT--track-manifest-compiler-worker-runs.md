@@ -11,7 +11,7 @@ relations:
   ANSWERS:
   - AN-S-3315
 state:
-  status: "active"
+  status: active
   version: 2
   updated_at: '2026-11-22T22:21:58.378197+00:00'
 ---

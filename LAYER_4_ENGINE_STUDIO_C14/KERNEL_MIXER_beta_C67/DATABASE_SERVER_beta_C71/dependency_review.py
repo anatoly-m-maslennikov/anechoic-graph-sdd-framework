@@ -8,7 +8,6 @@ def prepare_dependency_review(connection):
 
 
 def _prepare_import_cycles(connection):
-    # Reachability stores distinct node pairs, so cyclic paths do not expand without bound.
     connection.execute("""CREATE VIEW IF NOT EXISTS mrt_diag_import_cycles AS
         WITH RECURSIVE sites AS (
             SELECT 'module' AS level, i.source_key, i.target_key, i.occurrence_key,

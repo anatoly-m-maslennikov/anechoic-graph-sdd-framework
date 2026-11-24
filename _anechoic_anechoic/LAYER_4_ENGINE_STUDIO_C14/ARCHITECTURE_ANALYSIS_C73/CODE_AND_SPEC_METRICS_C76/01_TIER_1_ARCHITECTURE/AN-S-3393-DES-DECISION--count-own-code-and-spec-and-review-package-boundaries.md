@@ -38,6 +38,24 @@ Report each Package's own implementation bytes, lines, file count, and largest f
 
 Recommend a split when a separable responsibility can hide its decisions behind a small interface without adding cycles or excessive coupling. Check whether the proposed parts tend to change independently when useful Git history is available. Review a large file that serves one responsibility for an internal module split.
 
+### Formal Claim
+
+This model admits a row when its status is Current and its ID has the SPEC marker. It carries the supplied body measurements unchanged. It does not prove ownership or the accuracy of the supplied measurements.
+
+```lean
+def admitCurrentSpec (current hasSpecMarker : Bool) (bodyBytes bodyLines : Nat) : Option (Nat × Nat) :=
+  if current && hasSpecMarker then some (bodyBytes, bodyLines) else none
+
+theorem admitted_preserves_body (current marker : Bool) (bytes lines : Nat)
+    (h : admitCurrentSpec current marker bytes lines ≠ none) :
+    admitCurrentSpec current marker bytes lines = some (bytes, lines) := by
+  cases current <;> cases marker <;> simp_all [admitCurrentSpec]
+
+theorem total_includes_test (implementation tests : Nat) :
+    implementation ≤ implementation + tests := by
+  omega
+```
+
 ## References
 
 - [Parnas, On the Criteria To Be Used in Decomposing Systems into Modules](https://doi.org/10.1145/361598.361623)

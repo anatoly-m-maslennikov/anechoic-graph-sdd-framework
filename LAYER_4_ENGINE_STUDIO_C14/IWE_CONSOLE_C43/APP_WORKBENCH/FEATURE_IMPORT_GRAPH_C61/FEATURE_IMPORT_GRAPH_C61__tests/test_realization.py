@@ -1,15 +1,50 @@
+from contextlib import redirect_stderr, redirect_stdout
+from io import StringIO
+import json
 from pathlib import Path
 import subprocess
+import sys
 from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import patch
 
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61 import realization_graph_cli as cli
 from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.import_graph__shared import (
     capture, relevant_change, resolve_realization,
 )
 
 
 class RealizationTests(unittest.TestCase):
+    def test_consistency_failure_reports_both_maps_without_rescans(self):
+        root = Path(self.enterContext(TemporaryDirectory())).resolve()
+        source, dependency = root / "main.py", root / "pyproject.toml"
+        source.write_text("import os\n")
+        dependency.write_text("[tool]\n")
+
+        def change(*args):
+            source.write_text("import pathlib\n")
+            dependency.write_text("[tool.fixture]\n")
+            return {}, []
+
+        stdin = StringIO(json.dumps({"root": str(root), "config": {}}))
+        stdout, stderr = StringIO(), StringIO()
+        with (patch.object(sys, "stdin", stdin), patch.object(cli, "_state_projection", change),
+              patch.object(cli, "capture", wraps=cli.capture) as capture_sources,
+              patch.object(cli, "_manifests", wraps=cli._manifests) as capture_manifests,
+              redirect_stdout(stdout), redirect_stderr(stderr)):
+            self.assertEqual(1, cli.main())
+        self.assertEqual((2, 2), (capture_sources.call_count, capture_manifests.call_count))
+        self.assertEqual("", stdout.getvalue())
+        self.assertNotIn(str(root), stderr.getvalue())
+        report = json.loads(stderr.getvalue())
+        self.assertEqual(("ERROR", "realization_graph_inputs_changed"), (report["severity"], report["code"]))
+        self.assertEqual({
+            "resolution_inputs": {"change": "changed", "path": "pyproject.toml", "fields": ["stat_signature"]},
+            "sources": {"change": "changed", "path": "main.py", "fields": ["signature", "imports"]},
+        }, report["details"])
+        self.assertEqual({"change": "removed"}, cli._first_difference({"secret-name.py": "before"}, {}))
+        self.assertEqual({"change": "added", "path": "added.py"}, cli._first_difference({}, {"added.py": "after"}))
+
     def _temporary_project(self):
         tmp_path = Path(self.enterContext(TemporaryDirectory())).resolve()
         subprocess.run(["git", "init", "--quiet", str(tmp_path)], check=True)

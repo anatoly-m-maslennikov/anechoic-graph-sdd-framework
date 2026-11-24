@@ -45,6 +45,7 @@ services:
     environment:
       ANECHOIC_FRAMEWORK_DB_ROOT: /var/lib/anechoic
       ANECHOIC_RUNTIME_NAMESPACE: docker
+      ANECHOIC_LOG_LEVEL: ${ANECHOIC_LOG_LEVEL-INFO}
     volumes: *project-mounts
     networks: [runtime]
 

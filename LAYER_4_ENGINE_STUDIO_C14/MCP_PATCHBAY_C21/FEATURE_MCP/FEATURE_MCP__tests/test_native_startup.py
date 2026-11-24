@@ -2,12 +2,22 @@
 from .native_query_test_support import local_gateway
 
 
+import asyncio
+from contextlib import redirect_stderr
+from fcntl import LOCK_EX, LOCK_NB, flock
+from io import StringIO
+import json
 from pathlib import Path
 import tempfile
+from threading import Event
 import unittest
+from unittest.mock import Mock, patch
 
+import httpx2
 import yaml
 
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker import shared_supervisor as supervisor
+from MCP_PATCHBAY_C21.FEATURE_MCP.http_server import _guard_direct_transport
 MCP = Path(__file__).resolve().parents[1]
 PROGRAMMATIC = MCP.parents[1] / "FEATURE_PROGRAMMATIC"
 TOOLS = PROGRAMMATIC / "FEATURE_TOOLS"
@@ -69,6 +79,68 @@ class RuntimeSelectionTests(unittest.TestCase):
 
     def select(self, control=None):
         return self.admit(self.root, control)
+
+    def test_direct_manifest_repair_rotates_once_after_transport_and_lifecycle_drain(self):
+        control = self.root / ".anechoic_anechoic"
+        manifest = self.manifest(control)
+        directory = self.root / "sockets"
+        directory.mkdir()
+        arguments = lambda selection, _socket: ([selection.manifest_sha256], [selection.project_name])
+        reload = supervisor.ManifestReload(self.select, arguments, directory)
+        owner, backend = reload.children({})
+        calls = Mock()
+        owner.stop, owner.ensure, backend.stop = calls.owner_stop, calls.owner_start, calls.backend_stop
+        mcp = Mock(stop=calls.mcp_stop)
+        initial = reload.selection
+        original = manifest.read_text()
+        stopping = Event()
+        self.assertTrue(reload.refresh(owner, backend, mcp, stopping))
+        manifest.write_text("Invalid Manifest")
+        failure = StringIO()
+        with redirect_stderr(failure):
+            self.assertFalse(reload.refresh(owner, backend, mcp, stopping))
+            self.assertFalse(reload.refresh(owner, backend, mcp, stopping))
+        self.assertEqual(1, failure.getvalue().count("Manifest reload refused"))
+        self.assertEqual("project_manifest_invalid", reload.gate.read_text())
+        self.assertEqual([], calls.mock_calls)
+        manifest.write_text(original + "\n")
+        calls.idle.side_effect = [False, False, True]
+        with patch.object(supervisor, "_lifecycle_idle", calls.idle), patch.object(supervisor, "sleep"):
+            self.assertTrue(reload.refresh(owner, backend, mcp, stopping))
+            self.assertTrue(reload.refresh(owner, backend, mcp, stopping))
+        self.assertEqual(["backend_stop", "mcp_stop", "idle", "idle", "idle", "owner_stop", "owner_start"],
+                         [call[0] for call in calls.mock_calls])
+        calls.backend_stop.assert_called_once_with(graceful=True)
+        calls.mcp_stop.assert_called_once_with(graceful=True)
+        calls.owner_stop.assert_called_once_with(graceful=True)
+        self.assertEqual(initial.instance_id, reload.selection.instance_id)
+        self.assertNotEqual(initial.manifest_sha256, reload.selection.manifest_sha256)
+        self.assertEqual([reload.selection.manifest_sha256], owner.command)
+        self.assertEqual(list(reload.version),
+                         json.loads(backend.environment["ANECHOIC_BETA_DIRECT_MANIFEST"])["version"])
+        self.assertFalse(reload.gate.exists())
+
+    def test_direct_manifest_reloads_validated_semantic_settings(self):
+        control = self.root / ".anechoic_anechoic"
+        self.manifest(control)
+        directory = self.root / "sockets"
+        directory.mkdir()
+        reload = supervisor.ManifestReload(self.select, supervisor._direct_arguments, directory)
+        owner, backend = reload.children({})
+        mcp = Mock()
+        old = reload.selection
+        for child in (owner, backend):
+            self.assertEqual("disk", child.command[child.command.index("--workbench-storage") + 1])
+        parameters = {"runtime": {"workbench": {"storage": "memory", "import_graph": False}}}
+        self.manifest(control, parameters=parameters)
+        with patch.object(owner, "ensure") as restart:
+            self.assertTrue(reload.refresh(owner, backend, mcp, Event()))
+            restart.assert_called_once()
+        self.assertEqual(old.instance_id, reload.selection.instance_id)
+        self.assertNotEqual(old.manifest_sha256, reload.selection.manifest_sha256)
+        for child in (owner, backend):
+            self.assertEqual("memory", child.command[child.command.index("--workbench-storage") + 1])
+            self.assertNotIn("--watch-code", child.command)
 
     def test_staging_then_final_rename(self):
         old = self.legacy()
@@ -203,6 +275,38 @@ class RuntimeSelectionTests(unittest.TestCase):
         (self.root / ".anechoic_other" / "OT-S-001-PROJECT_MANIFEST--declare.md").unlink()
         self.legacy(".anechoic_legacy", declared=".anechoic_unknown")
         self.assertEqual(self.root / ".anechoic_anechoic", self.select().control_root)
+
+
+class DirectManifestTransportTests(unittest.IsolatedAsyncioTestCase):
+    async def test_transport_releases_drain_lock_after_accepted_response_completes(self):
+        root = Path(self.enterContext(tempfile.TemporaryDirectory())).resolve()
+        gate = root / "api.draining"
+        lock = gate.with_suffix(".transport")
+        lock.touch()
+        admitted, finish = asyncio.Event(), asyncio.Event()
+
+        async def app(_scope, _receive, send):
+            await send({"type": "http.response.start", "status": 200, "headers": []})
+            admitted.set()
+            await finish.wait()
+            await send({"type": "http.response.body", "body": b"lifecycle result"})
+
+        transport = httpx2.ASGITransport(app=_guard_direct_transport(app, gate))
+        client = await self.enterAsyncContext(httpx2.AsyncClient(transport=transport, base_url="http://localhost"))
+        request = asyncio.create_task(client.post("/mcp"))
+        try:
+            await asyncio.wait_for(admitted.wait(), 5)
+            gate.write_text("project_manifest_invalid")
+            blocked = await client.post("/mcp")
+            self.assertEqual((503, "project_manifest_invalid"), (blocked.status_code, blocked.json()["error"]))
+            with lock.open("rb") as waiter, self.assertRaises(BlockingIOError):
+                flock(waiter, LOCK_EX | LOCK_NB)
+        finally:
+            finish.set()
+            completed = await asyncio.wait_for(request, 5)
+        self.assertEqual((200, "lifecycle result"), (completed.status_code, completed.text))
+        with lock.open("rb") as waiter:
+            flock(waiter, LOCK_EX | LOCK_NB)
 
 
 if __name__ == "__main__":

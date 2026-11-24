@@ -48,7 +48,7 @@ from .model_catalog__pub import bindings_from_workbench_rows, class_bindings
 from .model_class_subject__pub import (
     canonical_model_address, model_class_target, model_declaration_subject, simple_model_address,
 )
-from .native_snapshot_cli import capture_carrier_delta, capture_ticket_delta, native_carrier_hashes, prepare_generation_snapshot
+from .native_snapshot_cli import UnrepresentableCarrierDelta, capture_carrier_delta, capture_ticket_delta, native_carrier_hashes, prepare_generation_snapshot
 from .project_database__pub import migrate_project_database
 from .indexed_lifecycle_capture import capture_indexed_lifecycle
 from .project_manifest__pub import (
@@ -248,7 +248,7 @@ __all__ = [
     "canonical_model_address",
     "capture_native",
     "attach_framework",
-    "capture_carrier_delta", "capture_ticket_delta",
+    "UnrepresentableCarrierDelta", "capture_carrier_delta", "capture_ticket_delta",
     "native_carrier_hashes",
     "prepare_generation_snapshot",
     "migrate_project_database",

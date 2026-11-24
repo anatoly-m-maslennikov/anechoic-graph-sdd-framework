@@ -8,7 +8,7 @@ context:
   template: task
   label: Epic
 state:
-  status: "in_queue"
+  status: in_queue
   version: 3
   updated_at: "2026-11-23T04:15:56.530718+00:00"
 ---

@@ -16,6 +16,9 @@ schema_version = 1
 projects_root = "/Users/am/Documents/My_Repos"
 http_port = 8092
 max_loaded_projects = 2
+
+[logging]
+level = "INFO"
 ```
 
 `projects_root` is the host root containing the configured Projects. Use
@@ -24,6 +27,12 @@ max_loaded_projects = 2
 [install guide](../../../../INSTALL.md) for Project creation defaults. The
 `max_loaded_projects` value bounds warm in-memory contexts; it does not limit
 which Projects under the configured root may be addressed.
+
+Shared startup reads `[logging]` once and passes its level to Studio processes.
+Use `DEBUG`, `INFO`, `WARNING`, or `ERROR`. An omitted level uses `INFO`. For a
+direct or development start, set `ANECHOIC_LOG_LEVEL` in the launch environment.
+The level takes effect when a new runtime process starts. If a direct launcher
+reuses a running container, that runtime continues with its original level.
 
 The container has exactly two application bind mounts: the configured host
 Projects root at the same absolute path, read/write, and this host settings file

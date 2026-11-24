@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 import re
 import subprocess
@@ -40,6 +41,9 @@ def _wait_healthy(docker, container, root: Path, image: str, labels, port: int) 
 
 
 def _container_command(root: Path, selection, image: str, port: int, control: str, labels):
+    log_level = os.environ.get("ANECHOIC_LOG_LEVEL", "INFO")
+    if log_level not in ("DEBUG", "INFO", "WARNING", "ERROR"):
+        raise LocalReleaseError("invalid_log_level")
     command = ["run", "-d", "--pull=never", "--init", "--read-only", "--cap-drop", "ALL",
                "--security-opt", "no-new-privileges:true", "--tmpfs", "/tmp:size=128m,mode=1777",
                "--pids-limit", "128", "--memory", "1536m", "--cpus", "1",
@@ -53,6 +57,7 @@ def _container_command(root: Path, selection, image: str, port: int, control: st
     for key, value in {"ANECHOIC_FRAMEWORK_DB_ROOT": "/var/lib/anechoic", "ANECHOIC_RUNTIME_NAMESPACE": "docker", "ANECHOIC_CONTROL_ROOT": control,
                        "ANECHOIC_PROJECT_INSTANCE_ID": selection.instance_id,
                        "ANECHOIC_MCP_HTTP_HEALTHCHECK": "1",
+                       "ANECHOIC_LOG_LEVEL": log_level,
                        "ANECHOIC_HOST_PROJECT_ROOT": str(root)}.items():
         command.extend(("-e", f"{key}={value}"))
     command.extend((image, "mcp-http"))
@@ -88,11 +93,10 @@ def start_container(root: Path, selection, image: str, fingerprint: str, port: i
         except (OSError, subprocess.SubprocessError) as error:
             raise LocalReleaseError("local-release-container-command-failed") from error
 
-    command = _container_command(root, selection, image, port, control, labels)
     if existing_container is not None and (not isinstance(existing_container, str)
                                            or not re.fullmatch(r"[0-9a-f]{64}", existing_container)):
         raise LocalReleaseError("local-release-container-id-invalid")
-    container = existing_container if existing_container is not None else docker(*command)
+    container = existing_container or docker(*_container_command(root, selection, image, port, control, labels))
     if not re.fullmatch(r"[0-9a-f]{64}", container):
         raise LocalReleaseError("local-release-container-id-invalid")
     try:

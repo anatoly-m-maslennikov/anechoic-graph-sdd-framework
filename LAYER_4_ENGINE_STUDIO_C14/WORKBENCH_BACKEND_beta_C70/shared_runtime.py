@@ -11,6 +11,7 @@ from starlette.responses import JSONResponse
 from starlette.routing import Route
 
 from .project_admission import AdmissionClient
+from .http_logging import runtime_log_level
 from .peer_transport import tool_failure
 from .shared_host_config import load
 from .shared_peer_owner import PeerOwnerClient
@@ -183,7 +184,9 @@ def main():
     parser.add_argument('--host-settings')
     parser.add_argument('--peer-owner-socket')
     args = parser.parse_args()
-    serve(socket_path(args.socket), create_app(load(args.host_settings), args.peer_owner_socket), shutdown_timeout=3)
+    config = load(args.host_settings)
+    os.environ.setdefault("ANECHOIC_LOG_LEVEL", runtime_log_level(config.log_level))
+    serve(socket_path(args.socket), create_app(config, args.peer_owner_socket), shutdown_timeout=3)
 
 
 if __name__ == '__main__':

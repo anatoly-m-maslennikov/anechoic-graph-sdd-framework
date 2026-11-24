@@ -4,6 +4,7 @@ import asyncio
 import json
 from math import ceil
 from pathlib import Path
+import re
 import shutil
 from statistics import median
 from time import monotonic
@@ -23,6 +24,10 @@ CONTRACT = SUMMARY + "\n## Guarantee\n\nReturn a result.\n"
 GENERATIONS = """SELECT json_extract_string(detail, '$.kind'), count(*)
     FROM flow_events WHERE component = 'C68' AND name = 'generation_result'
       AND outcome = 'succeeded' GROUP BY 1"""
+NON_DELTA_RUNS = """SELECT run_id, json_extract_string(detail, '$.kind')
+    FROM flow_events WHERE component = 'C68' AND name = 'generation_result'
+      AND outcome = 'succeeded' AND json_extract_string(detail, '$.kind') IS DISTINCT FROM 'native_delta'
+    ORDER BY "at" DESC LIMIT 32"""
 
 
 def target(ref, version=1):
@@ -64,21 +69,41 @@ class LifecycleLatencyImageTest(unittest.TestCase):
             await client.initialize()
             initial_atoms = (await self._sql(client, "SELECT count(*) FROM atoms"))[0][0]
             before = dict(await self._sql(client, GENERATIONS))
+            baseline = await self._sql(client, NON_DELTA_RUNS)
             samples = {}
             for _ in range(TRIALS):
                 await self._task(client, samples)
                 await self._asset(client, samples)
                 await self._contract(client, samples)
             after = dict(await self._sql(client, GENERATIONS))
+            expected = before | {"native_delta": before.get("native_delta", 0) + 13 * TRIALS}
+            diagnostics = await self._mismatch_diagnostics(client, baseline) if expected != after else None
         self.assertEqual(13, len(samples))
         self.assertTrue(all(len(values) == TRIALS for values in samples.values()))
-        expected = before | {"native_delta": before.get("native_delta", 0) + 13 * TRIALS}
-        self.assertEqual(expected, after, "Lifecycle trials must use only incremental admission")
+        self.assertEqual(expected, after, "Lifecycle trials must use only incremental admission; " + str(diagnostics))
         return {
             "initial_atoms": initial_atoms,
             "measurement": "MCP request to SQL readback",
             "operations": [operation_metrics(label, times) for label, times in samples.items()],
         }
+
+    async def _mismatch_diagnostics(self, client, baseline):
+        try:
+            after = await self._sql(client, NON_DELTA_RUNS)
+            baseline_ids = {row[0] for row in baseline}
+            new = [row for row in after if row[0] not in baseline_ids]
+            ids = [row[0] for row in new if isinstance(row[0], str) and re.fullmatch(r"[0-9a-f]{32}", row[0])]
+            events = []
+            if ids:
+                selected = ", ".join("'" + value + "'" for value in ids)
+                events = await self._sql(client, f"""SELECT run_id, sequence, kind, name, outcome,
+                    json_extract_string(detail, '$.kind'), json_extract_string(detail, '$.code')
+                    FROM flow_events WHERE component = 'C68' AND run_id IN ({selected})
+                    ORDER BY run_id, sequence LIMIT 24""")
+            return {"baseline_non_delta": baseline, "new_non_delta": new, "events": events,
+                    "run_limit": 32, "event_limit": 24}
+        except Exception as error:
+            return {"baseline_non_delta": baseline, "diagnostic_error": str(error)}
 
     async def _sql(self, client, query):
         reply = await client.call_tool("query_run", {"sql": query, "result_delivery": "inline"})

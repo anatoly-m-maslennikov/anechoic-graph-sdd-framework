@@ -8,6 +8,8 @@ from pathlib import Path, PurePosixPath
 from urllib.parse import urlencode
 
 from .jobs import UnixConnection
+from .watcher_diagnostics import report_graph_consistency
+from .startup_checkpoint import CHECKPOINT_FIELDS, MAX_DELTA_PATHS, checkpoint_paths
 
 FULL_FIELDS = {"snapshot", "receipt", "graph", "reuse"}
 NATIVE_FIELDS = {"base_generation", "snapshot", "snapshot_sha256"}
@@ -15,7 +17,6 @@ DELTA_FIELDS = NATIVE_FIELDS | {"paths"}
 GRAPH_FIELDS = NATIVE_FIELDS | {"graph", "graph_sha256", "reuse"}
 REUSE_FIELDS = {"inputs", "graph_config", "endpoints"}
 TICKET_ROOTS = {"__TICKETS", "001_TICKETS", "__TKT"}
-MAX_DELTA_PATHS = 1024
 MAX_WARM_DELTA_PATHS = 32
 
 
@@ -33,11 +34,16 @@ class WorkerIngestionFailure(RuntimeError):
         self.diagnostic = diagnostic
 
 
-def worker_failure(stdout, detail):
+def worker_failure(stdout, detail, *, run_id=None):
     try:
-        diagnostic = json.loads(stdout)["ingestion_failure"]
+        payload = json.loads(stdout)
+        diagnostic = payload["ingestion_failure"]
         if (diagnostic["source"] in ("atom", "build") and isinstance(diagnostic["issues"], list)
                 and diagnostic["issues"]):
+            first_issue = diagnostic["issues"][0]
+            if (diagnostic["source"] == "build" and isinstance(first_issue, dict)
+                    and first_issue.get("code") == "realization_scan_failed"):
+                report_graph_consistency(payload.get("graph_consistency"), run_id)
             return WorkerIngestionFailure("Worker failed: " + detail, diagnostic)
     except (TypeError, ValueError, KeyError):
         pass
@@ -148,10 +154,12 @@ def read_reuse(socket_path, instance_id):
         if response.status != 200:
             return None
         result = json.loads(response.read())["result"]
-        if (not isinstance(result, dict) or set(result) not in (REUSE_FIELDS | {"base_generation"}, REUSE_FIELDS | {"base_generation", "carrier_hashes"})
+        if (not isinstance(result, dict)
+                or set(result) - CHECKPOINT_FIELDS != REUSE_FIELDS | {"base_generation"}
                 or not isinstance(result["base_generation"], str) or not result["base_generation"]
                 or not isinstance(result["inputs"], dict) or not isinstance(result["endpoints"], dict)
-                or ("carrier_hashes" in result and not isinstance(result["carrier_hashes"], dict))):
+                or ("archive_pending" in result and result["archive_pending"] is not True)
+                or any(key in result and not isinstance(result[key], dict) for key in ("carrier_hashes", "folder_hashes"))):
             return None
         return result
     except (OSError, ValueError, TypeError, KeyError, http.client.HTTPException):
@@ -162,7 +170,8 @@ def read_reuse(socket_path, instance_id):
 
 
 def worker_request(binding, socket_path, instance_id, reuse, paths):
-    request = {"binding": binding, "reuse": reuse}
+    witness = None if reuse is None else {key: value for key, value in reuse.items() if key != "archive_pending"}
+    request = {"binding": binding, "reuse": witness}
     if paths is not None:
         request["paths"] = paths
     elif reuse is not None and reuse.get("graph_config") is not None:
@@ -191,11 +200,18 @@ def read_structure(socket_path, instance_id, reuse):
             connection.close()
 
 
-def parse_worker_result(stdout, reuse, paths, structure=None):
+def parse_worker_result(stdout, reuse, paths, structure=None, *, foreground=False):
     result = json.loads(stdout)
     if not isinstance(result, dict):
         raise TypeError("Worker returned invalid generation")
     fields = set(result) - {"carrier_hashes"}
+    if foreground and "deferred_archive" in fields:
+        deferred = result["deferred_archive"]
+        if (not isinstance(deferred, dict) or set(deferred) != {"roots", "snapshot", "carrier_hashes", "endpoints"}
+                or not isinstance(deferred["roots"], list) or not isinstance(deferred["snapshot"], dict)
+                or not isinstance(deferred["endpoints"], dict) or not isinstance(deferred["carrier_hashes"], dict)):
+            raise ValueError("Worker returned invalid deferred archive input")
+        fields.remove("deferred_archive")
     checkpoint = reuse is not None and "carrier_hashes" in reuse and paths is None
     if fields == {"base_generation", "unchanged"}:
         if not checkpoint or result.get("unchanged") is not True or result["base_generation"] != reuse["base_generation"] or "carrier_hashes" in result:
@@ -216,7 +232,7 @@ def parse_worker_result(stdout, reuse, paths, structure=None):
             if not expected or result["paths"] != expected:
                 raise ValueError("Worker returned unexpected Ticket delta paths")
         return result
-    if fields != FULL_FIELDS:
+    if fields != FULL_FIELDS or (foreground and "deferred_archive" not in result):
         raise ValueError("Worker returned invalid generation")
     witness = result["reuse"]
     if witness is not None and (not isinstance(witness, dict) or set(witness) != REUSE_FIELDS):
@@ -224,23 +240,9 @@ def parse_worker_result(stdout, reuse, paths, structure=None):
     return result
 
 
-def checkpoint_paths(paths):
-    if not isinstance(paths, list) or not 0 < len(paths) <= MAX_DELTA_PATHS:
-        return None
-    result = []
-    for pair in paths:
-        if not isinstance(pair, list) or len(pair) != 2 or not all(isinstance(x, str) and x for x in pair):
-            return None
-        parent, name = pair
-        path = PurePosixPath(parent) / name
-        if ("\\" in parent or "\\" in name or path.is_absolute() or ".." in path.parts
-                or path.parent.as_posix() != parent or path.name != name):
-            return None
-        result.append(pair)
-    return result if result == sorted(result) and len({tuple(pair) for pair in result}) == len(result) else None
-
-
 def confirm_reuse(socket_path, instance_id, result):
+    if result.get("archive_pending") is True:
+        return admit_generation(socket_path, instance_id, None, result, None)
     current = read_reuse(socket_path, instance_id)
     if current is None or current["base_generation"] != result["base_generation"]:
         raise GenerationBaseChanged("Kernel generation changed during revalidation")
@@ -261,14 +263,24 @@ def _admission_error(status, body, kind):
     return RuntimeError(message)
 
 
-def admit_generation(socket_path, instance_id, directory, result, target):
-    payload = {"instance_id": instance_id, **result}
+def _admission_route(result, archive):
+    if archive:
+        return "/generation/archive", "archive"
+    if result.get("unchanged") is True:
+        return "/generation/reuse", "reused"
     if "paths" in result:
-        path, kind = "/generation/native-delta", "native_delta"
-    elif "base_generation" in result:
-        path, kind = "/generation/native", "graph_refresh" if "graph" in result else "native_refresh"
-    else:
-        path, kind = "/generation", "full"
+        return "/generation/native-delta", "native_delta"
+    if "base_generation" in result:
+        return "/generation/native", "graph_refresh" if "graph" in result else "native_refresh"
+    return "/generation", "full"
+
+
+def admit_generation(socket_path, instance_id, directory, result, target, *, archive=False):
+    path, kind = _admission_route(result, archive)
+    payload = {"instance_id": instance_id, **result}
+    if kind == "reused":
+        del payload["unchanged"]
+    if kind == "full":
         for field in ("model", "structure"):
             payload[field] = (Path(directory) / f"{field}.json").read_bytes().decode("utf-8")
     if target is not None:

@@ -93,7 +93,7 @@ class WorkerAbortTests(unittest.TestCase):
                     return {"generation": "next"}
 
                 with (patch(MODULE + ".Flow.finish"),
-                      patch(MODULE + ".subprocess.Popen", side_effect=AssertionError("Cold Worker started")),
+                      patch("ORCHESTRATOR_beta_C68.generation_worker.subprocess.Popen", side_effect=AssertionError("Cold Worker started")),
                       patch(MODULE + ".admit_generation", side_effect=admit_generation) as admit):
                     jobs.generation_reuse = reuse
                     self._assert_warm_abort(jobs, change, marker, broker.pid)
@@ -142,8 +142,8 @@ class WorkerAbortTests(unittest.TestCase):
             real_popen = subprocess.Popen
             def spawn(*args, **kwargs):
                 return real_popen([sys.executable, "-c", "import time; time.sleep(60)"], **kwargs)
-            with (patch(MODULE + ".worker_request", return_value={}),
-                  patch(MODULE + ".subprocess.Popen", side_effect=spawn),
+            with (patch("ORCHESTRATOR_beta_C68.generation_worker.worker_request", return_value={}),
+                  patch("ORCHESTRATOR_beta_C68.generation_worker.subprocess.Popen", side_effect=spawn),
                   patch(MODULE + ".admit_generation") as admit,
                   patch(MODULE + ".Flow.finish")):
                 thread = threading.Thread(target=jobs._generate)

@@ -18,7 +18,7 @@ def _test_phase(root: Path, module: Path) -> str:
     parts = module.relative_to(root).parts
     for index in range(1, len(parts) - 1):
         if parts[index] == parts[index - 1] + "__tests" and index + 1 < len(parts) - 1:
-            if parts[index + 1] in ("static", "unit", "image"):
+            if parts[index + 1] in ("static", "unit", "functional", "image"):
                 return parts[index + 1]
     if module.parent in (root / MCP_TESTS, root / WORKBENCH_TESTS) and (
         module.stem.endswith("_docker_e2e") or module.stem == "test_selected_query_mcp_e2e"
@@ -62,19 +62,18 @@ def _required_unit_modules(root, discovered):
             raise ValueError("functional_test_modules must be a list")
         modules = _select_test_modules(root, discovered, tuple(selected))
         phases = {_test_phase(root, module) for module in modules}
-        if "image" in phases:
-            raise ValueError("functional_test_modules cannot include Docker tests")
-        if phases != {"unit"}:
-            raise ValueError("functional_test_modules must select unit tests")
+        if not phases <= {"unit", "functional"}:
+            raise ValueError("functional_test_modules must select host functional tests")
         return modules
     except (OSError, KeyError, TypeError, tomllib.TOMLDecodeError) as error:
         raise ValueError(f"functional_test_modules configuration is invalid: {error}") from error
 
 
 def select_phase_modules(root, discovered, phase, focused, required):
-    if required:
+    if required or phase == "functional":
         return _required_unit_modules(root, discovered)
     if phase != "full":
         phase = "image" if phase == "e2e" else phase
-        discovered = [module for module in discovered if _test_phase(root, module) == phase]
+        allowed = {"unit", "functional"} if phase == "unit" else {phase}
+        discovered = [module for module in discovered if _test_phase(root, module) in allowed]
     return _select_test_modules(root, discovered, focused) if focused is not None else discovered

@@ -28,9 +28,8 @@ SPEC and TKT use this order:
 1. `atom_family` is required. Use `SPEC` or `TKT`.
 2. `atom_id` is required. Preserve its stable ID and numeric suffix.
    The S and T markers identify SPEC and TKT.
-3. `concern` is optional. SPEC can declare a Subject with Path and
-   Relation, affected Components, or both. TKT uses one list of typed
-   references, such as `component(id=C51)`. Reserve `@` for eDSL calls.
+3. `concern` is optional. SPEC and Project Config use one locator with
+   Subject, Path, and Relation. TKT uses a list of these locators.
 4. `container` is a required top-level mapping with exactly one
    `component` or `atom` key and its owner's ID.
 5. SPEC requires top-level integer `tier`. TKT requires top-level integer
@@ -40,6 +39,8 @@ SPEC and TKT use this order:
 7. `relations` is optional. Each authored Relation contains a list of
    stable Atom IDs or exact revision references.
 8. `state` contains `status`, `version`, and `updated_at`, in that order.
+   Write Status as a plain YAML scalar, for example `status: active`
+   or `status: in_queue`.
 
 Project Config Atoms use `atom_family: PROJECT_CONFIG` and C IDs. They
 store their Container in `structure.container`. Their published

@@ -1,4 +1,6 @@
+from contextlib import redirect_stderr, redirect_stdout
 from hashlib import sha256
+from io import StringIO
 import json
 import os
 from pathlib import Path
@@ -8,7 +10,9 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import Mock, patch
 
+from .. import WORKERS_beta_C69__shared as worker
 from .WORKERS_beta_C69__tests__shared import generation_fixture
 
 WORKER = [sys.executable, "-B", "-P", "-m", "WORKERS_beta_C69.WORKERS_beta_C69__shared"]
@@ -40,6 +44,69 @@ class WorkerTests(unittest.TestCase):
             self.assertEqual("", result.stdout)
 
 class GenerationTests(unittest.TestCase):
+    @staticmethod
+    def _graph_change(path):
+        details = {"sources": {"change": "changed", "path": path, "fields": ["status"]}}
+        diagnostic = {"code": "realization_graph_inputs_changed", "component": "C61",
+                      "severity": "ERROR", "details": details}
+        return subprocess.CompletedProcess([], 1, "", "private raw child detail\n" + json.dumps(diagnostic))
+
+    def test_graph_restart_reuses_compilation_and_native_capture(self):
+        with tempfile.TemporaryDirectory() as directory:
+            binding, output, _ = generation_fixture(directory)
+            structure, config, endpoints = {"structure": "staged"}, {"include": []}, {"endpoint": {}}
+            finish = Mock(return_value=({"atoms": []}, {}))
+            stderr = StringIO()
+            with (patch("FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared.prepare_generation_snapshot",
+                        return_value=(config, finish)) as prepare,
+                  patch.object(worker, "_compile", return_value=({}, structure, endpoints)) as compile_stage,
+                  patch.object(subprocess, "run", side_effect=[
+                      self._graph_change("main.py"), subprocess.CompletedProcess([], 0, '{"nodes":[]}', "")]) as launch,
+                  redirect_stderr(stderr)):
+                result = worker.build_generation(binding, output)
+            self.assertEqual({"nodes": []}, result["graph"])
+            self.assertEqual(2, launch.call_count)
+            self.assertEqual(launch.call_args_list[0], launch.call_args_list[1])
+            command = launch.call_args.args[0]
+            self.assertEqual("WORKERS_beta_C69.realization_graph", command[-1])
+            self.assertEqual(structure, json.loads(launch.call_args.kwargs["input"])["structure"])
+            compile_stage.assert_called_once()
+            prepare.assert_called_once()
+            finish.assert_called_once_with(endpoints)
+            self.assertIn('"path":"main.py"', stderr.getvalue())
+            self.assertNotIn("private raw child detail", stderr.getvalue())
+
+    def test_unrelated_graph_failure_is_not_restarted(self):
+        child = subprocess.CompletedProcess([], 1, "", "unrelated failure")
+        for attempts in ([child], [self._graph_change("main.py"), child]):
+            with (self.subTest(launches=len(attempts)),
+                  patch.object(subprocess, "run", side_effect=attempts) as launch, redirect_stderr(StringIO())):
+                with self.assertRaisesRegex(ValueError, "realization_graph failed: unrelated failure"):
+                    worker._build_graph({"root": ".", "control_root": "control"}, {}, {})
+                self.assertEqual(len(attempts), launch.call_count)
+
+    def test_graph_restart_exhaustion_reports_last_typed_difference(self):
+        details = {"sources": {"change": "changed", "path": "main.py", "fields": ["status"]}}
+        stdout, stderr = StringIO(), StringIO()
+        with (patch.object(sys, "argv", ["worker", "--generation-dir", "/fixture"]),
+              patch.object(sys, "stdin", StringIO('{"binding":{},"reuse":null}')),
+              patch.object(worker, "watch_managed_parent"),
+              patch.object(worker, "_run", side_effect=lambda *_: worker._build_graph(
+                  {"root": ".", "control_root": "control"}, {}, {})),
+              patch.object(subprocess, "run", side_effect=[
+                  self._graph_change("first.py"), self._graph_change("main.py")]) as launch,
+              redirect_stdout(stdout), redirect_stderr(stderr)):
+            self.assertEqual(1, worker.main())
+        self.assertEqual(2, launch.call_count)
+        reply = json.loads(stdout.getvalue())
+        self.assertEqual(details, reply["graph_consistency"])
+        issue, = reply["ingestion_failure"]["issues"]
+        self.assertEqual("realization_scan_failed", issue["code"])
+        self.assertIn("Project source or dependency inputs changed during capture after one Realization Graph restart",
+                      issue["message"])
+        self.assertIn('"path":"first.py"', stderr.getvalue())
+        self.assertNotIn("private raw child detail", stdout.getvalue() + stderr.getvalue())
+
     def test_managed_refresh_reuses_artifacts_until_graph_inputs_change(self):
         with tempfile.TemporaryDirectory() as directory:
             binding, output, _ = generation_fixture(directory)

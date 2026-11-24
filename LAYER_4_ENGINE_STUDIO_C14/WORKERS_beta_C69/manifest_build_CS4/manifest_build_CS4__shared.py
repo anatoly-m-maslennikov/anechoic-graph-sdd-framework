@@ -149,7 +149,6 @@ def _manifest_candidates(root, control, checkpoint):
                 inventories[directory] = None
         return inventories[directory] or ()
 
-    # Mirror select_manifest_carriers, read_active_model_sources and _walk_structure.
     project = {root / name for name in inventory(root, required=True)
                if name.endswith(".md") and "-PROJECT_MANIFEST--" in name}
     if not project:
@@ -174,12 +173,12 @@ def _manifest_candidates(root, control, checkpoint):
     return project, directories, sorted(files)
 
 
-def manifest_input_signature(binding) -> str | None:
+def manifest_input_signature(binding, *, watcher_guarded=False) -> str | None:
     """Witness unchanged compiler inputs or leave admission to a fresh compile."""
     deadline = time.monotonic() + 5
 
     def checkpoint():
-        if (time.monotonic() >= deadline
+        if (not watcher_guarded and time.monotonic() >= deadline
                 and os.getenv("ANECHOIC_TEST_IMAGE_DEADLINES") != "0"):
             raise TimeoutError("Manifest input witness timed out")
 

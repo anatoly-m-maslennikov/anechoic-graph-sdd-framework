@@ -19,6 +19,23 @@ Runtime Images provides the `build-image` and `run-image` commands. User
 Setup uses both commands, and Local Release uses the same image layer for
 its candidate and production container.
 
+Local Release runs the `static` phase and then the `functional` phase with
+the configured host checks. After both pass, it builds the candidate and
+runs the `image` phase against its exact image ID. Installation requires
+passing image tests and the canary.
+
+Use `prepare-local --run-id <id> --base <full-commit> --changed-path <path>`
+with `--port <loopback-port>` to prepare an isolated Local Release checkout.
+Repeat `--changed-path` for each literal repository-relative file.
+An absent source file removes that file from the base.
+
+Preparation commits the specified paths and the isolated Manifest port
+in a private temporary checkout outside the source Project. The JSON
+result gives its `project_root` and exact `revision`. Run the existing
+`local` command from that checkout with its own Release script.
+Preparation ends after commit verification. Local Release handles the
+port binding, image build, and installation.
+
 Before a fresh image build, Local Release and the Engine build command
 ask Docker to trim unused build cache to 4 GB and free at least 2 GB on
 the builder. Local Release applies the same limits after the new runtime

@@ -47,10 +47,10 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
         self.assertGreaterEqual(select.call_count, 2)
         self.assertTrue(all(call.args[0].manifest_ref == "AN-S-001@1" for call in select.call_args_list))
         gates = [call for call in calls if any(arg.endswith("test_suite__pub.py") for arg in call)]
-        self.assertEqual(["static", "unit", "image"], [argv[argv.index("--phase") + 1] for argv in gates])
+        self.assertEqual(["static", "functional", "image"], [argv[argv.index("--phase") + 1] for argv in gates])
         self.assertNotIn("--candidate-image", gates[0])
         self.assertNotIn("--required", gates[0])
-        self.assertIn("--required", gates[1])
+        self.assertNotIn("--required", gates[1])
         self.assertNotIn("--candidate-image", gates[1])
         self.assertEqual(self.image_id, gates[2][gates[2].index("--candidate-image") + 1])
         self.assertIn("--canary-package", gates[2])
@@ -140,7 +140,7 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
             result = run_local_release(self.root, run_id="native-existing", runner=runner, image_mode="existing")
         self.assertEqual("completed", result["outcome"], result)
         gates = [call for call in calls if any(arg.endswith("test_suite__pub.py") for arg in call)]
-        self.assertEqual(["static", "unit", "image"], [argv[argv.index("--phase") + 1] for argv in gates])
+        self.assertEqual(["static", "functional", "image"], [argv[argv.index("--phase") + 1] for argv in gates])
         self.assertNotIn("--candidate-image", gates[1])
 
 
@@ -178,7 +178,7 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
         self.assertEqual("completed", result["outcome"], result)
         self.assertEqual("existing", result["image_mode"])
         gates = [argv for argv in calls if any(arg.endswith("test_suite__pub.py") for arg in argv)]
-        self.assertEqual(["static", "unit", "image"], [argv[argv.index("--phase") + 1] for argv in gates])
+        self.assertEqual(["static", "functional", "image"], [argv[argv.index("--phase") + 1] for argv in gates])
         self.assertNotIn("--candidate-image", gates[1])
         self.assertEqual({"use_packaged_assets": True}, self.image.resolve.call_args_list[0].kwargs)
         runtime_package = self.runtime / "simple_local_release/package"
@@ -240,14 +240,13 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
         )
 
         self.assertEqual("completed", result["outcome"])
-        self.assertEqual("static and unit", result["test_scope"])
+        self.assertEqual("static and functional", result["test_scope"])
         self.assertIsNone(result["test_modules"])
-        test_command = next(argv for argv in calls if any(
-            item.endswith("test_suite__pub.py") for item in argv
-        ))
-        self.assertNotIn("--test-module", test_command)
+        test_commands = [argv for argv in calls if "--phase" in argv]
+        self.assertEqual(["static", "functional", "image"], [argv[argv.index("--phase") + 1] for argv in test_commands])
+        self.assertTrue(all("--test-module" not in argv for argv in test_commands))
         receipt = (self.root / result["receipt_path"]).read_text(encoding="utf-8")
-        self.assertIn("Test scope: `static and unit`", receipt)
+        self.assertIn("Test scope: `static and functional`", receipt)
         self.assertIn("Selected test modules: configured required tests", receipt)
 
 
@@ -271,11 +270,11 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
         )
 
         self.assertEqual(("failed", "static_tests"), (result["outcome"], result["failed_step"]))
-        self.assertEqual("static and unit", result["test_scope"])
+        self.assertEqual("static and functional", result["test_scope"])
         self.assertIsNone(result["test_modules"])
         self.start_container.assert_not_called()
         report = (self.root / result["report_path"]).read_text(encoding="utf-8")
-        self.assertIn("Test scope: `static and unit`", report)
+        self.assertIn("Test scope: `static and functional`", report)
         self.assertIn("Selected test modules: configured required tests", report)
         self.assertIn("focused test failure", report)
 

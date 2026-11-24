@@ -93,8 +93,8 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
         self.assertTrue(source.is_relative_to(self.root / ".anechoic_tmp/simple_local_release"))
         self.assertEqual(source.parent / "image_builds", temporary)
         self.assertEqual(self.runtime / "simple_local_release/package", self.image_factory.call_args_list[1].args[0])
-        self.assertLess(events.index("static-green"), events.index("unit-green"))
-        self.assertLess(events.index("unit-green"), events.index("candidate-resolve"))
+        self.assertLess(events.index("static-green"), events.index("functional-green"))
+        self.assertLess(events.index("functional-green"), events.index("candidate-resolve"))
         self.assertLess(events.index("candidate-resolve"), events.index("image-green"))
         self.assertLess(events.index("image-green"), events.index("installed-resolve"))
         self.assertLess(events.index("installed-resolve"), events.index("launch"))
@@ -142,22 +142,29 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
         self.assertEqual("completed", result["outcome"], result)
         self._assert_candidate_image_order(events, result)
 
-    def test_unit_failure_stops_before_image_install_and_production_tag(self):
+    def test_functional_failure_stops_before_build_install_and_production_tag(self):
         runner, calls = self._runner()
 
-        def fail_unit(argv, cwd):
+        def fail_functional(argv, cwd):
             result = runner(argv, cwd)
-            if "--phase" in argv and argv[argv.index("--phase") + 1] == "unit":
-                self.assertIn("--required", argv)
-                return subprocess.CompletedProcess(argv, 1, "", "unit failed")
+            if "--phase" in argv and argv[argv.index("--phase") + 1] == "functional":
+                return subprocess.CompletedProcess(argv, 1, "", "functional checks failed")
             return result
 
-        result = run_local_release(self.root, run_id="unit-failed", runner=fail_unit)
-        self.assertEqual(("failed", "unit_tests"), (result["outcome"], result["failed_step"]))
-        self.assertFalse(any("image" in argv for argv in calls))
+        with patch.object(package_phases, "build_package") as build_package:
+            result = run_local_release(self.root, run_id="functional-failed", runner=fail_functional)
+        self.assertEqual(("failed", "functional_tests"), (result["outcome"], result["failed_step"]))
+        phases = [argv[argv.index("--phase") + 1] for argv in calls if "--phase" in argv]
+        self.assertEqual(["static", "functional"], phases)
+        build_package.assert_not_called()
+        self.image_factory.assert_not_called()
         self.image.mark_production_image.assert_not_called()
         self.start_container.assert_not_called()
         self.assertEqual("obsolete", (self.installed / "old.txt").read_text())
+        report = (self.root / result["report_path"]).read_text()
+        self.assertIn("Stopped at: `functional_tests`", report)
+        self.assertIn("Test scope: `static and functional`", report)
+        self.assertIn("functional checks failed", report)
 
 
     def test_failed_candidate_canary_preserves_the_installed_release(self):

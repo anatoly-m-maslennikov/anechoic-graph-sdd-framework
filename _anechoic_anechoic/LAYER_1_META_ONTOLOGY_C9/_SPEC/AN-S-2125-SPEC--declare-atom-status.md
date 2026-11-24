@@ -23,7 +23,7 @@ MODEL//ANECHOIC <+ Node//Artifact//Atom.Header.State.Status
 
 ### Prose Claim
 
-A Status with a dedicated folder has one integer Status Order Number from 0 through 999. Order numbers are distinct across Status values. Declare each number once, including for a Status admitted by several Roles. Active uses its Container's base directory.
+A Status with a dedicated folder has one integer Status Order Number from 0 through 999. Order numbers are distinct across Status values. Declare each number once, including for a Status admitted by several Roles. Active uses its Container's base directory. AN-S-3160 specifies the YAML representation.
 
 ### Formal Claim
 

@@ -77,7 +77,6 @@ def _collect(connection, read_fd, stop):
     chunks = []
     while True:
         ready, _, _ = select.select([connection, read_fd, stop], [], [])
-        # Closing the client's write side abandons just this capture.
         if stop in ready or connection in ready:
             return None
         chunk = os.read(read_fd, 65536)

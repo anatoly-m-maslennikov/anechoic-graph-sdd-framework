@@ -54,7 +54,7 @@ def archive_project(case, prepare=make_project):
             ["docker", "port", container, "8092/tcp"], text=True, timeout=image_timeout(10),
         ).strip()
         project = case.__class__("runTest")
-        project.root, project.url = root, f"http://{binding}"
+        project.root, project.url, project.container = root, f"http://{binding}", container
         project.api = f"{project.url}/anechoic/Anechoic/api"
         deadline = monotonic() + 90
         while observing(container, deadline):
@@ -210,6 +210,10 @@ class DockerBrowserAndMcpCases:
                 self.assertNotIn("\nrelations:", data)
                 path.write_text(data.replace(
                     "\n---\n", f"\nrelations:\n  IS_REPLACEMENT_FOR: [{atom}]\n---\n", 1), encoding="utf-8")
+                relation_sql = ("SELECT source_ref, target_ref FROM relations WHERE source_kind = 'Atom' "
+                                f"AND source_ref = '{replacement['atom_id']}' AND target_kind = 'Atom' "
+                                f"AND target_ref = '{atom}' AND relation_type = 'IS_REPLACEMENT_FOR' AND NOT derived")
+                await asyncio.to_thread(project._wait_rows, relation_sql, [[replacement["atom_id"], atom]])
                 archived = await call("atom_lifecycle_archive", arguments)
                 self.assertEqual("archived", archived["artifact"]["status"])
                 self.assertEqual([[f"{atom}@{original['version']}", "archived"]], project._rows(sql))
@@ -273,8 +277,10 @@ class DockerBrowserAndMcpCases:
         revision = revised["savedDraft"]
         if beta:
             self.assertEqual([[atom, 1, "backlog"], [revision["ref_id"], 2, "draft"]], self._rows(sql))
-        await call("atom_lifecycle_promote_draft", {
+        promoted = await call("atom_lifecycle_promote_draft", {
             "target": {"ref_id": revision["ref_id"], "version": revision["version"]},
             "targetStatus": "backlog",
         })
+        if beta:
+            self.assertEqual(2, promoted["artifact"]["version"])
         self.assertEqual([[atom + "@1", 1, "archived"], [atom, 2, "backlog"]], self._rows(sql))

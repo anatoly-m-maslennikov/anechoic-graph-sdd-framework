@@ -7,6 +7,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime, timezone
 import json
+import logging
 import os
 from pathlib import Path
 import re
@@ -139,6 +140,11 @@ class TechnicalDiagnosticLogger:
     ) -> str | None:
         if severity not in _SEVERITIES:
             return "invalid diagnostic severity"
+        configured = os.environ.get("ANECHOIC_LOG_LEVEL", "INFO")
+        if configured not in _SEVERITIES:
+            return "invalid ANECHOIC_LOG_LEVEL"
+        if getattr(logging, severity) < getattr(logging, configured):
+            return None
         try:
             record = self._record(
                 code=code,

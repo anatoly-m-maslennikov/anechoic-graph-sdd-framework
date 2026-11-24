@@ -7,7 +7,7 @@ priority: 2
 context:
   template: task
 state:
-  status: "canceled"
+  status: canceled
   version: 9
   updated_at: "2026-11-22T16:26:14.218682+00:00"
 ---

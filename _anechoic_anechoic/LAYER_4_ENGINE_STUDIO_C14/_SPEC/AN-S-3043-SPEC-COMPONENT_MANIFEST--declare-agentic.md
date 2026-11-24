@@ -29,6 +29,12 @@ declare_entity(
         component_id='C22',
         name='AGENTIC',
         lens_whitelist=['DES', 'DevOps', 'SPEC', 'SWD'],
+        boundaries={'code': {'imports': [], 'exports': {}},
+                    'state': {'reads': [], 'writes': []}},
     ),
 )
 ```
+
+## Boundary scope
+
+This definition delegates prompt guidance to C24 and skill guidance to C23. Its direct definition has no executable imports, exports, reads, or writes. The delegated Components retain their own boundaries.

@@ -18,12 +18,15 @@ from starlette.responses import JSONResponse, Response
 from starlette.routing import Route
 import uvicorn
 
+from .http_logging import http_log_config
+
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import attach_framework
 
 from ..model_host_CS5.model_host_CS5__shared import reviewed_native_model
 from ..structure_host_CS6.structure_host_CS6__shared import read_structure
 from .carrier_checkpoint import reuse_route
 from .database_route import database_route
+from .archive_generation import archive_pending, archive_route
 from .generation import replace_generation
 from .flows import flow_route, initialize_flows
 from . import ingestion_issues
@@ -166,6 +169,7 @@ def _generation_route(connection, instance_id, manifest_sha256, lock, queries, w
             fields = {"instance_id", "snapshot", "model", "structure", "receipt", "graph"}
             alternatives = (fields, fields | {"refresh_target"}, fields | {"reuse"}, fields | {"refresh_target", "reuse"})
             alternatives += tuple(option | {"carrier_hashes"} for option in alternatives)
+            alternatives += tuple(option | {"archive_pending"} for option in alternatives)
             data = await _read_object(request, 64 * 1024 * 1024, *alternatives)
             if data["instance_id"] != instance_id:
                 return _error("foreign_instance", "Instance does not match", 403)
@@ -191,32 +195,6 @@ def _generation_route(connection, instance_id, manifest_sha256, lock, queries, w
             return _error("journal_unavailable", "Work Journal is unavailable", 409)
 
     return admit_generation
-
-
-def _ingestion_route(connection, instance_id, lock):
-    async def issues(request):
-        if request.method == "GET":
-            if list(request.query_params.multi_items()) != [("instance_id", instance_id)]:
-                return _error("foreign_instance", "Instance does not match", 403)
-            with lock:
-                return JSONResponse({"result": {"rows": ingestion_issues.rows(connection)}})
-        try:
-            data = await _read_object(request, 64 * 1024 * 1024, {"instance_id", "source", "issues"})
-            if data["instance_id"] != instance_id:
-                return _error("foreign_instance", "Instance does not match", 403)
-            ingestion_issues.validate(data["source"], data["issues"])
-            with lock:
-                connection.execute("BEGIN TRANSACTION")
-                try:
-                    ingestion_issues.replace_issues(connection, data["source"], data["issues"])
-                    connection.execute("COMMIT")
-                except BaseException:
-                    connection.execute("ROLLBACK")
-                    raise
-            return JSONResponse({"result": {"source": data["source"], "count": len(data["issues"])}})
-        except (ValueError, TypeError, UnicodeError, duckdb.Error) as error:
-            return _error("invalid_ingestion_issues", str(error), 400)
-    return issues
 
 
 def _schema_route(connection, instance_id, lock):
@@ -271,20 +249,22 @@ def create_app(connection, instance_id, manifest_sha256, project_root=None, resu
     async def health(request):
         with lock:
             row = connection.execute("SELECT id FROM ops_generation").fetchone()
+            pending = archive_pending(connection)
         return JSONResponse({"result": {"instance_id": instance_id, "pid": os.getpid(),
             "manifest_sha256": manifest_sha256, "ready": row is not None,
-            "generation": row[0] if row else None}})
+            "archive_pending": pending, "generation": row[0] if row else None}})
 
     return Starlette(routes=[
         Route("/health", health),
         Route("/schema", _schema_route(connection, instance_id, lock)),
-        Route("/ingestion/issues", _ingestion_route(connection, instance_id, lock), methods=["GET", "PUT"]),
+        Route("/ingestion/issues", ingestion_issues.route(connection, instance_id, lock, _read_object, _error), methods=["GET", "PUT"]),
         Route("/flow/events", flow_route(connection, instance_id, lock, _read_object, _error), methods=["POST"]),
         Route("/database", database_route(connection, instance_id, lock, queries, sync_sources, project_root,
                                          saved_queries, _read_object, _error), methods=["POST"]),
         Route("/workspace", _workspace_route(workspaces, instance_id, lock, history, saved_queries), methods=["POST"]),
         Route("/results/rebuild", _rebuild_route(connection, instance_id, lock, queries, workspaces, sync_sources), methods=["POST"]),
-        Route("/generation/reuse", reuse_route(connection, instance_id, lock, _error)),
+        Route("/generation/reuse", reuse_route(connection, instance_id, lock, _read_object, _error), methods=["GET", "PUT"]),
+        Route("/generation/archive", archive_route(connection, instance_id, manifest_sha256, lock, _read_object, _error), methods=["PUT"]),
         Route("/generation/native", native_generation_route(connection, instance_id, manifest_sha256, lock, _read_object, _error), methods=["PUT"]),
         Route("/generation/native-delta", native_generation_route(connection, instance_id, manifest_sha256, lock, _read_object, _error), methods=["PUT"]),
         Route("/generation", _generation_route(connection, instance_id, manifest_sha256, lock, queries, workspaces, sync_sources), methods=["PUT"]),
@@ -325,6 +305,9 @@ def main():
     parser.add_argument("--journal-storage", choices=("files", "duckdb"), default="files")
     parser.add_argument("--journal-relative")
     args = parser.parse_args()
+    level = os.environ.get("ANECHOIC_LOG_LEVEL", "INFO")
+    if level not in ("DEBUG", "INFO", "WARNING", "ERROR"):
+        parser.error("Invalid ANECHOIC_LOG_LEVEL")
     if not args.instance_id or _HEX.fullmatch(args.manifest_sha256) is None:
         parser.error("Invalid Project binding")
     socket = socket_path(args.socket)
@@ -339,7 +322,8 @@ def main():
             listener.listen(128)
             app = create_app(connection, args.instance_id, args.manifest_sha256,
                              args.project_root, ttl, journal_sync, saved_queries)
-            server = uvicorn.Server(uvicorn.Config(app, log_level="warning"))
+            server = uvicorn.Server(uvicorn.Config(app, log_level=level.lower(), access_log=False,
+                                                   log_config=http_log_config()))
             server.run(sockets=[listener])
     finally:
         connection.close()

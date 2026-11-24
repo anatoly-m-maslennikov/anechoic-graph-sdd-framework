@@ -7,7 +7,7 @@ tier: 2
 context:
   lens: DES
 state:
-  status: "active"
+  status: active
   version: 4
   updated_at: "2026-11-22T01:02:41.627072+00:00"
 ---

@@ -7,7 +7,7 @@ tier: 2
 context:
   lens: SWD
 state:
-  status: "active"
+  status: active
   version: 11
   updated_at: "2026-11-22T08:47:49.126100+00:00"
 ---

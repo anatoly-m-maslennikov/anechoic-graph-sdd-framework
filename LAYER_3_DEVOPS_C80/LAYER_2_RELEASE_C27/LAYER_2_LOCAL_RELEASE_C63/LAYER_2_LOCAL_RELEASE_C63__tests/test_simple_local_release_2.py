@@ -236,12 +236,14 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
         with patch.dict(os.environ, {"PYTHONHOME": "/bad", "VIRTUAL_ENV": "/bad", "PYTHONPATH": "/bad"}), \
                 patch("LAYER_2_LOCAL_RELEASE_C63.local_release_runner.subprocess.run", side_effect=run), \
                 patch("LAYER_2_LOCAL_RELEASE_C63.local_release_runner.run_logged_test_process", side_effect=passed):
-            result = run_local_release(self.root, run_id="two-logs")
+            result = run_local_release(self.root, run_id="gate-logs")
         self.assertEqual("completed", result["outcome"], result)
-        self.assertEqual(["static", "unit", "image"], phases)
+        self.assertEqual(["static", "functional", "image"], phases)
         for phase in phases:
             path = self.root / result["test_log_paths"][phase]
             self.assertEqual(f"{phase} evidence\n", path.read_text())
+        receipt = (self.root / result["receipt_path"]).read_text()
+        self.assertIn(f"Complete functional test output: `{result['test_log_paths']['functional']}`", receipt)
         self.assertEqual(result["test_log_paths"]["image"], result["test_log_path"])
 
 

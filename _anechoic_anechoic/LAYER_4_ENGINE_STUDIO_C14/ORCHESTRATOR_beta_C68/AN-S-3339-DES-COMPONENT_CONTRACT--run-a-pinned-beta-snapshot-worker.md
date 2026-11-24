@@ -11,7 +11,7 @@ relations:
   ANSWERS:
   - AN-S-3337
 state:
-  status: "active"
+  status: active
   version: 24
   updated_at: "2026-11-23T10:26:33.104737+00:00"
 ---
@@ -21,8 +21,17 @@ Run a pinned Beta snapshot Worker
 
 ## Guarantee
 
-Run one pinned build at a time. Start a build at Project startup and
-after changes to watched Project sources. Watch code and dependency
+Watch before capturing the Project. Admit Current and Draft to make
+Studio ready. Load Archived Atoms in a separate Worker while the live
+lane handles source changes. Report archive progress and failures
+separately. Wait for complete history before admitting lifecycle writes.
+Use the watcher's completed observation to guard startup admission.
+Distinguish observed source changes from missing watcher coverage and
+write one bounded stderr record with the run ID, phase, wait time, and
+available Project-relative evidence for each failed fence.
+
+Serialize live builds and admissions. Start a live build at Project
+startup and after changes to watched Project sources. Watch code and dependency
 inputs when the Project enables its Realization Graph. Offer the generation
 to Kernel for admission. Report the active build and latest outcome. Retry a build with backoff
 when its input changes during capture.
@@ -56,11 +65,25 @@ when its generation matches the proof. Submit a native or native
 and Realization Graph refresh against that base. Run a full build
 if the base changed. Explicit rebuilds use the full build path.
 
-Attach the watcher before restart catch-up. Use an admitted proof
-and carrier checkpoint supplied by Kernel when available. Reuse the
-same generation only after Worker verifies its inputs and Kernel
-confirms the base. Admit a targeted delta when the offline changes
-fit that path.
+Report a failed Code Analyzer restart as a build issue and reserve the
+automatic generation retry for native source currentness failures.
+
+Attach the watcher before restart catch-up. Use Incremental Startup by
+default with a compatible persisted checkpoint from Kernel. Require Worker
+verification and Kernel confirmation of the base. Reuse an unchanged
+projection and admit the verified Current and Draft additions, edits,
+moves, and deletions before readiness.
+
+Use a full reload when the projection database or checkpoint is missing,
+the checkpoint is incompatible or cannot be verified, or a Model,
+Structure, or compiler schema input changed. When only Realization
+Graph inputs changed, request a Graph rebuild using the admitted
+Model and Structure.
+
+Run Archive catch-up in the background. Mark Archive pending while it
+catches up, including when prior checkpoint rows are visible. Clear
+that state only after Kernel confirms complete Archive. Report elapsed
+time to live readiness and Archive completion separately.
 
 Use native notifications for Ticket files where available. Retain
 polling for missed changes and other inputs. Send both paths for a

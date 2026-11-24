@@ -1,10 +1,6 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-3381
-concern:
-  components:
-  - C64
-  - C27
 container:
   component: C64
 tier: 1

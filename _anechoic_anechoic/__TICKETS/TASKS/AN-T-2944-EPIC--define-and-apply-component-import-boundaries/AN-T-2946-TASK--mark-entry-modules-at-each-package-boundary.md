@@ -7,7 +7,7 @@ priority: 2
 context:
   template: task
 state:
-  status: "in_queue"
+  status: in_queue
   version: 12
   updated_at: "2026-11-23T00:15:28.190910+00:00"
 ---

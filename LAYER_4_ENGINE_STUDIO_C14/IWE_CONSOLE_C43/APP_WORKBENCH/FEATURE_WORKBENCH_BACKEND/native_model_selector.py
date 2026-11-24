@@ -20,7 +20,6 @@ sys.path[:0] = list(map(str, (
 def _workbench_types():
     if ENGINE_ROOT.name == "LAYER_4_ENGINE_STUDIO_C14" or (ENGINE_ROOT / "pyproject.toml").is_file():
         from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import compile_content_schema
-        # Previous images can predate the shared exports for these types.
         from KERNEL_MIXER_C59.header_columns import HeaderColumn, HeaderSchema
         from KERNEL_MIXER_C59.query_store import QueryStore
     elif (ENGINE_ROOT / "KERNEL_MIXER_C59/query_store.py").is_file():
@@ -35,7 +34,6 @@ def _workbench_types():
 
 
 def select_claims(component: Path) -> list[list[str]]:
-    # The staging command mounts these codec modules in the previous image.
     from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.markdown_content__pub import parse_content
     from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.source_row__pub import atom
     from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_carrier_header__pub import native_header_view

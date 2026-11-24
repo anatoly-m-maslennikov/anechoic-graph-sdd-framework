@@ -16,7 +16,6 @@ def _content_properties(body: bytes, group: str, mode: bool | Literal["archive-s
     if not mode:
         return []
     if mode == "archive-summary" and group == "Archived":
-        # The generation index uses only the Summary of a migrated archive.
         if match := _ARCHIVED_SUMMARY.match(body):
             body = body[:match.end()]
     return parse_content(body.decode("utf-8"), tolerate_duplicate_siblings=True, compact=True)

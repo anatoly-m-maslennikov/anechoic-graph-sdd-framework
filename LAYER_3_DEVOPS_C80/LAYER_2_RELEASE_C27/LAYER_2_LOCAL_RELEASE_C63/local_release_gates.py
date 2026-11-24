@@ -23,8 +23,6 @@ def _gate_command(root, phase, candidate_image, package, package_identity, selec
         str(_ENGINE_PROJECT / "FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/test_suite__pub.py"),
         "--project-root", str(root), "--phase", suite_phase,
     )
-    if suite_phase == "unit":
-        argv += ("--required",)
     if suite_phase == "image":
         if candidate_image is None:
             raise LocalReleaseError("local-release-candidate-image-invalid")

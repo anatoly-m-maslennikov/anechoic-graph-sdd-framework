@@ -93,7 +93,7 @@ def assert_save_failures(test, api, control):
     journal.chmod(0o500)
     try:
         if os.access(journal, os.W_OK):
-            return  # A privileged test process can bypass file permissions.
+            return
         call = _caller(api)
         initial = _value(test, call, "query_saved_list", {})
         result = _value(test, call, "query_run", {"sql": "SELECT 42", "save": True, "result_delivery": "file"})

@@ -190,7 +190,6 @@ class ToolRegistryFixture:
         self.package = Path(self.temporary.name) / "package"
         self.feature = self.package / FEATURE_RELATIVE
         self.feature.mkdir(parents=True)
-        # Synthetic providers live outside the real Engine package.
         sys.path.insert(0, str(self.feature))
         self.addCleanup(sys.path.remove, str(self.feature))
         self.module = "provider_" + uuid4().hex

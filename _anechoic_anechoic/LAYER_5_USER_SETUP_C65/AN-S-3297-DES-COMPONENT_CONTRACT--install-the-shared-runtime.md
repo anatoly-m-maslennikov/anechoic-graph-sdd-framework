@@ -11,7 +11,7 @@ relations:
   ANSWERS:
   - AN-S-3296
 state:
-  status: "active"
+  status: active
   version: 8
   updated_at: '2026-11-23T14:19:28.649277+00:00'
 ---
@@ -32,6 +32,9 @@ UV_PROJECT_ENVIRONMENT="$setup/.venv-setup" \
 ```
 
 A first installation selects one Project repository or a containing folder. Later runs may use the saved settings. Setup owns machine-local `runtime.toml`. New settings default to port 8092, disk Workbench storage, and file Journal storage. Existing settings must not be overwritten by conflicting options.
+
+Use the machine-wide `[logging]` level in `runtime.toml` with default
+`INFO`. Validate and pass it to Studio at startup under AN-S-4741.
 
 Setup calls Release through its CLI to build an immutable shared runtime image and start it. Release verifies MCP through the published host port. For a single Project, it also verifies Project access. Only explicit `--init-project` initializes a new single Project.
 

@@ -22,6 +22,9 @@ UV_PROJECT_ENVIRONMENT="$PWD/LAYER_4_ENGINE_STUDIO_C14/.venv-dev" PYTHONPATH="$P
 
 `mcp-http-start` reports ready only after the loopback HTTP health check passes.
 
+`DuckPGQ.LICENSE` was copied from `cwida/duckpgq-extension` at commit
+`9c11bc192a071c9e44cef16cced90a22d7d7db2c`.
+
 ## MCP
 
 Use `mcp` for stdio MCP and `mcp-http-start` for the Project HTTP endpoint.

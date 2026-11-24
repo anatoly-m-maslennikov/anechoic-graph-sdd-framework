@@ -7,7 +7,7 @@ priority: 2
 context:
   template: Spec Proposal
 state:
-  status: "draft"
+  status: draft
   version: 1
   updated_at: "2026-11-22T13:08:08.161537+00:00"
 ---

@@ -29,6 +29,12 @@ declare_entity(
         component_id='C56',
         name='SUBJECT_TREE_ATOM_REWRITE_PROMPT',
         lens_whitelist=['DES'],
+        boundaries={'code': {'imports': {'only': []}, 'exports': {}},
+                    'state': {'reads': [], 'writes': []}},
     ),
 )
 ```
+
+## Boundary scope
+
+This definition covers subject_tree_atom_rewrite.prompt.md and compact_spec_rewrite.prompt.md. These carriers instruct a consumer; they do not perform the described reads, Draft writes, or state effects.

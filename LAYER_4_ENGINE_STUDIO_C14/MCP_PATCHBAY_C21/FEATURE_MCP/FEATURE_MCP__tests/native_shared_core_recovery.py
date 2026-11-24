@@ -68,7 +68,6 @@ async def _query_after_recovery(case, session, project):
             if not result.is_error:
                 case.assertEqual([[42]], result.structured_content["rows"])
                 return
-            # A replacement PID can exist before its initial admission succeeds.
             case.assertIn("project_gateway_busy", str(result.structured_content))
             if image_timeout(45) is None:
                 await asyncio.to_thread(assert_container_running, case._shared_candidate_container)

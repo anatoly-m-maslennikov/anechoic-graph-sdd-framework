@@ -15,7 +15,7 @@ from starlette.responses import HTMLResponse, JSONResponse
 
 from MCP_PATCHBAY_C21.FEATURE_MCP.health_page import render_health_page
 from MCP_PATCHBAY_C21.FEATURE_MCP.http_server import PORT, _accepts_html, streamable_app
-from MCP_PATCHBAY_C21.FEATURE_MCP.mcp_startup_boundary import run_startup, warning
+from MCP_PATCHBAY_C21.FEATURE_MCP.mcp_startup_boundary import http_log_config, run_startup, runtime_log_level, warning
 
 from MCP_PATCHBAY_C21.FEATURE_MCP.shared_backend import SharedBackendGateway
 
@@ -79,7 +79,8 @@ def _serve(args: argparse.Namespace) -> Any:
     import uvicorn
 
     app = create_app(args.host_settings)
-    uvicorn.run(app, host="0.0.0.0", port=PORT, log_level="warning")
+    uvicorn.run(app, host="0.0.0.0", port=PORT, log_level=runtime_log_level().lower(), access_log=False,
+                log_config=http_log_config())
 
 
 def main(argv: list[str] | None = None) -> Any:

@@ -4,6 +4,7 @@ import argparse
 import asyncio
 from concurrent.futures import CancelledError as FutureCancelledError
 from contextlib import ExitStack, asynccontextmanager
+from fcntl import LOCK_NB, LOCK_SH, flock
 import os
 from pathlib import Path
 import re
@@ -15,7 +16,7 @@ from starlette.routing import Route
 from MCP_PATCHBAY_C21.FEATURE_MCP.direct_gateway import native_project_gateway, native_runtime_gateway, startup_selection
 from MCP_PATCHBAY_C21.FEATURE_MCP.http_paths import HEALTH_PATH, MCP_PATH
 from mcp.server.transport_security import TransportSecuritySettings
-from MCP_PATCHBAY_C21.FEATURE_MCP.mcp_startup_boundary import run_startup, warning
+from MCP_PATCHBAY_C21.FEATURE_MCP.mcp_startup_boundary import http_log_config, run_startup, runtime_log_level, warning
 from MCP_PATCHBAY_C21.FEATURE_MCP.runtime_stack import runtime_stack
 from MCP_PATCHBAY_C21.FEATURE_MCP.workbench_web import routes as workbench_routes
 
@@ -144,7 +145,6 @@ def streamable_app(gateway, health_endpoint, *, shared=False):
                 started = True
                 yield
             finally:
-                # Single-Project initialization already closes on its own failure.
                 if started or shared:
                     await gateway.close()
 
@@ -155,11 +155,43 @@ def streamable_app(gateway, health_endpoint, *, shared=False):
     return guarded
 
 
+def _drain_refusal(gate):
+    try:
+        state = gate.read_text(encoding="ascii")
+    except FileNotFoundError:
+        return None
+    except (OSError, UnicodeError):
+        state = ""
+    return "project_manifest_invalid" if state == "project_manifest_invalid" else "project_manifest_reloading"
+
+
+def _guard_direct_transport(app, gate):
+    async def guarded(scope, receive, send):
+        if scope["type"] != "http" or scope["method"] in {"GET", "HEAD"}:
+            return await app(scope, receive, send)
+        if refusal := _drain_refusal(gate):
+            return await JSONResponse({"error": refusal}, status_code=503)(scope, receive, send)
+        with ExitStack() as stack:
+            try:
+                lock = stack.enter_context(gate.with_suffix(".transport").open("rb"))
+                flock(lock, LOCK_SH | LOCK_NB)
+            except OSError:
+                refusal = "project_manifest_reloading"
+            else:
+                refusal = _drain_refusal(gate)
+            if refusal:
+                return await JSONResponse({"error": refusal}, status_code=503)(scope, receive, send)
+            return await app(scope, receive, send)
+
+    return guarded
+
+
 def _serve(args, *, gateway_factory=None):
     if args.host != "0.0.0.0" or args.port != PORT:
         raise ValueError("HTTP MCP requires the container bind 0.0.0.0:8092")
     import uvicorn
 
+    level = runtime_log_level().lower()
     with ExitStack() as stack:
         if gateway_factory is not None:
             app = create_app(args.project_root, gateway_factory=gateway_factory, control_root=args.control_root)
@@ -168,7 +200,10 @@ def _serve(args, *, gateway_factory=None):
             socket = os.environ.get("ANECHOIC_BETA_BACKEND_SOCKET") if runtime_stack() == "beta" else None
             gateway = stack.enter_context(native_runtime_gateway(selection, backend_socket=socket))
             app = create_app(args.project_root, selection=selection, runtime_gateway=gateway)
-        uvicorn.run(app, host=args.host, port=args.port, log_level="warning")
+            if socket and (gate := os.environ.get("ANECHOIC_BETA_DIRECT_TRANSPORT_GATE")):
+                app.app = _guard_direct_transport(app.app, Path(gate))
+        uvicorn.run(app, host=args.host, port=args.port, log_level=level, access_log=False,
+                    log_config=http_log_config())
 
 
 def main(argv=None, *, gateway_factory=None):

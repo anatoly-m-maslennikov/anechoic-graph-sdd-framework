@@ -51,14 +51,14 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
                          [message.removeprefix("chore(release): simple local ") for message in commits])
 
 
-    def test_unit_gate_worktree_drift_is_refused_before_build(self):
+    def test_functional_gate_worktree_drift_is_refused_before_build(self):
         runner, calls = self._runner()
         drifted = False
 
         def changed(argv, cwd):
             nonlocal drifted
             result = runner(argv, cwd)
-            if "--phase" in argv and "unit" in argv:
+            if "--phase" in argv and argv[argv.index("--phase") + 1] == "functional":
                 drifted = True
             if drifted and argv[:2] == ("git", "status"):
                 return subprocess.CompletedProcess(argv, 0, "?? unrelated.txt\n", "")

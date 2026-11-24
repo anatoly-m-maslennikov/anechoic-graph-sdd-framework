@@ -40,7 +40,6 @@ def defer_container_cleanup(register, container: str) -> None:
         atexit.unregister(remove)
         remove()
 
-    # unittest skips its cleanups when an operator interrupts the test.
     atexit.register(remove)
     register(cleanup)
 
@@ -80,7 +79,6 @@ def run_browser(container, command, *, cwd, env, bounded_timeout=120):
                     assert_container_running(container)
                     sleep(.5)
             except BaseException:
-                # Playwright handles SIGINT and closes its browser processes.
                 process.send_signal(signal.SIGINT)
                 try:
                     process.wait(timeout=2)

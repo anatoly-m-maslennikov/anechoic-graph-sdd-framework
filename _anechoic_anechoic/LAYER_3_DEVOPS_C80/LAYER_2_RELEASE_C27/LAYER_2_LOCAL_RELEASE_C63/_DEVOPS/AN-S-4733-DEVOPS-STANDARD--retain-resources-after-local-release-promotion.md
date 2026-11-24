@@ -1,10 +1,6 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-4733
-concern:
-  components:
-  - C63
-  - C81
 container:
   component: C63
 tier: 2

@@ -7,7 +7,7 @@ priority: 2
 context:
   template: question
 state:
-  status: "in_queue"
+  status: in_queue
   version: 2
   updated_at: "2026-11-22T04:00:15.620612+00:00"
 ---

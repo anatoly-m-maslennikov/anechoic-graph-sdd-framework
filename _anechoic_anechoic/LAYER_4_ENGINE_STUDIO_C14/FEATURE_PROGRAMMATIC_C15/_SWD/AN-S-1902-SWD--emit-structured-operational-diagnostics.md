@@ -57,8 +57,9 @@ operation, degraded operation, failure, recovery, **or** diagnostic detail.
    Project-bound records carry the validated Project prefix from the existing bound
    Project selection and canonical prefix-field validation, never a guessed path,
    container, process or caller identity. Unbound host and service records keep
-   their existing host context without a Project prefix; do not invent a binding. This uses the selected immutable settings view; it
-   adds no settings carrier and makes no claim of full SettingsReader conformance.
+   their existing host context without a Project prefix; do not invent a binding.
+   Use AN-S-4741 for the Studio log level in the existing machine settings
+   and its propagation at startup.
    Configure bounded local rotation as `max-size=10m` and `max-file=3`, with Docker
    logging `mode=non-blocking` and `max-buffer-size=1m`; when that buffer is full,
    new technical messages may be dropped so logging cannot stall primary work.

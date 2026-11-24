@@ -60,6 +60,8 @@ async def _status(socket, database, instance_id, args):
     value = {"mode": "live_index", "syncing": runs.get("active") is not None,
              "last_synced_at": synced, "run_id": active.get("run_id"),
              "worker_alive": active.get("worker_alive")}
+    if "archive" in runs:
+        value["archive"] = runs["archive"]
     try:
         issues = await upstream(database, "GET", "/ingestion/issues", params={"instance_id": instance_id})
         rows = issues["result"]["rows"]

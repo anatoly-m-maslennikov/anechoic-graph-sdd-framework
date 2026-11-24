@@ -13,6 +13,7 @@ ENGINE = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ENGINE))
 
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import ExplicitStartupFailure  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_log_level import direct_log_level  # noqa: E402
 
 RUNTIME_MODES = frozenset({"mcp", "mcp-http", "shared-mcp"})
 
@@ -65,6 +66,10 @@ def _exec_service(mode):
                 if key in os.environ:
                     command += [flag, os.environ[key]]
     environment = {**{k: v for k, v in os.environ.items() if k != "PYTHONHOME"}, "PYTHONPATH": str(ENGINE)}
+    try:
+        environment["ANECHOIC_LOG_LEVEL"] = direct_log_level()
+    except ValueError as error:
+        raise ExplicitStartupFailure("invalid_log_level") from error
     if mode == "shared-mcp" and environment.get("ANECHOIC_RUNTIME_STACK") == "beta":
         from MCP_PATCHBAY_C21.FEATURE_MCP.docker.shared_supervisor import supervise
         return supervise(command, environment, environment["ANECHOIC_HOST_SETTINGS"])

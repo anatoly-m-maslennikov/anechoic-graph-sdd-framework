@@ -12,7 +12,7 @@ relations:
   - AN-S-3361@2
   - AN-S-3387@2
   IS_SOLUTION_FOR:
-  - AN-S-3336@22
+  - AN-S-3336@25
 state:
   status: active
   version: 2
@@ -68,5 +68,5 @@ component_workflow(
 
 ## Details
 
-This Solution defines the expected event sequence for the selected workflow.
-Trace conformance requires recorded evidence.
+The event names describe an expected sequence; the Worker does not record
+them as flow events. Trace conformance requires recorded evidence.

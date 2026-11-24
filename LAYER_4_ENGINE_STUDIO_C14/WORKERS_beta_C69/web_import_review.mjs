@@ -22,7 +22,7 @@ for (const [, source, target, written, line, column, status] of input.occurrence
   const list = links.get(from) || [];
   list.push({to, written, line, column}); links.set(from, list);
 }
-// Only a local, standalone config with explicit relevant options is supported.
+
 let opts = null;
 if (input.config !== null) {
   const parsed = ts.parseConfigFileTextToJson('tsconfig.json', input.config);

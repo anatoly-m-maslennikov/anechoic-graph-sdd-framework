@@ -8,7 +8,7 @@ context:
   template: component_manifest
   lens: SPEC
 state:
-  status: "active"
+  status: active
   version: 23
   updated_at: "2026-11-23T00:34:06.429864+00:00"
 ---
@@ -103,3 +103,7 @@ declare_entity(
     ),
 )
 ```
+
+## Details
+
+The Formal Model Engine belongs to C15. C15 delegates Model generation, bundled classes, and Model validation to C51 and its children. Existing code grants above remain in force.

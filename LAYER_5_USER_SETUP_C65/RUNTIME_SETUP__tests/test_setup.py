@@ -56,11 +56,27 @@ class RuntimeSetupTests(unittest.TestCase):
         self.assertEqual((original, False), select_settings(self.arguments()))
         saved = tomllib.loads(self.settings.read_text())
         self.assertEqual(str(self.project), saved["shared_mcp"]["project_root"])
+        self.assertEqual({"level": "INFO"}, saved["logging"])
         self.assertEqual(0o600, self.settings.stat().st_mode & 0o777)
         with self.assertRaisesRegex(ValueError, "conflicts"):
             select_settings(self.arguments("--projects-root", str(self.project)))
         with self.assertRaisesRegex(ValueError, "conflicts"):
             select_settings(self.arguments("--port", "8092"))
+
+    def test_accepts_legacy_and_strict_logging_settings(self):
+        base = f'schema_version=1\n[shared_mcp]\nproject_root="{self.project}"\nhttp_port=8092\n'
+        cases = [("", "INFO"), ("[logging]\n", "INFO"), ('[logging]\nlevel="DEBUG"\n', "DEBUG")]
+        for suffix, expected in cases:
+            with self.subTest(suffix=suffix):
+                self.settings.parent.mkdir(exist_ok=True)
+                self.settings.write_text(base + suffix)
+                values, new = select_settings(self.arguments())
+                self.assertFalse(new)
+                self.assertEqual(expected, values.log_level)
+        for suffix in ('[logging]\nlevel="debug"\n', '[logging]\nlevel=42\n', '[logging]\nextra=true\n'):
+            with self.subTest(suffix=suffix), self.assertRaisesRegex(ValueError, "Invalid|Unrecognized"):
+                self.settings.write_text(base + suffix)
+                select_settings(self.arguments())
 
     def test_settings_atomic_create_preserves_existing_configuration(self):
         values, _ = select_settings(self.arguments("--projects-root", str(self.project)))

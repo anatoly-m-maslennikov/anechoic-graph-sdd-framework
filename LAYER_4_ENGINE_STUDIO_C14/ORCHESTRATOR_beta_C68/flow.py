@@ -1,12 +1,12 @@
 """Bounded, best-effort observations for one generation run."""
 import hashlib
 import json
-import sys
 import threading
 import time
 import uuid
 
 from .jobs import UnixConnection
+from .watcher_diagnostics import emit_record
 
 _UNIT = {
     "path": "LAYER_4_ENGINE_STUDIO_C14/ORCHESTRATOR_beta_C68/ORCHESTRATOR_beta_C68__shared.py",
@@ -85,8 +85,8 @@ class Flow:
                     raise RuntimeError("HTTP status " + str(response.status))
             finally:
                 connection.close()
-        except Exception as error:
-            print(f"Flow publish failed: {type(error).__name__}: {error}", file=sys.stderr)
+        except Exception:
+            emit_record("WARNING", "flow_publish_failed", "publish_flow", "degraded", self.run_id)
 
 
 def safe_target(target):

@@ -29,6 +29,11 @@ declare_entity(
         component_id='C51',
         name='MODEL',
         lens_whitelist=['DES', 'SPEC'],
+        boundaries={'code': {'imports': [], 'exports': {}}},
     ),
 )
 ```
+
+## Details
+
+C51 groups C50 Model generation, C52 bundled Model classes, and C53 Model validation. Each child declares its own boundaries. C51 has no separate execution entry point or own IO or state boundary.

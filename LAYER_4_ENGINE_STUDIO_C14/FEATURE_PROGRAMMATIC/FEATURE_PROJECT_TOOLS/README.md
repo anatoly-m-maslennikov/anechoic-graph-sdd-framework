@@ -138,7 +138,7 @@ tests and then the canary; required skips fail.
 
 ## Source comments
 
-Engine QA Standard AN-S-3183 defines the source comment rule.
+Engine QA Standard AN-S-4739 defines the source comment rule.
 The full suite reports ordinary comments in the Engine and Delivery source.
 The check covers Python, Docker recipes, and the JavaScript, TypeScript, Svelte,
 CSS, and HTML sources. It retains executable and tooling directives and reports

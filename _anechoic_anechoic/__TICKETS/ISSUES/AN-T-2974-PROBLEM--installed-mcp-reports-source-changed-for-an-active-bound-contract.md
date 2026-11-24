@@ -2,15 +2,19 @@
 atom_family: TKT
 atom_id: AN-T-2974
 concern:
-- component(id=C21)
-- component(id=C30)
+- subject: C21
+  path: Project Structure.components
+  relation: affects
+- subject: C30
+  path: Project Structure.components
+  relation: affects
 container:
   component: C21
 priority: 2
 context:
   template: problem
 state:
-  status: "in_queue"
+  status: in_queue
   version: 3
   updated_at: "2026-11-22T02:08:54.419181+00:00"
 ---

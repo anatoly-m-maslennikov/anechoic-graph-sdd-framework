@@ -17,7 +17,6 @@ def _simple(node):
 
 
 def _flow(body, states, binding, receiver, token, booleans):
-    # States are (active, exit kind, uncertain); finalizers run for every exit.
     for statement in body:
         next_states = set()
         for active, exit_kind, uncertain in states:
@@ -49,7 +48,6 @@ def _flow(body, states, binding, receiver, token, booleans):
             elif isinstance(statement, ast.Pass) or (isinstance(statement, ast.Expr) and isinstance(statement.value, ast.Constant)):
                 next_states.add((active, 'normal', uncertain))
             else:
-                # Unknown effects may raise or alter the token/context; they cannot prove a leak.
                 contains_binding = any(n is binding for n in ast.walk(statement))
                 invalidates = any(isinstance(n, ast.Name) and isinstance(n.ctx, (ast.Store, ast.Del))
                                   and n.id in (receiver, token) for n in ast.walk(statement))

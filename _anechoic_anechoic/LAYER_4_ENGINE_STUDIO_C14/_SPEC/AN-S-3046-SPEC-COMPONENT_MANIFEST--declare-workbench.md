@@ -32,6 +32,11 @@ declare_entity(
         component_id='C43',
         name='WORKBENCH',
         lens_whitelist=['DES', 'DevOps', 'QA', 'SPEC', 'SWD'],
+        boundaries={
+            'code': {'imports': [], 'exports': {}},
+            'io': {'client': {'workbench': {'component': 'C21', 'interface': 'workbench_http'}}},
+            'state': {'reads': [], 'writes': []},
+        },
     ),
 )
 ```

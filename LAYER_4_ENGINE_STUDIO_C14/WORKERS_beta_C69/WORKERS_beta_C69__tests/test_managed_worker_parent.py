@@ -70,7 +70,6 @@ class ManagedWorkerParentTests(unittest.TestCase):
                     self.assertEqual(pids["worker"], os.getpgid(pids["descendant"]))
                     parent.kill()
                     self.assertEqual(-signal.SIGKILL, parent.wait(timeout=5))
-                    # The Worker and its descendant both hold stdout. Keep stdin open to exercise parent loss.
                     self.assertEqual(b"", _line(parent.stdout))
                     stopped = True
                 finally:

@@ -27,7 +27,7 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         url = urlsplit(self.path)
         if url.path == "/health" and not url.query:
-            return self.respond(200, {"result": {"instance_id": self.server.jobs.instance_id, "pid": os.getpid()}})
+            return self.respond(200, {"result": self.server.jobs.health()})
         if url.path == "/jobs/worker-runs":
             query = parse_qs(url.query, keep_blank_values=True)
             if query != {"instance_id": [self.server.jobs.instance_id]}:

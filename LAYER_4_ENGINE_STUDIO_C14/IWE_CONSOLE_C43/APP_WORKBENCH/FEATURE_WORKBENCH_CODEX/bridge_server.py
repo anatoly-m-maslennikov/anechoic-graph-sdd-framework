@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
 
-if not __package__:  # Direct launcher invocation.
+if not __package__:
     import sys
     sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_CODEX.bridge import CodexBridge

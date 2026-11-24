@@ -69,7 +69,6 @@ class DatabaseServerTest(unittest.TestCase):
     def assert_state_projection(self, client, payload, graph, set_graph):
         graph["state_effect_findings"] = [["m", "pkg/m.py", "python", "run", 1, None,
                                             "unresolved", False, "[]", "[]", "no Lean"]]
-        # The source identity is part of the admitted protocol.
         set_graph(graph)
         self.assertEqual(400, client.put("/generation", json=payload).status_code)
         graph["nodes"][2][0] = "module:pkg/m.py"
