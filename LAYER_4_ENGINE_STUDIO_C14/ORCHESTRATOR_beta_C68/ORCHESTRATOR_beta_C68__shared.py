@@ -144,7 +144,7 @@ class GenerationJobs(ArchiveJobs, GenerationWorker, AbortJobs, LifecycleJobs, Jo
                 elif any(changes) or due or job is not None:
                     self.flow_context = {"job": job, "changes": changes if job is None else (), "retry": due}
                     outcome = self._generate(job["target"] if job is not None else None,
-                                             changes=changes if job is None else ())
+                                             changes=tuple(change for change in changes if change) if job is None else ())
                     retry.observe(outcome)
                     with self.lock:
                         if job is not None:

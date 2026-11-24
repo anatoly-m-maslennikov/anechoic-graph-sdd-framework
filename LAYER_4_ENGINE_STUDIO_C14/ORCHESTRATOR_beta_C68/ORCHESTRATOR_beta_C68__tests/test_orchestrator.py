@@ -32,6 +32,31 @@ class UnixConnection(http.client.HTTPConnection):
 
 
 class OrchestratorTests(unittest.TestCase):
+    def test_internal_wake_does_not_prevent_ticket_delta(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            control, manifest = project(root)
+            ticket = control / "__TKT/AN-T-1--task.md"
+            ticket.parent.mkdir()
+            ticket.touch()
+            binding = {"root": str(root), "control_root": control.name, "manifest_path": manifest.name,
+                       "manifest_sha256": sha256(manifest.read_bytes()).hexdigest(), "project_prefix": "AN"}
+            jobs = module.GenerationJobs("test", binding, str(root / "kernel.sock"))
+            event = {"old_path": str(ticket), "new_path": None, "event_type": "created", "is_directory": False}
+
+            def generate(target=None, *, changes=(), startup=False):
+                if not startup:
+                    jobs.stopping.set()
+                    self.assertEqual([ticket.relative_to(root).as_posix()], module.ticket_delta_paths(binding, changes))
+                return {"state": "succeeded"}
+
+            with (patch.object(module, "read_reuse", return_value=None),
+                  patch.object(jobs, "_run_archive"),
+                  patch.object(jobs, "_generate", side_effect=generate) as capture,
+                  patch.object(jobs.watcher, "changes", side_effect=[[{}], [{}, event]])):
+                jobs._watch()
+            self.assertEqual(2, capture.call_count)
+
     def test_generation_worker_does_not_relay_raw_traceback(self):
         with tempfile.TemporaryDirectory() as directory:
             binding = {"root": directory, "control_root": "control", "manifest_path": "manifest.md",
