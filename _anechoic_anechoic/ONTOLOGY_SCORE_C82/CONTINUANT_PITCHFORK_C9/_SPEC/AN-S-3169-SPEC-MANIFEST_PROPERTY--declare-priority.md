@@ -9,13 +9,17 @@ context:
   template: manifest_property
 state:
   status: "active"
-  version: 4
-  updated_at: "2026-11-25T16:00:38.042166+00:00"
+  version: 5
+  updated_at: "2026-11-25T19:43:53.452606+00:00"
 ---
 
 ## Summary
 
 Declare Priority
+
+## Semantics
+
+Priority orders Ticket work independently of blocking dependencies and Specification Tier.
 
 ## Formal Manifest
 

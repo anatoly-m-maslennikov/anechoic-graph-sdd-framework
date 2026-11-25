@@ -9,7 +9,7 @@ Implementation is governed by PROMPTS RMED in the existing
 - R: CA-R-1801 (complete local review capability), CA-R-1802 (truthful completion).
 - M: CA-M-317 (semantic assessment separate from heading recognition).
 - E: CA-E-524 (golden implementation scenarios, distinct from methodology checks).
-- D: CA-D-509 (prompt package), CA-D-510 (coverage/correction report encoding).
+- D: CA-D-509 (prompt package), AN-S-1577 (coverage/correction report encoding).
 - Run evidence: CA-D-511 (shared Journal and full Markdown report).
 
 `source_bindings.json` records current known source bindings and unresolved

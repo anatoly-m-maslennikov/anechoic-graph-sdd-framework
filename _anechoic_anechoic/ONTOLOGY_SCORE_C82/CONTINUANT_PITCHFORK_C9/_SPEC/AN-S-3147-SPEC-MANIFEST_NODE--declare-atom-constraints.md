@@ -9,8 +9,8 @@ context:
   template: manifest_node
 state:
   status: "active"
-  version: 4
-  updated_at: "2026-11-25T16:00:37.955960+00:00"
+  version: 5
+  updated_at: "2026-11-25T20:15:29.329209+00:00"
 ---
 
 ## Summary
@@ -20,6 +20,10 @@ Declare Atom Constraints
 ## Claim scope
 
 MODEL//ANECHOIC <+ Graph/Node//Artifact//SSOT//Prescribed/Content/Atom.Constraints
+
+## Semantics
+
+Each stable Atom ID has at most one Current revision. An exact Ref ID identifies one revision in its applicable state.
 
 ## Formal Manifest
 

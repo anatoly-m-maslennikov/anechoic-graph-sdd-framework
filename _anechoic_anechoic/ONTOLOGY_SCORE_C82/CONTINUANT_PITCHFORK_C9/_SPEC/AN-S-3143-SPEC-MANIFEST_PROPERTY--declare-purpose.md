@@ -9,8 +9,8 @@ context:
   template: manifest_property
 state:
   status: "active"
-  version: 4
-  updated_at: "2026-11-25T16:00:37.931663+00:00"
+  version: 5
+  updated_at: "2026-11-25T18:11:24.559884+00:00"
 ---
 
 ## Summary
@@ -22,12 +22,14 @@ Declare Purpose
 ```python anechoic-edsl
 # Anechoic Python eDSL
 
+from anechoic.formal_claims import Cardinality
 from anechoic.model import ComponentSeedManifest, Property
 
 class Property3143(Property):
     name = 'Purpose'
     bearer = ComponentSeedManifest
-    property.cardinality = 1
+    field_options = {'default': None, 'kw_only': True}
+    property.cardinality = Cardinality(minimum=0, maximum=1)
     property.value.cardinality = 1
-    property.value.format = str
+    property.value.format = str | None
 ```

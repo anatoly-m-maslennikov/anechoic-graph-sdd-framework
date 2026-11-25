@@ -18,6 +18,7 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import
 )
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.project_selection import _instance_id, _project_root
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import CEILINGS, ReadContext, open_regular, protected
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.project_manifest__pub import manifest_summary_fields
 
 
 def is_native_control_name(name: str) -> bool:
@@ -92,6 +93,7 @@ def resolve_native_project(
     validate_manifest: Callable[[dict[str, object], str], ManifestIdentity],
     require_atom_state: bool = False,
     require_atom_header: bool = False,
+    require_manifest_summary: bool = False,
 ) -> NativeProjectSelection:
     """Validate the Manifest with the caller's compiled model and Project container."""
     root = _project_root(project_root)
@@ -112,6 +114,8 @@ def resolve_native_project(
         fields, component_id = manifest_inputs(path, carrier)
         if require_atom_state or require_atom_header:
             fields.update(manifest_state_fields(carrier, include_header=require_atom_header))
+        if require_manifest_summary:
+            fields.update(manifest_summary_fields(carrier))
         manifest = validate_manifest(fields, component_id)
         parameters = getattr(manifest, "parameters", fields.get("parameters", {}))
         if not isinstance(parameters, dict):

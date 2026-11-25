@@ -64,6 +64,20 @@ def validate (input : Input) : Except String Unit := do
   for event in input.events do
     let _ ← event.detail.getObj?
 
+def upperBound (value : Json) : Option Nat := do
+  let .obj fields := value | none
+  if fields.toList.length != 1 then none else do
+    let bound ← fields.get? "at_most"
+    bound.getNat?.toOption
+
+def detailMatches (expected actual : Json) : Bool :=
+  if expected == actual then true else
+  match upperBound expected with
+  | none => false
+  | some bound =>
+    let actualBound := upperBound actual <|> actual.getNat?.toOption
+    actualBound.any (fun n => n <= bound)
+
 def eventMatches (t : Transition) (e : Event) : Bool := Id.run do
   if t.event != e.name then return false
   let .ok fields := t.expect.getObj? | return false
@@ -77,7 +91,7 @@ def eventMatches (t : Transition) (e : Event) : Bool := Id.run do
     if key == "detail" then
       let .ok expected := value.getObj? | return false
       let .ok observed := actual.getObj? | return false
-      if !(expected.all fun k v => observed.get? k == some v) then return false
+      if !(expected.all fun k v => (observed.get? k).any (detailMatches v)) then return false
     else if value != actual then return false
   return true
 

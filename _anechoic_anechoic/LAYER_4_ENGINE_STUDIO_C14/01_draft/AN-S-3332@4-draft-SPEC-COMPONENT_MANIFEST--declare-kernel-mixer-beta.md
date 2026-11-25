@@ -55,6 +55,10 @@ declare_entity(
                 'beta_artifact_read': {
                     'outcomes': {
                         'succeeded': {'must_effect': [('artifact_response', 'paired')]},
+                        'structure_returned': {
+                            'must_effect': [('structure', 'rendered_from_accepted_rows'),
+                                            ('artifact_response', 'paired')],
+                        },
                         'foreign_instance': {'forbid_effect': ['artifact_response']},
                         'no_generation': {'forbid_effect': ['artifact_response']},
                     },

@@ -97,15 +97,15 @@ declare_entity(
                                               'output': 'native lifecycle outcome and effects on stdout'},
                            'worker_ticket_lifecycle': {'outcomes': {
                                'delta_returned': {
-                                   'must_effect': (('C69.lifecycle_result', 'outcome_and_delta_returned'),),
+                                   'must_effect': (('C69.lifecycle_result', 'outcome_and_delta_returned'), ('C16', 'lifecycle_requested'), ('C16', 'outcome_and_file_effects_received')),
                                    'forbid_effect': ('C69.full_generation',),
                                },
                                'projection_failed': {
-                                   'must_effect': (('C69.projection_error', 'reported'),),
+                                   'must_effect': (('C69.projection_error', 'reported'), ('C16', 'lifecycle_requested'), ('C16', 'outcome_and_file_effects_received')),
                                    'forbid_effect': ('C69.lifecycle_result', 'C69.full_generation'),
                                },
                            }}},
-                'client': {'task_lifecycle': {'component': 'C16', 'interface': 'task_lifecycle'},
+                'client': {'task_lifecycle': {'component': 'C16', 'interface': 'task_lifecycle', 'transport': 'cli'},
                            'manifest_build': {'component_seed': 'CS4', 'transport': 'cli'},
                            'native_snapshot': {'component': 'C30',
                                                'interface': 'native_snapshot'},

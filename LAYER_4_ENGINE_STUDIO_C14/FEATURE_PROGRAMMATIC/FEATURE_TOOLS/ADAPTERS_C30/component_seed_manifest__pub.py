@@ -31,9 +31,11 @@ def _fields(body):
         else:
             end_line = tokens[end].map[0] if end < len(tokens) else len(lines)
             sections[title] = '\n'.join(lines[token.map[1]:end_line]).strip()
-    if (tuple(sections) != ('Formal Manifest', 'Purpose', 'Solution')
-            or not sections['Purpose'] or not sections['Solution']):
-        raise ValueError('Expected Formal Manifest, Purpose and Solution sections in order')
+    order = ('Formal Manifest', 'Purpose', 'Contract', 'Solution')
+    if (tuple(sections) != tuple(name for name in order if name in sections)
+            or 'Formal Manifest' not in sections
+            or any(not sections[name] for name in sections)):
+        raise ValueError('Expected Formal Manifest followed by nonempty optional sections in order')
     claim = parse_native_model_claim(sections['Formal Manifest'])
     args = claim['arguments'] if claim and claim['kind'] == 'entity' else {}
     instance = args.get('instance', {})
@@ -46,7 +48,7 @@ def _fields(body):
     if not isinstance(fields.get('component_seed_id'), str) or not re.fullmatch(r'CS[0-9]+', fields['component_seed_id']):
         raise ValueError('Invalid Component Seed Manifest ID')
     parse_code_access(fields.get('boundaries'))
-    return fields | {'purpose': sections['Purpose'], 'solution': sections['Solution']}
+    return fields | {name.lower(): sections[name] for name in order[1:] if name in sections}
 
 
 def read_component_seed_manifest(path, carrier, parent, prefix):

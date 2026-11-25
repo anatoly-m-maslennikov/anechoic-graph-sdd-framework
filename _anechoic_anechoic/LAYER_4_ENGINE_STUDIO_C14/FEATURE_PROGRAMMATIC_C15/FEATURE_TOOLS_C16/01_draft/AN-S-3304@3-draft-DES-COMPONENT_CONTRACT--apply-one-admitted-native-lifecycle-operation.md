@@ -33,6 +33,7 @@ before writing.
 
 The output record properties identify logical fields. A preflight
 rejection reports invalid or stale input before lifecycle dispatch.
+Report runtime failures separately and preserve any observed file effects.
 
 ### Formal Claim
 
@@ -47,6 +48,6 @@ declare_cli_contract(
     stdout={'succeeded': 'native outcome and file effects on stdout'},
     output='preflight_rejected',
     forbid_effect=('lifecycle_dispatch', 'atom_write'),
-    checks={'output_format': {'record_properties': ('outcome', 'file_effects')}},
+    output_fields=('outcome', 'file_effects'),
 )
 ```

@@ -9,8 +9,8 @@ context:
   template: manifest_property
 state:
   status: "active"
-  version: 4
-  updated_at: "2026-11-25T17:11:01.252590+00:00"
+  version: 7
+  updated_at: "2026-11-25T20:41:48.756050+00:00"
 ---
 
 ## Summary
@@ -39,4 +39,4 @@ class atom_relations(Property):
 
 ## Semantics
 
-A Relation states how this Atom is connected to another Atom. A replacement identifies the earlier Atom whose contribution this Atom supersedes.
+A Relation states how this Atom is connected to another Atom. Different Relation names can express different facts about the same pair. Author each fact at its source. Derived inverse facts belong to the graph projection. Target order carries no Relation meaning. Use stable Atom IDs by default and exact revision references for History and Trace. A replacement identifies the earlier Atom whose contribution this Atom supersedes.

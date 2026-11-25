@@ -74,9 +74,10 @@ unready while the Manifest is invalid, and block affected writes.
 
 ### Formal Claim
 
-The modeled checkpoint covers the selected Project's binding, pair readiness,
-Current and Draft catch-up, and refusal for an invalid Manifest. The observations
-confirm readiness evidence that can arrive in any order before admission.
+For the selected Beta Project, Studio confirms the Project binding, both
+processes' readiness, and Current and Draft catch-up from Orchestrator C68.
+It reports an invalid Manifest separately. It can observe Kernel and
+Orchestrator readiness in either order.
 
 ```python
 component_workflow(
@@ -88,27 +89,35 @@ component_workflow(
         'states': {
             'checking_binding': {'on': {
                 'binding_validated': {'target': 'waiting_for_pair', 'guard': {'type': 'matchesTrace',
-                    'params': {'kind': 'effect', 'target': 'project_manifest', 'outcome': 'binding_validated'}}},
+                    'params': {'kind': 'effect', 'target': 'project_manifest', 'outcome': 'binding_validated',
+                               'detail': {'project': 'selected_project', 'runtime_pair': 'selected_runtime_pair'}}}},
                 'invalid_manifest_reported': {'target': 'reporting_invalid', 'guard': {'type': 'matchesTrace',
                     'params': {'kind': 'effect', 'target': 'invalid_manifest', 'outcome': 'reported'}}},
             }},
             'waiting_for_pair': {'on': {'role_ready': [
                 {'target': 'waiting_for_orchestrator', 'guard': {'type': 'matchesTrace',
-                    'params': {'kind': 'effect', 'target': 'kernel', 'outcome': 'ready'}}},
+                    'params': {'kind': 'effect', 'target': 'kernel', 'outcome': 'ready',
+                               'detail': {'project': 'selected_project', 'runtime_pair': 'selected_runtime_pair'}}}},
                 {'target': 'waiting_for_kernel', 'guard': {'type': 'matchesTrace',
-                    'params': {'kind': 'effect', 'target': 'orchestrator', 'outcome': 'ready'}}},
+                    'params': {'kind': 'effect', 'target': 'orchestrator', 'outcome': 'ready',
+                               'detail': {'project': 'selected_project', 'runtime_pair': 'selected_runtime_pair'}}}},
             ]}},
             'waiting_for_orchestrator': {'on': {
                 'orchestrator_ready': {'target': 'confirming_catch_up', 'guard': {'type': 'matchesTrace',
-                    'params': {'kind': 'effect', 'target': 'orchestrator', 'outcome': 'ready'}}},
+                    'params': {'kind': 'effect', 'target': 'orchestrator', 'outcome': 'ready',
+                               'detail': {'project': 'selected_project', 'runtime_pair': 'selected_runtime_pair'}}}},
             }},
             'waiting_for_kernel': {'on': {
                 'kernel_ready': {'target': 'confirming_catch_up', 'guard': {'type': 'matchesTrace',
-                    'params': {'kind': 'effect', 'target': 'kernel', 'outcome': 'ready'}}},
+                    'params': {'kind': 'effect', 'target': 'kernel', 'outcome': 'ready',
+                               'detail': {'project': 'selected_project', 'runtime_pair': 'selected_runtime_pair'}}}},
             }},
             'confirming_catch_up': {'on': {
                 'catch_up_confirmed': {'target': 'reporting', 'guard': {'type': 'matchesTrace',
-                    'params': {'kind': 'effect', 'target': 'current_and_draft', 'outcome': 'catch_up_confirmed'}}},
+                    'params': {'kind': 'effect', 'target': 'current_and_draft', 'outcome': 'catch_up_confirmed',
+                        'detail': {'project': 'selected_project', 'runtime_pair': 'selected_runtime_pair',
+                                   'component': 'C68', 'action': 'beta_startup_catch_up',
+                                   'output': 'live_catch_up_confirmed'}}}},
             }},
             'reporting_invalid': {'on': {
                 'project_unready': {'target': 'refused', 'guard': {'type': 'matchesTrace',

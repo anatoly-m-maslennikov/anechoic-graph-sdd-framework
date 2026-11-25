@@ -35,7 +35,10 @@ def _failure(native, errors):
 
 def _result(name, reply):
     projection = reply["projection"]
-    if projection["state"] not in {"ready", "failed"} or reply["write_state"] not in {"known", "unknown"}:
+    if projection["state"] not in {"ready", "failed", "blocked"} or reply["write_state"] not in {"known", "unknown"}:
+        raise ValueError("Invalid lifecycle outcome")
+    if projection["state"] == "blocked" and (reply["write_state"] != "known"
+            or reply["lifecycle"].get("outcome") != "blocked"):
         raise ValueError("Invalid lifecycle outcome")
     failure = [projection["error"]] if projection["state"] == "failed" else []
     if reply["write_state"] == "unknown":

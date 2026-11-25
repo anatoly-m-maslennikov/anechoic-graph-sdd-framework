@@ -7,7 +7,7 @@ import tempfile
 from pathlib import Path
 
 from .backend_http_checks import extract_backend_checks
-from SPEC_ENGINE_C75.contract_model__pub import lean_string
+from SPEC_ENGINE_C75.LAYER_3_LEAN_TRANSLATOR_C84.lean_values__pub import lean_string
 
 from .backend_http_contract import contract_to_lean
 from .backend_http_source import extract_http_observations

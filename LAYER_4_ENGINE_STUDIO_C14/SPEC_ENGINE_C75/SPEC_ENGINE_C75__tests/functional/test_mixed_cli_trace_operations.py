@@ -4,8 +4,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from SPEC_ENGINE_C75.cli_spec__pub import check_cli_spec
-from SPEC_ENGINE_C75.trace_spec__pub import check_trace_spec
+from SPEC_ENGINE_C75.LAYER_4_SPEC_COMPARISON_C88.cli_spec__pub import check_cli_spec
+from SPEC_ENGINE_C75.LAYER_4_SPEC_COMPARISON_C88.trace_spec__pub import check_trace_spec
 from SPEC_ENGINE_C75.SPEC_ENGINE_C75__tests.functional.test_cli_spec import (
     _CONTRACT, _MANIFEST, _SOLUTION, _carrier,
 )

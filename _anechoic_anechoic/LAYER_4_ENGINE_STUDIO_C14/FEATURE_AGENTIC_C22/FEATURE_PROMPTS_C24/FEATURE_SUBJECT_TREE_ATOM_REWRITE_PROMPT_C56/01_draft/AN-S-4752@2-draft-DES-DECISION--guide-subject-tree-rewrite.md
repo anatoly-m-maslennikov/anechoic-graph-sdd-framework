@@ -18,7 +18,7 @@ state:
 
 ## Summary
 
-Guide subject tree rewrite
+Guide subject tree and compact Spec rewrites
 
 ## Claim
 
@@ -57,8 +57,45 @@ component_workflow(
 )
 ```
 
+```python
+component_workflow(
+    component='C56',
+    action='compact_spec_rewrite',
+    machine={
+        'id': 'c56_compact_spec_rewrite',
+        'initial': 'idle',
+        'states': {
+            'idle': {'on': {
+                'rewrite_requested': {'target': 'source_guidance', 'guard': {'type': 'matchesTrace', 'params': {'kind': 'trigger'}}},
+            }},
+            'source_guidance': {'on': {
+                'current_source_guidance_provided': {'target': 'gate_guidance', 'guard': {'type': 'matchesTrace', 'params': {'kind': 'effect', 'target': 'current_source_guidance', 'outcome': 'provided'}}},
+            }},
+            'gate_guidance': {'on': {
+                'size_gate_guidance_provided': {'target': 'response', 'guard': {'type': 'matchesTrace', 'params': {'kind': 'effect', 'target': 'size_gate_guidance', 'outcome': 'provided'}}},
+            }},
+            'response': {'on': {
+                'draft_returned': {'target': 'done', 'guard': {'type': 'matchesTrace', 'params': {'kind': 'output', 'outcome': 'draft_returned'}}},
+                'held_returned': {'target': 'done', 'guard': {'type': 'matchesTrace', 'params': {'kind': 'output', 'outcome': 'held_returned'}}},
+            }},
+            'done': {'type': 'final'},
+        },
+    },
+)
+```
+
+
 ## Details
 
 Process parents first. Rebuild from pinned sources, check the inputs, and compare the sources. If inputs are missing, report them. If comparison is uncertain, record questions and keep the gate open.
 
 Write the Draft, record source-to-Draft mapping, and verify it before reporting it. Report a write or verification failure. An open question permits a provisional Draft; use Current authority for unresolved parent decisions.
+
+## Compact rewrite
+
+Source coverage: `LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_PROMPTS/FEATURE_SUBJECT_TREE_ATOM_REWRITE_PROMPT/compact_spec_rewrite.prompt.md`.
+The carrier guides the consumer and does not write Drafts or state. The output names the instructed response.
+
+Use only the Current source Atom. Preserve Role and Form, keep the central Claim and essential support, and retain out-of-scope statements in Offtopic. Return a Draft with Summary, Claim, and Details when all size gates pass.
+
+Exclude Offtopic from the gates. Apply the prompt's line-length and Form-specific Claim and Details limits. If a gate fails, remove the least essential in-scope support and recheck, up to five times. If a gate still fails, return Held and name it.

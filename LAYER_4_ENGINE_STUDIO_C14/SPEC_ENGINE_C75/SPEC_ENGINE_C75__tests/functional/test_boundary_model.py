@@ -2,7 +2,7 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from SPEC_ENGINE_C75.boundary_model import load_boundary_model, load_manifest
+from SPEC_ENGINE_C75.LAYER_1_SPEC_SOURCES_C83.boundary_model__pub import load_boundary_model, load_manifest
 
 
 def _inputs(tmp_path):

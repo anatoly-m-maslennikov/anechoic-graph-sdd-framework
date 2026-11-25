@@ -131,43 +131,13 @@ def derive_atom_id(path: Path, frontmatter: str) -> str:
     return identity
 
 
-def terminal_term(subject_path: str) -> str:
-    parts = re.split(r"\s*[/:]\s*", subject_path.strip())
-    if not parts or any(not part for part in parts):
-        raise CompileError("source-subject-path-invalid", "Definition Subject Path is invalid", subject_path=subject_path)
-    return parts[-1]
-
-
 def definition_subject(frontmatter: str, path: str) -> tuple[str | None, str | None, str]:
-    if (top_scalar(frontmatter, "cce_form") or "").lower() != "definition":
-        role = top_scalar(frontmatter, "role")
-        if (matches_named_value(role, "Method") or matches_named_value(role, "Requirement")) and matches_named_value(
-            top_scalar(frontmatter, "form"), "Term Definition"
-        ):
-            return term_definition_subject(frontmatter, path, role)
-        return None, None, ""
-    block = top_block(frontmatter, "subjects")
-    current_kind: str | None = None
-    governed: list[str] = []
-    for line in block:
-        kind = re.fullmatch(r"  ([a-z_]+):\s*(.*?)\s*", line)
-        if kind:
-            current_kind = kind.group(1)
-            raw = kind.group(2)
-            if raw and current_kind in {"governs", "declared"}:
-                governed.append(scalar_value(raw))
-            continue
-        item = re.fullmatch(r"(?:    |      )-\s*(.+?)\s*", line)
-        if item and current_kind in {"governs", "declared"}:
-            governed.append(scalar_value(item.group(1)))
-    if len(governed) != 1:
-        raise CompileError(
-            "definition-term-cardinality",
-            "A Definition Atom must identify exactly one Term through GOVERNS",
-            path=path,
-            governs_count=len(governed),
-        )
-    return terminal_term(governed[0]), governed[0], ""
+    role = top_scalar(frontmatter, "role")
+    if (matches_named_value(role, "Method") or matches_named_value(role, "Requirement")) and matches_named_value(
+        top_scalar(frontmatter, "form"), "Term Definition"
+    ):
+        return term_definition_subject(frontmatter, path, role)
+    return None, None, ""
 
 
 def _term_namespace(expression):

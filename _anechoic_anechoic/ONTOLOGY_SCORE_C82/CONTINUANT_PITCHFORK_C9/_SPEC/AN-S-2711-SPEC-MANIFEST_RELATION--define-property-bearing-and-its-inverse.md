@@ -9,8 +9,8 @@ context:
   template: manifest_relation
 state:
   status: "active"
-  version: 13
-  updated_at: "2026-11-25T16:00:37.698567+00:00"
+  version: 15
+  updated_at: "2026-11-25T19:53:13.687507+00:00"
 ---
 
 ## Summary
@@ -28,7 +28,7 @@ MODEL//ANECHOIC <+ Graph/Relation//IS_PROPERTY_OF
 | --- | --- | --- |
 | `IS_PROPERTY_OF` | no | yes |
 
-The link targets the immediate bearer. AN-S-2692 requires exactly one bearer for each Property occurrence.
+Each declared Property occurrence has exactly one immediate bearer. Its bearer qualifies its identity. A missing bearer invalidates the occurrence.
 
 ## Formal Manifest
 
@@ -39,6 +39,7 @@ from anechoic.model import Relation
 
 class Relation2711(Relation):
     name = 'IS_PROPERTY_OF'
+    relation.acyclic = True
     relation.source_endpoint = {'level': 'model_entities'}
     relation.target_endpoint = {'level': 'model_entities'}
 ```

@@ -23,6 +23,12 @@ class MetricsTests(unittest.TestCase):
         self.assertIn(['Component', 'C2', 'a/child/x.py', 'unclassified', 10, 1], rows)
         self.assertFalse(any(r[1] == 'C1' and r[2] == 'a/child/x.py' for r in rows))
 
+    def test_unreadable_source_without_size_fails_explicitly(self):
+        nodes = [['p', 'package', 'python', 'a', None, None, None],
+                 ['m', 'module', 'python', 'a/x.py', 'read_error', 'p', None]]
+        with self.assertRaisesRegex(ValueError, 'Cannot measure unreadable source: a/x.py'):
+            code_rows(nodes, [], {'a': 'C1'}, {}, {})
+
     def test_cross_component_tests_and_unbound_paths(self):
         nodes = [
             ['p', 'package', 'python', 'a', None, None, None],

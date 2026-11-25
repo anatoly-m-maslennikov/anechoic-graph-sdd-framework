@@ -9,8 +9,8 @@ context:
   template: manifest_node
 state:
   status: "active"
-  version: 21
-  updated_at: "2026-11-25T16:00:37.691613+00:00"
+  version: 23
+  updated_at: "2026-11-25T20:41:49.897113+00:00"
 ---
 
 ## Summary
@@ -31,3 +31,11 @@ from anechoic.model import Prescribed
 class Atom(Prescribed):
     node.identity = header.atom_id
 ```
+
+## Semantics
+
+The Atom’s Header and Content are its source of truth. Header.Container determines its containment. Carry the applicable authored properties on the Atom. Resolve other Atoms and governing declarations by reference.
+
+Each contained Atom has its own identity and lifecycle. A change confined to the contained Atoms preserves the containing Atom’s identity.
+
+Derive the expected Carrier filename and path from the Header and Content Summary using the declared Project Structure. A different filename or path is a placement discrepancy.

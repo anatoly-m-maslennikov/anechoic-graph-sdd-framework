@@ -8,8 +8,8 @@ context:
   lens: DES
 state:
   status: "active"
-  version: 46
-  updated_at: "2026-11-24T23:26:21.545278+00:00"
+  version: 47
+  updated_at: "2026-11-25T19:43:54.070102+00:00"
 ---
 ## Summary
 
@@ -22,7 +22,7 @@ Keep tier-parent relations within Atom Scope
 #### Applicability
 The existing governing IS_TIER_GOVERNED_BY relation, pending its separately planned replacement.
 
-IS_TIER_GOVERNED_BY is the directed governing connection from a child Atom to the parent Atom whose Claim governs that child's contribution. It is distinct from containment, dependency, classification and source-layer membership. The Atom definition CA-R-2508 and ordering definition CA-R-2149 govern endpoint admission and ordering. This definition preserves the existing relation until its separate replacement Epic; it does not migrate its actual links.
+IS_TIER_GOVERNED_BY is the directed governing connection from a child Atom to the parent Atom whose Claim governs that child's contribution. It is distinct from containment, dependency, classification and source-layer membership. The Atom definition CA-R-2508 governs endpoint admission for legacy sources. Interpret their existing order under the archived AN-S-1684@15. Current Relation Manifests govern native edges.
 
 Forward `Host ((IS_TIER_GOVERNED_BY)) Target` and reverse `Target <((IS_TIER_GOVERNED_BY)) Host` are views of the same Relation fact.
 IS_TIER_GOVERNED_BY relates child Atom to parent Atom.

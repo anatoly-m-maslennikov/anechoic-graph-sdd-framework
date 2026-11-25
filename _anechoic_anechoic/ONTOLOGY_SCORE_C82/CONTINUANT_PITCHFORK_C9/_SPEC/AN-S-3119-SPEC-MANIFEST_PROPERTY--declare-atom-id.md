@@ -9,8 +9,8 @@ context:
   template: manifest_property
 state:
   status: "active"
-  version: 5
-  updated_at: "2026-11-25T16:00:37.778542+00:00"
+  version: 6
+  updated_at: "2026-11-25T20:41:49.082301+00:00"
 ---
 
 ## Summary
@@ -31,3 +31,7 @@ class Property3119(Property):
     property.value.cardinality = 1
     property.value.format = str
 ```
+
+## Semantics
+
+The Atom keeps this ID throughout its lifecycle.

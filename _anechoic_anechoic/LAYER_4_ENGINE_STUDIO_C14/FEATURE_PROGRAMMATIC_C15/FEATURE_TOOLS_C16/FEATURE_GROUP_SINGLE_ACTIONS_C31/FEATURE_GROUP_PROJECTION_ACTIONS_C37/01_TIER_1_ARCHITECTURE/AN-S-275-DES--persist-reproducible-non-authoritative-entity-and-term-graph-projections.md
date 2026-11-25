@@ -7,9 +7,9 @@ tier: 1
 context:
   lens: DES
 state:
-  status: active
-  version: 21
-  updated_at: 2026-11-03 23:17:14 +0400
+  status: "active"
+  version: 23
+  updated_at: "2026-11-25T22:43:29.365069+00:00"
 ---
 ## Summary
 
@@ -24,3 +24,9 @@ Identical readable source bytes **and** settings **must** produce byte-identical
 Description **and** ordinary generation are mutation-free. Persistence occurs **only** **when** the caller supplies an explicit output path **or** a registered Project setting resolves one unambiguous Projection destination. One output Carrier represents exactly one source frontier **and** is replaced atomically. The Tool **must** reject destinations inside governed Atom **or** Journal authority, path traversal, symlink escape, ambiguous configured destinations, **and** **any** request that would make the Projection authoritative.
 
 the persisted Projection is suitable for strictly read-only consumption by `WORKBENCH` and optional presentation by `GRAPH_UI`, but it has no authority of its own: current Atoms, Journals, authoritative Settings Artifacts, **and** **any** other authority admitted by the applicable methodology remain authoritative independently of the Projection.
+
+### Readable Markdown export
+
+Keep a registered output's Projection ID across rebuilds. Require the existing ID and matching display and source selections before replacing its Markdown Carrier. A separate display can have its own ID. Use the renderer's registered filename under the Project `_projection/` folder.
+
+Carry `artifact_form`, `projection_id`, `form`, `source.named_selection`, `source.atoms`, and `updated_at` in YAML frontmatter. Use Map for tree exports and Catalog for the Relation declaration export. List contributing Atom revisions, name the source and display selections, and render tree indentation inside a text fence.

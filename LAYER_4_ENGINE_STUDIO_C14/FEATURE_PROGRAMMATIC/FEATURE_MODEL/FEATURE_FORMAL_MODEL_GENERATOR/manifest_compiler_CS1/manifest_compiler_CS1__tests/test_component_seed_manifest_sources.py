@@ -40,11 +40,20 @@ class ComponentSeedManifestTests(unittest.TestCase):
                          ('AN-S-123@1', 'CS123', 'Test purpose.', 'Test solution.'))
         self.assertEqual(fields['boundaries'], {'code': {'imports': ['CS124']}})
 
+    def test_optional_sections(self):
+        fields = self.read(BODY.split('## Purpose')[0])
+        self.assertTrue({'purpose', 'contract', 'solution'}.isdisjoint(fields))
+        fields = self.read(BODY.replace('## Solution', '## Contract\n\nTest contract.\n\n## Solution'))
+        self.assertEqual((fields['purpose'], fields['contract'], fields['solution']),
+                         ('Test purpose.', 'Test contract.', 'Test solution.'))
+
     def test_invalid_form_and_content(self):
         for body in [BODY + '\n## Purpose\nDuplicate\n', BODY + '\n## Extra\nExtra text\n',
                      BODY.replace('## Solution', '## Missing'),
                      BODY.replace('## Purpose', '## Solution', 1).replace('## Solution\n\nTest solution.', '## Purpose\n\nTest solution.'),
-                     BODY.replace('Test solution.', ''), BODY.replace('CS123', 'CS123x'),
+                     BODY.replace('Test solution.', ''), BODY.replace('Test purpose.', ''),
+                     BODY.replace('## Solution', '## Contract\n\n## Solution'),
+                     BODY.replace('CS123', 'CS123x'),
                      BODY.replace('component_seed_id="CS123"', 'component_seed_id="CS123", purpose="Test purpose."'),
                      BODY.replace('```python', '```text'), BODY.replace('## Formal Manifest', '### Formal Manifest'),
                      BODY.replace('## Purpose', '```python\npass\n```\n\n## Purpose'),

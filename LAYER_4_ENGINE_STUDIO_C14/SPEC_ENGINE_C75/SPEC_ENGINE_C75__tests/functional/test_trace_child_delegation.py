@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from SPEC_ENGINE_C75.trace_delegation__pub import check_child_outcome, check_sibling_outcome
+from SPEC_ENGINE_C75.LAYER_5_DELEGATION_VERIFICATION_C89.trace_delegation__pub import check_child_outcome, check_sibling_outcome
 from SPEC_ENGINE_C75.SPEC_ENGINE_C75__tests.functional.test_cli_spec import _carrier
 
 
@@ -156,7 +156,8 @@ class TraceSiblingOutcomeTests(unittest.TestCase):
                 _carrier(root, 'AN-S-5', 'component_manifest', 'C1', '{}', caller_manifest),
                 _carrier(root, 'AN-S-6', 'component_contract', 'C3', '{ANSWERS: [AN-S-5]}', caller_contract),
                 _carrier(root, 'AN-S-7', 'decision', 'C3', '{IS_SOLUTION_FOR: [AN-S-6@1]}',
-                         PARENT.replace("component='C1'", "component='C3'")),
+                         PARENT.replace("component='C1'", "component='C3'").replace(
+                             "'output': 'succeeded'", "'output': 'succeeded', 'interface': 'render'")),
             )
 
             def check():

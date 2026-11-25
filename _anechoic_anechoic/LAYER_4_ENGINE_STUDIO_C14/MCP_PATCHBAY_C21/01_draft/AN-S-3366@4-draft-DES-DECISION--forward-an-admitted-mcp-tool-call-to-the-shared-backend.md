@@ -133,20 +133,20 @@ component_workflow(
             'binding': {'on': {
                 'project_admitted': {'target': 'delegating', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'effect', 'target': 'C21.project_binding', 'outcome': 'admitted'}}},
-                'view_run_refused': {'target': 'failed', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'output', 'outcome': 'failed'}}},
+                'view_run_refused': {'target': 'view_run_error_reported', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'C21.view_run.error', 'outcome': 'returned'}}},
             }},
             'delegating': {'on': {
                 'view_run_delegated': {'target': 'running', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'effect', 'target': 'Backend.view_run', 'outcome': 'delegated'}}},
-                'view_run_refused': {'target': 'failed', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'output', 'outcome': 'failed'}}},
+                'view_run_refused': {'target': 'view_run_error_reported', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'C21.view_run.error', 'outcome': 'returned'}}},
             }},
             'running': {'on': {
                 'query_id_returned': {'target': 'completed', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'effect', 'target': 'C21.view_run.query_id', 'outcome': 'returned'}}},
-                'run_failed': {'target': 'failed', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'output', 'outcome': 'failed'}}},
+                'run_failed': {'target': 'view_run_error_reported', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'C21.view_run.error', 'outcome': 'returned'}}},
             }},
             'completed': {'on': {
                 'run_succeeded': {'target': 'succeeded', 'guard': {'type': 'matchesTrace', 'params':
@@ -157,6 +157,10 @@ component_workflow(
             'save_error_reported': {'on': {
                 'save_failed': {'target': 'partial', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'output', 'outcome': 'partial'}}},
+            }},
+            'view_run_error_reported': {'on': {
+                'view_run_failed': {'target': 'failed', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'output', 'outcome': 'failed'}}},
             }},
             'succeeded': {'type': 'final'},
             'failed': {'type': 'final'},

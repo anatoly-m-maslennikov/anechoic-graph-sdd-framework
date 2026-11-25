@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { loadLib } from './FEATURE_WORKBENCH_FRONTEND__tests__shared.mjs';
-const { cleanAfterSave, newView, persistable, restore, storageKey, workspaceTabs } = await loadLib();
+const { cleanAfterSave, newView, persistable, restore, storageKey, workspaceTabs, performAction } = await loadLib();
 
 test('a new empty view starts clean', () => {
   const tab = newView(1);
@@ -86,4 +86,37 @@ test('a stale poll cannot overwrite an acknowledged permanent-unsaved draft', ()
   assert.equal(tabs[0].sql, 'SELECT after');
   assert.equal(tabs[0].revision, 3);
   assert.equal(tabs[0].dirty, true);
+});
+
+
+test('completed runs reject missing or mismatched result IDs and keep save outcomes', async () => {
+  for (const [kind, queryId, fetchedId, expectedError] of [
+    ['run', null, null, 'The completed query has no result ID.'],
+    ['run', 'run-1', 'run-2', 'The View result changed before it could be displayed.'],
+    ['save', null, null, 'The completed query has no result ID.'],
+    ['save', 'run-1', 'run-2', 'The View result changed before it could be displayed.'],
+  ]) {
+    let tab = { id: 'a', sql: 'SELECT 1' };
+    let fetches = 0;
+    let refreshed = false;
+    const ctx = {
+      active: tab, workspaceReady: true, savedBusy: false,
+      boundApi: {
+        run: async () => ({ status: 'success', revision: 1, query_id: queryId, save_error: 'Save refused' }),
+        fetch: async () => { fetches++; return { query_id: fetchedId, rows: [['wrong result']] }; },
+      },
+      updateTab: (_id, changes) => { tab = { ...tab, ...changes }; },
+      fail: (_id, error) => { throw error; }, syncBeforeRun: async () => true, tabById: () => tab,
+      message: String, acceptResult: () => assert.fail('Unexpected result'), acceptSaved: () => assert.fail('Unexpected save'),
+      refreshSaved: async () => { refreshed = true; }, reportLogWarning: () => {}, resetGrid: () => {},
+      resultDisplay: () => ({ rowSizing: 'fixed', fixedPageSize: 25 }), grid: () => ({}),
+    };
+    await performAction(ctx, kind, 0);
+    assert.equal(tab.error, expectedError);
+    assert.equal(tab.busy, false);
+    assert.equal(tab.result, undefined);
+    assert.equal(tab.saveError, 'Save refused');
+    assert.equal(refreshed, kind === 'save');
+    assert.equal(fetches, queryId ? 1 : 0);
+  }
 });

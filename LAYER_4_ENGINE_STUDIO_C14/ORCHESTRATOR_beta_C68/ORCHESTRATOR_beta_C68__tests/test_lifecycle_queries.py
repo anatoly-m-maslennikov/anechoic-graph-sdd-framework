@@ -142,7 +142,7 @@ class LifecycleQueryTests(unittest.TestCase):
         db = database()
         db.execute("INSERT INTO atoms VALUES ('AN-T-4', '.', 'AN-T-4.md', 'Current', 1, 'active')")
         db.execute("INSERT INTO native_references VALUES ('AN-T-4', 'AN-T-4@1')")
-        db.execute("INSERT INTO relations VALUES ('Atom', 'AN-T-4', 'Atom', 'AN-T-1', 'IS_CONTAINED_BY', false)")
+        db.execute("INSERT INTO relations VALUES ('Atom', 'AN-T-4', 'Atom', 'AN-T-1', 'CONTAINED_BY', false)")
         row = db.execute(lifecycle_sql('AN', 'atom_lifecycle_update', {'target': {'ref_id': 'AN-T-1'}})).fetchone()
         child = next(c for c in json.loads(row[5]) if c['ref'] == 'AN-T-4' and c['owner_ref'] == 'AN-T-1')
         self.assertTrue(row[6])

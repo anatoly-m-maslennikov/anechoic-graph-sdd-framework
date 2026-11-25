@@ -47,7 +47,7 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
     def _install_status_fixture(self):
         methodology = Path(self.control) / "LAYER_2_META_METHODOLOGY_C58"
         source = STUDIO.parent / "_anechoic_anechoic" / "ONTOLOGY_SCORE_C82" / "OCCURRENT_METRONOME_C58"
-        refs = ("AN-S-1928@4", "AN-S-1834@1", "AN-S-1831@1")
+        refs = ("AN-S-1928@5", "AN-S-1834@1", "AN-S-1831@2")
         rows = []
         for ref in refs:
             atom_id = ref.partition("@")[0]
@@ -75,7 +75,7 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
         owner = NativeQueryOwner(self.selection, _native_inputs())
         self.addCleanup(owner.close)
         owner.start()
-        status_pins = sorted(("AN-S-1928@4", "AN-S-1834@1", "AN-S-1831@1"))
+        status_pins = sorted(("AN-S-1928@5", "AN-S-1834@1", "AN-S-1831@2"))
         pins_sql = (
             "SELECT exact_ref FROM native_references WHERE exact_ref IN ("
             + ", ".join(f"'{pin}'" for pin in status_pins)

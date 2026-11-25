@@ -41,8 +41,12 @@ declare_entity(
             'io': {'server': {'admit_studio_readiness': {
                 'outcomes': {
                     'ready': {
-                        'must_effect': [('project_manifest', 'binding_validated'), ('kernel', 'ready'),
-                                        ('orchestrator', 'ready'), ('current_and_draft', 'catch_up_confirmed')],
+                        'must_effect': [('project_manifest', 'binding_validated', {'project': 'selected_project', 'runtime_pair': 'selected_runtime_pair'}),
+                                        ('kernel', 'ready', {'project': 'selected_project', 'runtime_pair': 'selected_runtime_pair'}),
+                                        ('orchestrator', 'ready', {'project': 'selected_project', 'runtime_pair': 'selected_runtime_pair'}),
+                                        ('current_and_draft', 'catch_up_confirmed', {'project': 'selected_project', 'runtime_pair': 'selected_runtime_pair',
+                                         'component': 'C68', 'action': 'beta_startup_catch_up',
+                                         'output': 'live_catch_up_confirmed'})],
                         'forbid_effect': ['invalid_manifest'],
                     },
                     'manifest_invalid': {

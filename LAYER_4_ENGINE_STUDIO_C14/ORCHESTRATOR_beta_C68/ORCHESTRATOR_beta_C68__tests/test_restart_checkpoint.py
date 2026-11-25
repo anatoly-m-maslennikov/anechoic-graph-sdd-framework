@@ -81,7 +81,9 @@ class RestartCheckpointTests(unittest.TestCase):
             jobs.generation_reuse["base_generation"] = "unrelated-admission"
             refusal = jobs._execute_lifecycle(job)
         self.assertEqual("known", refusal["write_state"])
-        self.assertIn("preceding write", refusal["projection"]["error"]["message"])
+        self.assertEqual("blocked", refusal["lifecycle"]["outcome"])
+        self.assertEqual("write_blocked", refusal["lifecycle"]["errors"][0]["code"])
+        self.assertEqual("blocked", refusal["projection"]["state"])
         lookup.assert_called_once()
         worker.assert_called_once()
 

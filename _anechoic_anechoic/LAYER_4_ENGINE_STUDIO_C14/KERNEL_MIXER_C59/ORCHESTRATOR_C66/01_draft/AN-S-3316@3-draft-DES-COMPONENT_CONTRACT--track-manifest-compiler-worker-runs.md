@@ -31,7 +31,7 @@ run, its kind, the process if it started, and its status.
 
 ### Prose Claim
 
-For a completed run, the trace records the process start and reap, and
+For a failed run, record the failure. For a completed run, the trace records the process start and reap, and
 the completed terminal run record. For a timed-out run, it records the
 start, kill, and reap, and the timed-out terminal run record. Each
 started process is reaped before its terminal run is recorded. A successful
@@ -40,6 +40,17 @@ response is read-only; its field names and behavior for missing or foreign
 bindings remain open.
 
 ### Formal Claim
+
+```python trace
+declare_trace_contract(
+    action='manifest_compiler_worker_run',
+    interface='compiler_worker',
+    transport='in_process',
+    entry='ORCHESTRATOR_C66__shared.Orchestrator.run_worker',
+    output='failed',
+    must_effect=(('C66', 'failed'),),
+)
+```
 
 ```python trace
 declare_trace_contract(

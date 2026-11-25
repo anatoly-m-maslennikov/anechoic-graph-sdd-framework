@@ -8,9 +8,9 @@ context:
   template: action
   lens: DOM/MTD
 state:
-  status: active
-  version: 1
-  updated_at: 2026-11-11 14:05:36 +0400
+  status: "active"
+  version: 2
+  updated_at: "2026-11-25T19:30:51.305490+00:00"
 ---
 ## Summary
 
@@ -22,7 +22,7 @@ One exact selected Current Atom. The caller handles any contained Atoms through 
 
 ## Claim
 
-Archive the selected Current Atom using its applicable status model and derived carrier location. Preserve Version and Updated At. Report an explicit error on failure. An actual business observation may be recorded in the Journal independently; a recording failure does not block archival.
+Archive the selected Current Atom using its applicable status model and derived carrier location. Preserve Version and set Updated At to the time of the Status change. Report an explicit error on failure. An actual business observation may be recorded in the Journal independently; a recording failure does not block archival.
 
 For missing or invalid input format or allowed value, give a short explanation and request an additional input dictionary. Wait for it; the caller may cancel while waiting, without interrupting an Action.
 

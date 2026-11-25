@@ -7,9 +7,9 @@ tier: 1
 context:
   lens: DES
 state:
-  status: active
-  version: 31
-  updated_at: 2026-11-04 18:28:33 +0400
+  status: "active"
+  version: 32
+  updated_at: "2026-11-25T22:11:22.856660+00:00"
 ---
 ## Summary
 
@@ -33,4 +33,4 @@ Entity Definition Atoms, authored Semantics or Details, consistent use, and deri
 
 Reusable `Package`, `Unit`, and `ID` do not become unique complete entity names merely by being Terms. The contextual topic/code spellings `atom.id` and `projection.id` distinguish their respective ID Properties; they are not alternative complete canonical Subject names or case-folded aliases. Authored Subjects use their full admitted expressions. `ID` keeps its approved meaning across those uses. No dictionary Projection, extractor, lookup, entity renaming, or parser inference is required.
 
-CA-R-1279's canonical GOVERNS obligation remains applicable. A defining Claim may explicitly introduce its lexical Term target using Current authority under CA-R-1194 and CA-R-1931; lexical composition alone does not create one. The flat target family is `Term//<Name>`, including the approved target names `Term//Empty` and `Term//ID`. Those examples do not themselves define every Term. Optional terminology consumers must follow the Method-qualified meaning-owner selection without becoming prerequisites of Term meaning or implementing the deferred Terms Graph.
+A defining Claim may explicitly introduce its lexical Term target using Current authority under CA-R-1194 and CA-R-1931; lexical composition alone does not create one. The flat target family is `Term//<Name>`, including the approved target names `Term//Empty` and `Term//ID`. Those examples do not themselves define every Term. Optional terminology consumers must follow the Method-qualified meaning-owner selection without becoming prerequisites of Term meaning or implementing the deferred Terms Graph.

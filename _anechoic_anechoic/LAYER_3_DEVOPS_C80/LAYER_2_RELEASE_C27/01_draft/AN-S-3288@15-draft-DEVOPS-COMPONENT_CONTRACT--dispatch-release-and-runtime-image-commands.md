@@ -31,7 +31,7 @@ UV_PROJECT_ENVIRONMENT="$PWD/LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/.venv-releas
     python -B "$PWD/LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/release.py" --help
 ```
 
-Replace `--help` with `local --project-root <root> --run-id <id>` for Local Release or `public --project-root <root> --run-id <id>` for Public Release. Use `build-image --project-root <root> --run-id <id>` to build only the image. `run-image` delegates launch to the Engine shared MCP launcher.
+Replace `--help` with `local --project-root <root> --run-id <id>` for Local Release, `prepare-local --project-root <root> --run-id <id> --base <commit> --changed-path <path> --port <port>` to prepare its checkout, or `public --project-root <root> --run-id <id>` for Public Release. Use `build-image --project-root <root> --run-id <id>` to build only the image. `run-image` delegates launch to the Engine shared MCP launcher.
 
 The child Contracts define arguments and results for Runtime Images (AN-S-4732),
 Local Release (AN-S-3292), and Public Release (AN-S-3293).
@@ -50,6 +50,6 @@ declare_cli_contract(
     action='dispatch_framework_release',
     runner='uv',
     path='LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/release.py',
-    subcommands={'local': 'C63', 'public': 'C64', 'build-image': 'C81', 'run-image': 'C81'},
+    subcommands={'local': 'C63', 'prepare-local': 'C63', 'public': 'C64', 'build-image': 'C81', 'run-image': 'C81'},
 )
 ```

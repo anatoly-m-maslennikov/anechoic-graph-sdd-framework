@@ -13,7 +13,8 @@ export async function loadLib() {
   try {
     const lib = await server.ssrLoadModule('/src/lib/lib__shared.ts');
     const { render } = await server.ssrLoadModule('svelte/server');
-    return { ...lib, render };
+    const { performAction } = await server.ssrLoadModule('/src/app_actions.ts');
+    return { ...lib, render, performAction };
   }
   finally { await server.close(); }
 }

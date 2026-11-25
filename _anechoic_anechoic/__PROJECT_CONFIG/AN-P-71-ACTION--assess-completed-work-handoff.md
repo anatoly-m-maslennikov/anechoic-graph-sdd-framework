@@ -7,9 +7,9 @@ structure:
 context:
   template: action
 state:
-  status: active
-  version: 16
-  updated_at: 2026-10-29 22:26:57 +0400
+  status: "active"
+  version: 17
+  updated_at: "2026-11-25T21:47:24.194161+00:00"
 ---
 # Summary
 
@@ -34,13 +34,13 @@ This optional read-only Action assesses a completed bounded Plan's actual result
 4. Where representation changes are needed, return a bounded CA-O-079-ready reconciliation request and its missing permission or prerequisite. CA-O-079 remains the owner of authorized remaining-work edits, reuse or conditional creation, completed-prefix preservation, explicit blocking, current-Revision/placement checks and actual Journal events. This Action neither performs nor invokes those edits. If an actual separately authorized reconciliation outcome was supplied, assess and reference that outcome rather than duplicate it; partial or stale effects retain exact recoverable state and recovery-required or blocked disposition.
 5. Before returning a current assessment, confirm the observed source, predecessor and candidate Revisions still match the compared evidence. A changed Revision or result invalidates the affected success claim: return its stale binding and required fresh assessment or recovery, not stale success or an automatic retry. The receipt is evidence for this exact binding only.
 6. Return one checkable receipt containing predecessor/output/completion evidence references, applicable authority and observed Revisions, declared candidate universe and exclusions, every candidate's supported affected/unaffected disposition or exact unresolved classification, every affected binding's disposition and evidence, actual separately authorized reconciliation outcome or pending required change, unresolved blockers and requested next use. A complete unchanged assessment is a no-change result, not another Plan, historical event or repeated completed effect.
-7. For a declared Workflow-to-Workflow handoff, reuse CA-R-1520's terminal result and distinct-Run boundary. Distinguish a requested continuation from authorized, started or completed continuation; the ending Run does not call, wait for or resume a successor, and required pending, blocked or failed continuation is not reported complete. The separate executor retains predecessor/successor association and rechecks authority/input freshness before any separately admitted successor start.
+7. For a declared Workflow-to-Workflow handoff, reuse AN-S-1615's terminal result and distinct-Run boundary. Distinguish a requested continuation from authorized, started or completed continuation; the ending Run does not call, wait for or resume a successor, and required pending, blocked or failed continuation is not reported complete. The separate executor retains predecessor/successor association and rechecks authority/input freshness before any separately admitted successor start.
 
 ## Details
 
 ### Ownership and outcomes
 
-The contribution is the bounded completed-Plan result-to-affected-next-Plan assessment and receipt, including non-implementation work. CA-R-1583/CA-R-1599 retain completion/DoD meaning; CA-R-1520 retains Workflow handoff policy; CA-O-079 retains reconciliation effects; CA-O-017 retains implementation preparation, CA-O-077 coordinated Property/address reconciliation, and CA-O-090 corrective-Method acceptance. Reuse their responsibilities without broadening or duplicating them.
+The contribution is the bounded completed-Plan result-to-affected-next-Plan assessment and receipt, including non-implementation work. CA-R-1583/CA-R-1599 retain completion/DoD meaning; AN-S-1615 retains Workflow handoff policy; CA-O-079 retains reconciliation effects; CA-O-017 retains implementation preparation, CA-O-077 coordinated Property/address reconciliation, and CA-O-090 corrective-Method acceptance. Reuse their responsibilities without broadening or duplicating them.
 
 An assessed receipt may retain unchanged, rebinding-required, blocked and recovery-required bindings together. Incomplete universe or closure evidence prevents exhaustive/current readiness assurance, even if some individual comparisons are supported. Missing edit permission keeps the request pending and mutation blocked; a newly required prerequisite remains a start blocker under existing CA-R-1580 until separately satisfied. Refer to existing evidence and recoverable originals, not a new history or Journal store. Repeated assessment of the same evidence/Revisions has the same dispositions and no repeated completed effect; no-change is not an instruction to append a duplicate event.
 

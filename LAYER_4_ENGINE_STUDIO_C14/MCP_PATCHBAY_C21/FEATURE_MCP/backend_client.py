@@ -18,6 +18,7 @@ from MCP_PATCHBAY_C21.FEATURE_MCP.runtime_stack import runtime_stack
 
 _MODULE = "IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.backend_process"
 _STARTUP_SECONDS = 180
+_DEV_LOCAL_STARTUP_SECONDS = 420
 
 
 class ToolProtocolError(RuntimeError):
@@ -82,7 +83,9 @@ class BackendClient:
 
     def start(self):
         """Finish admission before the frontend advertises readiness."""
-        deadline = monotonic() + _STARTUP_SECONDS
+        dev_local = self._process is not None and os.getenv("ANECHOIC_RUNTIME_PROFILE") == "dev-local"
+        budget = _DEV_LOCAL_STARTUP_SECONDS if dev_local else _STARTUP_SECONDS
+        deadline = monotonic() + budget
         bounded = os.getenv("ANECHOIC_TEST_IMAGE_DEADLINES") != "0"
         while not self._closed and (not bounded or monotonic() < deadline):
             if self._process is not None and self._process.poll() is not None:

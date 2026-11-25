@@ -143,6 +143,18 @@ or repeat the write on this path. C71 names the delta admission call.
 This trace does not classify the exact write outcome carried with
 the error.
 
+The successful startup profile is separate from an explicit rebuild.
+Attach the watcher before capture. Require completed capture and a completed
+watcher observation before verified Kernel admission of Current and Draft.
+Confirm live catch-up only after that admission. Capture completion and
+observation completion have no required order relative to each other.
+For Incremental Startup with changed Current or Draft carriers, use the
+accepted checkpoint proof from Database Server C71.
+
+This profile leaves Archive, exact Project and generation values, wire
+transport, and error branches outside its scope. It does not exclude them
+from startup.
+
 ### Formal Claim
 
 ```python trace
@@ -296,6 +308,25 @@ declare_trace_contract(
         (('C69.lifecycle_dispatch', 'requested'), ('C69.projection_error', 'reported')),
         (('C69.projection_error', 'reported'), ('C68.worker_projection_error', 'reported')),
     ),
+)
+```
+
+```python trace
+declare_trace_contract(
+    action='beta_startup_catch_up',
+    output='live_catch_up_confirmed',
+    must_effect=(('C68.source_watcher', 'attached'),
+                 ('C68.startup_capture', 'started'),
+                 ('C68.startup_capture', 'completed'),
+                 ('C68.watcher_observation', 'completed'),
+                 ('startup_current_and_draft_admission', 'verified'),
+                 ('current_and_draft', 'catch_up_confirmed')),
+    must_precede=((('C68.source_watcher', 'attached'), ('C68.startup_capture', 'started')),
+                  (('C68.startup_capture', 'started'), ('C68.startup_capture', 'completed')),
+                  (('C68.source_watcher', 'attached'), ('C68.watcher_observation', 'completed')),
+                  (('C68.startup_capture', 'completed'), ('startup_current_and_draft_admission', 'verified')),
+                  (('C68.watcher_observation', 'completed'), ('startup_current_and_draft_admission', 'verified')),
+                  (('startup_current_and_draft_admission', 'verified'), ('current_and_draft', 'catch_up_confirmed'))),
 )
 ```
 

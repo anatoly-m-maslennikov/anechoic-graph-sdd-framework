@@ -43,6 +43,8 @@ declare_entity(
                 }, 'partial': {
                     'must_effect': [('C21.view_run.query_id', 'returned'), ('C21.view_run.save_error', 'returned'),
                                     ('workbench_save_error', 'shown'), ('workbench_display', 'shown')],
+                }, 'failed': {
+                    'must_effect': [('workbench_run_failure', 'reported')],
                 }}}},
             },
             'state': {'reads': [], 'writes': []},

@@ -9,8 +9,8 @@ context:
   template: manifest_relation
 state:
   status: "active"
-  version: 2
-  updated_at: "2026-11-25T16:00:38.250245+00:00"
+  version: 3
+  updated_at: "2026-11-25T22:52:50.793383+00:00"
 ---
 
 ## Summary
@@ -26,7 +26,7 @@ MODEL//ANECHOIC <+ Graph/Relation//IS_UPSTREAM_LAYER_FOR
 Relation type: Direct. Realization Graph edge facts are derived from source evidence.
 
 Realization Graph evidence: Package A and Package B are in the same ordered sibling group, and A has the lower layer number.
-Direction: IS_UPSTREAM_LAYER_FOR from A to B.
+Direction: IS_UPSTREAM_LAYER_FOR from A to B. Layer order limits which dependencies are allowed. An observed dependency needs its own source evidence.
 
 Package identification follows AN-S-3159. AN-S-2611 endpoint rules apply.
 Unresolved bindings emit no Package edge; retain a trace to the source.

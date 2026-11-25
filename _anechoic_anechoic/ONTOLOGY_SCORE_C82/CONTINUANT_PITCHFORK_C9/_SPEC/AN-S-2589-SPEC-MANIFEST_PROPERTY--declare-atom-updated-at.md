@@ -9,18 +9,16 @@ context:
   template: manifest_property
 state:
   status: "active"
-  version: 7
-  updated_at: "2026-11-25T16:00:37.687302+00:00"
+  version: 8
+  updated_at: "2026-11-25T19:30:50.490905+00:00"
 ---
 ## Summary
 
 Declare Atom.Updated At
 
-## Claim
+## Semantics
 
-### Prose Claim
-
-The Updated At value equals the maximum happened_at among Event Records whose single object_output has a version, has this Atom ID and current Version, and has action create or update.
+Updated At records when this Atom revision was created or last edited. The date-time identifies one instant and includes its UTC offset.
 
 ## Formal Manifest
 

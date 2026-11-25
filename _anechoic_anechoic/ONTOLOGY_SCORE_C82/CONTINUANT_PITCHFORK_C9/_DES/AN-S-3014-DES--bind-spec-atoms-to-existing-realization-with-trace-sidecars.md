@@ -7,9 +7,9 @@ tier: 3
 context:
   lens: DES
 state:
-  status: active
-  version: 3
-  updated_at: "2026-11-23T01:48:06.190382+00:00"
+  status: "active"
+  version: 5
+  updated_at: "2026-11-25T21:10:25.043808+00:00"
 ---
 ## Summary
 
@@ -23,6 +23,6 @@ Keep `<package>__spec_bind.yaml` at the root of the existing Realization Package
 
 Keep tests in the Package's direct `<package>__tests/` child. Derive `TESTS` from that child to the Package and `IS_TESTED_BY` in reverse, with or without a Spec Binding. A sibling or deeper match supplies no edge.
 
-Classify files under the Test Package's `assets/` as test assets, including code used as input. Classify recognized source outside `assets/` as test code. Total tests are the sum. Leave files without a declared classification out of the split.
+Count tests from the Test Package. Place non-executable fixture assets in an Asset Package and report those assets separately.
 
-A passing mapped check supports the behavior it exercises. The pinned Spec defines that behavior.
+The sidecar is the authored source for the binding. The Journal can record changes to the binding as observations. A passing mapped check supports the behavior it exercises. The pinned Spec defines that behavior.

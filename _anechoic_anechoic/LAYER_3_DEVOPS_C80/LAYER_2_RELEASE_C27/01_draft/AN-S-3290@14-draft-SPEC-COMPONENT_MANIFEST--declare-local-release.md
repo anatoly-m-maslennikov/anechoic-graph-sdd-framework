@@ -50,6 +50,11 @@ declare_entity(
                         'module': 'LAYER_2_LOCAL_RELEASE_C63.LAYER_2_LOCAL_RELEASE_C63__tests.packaged_image_fixture',
                         'arguments': ['<fixture-root>'],
                     },
+                    'run_local_release': {'outcomes': {
+                        'failed': {'must_effect': [('release_failure', 'reported')]},
+                        'completed_with_cleanup_pending': {'must_effect': [('C81.image', 'built'), ('C81.mcp_endpoint', 'healthy'), ('project_runtime', 'promoted'), ('eligible_cleanup', 'pending')]},
+                        'completed': {'must_effect': [('C81.image', 'built'), ('C81.mcp_endpoint', 'healthy'), ('project_runtime', 'promoted'), ('production_image_display_tag', 'updated'), ('eligible_cleanup', 'completed')]},
+                    }},
                     'local_release': {
                         'transport': 'cli',
                         'runner': 'uv',

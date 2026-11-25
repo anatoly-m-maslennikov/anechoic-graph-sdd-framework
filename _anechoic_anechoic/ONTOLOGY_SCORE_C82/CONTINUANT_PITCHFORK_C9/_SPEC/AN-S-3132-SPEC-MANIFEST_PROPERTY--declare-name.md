@@ -9,8 +9,8 @@ context:
   template: manifest_property
 state:
   status: "active"
-  version: 3
-  updated_at: "2026-11-25T16:00:37.871926+00:00"
+  version: 4
+  updated_at: "2026-11-25T23:12:26.120607+00:00"
 ---
 
 ## Summary
@@ -31,3 +31,7 @@ class Property3132(Property):
     property.value.cardinality = 1
     property.value.format = str
 ```
+
+## Semantics
+
+Name records the Operator’s chosen Project name before its first native Atom. Preserve its spelling. Derive the control root from the case-folded name.

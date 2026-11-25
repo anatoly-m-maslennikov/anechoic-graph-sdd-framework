@@ -9,8 +9,8 @@ context:
   template: manifest_node
 state:
   status: "active"
-  version: 3
-  updated_at: '2026-11-24T16:58:01.332889+00:00'
+  version: 4
+  updated_at: "2026-11-25T22:59:51.069923+00:00"
 ---
 
 ## Summary
@@ -29,3 +29,7 @@ MODEL//ANECHOIC <+ Graph
 class Graph:
     pass
 ```
+
+## Semantics
+
+The Model declares the kinds, Properties, and admissible Relations. Project Structure records the actual Components and Packages and their declared hierarchy. A change to one Project’s structure preserves the Model meaning of its kinds and Relations.

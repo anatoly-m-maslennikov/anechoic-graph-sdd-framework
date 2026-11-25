@@ -7,9 +7,9 @@ structure:
 context:
   template: action
 state:
-  status: active
-  version: 17
-  updated_at: 2026-10-27 19:59:44 +0400
+  status: "active"
+  version: 20
+  updated_at: "2026-11-25T21:38:54.838386+00:00"
 ---
 # Summary
 
@@ -17,12 +17,14 @@ Create sealed ANECHOIC Atom carriers
 
 ## Operation
 
+This contract describes the legacy sealed-carrier or Subject-batch route. Native Draft and Current carriers use AN-S-3160 and the lifecycle rules in AN-S-1604. Exact historical carrier references apply when interpreting legacy inputs.
+
 Create Sealed Atom Carriers **means** the reusable Action that creates one explicitly requested logical Atom under CA-R-865 with its admitted new ID, owning Scope Unit, required Type, complete Properties and Sections. Storage realization is private; no additional Atom is created as a hidden batch effect. Identity admission, complete content, initial Version/lifecycle and permission are workflow-owned decisions. A future connector delegation uses D625's explicit `create` request and supplied evidence, not hidden connector decisions; no runnable binding is selected here.
 
 ### Action
 
 1. bind the explicit new Atom request and declared owning Scope Unit. Validate its complete content, Summary, Content Role/Type, intended lifecycle and applicable schema before any effect.
-2. establish the requested unused Project ID from current authority and preserved assignment/history evidence under CA-D-508/CA-D-378. Archived, replaced or absorbed Atoms do not release IDs for reuse. Missing, conflicting or changed evidence blocks creation; do not silently allocate a different ID.
+2. establish the requested unused Project ID from current authority and preserved assignment/history evidence under AN-S-1783@19 and AN-S-1761@31. Archived, replaced or absorbed Atoms do not release IDs for reuse. Missing, conflicting or changed evidence blocks creation; do not silently allocate a different ID.
 3. resolve the private governed destination and prove it absent, safe and collision-free. Return the exact mutation-free proposal and identity-admission evidence.
 4. execute only with current exact permission under the admitted Project-local route. Recheck this one target's absence, content and identity pins immediately before its safe effect.
 5. independently verify the new Atom and actual first Revision and retain its source/effect evidence. Independently attempt Journal recording; its failure is diagnostic only and neither invalidates a verified creation nor authorizes replay. A failure invokes only this Action's admitted safe recovery and retains truthful partial or unknown effects; it does not erase earlier successful Atom creations.
@@ -36,4 +38,4 @@ Preview is prepared, not created. Existing Draft admission and private Carrier r
 
 ## Details
 
-Bind each actual standalone **or** nested Action Run **to** the shared every-Run contract in CA-P-1117 v3, Done CA-P-1443 J01–J08, independently reviewed by CA-P-1451: exact admitted definition Revision, actual Run identity/lineage, safe input/result/effect references, start and truthful terminal **or** still-pending interruption. Workflow-contained bindings also follow CA-R-1525; standalone coverage is the selected Epic obligation, **not** a broadened applicability claim for that Requirement. Reuse the shared recording capability **without** owning another Journal implementation. Preserve actual in-memory Run evidence and any pending observation; a supported recording retry uses the same Event identity/payload, never the performed Action. A receipt, intake acknowledgment, or Git Commit alone proves neither successful effects nor complete Run recording.
+Bind each actual standalone **or** nested Action Run **to** the shared every-Run contract in CA-P-1117 v3, Done CA-P-1443 J01–J08, independently reviewed by CA-P-1451: exact admitted definition Revision, actual Run identity/lineage, safe input/result/effect references, start and truthful terminal **or** still-pending interruption. Workflow-contained bindings also follow AN-S-1617; standalone coverage is the selected Epic obligation, **not** a broadened applicability claim for that Requirement. Reuse the shared recording capability **without** owning another Journal implementation. Preserve actual in-memory Run evidence and any pending observation; a supported recording retry uses the same Event identity/payload, never the performed Action. A receipt, intake acknowledgment, or Git Commit alone proves neither successful effects nor complete Run recording.

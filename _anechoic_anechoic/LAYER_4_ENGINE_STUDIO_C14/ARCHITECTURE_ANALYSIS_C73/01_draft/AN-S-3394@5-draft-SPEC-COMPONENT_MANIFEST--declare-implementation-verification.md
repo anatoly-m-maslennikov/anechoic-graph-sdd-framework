@@ -18,7 +18,7 @@ Declare Implementation Verification
 
 ## Purpose
 
-Derive bounded Lean models from authored implementation and Realization Graph facts, including code units, calls, conditions, and effects. Keep source references and report unresolved coverage. Compare with the Lean model supplied by Spec Engine when a matching Spec exists. The verifier checks Manifest obligations against the Contract and Solution, and Contract obligations against the Solution.
+Derive bounded Lean models from authored implementation and Realization Graph facts, including code units, calls, conditions, and effects. Keep source references and report unresolved coverage. Compare with the Lean model supplied by Spec Engine when a matching Spec exists.
 
 ## Formal manifest
 
@@ -40,8 +40,11 @@ declare_entity(
             'ADAPTERS_C30__shared.parse_component_manifest',
             'ADAPTERS_C30__shared.formal_claim_fences',
             'atom_reference__pub.derive_atom_ref',
-            'carrier_framing__pub.framing_to_lean',
+            'framing_lean__pub.framing_to_lean',
             'carrier_framing__pub.parse_framing',
+            'lean_values__pub.lean_string',
+            'contract_model__pub.parse_contract',
+            'tool_api_obligations__pub.manifest_tool_api',
             'carrier_compare.compare',
             'carrier_model._SOURCE',
             'carrier_model.generate',
@@ -62,8 +65,17 @@ declare_entity(
                     'arguments': ['--root <project-root>', '[--lean <executable>]', '[--formal-only]'],
                     'outcomes': {'compared': {'must_effect': [
                         ('carrier_model', 'built'), ('source_evidence', 'retained'), ('selected_cases', 'compared'),
+                    ]}, 'unresolved': {'must_effect': [
+                        ('coverage', 'unresolved'),
                     ]}},
                 },
+                'carrier_compare_formal_only': {'outcomes': {
+                    'formal_compared': {
+                        'must_effect': [('formal_cases', 'compared')],
+                        'forbid_effect': ['carrier_model', 'source_evidence'],
+                    },
+                    'unresolved': {'must_effect': [('coverage', 'unresolved')]},
+                }},
                 'backend_http_compare': {
                     'transport': 'cli',
                     'runner': 'managed_python',

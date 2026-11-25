@@ -9,8 +9,8 @@ context:
   template: manifest_node
 state:
   status: "active"
-  version: 3
-  updated_at: '2026-11-24T16:58:01.354636+00:00'
+  version: 4
+  updated_at: "2026-11-25T22:14:45.416016+00:00"
 ---
 
 ## Summary
@@ -31,3 +31,7 @@ from anechoic.model import Realization
 class Module(Realization):
     pass
 ```
+
+## Claim
+
+Each Module belongs to one Package. A Module directly in the realization root belongs to the Project Realization.

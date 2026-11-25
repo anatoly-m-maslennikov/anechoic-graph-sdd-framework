@@ -9,13 +9,17 @@ context:
   template: manifest_property
 state:
   status: "active"
-  version: 3
-  updated_at: "2026-11-25T16:00:37.890686+00:00"
+  version: 4
+  updated_at: "2026-11-25T20:23:21.671300+00:00"
 ---
 
 ## Summary
 
 Declare Component ID
+
+## Semantics
+
+A Component keeps its ID when its name or folder changes.
 
 ## Formal Manifest
 

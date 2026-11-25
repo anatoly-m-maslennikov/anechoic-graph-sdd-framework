@@ -9,8 +9,8 @@ context:
   template: manifest_node
 state:
   status: "active"
-  version: 4
-  updated_at: "2026-11-25T16:00:37.761674+00:00"
+  version: 5
+  updated_at: "2026-11-25T22:54:35.281115+00:00"
 ---
 
 ## Summary
@@ -31,3 +31,7 @@ from anechoic.model import Artifact
 class SSOT(Artifact):
     node.classifications = {'Artifact Kind': 'Artifact'}
 ```
+
+## Semantics
+
+An SSOT Artifact is the authoritative source for the facts it carries. Each fact has one authoritative source within its applicable context. A derived representation preserves that source binding.

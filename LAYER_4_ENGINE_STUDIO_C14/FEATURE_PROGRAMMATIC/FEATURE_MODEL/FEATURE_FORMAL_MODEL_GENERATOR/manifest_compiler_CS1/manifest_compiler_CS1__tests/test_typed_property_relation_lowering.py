@@ -37,11 +37,24 @@ class Reference(Relation):
                "declare_relation(relation_name='DERIVED_REFERENCE', derived_from='IS_REFERENCE', "
                "source_endpoint={'level': 'instances'}, target_endpoint={'level': 'instances'})\n")
     records = [('derived', 'MODEL//ANECHOIC <+ Graph/Relation//DERIVED_REFERENCE', derived)]
-    fields = [('reference', 'MODEL//ANECHOIC <+ Graph/Relation//IS_REFERENCE', explicit, 'manifest_relation')]
+    typed_derivation = """from anechoic.model import Relation
+class RecursiveReference(Relation):
+    name = 'RECURSIVE_REFERENCE'
+    relation.derived_from = 'IS_REFERENCE'
+    relation.source_endpoint = {'level': 'instances'}
+    relation.target_endpoint = {'level': 'instances'}
+"""
+    derived_scope = 'MODEL//ANECHOIC <+ Graph/Relation//RECURSIVE_REFERENCE'
+    fields = [
+        ('reference', 'MODEL//ANECHOIC <+ Graph/Relation//IS_REFERENCE', explicit, 'manifest_relation'),
+        ('recursive', derived_scope, typed_derivation, 'manifest_relation'),
+    ]
     names = declared_relation_names(records, fields)
     claim = lower_typed_fields('manifest_property', text, '', ADDRESSES, relation_names=names)
     arguments = parse_native_model_claim(claim)['arguments']
     assert arguments['allowed_relation_names'] == ('IS_REFERENCE',)
+    lowered = lower_typed_fields('manifest_relation', typed_derivation, derived_scope, ADDRESSES)
+    assert parse_native_model_claim(lowered)['arguments']['derived_from'] == 'IS_REFERENCE'
     assert arguments['property_occurrence_cardinality'] == {'minimum': 0, 'maximum': 1}
     assert arguments['dependent_property_cardinality'] == 1
     assert arguments['dependent_property_value_cardinality'] == 2

@@ -1,34 +1,12 @@
 """Read native Component claims without executing authored code."""
 
-import json
-
 from markdown_it import MarkdownIt
 
 from .native_model_claim__pub import parse_native_model_claim
 from .formal_claim__pub import formal_claim
 
 
-def _claim_headings(tokens, body):
-    in_claim = False
-    lines = body.splitlines()
-    for i, token in enumerate(tokens):
-        if token.type != 'heading_open':
-            continue
-        title = tokens[i + 1].content.strip()
-        level = int(token.tag[1:])
-        if level == 2:
-            in_claim = title == 'Claim'
-        elif in_claim and level == 3:
-            end = next((t.map[0] for t in tokens[i + 1:] if t.type == 'heading_open'), len(lines))
-            yield title, '\n'.join(lines[token.map[1]:end]).strip()
-
-
-def _formal_component_instance(tokens, body, source=None):
-    if source is None:
-        if not any(token.type == 'heading_open' and tokens[i + 1].content.strip().casefold() == 'formal claim'
-                   for i, token in enumerate(tokens)):
-            return None
-        source = formal_claim(body)
+def _formal_component_instance(source):
     claim = parse_native_model_claim(source)
     args = claim['arguments'] if claim and claim['kind'] == 'entity' else {}
     instance = args.get('instance', {})
@@ -36,22 +14,6 @@ def _formal_component_instance(tokens, body, source=None):
             or instance.get('type') != 'ComponentManifest'):
         raise ValueError('Expected one formal ComponentManifest instance')
     return instance['fields']
-
-
-def _legacy_manifest_fields(tokens, body):
-    fields = _formal_component_instance(tokens, body)
-    if fields is not None:
-        return fields
-    sections = {}
-    for title, value in _claim_headings(tokens, body):
-        key = {'Component ID': 'component_id', 'Name': 'name', 'Layer': 'layer',
-               'Lens Whitelist': 'lens_whitelist'}.get(title)
-        if key is None or key in sections:
-            raise ValueError('Unknown or duplicate Component Manifest field')
-        sections[key] = json.loads(value) if key in {'layer', 'lens_whitelist'} else value
-    if not {'component_id', 'name'} <= sections.keys():
-        raise ValueError('Missing Component Manifest fields')
-    return sections
 
 
 def parse_component_manifest(body):
@@ -88,8 +50,8 @@ def parse_component_manifest(body):
         if (len(fences) != 1 or fences[0].info.strip().casefold() != 'python'
                 or fences[0].level != 0 or any(t.type == 'heading_open' for t in section)):
             raise ValueError('Expected one Python Formal Manifest')
-        return _formal_component_instance(tokens, body, fences[0].content), purpose
-    return _legacy_manifest_fields(tokens, body), purpose
+        return _formal_component_instance(fences[0].content), purpose
+    return _formal_component_instance(formal_claim(body)), purpose
 
 
 def parse_component_manifest_fields(body):

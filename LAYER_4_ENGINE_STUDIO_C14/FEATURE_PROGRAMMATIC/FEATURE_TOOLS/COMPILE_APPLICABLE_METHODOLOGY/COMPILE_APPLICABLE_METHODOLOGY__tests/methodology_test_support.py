@@ -23,8 +23,6 @@ def carrier(atom_id: str, version: int = 1, extra: str = "", body: str = "claim"
     return (
         "---\n"
         f"atom_id: {atom_id}\n"
-        "cce_version: cce_1\n"
-        "cce_form: obligation\n"
         "status: Active\n"
         f"{extra}"
         f"version: {version}\n"
@@ -32,29 +30,6 @@ def carrier(atom_id: str, version: int = 1, extra: str = "", body: str = "claim"
         f"relations: {relations}\n"
         "---\n"
         f"# {atom_id}\n\n{body}\n"
-    ).encode()
-
-
-def definition_carrier(atom_id: str, term: str, subject_path: str | None = None) -> bytes:
-    governed = subject_path or term
-    return (
-        "---\n"
-        f"atom_id: {atom_id}\n"
-        "cce_version: cce_1\n"
-        "cce_form: definition\n"
-        "subjects:\n"
-        "  governs:\n"
-        "    continuant:\n"
-        f"      - {json.dumps(governed)}\n"
-        "  depends_on:\n"
-        "    continuant: []\n"
-        "status: Active\n"
-        "version: 1\n"
-        "updated_at: 2026-08-29 00:00:00 +0400\n"
-        "relations: {}\n"
-        "---\n"
-        f"# Define {term}\n\n"
-        f"{term} definition.\n"
     ).encode()
 
 

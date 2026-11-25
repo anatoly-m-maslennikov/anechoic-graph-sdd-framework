@@ -26,13 +26,14 @@ Build and run runtime images.
 
 Build returns the immutable image ID, input fingerprint, and version without
 release or installation. Run uses the selected exact image and host settings.
-Without `--apply`, it returns the plan without container changes. With `--apply`,
+Without `--apply`, it returns the plan without container changes. The CLI reports wire outcome `completed` for dry-run; the logical outcome is `launch_planned`. With `--apply`,
 it waits for readiness; `--verify-mcp` adds an MCP probe before success.
+Record the image result before reporting it.
 
 For Local Release, the same build owner receives the selected checkout and
 returns its immutable image. Start uses the selected Project, the exact selected
 image, and the supplied loopback port. It returns the health-checked MCP endpoint.
-These logical calls do not select a CLI or API transport.
+C81 uses `start_container` to launch Docker directly for this Project runtime. The separate shared-image apply path calls C21. These logical calls do not select a CLI or API transport.
 
 ### Formal Claim
 
@@ -65,8 +66,46 @@ component_workflow(
             'deciding_apply': {'on': {
                 'plan_only': {'target': 'reporting_plan', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'trigger', 'detail': {'apply': False}}}},
-                'apply': {'target': 'launching', 'guard': {'type': 'matchesTrace', 'params':
+                'apply': {'target': 'awaiting_applied_launch', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'trigger', 'detail': {'apply': True}}}},
+            }},
+            'awaiting_applied_launch': {'on': {
+                'runtime_ready': {'target': 'reporting', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'apply_shared_runtime_launch', 'outcome': 'runtime_ready', 'detail': {'apply': True, 'verify_mcp': False}}}},
+                'mcp_verified': {'target': 'reporting', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'apply_shared_runtime_launch', 'outcome': 'mcp_verified', 'detail': {'apply': True, 'verify_mcp': True}}}},
+            }},
+            'reporting_plan': {'on': {
+                'plan_reported': {'target': 'reported', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'output', 'outcome': 'launch_planned'}}},
+            }},
+            'reporting': {'on': {
+                'image_result_recorded': {'target': 'returning_result', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'C81.image_result', 'outcome': 'reported'}}},
+            }},
+            'returning_result': {'on': {
+                'result_reported': {'target': 'reported', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'output', 'outcome': 'image_result_reported'}}},
+            }},
+            'reported': {'type': 'final'},
+        },
+    },
+)
+```
+
+```python
+component_workflow(
+    component='C81', action='apply_shared_runtime_launch',
+    machine={
+        'id': 'c81_apply_shared_runtime_launch', 'initial': 'idle',
+        'states': {
+            'idle': {'on': {
+                'apply_requested': {'target': 'selecting_apply', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'trigger', 'target': 'runtime_images', 'detail': {'command': 'run-image', 'apply': True}}}},
+            }},
+            'selecting_apply': {'on': {
+                'apply_selected': {'target': 'launching', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'shared_runtime_launch', 'outcome': 'apply_selected'}}},
             }},
             'launching': {'on': {
                 'launch_requested': {'target': 'waiting_for_readiness', 'guard': {'type': 'matchesTrace', 'params':
@@ -77,24 +116,28 @@ component_workflow(
                     {'kind': 'effect', 'target': 'C21', 'outcome': 'ready'}}},
             }},
             'deciding_probe': {'on': {
-                'probe_skipped': {'target': 'reporting', 'guard': {'type': 'matchesTrace', 'params':
+                'probe_skipped': {'target': 'reporting_ready', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'trigger', 'detail': {'verify_mcp': False}}}},
-                'probe_selected': {'target': 'probing', 'guard': {'type': 'matchesTrace', 'params':
+                'probe_selected': {'target': 'requesting_probe', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'trigger', 'detail': {'verify_mcp': True}}}},
             }},
+            'requesting_probe': {'on': {
+                'probe_requested': {'target': 'probing', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'shared_runtime_mcp_probe', 'outcome': 'requested'}}},
+            }},
             'probing': {'on': {
-                'mcp_verified': {'target': 'reporting', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'effect', 'target': 'C81', 'outcome': 'mcp_verified'}}},
+                'probe_verified': {'target': 'reporting_verified', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'shared_runtime_mcp', 'outcome': 'verified'}}},
             }},
-            'reporting_plan': {'on': {
-                'plan_reported': {'target': 'reported', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'output', 'outcome': 'launch_planned'}}},
+            'reporting_ready': {'on': {
+                'runtime_ready': {'target': 'ready_result', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'output', 'outcome': 'runtime_ready'}}},
             }},
-            'reporting': {'on': {
-                'result_reported': {'target': 'reported', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'output', 'outcome': 'image_result_reported'}}},
+            'reporting_verified': {'on': {
+                'mcp_verified': {'target': 'verified_result', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'output', 'outcome': 'mcp_verified'}}},
             }},
-            'reported': {'type': 'final'},
+            'ready_result': {'type': 'final'}, 'verified_result': {'type': 'final'},
         },
     },
 )
@@ -140,7 +183,7 @@ component_workflow(
             }},
             'launching': {'on': {
                 'launch_requested': {'target': 'checking_health', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'effect', 'target': 'C21', 'outcome': 'launch_requested'}}},
+                    {'kind': 'effect', 'target': 'C81.project_container', 'outcome': 'launch_requested'}}},
             }},
             'checking_health': {'on': {
                 'endpoint_health_checked': {'target': 'returning', 'guard': {'type': 'matchesTrace', 'params':

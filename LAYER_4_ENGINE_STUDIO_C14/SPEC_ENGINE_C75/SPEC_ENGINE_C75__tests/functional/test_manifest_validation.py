@@ -1,6 +1,6 @@
 import unittest
 
-from SPEC_ENGINE_C75.manifest_validation import validate_manifest
+from SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C85.manifest_validation__pub import validate_manifest
 
 
 class ManifestValidationTests(unittest.TestCase):
@@ -45,5 +45,6 @@ class ManifestValidationTests(unittest.TestCase):
             with self.subTest(boundaries=boundaries):
                 self.assertEqual('boundaries', validate(boundaries)['unresolved'][0]['field'])
         self.assertEqual([], validate({'code': {'imports': []}})['unresolved'])
+        self.assertEqual({'issues': [], 'unresolved': []}, validate({'io': {'server': {}}}))
         self.assertEqual('boundaries.code.imports',
                          validate({'code': {'imports': ['C2']}})['unresolved'][0]['field'])

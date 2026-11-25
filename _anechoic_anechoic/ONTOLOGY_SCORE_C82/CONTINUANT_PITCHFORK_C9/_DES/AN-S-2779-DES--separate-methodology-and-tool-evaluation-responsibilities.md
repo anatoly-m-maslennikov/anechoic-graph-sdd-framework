@@ -7,9 +7,9 @@ tier: 2
 context:
   lens: DES
 state:
-  status: active
-  version: 25
-  updated_at: 2026-11-02 18:35:20 +0400
+  status: "active"
+  version: 26
+  updated_at: "2026-11-25T22:00:44.357433+00:00"
 ---
 ## Summary
 
@@ -27,7 +27,7 @@ Evaluation responsibility for operational definitions and their Tool implementat
 
 ## Details
 
-- methodology source Scope Units own Evaluations of Action **and** Workflow definitions, including valid Action references, Step inputs, typed transitions, **and** termination **or** bounded retry conditions. these Evaluations **may** directly check O authority under CA-R-1018; checks for Steps **and** Runs reuse CA-E-486 **when** applicable.
+- methodology source Scope Units own Evaluations of Action **and** Workflow definitions, including valid Action references, Step inputs, typed transitions, **and** termination **or** bounded retry conditions. these Evaluations **may** directly check O authority under CA-R-1018; check Step and Run bindings against AN-S-1617 when applicable.
 - TOOLS **and** its Tool Scope Units own Evaluations of Tools: implementation behavior, interfaces, failures, **and** conformance **to** the Action implemented by the Tool. these Evaluations **must not** independently define the correctness rules of the referenced Action **or** Workflow.
 
 checking whether a Tool realizes an Action correctly is distinct from checking whether that Action's definition is valid. a Tool test **may** use the methodology definition as its expected-behavior authority **without** taking ownership of definition validation.

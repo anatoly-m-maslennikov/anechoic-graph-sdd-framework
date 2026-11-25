@@ -4,10 +4,10 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from SPEC_ENGINE_C75.boundary_model import load_boundary_model
-from SPEC_ENGINE_C75.lean_spec__pub import compile_lean
-from SPEC_ENGINE_C75.trace_delegation__pub import check_child_outcome
-from SPEC_ENGINE_C75.trace_spec__pub import check_trace_spec
+from SPEC_ENGINE_C75.LAYER_1_SPEC_SOURCES_C83.boundary_model__pub import load_boundary_model
+from SPEC_ENGINE_C75.LAYER_3_LEAN_TRANSLATOR_C84.lean_spec__pub import compile_lean
+from SPEC_ENGINE_C75.LAYER_5_DELEGATION_VERIFICATION_C89.trace_delegation__pub import check_child_outcome
+from SPEC_ENGINE_C75.LAYER_4_SPEC_COMPARISON_C88.trace_spec__pub import check_trace_spec
 from SPEC_ENGINE_C75.SPEC_ENGINE_C75__tests.functional.test_trace_child_delegation import (
     CONTRACT, PARENT, SOLUTION, pins,
 )

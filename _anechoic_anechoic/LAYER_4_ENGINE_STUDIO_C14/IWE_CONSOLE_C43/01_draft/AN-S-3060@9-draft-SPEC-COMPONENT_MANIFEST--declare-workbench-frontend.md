@@ -43,8 +43,33 @@ declare_entity(
                             'must_effect': [('C21.view_run.query_id', 'returned'), ('C21.view_run.save_error', 'returned'),
                                             ('workbench_save_error', 'shown'), ('workbench_display', 'shown')],
                             'forbid_effect': ['C21.view_run.malformed_reply'],
+                        }, 'run_failed': {
+                            'must_effect': [('C21.view_run.error', 'returned'), ('workbench_run_error', 'shown')],
+                            'forbid_effect': ['C21.view_fetch', 'workbench_display', 'workbench_save_error'],
+                        }, 'failed': {
+                            'must_effect': [('workbench_run_error', 'shown')],
                         }},
                     },
+                    'workbench_frontend_check_view': {'outcomes': {
+                        'checked': {
+                            'must_effect': (
+                                ('project_api.view_check', 'returned', {'sql': 'current'}),
+                                ('workbench_check_verdict', 'shown_for_current_sql'),
+                                ('workbench_previous_run', 'preserved'),
+                            ),
+                            'forbid_effect': ('workbench_replace_previous_run', 'workbench_show_stale_check_verdict'),
+                        },
+                        'failed': {
+                            'must_effect': (('workbench_prior_check_verdict', 'cleared'), ('workbench_check_error', 'shown'), ('workbench_previous_run', 'preserved')),
+                            'forbid_effect': ('workbench_replace_previous_run', 'workbench_check_verdict', 'workbench_show_stale_check_verdict'),
+                        },
+                    }},
+                    'workbench_frontend_edit_sql': {'outcomes': {
+                        'changed': {
+                            'must_effect': (('workbench_prior_check_verdict', 'cleared'), ('workbench_previous_run', 'preserved')),
+                            'forbid_effect': ('workbench_replace_previous_run', 'workbench_check_verdict', 'workbench_show_stale_check_verdict'),
+                        },
+                    }},
                     'source_imports': {'transport': 'cli', 'runner': 'node',
                                        'path': 'LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND/scripts/import-graph-scanner.mjs'},
                     'source_function_sizes': {

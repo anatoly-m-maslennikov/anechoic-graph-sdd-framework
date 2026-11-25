@@ -8,8 +8,9 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import
     parse_component_manifest,
 )
 
-from SPEC_ENGINE_C75.contract_model__pub import lean_string, parse_contract
-from SPEC_ENGINE_C75.tool_api_obligations__pub import manifest_tool_api
+from SPEC_ENGINE_C75.LAYER_3_LEAN_TRANSLATOR_C84.lean_values__pub import lean_string
+from SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C85.contract_model__pub import parse_contract
+from SPEC_ENGINE_C75.LAYER_4_SPEC_COMPARISON_C88.tool_api_obligations__pub import manifest_tool_api
 
 _BASE = '_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/'
 _PATHS = {

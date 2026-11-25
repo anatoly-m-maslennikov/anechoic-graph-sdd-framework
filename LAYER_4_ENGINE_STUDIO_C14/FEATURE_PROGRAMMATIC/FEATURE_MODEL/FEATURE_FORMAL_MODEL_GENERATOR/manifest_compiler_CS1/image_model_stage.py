@@ -87,17 +87,22 @@ def bounded_run(argv, *, cwd, timeout, capture_stdout=True, max_output=MAX_OUTPU
                 pass
 
 
-def previous_claims(component: Path, image: str, *, timeout: float | None) -> list[list[str]]:
+def inspect_previous_image(image: str, *, timeout: float | None) -> dict:
     if re.fullmatch(r"sha256:[0-9a-f]{64}", image) is None:
         raise ValueError("Previous image must be an immutable image ID")
-    deadline = None if timeout is None else time.monotonic() + timeout
-    result = bounded_run(["docker", "image", "inspect", image], cwd=ROOT, timeout=_remaining(deadline))
+    result = bounded_run(["docker", "image", "inspect", image], cwd=ROOT, timeout=timeout)
     if result.returncode:
         raise ValueError("Previous ready image is unavailable")
     [details] = json.loads(result.stdout)
     if (details.get("Id") != image or details.get("Os") != "linux"
             or (details["Config"]["Labels"] or {}).get("org.anechoic.runtime.schema") != "1"):
         raise ValueError("Previous ready image is not an admitted runtime image")
+    return details
+
+
+def previous_claims(component: Path, image: str, *, timeout: float | None) -> list[list[str]]:
+    deadline = None if timeout is None else time.monotonic() + timeout
+    details = inspect_previous_image(image, timeout=_remaining(deadline))
 
     selector = component.parent / "selector.py"
     if any(set(str(path)) & {",", "\n", "\r"} for path in (component, selector)):
@@ -144,11 +149,27 @@ def _run(command: list[str], deadline: float | None) -> str:
     return result.stdout.strip()
 
 
+def _stage_claim_files(source, staged, reader):
+    hashes = {}
+    for directory in (source, source / '_SPEC'):
+        if not directory.exists() and not directory.is_symlink():
+            continue
+        for path in reader.inventory_shallow(directory):
+            if path.name in hashes:
+                raise ValueError('Duplicate native Model source filename')
+            raw = reader.read(path)
+            (staged / path.name).write_bytes(raw)
+            hashes[path.name] = sha256(raw).hexdigest()
+    return hashes
+
+
 def stage_model(project: Path, control: Path, timeout: float | None, previous: str | None) -> str:
     deadline = None if timeout is None else time.monotonic() + timeout
     source = find_ontology_component(control)
     compile_command = [sys.executable, "-B", "-P", "-m", COMPILE]
     if source is None:
+        if previous is not None:
+            inspect_previous_image(previous, timeout=_remaining(deadline))
         return _run(compile_command, deadline)
     reader = ReadContext(roots=[str(control)], limits=dict(CEILINGS))
     temporary = project / ".anechoic_tmp"
@@ -157,21 +178,12 @@ def stage_model(project: Path, control: Path, timeout: float | None, previous: s
     with TemporaryDirectory(prefix="anechoic-image-model-", dir=temporary) as stage:
         staged = Path(stage) / ONTOLOGY
         staged.mkdir()
-        hashes = {}
-        for directory in (source, source / '_SPEC'):
-            if not directory.exists() and not directory.is_symlink():
-                continue
-            for path in reader.inventory_shallow(directory):
-                if path.name in hashes:
-                    raise ValueError('Duplicate native Model source filename')
-                raw = reader.read(path)
-                (staged / path.name).write_bytes(raw)
-                hashes[path.name] = sha256(raw).hexdigest()
+        hashes = _stage_claim_files(source, staged, reader)
         selected = None
-        if previous:
+        if previous is not None:
             selected = previous_claims(staged, previous, timeout=_remaining(deadline))
         fingerprint = _run([*compile_command, str(staged.parent)], deadline)
-        if previous:
+        if previous is not None:
             records = json.loads((staged.parent / "model.json").read_text())["declarations"]
             names = [Path(location.rsplit("@", 1)[0]).name for location, _, _ in records]
             if selected != [[name, hashes[name]] for name in sorted(names)]:

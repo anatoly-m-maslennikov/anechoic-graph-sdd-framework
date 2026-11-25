@@ -50,9 +50,37 @@ component_workflow(
             'reading': {'on': {
                 'no_generation': {'target': 'rejected', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'output', 'outcome': 'no_generation'}}},
+                'structure_from_accepted_rows_read': {'target': 'reading_structure_pair', 'guard': {
+                    'type': 'matchesTrace', 'params': {
+                        'kind': 'effect', 'target': 'structure', 'outcome': 'rendered_from_accepted_rows',
+                        'detail': {'component': 'C71', 'action': 'beta_database_artifact_read',
+                                   'output': 'structure_returned'},
+                    },
+                }},
                 'accepted_artifact_read': {'target': 'responding', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'effect', 'target': 'artifact_content_generation', 'outcome': 'paired',
                      'detail': {'component': 'C71', 'action': 'beta_database_artifact_read', 'output': 'succeeded'}}}},
+            }},
+            'reading_structure_pair': {'on': {
+                'accepted_structure_pair_read': {'target': 'responding_structure', 'guard': {
+                    'type': 'matchesTrace', 'params': {
+                        'kind': 'effect', 'target': 'artifact_content_generation', 'outcome': 'paired',
+                        'detail': {'component': 'C71', 'action': 'beta_database_artifact_read',
+                                   'output': 'structure_returned'},
+                    },
+                }},
+            }},
+            'responding_structure': {'on': {
+                'structure_and_generation_paired': {'target': 'reporting_structure', 'guard': {
+                    'type': 'matchesTrace', 'params': {
+                        'kind': 'effect', 'target': 'artifact_response', 'outcome': 'paired',
+                    },
+                }},
+            }},
+            'reporting_structure': {'on': {
+                'structure_returned': {'target': 'succeeded', 'guard': {
+                    'type': 'matchesTrace', 'params': {'kind': 'output', 'outcome': 'structure_returned'},
+                }},
             }},
             'responding': {'on': {
                 'artifact_and_generation_paired': {'target': 'reporting', 'guard': {'type': 'matchesTrace', 'params':
@@ -83,6 +111,7 @@ from accepted rows. This Solution retains AN-S-4798@1's successful
 artifact-read account. The sources do not establish how those accounts
 fit together. Resolve that question before activation.
 
-The formal workflow checks binding observation, a paired content and generation
-effect from the succeeded C71 read, and the paired response in order. The representation, admission atomicity, and exact
-value equality remain outside the modeled checks.
+The `structure_returned` case models the existing accepted-row Draft
+proposal. Its comparison checks how that proposal fits C71. The source
+alignment and read sequence require review before adoption. Admission
+atomicity and exact value equality remain outside the checks.

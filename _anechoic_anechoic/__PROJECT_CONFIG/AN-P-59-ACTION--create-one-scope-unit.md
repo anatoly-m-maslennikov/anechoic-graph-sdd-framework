@@ -7,9 +7,9 @@ structure:
 context:
   template: action
 state:
-  status: active
-  version: 11
-  updated_at: 2026-11-02 19:44:26 +0400
+  status: "active"
+  version: 12
+  updated_at: "2026-11-25T21:38:55.190404+00:00"
 ---
 # Summary
 
@@ -30,4 +30,4 @@ Create One Scope Unit **means** the logical Action that adds exactly one explici
 
 Its separate governing Workflow and executable realization remain future gated work; this Action does not introduce an additional Workflow or Step now. Current Project Structure dispatch semantics remain applicable. Storage paths and folders are private realization details, not the public Scope Unit selector.
 
-These are normative source definitions, not executable bindings or live admission. Before any actual Run, resolve and independently verify the selected realization, current definition pins, applicable permissions and shared Run recording under CA-R-1525/CA-R-1720. Missing, stale, unsupported or incompatible bindings stop before dispatch. No new retry/resume decision, MCP activation, runtime manifest change, Core adoption or Subject publication is authorized.
+These are normative source definitions, not executable bindings or live admission. Before any actual Run, resolve and independently verify the selected realization, current definition pins, applicable permissions and shared Run recording under AN-S-1617/CA-R-1720. Missing, stale, unsupported or incompatible bindings stop before dispatch. No new retry/resume decision, MCP activation, runtime manifest change, Core adoption or Subject publication is authorized.

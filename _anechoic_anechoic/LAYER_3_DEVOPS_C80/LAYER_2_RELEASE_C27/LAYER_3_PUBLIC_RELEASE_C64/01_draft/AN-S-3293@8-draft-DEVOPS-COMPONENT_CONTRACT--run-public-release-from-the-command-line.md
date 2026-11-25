@@ -51,5 +51,9 @@ declare_cli_contract(
     path='LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/release.py',
     command='public',
     exit_codes={'completed': 0, 'input_required': 1, 'failed': 1, 'invalid_usage': 2, 'interrupted': 130},
+    output='completed',
+    must_effect=(('git_base_head', 'resolved'), ('content_draft_commit_pins', 'matched'), ('release_drafts', 'rendered'), ('pull_request_description', 'returned'), ('version_history', 'returned')),
+    must_precede=((('git_base_head', 'resolved'), ('content_draft_commit_pins', 'matched')), (('content_draft_commit_pins', 'matched'), ('release_drafts', 'rendered')), (('release_drafts', 'rendered'), ('pull_request_description', 'returned')), (('content_draft_commit_pins', 'matched'), ('version_history', 'returned'))),
+    forbid_effect=('external_publish', 'checkout_write'),
 )
 ```

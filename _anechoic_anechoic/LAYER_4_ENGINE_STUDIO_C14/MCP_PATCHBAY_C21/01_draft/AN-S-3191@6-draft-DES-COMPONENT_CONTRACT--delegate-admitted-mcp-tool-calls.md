@@ -130,6 +130,7 @@ declare_trace_contract(
     transport='http',
     operation='view_run',
     output='failed',
+    must_effect=(('C21.view_run.error', 'returned'),),
     forbid_effect=('C21.view_run.query_id', 'C21.view_run.save_error'),
 )
 ```

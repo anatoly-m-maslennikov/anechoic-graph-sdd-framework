@@ -51,7 +51,11 @@ def code_rows(nodes, test_edges, component_paths, sizes, test_assets):
     rows = {}
     for node in nodes:
         key, kind, _, path, status, owner, _ = node
-        if kind != 'module' or path is None or path not in sizes:
+        if kind != 'module' or path is None:
+            continue
+        if path not in sizes:
+            if status == 'read_error':
+                raise ValueError(f'Cannot measure unreadable source: {path}')
             continue
         candidates = [(len(PurePosixPath(p).parts), k) for k, p in tests.items()
                       if PurePosixPath(path).is_relative_to(PurePosixPath(p))]

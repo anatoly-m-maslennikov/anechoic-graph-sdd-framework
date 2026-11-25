@@ -140,6 +140,16 @@ class ManifestPropertyFieldsTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Unresolved Property group bearer"):
             assemble_model_classes([nested[0], nested[1], nested[3]])
 
+    def test_declared_field_under_an_open_property_group(self):
+        claims = [
+            primary("Entity"),
+            prop("Content", "Entity", ", value_cardinality=0, dependent_property_cardinality={'minimum': 0, 'maximum': None}"),
+            prop("Summary", "Entity.Content", ", value_format=str"),
+        ]
+        self.assertIn("summary: str", assemble_model_classes(claims))
+        with self.assertRaisesRegex(ValueError, "Unresolved Property group bearer"):
+            assemble_model_classes([claims[0], claims[2]])
+
     def test_header_paths_and_inherited_group(self):
         atom = "Node//Artifact//Atom"
         spec = atom + "//SpecAtom"

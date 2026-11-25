@@ -39,8 +39,26 @@ declare_entity(
                 'server': {
                     'replace_logical_atom_properties': {
                         'outcomes': {
-                            'change_reported': {'must_effect': [('logical_target', 'one_explicit'), ('logical_target', 'selected'), ('expected_state', 'checked'), ('change', 'completed')]},
-                            'invalid_target_rejected': {'must_effect': [('logical_target', 'invalid_cardinality')], 'forbid_effect': ['change']},
+                            'change_reported': {
+                                'must_effect': [('logical_target', 'one_explicit'), ('selected_atom_value', 'read'),
+                                                ('expected_state', 'checked'), ('change', 'completed'),
+                                                ('unselected_content', 'preserved')],
+                                'forbid_effect': ['semantic_target_substitution'],
+                            },
+                            'failure_reported': {
+                                'must_effect': [('replacement_report', 'failure')],
+                            },
+                            'uncertainty_reported': {
+                                'must_effect': [('replacement_report', 'uncertainty')],
+                            },
+                            'invalid_target_rejected': {
+                                'must_effect': [('logical_target', 'invalid_cardinality')],
+                                'forbid_effect': ['selected_atom_value', 'change', 'semantic_target_substitution'],
+                            },
+                            'stale_precondition_rejected': {
+                                'must_effect': [('expected_state', 'mismatch')],
+                                'forbid_effect': ['change', 'semantic_target_substitution'],
+                            },
                         },
                     },
                 },

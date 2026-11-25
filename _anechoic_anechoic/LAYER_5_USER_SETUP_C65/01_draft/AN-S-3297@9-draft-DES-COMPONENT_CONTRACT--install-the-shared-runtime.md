@@ -46,7 +46,7 @@ For a single Project, Release verifies Project access. Only explicit
 ### Prose Claim
 
 `image_built` identifies an immutable shared runtime image.
-`mcp_verified` requires a check through the published host port.
+`shared_runtime_mcp: verified` requires a check through the published host port.
 
 ### Formal Claim
 
@@ -58,6 +58,54 @@ declare_cli_contract(
     path='LAYER_5_USER_SETUP_C65/setup.py',
     command='install',
     output='succeeded',
-    must_effect=(('C27', 'image_built'), ('C27', 'runtime_started'), ('C27', 'mcp_verified')),
+    must_effect=(('C27', 'build_image_requested'), ('C27', 'image_built'),
+                 ('C27', 'run_image_requested'), ('C27', 'runtime_started'),
+                 ('shared_runtime_mcp', 'verified')),
+    must_precede=((('C27', 'build_image_requested'), ('C27', 'image_built')),
+                  (('C27', 'image_built'), ('C27', 'run_image_requested')),
+                  (('C27', 'run_image_requested'), ('C27', 'runtime_started')),
+                  (('C27', 'runtime_started'), ('shared_runtime_mcp', 'verified'))),
+)
+```
+
+```python trace
+declare_trace_contract(
+    action='prepare_setup_install',
+    output='conflicting_settings_preserved',
+    must_effect=(
+        ('C65.settings_options', 'conflict'),
+    ),
+    forbid_effect=('C65.runtime_settings',),
+)
+```
+
+```python trace
+declare_trace_contract(
+    action='prepare_setup_install',
+    output='explicit_project_initialized',
+    must_effect=(
+        ('C65.settings_options', 'consistent'),
+        ('C65.project_init_request', 'explicit_single_project'),
+        ('C65.project_inputs', 'initialized'),
+    ),
+    must_precede=(
+        (('C65.settings_options', 'consistent'), ('C65.project_init_request', 'explicit_single_project')),
+        (('C65.project_init_request', 'explicit_single_project'), ('C65.project_inputs', 'initialized')),
+    ),
+)
+```
+
+```python trace
+declare_trace_contract(
+    action='prepare_setup_install',
+    output='project_inputs_preserved',
+    forbid_effect=('C65.project_inputs',),
+    must_effect=(
+        ('C65.settings_options', 'consistent'),
+        ('C65.project_init_request', 'absent'),
+    ),
+    must_precede=(
+        (('C65.settings_options', 'consistent'), ('C65.project_init_request', 'absent')),
+    ),
 )
 ```

@@ -4,11 +4,9 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from SPEC_ENGINE_C75.carrier_framing__pub import (
-    framing_to_lean,
-    framing_to_mermaid,
-    parse_framing,
-)
+from SPEC_ENGINE_C75.LAYER_3_LEAN_TRANSLATOR_C84.framing_lean__pub import framing_to_lean
+from SPEC_ENGINE_C75.LAYER_3_MERMAID_RENDERER_C87.framing_diagram__pub import framing_to_mermaid
+from SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C85.carrier_framing__pub import parse_framing
 
 CONTRACT = 'declare_framing_contract(delimiter=[45,45,45], line_endings=[[10],[13,10]])'
 SOLUTION = ('declare_framing_solution(opening_prefixes=[[45,45,45,10],[45,45,45,13,10]], '

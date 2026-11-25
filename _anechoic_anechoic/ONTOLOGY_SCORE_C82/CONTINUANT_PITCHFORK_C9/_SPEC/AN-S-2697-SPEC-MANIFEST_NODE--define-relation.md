@@ -9,8 +9,8 @@ context:
   template: manifest_node
 state:
   status: "active"
-  version: 19
-  updated_at: '2026-11-24T16:58:01.317779+00:00'
+  version: 21
+  updated_at: "2026-11-25T20:41:49.320847+00:00"
 ---
 
 ## Summary
@@ -20,6 +20,10 @@ Define Relation
 ## Claim scope
 
 MODEL//ANECHOIC <+ Graph/Relation
+
+## Semantics
+
+Each authored Relation fact states one registered direct meaning between its source and target and has one authoritative declaration. Derived Relations identify their derivation and authoritative input facts, including through an upstream Projection. A derived inverse exposes the same fact with the endpoints reversed.
 
 ## Formal Manifest
 

@@ -1,7 +1,8 @@
 """Lower the bounded C45 HTTP Contract to a Lean value without executing it."""
 from pathlib import Path
 
-from SPEC_ENGINE_C75.contract_model__pub import lean_string, parse_contract
+from SPEC_ENGINE_C75.LAYER_3_LEAN_TRANSLATOR_C84.lean_values__pub import lean_string
+from SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C85.contract_model__pub import parse_contract
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
     formal_claim_fences,

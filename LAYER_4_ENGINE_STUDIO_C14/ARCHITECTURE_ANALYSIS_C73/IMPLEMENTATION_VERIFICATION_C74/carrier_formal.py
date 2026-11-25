@@ -10,7 +10,8 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.atom_reference__pub import (
     derive_atom_ref,
 )
-from SPEC_ENGINE_C75.carrier_framing__pub import framing_to_lean, parse_framing
+from SPEC_ENGINE_C75.LAYER_3_LEAN_TRANSLATOR_C84.framing_lean__pub import framing_to_lean
+from SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C85.carrier_framing__pub import parse_framing
 
 _BASE = ('_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/'
          'FEATURE_PROGRAMMATIC_C15/FEATURE_TOOLS_C16/')

@@ -7,9 +7,9 @@ tier: 2
 context:
   lens: SWD
 state:
-  status: active
-  version: 31
-  updated_at: 2026-11-02 19:44:26 +0400
+  status: "active"
+  version: 32
+  updated_at: "2026-11-25T22:32:17.448660+00:00"
 ---
 ## Summary
 
@@ -41,4 +41,4 @@ bounded cleanup, but keep **every** cleanup remnant confined **to** temporary st
 keep both trees non-authoritative. deleting `.anechoic_tmp/` can lose **only**
 disposable state. deleting `.anechoic_runtime/` **may** require reinstallation **or**
 lose operational history **and** resumable progress, but cannot lose a governed
-Artifact **or** Project Journal history.
+Artifact **or** Project Journal history. Preserve accepted Journal records in configured external sinks during cleanup or reinstallation.

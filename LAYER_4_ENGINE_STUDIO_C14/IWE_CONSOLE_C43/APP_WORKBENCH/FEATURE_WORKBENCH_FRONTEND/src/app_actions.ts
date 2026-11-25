@@ -34,8 +34,11 @@ export async function performAction(ctx: ActionContext, kind: 'run' | 'check' | 
     const response = await boundApi.run(current.id, cursor, kind === 'save' ? { save: true, ...(name ? { name } : {}) } : {});
     ctx.resetGrid(); updateTab(current.id, { revision: response.revision, run: response, result: undefined, saveError: response.save_error });
     if (response.status === 'failed') updateTab(current.id, { busy: false, error: response.error || 'Query failed' });
-    else if (response.query_id) acceptResult(current.id, await boundApi.fetch(current.id, 0, ctx.resultDisplay().rowSizing === 'fixed' ? ctx.resultDisplay().fixedPageSize : 100, ctx.grid()));
-    else updateTab(current.id, { busy: false });
+    else if (response.query_id) {
+      const result = await boundApi.fetch(current.id, 0, ctx.resultDisplay().rowSizing === 'fixed' ? ctx.resultDisplay().fixedPageSize : 100, ctx.grid());
+      if (result.query_id === response.query_id) acceptResult(current.id, result);
+      else updateTab(current.id, { busy: false, error: 'The View result changed before it could be displayed.' });
+    } else updateTab(current.id, { busy: false, error: 'The completed query has no result ID.' });
     if (kind === 'save') {
       if (!response.save_error && response.saved_query_id && response.saved_query_url) acceptSaved(current.id, { saved_query_id: response.saved_query_id, saved_query_url: response.saved_query_url, kind: 'query', sql: current.sql, ...(name ? { name } : {}) });
       await refreshSaved();

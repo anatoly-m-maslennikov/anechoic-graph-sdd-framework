@@ -25,7 +25,7 @@ Dispatch release and runtime image CLI requests and report child results.
 ### Prose Claim
 
 The release CLI dispatches the selected command to its child, then reports
-its JSON result and exit status. Help lists the commands and exits 0. Invalid
+its JSON result and exit status. `prepare-local` dispatches to C63. Help lists the commands and exits 0. Invalid
 CLI usage exits 2. Interruption exits 130. Exit 1 means another reported outcome.
 
 ### Formal Claim
@@ -45,6 +45,8 @@ component_workflow(
             'selecting': {'on': {
                 'local_selected': {'target': 'dispatching_local', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'trigger', 'detail': {'command': 'local'}}}},
+                'prepare_local_selected': {'target': 'dispatching_prepare_local', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'trigger', 'detail': {'command': 'prepare-local'}}}},
                 'public_selected': {'target': 'dispatching_public', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'trigger', 'detail': {'command': 'public'}}}},
                 'build_image_selected': {'target': 'dispatching_build_image', 'guard': {'type': 'matchesTrace', 'params':
@@ -54,6 +56,10 @@ component_workflow(
             }},
             'dispatching_local': {'on': {
                 'local_invoked': {'target': 'responding', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'C63'}}},
+            }},
+            'dispatching_prepare_local': {'on': {
+                'prepare_local_invoked': {'target': 'responding', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'effect', 'target': 'C63'}}},
             }},
             'dispatching_public': {'on': {

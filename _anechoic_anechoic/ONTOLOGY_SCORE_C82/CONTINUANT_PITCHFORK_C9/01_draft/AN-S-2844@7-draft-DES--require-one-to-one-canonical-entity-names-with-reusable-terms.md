@@ -7,9 +7,9 @@ tier: 1
 context:
   lens: DES
 state:
-  status: draft
+  status: "draft"
   version: 7
-  updated_at: 2026-11-04 18:25:15 +0400
+  updated_at: "2026-11-25T20:02:08.482944+00:00"
 ---
 ## Summary
 
@@ -19,7 +19,7 @@ Require one-to-one canonical entity names with reusable Terms
 
 ### Prose Claim
 
-Every entity represented in the Subject Graph, every declared Relation Type entity, and every authored occurrence mentioning one of those entities in ANECHOIC Controlled English.
+Every entity represented in the Subject Graph, every declared Relation Type entity, and every authored occurrence mentioning one of those entities in authored Claims.
 
 **every** entity represented **in** the Subject Graph **and** **every** declared Relation Type entity **must** have exactly one complete canonical name formed from reusable Terms and any applicable registered qualification syntax, and every authored occurrence **must** use that name consistently. Each complete name **must** identify exactly one entity; distinct complete names **must not** identify the same entity, and the same complete name **must not** identify distinct entities.
 

@@ -234,7 +234,11 @@ declare_entity(
                        'module': 'FEATURE_PROGRAMMATIC.FEATURE_TOOLS.native_lifecycle_cli',
                        'input': 'bound Task, Epic, or Ticket Asset lifecycle request and Model and Structure attestation on stdin',
                        'optional_inputs': ['indexed_task', 'lifecycle_context'],
-                       'output': {'succeeded': 'native outcome and file effects on stdout'}}}},
+                       'output_fields': ['outcome', 'file_effects'],
+                       'output': {'succeeded': 'native outcome and file effects on stdout'}},
+                'apply_native_lifecycle': {'outcomes': {'failed': {
+                    'must_effect': [('native_lifecycle_failure', 'reported')],
+                }}}}},
             'state': {
                 'channels': {'lifecycle_query_reader': 'rw'},
                 'reads': ['admitted Project carriers and declarations', 'applicable framework sources'],

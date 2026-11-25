@@ -7,9 +7,9 @@ tier: 1
 context:
   lens: DES
 state:
-  status: draft
+  status: "draft"
   version: 28
-  updated_at: 2026-11-04 18:25:15 +0400
+  updated_at: "2026-11-25T20:52:20.450010+00:00"
 ---
 ## Summary
 
@@ -43,7 +43,7 @@ qualified X inherits X's applicable features and constraints. Y does not
 become a narrower kind of X, and no intermediate X/Y kind is declared. Neither form assigns a
 value to an existing instance merely by appearing in an expression.
 
-Atom Form is represented by the YAML `form` key; Atom Role is represented by `role`. Legacy `type` and `content_role` are readable only under the transition rules in CA-D-657. These encodings do not create separate Property kinds.
+Atom Form is represented by the YAML `form` key; Atom Role is represented by `role`. The historical transition for `type` and `content_role` is specified in AN-S-1039@11. Native Template selection uses the Atom Header under AN-S-3160. These encodings do not create separate Property kinds.
 For example, `Atom/(.Header.Role: Method)` concerns Atoms classified by Content
 Role Method; Method is not used as a Type value in this example.
 

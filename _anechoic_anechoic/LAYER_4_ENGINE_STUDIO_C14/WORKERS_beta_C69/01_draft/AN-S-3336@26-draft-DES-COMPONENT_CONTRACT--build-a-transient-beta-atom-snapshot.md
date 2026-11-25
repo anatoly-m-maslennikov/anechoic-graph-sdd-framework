@@ -125,6 +125,10 @@ base and check their hashes against the write receipt before
 returning the outcome and delta. If projection fails, report an
 explicit error without returning a successful delta.
 
+The selected logical CLI Contract requests C16 lifecycle execution and
+receives the native outcome and file effects before recording them.
+Physical launch contexts and raw payloads remain open.
+
 ```python trace
 declare_trace_contract(
     action='worker_ticket_lifecycle',
@@ -132,13 +136,17 @@ declare_trace_contract(
     must_effect=(
         ('C69.lifecycle_result', 'outcome_and_delta_returned'),
         ('C69.lifecycle_request', 'admitted'),
+        ('C16', 'lifecycle_requested'),
+        ('C16', 'outcome_and_file_effects_received'),
         ('C69.native_write_outcome', 'recorded'),
         ('C69.carrier_delta', 'captured_against_admitted_base'),
         ('C69.carrier_hashes', 'verified_against_write_receipt'),
     ),
     forbid_effect=('C69.full_generation',),
     must_precede=(
-        (('C69.lifecycle_request', 'admitted'), ('C69.native_write_outcome', 'recorded')),
+        (('C69.lifecycle_request', 'admitted'), ('C16', 'lifecycle_requested')),
+        (('C16', 'lifecycle_requested'), ('C16', 'outcome_and_file_effects_received')),
+        (('C16', 'outcome_and_file_effects_received'), ('C69.native_write_outcome', 'recorded')),
         (('C69.native_write_outcome', 'recorded'), ('C69.carrier_delta', 'captured_against_admitted_base')),
         (('C69.carrier_delta', 'captured_against_admitted_base'), ('C69.carrier_hashes', 'verified_against_write_receipt')),
         (('C69.carrier_hashes', 'verified_against_write_receipt'), ('C69.lifecycle_result', 'outcome_and_delta_returned')),
@@ -153,11 +161,15 @@ declare_trace_contract(
     must_effect=(
         ('C69.projection_error', 'reported'),
         ('C69.lifecycle_request', 'admitted'),
+        ('C16', 'lifecycle_requested'),
+        ('C16', 'outcome_and_file_effects_received'),
         ('C69.native_write_outcome', 'recorded'),
     ),
     forbid_effect=('C69.lifecycle_result', 'C69.full_generation'),
     must_precede=(
-        (('C69.lifecycle_request', 'admitted'), ('C69.native_write_outcome', 'recorded')),
+        (('C69.lifecycle_request', 'admitted'), ('C16', 'lifecycle_requested')),
+        (('C16', 'lifecycle_requested'), ('C16', 'outcome_and_file_effects_received')),
+        (('C16', 'outcome_and_file_effects_received'), ('C69.native_write_outcome', 'recorded')),
         (('C69.native_write_outcome', 'recorded'), ('C69.projection_error', 'reported')),
     ),
 )

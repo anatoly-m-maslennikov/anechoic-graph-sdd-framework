@@ -239,7 +239,6 @@ def _check_relation_references(records: list[tuple[str, str, str]]) -> None:
     addresses = {subject for _, subject, _ in records}
     addresses.update(_class_property_aliases(parsed))
     _add_unambiguous_addresses(addresses, parsed)
-    declarations = [(source, declaration) for source, _, declaration in parsed]
     simple_address = cache(simple_model_address)
     canonical_address = cache(canonical_model_address)
     keys = {
@@ -247,12 +246,14 @@ def _check_relation_references(records: list[tuple[str, str, str]]) -> None:
         "incoming_model_relations", "model_relation_constraints", "instance_relation_constraints",
         "population_unique_constraints", "population_entity_path", "base_path", "entity_name",
     }
-    for source, declaration in sorted(declarations, key=lambda item: item[1]["kind"] != "relation"):
+    for source, subject, declaration in sorted(parsed, key=lambda item: item[2]["kind"] != "relation"):
         try:
             validate_field_contracts(declaration)
         except ValueError as error:
             raise ValueError(f"{source}:{declaration['line']}:1: {error}") from error
         arguments = {key: value for key, value in declaration["arguments"].items() if key in keys}
+        if "population_unique_constraints" in arguments and "entity_class" in declaration["arguments"]:
+            arguments.setdefault("population_entity_path", model_class_target(subject, arguments["entity_name"]))
         if declaration["kind"] == "relation":
             arguments.pop("relation_name", None)
         check = {**declaration, "arguments": arguments, "imports": {}, "classes": ()}

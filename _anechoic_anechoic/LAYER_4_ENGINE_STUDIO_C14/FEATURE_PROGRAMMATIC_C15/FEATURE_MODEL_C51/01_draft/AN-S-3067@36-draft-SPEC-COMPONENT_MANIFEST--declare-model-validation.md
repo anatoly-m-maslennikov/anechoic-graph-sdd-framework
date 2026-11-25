@@ -59,6 +59,7 @@ declare_entity(
                               },
                               'open_admitted_model': {'outcomes': {
                                   'succeeded': {'must_effect': [('C53.admitted_model', 'opened')]},
+                                  'failed': {'must_effect': [('C53.admitted_model', 'failed')]},
                               }},
                               'validate_proposed_model_instance': {'outcomes': {
                                   'succeeded': {'must_effect': [('model_rules', 'passed')],

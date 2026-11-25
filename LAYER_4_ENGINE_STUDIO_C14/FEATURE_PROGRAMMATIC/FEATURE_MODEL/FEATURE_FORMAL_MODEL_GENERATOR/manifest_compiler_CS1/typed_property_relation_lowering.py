@@ -16,7 +16,7 @@ _PROPERTY_KEYS = {
 }
 _RELATION_KEYS = {
     'name', 'source_endpoint', 'target_endpoint', 'endpoint_pairs',
-    'inverse_alias', 'written_alias', 'reverse_written_alias', 'acyclic',
+    'inverse_alias', 'written_alias', 'reverse_written_alias', 'acyclic', 'derived_from',
     'forbidden_status_pairs',
 }
 _PROPERTY_PATHS = {
@@ -223,8 +223,9 @@ def declared_relation_names(records, fields):
     for _, _, text, kind in fields:
         if kind == 'manifest_relation':
             _, _, _, cls = _parse_field_body(ast.parse(text))
-            _, name = _field_assignments(cls, 'Relation')
-            names.add(name.value)
+            assignments, name = _field_assignments(cls, 'Relation')
+            if 'derived_from' not in assignments:
+                names.add(name.value)
     return tuple(sorted(names))
 
 

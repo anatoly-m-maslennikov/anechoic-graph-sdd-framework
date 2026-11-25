@@ -26,7 +26,8 @@ Execute one connector operation.
 
 Admit the request before dispatch. Verify a read, applied delta, or
 unchanged result before reporting success. Reject invalid bindings
-before dispatch. Return an uncertain effect as a structured error.
+before dispatch. Return an uncertain effect or known partial effects with a
+structured error.
 
 ### Formal Claim
 
@@ -87,9 +88,28 @@ component_workflow(
                         'kind': 'effect', 'target': 'C17.admitted_delta', 'outcome': 'applied',
                     },
                 }},
+                'partial_effects_reported': {'target': 'reporting_partial_error', 'guard': {
+                    'type': 'matchesTrace', 'params': {
+                        'kind': 'effect', 'target': 'C17.partial_effects', 'outcome': 'reported',
+                    },
+                }},
                 'uncertain_effect_reported': {'target': 'reporting_uncertainty', 'guard': {
                     'type': 'matchesTrace', 'params': {
                         'kind': 'effect', 'target': 'C17.effect_uncertain', 'outcome': 'reported',
+                    },
+                }},
+            }},
+            'reporting_partial_error': {'on': {
+                'error_reported': {'target': 'reporting_partial_failure', 'guard': {
+                    'type': 'matchesTrace', 'params': {
+                        'kind': 'effect', 'target': 'C17.operation_error', 'outcome': 'reported',
+                    },
+                }},
+            }},
+            'reporting_partial_failure': {'on': {
+                'write_partial_failure': {'target': 'done', 'guard': {
+                    'type': 'matchesTrace', 'params': {
+                        'kind': 'output', 'outcome': 'write_partial_failure',
                     },
                 }},
             }},
@@ -151,5 +171,5 @@ component_workflow(
 ## Details
 
 The workflow abstracts the connector backend and the actual result values.
-The Contract also defines the separate Subject lookup and known partial
-effect handling.
+The Contract also defines the separate Subject lookup. The partial-failure
+path models reported evidence and an error, not a rollback or recovery policy.

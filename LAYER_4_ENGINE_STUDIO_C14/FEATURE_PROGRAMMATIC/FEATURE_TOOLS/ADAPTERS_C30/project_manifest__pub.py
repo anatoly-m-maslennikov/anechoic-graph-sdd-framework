@@ -10,6 +10,7 @@ from .carrier_read__pub import ParsedCarrier, parse_carrier
 from .formal_claim__pub import formal_claim
 from .native_carrier_header__pub import native_header_model_fields, native_header_view
 from .native_model_claim__pub import parse_native_model_claim
+from .markdown_content__pub import parse_content
 
 
 class ProjectSelectionError(ValueError):
@@ -91,3 +92,18 @@ def manifest_state_fields(carrier: ParsedCarrier, *, include_header=False) -> di
         raise ValueError("Manifest State requires a datetime Updated At")
     fields = {"status": state["status"], "updated_at": updated_at}
     return fields | native_header_model_fields(carrier.metadata) if include_header else fields
+
+
+def manifest_summary_fields(carrier: ParsedCarrier, *, use_title=False) -> dict[str, object]:
+    sections = parse_content(carrier.body, tolerate_duplicate_siblings=True)
+    if use_title:
+        titles = [section['heading'].strip() for section in sections if section['heading_level'] == 1]
+        if len(titles) != 1 or not titles[0]:
+            raise ValueError('Component Seed Manifest requires one title')
+        return {'summary': titles[0]}
+    summaries = [section for section in sections
+                 if section["property_path"] == ["summary"]]
+    if len(summaries) > 1:
+        raise ValueError("Manifest has duplicate Summary properties")
+    value = summaries[0]["direct_markdown"] if summaries else None
+    return {"summary": value.strip()} if value is not None else {}

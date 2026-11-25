@@ -119,7 +119,10 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
             with self.assertRaisesRegex(NativeWorkflowDefinitionError, "Missing or ambiguous"):
                 bind_status_specifications(self.selection, current_rows=invalid)
         path = self.root / rows[0]["source_path"]
-        path.write_bytes(path.read_bytes().replace(b"status: active", b"status: draft"))
+        header, delimiter, body = path.read_bytes().partition(b"\n---\n")
+        metadata = yaml.safe_load(header.removeprefix(b"---\n"))
+        metadata["state"]["status"] = "draft"
+        path.write_bytes(b"---\n" + yaml.safe_dump(metadata, sort_keys=False).rstrip().encode() + delimiter + body)
         rows[0]["_source_sha256"] = sha256(path.read_bytes()).hexdigest()
         with self.assertRaisesRegex(NativeWorkflowDefinitionError, "Expected active native workflow"):
             bind_status_specifications(self.selection, current_rows=rows)

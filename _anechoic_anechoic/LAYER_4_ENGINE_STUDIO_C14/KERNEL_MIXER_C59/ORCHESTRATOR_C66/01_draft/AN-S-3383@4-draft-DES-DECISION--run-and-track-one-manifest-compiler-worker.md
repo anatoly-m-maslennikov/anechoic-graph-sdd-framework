@@ -24,7 +24,7 @@ Run and track one Manifest compiler Worker.
 
 ### Prose Claim
 
-Start and track one compiler run. Reap each started process before
+Start and track one compiler run. Record a failed run before reporting it. Reap each started process before
 recording its terminal status. A deadline or accepted stop kills the
 process before reaping it. A deadline raises a timeout. This flow
 covers a run with at most one termination trigger. A successful status
@@ -54,8 +54,8 @@ component_workflow(
                     {'kind': 'effect', 'outcome': 'started', 'target': 'C66.worker_process'}}},
                 'launch_failure_recorded': {'target': 'raise_launch_error', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'effect', 'outcome': 'failed', 'target': 'C66'}}},
-                'worker_request_rejected': {'target': 'reported', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'output', 'outcome': 'failed'}}},
+                'worker_request_rejected': {'target': 'report_failure', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'outcome': 'failed', 'target': 'C66'}}},
             }},
             'running': {'on': {
                 'compiler_process_reaped': {'target': 'record_normal_exit', 'guard': {'type': 'matchesTrace', 'params':
@@ -69,7 +69,7 @@ component_workflow(
                 'terminal_run_recorded': [
                     {'target': 'return_result', 'guard': {'type': 'matchesTrace', 'params':
                         {'kind': 'effect', 'outcome': 'completed', 'target': 'C66.worker_run'}}},
-                    {'target': 'report_failure', 'guard': {'type': 'matchesTrace', 'params':
+                    {'target': 'record_failure', 'guard': {'type': 'matchesTrace', 'params':
                         {'kind': 'effect', 'outcome': 'failed', 'target': 'C66.worker_run'}}},
                 ],
             }},
@@ -102,8 +102,8 @@ component_workflow(
                     {'kind': 'effect', 'outcome': 'cancelled', 'target': 'C66.worker_run'}}},
             }},
             'return_stopped_result': {'on': {
-                'compiler_result_returned': {'target': 'reported', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'output', 'outcome': 'failed'}}},
+                'stop_failure_recorded': {'target': 'report_failure', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'outcome': 'failed', 'target': 'C66'}}},
             }},
             'raise_launch_error': {'on': {
                 'worker_error_raised': {'target': 'reported', 'guard': {'type': 'matchesTrace', 'params':
@@ -112,6 +112,10 @@ component_workflow(
             'return_result': {'on': {
                 'compiler_result_returned': {'target': 'reported', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'output', 'outcome': 'completed'}}},
+            }},
+            'record_failure': {'on': {
+                'run_failure_recorded': {'target': 'report_failure', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'outcome': 'failed', 'target': 'C66'}}},
             }},
             'report_failure': {'on': {
                 'compiler_result_returned': {'target': 'reported', 'guard': {'type': 'matchesTrace', 'params':

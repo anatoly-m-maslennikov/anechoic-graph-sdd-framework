@@ -4,7 +4,7 @@ import unittest
 from itertools import pairwise
 from pathlib import Path
 
-from SPEC_ENGINE_C75.cli_spec__pub import check_cli_spec
+from SPEC_ENGINE_C75.LAYER_4_SPEC_COMPARISON_C88.cli_spec__pub import check_cli_spec
 from test_cli_spec import _CONTRACT, _MANIFEST, _carrier
 
 

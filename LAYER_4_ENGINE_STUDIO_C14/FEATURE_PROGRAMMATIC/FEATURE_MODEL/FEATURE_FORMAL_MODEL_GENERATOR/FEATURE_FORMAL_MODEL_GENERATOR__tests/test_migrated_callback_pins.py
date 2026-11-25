@@ -5,6 +5,19 @@ from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR import na
 
 
 class MigratedCallbackPinsTests(unittest.TestCase):
+    def test_previous_seed_callback_still_binds(self):
+        records = native.reviewed_model_records()[0]
+        previous = [
+            (source, subject, native._previous_seed_claim(claim) if subject == native._SEED_SUBJECT else claim)
+            for source, subject, claim in records
+        ]
+        model = native._NativeModel(records=previous)
+        seed = model.validate_component_seed_manifest({
+            "atom_id": "AN-S-125", "ref_id": "AN-S-125@1", "version": 1, "tier": 2,
+            "component_seed_id": "CS123", "purpose": "Purpose", "solution": "Solution",
+        }, "C01")
+        self.assertEqual(seed.solution, "Solution")
+
     def test_component_seed_manifest_pin_uses_manifest_scope(self):
         old = native._OLD_ATOM + '//Spec Atom//Component Seed Manifest'
         target = native._NEW_ATOM + '//Specification//Manifest//Component Seed Manifest'

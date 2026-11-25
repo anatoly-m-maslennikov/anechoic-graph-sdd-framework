@@ -3,7 +3,7 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from SPEC_ENGINE_C75.lean_spec__pub import validate_declaration
+from SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C85.claim_model__pub import validate_declaration
 
 
 CONTRACT = """declare_contract(operation='POST /tools', outcomes={

@@ -50,6 +50,15 @@ A lost Worker reply leads to an unknown result and a write block.
 The blocked-request path ends before Worker dispatch. This trace
 covers the block and refusal events for individual requests.
 
+For successful startup catch-up, attach the watcher before capture. Wait
+for completed capture and a completed watcher observation in either order.
+Verify Kernel admission of Current and Draft before confirming live catch-up.
+With changed Current or Draft carriers at Incremental Startup, observe
+the accepted checkpoint proof from Database Server C71.
+This profile is separate from `generate`; Archive, exact Project and
+generation values, wire transport, and error branches remain outside it.
+Their absence from this profile does not exclude them from startup.
+
 ### Formal Claim
 
 ```python
@@ -384,6 +393,75 @@ component_workflow(
                     },
                 }},
             }},
+        },
+    },
+)
+```
+
+```python
+component_workflow(
+    component='C68',
+    action='beta_startup_catch_up',
+    machine={
+        'id': 'c68_beta_startup_catch_up',
+        'initial': 'idle',
+        'states': {
+            'idle': {'on': {
+                'startup_requested': {'target': 'attaching_watcher', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'trigger'}}},
+            }},
+            'attaching_watcher': {'on': {
+                'startup_watcher_attached': {'target': 'awaiting_capture_start_or_observation', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'C68.source_watcher', 'outcome': 'attached'}}},
+            }},
+            'awaiting_capture_start_or_observation': {'on': {
+                'startup_capture_started': {'target': 'awaiting_evidence', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'C68.startup_capture', 'outcome': 'started'}}},
+                'startup_observation_completed': {'target': 'awaiting_capture_start', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'C68.watcher_observation', 'outcome': 'completed'}}},
+            }},
+            'awaiting_capture_start': {'on': {
+                'startup_capture_started': {'target': 'awaiting_capture', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'C68.startup_capture', 'outcome': 'started'}}},
+            }},
+            'awaiting_evidence': {'on': {
+                'startup_capture_completed': {'target': 'awaiting_observation', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'C68.startup_capture', 'outcome': 'completed'}}},
+                'startup_observation_completed': {'target': 'awaiting_capture', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'C68.watcher_observation', 'outcome': 'completed'}}},
+            }},
+            'awaiting_observation': {'on': {
+                'startup_observation_completed': {'target': 'verifying_admission', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'C68.watcher_observation', 'outcome': 'completed'}}},
+            }},
+            'awaiting_capture': {'on': {
+                'startup_capture_completed': {'target': 'verifying_admission', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'C68.startup_capture', 'outcome': 'completed'}}},
+            }},
+            'verifying_admission': {'on': {
+                'startup_checkpoint_admission_verified': {'target': 'confirming', 'guard': {
+                    'type': 'matchesTrace', 'params': {
+                        'kind': 'effect', 'target': 'startup_current_and_draft_admission', 'outcome': 'verified',
+                        'detail': {'component': 'C71', 'action': 'beta_startup_checkpoint_admission',
+                                   'output': 'checkpoint_admitted', 'startup_case': 'incremental_changed'},
+                    },
+                }},
+                'startup_other_admission_verified': {'target': 'confirming', 'guard': {
+                    'type': 'matchesTrace', 'params': {
+                        'kind': 'effect', 'target': 'startup_current_and_draft_admission', 'outcome': 'verified',
+                        'detail': {'startup_case': 'other'},
+                    },
+                }},
+            }},
+            'confirming': {'on': {
+                'startup_live_catch_up_confirmed': {'target': 'reporting', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'current_and_draft', 'outcome': 'catch_up_confirmed'}}},
+            }},
+            'reporting': {'on': {
+                'startup_catch_up_returned': {'target': 'confirmed', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'output', 'outcome': 'live_catch_up_confirmed'}}},
+            }},
+            'confirmed': {'type': 'final'},
         },
     },
 )

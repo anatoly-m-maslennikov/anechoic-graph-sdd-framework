@@ -9,8 +9,8 @@ context:
   template: manifest_property
 state:
   status: "active"
-  version: 3
-  updated_at: "2026-11-25T16:00:37.880439+00:00"
+  version: 4
+  updated_at: "2026-11-25T22:46:48.992689+00:00"
 ---
 
 ## Summary
@@ -31,3 +31,7 @@ class Property3133(Property):
     property.value.cardinality = 1
     property.value.format = str
 ```
+
+## Semantics
+
+Prefix identifies the Project namespace in its Atom IDs. Record the Operator’s uppercase Prefix in the Project Manifest before creating the first native Atom. Validate it as written.

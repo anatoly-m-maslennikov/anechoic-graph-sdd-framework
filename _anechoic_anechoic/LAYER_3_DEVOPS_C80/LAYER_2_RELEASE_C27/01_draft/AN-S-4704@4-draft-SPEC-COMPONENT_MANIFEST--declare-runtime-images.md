@@ -45,12 +45,24 @@ declare_entity(
             },
             'io': {
                 'server': {
+                    'build_and_run_runtime_images': {'outcomes': {
+                        'image_result_reported': {'must_effect': [('C81.image_result', 'reported')]},
+                    }},
                     'build_project_image': {'outcomes': {'succeeded': {
                         'must_effect': [('C81.image', 'built')],
                     }}},
                     'start_project_runtime': {'outcomes': {'succeeded': {
-                        'must_effect': [('C21', 'launch_requested'), ('C81.mcp_endpoint', 'healthy')],
+                        'must_effect': [('C81.project_container', 'launch_requested'), ('C81.mcp_endpoint', 'healthy')],
                     }}},
+                    'apply_shared_runtime_launch': {'outcomes': {
+                        'runtime_ready': {
+                            'must_effect': [('shared_runtime_launch', 'apply_selected'), ('C21', 'launch_requested'), ('C21', 'ready')],
+                            'forbid_effect': ['shared_runtime_mcp_probe', 'shared_runtime_mcp'],
+                        },
+                        'mcp_verified': {
+                            'must_effect': [('shared_runtime_launch', 'apply_selected'), ('C21', 'launch_requested'), ('C21', 'ready'), ('shared_runtime_mcp_probe', 'requested'), ('shared_runtime_mcp', 'verified')],
+                        },
+                    }},
                     'runtime_images': {
                         'transport': 'cli', 'runner': 'uv',
                         'path': 'LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/release.py',

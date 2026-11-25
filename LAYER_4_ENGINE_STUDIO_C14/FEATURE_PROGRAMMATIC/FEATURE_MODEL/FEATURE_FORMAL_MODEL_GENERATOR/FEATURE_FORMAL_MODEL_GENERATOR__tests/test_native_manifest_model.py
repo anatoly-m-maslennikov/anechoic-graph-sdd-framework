@@ -65,15 +65,17 @@ class NativeManifestModelTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             model.validate_component_manifest(fields | {"tier": 4}, "C00")
 
-    def test_component_seed_manifest_checks_identity_and_solution(self):
+    def test_component_seed_manifest_checks_identity_and_accepts_optional_prose(self):
         fields = {"atom_id": "AN-S-125", "ref_id": "AN-S-125@1", "version": 1,
-                  "tier": 2, "component_seed_id": "CS123", "purpose": "Purpose", "solution": "Solution"}
-        self.assertEqual(self.model.validate_component_seed_manifest(fields, "C01").component_seed_id, "CS123")
+                  "tier": 2, "component_seed_id": "CS123"}
+        seed = self.model.validate_component_seed_manifest(fields, "C01")
+        self.assertEqual((seed.purpose, seed.contract, seed.solution), (None, None, None))
+        prose = {"purpose": "Purpose", "contract": "Contract", "solution": "Solution"}
+        seed = self.model.validate_component_seed_manifest(fields | prose, "C01")
+        self.assertEqual((seed.purpose, seed.contract, seed.solution), tuple(prose.values()))
         for seed_id in ("CS", "CS１２", "pkg1", "CS1x"):
             with self.subTest(seed_id=seed_id), self.assertRaisesRegex(ValueError, "check_component_seed_manifest"):
                 self.model.validate_component_seed_manifest(fields | {"component_seed_id": seed_id}, "C01")
-        with self.assertRaisesRegex(ValueError, "check_component_seed_manifest"):
-            self.model.validate_component_seed_manifest(fields | {"solution": " "}, "C01")
 
     def test_release_workflow_setting_is_an_optional_exact_boolean(self):
         self.model.validate_manifest(self.fields | {"parameters": {"project_mcp": {}}}, "C00")

@@ -40,7 +40,10 @@ declare_entity(
                     'run_tool_workflow': {
                         'outcomes': {
                             'workflow_completed': {'must_effect': [('actions', 'completed')], 'forbid_effect': ['action_stop']},
-                            'failed': {'must_effect': [('action_stop', 'observed'), ('completed_effects', 'retained'), ('remaining_targets', 'untouched')]},
+                            'failed': {
+                                'must_effect': [('actions', 'dispatched'), ('action_stop', 'observed'),
+                                                ('completed_effects', 'retained'), ('remaining_targets', 'untouched')],
+                            },
                             'owner_resolution_failed': {'forbid_effect': ['actions']},
                         },
                     },

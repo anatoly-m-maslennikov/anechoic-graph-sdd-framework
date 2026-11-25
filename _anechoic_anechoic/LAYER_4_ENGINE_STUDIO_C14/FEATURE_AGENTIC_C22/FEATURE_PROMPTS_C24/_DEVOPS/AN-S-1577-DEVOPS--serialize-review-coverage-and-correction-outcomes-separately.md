@@ -7,9 +7,9 @@ tier: 3
 context:
   lens: DevOps
 state:
-  status: active
-  version: 18
-  updated_at: 2026-11-10 20:47:54 +0400
+  status: "active"
+  version: 19
+  updated_at: "2026-11-25T19:58:56.867630+00:00"
 ---
 
 ## Summary
@@ -34,7 +34,7 @@ temporary JSON reports **and** progress records emitted by the RMED review promp
 | report | `atom_id` | checked Atom ID |
 | report | `workflow_run_id` | the caller's Run ID, retained through checking, correction, **and** handoff |
 | report | `criteria_sha256` | the supplied shared checking-packet digest, linked **to** its exact rule bindings; retain that digest rather than hashing a different subset |
-| report | `checks` | object keyed by `properties`, `cce`, `scope`, `claim`, `details`, **and** `summary`; **every** entry carries `status` **and** evidence **or** a reason |
+| report | `checks` | object keyed by `properties`, `writing`, `scope`, `claim`, `details`, **and** `summary`; **every** entry carries `status` **and** evidence **or** a reason |
 | report | `findings`, `blockers` | separate arrays of confirmed findings **and** incomplete check coverage |
 | report | `corrections`, `rejected_findings`, `unresolved_findings` | separate arrays retaining the disposition of findings; a completed fix carries an explicit empty `unresolved_findings` array |
 | report | `fix_blockers` | correction blockers, distinct from incomplete initial check coverage |

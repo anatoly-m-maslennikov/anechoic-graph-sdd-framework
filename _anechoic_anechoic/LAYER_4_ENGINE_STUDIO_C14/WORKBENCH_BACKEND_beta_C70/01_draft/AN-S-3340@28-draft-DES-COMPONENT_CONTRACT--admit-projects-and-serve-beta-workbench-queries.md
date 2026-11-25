@@ -116,6 +116,10 @@ For a shared Ticket Tool call, distinguish an unknown write outcome, a
 known write with a projection failure, and a request refused while the
 Orchestrator has blocked writes. Preserve the Orchestrator outcome.
 
+
+A Worker projection error received from Orchestrator is reported as a
+projection failure. The error alone leaves the file effects unspecified.
+
 ### Formal Claim
 
 ```python trace
@@ -124,6 +128,18 @@ declare_trace_contract(
     output='succeeded',
     must_effect=(('C68', 'requested'), ('C68.replacement_ids', 'returned')),
     must_precede=((('C68', 'requested'), ('C68.replacement_ids', 'returned')),),
+)
+```
+
+```python trace
+declare_trace_contract(
+    action='beta_backend_tool_call',
+    interface='shared_workbench_api',
+    route='POST /tools',
+    transport='http',
+    operation='tool_call',
+    output='failed',
+    must_effect=(('C70.tool_call_failure', 'reported'),),
 )
 ```
 
@@ -219,6 +235,31 @@ declare_trace_contract(
         (('C70.tool_validation', 'validated'), ('C68', 'lifecycle_requested')),
         (('C68', 'lifecycle_requested'), ('C68.write_request', 'rejected')),
         (('C68.write_request', 'rejected'), ('C70.write_request', 'rejected')),
+    ),
+)
+```
+
+```python trace
+declare_trace_contract(
+    action='beta_backend_lifecycle_failures',
+    interface='shared_workbench_api',
+    route='POST /tools',
+    transport='http',
+    operation='tool_call',
+    output='worker_projection_failed',
+    must_effect=(
+        ('C70.project_binding', 'admitted'),
+        ('C70.tool_validation', 'validated'),
+        ('C68', 'lifecycle_requested'),
+        ('C68.worker_projection_error', 'reported'),
+        ('C70.projection', 'failed'),
+    ),
+    forbid_effect=('C70.write_request',),
+    must_precede=(
+        (('C70.project_binding', 'admitted'), ('C70.tool_validation', 'validated')),
+        (('C70.tool_validation', 'validated'), ('C68', 'lifecycle_requested')),
+        (('C68', 'lifecycle_requested'), ('C68.worker_projection_error', 'reported')),
+        (('C68.worker_projection_error', 'reported'), ('C70.projection', 'failed')),
     ),
 )
 ```

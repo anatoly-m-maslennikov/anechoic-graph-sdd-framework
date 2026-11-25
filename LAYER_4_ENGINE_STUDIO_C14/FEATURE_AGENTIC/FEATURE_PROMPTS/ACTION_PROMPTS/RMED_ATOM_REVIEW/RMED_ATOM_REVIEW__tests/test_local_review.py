@@ -3,7 +3,6 @@ from copy import deepcopy
 import unittest
 
 from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__tests.test_split_evaluation import contract, part as legacy_part, source, SOURCE_TEXT, RULE_TEXT
-from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.operator_precheck import word_inventory
 
 REGISTRY = '''1. statement form: **to**, **means**
 2. modality: **must**, **must not**, **may**
@@ -22,7 +21,7 @@ def prechecked_packet():
     registry = source('registry.md', 'MOCK-M-003', REGISTRY)
     packet['sources'].append(registry)
     packet['authority_bindings'].append(registry['binding'])
-    packet['review_constraints'].update(operator_precheck=word_inventory(REGISTRY),
+    packet['review_constraints'].update(operator_precheck=['must'],
                                         operator_registry='MOCK-M-003@1')
     return packet
 
@@ -82,32 +81,12 @@ class LocalReview(unittest.TestCase):
         with self.assertRaises(ValueError):
             contract.merge_evaluations(parts, context=ctx)
 
-    def test_bound_operator_precheck_rejects_skipped_rendering(self):
+    def test_historical_precheck_fields_do_not_enforce_operator_rules(self):
         packet = prechecked_packet()
         ctx = contract.ReviewContext(packet)
         report = part6('cce')
         report['context_sha256'] = ctx.sha256
-        with self.assertRaisesRegex(ValueError, 'operator precheck coverage'):
-            contract.validate_part(report, context=ctx)
-
-    def test_precheck_cannot_narrow_or_enlarge_bound_inventory(self):
-        for inventory in (['must'], word_inventory(REGISTRY) + ['together with']):
-            packet = prechecked_packet()
-            packet['review_constraints']['operator_precheck'] = inventory
-            with self.subTest(inventory=inventory), self.assertRaisesRegex(ValueError, 'differs'):
-                contract.ReviewContext(packet)
-
-    def test_precheck_requires_admitted_registry(self):
-        for change in ('missing', 'unbound', 'candidate'):
-            packet = prechecked_packet()
-            if change == 'missing':
-                packet['review_constraints'].pop('operator_registry')
-            elif change == 'unbound':
-                packet['authority_bindings'].pop()
-            else:
-                packet['review_constraints']['operator_registry'] = 'MOCK-R-001@1'
-            with self.subTest(change=change), self.assertRaisesRegex(ValueError, 'bound registry'):
-                contract.ReviewContext(packet)
+        contract.validate_part(report, context=ctx)
 
     def test_compact_context_needs_no_graph_or_principles_or_registry(self):
         ctx = context6()

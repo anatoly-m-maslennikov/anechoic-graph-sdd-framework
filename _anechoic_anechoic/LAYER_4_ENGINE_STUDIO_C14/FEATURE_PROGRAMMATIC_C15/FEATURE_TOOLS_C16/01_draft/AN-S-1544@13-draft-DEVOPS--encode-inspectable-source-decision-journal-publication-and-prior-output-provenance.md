@@ -7,9 +7,9 @@ tier: 4
 context:
   lens: DevOps
 state:
-  status: draft
+  status: "draft"
   version: 13
-  updated_at: 2026-10-24 23:55:59 +0400
+  updated_at: "2026-11-25T23:21:09.255933+00:00"
 ---
 # Summary
 
@@ -25,7 +25,7 @@ The compiler result **must** make exact source, decision, optional Journal obser
 
 ## Details
 
-Every result contains `outcome`, `operation`, `source_frontier_digest`, `source_frontier`, `conflicts`, `decision_provenance`, `publication`, `evidence_refs`, and shared `run_receipt_refs`. Every frontier row contains `source_layer`, optional `extension_id` and `extension_revision`, `source_carrier_path`, `source_atom_id`, `source_atom_revision`, `source_sha256`, and `original_relations_digest`. Every decision row contains conflict ID, proposal/selection, Operator identity, independently verified admitted Run/effect evidence, optional Journal observation reference and digest, and the bound frontier digest; an optional configuration-index reference is marked `non_authoritative`.
+Every result contains `outcome`, `operation`, `source_frontier_digest`, `source_frontier`, `conflicts`, `decision_provenance`, `publication`, `evidence_refs`, and shared `run_receipt_refs`. Every frontier row contains `source_layer`, `source_carrier_path`, `source_atom_id`, `source_atom_revision`, `source_sha256`, and `original_relations_digest`. Every decision row contains conflict ID, proposal/selection, Operator identity, independently verified admitted Run/effect evidence, optional Journal observation reference and digest, and the bound frontier digest; an optional configuration-index reference is marked `non_authoritative`.
 
 For each published Carrier, `publication.output` records output path, output digest, and the exact original-source binding. The rendered Carrier preserves the original source frontmatter/body/Relations and records only its generated projection binding. A blocked/failed result includes `prior_output_state: "preserved" | "not_started" | "uncertain"`, exact findings, and no success receipt. A successful result contains atomic transaction ID, complete output digest, and independently verified publication/effect evidence, with an optional Journal publication reference. A failed Journal append is surfaced as a `recording_error` diagnostic and does not roll back or invalidate a successful publication. Journal append remains a plain explicit business-record operation; repeating it neither establishes identity nor authorizes or blocks the operation. It never reports a source mutation as a compiler effect.
 

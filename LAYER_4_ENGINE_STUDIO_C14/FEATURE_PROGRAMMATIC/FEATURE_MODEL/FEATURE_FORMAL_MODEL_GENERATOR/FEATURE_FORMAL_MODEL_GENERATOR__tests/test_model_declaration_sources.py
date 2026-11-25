@@ -10,6 +10,9 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.relation_declaration_catalo
 from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.FEATURE_FORMAL_MODEL_GENERATOR__shared import (
     _class_property_aliases, select_model_claims,
 )
+from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.model_declaration_sources import (
+    _check_relation_references,
+)
 
 
 CLAIM = "from anechoic.formal_claims import declare_entity\ndeclare_entity(entity_name='Atom')\n"
@@ -27,6 +30,27 @@ def carrier(subject="ANECHOIC_MODEL <+ Atom", *, identifier="CA-R-1", status="ac
 
 
 class ModelDeclarationSourceTests(unittest.TestCase):
+    def test_population_keys_resolve_on_qualified_model_owner(self):
+        owner = "Graph/Node//Artifact//SSOT//Recorded//Event Record"
+        scope = "MODEL//ANECHOIC <+ " + owner
+        declaration = "from anechoic.formal_claims import declare_entity\n"
+        claims = [
+            ("record.md", scope, declaration + "class EventRecord:\n    pass\n"
+             "declare_entity(entity_class=EventRecord, entity_name='Event Record', entity_kind='Primary')\n"),
+            ("id.md", scope + ".ID", declaration +
+             f"declare_entity(entity_name='ID', entity_kind='Property', base_path={owner!r}, "
+             "relation_name='IS_PROPERTY_OF', value_format=str)\n"),
+            ("constraints.md", scope + ".Constraints", declaration +
+             f"declare_entity(entity_name='Event Record Constraints', constraints_for={owner!r}, "
+             "population_unique_constraints=({'keys': ('ID',)},))\n"),
+            ("relation.md", "MODEL//ANECHOIC <+ Graph/Relation//IS_PROPERTY_OF",
+             "from anechoic.formal_claims import declare_relation\n"
+             "declare_relation(relation_name='IS_PROPERTY_OF', source_endpoint={}, target_endpoint={})\n"),
+        ]
+        _check_relation_references(claims)
+        with self.assertRaisesRegex(ValueError, "unknown population Property address"):
+            _check_relation_references([claims[0], *claims[2:]])
+
     def test_claim_language_descriptors_stay_outside_the_generated_model(self):
         language = carrier("ANECHOIC_MODEL <+ CFEL", identifier="CA-R-2", body="")
         operator = carrier("ANECHOIC_MODEL <+ CFEL <+ Operator//Delivery", identifier="CA-R-3", body="")

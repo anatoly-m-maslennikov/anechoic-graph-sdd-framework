@@ -9,8 +9,8 @@ context:
   template: manifest_property
 state:
   status: "active"
-  version: 9
-  updated_at: "2026-11-25T16:00:37.884513+00:00"
+  version: 12
+  updated_at: "2026-11-25T23:19:13.568186+00:00"
 ---
 
 ## Summary
@@ -21,9 +21,11 @@ Declare Parameters
 
 ### Parameters
 
-Paths below are relative to `ProjectManifest.parameters`. The Project Manifest carries Project identity and the Project-owned options below. Runtime paths are derived from the selected Project and its control root; they are not separately configured here.
+Validate Project Manifest settings against their declared schema. Reject missing required keys, duplicate keys, unknown keys in closed mappings, invalid types, and invalid values.
 
-Component and Component Seed Manifests own Structure. The Meta-Ontology and Project Config Custom Model own Atom types, properties and relations. Project Config owns release Workflows; the Project Manifest gate controls their MCP exposure. See AN-T-2978.
+Paths below are relative to `ProjectManifest.parameters`. The Project Manifest owns Project identity and all Operator-selected Project settings. Governing Specs declare applicable parameters and constraints. Runtime paths are derived from the selected Project and its control root; they are not separately configured here.
+
+Component and Component Seed Manifests own Structure. The Meta-Ontology owns the base Model. Project Config Custom Model is the sole source of Project-specific Model declarations. Project Config owns release Workflows; the Project Manifest gate controls their MCP exposure. See AN-T-2978.
 
 | Parameter | Meaning |
 | --- | --- |

@@ -119,18 +119,20 @@ def _relative_property_path(args):
 def _property_groups(properties):
     groups = {}
     for args, _ in properties:
-        if args.get("value_cardinality") != 0 or "allowed_dependent_property_names" not in args:
+        declared = args.get("allowed_dependent_property_names")
+        if args.get("value_cardinality") != 0 or (declared is None and (
+                "dependent_property_cardinality" not in args or "value_format" in args)):
             continue
         path = f"{args['base_path']}.{args['entity_name']}"
         _field_name(args["entity_name"])
-        declared = args.get("allowed_dependent_property_names")
-        if (not isinstance(declared, (tuple, list)) or not declared
+        if "applies_to_entity_classes" in args or (declared is not None and (
+                not isinstance(declared, (tuple, list)) or not declared
                 or any(not isinstance(name, str) or "." in name for name in declared)
-                or len(set(declared)) != len(declared) or "applies_to_entity_classes" in args):
+                or len(set(declared)) != len(declared))):
             raise ValueError(f"{path}: Property group requires distinct declared children")
         if path in groups:
             raise ValueError(f"Duplicate Property group: {path}")
-        groups[path] = set(declared)
+        groups[path] = None if declared is None else set(declared)
     return groups
 
 
@@ -149,7 +151,7 @@ def _check_property_fields(fields, groups, children, classes):
                for other_owner, other_name in fields):
             raise ValueError(f"Duplicate inherited Property field: {owner}.{name}")
     for path, expected in groups.items():
-        if children[path] != expected:
+        if expected is not None and children[path] != expected:
             raise ValueError(f"{path}: expected declared children {sorted(expected)}")
 
 

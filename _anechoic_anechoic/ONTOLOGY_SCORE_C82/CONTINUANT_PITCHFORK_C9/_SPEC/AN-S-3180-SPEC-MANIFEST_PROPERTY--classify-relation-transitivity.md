@@ -9,8 +9,8 @@ context:
   template: manifest_property
 state:
   status: "active"
-  version: 3
-  updated_at: "2026-11-25T16:00:38.099570+00:00"
+  version: 4
+  updated_at: "2026-11-25T20:41:49.505132+00:00"
 ---
 
 ## Summary
@@ -33,7 +33,7 @@ Keep derived links separate from authored direct facts.
 
 ## References
 
-AN-S-2697, AN-S-2636, AN-S-2674.
+AN-S-2697, AN-S-2674.
 
 ## Formal Manifest
 

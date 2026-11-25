@@ -9,8 +9,8 @@ context:
   template: manifest_node
 state:
   status: "active"
-  version: 8
-  updated_at: '2026-11-24T16:58:01.311694+00:00'
+  version: 9
+  updated_at: "2026-11-25T19:21:20.215013+00:00"
 ---
 
 ## Summary
@@ -20,6 +20,10 @@ Declare Package
 ## Claim scope
 
 MODEL//ANECHOIC <+ Graph/Node//Artifact//SSOT//Realization/Structure/Package
+
+## Semantics
+
+A local Package kind follows the postfix of its folder name. The reserved postfixes are `__tests`, `__agentic`, and `__assets`.
 
 ## Formal Manifest
 

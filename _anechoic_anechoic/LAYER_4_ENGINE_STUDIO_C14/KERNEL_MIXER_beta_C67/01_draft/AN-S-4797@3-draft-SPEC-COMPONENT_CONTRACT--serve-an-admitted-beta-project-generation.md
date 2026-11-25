@@ -37,7 +37,7 @@ Reject requests for another instance. Report candidate admission failures and di
 A successful read validates the Project binding, reads accepted content
 through C71, and returns the content with its generation ID. A foreign
 instance or a request before generation admission gets no artifact response.
-These outcomes apply to either Structure representation.
+The Structure-specific outcome covers the accepted-row Draft proposal.
 
 ### Formal Claim
 
@@ -67,11 +67,21 @@ declare_trace_contract(
 )
 ```
 
+```python trace
+declare_trace_contract(
+    action='beta_artifact_read',
+    output='structure_returned',
+    must_effect=(('project_binding', 'matched'), ('structure', 'rendered_from_accepted_rows'),
+                 ('artifact_content_generation', 'paired'), ('artifact_response', 'paired')),
+    must_precede=((('project_binding', 'matched'), ('structure', 'rendered_from_accepted_rows')),
+                  (('structure', 'rendered_from_accepted_rows'), ('artifact_content_generation', 'paired')),
+                  (('artifact_content_generation', 'paired'), ('artifact_response', 'paired'))),
+)
+```
+
 ## Source alignment to resolve
 
-AN-S-4797@1 says the Server admits paired artifacts and a Project snapshot,
-and serves accepted Model or Structure bytes. AN-S-4797@2-draft instead
-says to reconstruct Structure JSON from accepted rows and generation facts.
-The active AN-S-4798@1 describes the Host reading an artifact under a lock.
-Resolve how the Structure representation and read sequence agree before
-activation. This Draft preserves both accounts without deciding that issue.
+Returning Structure bytes with a generation ID is compatible with
+rendering those bytes from accepted rows. The Structure Host's read from
+a database record and the Solution's shared-lock read need review before
+adopting the row-rendered outcome.

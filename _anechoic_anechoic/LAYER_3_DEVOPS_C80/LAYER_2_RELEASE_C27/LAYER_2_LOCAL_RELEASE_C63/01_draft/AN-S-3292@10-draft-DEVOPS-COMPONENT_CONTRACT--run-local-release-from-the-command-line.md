@@ -36,12 +36,16 @@ protected configuration. Delegate the candidate image build and Project runtime
 launch to C81. Request `build_project_image` for the selected checkout and
 use its returned candidate image for verification and installation. Request
 `start_project_runtime` for that image and the Project Manifest port; use its
-returned health-checked MCP endpoint as readiness evidence. C81 delegates the
-actual shared MCP container start to C21. Tag the candidate as production after
-MCP is ready.
+returned health-checked MCP endpoint as readiness evidence. C81 uses its
+`start_container` helper to launch Docker directly for the Project runtime.
 
-After promotion, apply the retention standard. Report
-incomplete cleanup separately from promotion failure.
+The installed candidate is promoted as the Project runtime when its production
+MCP endpoint is healthy. Then update its production image display tag.
+
+If the tag update fails, report cleanup pending. Do not remove obsolete images
+or prune the build cache or temporary files.
+
+After a successful tag update, apply the retention standard. Report incomplete cleanup separately from runtime promotion failure.
 
 Report the failed step and observed effects on failure. Write release receipts
 under `.anechoic_runtime/simple_local_release/` and test logs under
@@ -79,7 +83,7 @@ declare_cli_contract(
         },
     },
     output='completed',
-    must_effect=(('C81.image', 'built'), ('C81.mcp_endpoint', 'healthy')),
-    must_precede=((('C81.image', 'built'), ('C81.mcp_endpoint', 'healthy')),),
+    must_effect=(('C81.image', 'built'), ('C81.mcp_endpoint', 'healthy'), ('project_runtime', 'promoted'), ('production_image_display_tag', 'updated'), ('eligible_cleanup', 'completed')),
+    must_precede=((('C81.image', 'built'), ('C81.mcp_endpoint', 'healthy')), (('C81.mcp_endpoint', 'healthy'), ('project_runtime', 'promoted')), (('project_runtime', 'promoted'), ('production_image_display_tag', 'updated')), (('production_image_display_tag', 'updated'), ('eligible_cleanup', 'completed'))),
 )
 ```

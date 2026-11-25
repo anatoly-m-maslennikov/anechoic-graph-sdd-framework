@@ -29,6 +29,9 @@ Find and replace uses one explicit Atom target and admitted logical Atom Propert
 Each Update receives the exact Atom identity, expected current state, logical Property or section, full old value and full computed new value. Literal text replacement uses a nonempty search text and replaces all occurrences in the selected value. Unselected content remains unchanged.
 
 Summary and Type changes use the existing fresh-ID replacement path.
+Report failure or uncertainty for the selected target. A failure or
+uncertain result does not establish whether a dispatched change took effect.
+
 For multiple targets, the C18 Workflow owns sequencing and the
 disposition of completed and remaining Actions.
 
@@ -40,10 +43,15 @@ disposition of completed and remaining Actions.
 declare_trace_contract(
     action='replace_logical_atom_properties',
     output='change_reported',
-    must_effect=(('logical_target', 'one_explicit'), ('logical_target', 'selected'), ('expected_state', 'checked'), ('change', 'completed')),
-    must_precede=((('logical_target', 'one_explicit'), ('logical_target', 'selected')),
-                  (('logical_target', 'selected'), ('expected_state', 'checked')),
-                  (('expected_state', 'checked'), ('change', 'completed'))),
+    must_effect=(('logical_target', 'one_explicit'), ('selected_atom_value', 'read'),
+                 ('expected_state', 'checked'), ('logical_value_delta', 'complete_old_and_new_supplied'),
+                 ('change', 'completed'), ('unselected_content', 'preserved')),
+    forbid_effect=('semantic_target_substitution',),
+    must_precede=((('logical_target', 'one_explicit'), ('selected_atom_value', 'read')),
+                  (('selected_atom_value', 'read'), ('expected_state', 'checked')),
+                  (('expected_state', 'checked'), ('change', 'completed')),
+                  (('logical_value_delta', 'complete_old_and_new_supplied'), ('change', 'completed')),
+                  (('change', 'completed'), ('unselected_content', 'preserved'))),
 )
 ```
 
@@ -52,6 +60,33 @@ declare_trace_contract(
     action='replace_logical_atom_properties',
     output='invalid_target_rejected',
     must_effect=(('logical_target', 'invalid_cardinality'),),
-    forbid_effect=('change',),
+    forbid_effect=('selected_atom_value', 'change', 'semantic_target_substitution'),
+)
+```
+
+```python trace
+declare_trace_contract(
+    action='replace_logical_atom_properties',
+    output='stale_precondition_rejected',
+    must_effect=(('logical_target', 'one_explicit'), ('selected_atom_value', 'read'), ('expected_state', 'mismatch')),
+    forbid_effect=('change', 'semantic_target_substitution'),
+    must_precede=((('logical_target', 'one_explicit'), ('selected_atom_value', 'read')),
+                  (('selected_atom_value', 'read'), ('expected_state', 'mismatch'))),
+)
+```
+
+```python trace
+declare_trace_contract(
+    action='replace_logical_atom_properties',
+    output='failure_reported',
+    must_effect=(('replacement_report', 'failure'),),
+)
+```
+
+```python trace
+declare_trace_contract(
+    action='replace_logical_atom_properties',
+    output='uncertainty_reported',
+    must_effect=(('replacement_report', 'uncertainty'),),
 )
 ```

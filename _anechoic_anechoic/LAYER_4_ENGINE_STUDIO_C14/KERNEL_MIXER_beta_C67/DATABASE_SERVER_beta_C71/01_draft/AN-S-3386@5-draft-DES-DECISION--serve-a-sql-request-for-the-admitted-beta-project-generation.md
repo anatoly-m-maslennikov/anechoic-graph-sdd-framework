@@ -25,11 +25,16 @@ Serve a SQL request for the admitted Beta Project generation.
 
 For a successful new read-only SQL Run, the Database Server checks the
 Project binding and accepted generation, admits one read-only SELECT without
-external access, then executes and retains the result before returning it. A query can also append to history.
+external access, then executes and retains the result before returning it.
+The result has at most 1,000 rows and 1 MiB of serialized data. Refuse a new
+result that would exceed result capacity; do not retain it. A query can also
+append to history.
 
 For a Model or Structure request, the Server checks the Project binding and
 pairs accepted content with its corresponding generation ID before returning
-it. A foreign instance or missing generation returns no pair.
+it. For the Structure-specific outcome, the Server renders canonical Structure
+from accepted rows and generation facts before pairing it with its generation
+ID. A foreign instance or missing generation returns no pair.
 
 For full generation admission, the Server checks the Project binding and
 verifies admission inputs before it commits paired artifacts and the Project
@@ -43,6 +48,11 @@ relation rows with their graph rows and Current Lens membership. The
 accepted Model, Structure, and Realization Graph stay in place. A stale
 base or a delta that cannot preserve relation ownership leaves the
 previous projection in place.
+
+For Incremental Startup with changed Current and Draft carriers, the Server
+confirms the named base. It commits affected rows and checkpoints together,
+including removal of checkpoints for absent paths and old move paths. It makes
+the current proof available to C68 before verification is reported.
 
 ### Formal Claim
 
@@ -68,9 +78,17 @@ component_workflow(
                     {'kind': 'effect', 'target': 'C71', 'outcome': 'read_only_select_admitted'}}},
             }},
             'step_3': {'on': {
+                'result_capacity_exceeded': {'target': 'reporting_refusal', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'C71.result_capacity', 'outcome': 'exceeded'}}},
                 'query_executed_and_retained': {'target': 'responding', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'effect', 'target': 'C71', 'outcome': 'query_retained'}}},
+                    {'kind': 'effect', 'target': 'C71.query_result', 'outcome': 'query_retained',
+                     'detail': {'rows': {'at_most': 1000}, 'serialized_bytes': {'at_most': 1048576}}}}},
             }},
+            'reporting_refusal': {'on': {
+                'capacity_refusal_reported': {'target': 'refused', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'output', 'outcome': 'result_capacity_exceeded'}}},
+            }},
+            'refused': {'type': 'final'},
             'responding': {'on': {
                 'query_result_returned': {'target': 'succeeded', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'output', 'outcome': 'succeeded'}}},
@@ -93,7 +111,7 @@ component_workflow(
                 'model_requested': {'target': 'checking_instance', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'trigger', 'target': 'database_api',
                      'detail': {'route': 'model', 'transport': 'http', 'operation': 'GET /model'}}}},
-                'structure_requested': {'target': 'checking_instance', 'guard': {'type': 'matchesTrace', 'params':
+                'structure_requested': {'target': 'checking_structure_instance', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'trigger', 'target': 'database_api',
                      'detail': {'route': 'structure', 'transport': 'http', 'operation': 'GET /structure'}}}},
             }},
@@ -102,6 +120,28 @@ component_workflow(
                     {'kind': 'effect', 'target': 'project_binding', 'outcome': 'matched'}}},
                 'foreign_instance': {'target': 'rejected', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'output', 'outcome': 'foreign_instance'}}},
+            }},
+            'checking_structure_instance': {'on': {
+                'structure_binding_matched': {'target': 'reading_structure', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'project_binding', 'outcome': 'matched'}}},
+                'structure_foreign_instance': {'target': 'rejected', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'output', 'outcome': 'foreign_instance'}}},
+            }},
+            'reading_structure': {'on': {
+                'structure_rendered': {'target': 'pairing_structure', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'structure', 'outcome': 'rendered_from_accepted_rows'}}},
+                'structure_no_generation': {'target': 'rejected', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'output', 'outcome': 'no_generation'}}},
+            }},
+            'pairing_structure': {'on': {
+                'rendered_structure_and_generation_paired': {'target': 'responding_structure', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'artifact_content_generation', 'outcome': 'paired'}}},
+            }},
+            'responding_structure': {'on': {
+                'structure_artifact_returned': {'target': 'succeeded', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'output', 'outcome': 'succeeded'}}},
+                'structure_returned': {'target': 'succeeded', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'output', 'outcome': 'structure_returned'}}},
             }},
             'reading': {'on': {
                 'content_and_generation_paired': {'target': 'responding', 'guard': {'type': 'matchesTrace', 'params':
@@ -279,9 +319,49 @@ component_workflow(
 )
 ```
 
+```python
+component_workflow(
+    component='C71',
+    action='beta_startup_checkpoint_admission',
+    machine={
+        'id': 'c71_beta_startup_checkpoint_admission',
+        'initial': 'idle',
+        'states': {
+            'idle': {'on': {
+                'incremental_startup_received': {'target': 'confirming_base', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'trigger'}}},
+            }},
+            'confirming_base': {'on': {
+                'base_confirmed': {'target': 'committing', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'C71.startup_base', 'outcome': 'confirmed'}}},
+            }},
+            'committing': {'on': {
+                'rows_and_checkpoints_committed': {'target': 'exposing_proof', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'C71.startup_rows_and_checkpoints', 'outcome': 'committed'}}},
+            }},
+            'exposing_proof': {'on': {
+                'proof_available': {'target': 'verifying', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'C71.startup_proof', 'outcome': 'available'}}},
+            }},
+            'verifying': {'on': {
+                'admission_verified': {'target': 'responding', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'startup_current_and_draft_admission', 'outcome': 'verified'}}},
+            }},
+            'responding': {'on': {
+                'checkpoint_admitted': {'target': 'succeeded', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'output', 'outcome': 'checkpoint_admitted'}}},
+            }},
+            'succeeded': {'type': 'final'},
+        },
+    },
+)
+```
+
 ## Details
 
-The SQL profile covers a new Run. Paging, other failures, checkpoints, and Archive remain outside these profiles.
+The SQL profile covers a new Run. The checkpoint profile covers Incremental
+Startup with changed Current and Draft carriers. Paging, other failures, other
+checkpoint cases, and Archive remain outside these profiles.
 
 The Contract describes Structure JSON reconstructed from accepted rows.
 AN-S-4797@1 describes accepted artifact bytes, and AN-S-4798@1 describes

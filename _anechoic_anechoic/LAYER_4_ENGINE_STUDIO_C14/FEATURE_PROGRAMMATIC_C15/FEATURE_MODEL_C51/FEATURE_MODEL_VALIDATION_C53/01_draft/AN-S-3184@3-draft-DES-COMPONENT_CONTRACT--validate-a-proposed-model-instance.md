@@ -41,7 +41,7 @@ A returned instance requires the applicable Model rules to pass. The
 validator does not write the instance; the caller owns that step.
 
 Open an accepted admitted-Model artifact for an in-process caller. Report
-failure if the accepted artifact is unavailable or invalid. The exact input,
+failure if the accepted artifact is unavailable or invalid. Record the failure. The exact input,
 verification predicates, and returned representation remain unresolved.
 
 ### Formal Claim
@@ -72,5 +72,16 @@ declare_trace_contract(
     entry='FEATURE_MODEL_VALIDATION__shared.open_admitted_model',
     output='succeeded',
     must_effect=(('C53.admitted_model', 'opened'),),
+)
+```
+
+```python trace
+declare_trace_contract(
+    action='open_admitted_model',
+    interface='admitted_model',
+    transport='in_process',
+    entry='FEATURE_MODEL_VALIDATION__shared.open_admitted_model',
+    output='failed',
+    must_effect=(('C53.admitted_model', 'failed'),),
 )
 ```

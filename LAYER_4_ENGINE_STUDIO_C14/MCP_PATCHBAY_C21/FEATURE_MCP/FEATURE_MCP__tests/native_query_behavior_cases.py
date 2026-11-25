@@ -277,7 +277,18 @@ declare_entity(
 """)
         self._write("AN-S-012-child-manifest.md", "AN-S-012", "active", 1, template="component_manifest",
                     lens="SPEC", container={"component": "C1"},
-                    body="## Claim\n\n### Component ID\n\nC2\n\n### Name\n\nChild\n")
+                    body="""## Formal Manifest
+
+```python
+from anechoic.formal_claims import declare_entity
+from anechoic.model import ComponentManifest
+
+declare_entity(
+    entity_name="Component Manifest",
+    instance=ComponentManifest(component_id="C2", name="Child"),
+)
+```
+""")
         self._write("AN-S-013-contract.md", "AN-S-013", "active", 1, container={"component": "C1"})
         self._write("AN-S-014-solution.md", "AN-S-014", "active", 1, container={"component": "C1"}, tier=1)
         self._write("AN-S-016@1-draft-contract.md", "AN-S-016", "draft", 1, container={"component": "C1"})

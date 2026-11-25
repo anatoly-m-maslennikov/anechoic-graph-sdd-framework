@@ -3,11 +3,11 @@ import tempfile
 from pathlib import Path
 import unittest
 
-from SPEC_ENGINE_C75.cli_spec__pub import _outcome_stdout, _workflow_facts, check_cli_spec
+from SPEC_ENGINE_C75.LAYER_4_SPEC_COMPARISON_C88.cli_spec__pub import _outcome_stdout, _workflow_facts, check_cli_spec
 from SPEC_ENGINE_C75.SPEC_ENGINE_C75__tests.functional.test_cli_spec import (
     _carrier, _CONTRACT, _MANIFEST, _SOLUTION,
 )
-from SPEC_ENGINE_C75.contract_model__pub import parse_cli_contract
+from SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C85.contract_model__pub import parse_cli_contract
 
 
 class CliProtocolTests(unittest.TestCase):
@@ -78,7 +78,7 @@ class CliProtocolTests(unittest.TestCase):
 
     @unittest.skipUnless(shutil.which("lean"), "Lean executable unavailable")
     def test_wrong_protocols_conflict(self):
-        from SPEC_ENGINE_C75.top_down__pub import compare_obligations
+        from SPEC_ENGINE_C75.LAYER_4_SPEC_COMPARISON_C88.top_down__pub import compare_obligations
 
         sources = dict.fromkeys(('manifest', 'contract', 'solution'), {})
         declared = {'stdin': 'event', 'stdout': 'result'}

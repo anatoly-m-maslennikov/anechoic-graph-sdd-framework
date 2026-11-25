@@ -93,12 +93,12 @@ def bind_native_workflow(
 
 
 STATUS_SPECIFICATIONS = {
-    'workflow': ('AN-S-1928@4',
-        'aa687f42ead0f4f6fe800880b31ad36167a5c40ae9d03db444a1990aea0c057d'),
+    'workflow': ('AN-S-1928@5',
+        '5baee5afaf1cc2577bb7e85fce2b2d78db4229d97033d40a4ef36674426b0fcb'),
     'step': ('AN-S-1834@1',
         'cf13a7f20adf79c318e0ea52dfb4466ef1bcec6f0eae4246935a31880c7ab9e2'),
-    'action': ('AN-S-1831@1',
-        'ff28938b3a725b2aee728e8cad99bb14f202446c0183e5ab9428d5f26c6b7448'),
+    'action': ('AN-S-1831@2',
+        'f2d16c77d8b2d9062c7c8221adbbb6eeb011dc5c2d6ec84da33eb6ae2fd1f81a'),
 }
 
 

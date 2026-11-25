@@ -36,6 +36,15 @@ declare_entity(
                             'must_effect': [('rebuild_guidance', 'provided'), ('traceability_guidance', 'provided')],
                             'forbid_effect': ['draft_write', 'state_write'],
                         },
+                    }}, 'compact_spec_rewrite': {'outcomes': {
+                        'draft_returned': {
+                            'must_effect': [('current_source_guidance', 'provided'), ('size_gate_guidance', 'provided')],
+                            'forbid_effect': ['draft_write', 'state_write'],
+                        },
+                        'held_returned': {
+                            'must_effect': [('current_source_guidance', 'provided'), ('size_gate_guidance', 'provided')],
+                            'forbid_effect': ['draft_write', 'state_write'],
+                        },
                     }}}}},
     ),
 )

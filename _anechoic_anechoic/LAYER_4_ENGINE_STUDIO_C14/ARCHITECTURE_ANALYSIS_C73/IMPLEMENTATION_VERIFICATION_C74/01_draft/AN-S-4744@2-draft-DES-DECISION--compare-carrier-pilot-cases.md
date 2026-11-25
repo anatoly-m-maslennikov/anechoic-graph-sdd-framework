@@ -23,7 +23,7 @@ Compare carrier pilot cases
 
 ### Prose Claim
 
-Generate the carrier model, collect source and effect evidence, run Lean against the supplied formal blocks, and compare the selected observations. An unavailable Lean executable or failed comparison is unresolved. Findings are limited to the selected cases.
+Generate the carrier model, collect source and effect evidence, run Lean against the supplied formal blocks, and compare the selected observations. Report unresolved coverage or execution failure. An unavailable Lean executable or failed comparison is unresolved. Findings are limited to the selected cases. With `--formal-only`, compare authored Contract and Solution cases without building the implementation model or collecting implementation evidence. Manifest comparison and unmodeled behavior remain unresolved.
 
 ### Formal Claim
 
@@ -46,27 +46,63 @@ component_workflow(
             'building': {'on': {
                 'model_built_from_python_syntax_and_shape': {'target': 'collecting', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'effect', 'target': 'carrier_model', 'outcome': 'built'}}},
-                'build_unresolved': {'target': 'unresolved', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'output', 'outcome': 'unresolved'}}},
+                'build_unresolved': {'target': 'reporting_unresolved', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'coverage', 'outcome': 'unresolved'}}},
             }},
             'collecting': {'on': {
                 'source_and_effect_evidence_retained': {'target': 'comparing', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'effect', 'target': 'source_evidence', 'outcome': 'retained'}}},
-                'evidence_unresolved': {'target': 'unresolved', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'output', 'outcome': 'unresolved'}}},
+                'evidence_unresolved': {'target': 'reporting_unresolved', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'coverage', 'outcome': 'unresolved'}}},
             }},
             'comparing': {'on': {
                 'selected_observations_compared_with_formal_claims': {'target': 'reporting', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'effect', 'target': 'selected_cases', 'outcome': 'compared'}}},
-                'comparison_or_lean_unresolved': {'target': 'unresolved', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'output', 'outcome': 'unresolved'}}},
+                'comparison_or_lean_unresolved': {'target': 'reporting_unresolved', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'coverage', 'outcome': 'unresolved'}}},
             }},
             'reporting': {'on': {
                 'comparison_reported': {'target': 'compared', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'output', 'outcome': 'compared'}}},
             }},
+            'reporting_unresolved': {'on': {
+                'unresolved_reported': {'target': 'unresolved', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'output', 'outcome': 'unresolved'}}},
+            }},
             'compared': {'type': 'final'},
             'unresolved': {'type': 'final'},
+        },
+    },
+)
+```
+
+```python
+component_workflow(
+    component='C74',
+    action='carrier_compare_formal_only',
+    machine={
+        'id': 'c74_compare_formal_carrier_cases',
+        'initial': 'idle',
+        'states': {
+            'idle': {'on': {
+                'formal_only_requested': {'target': 'comparing', 'guard': {'type': 'matchesTrace',
+                    'params': {'kind': 'trigger', 'detail': {'mode': 'formal_only'}}}},
+            }},
+            'comparing': {'on': {
+                'cases_compared': {'target': 'reporting', 'guard': {'type': 'matchesTrace',
+                    'params': {'kind': 'effect', 'target': 'formal_cases', 'outcome': 'compared'}}},
+                'coverage_unresolved': {'target': 'reporting_unresolved', 'guard': {'type': 'matchesTrace',
+                    'params': {'kind': 'effect', 'target': 'coverage', 'outcome': 'unresolved'}}},
+            }},
+            'reporting': {'on': {
+                'report_cases': {'target': 'done', 'guard': {'type': 'matchesTrace',
+                    'params': {'kind': 'output', 'outcome': 'formal_compared'}}},
+            }},
+            'reporting_unresolved': {'on': {
+                'report_gap': {'target': 'done', 'guard': {'type': 'matchesTrace',
+                    'params': {'kind': 'output', 'outcome': 'unresolved'}}},
+            }},
+            'done': {'type': 'final'},
         },
     },
 )

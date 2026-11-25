@@ -7,9 +7,9 @@ tier: 3
 context:
   lens: DES
 state:
-  status: active
-  version: 4
-  updated_at: '2026-11-13T22:57:24.985880+00:00'
+  status: "active"
+  version: 5
+  updated_at: "2026-11-25T20:32:20.933056+00:00"
 ---
 
 ## Summary
@@ -19,6 +19,8 @@ Declare Work Report Form
 ## Claim
 
 ### Prose Claim
+
+This rule describes the legacy Plan role with the Work Report Form. For the native Ticket Asset, use AN-S-2752.
 
 A Work Report records the execution of one Plan with Form Plan in a separate Atom. This is the reported Task. It has its own ID and the same Summary and Container as that Task. IS_WORK_REPORT_FOR identifies the Task by its base Atom ID.
 

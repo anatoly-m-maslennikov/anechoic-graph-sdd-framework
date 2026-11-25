@@ -47,7 +47,10 @@ component_workflow(
                     {'kind': 'output', 'outcome': 'owner_resolution_failed'}}},
             }},
             'executing': {'on': {
-                'action_dispatched': {'target': 'waiting', 'guard': {'type': 'matchesTrace', 'params': {'kind': 'effect', 'target': 'actions', 'outcome': 'dispatched'}}},
+                'action_dispatched': {'target': 'waiting', 'guard': {'type': 'matchesTrace', 'params': {
+                    'kind': 'effect', 'target': 'actions', 'outcome': 'dispatched',
+                    'detail': {'target_count': 1, 'explicit': True, 'sequence': 'next_supplied_target'},
+                }}},
                 'actions_completed': {'target': 'reporting', 'guard': {'type': 'matchesTrace', 'params': {'kind': 'effect', 'target': 'actions', 'outcome': 'completed'}}},
             }},
             'waiting': {'on': {

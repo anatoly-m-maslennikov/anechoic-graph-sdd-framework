@@ -8,9 +8,9 @@ context:
   template: workflow
   lens: DOM/MTD
 state:
-  status: active
-  version: 2
-  updated_at: 2026-11-11 14:19:47 +0400
+  status: "active"
+  version: 4
+  updated_at: "2026-11-25T21:55:25.861060+00:00"
 ---
 ## Summary
 
@@ -32,11 +32,11 @@ graph TD;
 
 ### Prose Claim
 
-This Workflow's Purpose is Runtime; its scheme follows [CA-R-1570](../../CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1570-CORE_META_MODEL-RULE--keep-workflow-graphs-separate-from-step-bindings.md).
+This Workflow's Purpose is Runtime; its scheme follows AN-S-1709.
 
 #### Input
 
-One exact Current Atom selector. For a folder-backed parent, the caller first archives all recursively contained latest Atoms through independent one-Atom invocations under CA-R-1521, CA-D-461 and CA-D-467. References outside the Carrier tree and older archived revisions are excluded. Stop at the first failure and report completed effects and remaining targets.
+One exact Current Atom selector. For a folder-backed parent, the caller first archives all recursively contained latest Atoms through independent one-Atom invocations under AN-S-1616 and CA-D-467. Use AN-S-3160 for native placement and AN-S-1915@33 for historical Plan placement. References outside the Carrier tree and older archived revisions are excluded. Stop at the first failure and report completed effects and remaining targets.
 
 The `projectContext` input port binds the Project and applicable model.
 

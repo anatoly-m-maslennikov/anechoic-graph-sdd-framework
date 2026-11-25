@@ -1,12 +1,10 @@
 import unittest
 from unittest.mock import patch
 
-from SPEC_ENGINE_C75.boundary_sources import recognized_claim
-from SPEC_ENGINE_C75.group_spec__pub import (
-    check_group_spec,
-    group_to_mermaid,
-    parse_group,
-)
+from SPEC_ENGINE_C75.LAYER_1_SPEC_SOURCES_C83.boundary_sources__pub import recognized_claim
+from SPEC_ENGINE_C75.LAYER_4_SPEC_COMPARISON_C88.group_spec__pub import check_group_spec
+from SPEC_ENGINE_C75.LAYER_3_MERMAID_RENDERER_C87.group_diagram__pub import group_to_mermaid
+from SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C85.group_model__pub import parse_group
 
 LEAN = '/Users/am/.bb/thread-storage/thr_8zxi7bmrvv/pastalean-trial/lean-4.31.0-darwin_aarch64/bin/lean'
 CONTRACT = "declare_group_contract(roles={'generation': 'C50', 'core': 'C52'}, entry_points=('api',))"
@@ -25,7 +23,7 @@ def model(contract=CONTRACT, solution=SOLUTION, server=None):
 class GroupSpecTests(unittest.TestCase):
     def check(self, *, children=('C50', 'C52'), contract=CONTRACT, solution=SOLUTION, server=None,
               current_record_count=None):
-        with patch('SPEC_ENGINE_C75.boundary_model.load_boundary_model', return_value=model(contract, solution, server)):
+        with patch('SPEC_ENGINE_C75.LAYER_1_SPEC_SOURCES_C83.boundary_model__pub.load_boundary_model', return_value=model(contract, solution, server)):
             return check_group_spec('.', 'C51', {}, {}, {}, structure_children=children,
                                     current_record_count=current_record_count, lean=LEAN)
 

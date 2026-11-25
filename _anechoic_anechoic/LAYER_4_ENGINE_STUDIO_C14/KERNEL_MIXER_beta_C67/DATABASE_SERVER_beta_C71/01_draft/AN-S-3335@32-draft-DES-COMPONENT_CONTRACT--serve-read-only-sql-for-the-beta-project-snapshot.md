@@ -145,7 +145,9 @@ operations have separate inputs and outcomes.
 
 The artifact read profile covers Model and Structure. A successful read
 matches the Project binding and returns accepted content with its corresponding
-generation ID. A foreign instance or missing generation returns no pair.
+generation ID. A foreign instance or missing generation returns no pair. The Structure-specific
+outcome renders canonical Structure from accepted rows and generation facts,
+then returns it paired with its generation ID.
 
 The full generation admission profile covers the bound Project. A commit
 pairs the artifacts and Project snapshot, including the enabled Realization
@@ -160,6 +162,11 @@ accepted Model, Structure, and Realization Graph stay in place. A stale
 base or a delta that cannot preserve relation ownership leaves the
 previous projection in place.
 
+The Incremental Startup checkpoint profile covers changed Current and Draft
+carriers. It confirms the named base before committing affected rows and
+checkpoints together. The commit removes checkpoints for absent paths and old
+move paths. It then makes the current proof available to C68.
+
 ### Formal Claim
 
 ```python trace
@@ -170,10 +177,24 @@ declare_trace_contract(
     transport='http',
     operation='POST /database',
     output='succeeded',
-    must_effect=(('C71', 'generation_checked'), ('C71', 'read_only_select_admitted'), ('C71', 'query_retained')),
+    must_effect=(('C71', 'generation_checked'), ('C71', 'read_only_select_admitted'),
+                 ('C71.query_result', 'query_retained', {'rows': {'at_most': 1000}, 'serialized_bytes': {'at_most': 1048576}})),
     forbid_effect=('sql_mutation', 'sql_external_access'),
-    must_precede=((('C71', 'generation_checked'), ('C71', 'query_retained')),
-                  (('C71', 'read_only_select_admitted'), ('C71', 'query_retained'))),
+    must_precede=((('C71', 'generation_checked'), ('C71.query_result', 'query_retained')),
+                  (('C71', 'read_only_select_admitted'), ('C71.query_result', 'query_retained'))),
+)
+```
+
+```python trace
+declare_trace_contract(
+    action='beta_database_query',
+    interface='database_api',
+    route='query',
+    transport='http',
+    operation='POST /database',
+    output='result_capacity_exceeded',
+    must_effect=(('C71.result_capacity', 'exceeded'),),
+    forbid_effect=('C71.query_result',),
 )
 ```
 
@@ -183,6 +204,17 @@ declare_trace_contract(
     output='succeeded',
     must_effect=(('project_binding', 'matched'), ('artifact_content_generation', 'paired')),
     must_precede=((('project_binding', 'matched'), ('artifact_content_generation', 'paired')),),
+)
+```
+
+```python trace
+declare_trace_contract(
+    action='beta_database_artifact_read',
+    output='structure_returned',
+    must_effect=(('project_binding', 'matched'), ('structure', 'rendered_from_accepted_rows'),
+                 ('artifact_content_generation', 'paired')),
+    must_precede=((('project_binding', 'matched'), ('structure', 'rendered_from_accepted_rows')),
+                  (('structure', 'rendered_from_accepted_rows'), ('artifact_content_generation', 'paired'))),
 )
 ```
 
@@ -322,6 +354,20 @@ declare_trace_contract(
     action='beta_native_delta_admission',
     output='foreign_instance',
     forbid_effect=('C71.delta',),
+)
+```
+
+```python trace
+declare_trace_contract(
+    action='beta_startup_checkpoint_admission',
+    output='checkpoint_admitted',
+    must_effect=(('C71.startup_base', 'confirmed'),
+                 ('C71.startup_rows_and_checkpoints', 'committed'),
+                 ('C71.startup_proof', 'available'),
+                 ('startup_current_and_draft_admission', 'verified')),
+    must_precede=((('C71.startup_base', 'confirmed'), ('C71.startup_rows_and_checkpoints', 'committed')),
+                  (('C71.startup_rows_and_checkpoints', 'committed'), ('C71.startup_proof', 'available')),
+                  (('C71.startup_proof', 'available'), ('startup_current_and_draft_admission', 'verified'))),
 )
 ```
 

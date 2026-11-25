@@ -160,8 +160,6 @@ class LifecycleJobs:
         reuse = self.generation_reuse
         if reuse is None:
             raise ValueError("An admitted generation is required for lifecycle writes")
-        if self.unconfirmed_lifecycle_write:
-            raise ValueError("Lifecycle requires admission of the preceding write")
         base = reuse["base_generation"]
         if _new_component_task(job):
             structure = read_structure(self.database_socket, self.instance_id, reuse)
@@ -184,6 +182,10 @@ class LifecycleJobs:
         return base, structure, {"lifecycle_context": {**context, "carriers": carriers, "endpoints": reuse["endpoints"]}}
 
     def _execute_lifecycle(self, job):
+        if self.unconfirmed_lifecycle_write:
+            return {"lifecycle": {"outcome": "blocked", "errors": [{"code": "write_blocked",
+                    "message": "Lifecycle requires admission of the preceding write"}]},
+                    "write_state": "known", "projection": {"state": "blocked"}}
         try:
             base, structure, facts = self._lifecycle_inputs(job)
         except (OSError, ValueError, TypeError, KeyError, http.client.HTTPException) as error:
@@ -201,6 +203,14 @@ class LifecycleJobs:
             return {"lifecycle": None, "write_state": "unknown",
                     "projection": self._projection_failure(error)}
         lifecycle = reply["lifecycle"]
+        projection = self._publish_lifecycle_projection(reply, base, archive_epoch)
+        uncertain = any(error.get("code") == "effect_uncertain" for error in lifecycle.get("errors", []))
+        if projection["state"] != "ready" and (uncertain or lifecycle.get("effects")):
+            self.unconfirmed_lifecycle_write = True
+        return {"lifecycle": lifecycle, "write_state": "known", "projection": projection}
+
+    def _publish_lifecycle_projection(self, reply, base, archive_epoch):
+        lifecycle = reply["lifecycle"]
         projection = {"state": "ready", "generation": base}
         if reply["projection_error"] is not None:
             projection = self._projection_failure(reply["projection_error"])
@@ -212,10 +222,7 @@ class LifecycleJobs:
             projection = self._admit_lifecycle_delta(reply["delta"], base)
             if projection["state"] == "ready":
                 self.watcher.acknowledge(lifecycle.get("effects", []), archive_epoch=archive_epoch)
-        uncertain = any(error.get("code") == "effect_uncertain" for error in lifecycle.get("errors", []))
-        if projection["state"] != "ready" and (uncertain or lifecycle.get("effects")):
-            self.unconfirmed_lifecycle_write = True
-        return {"lifecycle": lifecycle, "write_state": "known", "projection": projection}
+        return projection
 
     def _admit_lifecycle_generation(self, candidate):
         try:

@@ -105,9 +105,22 @@ declare_entity(
                                             'runner': 'managed_python',
                                             'module': 'KERNEL_MIXER_beta_C67.DATABASE_SERVER_beta_C71.DATABASE_SERVER_beta_C71__shared',
                                             'receipt_digests': ['snapshot_sha256', 'graph_sha256']},
+                           'beta_database_query': {'outcomes': {
+                               'succeeded': {'must_effect': [('C71', 'generation_checked'),
+                                                             ('C71', 'read_only_select_admitted'),
+                                                             ('C71.query_result', 'query_retained', {'rows': {'at_most': 1000}, 'serialized_bytes': {'at_most': 1048576}})],
+                                             'forbid_effect': ['sql_mutation', 'sql_external_access']},
+                               'result_capacity_exceeded': {
+                                   'must_effect': [('C71.result_capacity', 'exceeded')],
+                                   'forbid_effect': ['C71.query_result'],
+                               },
+                           }},
                            'beta_database_artifact_read': {'outcomes': {
                                'succeeded': {'must_effect': [('project_binding', 'matched'),
                                                              ('artifact_content_generation', 'paired')]},
+                               'structure_returned': {'must_effect': [('project_binding', 'matched'),
+                                                                       ('structure', 'rendered_from_accepted_rows'),
+                                                                       ('artifact_content_generation', 'paired')]},
                                'foreign_instance': {'forbid_effect': ['artifact_content_generation']},
                                'no_generation': {'forbid_effect': ['artifact_content_generation']},
                            }},
@@ -145,6 +158,13 @@ declare_entity(
                                                           ('C71.previous_generation', 'retained')],
                                           'forbid_effect': ['C71.generation']},
                                'foreign_instance': {'forbid_effect': ['C71.generation']},
+                           }},
+                           'beta_startup_checkpoint_admission': {'outcomes': {
+                               'checkpoint_admitted': {'must_effect': [
+                                   ('C71.startup_base', 'confirmed'),
+                                   ('C71.startup_rows_and_checkpoints', 'committed'),
+                                   ('C71.startup_proof', 'available'),
+                                   ('startup_current_and_draft_admission', 'verified')]},
                            }}}},
          'state': {'reads': ['attested Project generation', 'bound disk generation on restart',
                               'sealed files in the admitted Project Journal directory',

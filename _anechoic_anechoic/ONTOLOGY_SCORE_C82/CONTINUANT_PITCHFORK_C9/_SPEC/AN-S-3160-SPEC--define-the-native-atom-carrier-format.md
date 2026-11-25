@@ -8,8 +8,8 @@ context:
   lens: SPEC
 state:
   status: "active"
-  version: 18
-  updated_at: "2026-11-25T17:11:01.160781+00:00"
+  version: 31
+  updated_at: "2026-11-25T22:59:51.523368+00:00"
 ---
 
 ## Summary
@@ -18,8 +18,11 @@ Define the native Atom Carrier format
 
 ## Claim
 
-The Atom Carrier is the source of truth. The YAML Header carries the
-Atom's Properties. The Markdown Content follows the Header.
+Each Atom revision has one authoritative Markdown Carrier. It stores a YAML Header followed by Markdown Content. Any additional Carrier follows its applicable declaration and represents the same revision.
+
+Preserve exact IDs, opaque references, authored text, and typed values. The YAML Header carries metadata. Markdown carries Summary and the other Content Properties in their defined sections. Store each property value once at its declared location.
+
+Write each YAML mapping key once. A scalar uses its declared type. Use plain scalars for registered YAML-safe controlled strings.
 
 ### Header order
 
@@ -53,24 +56,11 @@ uses Tier 1 or Tier 2.
 
 Derive containment from `container`.
 
-### SPEC lifecycle
+### Additional Status placement
 
-A finalized Draft becomes Ready, with YAML Status `ready`. When
-implementation starts, Ready becomes Active. When retired, Active becomes
-Archived.
-
-### Ticket lifecycle
-
-Tickets progress from Draft to Backlog, then to In Queue at the branch
-root. In Progress is ephemeral; YAML Status remains `in_queue` while work
-is in progress. Planning Tasks, including their Labels, finish Done or
-Canceled. Issues of every Template finish Resolved or Canceled.
-
-A standalone Asset can finish Complete, with YAML Status `complete`,
-and uses `08_complete/`.
-
-Replacement by another Atom permits Archive from any state. Historical
-revisions remain addressable.
+An In Queue Ticket uses its branch root. A standalone Complete Asset uses
+`08_complete/`. A Status subdirectory serves only as a placement group.
+Read the Atom’s Status from its Header. Historical revisions remain addressable.
 
 ### Ticket containment
 
@@ -82,27 +72,15 @@ The Label is for navigation in Workbench and derived filenames. AN-S-3176
 declares its vocabulary. Default to `Subtask` for a Task under a Task and
 `Sub-epic` for an Epic under an Epic. An explicit Label takes precedence.
 
-Changing a planning Ticket preserves its containment tree at every depth.
-Move its companion folder with the Ticket when its path changes.
-
-Promote contained planning Tickets recursively when their parent moves
-from Draft to Backlog or In Queue, or from Backlog to In Queue. Promote
-only lower statuses. Preserve Assets, terminal statuses, and unpublished
-revisions of Tickets that already have a Current carrier.
-
-When a planning Ticket becomes Done or Canceled, cancel every Current
-nonterminal descendant. Preserve the Status, Version, and history of
-terminal descendants, including Resolved Issues and Archived Tickets.
-
-Reopening a Done or Canceled planning Ticket makes it In Queue. Its
-descendants keep their current Status, Version, history, and containment.
-
 ### Content
 
-A Component Seed Manifest has three Markdown sections. Formal Manifest
-declares the Component Seed ID and any boundaries. Purpose and Solution
-carry the authored prose. The Realization uses its Spec Binding to identify
-the exact Manifest revision.
+A Project Manifest or Component Manifest may include a `## Purpose` section.
+
+A Component or Component Seed exists when an Active Manifest formally
+declares its identity. A Component Seed Manifest requires one `## Formal Manifest`
+section for its ID and any boundaries. It may include nonempty Purpose,
+Contract, and Solution sections after it, in that order. The Realization
+uses its Spec Binding to identify the exact Manifest revision.
 
 ### Materialized Views
 
@@ -111,18 +89,19 @@ the filename and location. The files and directories materialize that
 placement. An Atom with children has a companion folder beside its file.
 The folder uses the full filename without `.md`. Its children live inside
 the folder and use the same rule for their own children. The authored
-Container determines the owner. Destination and Ref ID are computed
+Container determines the owner. A Carrier has a placement discrepancy when its actual filename or location differs from the derived destination. Destination and Ref ID are computed
 values. Ref ID derives from Atom ID, Version, and Status. A Draft suffix
 identifies a Draft revision. A bare ID selects Current; `ID@Version`
 selects an exact Current or Archived revision; `ID@Version-draft` selects
 an exact Draft. Resolve a collision before archiving a Draft.
 
-Use the corresponding Ref ID as the filename marker, followed by the
-family-specific Lens and Template or navigation Label tokens and
+Use `ID` for a Current filename marker, `ID@Version` for an Archive,
+and `ID@Version-draft` for a Draft. Follow it with the
+family-specific Lens and Template or navigation Label tokens in uppercase, followed by
 `--<summary-slug>.md`. Form the slug from lowercase ASCII alphanumeric
 runs joined by hyphens. Preserve the authored Summary.
 
-The Active Tier -1 Project Manifest and Goal use the repository root.
+The Active Tier -1 Project Manifest and any Active Tier -1 Project Goals use the repository root.
 Active Tier 0 SPEC Atoms use their owning root. For Project-owned Tier 0
 Atoms, this is the Project control directory.
 
@@ -143,7 +122,7 @@ Lens token.
 SPEC Drafts, Ready Atoms, and Archives use `01_draft/`,
 `02_ready/`, and `09_archived/`, respectively.
 The Project control root uses `__TICKETS/` and `__PROJECT_CONFIG/`.
-The Project Config directory holds configuration files.
+The Project Config directory holds configuration files. Keep the repository's `LICENSE` and any `LICENSES/` notices outside the Project control and runtime directories.
 
 ### Project Config catalog
 
@@ -176,9 +155,9 @@ Apply this layout after the native tools can read and write it. Compare
 migrated authored values to exact Git revisions through the migration
 bindings. Restore admitted values and preserve evidence for unresolved
 fields. Preserve Atom IDs, exact revision references, and Markdown Content
-during a mechanical format migration.
+during a mechanical format migration. A Carrier-only recoding preserves the authored Claim, applicability, and direct Relations.
 Existing P IDs remain valid references to Project Config Atoms.
 
 ## References
 
-AN-T-2929, AN-S-3118, AN-S-2181, AN-S-3013, AN-S-3014.
+AN-T-2929, AN-S-3118, AN-S-3175, AN-S-3013, AN-S-3014.

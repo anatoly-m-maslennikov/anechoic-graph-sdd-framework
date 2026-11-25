@@ -3,8 +3,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from SPEC_ENGINE_C75.cli_spec__pub import check_cli_spec
-from SPEC_ENGINE_C75.contract_model__pub import parse_cli_contract
+from SPEC_ENGINE_C75.LAYER_4_SPEC_COMPARISON_C88.cli_spec__pub import check_cli_spec
+from SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C85.contract_model__pub import parse_cli_contract
 
 _MANIFEST = """## Formal Manifest
 

@@ -7,9 +7,9 @@ tier: 1
 context:
   lens: DES
 state:
-  status: draft
+  status: "draft"
   version: 21
-  updated_at: 2026-10-30 07:00:34 +0400
+  updated_at: "2026-11-25T21:25:21.944536+00:00"
 ---
 ## Summary
 
@@ -17,7 +17,7 @@ Define the Content Role Property
 
 ## Claim scope
 
-The Content Role classification of Atoms.
+The Content Role classification of legacy Atom carriers.
 
 ## Claim
 
@@ -39,4 +39,4 @@ The stored Content Role value classifies a particular Atom. The Subject notation
 
 ## Details
 
-The allowed values and the requirement for one value per Atom remain governed by CA-R-1283 and CA-R-740. This definition does not change those rules.
+The allowed values and the requirement for one value per Atom remain governed by AN-S-1586@33 and AN-S-1866@40. This definition does not change those rules.

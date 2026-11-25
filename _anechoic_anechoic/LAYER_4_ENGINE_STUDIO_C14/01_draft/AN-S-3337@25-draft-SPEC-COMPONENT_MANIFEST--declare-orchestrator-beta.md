@@ -99,6 +99,11 @@ declare_entity(
                                    'forbid_effect': ('C71.delta',),
                                },
                            }},
+                           'beta_startup_catch_up': {'outcomes': {
+                               'live_catch_up_confirmed': {
+                                   'must_effect': [('current_and_draft', 'catch_up_confirmed')],
+                               },
+                           }},
                            'generate': {'outcomes': {
                                'succeeded': {'must_effect': [('C69.artifacts', 'sealed'),
                                                              ('C71.generation', 'committed'),

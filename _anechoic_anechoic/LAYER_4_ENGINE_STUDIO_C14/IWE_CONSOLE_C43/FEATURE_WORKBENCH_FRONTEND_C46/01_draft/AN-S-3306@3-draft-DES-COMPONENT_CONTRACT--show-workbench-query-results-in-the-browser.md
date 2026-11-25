@@ -38,8 +38,8 @@ save error, fetch and display the result, and report partial outcome.
 ### Prose Claim
 
 The View Run trace checks that C21 provides a query ID before the browser
-displays the completed result. Exact result values, preserved SQL,
-and Check behavior remain outside this trace. A partial save trace requires
+displays the completed result. Exact result values and preserved SQL
+remain outside the Run trace. A partial save trace requires
 the query ID and save error, the displayed error, and the completed result.
 
 ### Formal Claim
@@ -63,5 +63,64 @@ declare_trace_contract(
     forbid_effect=('C21.view_run.malformed_reply',),
     must_precede=((('C21.view_run.query_id', 'returned'), ('workbench_display', 'shown')),
                   (('C21.view_run.save_error', 'returned'), ('workbench_save_error', 'shown'))),
+)
+```
+
+```python trace
+declare_trace_contract(
+    action='workbench_frontend_run_view',
+    output='run_failed',
+    must_effect=(('C21.view_run.error', 'returned'), ('workbench_run_error', 'shown')),
+    forbid_effect=('C21.view_fetch', 'workbench_display', 'workbench_save_error'),
+    must_precede=((('C21.view_run.error', 'returned'), ('workbench_run_error', 'shown')),)
+)
+```
+
+
+```python trace
+declare_trace_contract(
+    action='workbench_frontend_run_view',
+    output='failed',
+    must_effect=(('workbench_run_error', 'shown'),),
+)
+```
+
+```python trace
+declare_trace_contract(
+    action='workbench_frontend_check_view',
+    output='checked',
+    must_effect=(
+        ('project_api.view_check', 'returned', {'sql': 'current'}),
+        ('workbench_check_verdict', 'shown_for_current_sql'),
+        ('workbench_previous_run', 'preserved'),
+    ),
+    forbid_effect=('workbench_replace_previous_run', 'workbench_show_stale_check_verdict'),
+    must_precede=((('project_api.view_check', 'returned', {'sql': 'current'}),
+                  ('workbench_check_verdict', 'shown_for_current_sql')),),
+)
+```
+
+```python trace
+declare_trace_contract(
+    action='workbench_frontend_check_view',
+    output='failed',
+    must_effect=(
+        ('workbench_prior_check_verdict', 'cleared'),
+        ('workbench_check_error', 'shown'),
+        ('workbench_previous_run', 'preserved'),
+    ),
+    forbid_effect=('workbench_replace_previous_run', 'workbench_check_verdict', 'workbench_show_stale_check_verdict'),
+)
+```
+
+```python trace
+declare_trace_contract(
+    action='workbench_frontend_edit_sql',
+    output='changed',
+    must_effect=(
+        ('workbench_prior_check_verdict', 'cleared'),
+        ('workbench_previous_run', 'preserved'),
+    ),
+    forbid_effect=('workbench_replace_previous_run', 'workbench_check_verdict', 'workbench_show_stale_check_verdict'),
 )
 ```

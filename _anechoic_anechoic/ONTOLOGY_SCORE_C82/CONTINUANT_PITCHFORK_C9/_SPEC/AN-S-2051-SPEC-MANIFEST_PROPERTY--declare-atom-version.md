@@ -9,12 +9,16 @@ context:
   template: manifest_property
 state:
   status: "active"
-  version: 6
-  updated_at: "2026-11-25T16:00:37.642175+00:00"
+  version: 7
+  updated_at: "2026-11-25T19:22:36.023185+00:00"
 ---
 ## Summary
 
 Declare Atom.Version
+
+## Semantics
+
+Versions increase across successive revisions of the same Atom ID.
 
 ## Formal Manifest
 

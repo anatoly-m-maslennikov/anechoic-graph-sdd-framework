@@ -9,8 +9,8 @@ context:
   template: manifest_property
 state:
   status: "active"
-  version: 4
-  updated_at: "2026-11-25T16:00:38.037750+00:00"
+  version: 5
+  updated_at: "2026-11-25T20:41:50.072797+00:00"
 ---
 
 ## Summary
@@ -31,3 +31,7 @@ class Property3168(Property):
     property.value.cardinality = 1
     property.value.format = dict[str, str]
 ```
+
+## Semantics
+
+The Container identifies one existing immediate owner by stable ID. An Atom owner resolves to its Current revision. Each chain of Atom owners reaches a Component without a cycle.

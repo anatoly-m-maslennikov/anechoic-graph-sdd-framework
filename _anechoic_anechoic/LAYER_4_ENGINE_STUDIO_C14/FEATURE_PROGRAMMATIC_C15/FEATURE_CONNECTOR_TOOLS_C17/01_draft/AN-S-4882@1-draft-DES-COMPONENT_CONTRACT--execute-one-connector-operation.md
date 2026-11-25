@@ -47,7 +47,7 @@ declare_trace_contract(
         ('C17.request', 'admitted'),
         ('C17.backend_dispatch', 'read'),
     ),
-    forbid_effect=('C17.admitted_delta', 'C17.workflow_dispatch'),
+    forbid_effect=('C17.admitted_delta', 'C17.workflow_dispatch', 'semantic_target_substitution'),
     must_precede=(
         (('C17.request', 'admitted'), ('C17.backend_dispatch', 'read')),
         (('C17.backend_dispatch', 'read'), ('C17.operation_result', 'verified')),
@@ -65,7 +65,7 @@ declare_trace_contract(
         ('C17.request', 'admitted'),
         ('C17.backend_dispatch', 'write'),
     ),
-    forbid_effect=('C17.workflow_dispatch',),
+    forbid_effect=('C17.workflow_dispatch', 'semantic_target_substitution'),
     must_precede=(
         (('C17.request', 'admitted'), ('C17.backend_dispatch', 'write')),
         (('C17.backend_dispatch', 'write'), ('C17.admitted_delta', 'applied')),
@@ -83,7 +83,7 @@ declare_trace_contract(
         ('C17.operation_result', 'verified'),
         ('C17.request', 'admitted'),
     ),
-    forbid_effect=('C17.admitted_delta', 'C17.workflow_dispatch'),
+    forbid_effect=('C17.admitted_delta', 'C17.workflow_dispatch', 'semantic_target_substitution'),
     must_precede=(
         (('C17.request', 'admitted'), ('C17.storage_state', 'verified_unchanged')),
         (('C17.storage_state', 'verified_unchanged'), ('C17.operation_result', 'verified')),
@@ -100,10 +100,29 @@ declare_trace_contract(
         ('C17.request', 'admitted'),
         ('C17.backend_dispatch', 'write'),
     ),
-    forbid_effect=('C17.operation_result', 'C17.workflow_dispatch'),
+    forbid_effect=('C17.operation_result', 'C17.workflow_dispatch', 'semantic_target_substitution'),
     must_precede=(
         (('C17.request', 'admitted'), ('C17.backend_dispatch', 'write')),
         (('C17.backend_dispatch', 'write'), ('C17.effect_uncertain', 'reported')),
+    ),
+)
+```
+
+```python trace
+declare_trace_contract(
+    action='execute_connector_operation',
+    output='write_partial_failure',
+    must_effect=(
+        ('C17.request', 'admitted'),
+        ('C17.backend_dispatch', 'write'),
+        ('C17.partial_effects', 'reported'),
+        ('C17.operation_error', 'reported'),
+    ),
+    forbid_effect=('C17.operation_result', 'C17.workflow_dispatch', 'semantic_target_substitution'),
+    must_precede=(
+        (('C17.request', 'admitted'), ('C17.backend_dispatch', 'write')),
+        (('C17.backend_dispatch', 'write'), ('C17.partial_effects', 'reported')),
+        (('C17.partial_effects', 'reported'), ('C17.operation_error', 'reported')),
     ),
 )
 ```
@@ -115,12 +134,15 @@ declare_trace_contract(
     must_effect=(
         ('C17.request_error', 'reported'),
     ),
-    forbid_effect=('C17.backend_dispatch', 'C17.admitted_delta', 'C17.workflow_dispatch'),
+    forbid_effect=('C17.backend_dispatch', 'C17.admitted_delta', 'C17.workflow_dispatch', 'semantic_target_substitution'),
 )
 ```
 
 ## Details
 
-These cases cover the common connector request. The named direct
-Subject lookup, exact values, and failures with known partial effects
-remain governed by the Guarantee.
+These cases cover the common connector request. The named direct Subject
+lookup and exact values remain governed by the Guarantee. The symbolic
+`semantic_target_substitution` effect means changing the caller's logical
+target. It does not include private physical binding or explicit Query result
+selection. `C17.partial_effects` represents reported known partial effects;
+it does not claim that all effects are known.

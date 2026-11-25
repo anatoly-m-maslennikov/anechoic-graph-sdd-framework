@@ -56,6 +56,10 @@ declare_entity(
                                    ),
                                    'forbid_effect': ('C70.write_request',),
                                },
+                               'worker_projection_failed': {
+                                   'must_effect': (('C70.projection', 'failed'),),
+                                   'forbid_effect': ('C70.write_request',),
+                               },
                                'write_blocked': {
                                    'must_effect': (
                                        ('C70.write_request', 'rejected'),
@@ -68,6 +72,7 @@ declare_entity(
                            }},
                            'beta_backend_tool_call': {'outcomes': {
                                'succeeded': {'must_effect': [('C70.raw_tool_result', 'returned')]},
+                               'failed': {'must_effect': [('C70.tool_call_failure', 'reported')]},
                            }},
                            'shared_peer_owner': {'transport': 'newline-delimited JSON over private Unix socket',
                                                  'runner': 'managed_python',

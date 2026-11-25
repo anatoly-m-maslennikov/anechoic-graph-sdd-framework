@@ -1,0 +1,36 @@
+---
+atom_family: SPEC
+atom_id: AN-S-2308
+container:
+  component: C9
+tier: 1
+context:
+  lens: SWD
+state:
+  status: "archived"
+  version: 7
+  updated_at: "2026-11-25T23:20:50.398414+00:00"
+---
+## Summary
+
+Define ID
+
+## Claim
+
+### Prose Claim
+
+
+The reusable lexical Term `ID` as used for identifiers of Continuant and Occurrent entity instances within a matching prefix namespace.
+
+
+ID **means** a unique identifier used **to** find **`=1`** entity instance, whether Continuant **or** Occurrent, whose uniqueness is bounded **to** its matching prefix namespace. This Claim explicitly introduces the lexical Term instance named ID at `Term//ID`.
+
+## Details
+
+The Operator supplied this meaning and accepted `CA-P-123`, `CA-P-123@1-draft`, and `CA-P-123@3` as examples. The examples do not define lifecycle identity, version equivalence, Draft/Current/Archived transitions, or a rule for changing an existing identifier. Existing identifier and lifecycle authority retains those responsibilities. Matching local or numeric parts under different prefixes do not by themselves establish a collision; a collision within the matching prefix namespace does not satisfy the meaning.
+
+`ID` retains its approved meaning across its uses. The contextual topic/code spellings `atom.id` and `projection.id` distinguish their respective ID Properties; they are not alternative complete canonical Subject names or case-folded aliases. Authored Subjects use their full admitted expressions. Their shared terminal label need not be globally unique. Dot remains qualification syntax rather than a Term. These literal spellings are not changed to `atom.atom_id` or similar invented spellings, and existing code identifiers are not renamed.
+
+This Active Method Term Definition is the single authoritative meaning owner of the lexical Term ID under CA-R-1319. E evaluates well-formedness and conflicts. No dictionary Projection, extractor, or lookup service is required.
+
+The initially flat target `Term//ID` is explicitly introduced by this defining Claim, not inferred from property-name letters. This definition introduces no property, domain instance, prefix namespace, Relation, or other entity merely by naming it. It does not implement the deferred Terms Graph or waive applicable defining-target binding rules; C605's separate Term-placement reconciliation remains applicable.

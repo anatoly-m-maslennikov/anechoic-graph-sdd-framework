@@ -185,7 +185,8 @@ declare_entity(
                             'must_effect': [('C21.view_run.query_id', 'returned'),
                                             ('C21.view_run.save_error', 'returned')],
                         },
-                        'failed': {'forbid_effect': ['C21.view_run.query_id', 'C21.view_run.save_error']},
+                        'failed': {'must_effect': [('C21.view_run.error', 'returned')],
+                                   'forbid_effect': ['C21.view_run.query_id', 'C21.view_run.save_error']},
                     }},
                     'project_mcp': {
                         'transport': 'cli',

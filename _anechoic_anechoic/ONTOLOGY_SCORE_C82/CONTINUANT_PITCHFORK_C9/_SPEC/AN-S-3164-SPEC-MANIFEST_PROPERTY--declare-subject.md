@@ -9,8 +9,8 @@ context:
   template: manifest_property
 state:
   status: "active"
-  version: 4
-  updated_at: "2026-11-25T16:00:38.019515+00:00"
+  version: 5
+  updated_at: "2026-11-25T22:11:22.493269+00:00"
 ---
 
 ## Summary
@@ -33,3 +33,7 @@ class Property3164(Property):
     property.value.cardinality = 1
     property.value.format = str | None
 ```
+
+## Semantics
+
+Subject names what the Concern is about. Its topic can span Components and remain the same when the Atom moves.

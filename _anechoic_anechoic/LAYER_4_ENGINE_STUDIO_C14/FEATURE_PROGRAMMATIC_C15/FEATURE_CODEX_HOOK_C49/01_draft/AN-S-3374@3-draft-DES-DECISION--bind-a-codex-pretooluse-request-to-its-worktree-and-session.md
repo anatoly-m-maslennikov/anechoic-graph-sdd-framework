@@ -48,14 +48,18 @@ component_workflow(
             'checking': {'on': {
                 'git_worktree_resolved': {'target': 'responding', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'effect', 'target': 'C49', 'outcome': 'succeeded'}}},
-                'event_denied': {'target': 'failed', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'output', 'outcome': 'failed', 'detail': {'stdout': 'Codex hook result JSON on stdout'}}}},
+                'event_denied': {'target': 'reporting_denial', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'hook_request', 'outcome': 'denied'}}},
                 'other_tool_ignored': {'target': 'succeeded', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'output', 'outcome': 'succeeded', 'detail': {'stdout': 'Codex hook result JSON on stdout'}}}},
             }},
             'responding': {'on': {
                 'updated_input_returned': {'target': 'succeeded', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'output', 'outcome': 'succeeded', 'detail': {'stdout': 'Codex hook result JSON on stdout'}}}},
+            }},
+            'reporting_denial': {'on': {
+                'denial_returned': {'target': 'failed', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'output', 'outcome': 'failed', 'detail': {'stdout': 'Codex hook result JSON on stdout'}}}},
             }},
             'succeeded': {'type': 'final'},
             'failed': {'type': 'final'},

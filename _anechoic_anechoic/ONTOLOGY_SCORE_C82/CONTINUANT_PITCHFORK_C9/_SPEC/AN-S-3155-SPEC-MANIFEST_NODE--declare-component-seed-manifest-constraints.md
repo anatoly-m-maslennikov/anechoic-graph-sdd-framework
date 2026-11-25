@@ -9,8 +9,8 @@ context:
   template: manifest_node
 state:
   status: "active"
-  version: 5
-  updated_at: "2026-11-25T16:00:37.993294+00:00"
+  version: 6
+  updated_at: "2026-11-25T18:11:24.883695+00:00"
 ---
 
 ## Summary
@@ -30,7 +30,7 @@ from anechoic.model import Component, ComponentSeedManifest, NodeConstraints
 
 def check_component_seed_manifest(spec: ComponentSeedManifest) -> bool:
     return bool(spec.component_seed_id.startswith("CS") and spec.component_seed_id[2:].isascii()
-                and spec.component_seed_id[2:].isdigit() and spec.purpose.strip() and spec.solution.strip())
+                and spec.component_seed_id[2:].isdigit())
 
 class Constraints(NodeConstraints):
     bearer = ComponentSeedManifest

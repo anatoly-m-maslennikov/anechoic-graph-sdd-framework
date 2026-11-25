@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from SPEC_ENGINE_C75.sibling_delegation__pub import check_sibling_binding
+from SPEC_ENGINE_C75.LAYER_5_DELEGATION_VERIFICATION_C89.sibling_delegation__pub import check_sibling_binding
 from SPEC_ENGINE_C75.SPEC_ENGINE_C75__tests.functional.test_cli_spec import _carrier
 
 

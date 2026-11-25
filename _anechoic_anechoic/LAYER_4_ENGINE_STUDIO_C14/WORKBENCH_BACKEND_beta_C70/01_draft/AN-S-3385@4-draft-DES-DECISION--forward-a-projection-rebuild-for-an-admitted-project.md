@@ -29,11 +29,15 @@ For result and flow-history targets, it forwards the rebuild to Kernel.
 
 A shared Backend Tool call binds the Project, checks the enabled Tool
 definition, dispatches the call, and returns the raw Tool result. It
-returns a failure if binding, validation, or dispatch fails.
+returns a failure if binding, validation, dispatch, or response handling fails.
+A failure after dispatch does not establish the Tool's write outcome.
 
 For a shared Ticket Tool call, distinguish an unknown write outcome, a
 known write with a projection failure, and a request refused while the
 Orchestrator has blocked writes. Preserve the Orchestrator outcome.
+
+A Worker projection error received from Orchestrator is reported as a
+projection failure. The error alone leaves the file effects unspecified.
 
 ### Formal Claim
 
@@ -84,25 +88,29 @@ component_workflow(
             'binding': {'on': {
                 'project_admitted': {'target': 'validating', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'effect', 'target': 'C70.project_binding', 'outcome': 'admitted'}}},
-                'tool_call_failed': {'target': 'failed', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'output', 'outcome': 'failed'}}},
+                'tool_call_failed': {'target': 'reporting_tool_failure', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'C70.tool_call_failure', 'outcome': 'reported'}}},
             }},
             'validating': {'on': {
                 'tool_validated': {'target': 'dispatching', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'effect', 'target': 'C70.tool_validation', 'outcome': 'validated'}}},
-                'tool_call_failed': {'target': 'failed', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'output', 'outcome': 'failed'}}},
+                'tool_call_failed': {'target': 'reporting_tool_failure', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'C70.tool_call_failure', 'outcome': 'reported'}}},
             }},
             'dispatching': {'on': {
                 'tool_dispatched': {'target': 'responding', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'effect', 'target': 'C70.tool_dispatch', 'outcome': 'dispatched'}}},
-                'tool_call_failed': {'target': 'failed', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'output', 'outcome': 'failed'}}},
+                'tool_call_failed': {'target': 'reporting_tool_failure', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'C70.tool_call_failure', 'outcome': 'reported'}}},
             }},
             'responding': {'on': {
                 'raw_tool_result_returned': {'target': 'returning', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'effect', 'target': 'C70.raw_tool_result', 'outcome': 'returned'}}},
-                'tool_call_failed': {'target': 'failed', 'guard': {'type': 'matchesTrace', 'params':
+                'tool_call_failed': {'target': 'reporting_tool_failure', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'C70.tool_call_failure', 'outcome': 'reported'}}},
+            }},
+            'reporting_tool_failure': {'on': {
+                'failure_returned': {'target': 'failed', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'output', 'outcome': 'failed'}}},
             }},
             'returning': {'on': {
@@ -185,6 +193,18 @@ component_workflow(
                         },
                     },
                 }},
+                'orchestrator_worker_projection_failed': {
+                    'target': 'reporting_worker_projection_error', 'guard': {
+                        'type': 'matchesTrace', 'params': {
+                            'kind': 'effect', 'target': 'C68.worker_projection_error', 'outcome': 'reported',
+                            'detail': {
+                                'component': 'C68',
+                                'action': 'beta_lifecycle_delta_projection',
+                                'output': 'worker_projection_failed',
+                            },
+                        },
+                    },
+                },
                 'orchestrator_write_blocked': {'target': 'reporting_refusal', 'guard': {
                     'type': 'matchesTrace', 'params': {
                         'kind': 'effect', 'target': 'C68.write_request', 'outcome': 'rejected',
@@ -214,6 +234,20 @@ component_workflow(
                 'tool_projection_failure': {'target': 'projection_response', 'guard': {
                     'type': 'matchesTrace', 'params': {
                         'kind': 'effect', 'target': 'C70.projection', 'outcome': 'failed',
+                    },
+                }},
+            }},
+            'reporting_worker_projection_error': {'on': {
+                'tool_worker_projection_failure': {'target': 'worker_projection_response', 'guard': {
+                    'type': 'matchesTrace', 'params': {
+                        'kind': 'effect', 'target': 'C70.projection', 'outcome': 'failed',
+                    },
+                }},
+            }},
+            'worker_projection_response': {'on': {
+                'tool_worker_projection_failure_returned': {'target': 'done', 'guard': {
+                    'type': 'matchesTrace', 'params': {
+                        'kind': 'output', 'outcome': 'worker_projection_failed',
                     },
                 }},
             }},

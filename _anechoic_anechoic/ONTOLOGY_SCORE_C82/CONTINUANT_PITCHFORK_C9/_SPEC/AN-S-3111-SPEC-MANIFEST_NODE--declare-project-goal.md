@@ -9,8 +9,8 @@ context:
   template: manifest_node
 state:
   status: "active"
-  version: 4
-  updated_at: '2026-11-24T16:58:01.374343+00:00'
+  version: 6
+  updated_at: "2026-11-25T22:32:16.876387+00:00"
 ---
 
 ## Summary
@@ -31,3 +31,7 @@ from anechoic.model import Purpose
 class ProjectGoal(Purpose):
     pass
 ```
+
+## Semantics
+
+A Project Goal states an intended outcome of the Project. A Project may have zero or more Active Project Goals. Project Goals express outcomes. Component Manifests govern Component Structure.

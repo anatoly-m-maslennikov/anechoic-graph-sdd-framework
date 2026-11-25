@@ -7,9 +7,9 @@ tier: 5
 context:
   lens: SWD
 state:
-  status: draft
+  status: "draft"
   version: 27
-  updated_at: 2026-10-30 06:13:15 +0400
+  updated_at: "2026-11-25T20:02:08.485346+00:00"
 ---
 ## Summary
 
@@ -44,7 +44,7 @@ Atom Claims.
 - preserve the complete Claim **and** its qualifications; easier wording **or** layout **must not** change its meaning.
 - retain the Atom boundary under `CA-R-1270-CORE_META_MODEL-RULE--permit-one-composite-claim-as-one-authority-unit`. one Claim does **not** require one sentence; paragraphs, bullets, **and** table rows do **not** determine the number of independently governed Claims.
 - express authoritative content once rather than repeating the same Claim **in** prose **and** a list **or** table.
-- apply the Term **and** CCE Operator rendering Method under `CA-M-229-CORE_META_MODEL-METHOD--render-governed-terms-and-cce-operators-distinctly` throughout.
+- use the exact spelling and case of each declared Term.
 
 readable layout alone is insufficient **when** the Claim still requires the reader **to** reconstruct missing context **or** logical connections.
 

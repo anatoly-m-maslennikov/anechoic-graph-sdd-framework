@@ -9,8 +9,8 @@ context:
   template: manifest_node
 state:
   status: "active"
-  version: 3
-  updated_at: '2026-11-24T16:58:01.347611+00:00'
+  version: 6
+  updated_at: "2026-11-25T20:23:21.428141+00:00"
 ---
 
 ## Summary
@@ -31,3 +31,9 @@ from anechoic.model import Prescribed
 class Component(Prescribed):
     pass
 ```
+
+## Semantics
+
+A Component groups its owned Spec Atoms within a responsibility boundary. Its declared hierarchy also governs the corresponding Component Packages. Each non-root Component has exactly one Active Component Manifest.
+
+A folder that represents a child Component ends in an underscore followed by the Component’s stable ID.

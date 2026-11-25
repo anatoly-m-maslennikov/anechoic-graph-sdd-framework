@@ -7,9 +7,9 @@ tier: 3
 context:
   lens: DES
 state:
-  status: active
-  version: 36
-  updated_at: 2026-11-02 19:44:26 +0400
+  status: "active"
+  version: 37
+  updated_at: "2026-11-25T20:52:14.256752+00:00"
 ---
 ## Summary
 
@@ -19,6 +19,8 @@ Derive Artifact scope inclusion
 
 ### Prose Claim
 
+This rule applies to legacy Scope Unit carriers. Use AN-S-3168 for the native Atom Container.
+
 
 Artifacts contained **in** a Scope Unit.
 
@@ -27,4 +29,4 @@ the resolver **must** resolve **`=1`** direct Scope Unit from the Atom's interna
 
 ## Details
 
-an Atom with no containing Scope Unit uses the external-Atom Author fallback under CA-D-657-CORE_META_MODEL-ENG_DECISION--use-economical-yaml-frontmatter; a failed Scope Unit resolution does **not** establish that no containing Scope Unit exists.
+For a legacy Project Goal without a Scope Unit, resolve its Operator owner under AN-S-1039@1; a failed Scope Unit resolution does **not** establish that no containing Scope Unit exists.

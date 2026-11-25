@@ -8,9 +8,9 @@ context:
   template: workflow
   lens: DOM/MTD
 state:
-  status: active
-  version: 4
-  updated_at: '2026-11-12T07:10:31+04:00'
+  status: "active"
+  version: 5
+  updated_at: "2026-11-25T19:30:53.036464+00:00"
 ---
 ## Summary
 
@@ -46,7 +46,7 @@ flowchart TD;
 
 This Runtime Workflow accepts one exact Current Atom selector and an allowed Current `targetStatus`. The Engine binds the Project and applicable model and supplies a pinned Current tree. Attached Drafts stay outside the cascade.
 
-Run one Action per selected Atom. Enter shared Plan Backlog and reopen terminal Plans parent first. Moving a Backlog Plan to Active also activates every Current contained Task parent first. Otherwise, process descendants before the parent. To close a Plan to Done or Canceled, preserve terminal descendants and set the other Current descendants to Canceled. Each Action checks the model and source and derives the destination. The Workflow changes neither Version nor Updated At.
+Run one Action per selected Atom. Enter shared Plan Backlog and reopen terminal Plans parent first. Moving a Backlog Plan to Active also activates every Current contained Task parent first. Otherwise, process descendants before the parent. To close a Plan to Done or Canceled, preserve terminal descendants and set the other Current descendants to Canceled. Each Action checks the model and source and derives the destination. Each Action retains Version and updates Updated At for each Status change.
 
 Return the saved Atom reference and confirmed effects on success. Report rejected fields before any write. At the first Action failure, return the failed Action, the reason, confirmed and uncertain effects, and any selected Actions left unrun.
 

@@ -7,9 +7,9 @@ tier: 3
 context:
   lens: DES
 state:
-  status: active
-  version: 11
-  updated_at: 2026-10-27 20:00:03 +0400
+  status: "active"
+  version: 12
+  updated_at: "2026-11-25T21:03:30.414106+00:00"
 ---
 ## Summary
 
@@ -49,4 +49,4 @@ lineage in the canonical Events Journal.
 - Projection Action Runs additionally retain target Projection, exact selected
   source Atom revisions and Journal selection, generator/configuration
   reference, and produced revision only when it exists, as required by
-  CA-R-1728.
+  AN-S-1479.

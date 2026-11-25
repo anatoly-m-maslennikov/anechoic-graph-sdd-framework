@@ -28,7 +28,7 @@ Validate fields and Relations, construct the instance, apply named and
 inherited population checks, then return the instance or raise an error.
 
 Open the accepted admitted-Model artifact for the caller. Fail if the artifact
-is unavailable or invalid. The exact input, verification predicates, and
+is unavailable or invalid and record that failure. The exact input, verification predicates, and
 returned representation remain unresolved.
 
 ### Formal Claim
@@ -87,7 +87,11 @@ component_workflow(
             'opening': {'on': {
                 'admitted_model_opened': {'target': 'returning', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'effect', 'target': 'C53.admitted_model', 'outcome': 'opened'}}},
-                'artifact_unavailable_or_invalid': {'target': 'failed', 'guard': {'type': 'matchesTrace', 'params':
+                'artifact_unavailable_or_invalid': {'target': 'reporting_failure', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'C53.admitted_model', 'outcome': 'failed'}}},
+            }},
+            'reporting_failure': {'on': {
+                'failure_reported': {'target': 'failed', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'output', 'outcome': 'failed'}}},
             }},
             'returning': {'on': {

@@ -7,9 +7,9 @@ tier: 5
 context:
   lens: SWD
 state:
-  status: active
-  version: 19
-  updated_at: 2026-10-27 19:59:42 +0400
+  status: "active"
+  version: 22
+  updated_at: "2026-11-25T23:19:15.485314+00:00"
 ---
 # Summary
 
@@ -35,7 +35,7 @@ implementation of Atom validation checks from source authority for `VALIDATE_ATO
 - inventory governing obligations independently of the available adapters. identify mechanically supported checks, semantic-review exclusions, unresolved obligations, **and** missing adapters explicitly; an absent adapter **must not** remove its obligation from the coverage denominator.
 - bind source-dependent checks **to** canonical identity, Version, **and** a content digest. a digest mismatch, incomplete source set, contradictory Property declarations, **or** unresolved admission prevents complete coverage; no caller-supplied rule bundle **may** override source authority **or** supply executable code.
 - **if** applicable Delivery authority does **not** settle a field spelling, value type, location, **or** required cardinality, report the exact schema gap. do **not** silently infer it from current fixtures, filenames, widespread usage, **or** the implementation.
-- do **not** require `cce_version`, `cce_form`, **or** `llm_session_ids` on Atoms. apply the retired-field rule under CA-D-478; CCE authority resolves from the applicable methodology **and** the admitted Claim classification, **not** from those removed fields.
+- Validate the fields admitted by the Atom Template and declared writing rules. Apply the retired-field rule under CA-D-478.
 
 ### Boundary libraries
 
@@ -45,8 +45,8 @@ implementation of Atom validation checks from source authority for `VALIDATE_ATO
 
 ### Body and Actor adapters
 
-- select the body contract by the carried Content Role under CA-D-479-CORE_META_MODEL-DELIVERY--use-stable-headings-for-atom-body-properties; reuse **`=1`** section parser across section, Property-location, **and** Plan-model checks. use the current CA-D-470-CORE_META_MODEL-DELIVERY--serialize-plan-file-sections nesting for the Plan Definition of Done, **not** its retired sibling-section layout.
-- parse actual heading boundaries outside fenced examples. check required cardinality, order, content, **and** nesting independently; an empty admitted Details section is **not** a missing section. retain an explicit gap for an unresolved role **or** extension contract.
+- select the body contract by the carried Content Role under CA-D-479-CORE_META_MODEL-DELIVERY--use-stable-headings-for-atom-body-properties; reuse **`=1`** section parser across section, Property-location, **and** Plan-model checks. Use the exact AN-S-1777@33 nesting for the legacy Plan Definition of Done.
+- parse actual heading boundaries outside fenced examples. check required cardinality, order, content, **and** nesting independently; an empty admitted Details section is **not** a missing section. Retain an explicit gap for an unresolved Template or governing source.
 - check Author by exact membership **in** the selected Operator registry under CA-D-274-CORE_META_MODEL-ENG_DECISION--serialize-explicit-atom-revision-author **and** CA-D-494-CORE_META_MODEL-ENG_DECISION--store-operator-registry-in-project-root. read the registry through the bounded, fingerprinted file reader; fail unlisted names **only after** its schema is valid. do **not** infer aliases, Actor records, **or** permissions. retain malformed, stale, unavailable, **or** absent registry context as incomplete coverage.
 - omit effective Plan Assignee resolution for now; retain its deferred coverage explicitly **without** inferring an Assignee from Author **or** from the registry. this does **not** change the optional carried `assignee` encoding.
 - refresh an adapter's source binding **only after** reconciling its behavior **and** positive/negative tests with the changed governing Claim. a pin refresh alone is **not** an implementation fix.

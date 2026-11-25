@@ -9,8 +9,8 @@ context:
   template: manifest_relation
 state:
   status: "active"
-  version: 6
-  updated_at: "2026-11-25T16:00:37.768036+00:00"
+  version: 7
+  updated_at: "2026-11-25T20:23:21.941300+00:00"
 ---
 
 ## Summary
@@ -24,7 +24,7 @@ MODEL//ANECHOIC <+ Graph/Relation//IS_CHILD_OF
 
 ## Claim
 
-`IS_CHILD_OF` identifies an immediate parent. AN-S-3148 gives each Component one parent, and AN-S-3146 gives Project zero parents. `IS_PARENT_FOR` can return multiple immediate children.
+`IS_CHILD_OF` identifies an immediate parent. AN-S-3148 gives each Component one parent, and AN-S-3146 gives Project zero parents. `IS_PARENT_FOR` derives the immediate children from the same facts. Use the declared Project Structure for Component parentage.
 
 ## Formal Manifest
 

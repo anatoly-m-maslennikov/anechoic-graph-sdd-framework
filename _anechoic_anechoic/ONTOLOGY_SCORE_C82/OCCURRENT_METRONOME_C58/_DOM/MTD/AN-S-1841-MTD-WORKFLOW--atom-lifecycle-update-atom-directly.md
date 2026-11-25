@@ -8,9 +8,9 @@ context:
   template: workflow
   lens: DOM/MTD
 state:
-  status: active
-  version: 2
-  updated_at: 2026-11-11 14:19:47 +0400
+  status: "active"
+  version: 3
+  updated_at: "2026-11-25T21:47:25.363708+00:00"
 ---
 ## Summary
 
@@ -32,7 +32,7 @@ graph TD;
 
 ### Prose Claim
 
-This Workflow's Purpose is Runtime; its scheme follows [CA-R-1570](../../CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1570-CORE_META_MODEL-RULE--keep-workflow-graphs-separate-from-step-bindings.md).
+This Workflow's Purpose is Runtime; its scheme follows AN-S-1709.
 
 #### Input
 

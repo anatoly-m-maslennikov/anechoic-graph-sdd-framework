@@ -26,13 +26,13 @@ class NativeModelClaimTests(unittest.TestCase):
         self.assertEqual(fields, parse_component_manifest_fields(body))
         self.assertIsNone(parse_component_manifest(formal)[1])
         self.assertIsNone(parse_component_manifest('## Purpose\n\n' + formal)[1])
-        legacy = '## Claim\n\n### Component ID\n\nAN-C-14\n\n### Name\n\nExample\n'
-        self.assertEqual(({'component_id': 'AN-C-14', 'name': 'Example'}, None),
-                         parse_component_manifest(legacy))
+        bare_prose = '## Claim\n\n### Component ID\n\nAN-C-14\n\n### Name\n\nExample\n'
+        prior_formal = formal.replace('## Formal manifest', '## Claim\n\n### Formal Claim')
+        self.assertEqual((fields, None), parse_component_manifest(prior_formal))
         invalid = (body + '\n## Purpose\nAgain\n', body + '\n' + formal,
                    formal + '\n## Claim\n', formal.replace('## Formal manifest', '### Formal manifest'),
                    formal.replace('```python', '```text'), formal + '\n```python\npass\n```\n',
-                   formal.replace('name="Example"', 'name=load_name()'))
+                   formal.replace('name="Example"', 'name=load_name()'), bare_prose)
         for value in invalid:
             with self.subTest(value=value), self.assertRaises(ValueError):
                 parse_component_manifest(value)

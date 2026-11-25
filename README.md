@@ -62,7 +62,7 @@ derive them from one authoritative source →\
 **load only the context needed without duplicating authority.**
 
 Natural-language phrases can be ambiguous →\
-shared vocabulary + Anechoic Controlled English (CCE), a constrained way to write Claims →\
+shared vocabulary and explicit conditions in prose or formal Manifests →\
 **explicit, checkable Claims.**
 
 The spec is about different things →\

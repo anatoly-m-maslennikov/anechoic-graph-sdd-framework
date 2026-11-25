@@ -102,6 +102,25 @@ component_workflow(
                 }},
             }},
             'executing': {'on': {
+                'native_lifecycle_requested': {'target': 'awaiting_native_outcome', 'guard': {
+                    'type': 'matchesTrace', 'params': {
+                        'kind': 'effect', 'target': 'C16', 'outcome': 'lifecycle_requested',
+                        'detail': {'interface': 'task_lifecycle', 'transport': 'cli', 'runner': 'managed_python',
+                                   'module': 'FEATURE_PROGRAMMATIC.FEATURE_TOOLS.native_lifecycle_cli',
+                                   'stdin': 'bound Task, Epic, or Ticket Asset lifecycle request and Model and Structure attestation on stdin'},
+                    },
+                }},
+            }},
+            'awaiting_native_outcome': {'on': {
+                'native_outcome_with_file_effects_received': {'target': 'recording_outcome', 'guard': {
+                    'type': 'matchesTrace', 'params': {
+                        'kind': 'effect', 'target': 'C16', 'outcome': 'outcome_and_file_effects_received',
+                        'detail': {'record_properties': ['outcome', 'file_effects'],
+                                   'stdout': 'native outcome and file effects on stdout'},
+                    },
+                }},
+            }},
+            'recording_outcome': {'on': {
                 'ticket_outcome_recorded': {'target': 'capturing_delta', 'guard': {
                     'type': 'matchesTrace', 'params': {
                         'kind': 'effect', 'target': 'C69.native_write_outcome', 'outcome': 'recorded',

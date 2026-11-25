@@ -8,7 +8,8 @@ import subprocess
 import sys
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import formal_claim_fences
-from SPEC_ENGINE_C75.workflow_model__pub import compile_workflow, parse_workflow
+from SPEC_ENGINE_C75.workflow_model__pub import compile_workflow
+from SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C85.workflow_model__pub import parse_workflow
 
 _HERE = Path(__file__).resolve().parent
 _OBSERVABLE = {"trigger", "effect", "output"}

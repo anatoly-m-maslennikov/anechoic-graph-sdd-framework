@@ -9,8 +9,8 @@ context:
   template: manifest_node
 state:
   status: "active"
-  version: 1
-  updated_at: '2026-11-24T00:00:00+00:00'
+  version: 2
+  updated_at: "2026-11-25T19:21:20.513790+00:00"
 ---
 
 ## Summary
@@ -20,6 +20,10 @@ Declare Test Package
 ## Claim scope
 
 MODEL//ANECHOIC <+ Graph/Node//Artifact//SSOT//Realization/Structure/Package//Test Package
+
+## Semantics
+
+A Test Package folder name ends in `__tests`. Its members are tests.
 
 ## Formal Manifest
 

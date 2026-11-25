@@ -7,9 +7,9 @@ tier: 3
 context:
   lens: SWD
 state:
-  status: draft
+  status: "draft"
   version: 48
-  updated_at: 2026-11-04 18:25:15 +0400
+  updated_at: "2026-11-25T21:25:21.954641+00:00"
 ---
 ## Summary
 
@@ -25,9 +25,9 @@ Subject assignment for an Atom from its Claim **and** complete Markdown Main Con
 
 **to** assign an Atom's Subjects, the Author **must** perform **all** of:
 
-1. read the entire Markdown Main Content, including Summary, Scope, Claim, Details, other registered sections, nested headings, tables, examples, **and** reference labels. build an inventory of canonical Subject Target mentions with exact locations **and** full resolved paths. treat an Atom citation label rendered under `CA-M-444-CORE_META_MODEL-IMPLEMENTATION_METHOD--atom-claims-expose-their-meaning-conditions-and-consequences-clearly` as the referenced Atom's complete filename **without** its `.md` extension **or** directory path. under `CA-R-1280-CORE_META_MODEL-RULE--reference-every-prerequisite-subject-through-depends-on`, the label is readable reference evidence, **not** a Subject Target mention **or** Subject target, including **when** it occurs **in** the same sentence as Subject Target language; inventory a Subject Target **only** **when** surrounding prose independently uses it.
+1. read the entire Markdown Main Content, including Summary, Scope, Claim, Details, other registered sections, nested headings, tables, examples, **and** reference labels. build an inventory of canonical Subject Target mentions with exact locations **and** full resolved paths. treat an Atom citation label rendered under `CA-M-444-CORE_META_MODEL-IMPLEMENTATION_METHOD--atom-claims-expose-their-meaning-conditions-and-consequences-clearly` as the referenced Atom's complete filename **without** its `.md` extension **or** directory path. under `AN-S-2571@35 for legacy Subject carriers`, the label is readable reference evidence, **not** a Subject Target mention **or** Subject target, including **when** it occurs **in** the same sentence as Subject Target language; inventory a Subject Target **only** **when** surrounding prose independently uses it.
 
-   recognize an evidenced reusable Term through its authoritative Method Atom of Type Term Definition, including the lexical Term `Term` at `Term//Term`. `Evaluation` remains a Term **when** used inside an Evaluation Atom. use structural definitions, such as `CA-R-1318-CORE_META_MODEL-DEFINITION--define-term` for the Term kind and `CA-R-2514-CORE_META_MODEL-DEFINITION--define-evaluation-content-role` for the Evaluation Content Role, together with the usage context to resolve the referenced Entity target; those structural definitions do **not** replace the lexical meaning owner. self-reference alone does **not** remove a mentioned Subject Target from the inventory **or** establish a new Subject Target; a Term's spelling alone does **not** establish its Subject target. a source-admitted instance name after `//`, a selector literal, **or** syntax is **not** automatically a reusable Term. retain unresolved meaning as an explicit gap rather than treating it as ordinary wording.
+   recognize an evidenced reusable Term through its authoritative Method Atom of Type Term Definition, including the lexical Term `Term` at `Term//Term`. `Evaluation` remains a Term **when** used inside an Evaluation Atom. use structural definitions, such as `CA-R-1318-CORE_META_MODEL-DEFINITION--define-term` for the Term kind and `AN-S-2013@7` for the Evaluation Content Role, together with the usage context to resolve the referenced Entity target; those structural definitions do **not** replace the lexical meaning owner. self-reference alone does **not** remove a mentioned Subject Target from the inventory **or** establish a new Subject Target; a Term's spelling alone does **not** establish its Subject target. a source-admitted instance name after `//`, a selector literal, **or** syntax is **not** automatically a reusable Term. retain unresolved meaning as an explicit gap rather than treating it as ordinary wording.
 2. select the **`=1`** canonical Subject Target that the Claim governs **and** reference its narrowest exact Subject Path directly through GOVERNS.
 
    - for a Claim about entry **or** exit criteria of a Property, apply this same narrowest-target rule rather than substituting its wider bearer.

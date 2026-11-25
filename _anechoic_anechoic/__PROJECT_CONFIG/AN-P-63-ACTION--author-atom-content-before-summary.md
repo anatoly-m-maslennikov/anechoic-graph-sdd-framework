@@ -7,9 +7,9 @@ structure:
 context:
   template: action
 state:
-  status: active
+  status: "active"
   version: 16
-  updated_at: 2026-10-27 19:59:45 +0400
+  updated_at: "2026-11-25T22:24:06.380669+00:00"
 ---
 # Summary
 
@@ -22,7 +22,7 @@ Atom Content Authoring **means** the Action that takes an authorized authoring r
 1. for RMED, write Scope describing applicability, **then** write **=1** Claim within that Scope. for other Content Roles, write their primary contribution: Question, Concern, Objective, **or** Operation.
 2. write the remaining body sections under CA-D-479 **and** the applicable Method. keep Details within the primary contribution **and** its applicability; RMED Details support the Claim **without** changing Claim **or** Scope.
 3. review the primary contribution **and** its applicability against the completed remaining content. for RMED, review Scope **and** Claim together. **if** either needs changing, revise it explicitly within the authorized request **and** recheck the affected sections; never let Details silently change the contribution **or** applicability.
-4. derive Summary from the finalized primary contribution within its applicability **only after** that review. for RMED, summarize the Claim within Scope, **not** Scope alone. for an existing Atom identity, compare the needed Summary with its established value; **if** a change is needed, return replacement required under CA-R-1464 rather than mutating that identity.
+4. derive Summary from the finalized primary contribution within its applicability **only after** that review. for RMED, summarize the Claim within Scope, **not** Scope alone. for an existing Atom identity, compare the needed Summary with its established value; **if** a change is needed, return replacement required under AN-S-1604 rather than mutating that identity.
 5. return the candidate, its review findings, **and** ready, replacement required, **or** blocked outcome. unresolved inconsistency **or** unmet permission **or** confidence gates returns blocked, **not** a ready candidate.
 
 ## Details

@@ -33,6 +33,8 @@ A Workflow uses explicit one-target Atom Actions. For several targets, it execut
 
 ### Formal Claim
 
+These cases cover a Workflow that dispatches Atom Actions.
+
 ```python trace
 declare_trace_contract(
     action='run_tool_workflow',
@@ -55,8 +57,12 @@ declare_trace_contract(
 declare_trace_contract(
     action='run_tool_workflow',
     output='failed',
-    must_effect=(('action_stop', 'observed'), ('completed_effects', 'retained'), ('remaining_targets', 'untouched')),
-    must_precede=((('action_stop', 'observed'), ('completed_effects', 'retained')),
+    must_effect=(('workflow_owner', 'unique_owner_resolved'), ('actions', 'dispatched'),
+                 ('action_stop', 'observed'), ('completed_effects', 'retained'),
+                 ('remaining_targets', 'untouched')),
+    must_precede=((('workflow_owner', 'unique_owner_resolved'), ('actions', 'dispatched')),
+                  (('actions', 'dispatched'), ('action_stop', 'observed')),
+                  (('action_stop', 'observed'), ('completed_effects', 'retained')),
                   (('action_stop', 'observed'), ('remaining_targets', 'untouched'))),
 )
 ```

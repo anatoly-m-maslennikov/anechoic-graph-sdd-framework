@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from SPEC_ENGINE_C75.cli_delegation__pub import check_cli_child_dispatch
+from SPEC_ENGINE_C75.LAYER_5_DELEGATION_VERIFICATION_C89.cli_delegation__pub import check_cli_child_dispatch
 from test_cli_spec import _CONTRACT, _MANIFEST, _SOLUTION, _carrier
 
 

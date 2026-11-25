@@ -56,16 +56,20 @@ component_workflow(
             'executing': {'on': {
                 'lifecycle_operation_dispatched': {'target': 'responding', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'effect', 'target': 'lifecycle_dispatch', 'outcome': 'dispatched'}}},
-                'lifecycle_error': {'target': 'failed', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'output', 'outcome': 'failed'}}},
+                'lifecycle_error': {'target': 'reporting_error', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'native_lifecycle_failure', 'outcome': 'reported'}}},
             }},
             'responding': {'on': {
                 'lifecycle_result': {'target': 'reported', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'output', 'outcome': 'succeeded', 'detail': {
-                        'record_properties': ['outcome', 'file_effects'],
+                        'output_fields': ['outcome', 'file_effects'],
                         'stdout': 'native outcome and file effects on stdout',
                     }}}},
-                'lifecycle_error': {'target': 'failed', 'guard': {'type': 'matchesTrace', 'params':
+                'lifecycle_error': {'target': 'reporting_error', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'native_lifecycle_failure', 'outcome': 'reported'}}},
+            }},
+            'reporting_error': {'on': {
+                'lifecycle_failed': {'target': 'failed', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'output', 'outcome': 'failed'}}},
             }},
             'reported': {'type': 'final'},

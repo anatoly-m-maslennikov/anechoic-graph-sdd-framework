@@ -44,6 +44,7 @@ declare_entity(
                     },
                     'manifest_compiler_worker_run': {
                         'outcomes': {
+                            'failed': {'must_effect': [('C66', 'failed')]},
                             'completed': {'must_effect': [
                                 ('C66.worker_process', 'started'), ('C66.worker_process', 'reaped'),
                                 ('C66.worker_run', 'completed'),

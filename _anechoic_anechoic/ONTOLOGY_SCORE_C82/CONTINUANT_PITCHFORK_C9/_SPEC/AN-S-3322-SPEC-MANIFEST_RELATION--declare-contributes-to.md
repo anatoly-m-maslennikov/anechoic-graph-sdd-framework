@@ -9,8 +9,8 @@ context:
   template: manifest_relation
 state:
   status: "active"
-  version: 7
-  updated_at: "2026-11-25T16:00:38.169046+00:00"
+  version: 9
+  updated_at: "2026-11-25T20:47:36.974607+00:00"
 ---
 
 ## Summary
@@ -25,12 +25,16 @@ MODEL//ANECHOIC <+ Graph/Relation//CONTRIBUTES_TO
 
 ### Prose Claim
 
-An Atom contributes when it supplies guidance, design detail, or evidence
-that supports a specific claim in the target Atom. In the Contract chain,
+A Specification contributes by adding guidance, design detail, evidence, or
+a rule for a narrower case that supports a specific claim in the target. In the Contract chain,
 a Tier 2 or higher-numbered SPEC Atom contributes to a Tier 1 SPEC Atom
 by supporting its design or decision. The authored Relation points from
 the contributor to the supported Atom. Derive HAS_CONTRIBUTION for the
 same direct pair. The tier rule for this chain is an authoring rule.
+
+## Semantics
+
+Contribution identifies support for a claim. Verification establishes whether the claim is satisfied.
 
 ## Formal Manifest
 

@@ -9,8 +9,8 @@ context:
   template: manifest_node
 state:
   status: "active"
-  version: 1
-  updated_at: '2026-11-24T00:00:00+00:00'
+  version: 2
+  updated_at: "2026-11-25T19:32:44.108446+00:00"
 ---
 
 ## Summary
@@ -20,6 +20,10 @@ Declare File
 ## Claim scope
 
 MODEL//ANECHOIC <+ Carrier/File
+
+## Semantics
+
+A File represents content carried as bytes at a filesystem path.
 
 ## Formal Manifest
 

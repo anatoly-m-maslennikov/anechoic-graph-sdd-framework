@@ -9,8 +9,8 @@ context:
   template: manifest_relation
 state:
   status: "active"
-  version: 3
-  updated_at: "2026-11-25T16:00:38.176886+00:00"
+  version: 4
+  updated_at: "2026-11-25T20:33:55.439357+00:00"
 ---
 
 ## Summary
@@ -21,25 +21,21 @@ Declare ANSWERS
 
 MODEL//ANECHOIC <+ Graph/Relation//ANSWERS
 
-## Claim
+## Semantics
 
-### Prose Claim
-
-A Tier 0 Contract answers a Manifest by accepting a specific responsibility
-the Manifest assigns. The Contract states what the Component commits to
-deliver and what it requires from callers. The authored Relation points from
-the Contract to the Manifest. Derive IS_ANSWERED_BY for the same direct pair.
+The Contract takes on a responsibility assigned by the Component Manifest.
+It states what the Component delivers and what it requires from callers.
 
 ## Formal Manifest
 
 ```python anechoic-edsl
 # Anechoic Python eDSL
 
-from anechoic.model import Contract, Manifest, Relation
+from anechoic.model import ComponentManifest, Contract, Relation
 
 class Relation3362(Relation):
     name = 'ANSWERS'
     relation.inverse_alias = 'IS_ANSWERED_BY'
     relation.source_endpoint = {'level': 'instances', 'entity_paths': (Contract,)}
-    relation.target_endpoint = {'level': 'instances', 'entity_paths': (Manifest,)}
+    relation.target_endpoint = {'level': 'instances', 'entity_paths': (ComponentManifest,)}
 ```

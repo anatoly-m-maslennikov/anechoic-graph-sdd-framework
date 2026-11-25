@@ -9,8 +9,8 @@ context:
   template: manifest_node
 state:
   status: "active"
-  version: 1
-  updated_at: '2026-11-24T00:00:00+00:00'
+  version: 2
+  updated_at: "2026-11-25T22:52:51.365116+00:00"
 ---
 
 ## Summary
@@ -31,3 +31,7 @@ from anechoic.model import SSOT
 class Realization(SSOT):
     pass
 ```
+
+## Semantics
+
+Realization records what exists and how it behaves. Its files and declarations supply evidence for observed interfaces and dependencies. A derived view preserves the identity of those sources.

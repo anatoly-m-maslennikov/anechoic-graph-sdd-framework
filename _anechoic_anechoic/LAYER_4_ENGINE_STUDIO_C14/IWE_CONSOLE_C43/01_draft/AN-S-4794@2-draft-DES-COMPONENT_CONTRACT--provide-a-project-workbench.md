@@ -67,3 +67,11 @@ declare_trace_contract(
                   (('workbench_save_error', 'shown'), ('workbench_display', 'shown'))),
 )
 ```
+
+```python trace
+declare_trace_contract(
+    action='workbench_run_view',
+    output='failed',
+    must_effect=(('workbench_run_failure', 'reported'),),
+)
+```

@@ -9,8 +9,8 @@ context:
   template: manifest_relation
 state:
   status: "active"
-  version: 11
-  updated_at: "2026-11-25T16:00:37.706342+00:00"
+  version: 12
+  updated_at: "2026-11-25T19:22:36.160359+00:00"
 ---
 
 ## Summary
@@ -36,6 +36,7 @@ class Relation2712(Relation):
     name = 'IS_NARROWER_THAN'
     relation.source_endpoint = {'level': 'model_entities'}
     relation.target_endpoint = {'level': 'model_entities'}
+    relation.acyclic = True
     relation.inverse_alias = 'HAS_NARROWER'
     relation.reverse_written_alias = '/'
 ```

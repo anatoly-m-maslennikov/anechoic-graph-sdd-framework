@@ -22,7 +22,7 @@ Measure the size of code and the Spec it realizes. Use ownership and dependency 
 
 Delegate measuring code and Spec and reviewing Package boundaries to Code and Spec Metrics. Delegate checking implementation behavior against its formal Spec to Implementation Verification.
 
-This Component delegates implementation to its child Components. A child report alone does not establish complete coverage. Coverage criteria remain open; report unresolved coverage until both children have complete coverage evidence. Each report must arrive before its child coverage is confirmed.
+This Component groups C74 Implementation Verification and C76 Code and Spec Metrics. Each child owns its output and coverage. C73 has no combined report or separate execution entry point.
 
 ## Formal manifest
 
@@ -36,13 +36,7 @@ declare_entity(
         component_id='C73',
         name='Architecture Analysis',
         lens_whitelist=['DES', 'SPEC'],
-        boundaries={
-            'code': {'imports': []},
-            'io': {'server': {'report_architecture_analysis': {'outcomes': {'complete': {
-                'must_effect': [('file_and_spec_bindings', 'identified'), ('selected_cases', 'compared'),
-                                ('C76', 'complete'), ('C74', 'complete')],
-            }}}}},
-        },
+        boundaries={'code': {'imports': []}, 'io': {'server': {}}},
     ),
 )
 ```

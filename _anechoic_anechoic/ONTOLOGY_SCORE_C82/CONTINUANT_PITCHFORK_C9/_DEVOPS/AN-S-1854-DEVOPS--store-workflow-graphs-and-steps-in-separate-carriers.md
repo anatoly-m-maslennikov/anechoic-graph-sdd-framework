@@ -7,9 +7,9 @@ tier: 3
 context:
   lens: DevOps
 state:
-  status: active
-  version: 30
-  updated_at: '2026-11-11T17:45:31+04:00'
+  status: "active"
+  version: 31
+  updated_at: "2026-11-25T22:07:20.791198+00:00"
 ---
 ## Summary
 
@@ -34,4 +34,4 @@ a folder-backed Workflow **must** use **`=1`** Workflow Atom Markdown Carrier **
 - the Atom files retain the existing Atom filename, frontmatter, **and** main-content rules; the folder is a grouping Carrier, **not** another Workflow definition **or** owning Scope Unit.
 - grouping is optional: separately placed Workflow **and** Step Carriers remain permitted **when** their references resolve unambiguously. a carrier-only move does **not** redefine the graph **or** change carried Status.
 - **every** admitted Workflow **or** containing Step parent Status change requires the containment cascade under CA-R-1521: compose independent single-Atom Actions for the latest Revision of the Workflow's direct Steps and their direct leaf Substeps, or the Step's direct leaf Substeps, requesting the same Status under each Atom's own model. separately placed referenced Steps **and** Actions outside the Carrier tree are **not** cascade targets; older archived Revisions retain their exact bytes, Version **and** Status.
-- read each Step and Substep's Status from its own Markdown Carrier under CA-D-483; containing Status directories **or** parents **must not** override it. the cascade writes the changed latest Revisions; it **does not** infer execution order **or** execution inheritance.
+- read each Step and Substep's Status from its own Markdown Header under AN-S-3160; containing Status directories **or** parents **must not** override it. the cascade writes the changed latest Revisions; it **does not** infer execution order **or** execution inheritance.

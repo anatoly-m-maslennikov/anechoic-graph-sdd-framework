@@ -36,6 +36,8 @@ or a skipped required test.
 
 `zero` denotes process exit status 0. `nonzero` denotes any other process exit status.
 
+For a failed release test phase, record the phase failure.
+
 ### Formal Claim
 
 ```python cli
@@ -45,6 +47,38 @@ declare_cli_contract(
     runner='uv',
     path='LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/test_suite__pub.py',
     outcomes={'succeeded': 'zero', 'failed': 'nonzero'},
+)
+```
+
+
+```python trace
+declare_trace_contract(
+    action='run_release_test_phase', output='failed',
+    must_effect=(('C19', 'failed'),),
+)
+```
+
+```python trace
+declare_trace_contract(
+    action='run_release_test_phase', output='static_passed',
+    must_effect=(('static_checks', 'passed'), ('C19', 'passed')),
+    must_precede=((('static_checks', 'passed'), ('C19', 'passed')),),
+)
+```
+
+```python trace
+declare_trace_contract(
+    action='run_release_test_phase', output='functional_passed',
+    must_effect=(('host_functional_checks', 'passed'), ('C19', 'passed')),
+    must_precede=((('host_functional_checks', 'passed'), ('C19', 'passed')),),
+)
+```
+
+```python trace
+declare_trace_contract(
+    action='run_release_test_phase', output='image_passed',
+    must_effect=(('candidate_image_tests', 'passed'), ('candidate_canary', 'passed'), ('C19', 'passed')),
+    must_precede=((('candidate_image_tests', 'passed'), ('candidate_canary', 'passed')), (('candidate_canary', 'passed'), ('C19', 'passed'))),
 )
 ```
 

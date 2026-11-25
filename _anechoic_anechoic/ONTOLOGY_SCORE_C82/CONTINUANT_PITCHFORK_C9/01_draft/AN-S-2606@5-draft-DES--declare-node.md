@@ -7,9 +7,9 @@ tier: 3
 context:
   lens: DES
 state:
-  status: draft
+  status: "draft"
   version: 5
-  updated_at: 2026-11-05 16:33:24 +0400
+  updated_at: "2026-11-25T17:56:09.045363+00:00"
 ---
 
 ## Summary
@@ -20,7 +20,6 @@ Declare Node
 
 ### Prose Claim
 
-- Each Model Node and each of its Model Properties has exactly one outgoing IS_DECLARED_BY link to its canonical Requirement / Declaration Atom. Derive the link from a GOVERNS fact that identifies the canonical declaring Atom.
 - Each Node or its Properties allow only the explicitly admitted Relations, separately for Model entities and instances.
 - Each Property has exactly one bearer. Its bearer is a Node or a Property. A Node has no bearer.
 - Each Model Node or Property has at most one IS_PROPERTY_OF link.
@@ -47,7 +46,6 @@ declare_entity(
     entity_class=Node,
     model_relation_constraints={
         "IS_PROPERTY_OF": {"targets_per_source": 0},
-        "IS_DECLARED_BY": {"targets_per_source": 1},
         "NARROWER_THAN": {"target_entity_paths": ("Node",), "targets_per_source": Cardinality(minimum=0, maximum=None)},
         "HAS_NARROWER": {"target_entity_paths": ("Node",), "targets_per_source": Cardinality(minimum=0, maximum=None)},
         "HAS_PROPERTY": {"targets_per_source": Cardinality(minimum=0, maximum=None)},

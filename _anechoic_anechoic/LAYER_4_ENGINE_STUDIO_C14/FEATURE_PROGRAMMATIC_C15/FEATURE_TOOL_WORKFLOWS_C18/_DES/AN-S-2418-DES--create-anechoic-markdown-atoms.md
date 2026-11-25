@@ -7,9 +7,9 @@ tier: 3
 context:
   lens: DES
 state:
-  status: active
-  version: 29
-  updated_at: 2026-10-27 20:00:11 +0400
+  status: "active"
+  version: 30
+  updated_at: "2026-11-25T21:23:34.101360+00:00"
 ---
 ## Summary
 
@@ -26,7 +26,7 @@ ATOM_CREATE admission and creation of complete new Markdown Atom Carriers within
 the ATOM_CREATE Tool **must** provide admission **and** creation of complete new Markdown Atom Carriers within configured Project control-root Content Role locations:
 
 - accept one explicit logical CreateAtom request with complete admitted Atom content and owning Scope Unit; the Workflow decides admitted identity, metadata, initial Revision and ownership, then supplies the exact content and applicable schema and authority bindings to the connector. The connector maps the logical target to its private storage and mechanically checks supplied placement and preconditions without allocating identity or deciding lifecycle policy.
-- reject destination collisions **and** reused assigned Atom IDs, including IDs retained **only** **in** historical authority. identity admission follows CA-D-508; an unassigned Draft does **not** acquire an invented ID.
+- reject destination collisions **and** reused assigned Atom IDs, including IDs retained **only** **in** historical authority. the legacy sealed route follows AN-S-1783@19; an unassigned Draft does **not** acquire an invented ID.
 - create **`=1`** Atom per independently admitted Action. A several-Atom Workflow stops at the first failed Action, retains completed creations and leaves the remainder untouched. Retain each one-Atom Action's complete admission, preflight and storage-effect safeguards; do not promise a cross-Atom all-or-nothing effect.
 - permit generic Carrier-construction mechanics while retaining responsibility for Atom admission, identity, Revision, one-Atom storage-effect safeguards, **and** effect semantics.
 - default **to** a mutation-free dry run. accept `--apply` **only** through authorized Project-local MCP delegation with a sealed Initiative action envelope.

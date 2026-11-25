@@ -6,7 +6,8 @@ import shutil
 import subprocess
 import unittest
 
-from SPEC_ENGINE_C75.workflow_model__pub import compile_workflow, parse_workflow
+from SPEC_ENGINE_C75.workflow_model__pub import compile_workflow
+from SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C85.workflow_model__pub import parse_workflow
 
 LEAN = os.environ.get('LEAN_BIN') or shutil.which('lean')
 SCRIPT = Path(__file__).resolve().parents[1] / 'WorkflowTrace.lean'
@@ -93,6 +94,12 @@ class WorkflowCompilerTests(unittest.TestCase):
             ({'kind': 'output', 'detail': {'a': {'x': 1}}},
              {'kind': 'output', 'detail': {'a': {'x': 1, 'y': 2}}}, False),
             ({'kind': 'output', 'detail': {'a': True}}, {'kind': 'output', 'detail': {'a': 1}}, False),
+            ({'kind': 'output', 'detail': {'a': {'at_most': 45}}}, {'kind': 'output', 'detail': {'a': 45}}, True),
+            ({'kind': 'output', 'detail': {'a': 45.0}}, {'kind': 'output', 'detail': {'a': {'at_most': 45}}}, True),
+            ({'kind': 'output', 'detail': {'a': {'at_most': 45}}}, {'kind': 'output', 'detail': {'a': 46}}, False),
+            ({'kind': 'output', 'detail': {'a': {'at_most': 45}}}, {'kind': 'output', 'detail': {'a': True}}, False),
+            ({'kind': 'output', 'detail': {'a': {'at_most': 45}}},
+             {'kind': 'output', 'detail': {'a': {'at_most': 2}}}, True),
         ]
         for a, b, overlap in pairs:
             c = machine()
@@ -117,6 +124,20 @@ class WorkflowTraceTests(unittest.TestCase):
         run = self.run_case(value)
         self.assertEqual(run.returncode, 0, run.stderr)
         return json.loads(run.stdout)
+
+    def test_upper_bound_detail(self):
+        case = sample()
+        case['model']['states'][0]['transitions'][0]['expect']['detail'] = {
+            'rows': {'at_most': 45}, 'serialized_bytes': {'at_most': 300}}
+        for detail, expected in [({'rows': 45, 'serialized_bytes': 300}, 'matched'),
+                                 ({'rows': {'at_most': 20}, 'serialized_bytes': 299}, 'matched'),
+                                 ({'rows': 46, 'serialized_bytes': 300}, 'different'),
+                                 ({'rows': True, 'serialized_bytes': 300}, 'different'),
+                                 ({'rows': 45}, 'different'),
+                                 ({'rows': {'at_most': 46}, 'serialized_bytes': 300}, 'different')]:
+            case['events'][0]['detail'] = detail
+            with self.subTest(detail=detail):
+                self.assertEqual(self.result(case)['status'], expected)
 
     def test_match_and_mismatches(self):
         self.assertEqual(self.result(sample())['status'], 'matched')

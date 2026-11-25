@@ -58,7 +58,7 @@ component_workflow(
                 'interrupted': {'target': 'interrupted', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'output', 'outcome': 'interrupted', 'detail': {'exit_code': 130}}}},
                 'git_refs_and_version_resolved': {'target': 'selecting', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'effect', 'target': 'C64'}}},
+                    {'kind': 'effect', 'target': 'git_base_head', 'outcome': 'resolved'}}},
                 'comparison_failed': {'target': 'failed', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'output', 'outcome': 'failed', 'detail': {'exit_code': 1}}}},
             }},
@@ -67,10 +67,38 @@ component_workflow(
                     {'kind': 'output', 'outcome': 'interrupted', 'detail': {'exit_code': 130}}}},
                 'pinned_ticket_evidence_read': {'target': 'reporting', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'effect', 'target': 'C64'}}},
-                'markdown_drafts_returned': {'target': 'completed', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'output', 'outcome': 'completed', 'detail': {'exit_code': 0}}}},
+                'content_draft_pins_matched': {'target': 'rendering_drafts', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'content_draft_commit_pins', 'outcome': 'matched'}}},
                 'content_draft_invalid': {'target': 'failed', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'output', 'outcome': 'failed', 'detail': {'exit_code': 1}}}},
+            }},
+            'rendering_drafts': {'on': {
+                'drafts_rendered': {'target': 'rendering_description', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'release_drafts', 'outcome': 'rendered'}}},
+                'rendering_failed': {'target': 'failed', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'output', 'outcome': 'failed', 'detail': {'exit_code': 1}}}},
+                'interrupted': {'target': 'interrupted', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'output', 'outcome': 'interrupted', 'detail': {'exit_code': 130}}}},
+            }},
+            'rendering_description': {'on': {
+                'description_returned': {'target': 'rendering_history', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'pull_request_description', 'outcome': 'returned'}}},
+                'rendering_failed': {'target': 'failed', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'output', 'outcome': 'failed', 'detail': {'exit_code': 1}}}},
+                'interrupted': {'target': 'interrupted', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'output', 'outcome': 'interrupted', 'detail': {'exit_code': 130}}}},
+            }},
+            'rendering_history': {'on': {
+                'history_returned': {'target': 'returning_drafts', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'version_history', 'outcome': 'returned'}}},
+                'rendering_failed': {'target': 'failed', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'output', 'outcome': 'failed', 'detail': {'exit_code': 1}}}},
+                'interrupted': {'target': 'interrupted', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'output', 'outcome': 'interrupted', 'detail': {'exit_code': 130}}}},
+            }},
+            'returning_drafts': {'on': {
+                'markdown_drafts_returned': {'target': 'completed', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'output', 'outcome': 'completed', 'detail': {'exit_code': 0}}}},
             }},
             'reporting': {'on': {
                 'interrupted': {'target': 'interrupted', 'guard': {'type': 'matchesTrace', 'params':

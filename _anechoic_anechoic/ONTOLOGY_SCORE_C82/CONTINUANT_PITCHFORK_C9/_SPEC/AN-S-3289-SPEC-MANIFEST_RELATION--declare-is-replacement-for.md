@@ -9,8 +9,8 @@ context:
   template: manifest_relation
 state:
   status: "active"
-  version: 4
-  updated_at: "2026-11-25T17:37:43.183587+00:00"
+  version: 5
+  updated_at: "2026-11-25T22:59:51.301708+00:00"
 ---
 
 ## Summary
@@ -25,10 +25,6 @@ MODEL//ANECHOIC <+ Graph/Relation//IS_REPLACEMENT_FOR
 
 This Relation records that the successor supersedes a different predecessor Atom's contribution.
 One successor can replace several predecessors.
-
-## References
-
-AN-S-2733.
 
 ## Formal Manifest
 

@@ -66,6 +66,30 @@ class ImageModelStageTests(unittest.TestCase):
                 docker.assert_called_once()
 
 
+    def test_fallback_checks_previous_image_admission(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            project = Path(temporary)
+            details = [{"Id": IMAGE_ID, "Os": "linux",
+                        "Config": {"Labels": {"org.anechoic.runtime.schema": "1"}}}]
+            admitted = subprocess.CompletedProcess([], 0, json.dumps(details), "")
+            failed = subprocess.CompletedProcess([], 1, "", "")
+            with (patch.object(stage, "_run", return_value="fingerprint") as compile_model,
+                  patch.object(stage, "bounded_run", return_value=admitted) as docker):
+                self.assertEqual(stage.stage_model(project, project, 5, None), "fingerprint")
+                self.assertEqual(stage.stage_model(project, project, 5, IMAGE_ID), "fingerprint")
+                docker.assert_called_once()
+                self.assertEqual(compile_model.call_count, 2)
+                docker.return_value = failed
+                with self.assertRaisesRegex(ValueError, "Previous ready image is unavailable"):
+                    stage.stage_model(project, project, 5, IMAGE_ID)
+                details[0]["Config"]["Labels"] = {}
+                docker.return_value = subprocess.CompletedProcess([], 0, json.dumps(details), "")
+                with self.assertRaisesRegex(ValueError, "not an admitted runtime image"):
+                    stage.stage_model(project, project, 5, IMAGE_ID)
+                with self.assertRaisesRegex(ValueError, "immutable image ID"):
+                    stage.stage_model(project, project, 5, "")
+                self.assertEqual(compile_model.call_count, 2)
+
     def test_staging_reads_spec_and_rejects_duplicate_filenames(self):
         with tempfile.TemporaryDirectory() as temporary:
             project = Path(temporary).resolve()
@@ -99,6 +123,27 @@ class ImageModelStageTests(unittest.TestCase):
 
             with patch.object(stage, '_run', side_effect=compile_model):
                 self.assertEqual(stage.stage_model(project, project, 5, None), 'fingerprint')
+
+    def test_staging_accepts_matching_previous_selection(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            project = Path(temporary).resolve()
+            (project / ".anechoic_tmp").mkdir()
+            source = project / stage.ONTOLOGY
+            source.mkdir()
+            (source / "claim.md").write_bytes(b"claim")
+
+            def compile_model(command, deadline):
+                (Path(command[-1]) / "model.json").write_text(
+                    json.dumps({"declarations": [["claim.md@1", None, None]]}))
+                return "fingerprint"
+
+            selected = [["claim.md", stage.sha256(b"claim").hexdigest()]]
+            with (patch.object(stage, "_run", side_effect=compile_model),
+                  patch.object(stage, "previous_claims", return_value=selected) as verify):
+                self.assertEqual(stage.stage_model(project, project, 5, IMAGE_ID), "fingerprint")
+                verify.assert_called_once()
+            with self.assertRaisesRegex(ValueError, "immutable image ID"):
+                stage.stage_model(project, project, 5, "")
 
     def test_staging_rejects_changed_sources_and_selector_mismatch(self):
         with tempfile.TemporaryDirectory() as temporary:

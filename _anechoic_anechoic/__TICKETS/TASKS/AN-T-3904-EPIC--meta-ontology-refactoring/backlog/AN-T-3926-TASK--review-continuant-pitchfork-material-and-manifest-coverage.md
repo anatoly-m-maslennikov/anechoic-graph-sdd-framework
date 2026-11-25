@@ -10,7 +10,7 @@ context:
 state:
   status: "backlog"
   version: 1
-  updated_at: "2026-11-25T17:37:43.187747+00:00"
+  updated_at: "2026-11-25T23:20:08.775578+00:00"
 
 ---
 ## Summary
@@ -30,6 +30,8 @@ Find missing Continuant Manifests. Record each needed Node, Property, or Relatio
 Review former R rules against the active Model Manifests. Carry forward rules by their owning Manifest. Check consumers before retiring superseded Specs.
 
 ## Decisions
+
+Retire installed Extensions. Project Config Custom Model is the sole source of Project-specific Model declarations.
 
 Properties name the types they accept. Atom Relations keeps one authored entry per Relation name with distinct Atom references.
 

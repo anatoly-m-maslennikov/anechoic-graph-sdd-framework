@@ -47,19 +47,30 @@ component_workflow(
                 'invalid_target': {'target': 'reporting_invalid_target', 'guard': {'type': 'matchesTrace', 'params': {'kind': 'effect', 'target': 'logical_target', 'outcome': 'invalid_cardinality'}}},
             }},
             'selecting': {'on': {
-                'target_selected': {'target': 'checking', 'guard': {'type': 'matchesTrace', 'params': {'kind': 'effect', 'target': 'logical_target', 'outcome': 'selected'}}},
+                'target_selected': {'target': 'checking', 'guard': {'type': 'matchesTrace', 'params': {'kind': 'effect', 'target': 'selected_atom_value', 'outcome': 'read'}}},
                 'selection_failed': {'target': 'reporting_failure', 'guard': {'type': 'matchesTrace', 'params': {'kind': 'effect', 'target': 'logical_target', 'outcome': 'failed'}}},
                 'selection_uncertain': {'target': 'reporting_uncertainty', 'guard': {'type': 'matchesTrace', 'params': {'kind': 'effect', 'target': 'logical_target', 'outcome': 'uncertain'}}},
             }},
             'checking': {'on': {
-                'state_checked': {'target': 'changing', 'guard': {'type': 'matchesTrace', 'params': {'kind': 'effect', 'target': 'expected_state', 'outcome': 'checked'}}},
+                'state_checked': {'target': 'preparing_change', 'guard': {'type': 'matchesTrace', 'params': {'kind': 'effect', 'target': 'expected_state', 'outcome': 'checked'}}},
+                'state_mismatch': {'target': 'reporting_stale', 'guard': {'type': 'matchesTrace',
+                    'params': {'kind': 'effect', 'target': 'expected_state', 'outcome': 'mismatch'}}},
                 'check_failed': {'target': 'reporting_failure', 'guard': {'type': 'matchesTrace', 'params': {'kind': 'effect', 'target': 'expected_state', 'outcome': 'failed'}}},
                 'check_uncertain': {'target': 'reporting_uncertainty', 'guard': {'type': 'matchesTrace', 'params': {'kind': 'effect', 'target': 'expected_state', 'outcome': 'uncertain'}}},
             }},
+            'preparing_change': {'on': {
+                'old_and_new_supplied': {'target': 'changing', 'guard': {'type': 'matchesTrace',
+                    'params': {'kind': 'effect', 'target': 'logical_value_delta',
+                               'outcome': 'complete_old_and_new_supplied'}}},
+            }},
             'changing': {'on': {
-                'change_completed': {'target': 'reporting', 'guard': {'type': 'matchesTrace', 'params': {'kind': 'effect', 'target': 'change', 'outcome': 'completed'}}},
+                'change_completed': {'target': 'preserving_unselected', 'guard': {'type': 'matchesTrace', 'params': {'kind': 'effect', 'target': 'change', 'outcome': 'completed'}}},
                 'change_failed': {'target': 'reporting_failure', 'guard': {'type': 'matchesTrace', 'params': {'kind': 'effect', 'target': 'change', 'outcome': 'failed'}}},
                 'change_uncertain': {'target': 'reporting_uncertainty', 'guard': {'type': 'matchesTrace', 'params': {'kind': 'effect', 'target': 'change', 'outcome': 'uncertain'}}},
+            }},
+            'preserving_unselected': {'on': {
+                'unselected_values_preserved': {'target': 'reporting', 'guard': {'type': 'matchesTrace',
+                    'params': {'kind': 'effect', 'target': 'unselected_content', 'outcome': 'preserved'}}},
             }},
             'reporting': {'on': {
                 'change_reported': {'target': 'completed', 'guard': {'type': 'matchesTrace', 'params': {'kind': 'output', 'outcome': 'change_reported'}}},
@@ -67,10 +78,20 @@ component_workflow(
             'reporting_invalid_target': {'on': {
                 'invalid_target_rejected': {'target': 'stopped', 'guard': {'type': 'matchesTrace', 'params': {'kind': 'output', 'outcome': 'invalid_target_rejected'}}},
             }},
+            'reporting_stale': {'on': {
+                'stale_precondition_rejected': {'target': 'stopped', 'guard': {'type': 'matchesTrace',
+                    'params': {'kind': 'output', 'outcome': 'stale_precondition_rejected'}}},
+            }},
             'reporting_failure': {'on': {
+                'failure_recorded': {'target': 'failure_output', 'guard': {'type': 'matchesTrace', 'params': {'kind': 'effect', 'target': 'replacement_report', 'outcome': 'failure'}}},
+            }},
+            'failure_output': {'on': {
                 'failure_reported': {'target': 'stopped', 'guard': {'type': 'matchesTrace', 'params': {'kind': 'output', 'outcome': 'failure_reported'}}},
             }},
             'reporting_uncertainty': {'on': {
+                'uncertainty_recorded': {'target': 'uncertainty_output', 'guard': {'type': 'matchesTrace', 'params': {'kind': 'effect', 'target': 'replacement_report', 'outcome': 'uncertainty'}}},
+            }},
+            'uncertainty_output': {'on': {
                 'uncertainty_reported': {'target': 'stopped', 'guard': {'type': 'matchesTrace', 'params': {'kind': 'output', 'outcome': 'uncertainty_reported'}}},
             }},
             'completed': {'type': 'final'},

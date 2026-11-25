@@ -9,8 +9,8 @@ context:
   template: manifest_node
 state:
   status: "active"
-  version: 1
-  updated_at: '2026-11-24T00:00:00+00:00'
+  version: 2
+  updated_at: "2026-11-25T17:50:12.189204+00:00"
 ---
 
 ## Summary
@@ -31,3 +31,7 @@ from anechoic.model import Prescribed
 class AtomCompanionContainer(Prescribed):
     pass
 ```
+
+## Semantics
+
+The companion folder sits beside its owning Atom’s Carrier. Its name is the Atom’s full filename without `.md`. The folder provides the location for the Atom’s children.

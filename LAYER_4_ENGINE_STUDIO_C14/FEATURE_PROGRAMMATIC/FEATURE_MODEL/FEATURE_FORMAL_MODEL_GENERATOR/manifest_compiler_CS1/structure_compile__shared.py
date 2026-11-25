@@ -11,6 +11,7 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.atom_reference__pub import 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import native_header_view
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import select_manifest_carriers, manifest_inputs, manifest_state_fields
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_read__pub import parse_carrier
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.project_manifest__pub import manifest_summary_fields
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import CEILINGS, ReadContext, open_regular
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.component_seed_manifest__pub import read_component_seed_manifest
@@ -52,10 +53,12 @@ def _component_inputs(path, carrier, parent, prefix):
     return {"atom_id": atom, "ref_id": derive_atom_ref(atom, version, state["status"]), "version": version, "tier": context["tier"], **fields}
 
 
-def _validation_fields(fields, carrier, model):
-    if not model.requires_atom_state:
-        return fields
-    return fields | manifest_state_fields(carrier, include_header=model.requires_atom_header)
+def _validation_fields(fields, carrier, model, name):
+    if model.requires_atom_state:
+        fields = fields | manifest_state_fields(carrier, include_header=model.requires_atom_header)
+    if getattr(model, 'declares_summary', lambda _name: False)(name):
+        fields = fields | manifest_summary_fields(carrier, use_title=name == 'Component Seed Manifest')
+    return fields
 
 
 def _record_carrier(path, reader, directory_fd, parent, project_fields, model, control, atoms, packages, components, pending, child_dirs):
@@ -70,7 +73,7 @@ def _record_carrier(path, reader, directory_fd, parent, project_fields, model, c
             atom, package_id = fields["atom_id"], fields["component_seed_id"]
             if atom in atoms or package_id in packages:
                 raise ValueError(f"Duplicate Component Seed or Atom ID: {path}")
-            model.validate_component_seed_manifest(_validation_fields(fields, carrier, model), parent)
+            model.validate_component_seed_manifest(_validation_fields(fields, carrier, model, 'Component Seed Manifest'), parent)
             atoms.add(atom)
             packages[package_id] = {
                 "component": parent, "ref": fields["ref_id"], "fields": fields,
@@ -86,7 +89,7 @@ def _record_carrier(path, reader, directory_fd, parent, project_fields, model, c
     atom, cid = fields["atom_id"], fields.get("component_id")
     if not isinstance(cid, str) or not re.fullmatch(r'C[0-9]+', cid) or cid == 'C00' or cid in components or atom in atoms:
         raise ValueError(f'Duplicate or invalid Component or Atom ID: {path}')
-    model.validate_component_manifest(_validation_fields(fields, carrier, model), parent)
+    model.validate_component_manifest(_validation_fields(fields, carrier, model, 'Component Manifest'), parent)
     components[cid] = {'parent': parent, 'ref': fields['ref_id'], 'sha256': reader.fingerprints[str(path)], 'fields': fields, 'source_path': path.relative_to(control).as_posix()}
     atoms.add(atom)
     if cid in child_dirs:

@@ -14,12 +14,16 @@ _REVIEWED_CHECKS = {
     "check_component_manifest": "ae53cc8bacccac9d36d5a2d5b40f1a83e723f0ca903bc445e0f8d1e219d39c65",
     "check_purpose": "a080c8a08f9b2f066992045de8183f532eb0aa6fb1dc566e746bc3bed2701a3b",
     "check_contract": "087afdc97f4a8add78336871fbf1f3698718b97200fad1518f96ef8c20a72007",
-    "check_component_seed_manifest": "78cb8f9712a733bfefc74ede375a671b9c7a70635ab972759397725e283a5752",
+    "check_component_seed_manifest": "ef56efe0ba469a4043f7d8b87ea4de5752dc5775c29a6b081656b9afcc82c6e5",
 }
+_PRIOR_SEED_CHECK = "78cb8f9712a733bfefc74ede375a671b9c7a70635ab972759397725e283a5752"
 
 
-def reviewed_claim_sha256(name: str) -> str:
-    return _REVIEWED_CHECKS[name]
+def is_reviewed_claim(name: str, claim: str) -> bool:
+    digest = sha256(claim.encode()).hexdigest()
+    return digest == _REVIEWED_CHECKS.get(name) or (
+        name == "check_component_seed_manifest" and digest == _PRIOR_SEED_CHECK
+    )
 
 
 def normalize_reviewed_claim(claim: str) -> str:
@@ -47,7 +51,7 @@ class BoundNativeModel:
         self._checks = {}
         seen = set()
         for parameter_type, name, subject, original in bindings["checks"]:
-            if name in seen or name not in _REVIEWED_CHECKS or sha256(original.encode()).hexdigest() != _REVIEWED_CHECKS[name]:
+            if name in seen or not is_reviewed_claim(name, original):
                 raise ValueError(f"{subject}: Claim differs from reviewed source")
             claim = normalize_reviewed_claim(original)
             check = parse_native_model_claim(claim).get("instance_check")
@@ -100,6 +104,9 @@ class BoundNativeModel:
         ticket = self._types.get("Ticket Atom")
         label = getattr(ticket, "__dataclass_fields__", {}).get("label")
         return tuple(label.metadata.get("allowed_values", ())) if label is not None else ()
+
+    def declares_summary(self, name):
+        return "summary" in self._types[name].__dataclass_fields__
 
     def validate_manifest(self, fields, component_id):
         if component_id != "C00":

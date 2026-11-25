@@ -56,32 +56,32 @@ component_workflow(
                     {'kind': 'effect', 'target': 'C21.view_run.query_id', 'outcome': 'returned',
                      'detail': {'component': 'C21', 'action': 'workbench_view_run',
                                 'output': 'partial'}}}},
-                'project_run_failed': {'target': 'failed', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'output', 'outcome': 'failed'}}},
+                'project_run_failed': {'target': 'reporting_error', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'workbench_run', 'outcome': 'failed'}}},
             }},
             'partial_save_error': {'on': {
                 'project_save_error_returned': {'target': 'showing_partial_save_error', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'effect', 'target': 'C21.view_run.save_error', 'outcome': 'returned',
                      'detail': {'component': 'C21', 'action': 'workbench_view_run',
                                 'output': 'partial'}}}},
-                'project_run_failed': {'target': 'failed', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'output', 'outcome': 'failed'}}},
+                'project_run_failed': {'target': 'reporting_error', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'workbench_run', 'outcome': 'failed'}}},
             }},
             'showing_partial_save_error': {'on': {
                 'partial_save_error_displayed': {'target': 'partial_displaying', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'effect', 'target': 'workbench_save_error', 'outcome': 'shown',
                      'detail': {'component': 'C46', 'action': 'workbench_frontend_run_view',
                                 'output': 'partial'}}}},
-                'partial_save_error_failed': {'target': 'failed', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'output', 'outcome': 'failed'}}},
+                'partial_save_error_failed': {'target': 'reporting_error', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'workbench_run', 'outcome': 'failed'}}},
             }},
             'partial_displaying': {'on': {
                 'partial_result_displayed': {'target': 'partial_displayed', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'effect', 'target': 'workbench_display', 'outcome': 'shown',
                      'detail': {'component': 'C46', 'action': 'workbench_frontend_run_view',
                                 'output': 'partial'}}}},
-                'partial_display_failed': {'target': 'failed', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'output', 'outcome': 'failed'}}},
+                'partial_display_failed': {'target': 'reporting_error', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'workbench_run', 'outcome': 'failed'}}},
             }},
             'partial_displayed': {'on': {
                 'run_partial': {'target': 'partial', 'guard': {'type': 'matchesTrace', 'params':
@@ -92,8 +92,8 @@ component_workflow(
                     {'kind': 'effect', 'target': 'workbench_display', 'outcome': 'shown',
                      'detail': {'component': 'C46', 'action': 'workbench_frontend_run_view',
                                 'output': 'succeeded'}}}},
-                'display_failed': {'target': 'failed', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'output', 'outcome': 'failed'}}},
+                'display_failed': {'target': 'reporting_error', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'workbench_run', 'outcome': 'failed'}}},
             }},
             'displayed': {'on': {
                 'run_completed': {'target': 'succeeded', 'guard': {'type': 'matchesTrace', 'params':
@@ -101,6 +101,14 @@ component_workflow(
             }},
             'partial': {'type': 'final'},
             'succeeded': {'type': 'final'},
+            'reporting_error': {'on': {
+                'run_error_reported': {'target': 'finishing_failure', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'workbench_run_failure', 'outcome': 'reported'}}},
+            }},
+            'finishing_failure': {'on': {
+                'failure_reported': {'target': 'failed', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'output', 'outcome': 'failed'}}},
+            }},
             'failed': {'type': 'final'},
         },
     },

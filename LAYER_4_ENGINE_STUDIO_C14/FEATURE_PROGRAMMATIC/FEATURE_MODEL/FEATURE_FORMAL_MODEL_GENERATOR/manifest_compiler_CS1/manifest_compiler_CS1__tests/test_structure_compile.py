@@ -12,6 +12,8 @@ ROOT = Path(__file__).resolve().parents[6]
 from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.manifest_compiler_CS1 import structure_compile__shared as compiler  # noqa: E402
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import canonical_native_header, native_header_view  # noqa: E402
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_read__pub import parse_carrier  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.project_manifest__pub import manifest_summary_fields  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.native_project_selection import resolve_native_project  # noqa: E402
 
 CONTROL = ROOT / '_anechoic_anechoic'
 if (ROOT.parent / 'native-control').is_dir():
@@ -41,6 +43,34 @@ class Model:
 
 
 class StructureTests(unittest.TestCase):
+    def test_project_summary_follows_model_declaration(self):
+        from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.native_manifest_model import load_native_model
+        model = load_native_model()
+        def validate(fields, parent):
+            self.assertEqual('Declare Anechoic', fields.pop('summary'))
+            return model.validate_manifest(fields, parent)
+        resolve_native_project(ROOT, CONTROL.name, validate_manifest=validate, require_manifest_summary=True)
+        resolve_native_project(ROOT, CONTROL.name, validate_manifest=model.validate_manifest)
+        self.assertEqual({}, manifest_summary_fields(SimpleNamespace(body='## Claim\n\nText\n')))
+        with self.assertRaisesRegex(ValueError, 'duplicate Summary'):
+            manifest_summary_fields(SimpleNamespace(body='## Summary\n\nOne\n\n## Summary\n\nTwo\n'))
+
+    def test_component_summary_follows_model_declaration(self):
+        carrier = SimpleNamespace(body='## Summary\n\nAuthored summary.\n', metadata={})
+        model = SimpleNamespace(requires_atom_state=False, declares_summary=lambda name: name == 'Component Manifest')
+        self.assertEqual({'summary': 'Authored summary.'},
+                         compiler._validation_fields({}, carrier, model, 'Component Manifest'))
+        self.assertEqual({}, compiler._validation_fields({}, carrier, model, 'Component Seed Manifest'))
+
+    def test_seed_title_supplies_summary_only_for_declaring_model(self):
+        model = SimpleNamespace(requires_atom_state=False, declares_summary=lambda _: True)
+        carrier = SimpleNamespace(body='# Manifest Build\n\n## Purpose\n\nBuild.\n', metadata={})
+        self.assertEqual({'summary': 'Manifest Build'},
+                         compiler._validation_fields({}, carrier, model, 'Component Seed Manifest'))
+        for body in ('## Purpose\n\nBuild.\n', '# One\n\n# Two\n'):
+            with self.assertRaisesRegex(ValueError, 'requires one title'):
+                compiler._validation_fields({}, SimpleNamespace(body=body, metadata={}), model, 'Component Seed Manifest')
+
     def test_live_sources(self):
         result = compiler.compile_structure(selection(CONTROL), Model())
         self.assertTrue({'C14', 'C59', 'C62'} <= result['components'].keys())

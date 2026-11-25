@@ -9,18 +9,16 @@ context:
   template: manifest_property
 state:
   status: "active"
-  version: 8
-  updated_at: "2026-11-25T16:00:37.654070+00:00"
+  version: 9
+  updated_at: "2026-11-25T19:46:35.615401+00:00"
 ---
 ## Summary
 
 Declare Atom.Status
 
-## Claim
+## Semantics
 
-### Prose Claim
-
-A Status with a dedicated folder has one integer Status Order Number from 0 through 999. Order numbers are distinct across Status values. Declare each number once, including for a Status admitted by several Roles. Active uses its Container's base directory. AN-S-3160 specifies the YAML representation.
+Status records an Atom revision's lifecycle state. The Atom Family supplies its allowed values. AN-S-3160 defines the Carrier representation.
 
 ## Formal Manifest
 

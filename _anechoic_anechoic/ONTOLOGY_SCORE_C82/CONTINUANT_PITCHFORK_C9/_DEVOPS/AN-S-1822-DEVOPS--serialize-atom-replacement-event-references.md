@@ -7,9 +7,9 @@ tier: 3
 context:
   lens: DevOps
 state:
-  status: active
-  version: 26
-  updated_at: 2026-11-03 23:25:51 +0400
+  status: "active"
+  version: 28
+  updated_at: "2026-11-25T22:00:44.064335+00:00"
 ---
 ## Summary
 
@@ -29,4 +29,4 @@ the Main Content of a Journal Carrier **must** preserve the actually supplied pr
 - do **not** look up an earlier Journal Event Record, require a predecessor chain, compute a digest, validate the replacement **or** fabricate a baseline **to** append these observations.
 - absence of replacement references does **not** establish whether the action was a replacement. do **not** infer missing identities, successors **or** historical facts.
 - existing encoded Event Record representations remain readable **without** rewriting their fields, selected representation **or** observed values. legacy **or** nonconforming values remain observations, **not** certified replacements.
-- actual source replacement, exact predecessor history **and** successor correctness remain independently governed by CA-R-807 **and** CA-E-462. Journal Carrier append **or** read grants no source-effect permission **and** proves none of those conditions.
+- actual source replacement, exact predecessor history **and** successor correctness remain independently governed by AN-S-1846. Journal Carrier append **or** read grants no source-effect permission **and** proves none of those conditions.

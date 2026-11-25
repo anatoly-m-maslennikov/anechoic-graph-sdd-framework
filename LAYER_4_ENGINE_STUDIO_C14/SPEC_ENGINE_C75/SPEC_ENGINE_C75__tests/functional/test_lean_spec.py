@@ -4,7 +4,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from SPEC_ENGINE_C75.lean_spec__pub import compile_lean
+from SPEC_ENGINE_C75.LAYER_3_LEAN_TRANSLATOR_C84.lean_spec__pub import compile_lean as emit_lean
+from SPEC_ENGINE_C75.LAYER_3_MERMAID_RENDERER_C87.solution_diagram__pub import render_solution
 
 
 _CONTRACT = """declare_contract(operation='POST /tools', outcomes={
@@ -17,9 +18,14 @@ _SOLUTION = """component_workflow(component='C45', action='invoke', machine={
         'done': {'type': 'final'}}})"""
 
 
+def compile_lean(model):
+    compiled = emit_lean(model)
+    return {**compiled, 'mermaid': render_solution(model, compiled['claims'].get('solution'))}
+
+
 class LeanSpecTests(unittest.TestCase):
     def test_tool_contract_and_status_trace_keep_separate_operations(self):
-        from SPEC_ENGINE_C75.tool_api_spec__pub import _tool_contract, _tool_solution
+        from SPEC_ENGINE_C75.LAYER_4_SPEC_COMPARISON_C88.tool_api_spec__pub import _tool_contract, _tool_solution
 
         model = self._model()
         model['contract']['claims'].append(('python trace',

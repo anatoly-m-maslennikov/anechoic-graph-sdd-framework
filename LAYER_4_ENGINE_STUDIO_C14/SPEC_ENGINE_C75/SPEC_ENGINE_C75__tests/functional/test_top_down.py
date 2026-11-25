@@ -3,7 +3,7 @@ import shutil
 import unittest
 from unittest.mock import patch
 
-from SPEC_ENGINE_C75.top_down__pub import compare_obligations
+from SPEC_ENGINE_C75.LAYER_4_SPEC_COMPARISON_C88.top_down__pub import compare_obligations
 
 
 class TopDownTests(unittest.TestCase):

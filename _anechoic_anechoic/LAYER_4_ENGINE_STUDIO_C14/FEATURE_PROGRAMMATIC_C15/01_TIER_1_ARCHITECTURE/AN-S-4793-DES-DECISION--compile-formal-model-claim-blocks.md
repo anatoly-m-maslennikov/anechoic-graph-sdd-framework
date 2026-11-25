@@ -9,11 +9,11 @@ context:
   lens: DES
 relations:
   IS_SOLUTION_FOR:
-  - AN-S-4792@1
+  - AN-S-4792@3
 state:
-  status: active
-  version: 1
-  updated_at: '2026-11-24T00:00:00+00:00'
+  status: "active"
+  version: 3
+  updated_at: "2026-11-25T23:05:44.717820+00:00"
 ---
 
 ## Summary
@@ -24,17 +24,17 @@ Compile formal Model Claim blocks
 
 ### Prose Claim
 
-The Formal Model Engine reads Claim fences, retains CFEL and compiles Python Model Claims. Its language selection is modeled below; the model does not establish implementation conformance.
+The Formal Model Engine reads Claim fences and compiles Python Model Claims. Its language selection is modeled below; the model does not establish implementation conformance.
 
 ### Formal Claim
 
 ```lean
 inductive ClaimLanguage where
-  | cfel | python | other
+  | python | other
   deriving DecidableEq
 
 def selected : ClaimLanguage → Bool
-  | .cfel | .python => true
+  | .python => true
   | .other => false
 
 theorem other_is_not_selected : selected .other = false := by rfl

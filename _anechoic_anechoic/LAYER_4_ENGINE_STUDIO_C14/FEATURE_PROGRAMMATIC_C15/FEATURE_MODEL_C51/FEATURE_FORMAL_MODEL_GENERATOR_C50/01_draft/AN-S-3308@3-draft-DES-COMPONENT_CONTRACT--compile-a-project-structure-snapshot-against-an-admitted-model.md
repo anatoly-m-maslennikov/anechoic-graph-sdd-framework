@@ -27,9 +27,10 @@ Include the Seed properties for each admitted Component Seed.
 Reject invalid Component identity or containment, duplicate Component
 paths, and inputs that change during compilation.
 
-For image staging, admit a supplied previous image only after its Model
-Claim selection matches the staged Claims. Reject an unavailable previous
-image or changes to the staged source inventory.
+Verify that a supplied previous image is an admitted immutable image.
+For staged native Model Claims, require its selection to match the
+staged Claims and reject inventory changes. For the bundled Model, use
+the reviewed fingerprint.
 
 ## Claim
 
