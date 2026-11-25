@@ -157,7 +157,7 @@ class NativeQueryBehaviorCases:
         self.assertEqual({"AN-P-001", "AN-C-001"}, {row[0] for row in listed["rows"]})
         self.assertEqual({"AN-P-001"}, {row[0] for row in (await self._tree_template(client, "list_atoms", family="pmeta", statuses=["active"]))["rows"]})
         self.assertEqual([["active", 1]], (await self._tree_template(client, "get_atom_state", reference="AN-C-001@1"))["rows"])
-        self.assertEqual([["CONTAINED_BY", "AN-P-001", False]],
+        self.assertEqual([["IS_CONTAINED_BY", "AN-P-001", False]],
                          (await self._tree_template(client, "list_relations", reference="AN-C-001@1"))["rows"])
         counted = await self._tree_template(client, "count_atoms", family="tkt", kind="task", statuses=["archived"])
         self.assertEqual(["count"], [column["name"] for column in counted["columns"]])
@@ -165,11 +165,11 @@ class NativeQueryBehaviorCases:
         grouped = await self._tree_template(client, "count_atoms", family="tkt", group_by="status")
         self.assertEqual([["active", 1], ["archived", 1], ["done", 1], ["draft", 1]], grouped["rows"])
         edges = await self._tree_template(client, "list_relations", reference="AN-T-010@1")
-        self.assertEqual([["CONTAINED_BY", "AN-T-009", False]], edges["rows"])
+        self.assertEqual([["IS_CONTAINED_BY", "AN-T-009", False]], edges["rows"])
         incoming = await self._tree_template(client, "list_relations", reference="AN-T-010", direction="incoming")
         self.assertEqual([["CONTAINS", "AN-T-009", True]], incoming["rows"])
         edge_counts = await self._tree_template(client, "count_relations_by_type")
-        self.assertEqual([["CONTAINED_BY", False, 7], ["CONTAINS", True, 7]], edge_counts["rows"])
+        self.assertEqual([["CONTAINS", True, 7], ["IS_CONTAINED_BY", False, 7]], edge_counts["rows"])
 
 
     async def _check_query_pages(self, client):
@@ -189,7 +189,7 @@ class NativeQueryBehaviorCases:
             "WHERE (source_ref = 'C0' AND target_ref = 'AN-T-009') "
             "OR (source_ref = 'AN-T-009' AND target_ref = 'C0') ORDER BY derived"
         )
-        self.assertEqual([["CONTAINED_BY", False], ["CONTAINS", True]], inverse["rows"])
+        self.assertEqual([["IS_CONTAINED_BY", False], ["CONTAINS", True]], inverse["rows"])
         for name, arguments in (
             ("query_run", {"sql": "SELECT 1", "project_root": str(self.root.parent)}),
             ("query_run", {"sql": "SELECT 1", "save": "yes"}),

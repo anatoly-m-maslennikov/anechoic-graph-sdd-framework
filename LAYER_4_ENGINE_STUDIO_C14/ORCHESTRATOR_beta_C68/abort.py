@@ -32,6 +32,8 @@ class AbortJobs:
             if active is not None:
                 active["worker_alive"] = self._worker_alive()
             result = {"active": active, "latest": dict(self.latest) if self.latest is not None else None}
+            if self.skip_archives:
+                result["archive"] = {"state": "disabled"}
             if self.archive_run is not None:
                 process = self.archive_process
                 result["archive"] = {**self.archive_run, "worker_alive": process is not None and process.poll() is None}

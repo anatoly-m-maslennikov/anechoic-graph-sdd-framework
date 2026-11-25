@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 30
-  updated_at: "2026-11-23T00:13:28.163243+00:00"
+  version: 31
+  updated_at: "2026-11-24T23:12:55.813309+00:00"
 ---
 
 ## Summary
@@ -116,26 +116,6 @@ declare_entity(
                     'ADAPTERS_C30__shared.parse_subject',
                     'ADAPTERS_C30__shared.profile_evidence',
                 ],
-                'exports': {
-                    'FEATURE_FORMAL_MODEL_GENERATOR__shared._check_manifest_property_bearers': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_FORMAL_MODEL_GENERATOR/FEATURE_FORMAL_MODEL_GENERATOR__tests']},
-                    'FEATURE_FORMAL_MODEL_GENERATOR__shared._check_relation_references': {'private': ['CS1']},
-                    'FEATURE_FORMAL_MODEL_GENERATOR__shared._class_property_aliases': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_FORMAL_MODEL_GENERATOR/FEATURE_FORMAL_MODEL_GENERATOR__tests']},
-                    'FEATURE_FORMAL_MODEL_GENERATOR__shared._merge_constraint_claims': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_FORMAL_MODEL_GENERATOR/FEATURE_FORMAL_MODEL_GENERATOR__tests']},
-                    'FEATURE_FORMAL_MODEL_GENERATOR__shared._native_claim': {'private': ['CS1']},
-                    'FEATURE_FORMAL_MODEL_GENERATOR__shared._native_claim_text': {'private': ['CS1']},
-                    'FEATURE_FORMAL_MODEL_GENERATOR__shared.admit_active_model_records': {'private': ['CS1']},
-                    'FEATURE_FORMAL_MODEL_GENERATOR__shared.assemble_model_classes': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_FORMAL_MODEL_GENERATOR/FEATURE_FORMAL_MODEL_GENERATOR__tests']},
-                    'FEATURE_FORMAL_MODEL_GENERATOR__shared.assemble_model_modules': {'private': ['CS1', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_FORMAL_MODEL_GENERATOR/FEATURE_FORMAL_MODEL_GENERATOR__tests']},
-                    'FEATURE_FORMAL_MODEL_GENERATOR__shared.build_model_class_source': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_FORMAL_MODEL_GENERATOR/FEATURE_FORMAL_MODEL_GENERATOR__tests']},
-                    'FEATURE_FORMAL_MODEL_GENERATOR__shared.compile_native_bindings': {'private': ['CS1']},
-                    'FEATURE_FORMAL_MODEL_GENERATOR__shared.load_compiled_model': {'private': ['CS1']},
-                    'FEATURE_FORMAL_MODEL_GENERATOR__shared.load_native_model': {'private': ['CS1', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_FORMAL_MODEL_GENERATOR/FEATURE_FORMAL_MODEL_GENERATOR__tests']},
-                    'FEATURE_FORMAL_MODEL_GENERATOR__shared.model_module_name': {'private': ['CS1']},
-                    'FEATURE_FORMAL_MODEL_GENERATOR__shared.native_manifest_model': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_FORMAL_MODEL_GENERATOR/FEATURE_FORMAL_MODEL_GENERATOR__tests']},
-                    'FEATURE_FORMAL_MODEL_GENERATOR__shared.reviewed_model_records': {'private': ['CS1']},
-                    'FEATURE_FORMAL_MODEL_GENERATOR__shared.select_model_claims': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_FORMAL_MODEL_GENERATOR/FEATURE_FORMAL_MODEL_GENERATOR__tests']},
-                    'FEATURE_FORMAL_MODEL_GENERATOR__shared.select_model_declarations': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_FORMAL_MODEL_GENERATOR/FEATURE_FORMAL_MODEL_GENERATOR__tests']},
-                },
             },
             'io': {
                 'server': {

@@ -8,9 +8,9 @@ context:
   template: project_manifest
   lens: SPEC
 state:
-  status: active
-  version: 19
-  updated_at: '2026-11-22T12:51:17.372084+00:00'
+  status: "active"
+  version: 20
+  updated_at: "2026-11-25T11:13:54.667837+00:00"
 ---
 
 ## Summary
@@ -29,7 +29,7 @@ declare_entity(
     entity_name='Project Manifest',
     instance=ProjectManifest(
         name='Anechoic',
-        lens_whitelist=['DES', 'DevOps', 'QA', 'SPEC', 'SWD'],
+        lens_whitelist=['DES', 'DOM/ONT', 'DOM/MTD', 'DevOps', 'QA', 'SPEC', 'SWD'],
         prefix='AN',
         parameters={
             'project': {
@@ -74,6 +74,14 @@ declare_entity(
 ### Prose Claim
 
 At Workbench startup, `parameters.runtime.workbench.inline_result_limit_kib` is a whole positive KiB value. Workbench automatically sends complete query results up to this limit inline and larger results to files.
+
+### Domain Lenses
+
+`DOM/ONT` (Ontology) is declarative. It defines the kinds of entities in a
+Domain and the rules that apply to them.
+
+`DOM/MTD` (Methodology) is imperative. It describes actions and workflows
+for working in the Domain.
 
 ### Folder Layout
 

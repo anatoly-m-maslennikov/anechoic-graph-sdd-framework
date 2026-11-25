@@ -8,9 +8,6 @@ context:
   template: DECISION
   lens: DevOps
 relations:
-  IS_REFERENCE:
-  - AN-S-3361@2
-  - AN-S-3387@2
   IS_SOLUTION_FOR:
   - AN-S-3293@7
 state:

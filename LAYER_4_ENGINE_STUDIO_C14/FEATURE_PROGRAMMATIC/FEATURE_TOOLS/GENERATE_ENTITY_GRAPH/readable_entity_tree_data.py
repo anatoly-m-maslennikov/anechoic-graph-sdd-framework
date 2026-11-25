@@ -8,8 +8,8 @@ Record = dict[str, Any]
 Nodes = dict[str, Record]
 Children = dict[str, list[tuple[str, Record]]]
 LABELS = {
-    "NARROWER_THAN": "/",
-    "INSTANCE_OF": "//",
+    "IS_NARROWER_THAN": "/",
+    "IS_INSTANCE_OF": "//",
     "IS_BORNE_BY": ".",
     "IS_PROPERTY_OF": ".",
     "IS_CONTAINED_BY": "<+",

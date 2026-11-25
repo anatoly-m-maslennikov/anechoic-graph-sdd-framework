@@ -16,6 +16,7 @@ from .common import InputError, SourceChanged, result
 
 
 from .native_update_selection import _descendants, _status_bytes
+from .native_replacement_promotion import _archive_replacements, _check_replacement_activation, _plan_replacements
 
 
 def _check_promotion_companion(selection, companion, rows, owners):
@@ -31,7 +32,8 @@ def _check_promotion_companion(selection, companion, rows, owners):
         if owner_id not in owners:
             raise InputError('target', 'Ticket companion contains an unrelated Atom.')
 
-def promote_ticket_tree(selection, selected, destination, status, original_rows, rows, check_definition):
+def promote_ticket_tree(selection, selected, destination, status, original_rows, capture, check_definition):
+    rows = capture.atoms
     root_path = selection.root / selected['source_path']
     before = _descendants(original_rows, selected['id'], include_drafts=True)
     descendants = _descendants(rows, selected['id'], include_drafts=True)
@@ -66,9 +68,16 @@ def promote_ticket_tree(selection, selected, destination, status, original_rows,
         dest = branch / ('' if status in {'active', 'in_queue'} else status) / (row['id'] + name[len(prefix):])
         actions.append((row, source, dest))
     actions.append((selected, root_path, destination))
-    return _apply_promotions(selection, actions, status, check_definition)
+    replacements = {}
+    for row, _, _ in actions:
+        if row['status_group'] == 'Draft':
+            for plan in _plan_replacements(selection, row, original_rows, None, capture):
+                replacements.setdefault(plan[0]['id'], (plan, row))
+    if status == 'active':
+        _check_replacement_activation([row for row, _, _ in actions], rows, replacements)
+    return _apply_promotions(selection, actions, status, check_definition, replacements.values())
 
-def _apply_promotions(selection, actions, status, check_definition):
+def _apply_promotions(selection, actions, status, check_definition, replacements):
     from .native_update import _move_ticket
     planned_destinations = set()
     prepared = []
@@ -90,6 +99,11 @@ def _apply_promotions(selection, actions, status, check_definition):
         _status_bytes(raw, bounds, source, status)
         prepared.append((row, source, dest, raw, bounds))
     recorded = []
+    for plan, draft in replacements:
+        outcome = _archive_replacements(selection, [plan], draft)
+        recorded.extend(outcome['effects'])
+        if outcome['errors']:
+            return result(effects=recorded, errors=outcome['errors'])
     for row, source, dest, raw, bounds in prepared:
         try:
             tree = _read_tree(selection.root, source.with_suffix('')) if source.with_suffix('').is_dir() else None

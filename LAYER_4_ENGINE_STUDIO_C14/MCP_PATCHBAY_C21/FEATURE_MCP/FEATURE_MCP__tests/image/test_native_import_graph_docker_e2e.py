@@ -236,7 +236,7 @@ class NativeImportGraphDockerE2E(
         relative = "_anechoic_anechoic/001_TICKETS/TASKS/AN-T-9901--watcher.md"
         graph = """
             FROM GRAPH_TABLE (anechoic
-            MATCH (s:Reference)-[e:CONTAINED_BY]->(t:Reference)
+            MATCH (s:Reference)-[e:IS_CONTAINED_BY]->(t:Reference)
             COLUMNS (s.ref AS source_ref, t.kind AS target_kind, t.ref AS target_ref))
             SELECT target_kind, target_ref WHERE source_ref = 'AN-T-9901'
         """
@@ -244,7 +244,7 @@ class NativeImportGraphDockerE2E(
             SELECT a.filename, a.reference, n.exact_ref, r.target_kind, r.target_ref
             FROM atoms a JOIN native_references n USING (relative_path, filename, reference)
             JOIN relations r ON r.source_kind = 'Atom' AND r.source_ref = a.reference
-                AND r.relation_type = 'CONTAINED_BY' AND NOT r.derived
+                AND r.relation_type = 'IS_CONTAINED_BY' AND NOT r.derived
             WHERE a.reference = 'AN-T-9901'
         """
 

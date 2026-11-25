@@ -12,7 +12,7 @@ from .WORKERS_beta_C69__tests__shared import generation_fixture
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import native_carrier_hashes
 
 
-ENDPOINTS = {"CONTAINED_BY": [{"inverse_alias": "CONTAINS"}, False], "CONTAINS": [{}, True]}
+ENDPOINTS = {"IS_CONTAINED_BY": [{"inverse_alias": "CONTAINS"}, False], "CONTAINS": [{}, True]}
 
 
 def carrier(number, status="active"):

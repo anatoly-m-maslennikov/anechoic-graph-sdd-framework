@@ -88,8 +88,10 @@ def _checks(rows):
     return '#eval IO.println (Lean.toJson [' + ',\n'.join(checks) + ']).compress\n'
 
 
-def compare(root, lean='lean'):
+def compare(root, lean='lean', formal_only=False):
     """Return binding evidence, per-case findings, and explicit unresolved gaps."""
+    if formal_only:
+        return _formal_compare(root, lean)
     source = (Path(root) / _SOURCE).read_bytes()
     model, evidence = generate(root, source)
     evidence['effects'] = analyze_carrier(source)
@@ -144,13 +146,106 @@ def _findings(rows, values, evidence):
     return {'status': status, 'evidence': evidence, 'cases': rows, 'findings': findings}
 
 
+def _formal_program(blocks):
+    text = '\n'.join(re.sub(r'^\s*import Lean\s*\n', '', block, count=1)
+                     for block in blocks)
+    adapters = ['def normalizedBounds (b : Option (Nat × Nat × Nat)) : Option (List Nat) := '
+                'b.map (fun (a, c, d) => [a, c, d])']
+    for ns in ('CarrierBodyContract', 'CarrierBodySolution'):
+        adapters.append(f"def {ns}Body (raw : List Nat) : Option (List Nat) := "
+                        f"match {ns}.body raw with | .missingDelimiter => none "
+                        f"| .body bytes => some bytes")
+    rows = []
+    for raw in _CASES.values():
+        value = _lean_bytes(raw)
+        rows.append(f'(normalizedBounds ({{ns}}.bounds {value}), {{ns}}Body {value})')
+    expr = ', '.join(row.format(ns=ns) for row in rows
+                     for ns in ('CarrierBodyContract', 'CarrierBodySolution'))
+    return 'import Lean\n' + text + '\n' + '\n'.join(adapters) + (
+        '\n#eval IO.println (Lean.toJson [' + expr + ']).compress\n')
+
+
+def _formal_compare(root, lean):
+    evidence = {'scope': 'Eight byte witnesses only; no inference for unmodeled boundary behavior.',
+                'coverage_unresolved': ['Unmapped Manifest entries and unmodeled code, state, I/O and boundary behavior are not checked.'],
+                'unresolved': []}
+    findings = []
+    try:
+        blocks, evidence['formal'] = formal_inputs(root)
+    except (OSError, ValueError, SyntaxError) as exc:
+        evidence['unresolved'].append('Formal binding: ' + str(exc))
+        return _formal_report('unresolved', evidence, [], findings)
+    executable = shutil.which(lean)
+    if executable is None:
+        evidence['unresolved'].append('Lean executable unavailable')
+        return _formal_report('unresolved', evidence, [], findings)
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / 'FormalComparison.lean'
+        path.write_text(_formal_program(blocks))
+        try:
+            result = subprocess.run([executable, str(path)], capture_output=True,
+                                    text=True, timeout=120, check=False)
+        except subprocess.TimeoutExpired:
+            evidence['unresolved'].append('Lean comparison timed out')
+            return _formal_report('unresolved', evidence, [], findings)
+    try:
+        values = json.loads(result.stdout)
+        if result.returncode or not _valid_formal_values(values):
+            raise ValueError('unexpected Lean result')
+    except (ValueError, TypeError):
+        evidence['unresolved'].append('Lean comparison failed: ' + (result.stderr + result.stdout)[:2000])
+        return _formal_report('unresolved', evidence, [], findings)
+    cases = []
+    for i, (name, raw) in enumerate(_CASES.items()):
+        contract, solution = values[2 * i:2 * i + 2]
+        row = {'name': name, 'raw': list(raw), 'contract': contract, 'solution': solution}
+        cases.append(row)
+        if contract != solution:
+            findings.append({'kind': 'formal_disagreement', 'case': name, 'raw': list(raw),
+                             'bounds': contract[0] != solution[0], 'body': contract[1] != solution[1]})
+    return _formal_report('mismatch' if findings else 'no_mismatch_in_cases',
+                          evidence, cases, findings)
+
+
+def _formal_report(status, evidence, cases, findings):
+    checked = len(cases) == len(_CASES)
+    behavior = []
+    for index, operation in enumerate(('bounds', 'body')):
+        differing = [row['name'] for row in cases
+                     if row['contract'][index] != row['solution'][index]]
+        behavior.append({'contract_operation': operation, 'solution_operation': operation,
+                         'verdict': ('mismatch' if differing else
+                                     'no_mismatch_in_cases' if checked else 'unresolved'),
+                         'differing_cases': differing})
+    directions = {
+        'manifest_to_contract': {'verdict': 'unresolved', 'reason': 'No comparable Manifest facts are modeled.'},
+        'manifest_to_solution': {'verdict': 'unresolved', 'reason': 'No comparable Manifest facts are modeled.'},
+        'contract_to_solution': {'behavioral_witnesses': behavior, 'case_count': len(cases)},
+    }
+    return {'status': status, 'evidence': evidence, 'cases': cases,
+            'findings': findings, 'directions': directions}
+
+
+def _valid_formal_values(values):
+    def naturals(value):
+        return isinstance(value, list) and all(type(n) is int and n >= 0 for n in value)
+    def observation(value):
+        if not isinstance(value, list) or len(value) != 2:
+            return False
+        bounds, body = value
+        return ((bounds is None or (naturals(bounds) and len(bounds) == 3))
+                and (body is None or (naturals(body) and all(n <= 255 for n in body))))
+    return isinstance(values, list) and len(values) == len(_CASES) * 2 and all(map(observation, values))
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--root', required=True)
     parser.add_argument('--lean', default='lean')
+    parser.add_argument('--formal-only', action='store_true')
     args = parser.parse_args()
     try:
-        report = compare(args.root, args.lean)
+        report = compare(args.root, args.lean, formal_only=args.formal_only)
     except (OSError, ValueError, SyntaxError) as exc:
         report = {'status': 'unresolved', 'reason': str(exc)}
     print(json.dumps(report, indent=2))

@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 5
-  updated_at: "2026-11-22T18:48:53.094425+00:00"
+  version: 6
+  updated_at: "2026-11-24T23:12:55.813309+00:00"
 ---
 
 ## Summary
@@ -31,13 +31,7 @@ declare_entity(
         lens_whitelist=['DES'],
         boundaries={
             'code': {
-                'exports': {
-                    'FEATURE_GENERATED_MODEL_C52__shared.Plan': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FEATURE_TOOLS__tests']},
-                    'FEATURE_GENERATED_MODEL_C52__shared.PlanForm': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FEATURE_TOOLS__tests']},
-                    'FEATURE_GENERATED_MODEL_C52__shared.WorkReport': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FEATURE_TOOLS__tests']},
-                    'FEATURE_GENERATED_MODEL_C52__shared.AtomDestination': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_MODEL_VALIDATION/FEATURE_MODEL_VALIDATION__tests']},
-                    'FEATURE_GENERATED_MODEL_C52__shared.AtomDestinationFile': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_MODEL_VALIDATION/FEATURE_MODEL_VALIDATION__tests']},
-                },
+
             },
         },
     ),

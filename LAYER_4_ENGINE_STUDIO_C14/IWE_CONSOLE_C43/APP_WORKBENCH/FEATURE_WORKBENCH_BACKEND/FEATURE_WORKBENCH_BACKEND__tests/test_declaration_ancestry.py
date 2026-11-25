@@ -69,7 +69,7 @@ class AncestryTests(unittest.TestCase):
         self.assertEqual({'0', '1', '2'}, set(bound.provenance))
 
     def test_arbitrary_mixed_ancestry_and_explicit_relation(self):
-        result = self.project('Atom/A//B/C', 'D ((NARROWER_THAN)) C',
+        result = self.project('Atom/A//B/C', 'D ((IS_NARROWER_THAN)) C',
                               'D//E/F', 'F.Header.Form:: [in (Special)]',
                               'F.Content.One.Two[string]')
         prop = next(p for p in result if p.statement.endswith('.Content.One.Two[string]'))
@@ -78,10 +78,10 @@ class AncestryTests(unittest.TestCase):
 
     def test_named_edge_with_qualified_parent_projects_and_inherits(self):
         result = self.project(
-            'Workflow ((NARROWER_THAN)) Atom/(.Header.Context.Role in (Operations))',
+            'Workflow ((IS_NARROWER_THAN)) Atom/(.Header.Context.Role in (Operations))',
             'Workflow.Header.Context.Form:: [in (Workflow)]',
             'Workflow.Content.Steps[string]',
-            'Step ((INSTANCE_OF)) Workflow',
+            'Step ((IS_INSTANCE_OF)) Workflow',
             'Step.Header.Context.Form:: [in (Workflow)]',
             'Step.Content.Detail[string]',
         )
@@ -94,7 +94,7 @@ class AncestryTests(unittest.TestCase):
     def test_named_edge_rejects_variable_and_unsupported_parent(self):
         for parent in ('Atom//$variable', 'Atom/*/Workflow', 'Atom/(.Header.Role != Operations)'):
             with self.subTest(parent=parent):
-                result = self.project(f'Workflow ((NARROWER_THAN)) {parent}',
+                result = self.project(f'Workflow ((IS_NARROWER_THAN)) {parent}',
                                       'Workflow.Header.Form:: [in (Workflow)]',
                                       'Workflow.Content.Steps[string]')
                 self.assertFalse(any(p.roles not in (None, frozenset()) and p.statement.endswith('.Content.Steps[string]')
@@ -103,7 +103,7 @@ class AncestryTests(unittest.TestCase):
     def test_named_edge_projects_workflow_content_schema(self):
         source = DeclarationSource('CA-R-1', 1, 'workflow.md')
         schema = content_schema_from_statements((statement, source) for statement in (
-            'Workflow ((NARROWER_THAN)) Atom/(.Header.Context.Role in (Operations))',
+            'Workflow ((IS_NARROWER_THAN)) Atom/(.Header.Context.Role in (Operations))',
             'Workflow.Header.Context.Form:: [in (Workflow)]',
             'Workflow.Content.Steps:: {::1}',
         ))

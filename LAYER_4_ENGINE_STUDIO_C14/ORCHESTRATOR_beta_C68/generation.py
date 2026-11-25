@@ -3,20 +3,19 @@ import http.client
 from contextlib import closing
 import json
 import re
-import stat
 from pathlib import Path, PurePosixPath
 from urllib.parse import urlencode
 
+from .ticket_paths import TICKET_ROOTS as TICKET_ROOTS, _ticket_path as _ticket_path, ticket_delta_paths as ticket_delta_paths
 from .jobs import UnixConnection
 from .watcher_diagnostics import report_graph_consistency
-from .startup_checkpoint import CHECKPOINT_FIELDS, MAX_DELTA_PATHS, checkpoint_paths
+from .startup_checkpoint import CHECKPOINT_FIELDS, MAX_DELTA_PATHS as MAX_DELTA_PATHS, checkpoint_paths
 
 FULL_FIELDS = {"snapshot", "receipt", "graph", "reuse"}
 NATIVE_FIELDS = {"base_generation", "snapshot", "snapshot_sha256"}
 DELTA_FIELDS = NATIVE_FIELDS | {"paths"}
 GRAPH_FIELDS = NATIVE_FIELDS | {"graph", "graph_sha256", "reuse"}
 REUSE_FIELDS = {"inputs", "graph_config", "endpoints"}
-TICKET_ROOTS = {"__TICKETS", "001_TICKETS", "__TKT"}
 MAX_WARM_DELTA_PATHS = 32
 
 
@@ -29,9 +28,10 @@ class DeltaRequiresReconciliation(RuntimeError):
 
 
 class WorkerIngestionFailure(RuntimeError):
-    def __init__(self, message, diagnostic):
+    def __init__(self, message, diagnostic, model_diagnostics=None):
         super().__init__(message)
         self.diagnostic = diagnostic
+        self.model_diagnostics = model_diagnostics
 
 
 def worker_failure(stdout, detail, *, run_id=None):
@@ -44,14 +44,20 @@ def worker_failure(stdout, detail, *, run_id=None):
             if (diagnostic["source"] == "build" and isinstance(first_issue, dict)
                     and first_issue.get("code") == "realization_scan_failed"):
                 report_graph_consistency(payload.get("graph_consistency"), run_id)
-            return WorkerIngestionFailure("Worker failed: " + detail, diagnostic)
+            model_diagnostics = payload.get("model_diagnostics")
+            if model_diagnostics is not None and (diagnostic["source"] != "build" or not isinstance(model_diagnostics, list)):
+                raise ValueError("Invalid Model diagnostics")
+            return WorkerIngestionFailure("Worker failed: " + detail, diagnostic, model_diagnostics)
     except (TypeError, ValueError, KeyError):
         pass
     return RuntimeError("Worker failed: " + detail)
 
 
-def replace_ingestion_issues(socket_path, instance_id, source, issues):
-    payload = json.dumps({"instance_id": instance_id, "source": source, "issues": issues}, ensure_ascii=False)
+def replace_ingestion_issues(socket_path, instance_id, source, issues, *, model_diagnostics=None):
+    data = {"instance_id": instance_id, "source": source, "issues": issues}
+    if model_diagnostics is not None:
+        data["model_diagnostics"] = model_diagnostics
+    payload = json.dumps(data, ensure_ascii=False)
     with closing(UnixConnection(socket_path)) as connection:
         connection.request("PUT", "/ingestion/issues", payload.encode("utf-8"),
                            {"Content-Type": "application/json"})
@@ -92,59 +98,6 @@ def ticket_allocation(socket_path, instance_id, base_generation, prefix):
     return number, labels
 
 
-def ticket_delta_paths(binding, changes):
-    root = Path(binding["root"])
-    control = root / binding["control_root"]
-    if not control.name.startswith(("_anechoic_", ".")) or not control.is_dir():
-        return None
-    ticket = re.compile(rf"{re.escape(binding['project_prefix'])}-T-[0-9]+(?:@[1-9][0-9]*(?:-draft)?)?[-.].*\.md\Z")
-    paths = set()
-    for change in changes:
-        if not isinstance(change, dict) or change.get("is_directory") is not False:
-            return None
-        event = change.get("event_type")
-        source, destination = change.get("old_path"), change.get("new_path")
-        if event == "moved":
-            if destination == source:
-                return None
-            endpoints = (source, destination)
-        elif event in ("created", "deleted", "modified") and destination in (None, ""):
-            endpoints = (source,)
-        else:
-            return None
-        for value in endpoints:
-            relative = _ticket_path(root, control, ticket, value)
-            if relative is None:
-                return None
-            paths.add(relative)
-            if len(paths) > MAX_DELTA_PATHS:
-                return None
-    return sorted(paths) or None
-
-
-def _ticket_path(root, control, ticket, value):
-    if not isinstance(value, str) or not value:
-        return None
-    path = Path(value)
-    if (not path.is_absolute() or str(path) != value or ".." in path.parts
-            or not ticket.fullmatch(path.name) or not path.is_relative_to(control)):
-        return None
-    parts = path.relative_to(control).parts
-    relative = path.relative_to(root).as_posix()
-    if len(parts) < 2 or parts[0] not in TICKET_ROOTS or "\\" in relative:
-        return None
-    try:
-        if path.resolve() != path:
-            return None
-        if not stat.S_ISREG(path.lstat().st_mode):
-            return None
-    except FileNotFoundError:
-        pass
-    except (OSError, ValueError, RuntimeError):
-        return None
-    return relative
-
-
 def read_reuse(socket_path, instance_id):
     connection = None
     try:
@@ -167,6 +120,20 @@ def read_reuse(socket_path, instance_id):
     finally:
         if connection is not None:
             connection.close()
+
+
+def read_accepted_model(socket_path, instance_id):
+    with closing(UnixConnection(socket_path)) as connection:
+        connection.request("GET", "/model?" + urlencode({"instance_id": instance_id}))
+        response = connection.getresponse()
+        if response.status == 409:
+            return None
+        if response.status != 200:
+            raise ValueError("Cannot retrieve the accepted Project Model")
+        model = json.loads(response.read())
+        if not isinstance(model, dict):
+            raise ValueError("Invalid accepted Project Model")
+        return model
 
 
 def worker_request(binding, socket_path, instance_id, reuse, paths):
@@ -205,6 +172,10 @@ def parse_worker_result(stdout, reuse, paths, structure=None, *, foreground=Fals
     if not isinstance(result, dict):
         raise TypeError("Worker returned invalid generation")
     fields = set(result) - {"carrier_hashes"}
+    if "model_diagnostics" in fields:
+        if not isinstance(result["model_diagnostics"], list):
+            raise ValueError("Worker returned invalid Model diagnostics")
+        fields.remove("model_diagnostics")
     if foreground and "deferred_archive" in fields:
         deferred = result["deferred_archive"]
         if (not isinstance(deferred, dict) or set(deferred) != {"roots", "snapshot", "carrier_hashes", "endpoints"}
@@ -212,6 +183,8 @@ def parse_worker_result(stdout, reuse, paths, structure=None, *, foreground=Fals
                 or not isinstance(deferred["endpoints"], dict) or not isinstance(deferred["carrier_hashes"], dict)):
             raise ValueError("Worker returned invalid deferred archive input")
         fields.remove("deferred_archive")
+    if "model_diagnostics" in result and fields != FULL_FIELDS:
+        raise ValueError("Model diagnostics require a full generation")
     checkpoint = reuse is not None and "carrier_hashes" in reuse and paths is None
     if fields == {"base_generation", "unchanged"}:
         if not checkpoint or result.get("unchanged") is not True or result["base_generation"] != reuse["base_generation"] or "carrier_hashes" in result:
@@ -287,7 +260,8 @@ def admit_generation(socket_path, instance_id, directory, result, target, *, arc
         payload["refresh_target"] = target
     connection = UnixConnection(socket_path)
     try:
-        connection.request("PUT", path, json.dumps(payload, ensure_ascii=False).encode("utf-8"),
+        body = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+        connection.request("PUT", path, body,
                            {"Content-Type": "application/json"})
         response = connection.getresponse()
         body = response.read()

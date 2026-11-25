@@ -8,9 +8,6 @@ context:
   template: DECISION
   lens: SPEC
 relations:
-  IS_REFERENCE:
-  - AN-S-3361@2
-  - AN-S-3387@2
   IS_SOLUTION_FOR:
   - AN-S-4797@1
 state:

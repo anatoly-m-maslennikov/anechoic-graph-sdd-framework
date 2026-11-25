@@ -6,9 +6,6 @@ container:
 priority: 2
 context:
   template: Code-Spec Mismatch
-relations:
-  IS_REFERENCE:
-  - AN-S-3160@6
 state:
   status: resolved
   version: 1

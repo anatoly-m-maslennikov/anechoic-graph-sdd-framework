@@ -66,7 +66,8 @@ class TableNamesTest(unittest.TestCase):
             connection.execute('CREATE TABLE atoms (reference VARCHAR PRIMARY KEY, "content.summary" VARCHAR)')
             connection.execute("INSERT INTO atoms VALUES ('legacy-atom', 'retained')")
             connection.execute("CREATE TABLE generation (id VARCHAR, model VARCHAR, structure VARCHAR)")
-            connection.execute("INSERT INTO generation VALUES ('legacy-generation', '{}', '{}')")
+            connection.execute("INSERT INTO generation VALUES (?, ?, ?)", ["legacy-generation", "{}", json.dumps(
+                {"project": {"ref": "AN-S-1", "sha256": PIN}, "components": {}})])
             connection.execute("CREATE TABLE generation_carriers (hashes VARCHAR)")
             connection.execute("INSERT INTO generation_carriers VALUES (?)", [json.dumps({"a.py": "a" * 64})])
             connection.execute("CREATE TABLE generation_reuse (witness VARCHAR)")

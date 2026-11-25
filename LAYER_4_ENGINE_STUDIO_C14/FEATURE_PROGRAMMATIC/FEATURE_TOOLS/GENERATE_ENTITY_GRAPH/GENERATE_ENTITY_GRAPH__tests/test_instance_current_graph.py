@@ -55,8 +55,8 @@ class CurrentInstanceGraphTests(unittest.TestCase):
         self.assertEqual(
             [
                 ("Entity", None, None),
-                ("Entity/Workflow", "Entity", "NARROWER_THAN"),
-                ("Entity/Workflow//Daily", "Entity/Workflow", "INSTANCE_OF"),
+                ("Entity/Workflow", "Entity", "IS_NARROWER_THAN"),
+                ("Entity/Workflow//Daily", "Entity/Workflow", "IS_INSTANCE_OF"),
                 ("Entity/Workflow//Daily.Status", "Entity/Workflow//Daily", "IS_PROPERTY_OF"),
                 (
                     "Entity/Workflow//Daily.Status:Active",
@@ -74,7 +74,7 @@ class CurrentInstanceGraphTests(unittest.TestCase):
             for row in graph["edges"]
         }
         self.assertIn(
-            ("INSTANCE_OF", "Entity/Workflow//Daily", "Entity/Workflow"),
+            ("IS_INSTANCE_OF", "Entity/Workflow//Daily", "Entity/Workflow"),
             edges,
         )
         self.assertIn(
@@ -88,9 +88,9 @@ class CurrentInstanceGraphTests(unittest.TestCase):
         self.assertEqual(
             [
                 ("Entity", None, None),
-                ("Entity/Type", "Entity", "NARROWER_THAN"),
+                ("Entity/Type", "Entity", "IS_NARROWER_THAN"),
                 ("Entity/Type:Workflow", "Entity/Type", "IS_ALLOWED_VALUE_OF"),
-                ("Entity/Type:Workflow//Daily", "Entity/Type:Workflow", "INSTANCE_OF"),
+                ("Entity/Type:Workflow//Daily", "Entity/Type:Workflow", "IS_INSTANCE_OF"),
             ],
             path_steps("Entity/Type:Workflow//Daily"),
         )
@@ -99,7 +99,7 @@ class CurrentInstanceGraphTests(unittest.TestCase):
         self.assertEqual(
             [
                 ("Entity", None, None),
-                ("Entity/Property", "Entity", "NARROWER_THAN"),
+                ("Entity/Property", "Entity", "IS_NARROWER_THAN"),
                 ("Entity/Property.Status", "Entity/Property", "IS_PROPERTY_OF"),
                 (
                     "Entity/Property.Status:Active",
@@ -133,7 +133,7 @@ class CurrentInstanceGraphTests(unittest.TestCase):
         names = {row["id"]: row["identity"] for row in graph["nodes"]}
         edges = {(row["kind"], names[row["relation_source"]], names[row["relation_target"]])
                  for row in graph["edges"]}
-        self.assertIn(("NARROWER_THAN", "Root/X/(.Property:Value)", "Root/X"), edges)
+        self.assertIn(("IS_NARROWER_THAN", "Root/X/(.Property:Value)", "Root/X"), edges)
         self.assertIn(("IS_PROPERTY_OF", "Root/X.Property", "Root/X"), edges)
         self.assertIn(("IS_ALLOWED_VALUE_OF", "Root/X.Property:Value", "Root/X.Property"), edges)
         self.assertNotIn("Property:Value", names.values())

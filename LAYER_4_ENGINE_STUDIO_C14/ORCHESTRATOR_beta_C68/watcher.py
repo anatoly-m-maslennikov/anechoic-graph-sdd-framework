@@ -2,6 +2,7 @@
 from pathlib import Path
 from queue import Empty, Queue
 import os
+import re
 import stat
 from threading import Lock
 import time
@@ -20,6 +21,7 @@ SOURCE_SUFFIXES = frozenset(""".py .sh .js .mjs .cjs .ts .svelte .bash .bat .c .
 .cs .cxx .dart .el .ex .exs .fish .fs .go .hs .java .jl .jsx .kt .kts .lua .m
 .mm .ml .php .pl .ps1 .r .rb .rs .scala .swift .tsx .zig .zsh""".split())
 RESOLUTION_INPUTS = {".gitignore", "pyproject.toml", "uv.lock", "package.json", "tsconfig.json"}
+_COMPONENT_DIR = re.compile(r'(?!__).+_(C[0-9]+)$')
 MAX_TRACKED_TICKETS = 16384
 EXCLUDED = set(""".anechoic_archive .anechoic_install .anechoic_legacy .anechoic_runtime
 .anechoic_tmp .anechoic_anechoic .cache .git .hg .mypy_cache .nox .pytest_cache
@@ -220,7 +222,9 @@ class SourceWatcher(FileSystemEventHandler):
             if event.is_directory and self.watch_code:
                 code = any(known.is_relative_to(path) for known in self.known_code)
             boundary = event.is_directory and (path == self.control_root or path == self._archives.root_for(path))
-            relevant |= markdown or code or boundary
+            component = (event.is_directory and path != self.control_root and path.is_relative_to(self.control_root)
+                         and all(_COMPONENT_DIR.fullmatch(part) for part in path.relative_to(self.control_root).parts))
+            relevant |= markdown or code or boundary or component
         ticket = not event.is_directory and bool(paths) and all(self._ticket_path(path) for path in paths)
         if not relevant:
             return

@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 8
-  updated_at: '2026-11-23T13:44:08.728884+00:00'
+  version: 9
+  updated_at: "2026-11-24T23:12:55.813309+00:00"
 ---
 
 ## Summary
@@ -37,20 +37,6 @@ declare_entity(
         boundaries={
             'code': {
                 'imports': {'only': ['C65']},
-                'exports': {
-                    'RUNTIME_SETUP__shared.main': {'private': ['LAYER_5_USER_SETUP_C65/RUNTIME_SETUP__tests']},
-                    'RUNTIME_SETUP__shared.Settings': 'shared',
-                    'RUNTIME_SETUP__shared.HOOK_SOURCE': {'shared': ['LAYER_5_USER_SETUP_C65/RUNTIME_SETUP__tests']},
-                    'RUNTIME_SETUP__shared.MATCHER': {'shared': ['LAYER_5_USER_SETUP_C65/RUNTIME_SETUP__tests']},
-                    'RUNTIME_SETUP__shared.install_codex': {'shared': ['LAYER_5_USER_SETUP_C65/RUNTIME_SETUP__tests']},
-                    'RUNTIME_SETUP__shared.initialize_project': {'shared': ['LAYER_5_USER_SETUP_C65/RUNTIME_SETUP__tests']},
-                    'RUNTIME_SETUP__shared.LAUNCHER': {'shared': ['LAYER_5_USER_SETUP_C65/RUNTIME_SETUP__tests']},
-                    'RUNTIME_SETUP__shared.RELEASE': {'shared': ['LAYER_5_USER_SETUP_C65/RUNTIME_SETUP__tests']},
-                    'RUNTIME_SETUP__shared.install': {'shared': ['LAYER_5_USER_SETUP_C65/RUNTIME_SETUP__tests']},
-                    'RUNTIME_SETUP__shared.parse_arguments': {'shared': ['LAYER_5_USER_SETUP_C65/RUNTIME_SETUP__tests']},
-                    'RUNTIME_SETUP__shared.select_settings': {'shared': ['LAYER_5_USER_SETUP_C65/RUNTIME_SETUP__tests']},
-                    'RUNTIME_SETUP__shared.write_settings': {'shared': ['LAYER_5_USER_SETUP_C65/RUNTIME_SETUP__tests']},
-                },
             },
             'io': {
                 'server': {

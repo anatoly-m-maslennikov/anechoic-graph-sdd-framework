@@ -20,7 +20,7 @@ from ..DATABASE_SERVER_beta_C71__shared import create_app
 def base_generation():
     data = _native_generation()
     model = json.loads(data["model"])
-    model["bindings"]["endpoints"]["CONTAINED_BY"] = [{"inverse_alias": "CONTAINS"}, False]
+    model["bindings"]["endpoints"]["IS_CONTAINED_BY"] = [{"inverse_alias": "CONTAINS"}, False]
     data["model"] = json.dumps(model)
     data["receipt"]["model_descriptor_sha256"] = sha256(data["model"].encode()).hexdigest()
     data["snapshot"]["relations"].append({"source_kind": "Component", "source_ref": "C00", "target_kind": "Atom",
@@ -31,14 +31,14 @@ def base_generation():
 
 def delta(base, paths, atoms, relations):
     snapshot = {"schema_version": 2, "manifest_sha256": PIN, "atoms": atoms, "relations": relations,
-                "relation_types": ["CONTAINED_BY", "CONTAINS"]}
+                "relation_types": ["IS_CONTAINED_BY", "CONTAINS"]}
     return BINDING | {"base_generation": base, "paths": paths, "snapshot": snapshot,
                       "snapshot_sha256": _digest({"paths": paths, "snapshot": snapshot})}
 
 
 def edges(reference, target="C00"):
     return [{"source_kind": "Atom", "source_ref": reference, "target_kind": "Component", "target_ref": target,
-             "relation_type": "CONTAINED_BY", "derived": False},
+             "relation_type": "IS_CONTAINED_BY", "derived": False},
             {"source_kind": "Component", "source_ref": target, "target_kind": "Atom", "target_ref": reference,
              "relation_type": "CONTAINS", "derived": True}]
 
@@ -127,7 +127,7 @@ class NativeDeltaTest(unittest.TestCase):
             self.assertEqual([[1002]], _query(client, "SELECT count(*) FROM main.relations").json()["result"]["rows"])
             sql = _query(client, "SELECT count(*), count(DISTINCT reference) FROM atoms")
             self.assertEqual([[502, 502]], sql.json()["result"]["rows"])
-            graph = _query(client, "FROM GRAPH_TABLE (anechoic MATCH (s:Reference)-[e:CONTAINED_BY]->(t:Reference) COLUMNS (s.ref AS source)) SELECT count(*)")
+            graph = _query(client, "FROM GRAPH_TABLE (anechoic MATCH (s:Reference)-[e:IS_CONTAINED_BY]->(t:Reference) COLUMNS (s.ref AS source)) SELECT count(*)")
             self.assertEqual([[501]], graph.json()["result"]["rows"])
             self.send(client, delta(new_base, paths, [], []))
             self.assertEqual([[2]], _query(client, "SELECT count(*) FROM atoms").json()["result"]["rows"])
@@ -190,7 +190,7 @@ class NativeDeltaTest(unittest.TestCase):
                 self.assertEqual(base, client.get("/health").json()["result"]["generation"])
 
     def assert_graph(self, client, expected):
-        result = _query(client, "FROM GRAPH_TABLE (anechoic MATCH (s:Reference)-[e:CONTAINED_BY]->(t:Reference) COLUMNS (s.ref AS source)) ORDER BY source")
+        result = _query(client, "FROM GRAPH_TABLE (anechoic MATCH (s:Reference)-[e:IS_CONTAINED_BY]->(t:Reference) COLUMNS (s.ref AS source)) ORDER BY source")
         self.assertEqual(200, result.status_code, result.text)
         self.assertEqual([[value] for value in expected], result.json()["result"]["rows"])
 
@@ -218,13 +218,13 @@ class NativeDeltaTest(unittest.TestCase):
             other = original | {"reference": "AN-T-2", "exact_ref": "AN-T-2@1", "version": 1,
                                 "filename": "AN-T-2-TASK.md"}
             direct = {"source_kind": "Atom", "source_ref": "AN-T-2", "target_kind": "Atom", "target_ref": "AN-T-1",
-                      "relation_type": "CONTAINED_BY", "derived": False}
+                      "relation_type": "IS_CONTAINED_BY", "derived": False}
             inverse = {"source_kind": "Atom", "source_ref": "AN-T-1", "target_kind": "Atom", "target_ref": "AN-T-2",
                        "relation_type": "CONTAINS", "derived": True}
             key = [other["relative_path"], other["filename"]]
             base = self.send(client, delta(base, [key], [other], [direct, inverse]))
             original_key = [original["relative_path"], original["filename"]]
             self.send(client, delta(base, [original_key], [], []))
-            graph = _query(client, "FROM GRAPH_TABLE (anechoic MATCH (s:Reference)-[e:CONTAINED_BY]->(t:Reference) COLUMNS (s.ref AS source, t.ref AS target))")
+            graph = _query(client, "FROM GRAPH_TABLE (anechoic MATCH (s:Reference)-[e:IS_CONTAINED_BY]->(t:Reference) COLUMNS (s.ref AS source, t.ref AS target))")
             self.assertEqual([["AN-T-2", "AN-T-1"]], graph.json()["result"]["rows"])
             self.assertEqual([[2]], _query(client, "SELECT count(*) FROM main.relations").json()["result"]["rows"])

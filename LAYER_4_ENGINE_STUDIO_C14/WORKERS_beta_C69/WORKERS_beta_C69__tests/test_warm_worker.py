@@ -52,7 +52,7 @@ class WarmWorkerTest(unittest.TestCase):
         binding = {"root": str(root), "control_root": "_anechoic_test", "manifest_path": manifest.name,
                    "manifest_sha256": sha256(manifest.read_bytes()).hexdigest(), "project_prefix": "AN"}
         reuse = {"base_generation": "base", "inputs": {}, "graph_config": {},
-                 "endpoints": {"CONTAINED_BY": [{"inverse_alias": "CONTAINS"}, False], "CONTAINS": [{}, True]}}
+                 "endpoints": {"IS_CONTAINED_BY": [{"inverse_alias": "CONTAINS"}, False], "CONTAINS": [{}, True]}}
         paths = [ticket.relative_to(root).as_posix()]
         runtime = tmp_path / "runtime"
         runtime.mkdir(mode=0o700)
@@ -95,7 +95,7 @@ class WarmWorkerTest(unittest.TestCase):
         manifest.unlink()
         indexed = {"max_number": "100", "manifest_ref": "AN-S-1@1", "component_ids": ["C00"],
                    "ticket_labels": ["Task"],
-                   "endpoints": {"CONTAINED_BY": [{"inverse_alias": "CONTAINS"}, False], "CONTAINS": [{}, True]}}
+                   "endpoints": {"IS_CONTAINED_BY": [{"inverse_alias": "CONTAINS"}, False], "CONTAINS": [{}, True]}}
         job = {"binding": binding, "name": "atom_lifecycle_create_draft", "base_generation": "base",
                "structure_sha256": "admitted", "indexed_task": indexed,
                "arguments": {"newAtom": {"template": "task", "container": {"component": "C00"},

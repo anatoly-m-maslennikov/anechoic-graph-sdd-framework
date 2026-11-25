@@ -13,6 +13,7 @@ from .graph_store import GraphState, register_graph
 from .index_delta import MaterializationDelta
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import source_markdown
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import NativeCapture
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.relation_declaration_catalog__pub import retired_archive_relations
 from .query_store import QueryStore
 
 
@@ -24,16 +25,19 @@ def _relation_bindings(relation_types, inverses):
             or set(inverses) & set(inverses.values())):
         raise ValueError("Invalid native relation declarations")
     inverse = dict(inverses) | {value: key for key, value in inverses.items()}
-    if "CONTAINED_BY" not in inverse:
+    if "IS_CONTAINED_BY" not in inverse:
         raise ValueError("Native containment requires a declared inverse")
     return inverse
 
 
-def _authored_edges(row):
+def _authored_edges(row, relation_types):
     relations = row["header_json"].get("relations", {})
     if not isinstance(relations, dict):
         raise ValueError("Native relations must be a mapping")
+    retired = retired_archive_relations(row.get("status_group"), relation_types)
     for name, targets in relations.items():
+        if name in retired:
+            continue
         if not isinstance(targets, list):
             raise ValueError("Native relation targets must be a list")
         for target in targets:
@@ -93,7 +97,7 @@ def _projected_rows(capture, relation_types, inverse):
             raise ValueError(f"Native relation {derived} is derived")
         citations = set()
         consolidated = set()
-        for edge in _authored_edges(row):
+        for edge in _authored_edges(row, relation_types):
             edge["relation_type"] = historical.get(edge["relation_type"], edge["relation_type"])
             if edge["relation_type"] in historical.values():
                 key = edge["relation_type"], edge["target_kind"], edge["target_ref"]

@@ -24,9 +24,7 @@ class ExistingAccessFindingsTest(unittest.TestCase):
             (root / 'Widget/client/run.py').write_text(
                 'from Widget.lib.parse import run\nfrom Widget.lib.parse import *\n'
                 'from Widget.lib import run\n')
-            code = {'imports': ['lib.parse.run'],
-                    'exports': {'lib.parse.run': {'private': ['Widget/client']}, 'lib.run': 'public'}}
-            code['imports'].append('lib.run')
+            code = {'imports': ['lib.parse.run', 'lib.run']}
             structure = {'model_sha256': 'model', 'project': {'ref': 'AN-S-1', 'sha256': 'hash'},
                          'components': {'C9': {'parent': 'C00', 'ref': 'AN-S-2', 'sha256': 'hash',
                                                 'fields': {'name': 'Widget', 'boundaries': {'code': code}},
@@ -42,12 +40,12 @@ class ExistingAccessFindingsTest(unittest.TestCase):
                         if row[1] == 'Widget/client/run.py']
             rows = findings()
             self.assertEqual([(row[4], row[5], row[6]) for row in rows], [
-                ('from Widget.lib.parse import run', 'declared_bypass', 'exact import and export declarations'),
+                ('from Widget.lib.parse import run', 'declared_bypass', 'exact import declaration'),
                 ('from Widget.lib.parse import *', 'uncertain', 'wildcard import'),
-                ('from Widget.lib import run', 'declared_bypass', 'exact import and export declarations')])
-            code['exports']['lib.parse.run'] = {'private': []}
+                ('from Widget.lib import run', 'denied', 'code access rule')])
+            code['imports'].remove('lib.parse.run')
             self.assertEqual('denied', findings()[0][5])
-            code['exports']['lib.parse.run'] = 'public'
+            code['imports'].append('lib.parse.run')
             self.assertEqual('declared_bypass', findings()[0][5])
 
     def test_reversed_sibling_layer_is_denied(self):
@@ -67,8 +65,8 @@ class ExistingAccessFindingsTest(unittest.TestCase):
                 return {'parent': 'C00', 'ref': 'AN-S-2', 'sha256': 'hash',
                         'fields': fields, 'source_path': '_SPEC/spec.md'}
             structure = {'model_sha256': 'model', 'project': {'ref': 'AN-S-1', 'sha256': 'hash'},
-                         'components': {'C1': component('Low', 1),
-                                        'C2': component('High', 2, {'exports': {'api.run': 'public'}})},
+                         'components': {'C1': component('Low', 1, {'imports': ['High.api.run']}),
+                                        'C2': component('High', 2)},
                          'packages': {}}
             request = {'root': str(root), 'config': {'python_roots': ['.']},
                        'structure': structure, 'control_root': '_control'}

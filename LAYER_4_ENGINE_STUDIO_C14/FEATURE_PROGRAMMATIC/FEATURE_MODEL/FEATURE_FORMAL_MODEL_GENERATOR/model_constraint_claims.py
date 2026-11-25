@@ -14,7 +14,7 @@ def _constraint_owners(parsed: list) -> dict:
             raise ValueError(f"{source}: duplicate Model class target: {target}")
         owners[target] = (source, declaration)
         if args.get("entity_kind") == "Primary":
-            allowed = {"entity_name", "entity_class", "entity_kind", "identity_properties"}
+            allowed = {"entity_name", "entity_class", "entity_kind", "identity_properties", "classifications"}
             if args.keys() - allowed or declaration.get("instance_check"):
                 raise ValueError(f"{source}: Primary class Declaration contains constraints")
     return owners
@@ -36,7 +36,7 @@ def _merge_constraint_claims(parsed: list) -> list:
             raise ValueError(f"{source}: duplicate constraint owner: {target}")
         seen.add(target)
         owner = owners[target][1]
-        allowed = {"entity_name", "constraints_for", "instance_relation_constraints",
+        allowed = {"entity_name", "constraints_for", "model_relation_constraints", "instance_relation_constraints",
                    "population_unique_constraints", "instance_check"}
         if (declaration["kind"] != "entity" or args.keys() - allowed
                 or args.get("entity_name") != owner["arguments"]["entity_name"] + " Constraints"):
@@ -50,7 +50,7 @@ def _merge_constraint_claims(parsed: list) -> list:
             continue
         constraint = next(item for _, _, item in parsed
                           if item["arguments"].get("constraints_for") == target)
-        for key in ("instance_relation_constraints", "population_unique_constraints"):
+        for key in ("model_relation_constraints", "instance_relation_constraints", "population_unique_constraints"):
             if key in constraint["arguments"]:
                 if key in args:
                     raise ValueError(f"{source}: duplicate {key} for {target}")

@@ -1,4 +1,5 @@
 import subprocess
+from hashlib import sha256
 import importlib
 import json
 import sys
@@ -23,6 +24,24 @@ def graph_worker(result, requests):
 
 
 class RestartCheckpointTests(unittest.TestCase):
+    def test_lifecycle_generation_requires_expected_candidate(self):
+        from ORCHESTRATOR_beta_C68.lifecycle import LifecycleJobs
+        jobs = LifecycleJobs()
+        jobs.database_socket, jobs.instance_id = "socket", "test"
+        jobs._generate = lambda: None
+        model = {"model_sha256": "new"}
+        structure = {"model_sha256": "new"}
+        candidate = {"model_sha256": "new",
+                     "model_descriptor_sha256": sha256(json.dumps(model, sort_keys=True).encode()).hexdigest(),
+                     "structure_sha256": sha256(json.dumps(structure, sort_keys=True, separators=(",", ":")).encode()).hexdigest()}
+        with patch.object(jobs, "_generate", return_value={"state": "succeeded", "generation": "new"}) as generate, \
+                patch("ORCHESTRATOR_beta_C68.lifecycle.read_accepted_model", return_value=model) as read_model, \
+                patch("ORCHESTRATOR_beta_C68.lifecycle.read_structure", return_value=structure):
+            self.assertEqual("ready", jobs._admit_lifecycle_generation(candidate)["state"])
+            read_model.return_value = {"model_sha256": "previous"}
+            self.assertEqual("failed", jobs._admit_lifecycle_generation(candidate)["state"])
+        self.assertEqual(2, generate.call_count)
+
     def test_warm_dispatch_only_marks_unknown_after_possible_write(self):
         root = Path(self.enterContext(tempfile.TemporaryDirectory())).resolve()
         binding = {"root": str(root), "control_root": "control", "manifest_path": "manifest.md",
@@ -194,9 +213,11 @@ class RestartCheckpointTests(unittest.TestCase):
             def close(self): pass
         requests = []
         with patch("ORCHESTRATOR_beta_C68.generation.UnixConnection", Connection), \
+                patch("ORCHESTRATOR_beta_C68.generation_worker.read_accepted_model", return_value=None), \
                 patch.object(subprocess, "Popen", graph_worker(graph_result, requests)):
             outcome = jobs._attempt_generation(None, reuse)
-        self.assertEqual({"binding": binding, "reuse": reuse, "structure": {"nodes": []}}, requests[0])
+        self.assertEqual({"binding": binding, "reuse": reuse, "structure": {"nodes": []},
+                          "model_source": {"accepted_model": None}}, requests[0])
         self.assertEqual(("GET", "/structure?instance_id=test+id"), calls[0][:2])
         self.assertEqual("/generation/native", calls[1][1])
         self.assertEqual({"instance_id", "base_generation", "snapshot", "snapshot_sha256", "graph", "graph_sha256", "reuse"},
@@ -295,6 +316,7 @@ class RestartCheckpointTests(unittest.TestCase):
                 return json.dumps({"base_generation": "old", "snapshot": {}, "snapshot_sha256": "s"}), ""
         response = Response()
         with patch("ORCHESTRATOR_beta_C68.generation.UnixConnection", Connection), \
+                patch("ORCHESTRATOR_beta_C68.generation_worker.read_accepted_model", return_value=None), \
                 patch.object(subprocess, "Popen", Worker):
             jobs._run_worker(str(root), reuse, None)
             self.assertEqual({}, requests[-1]["structure"])
@@ -306,6 +328,7 @@ class RestartCheckpointTests(unittest.TestCase):
             jobs._run_worker(str(root), reuse | {"graph_config": None}, None)
             self.assertNotIn("structure", requests[-1])
         with patch("ORCHESTRATOR_beta_C68.generation.UnixConnection", side_effect=OSError("offline")), \
+                patch("ORCHESTRATOR_beta_C68.generation_worker.read_accepted_model", return_value=None), \
                 patch.object(subprocess, "Popen", Worker):
             jobs._run_worker(str(root), reuse, None)
             self.assertNotIn("structure", requests[-1])

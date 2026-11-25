@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 19
-  updated_at: "2026-11-23T00:34:06.573335+00:00"
+  version: 20
+  updated_at: "2026-11-24T23:12:55.813309+00:00"
 ---
 
 ## Summary
@@ -40,11 +40,6 @@ declare_entity(
                     'ADAPTERS_C30__shared.owned_temporary_root',
                     'source_watcher__pub.SourceWatcher',
                 ],
-                'exports': {
-                    'MANIFEST_RUNTIME_C62__shared.run_manifest_runtime': {
-                        'private': ['C59'],
-                    },
-                },
             },
             'io': {
                 'client': [

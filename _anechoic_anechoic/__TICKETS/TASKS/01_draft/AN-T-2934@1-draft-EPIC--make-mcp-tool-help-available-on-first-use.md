@@ -7,11 +7,6 @@ priority: 2
 context:
   template: task
   label: Epic
-relations:
-  IS_REFERENCE:
-  - AN-S-1958
-  - AN-S-511
-  - AN-T-1658
 state:
   status: draft
   version: 1

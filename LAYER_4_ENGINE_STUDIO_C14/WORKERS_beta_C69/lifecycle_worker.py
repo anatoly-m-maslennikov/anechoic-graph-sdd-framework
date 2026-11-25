@@ -65,11 +65,10 @@ def _validate_indexed(request):
                 or any(not isinstance(indexed[field], list) or any(not isinstance(x, str) for x in indexed[field])
                        for field in ("component_ids", "ticket_labels"))):
             raise ValueError("Invalid indexed task request")
-    elif (set(indexed) != {"structure", "ticket_labels", "max_numbers", "carriers", "lenses", "model", "has_descendants", "endpoints"}
+    elif (set(indexed) != {"structure", "ticket_labels", "max_numbers", "carriers", "lenses", "model", "endpoints"}
           or not isinstance(indexed["structure"], dict) or not isinstance(indexed["max_numbers"], dict)
           or any(not isinstance(indexed[field], list) for field in ("ticket_labels", "carriers", "lenses"))
-          or indexed["model"] is not None and not isinstance(indexed["model"], dict)
-          or type(indexed["has_descendants"]) is not bool):
+          or indexed["model"] is not None and not isinstance(indexed["model"], dict)):
         raise ValueError("Invalid lifecycle context")
     return key
 
@@ -101,8 +100,12 @@ def run(request, *, indexed_draft=None):
                 observed = root / "after"
                 observed.mkdir()
                 after, _, _ = _compile(binding, observed)
-                if after["structure_sha256"] != receipt["structure_sha256"]:
-                    raise ValueError("Lifecycle changed the admitted Model or Structure")
+                identity = ("model_sha256", "model_descriptor_sha256", "structure_sha256")
+                if any(after[key] != receipt[key] for key in identity):
+                    if lifecycle.get("outcome") != "completed":
+                        raise ValueError("Lifecycle changed the admitted Model or Structure")
+                    return {"lifecycle": lifecycle, "delta": None, "projection_error": None,
+                            "generation_candidate": {key: after[key] for key in identity}}
             return {"lifecycle": lifecycle, "delta": delta, "projection_error": None}
         except Exception as error:
             return {"lifecycle": lifecycle, "delta": None, "projection_error": str(error) or type(error).__name__}

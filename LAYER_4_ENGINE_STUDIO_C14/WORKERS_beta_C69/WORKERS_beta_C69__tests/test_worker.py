@@ -136,7 +136,7 @@ class GenerationTests(unittest.TestCase):
             self.assertEqual("a" * 64, native["base_generation"])
             self.assertNotEqual(full["snapshot"], native["snapshot"])
             self.assertEqual([], list(refreshed.iterdir()))
-            (root / "new_module.py").write_text("value = 1\n", encoding="utf-8")
+            (root / "pyproject.toml").write_text("[project]\nname = \"fixture\"\nversion = \"1.0\"\n", encoding="utf-8")
             structure = json.loads((output / "structure.json").read_text())
             graph_refresh = run(refreshed, previous, structure)
             self.assertEqual({"base_generation", "snapshot", "snapshot_sha256", "graph", "graph_sha256", "reuse", "carrier_hashes"}, set(graph_refresh))

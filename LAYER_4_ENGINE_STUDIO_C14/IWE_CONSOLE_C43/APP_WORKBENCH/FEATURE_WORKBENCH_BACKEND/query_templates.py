@@ -118,7 +118,7 @@ def _inventory(template, arguments, columns):
         filters.append(
             "EXISTS (SELECT 1 FROM relations AS edge "
             "WHERE edge.source_kind = 'Atom' AND edge.source_ref = a.reference "
-            "AND edge.target_kind = 'Atom' AND edge.relation_type = 'CONTAINED_BY' "
+            "AND edge.target_kind = 'Atom' AND edge.relation_type = 'IS_CONTAINED_BY' "
             f"AND NOT edge.derived AND edge.target_ref = {_literal(arguments['parent'])})"
         )
     if "statuses" in arguments:
@@ -157,7 +157,7 @@ def _component(template, arguments):
                  f"AND {tier} = '{selected_tier}' "
                  "AND EXISTS (SELECT 1 FROM relations AS edge WHERE edge.source_ref = a.reference "
                  "AND edge.source_kind = 'Atom' AND edge.target_kind = 'Component' "
-                 f"AND edge.relation_type = 'CONTAINED_BY' AND NOT edge.derived AND edge.target_ref = {cid})")
+                 f"AND edge.relation_type = 'IS_CONTAINED_BY' AND NOT edge.derived AND edge.target_ref = {cid})")
     return columns, where, order
 
 

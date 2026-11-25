@@ -14,11 +14,14 @@ from pathlib import Path
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from ORCHESTRATOR_beta_C68.generation import parse_worker_result
-module = importlib.import_module("ORCHESTRATOR_beta_C68.ORCHESTRATOR_beta_C68__shared")
 from ORCHESTRATOR_beta_C68.ORCHESTRATOR_beta_C68__tests.ORCHESTRATOR_beta_C68__tests__shared import (
     project,
 )
+
+
+from .orchestrator_ticket_cases import OrchestratorTicketTests as OrchestratorTicketTests
+
+module = importlib.import_module("ORCHESTRATOR_beta_C68.ORCHESTRATOR_beta_C68__shared")
 
 
 class UnixConnection(http.client.HTTPConnection):
@@ -63,7 +66,8 @@ class OrchestratorTests(unittest.TestCase):
                        "manifest_sha256": "a" * 64, "project_prefix": "AN"}
             jobs = module.GenerationJobs("test", binding, directory + "/kernel.sock")
             stderr = StringIO()
-            with patch.object(subprocess, "Popen") as popen, redirect_stderr(stderr):
+            with patch.object(subprocess, "Popen") as popen, redirect_stderr(stderr), \
+                    patch("ORCHESTRATOR_beta_C68.generation_worker.read_accepted_model", return_value=None):
                 process = popen.return_value
                 process.communicate.return_value = ("", "Traceback in inventory\nLimitReached: timeout_seconds\n")
                 process.returncode = 1
@@ -87,6 +91,7 @@ class OrchestratorTests(unittest.TestCase):
             first = {"sources": {"change": "removed", "path": "app/first.py"}}
             restart = "anechoic-realization-graph-restart " + json.dumps(first)
             with (patch.object(subprocess, "Popen") as popen, redirect_stderr(stderr),
+                  patch("ORCHESTRATOR_beta_C68.generation_worker.read_accepted_model", return_value=None),
                   patch.object(jobs, "_record_ingestion_failure") as record_failure):
                 process = popen.return_value
                 process.communicate.return_value = (json.dumps(payload), f"{restart}\nPrivate traceback\n{message}\n")
@@ -215,20 +220,67 @@ class OrchestratorTests(unittest.TestCase):
                     return Response()
                 def close(self):
                     pass
-            with patch.object(subprocess, "Popen", side_effect=OSError("broken")):
+            with patch.object(subprocess, "Popen", side_effect=OSError("broken")), \
+                    patch("ORCHESTRATOR_beta_C68.generation_worker.read_accepted_model", return_value=None):
                 jobs._generate()
             self.assertEqual("failed", jobs.status()["latest"]["state"])
             self.assertIn("broken", jobs.status()["latest"]["message"])
             with patch.object(subprocess, "Popen", Worker), patch(
-                    "ORCHESTRATOR_beta_C68.generation.UnixConnection", Connection):
+                    "ORCHESTRATOR_beta_C68.generation.UnixConnection", Connection), \
+                    patch("ORCHESTRATOR_beta_C68.generation_worker.read_accepted_model", return_value=None):
                 jobs._generate()
-            self.assertEqual("g1", jobs.status()["latest"]["generation"])
-            self.assertEqual("full", jobs.status()["latest"]["kind"])
-            self.assertEqual([{"binding": binding, "reuse": None}], worker_requests)
-            self.assertEqual(("PUT", "/generation"), sent[0][:2])
-            self.assertEqual('{"line":"a"}\r\n', sent[0][2]["model"])
-            self.assertEqual({"instance_id", "snapshot", "receipt", "graph", "model", "structure"}, set(sent[0][2]))
-            self.assertEqual(400, jobs.build({})[0])
+            self._assert_handoff(jobs, binding, worker_requests, sent)
+
+    def _assert_handoff(self, jobs, binding, worker_requests, sent):
+        self.assertEqual("g1", jobs.status()["latest"]["generation"])
+        self.assertEqual("full", jobs.status()["latest"]["kind"])
+        self.assertEqual([{"binding": binding, "reuse": None,
+                           "model_source": {"accepted_model": None}}], worker_requests)
+        self.assertEqual(("PUT", "/generation"), sent[0][:2])
+        self.assertEqual('{"line":"a"}\r\n', sent[0][2]["model"])
+        self.assertEqual({"instance_id", "snapshot", "receipt", "graph", "model", "structure"}, set(sent[0][2]))
+        self.assertEqual(400, jobs.build({})[0])
+
+    def test_accepted_model_request_is_instance_bound(self):
+        from ORCHESTRATOR_beta_C68.generation import read_accepted_model
+        class Connection:
+            status = 409
+            def __init__(self, path):
+                self.path = path
+            def request(self, method, path):
+                self.requested = (method, path)
+                requests.append(self.requested)
+            def getresponse(self):
+                return self
+            def read(self):
+                return b'{"model_sha256":"accepted"}'
+            def close(self):
+                pass
+        requests = []
+        with patch("ORCHESTRATOR_beta_C68.generation.UnixConnection", Connection):
+            self.assertIsNone(read_accepted_model("socket", "test id"))
+            Connection.status = 200
+            self.assertEqual({"model_sha256": "accepted"}, read_accepted_model("socket", "test id"))
+            Connection.status = 503
+            with self.assertRaises(ValueError):
+                read_accepted_model("socket", "test id")
+        self.assertEqual([("GET", "/model?instance_id=test+id")] * 3, requests)
+
+    def test_worker_failure_forwards_model_diagnostics(self):
+        from ORCHESTRATOR_beta_C68.generation import worker_failure
+        diagnostic = {"attempt_id": "one", "accepted_generation": None, "severity": "ERROR",
+                      "code": "invalid_model_source", "message": "bad source", "atom_ref": "AN-C-1@1",
+                      "source_path": "__PROJECT_CONFIG/CUSTOM_MODEL/AN-C-1-a.md", "subject": None}
+        issues = [{"relative_path": None, "code": "build_failed", "message": "fallback failed",
+                   "atom_ref": None, "related_paths": []}]
+        error = worker_failure(json.dumps({"ingestion_failure": {"source": "build", "issues": issues},
+                                           "model_diagnostics": [diagnostic]}), "fallback failed")
+        jobs = module.GenerationJobs("test", {"root": "/tmp", "control_root": "control",
+                                            "manifest_path": "manifest.md", "manifest_sha256": "a" * 64,
+                                            "project_prefix": "AN"}, "/tmp/kernel.sock")
+        with patch("ORCHESTRATOR_beta_C68.ORCHESTRATOR_beta_C68__shared.replace_ingestion_issues") as send:
+            jobs._record_ingestion_failure(error)
+        send.assert_called_once_with("/tmp/kernel.sock", "test", "build", issues, model_diagnostics=[diagnostic])
 
     def test_single_active_build_and_timeout(self):
         jobs = module.Jobs("test")
@@ -252,48 +304,3 @@ class OrchestratorTests(unittest.TestCase):
         with patch.object(subprocess, "run", side_effect=subprocess.TimeoutExpired("worker", 1)):
             self.assertEqual(504, jobs.build(request)[0])
         self.assertEqual("worker_timeout", jobs.status()["latest"]["code"])
-
-    def test_ticket_delta_requires_every_event_to_be_a_bounded_ticket_file_mutation(self):
-        root = Path(self.enterContext(tempfile.TemporaryDirectory())).resolve()
-        control = root / "_anechoic_fixture"
-        control.mkdir()
-        binding = {"root": str(root), "control_root": control.name, "project_prefix": "AN"}
-        old = control / "__TICKETS" / "AN-T-1--original.md"
-        new = control / "001_TICKETS" / "AN-T-1--next.md"
-
-        def event(path, destination=None, kind="modified", directory=False):
-            return {"old_path": str(path), "new_path": str(destination) if destination is not None else None,
-                    "event_type": kind, "is_directory": directory}
-
-        classify = module.ticket_delta_paths
-        expected = sorted([old.relative_to(root).as_posix(), new.relative_to(root).as_posix()])
-        self.assertEqual(expected, classify(binding, [event(old, new, "moved"), event(new)]))
-        for other in ({}, event(root / "AN-T-5--external.md"), event(old, directory=True),
-                      event(old, kind="moved"), event(old, new), event(old.with_suffix(".py")),
-                      event(control / "__TKT" / "README.md"), event(control / "AN-T-5--other.md")):
-            with self.subTest(event=other):
-                self.assertIsNone(classify(binding, [event(old), other]))
-        paths = [event(old.with_name(f"AN-T-{index}--task.md")) for index in range(1025)]
-        self.assertEqual(500, len(classify(binding, paths[:500])))
-        self.assertEqual(1024, len(classify(binding, paths[:1024])))
-        self.assertIsNone(classify(binding, paths))
-        link = control / "__TKT" / "AN-T-2--symbolic.md"
-        link.parent.mkdir()
-        link.symlink_to(new)
-        self.assertIsNone(classify(binding, [event(link)]))
-
-    def test_worker_delta_must_echo_the_base_and_both_path_parts(self):
-        path = "_anechoic_fixture/__TKT/AN-T-1--task.md"
-        reuse = {"base_generation": "old"}
-        result = {"base_generation": "old", "paths": [["_anechoic_fixture/__TKT", "AN-T-1--task.md"]],
-                  "snapshot": {}, "snapshot_sha256": "ignored"}
-        self.assertEqual(result, parse_worker_result(json.dumps(result), reuse, [path]))
-        for invalid in (result | {"base_generation": "new"}, result | {"paths": [path]}):
-            with self.assertRaises(ValueError):
-                parse_worker_result(json.dumps(invalid), reuse, [path])
-        with self.assertRaises(ValueError):
-            parse_worker_result(json.dumps(result), reuse, None)
-
-
-if __name__ == "__main__":
-    unittest.main()

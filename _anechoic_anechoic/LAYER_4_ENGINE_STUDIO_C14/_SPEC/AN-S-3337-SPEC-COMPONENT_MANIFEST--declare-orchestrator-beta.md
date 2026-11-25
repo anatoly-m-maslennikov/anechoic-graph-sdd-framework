@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 23
-  updated_at: "2026-11-23T10:32:23.335449+00:00"
+  version: 24
+  updated_at: "2026-11-24T23:12:55.813309+00:00"
 ---
 ## Summary
 
@@ -32,13 +32,7 @@ declare_entity(
                                                     'ORCHESTRATOR_beta_C68__shared',
                                                     'ORCHESTRATOR_beta_C68__shared.Flow',
                                                     'ORCHESTRATOR_beta_C68__shared.GenerationJobs',
-                                                    'lifecycle_queries.lifecycle_context', 'lifecycle_queries.lifecycle_sql']},
-                              'exports': {
-                                  'lifecycle_queries.lifecycle_context': {'private': ['LAYER_4_ENGINE_STUDIO_C14/ORCHESTRATOR_beta_C68/ORCHESTRATOR_beta_C68__tests']},
-                                  'lifecycle_queries.lifecycle_sql': {'private': ['LAYER_4_ENGINE_STUDIO_C14/ORCHESTRATOR_beta_C68/ORCHESTRATOR_beta_C68__tests']},
-                                  'ORCHESTRATOR_beta_C68__shared': {'private': ['LAYER_4_ENGINE_STUDIO_C14/ORCHESTRATOR_beta_C68/ORCHESTRATOR_beta_C68__tests']},
-                                          'ORCHESTRATOR_beta_C68__shared.Flow': {'private': ['LAYER_4_ENGINE_STUDIO_C14/ORCHESTRATOR_beta_C68/ORCHESTRATOR_beta_C68__tests']},
-                                          'ORCHESTRATOR_beta_C68__shared.GenerationJobs': {'private': ['LAYER_4_ENGINE_STUDIO_C14/ORCHESTRATOR_beta_C68/ORCHESTRATOR_beta_C68__tests']}}},
+                                                    'lifecycle_queries.lifecycle_context', 'lifecycle_queries.lifecycle_sql']}},
          'io': {'server': {'jobs': {'transport': 'http',
                                     'socket': 'private Unix socket',
                                     'runner': 'managed_python',

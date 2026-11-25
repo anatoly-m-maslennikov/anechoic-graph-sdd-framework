@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 4
-  updated_at: '2026-11-23T13:46:18.273025+00:00'
+  version: 5
+  updated_at: "2026-11-24T23:12:55.813309+00:00"
 ---
 
 ## Summary
@@ -36,7 +36,7 @@ declare_entity(
         name='Engine Studio',
         layer=4,
         lens_whitelist=['DES', 'DevOps', 'QA', 'SPEC', 'SWD'],
-        boundaries={'code': {'imports': [], 'exports': {}}},
+        boundaries={'code': {'imports': []}},
     ),
 )
 ```

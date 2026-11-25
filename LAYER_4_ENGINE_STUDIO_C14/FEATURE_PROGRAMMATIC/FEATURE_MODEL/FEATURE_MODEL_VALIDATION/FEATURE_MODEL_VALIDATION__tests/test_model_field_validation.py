@@ -22,6 +22,28 @@ class Record(Entity):
 
 
 class ModelFieldValidationTests(unittest.TestCase):
+    def test_authored_relation_names_and_atom_references(self):
+        many = {"minimum": 1, "maximum": None}
+
+        @dataclass
+        class Header:
+            relations: dict[str, list[str]] | None = field(default=None, metadata={
+                "value_cardinality": 0, "dependent_property_cardinality": many,
+                "dependent_property_value_cardinality": many,
+                "allowed_relation_names": ("IS_REFERENCE",),
+            })
+
+        validate_model_fields(Header, {})
+        validate_model_fields(Header, {"relations": {"IS_REFERENCE": ["AN-S-2", "AN-S-3@1-draft"]}})
+        for relation, targets, error in (
+            ("HAS_REFERENCE", ["AN-S-2"], "undeclared authored Relation"),
+            ("IS_REFERENCE", ["C9"], "expected Atom references"),
+            ("IS_REFERENCE", ["AN-S-2", "AN-S-2"], "duplicate Atom reference"),
+            ("IS_REFERENCE", [], "value count"),
+        ):
+            with self.subTest(relation=relation, targets=targets), self.assertRaisesRegex(ValueError, error):
+                validate_model_fields(Header, {"relations": {relation: targets}})
+
     def test_valid_inherited_and_optional_field(self):
         validate_model_fields(Record, {"identity": 1})
         validate_model_fields(Record, {"identity": 1, "tags": ["one", "two"]})

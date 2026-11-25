@@ -19,7 +19,7 @@ def _partial():
     archive = {"schema_version": 2, "manifest_sha256": PIN, "atoms": [archived],
                "relations": [{"source_kind": "Atom", "source_ref": archived["reference"],
                               "target_kind": "Component", "target_ref": "C00",
-                              "relation_type": "CONTAINED_BY", "derived": False}],
+                              "relation_type": "IS_CONTAINED_BY", "derived": False}],
                "relation_types": snapshot["relation_types"]}
     path = archived["relative_path"] + "/" + archived["filename"]
     return data, archive, {path: "b" * 64}
@@ -56,7 +56,7 @@ class ArchiveGenerationTest(unittest.TestCase):
             self.assertEqual(2, len(checkpoint))
             findings = _query(client, "SELECT source_key, status FROM code_access_findings")
             self.assertEqual([["module:pkg/a.py", "denied"]], findings.json()["result"]["rows"])
-            graph = _query(client, "FROM GRAPH_TABLE (anechoic MATCH (s:Reference)-[e:CONTAINED_BY]->(t:Reference) COLUMNS (s.ref AS source, t.ref AS target)) ORDER BY source")
+            graph = _query(client, "FROM GRAPH_TABLE (anechoic MATCH (s:Reference)-[e:IS_CONTAINED_BY]->(t:Reference) COLUMNS (s.ref AS source, t.ref AS target)) ORDER BY source")
             self.assertEqual([["AN-T-1", "C00"], ["AN-T-1@1", "C00"]], graph.json()["result"]["rows"])
 
     def test_success_clears_only_archive_issues(self):

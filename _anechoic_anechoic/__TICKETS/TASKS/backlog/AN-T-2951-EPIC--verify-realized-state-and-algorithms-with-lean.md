@@ -11,9 +11,7 @@ state:
   status: backlog
   version: 3
   updated_at: '2026-11-22T09:53:45.225009+00:00'
-relations:
-  IS_REFERENCE:
-  - AN-T-2973
+
 ---
 ## Summary
 

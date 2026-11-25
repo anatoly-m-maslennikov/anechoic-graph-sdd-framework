@@ -31,6 +31,8 @@ services:
       ANECHOIC_MAX_LOADED_PROJECTS: ${ANECHOIC_MAX_LOADED_PROJECTS:?Shared context limit is required}
       ANECHOIC_SHARED_RUNTIME_ID: ${ANECHOIC_SHARED_RUNTIME_ID:?Shared runtime identity is required}
       ANECHOIC_LOG_LEVEL: ${ANECHOIC_LOG_LEVEL-INFO}
+      ANECHOIC_WORKBENCH_STORAGE:
+      ANECHOIC_JOURNAL_STORAGE:
     volumes:
       - type: volume
         source: framework-db

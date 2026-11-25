@@ -38,8 +38,8 @@ def namespace_local_expression(expression: _subject_Path | _subject_RelationChai
 
 Record = dict[str, Any]
 _KINDS = {
-    "//": "INSTANCE_OF",
-    "/": "NARROWER_THAN",
+    "//": "IS_INSTANCE_OF",
+    "/": "IS_NARROWER_THAN",
     ".": "IS_PROPERTY_OF",
     ":": "IS_ALLOWED_VALUE_OF",
     ":=": "IS_ALLOWED_VALUE_OF",
@@ -150,7 +150,7 @@ class _SubjectFacts:
                 kind = "IS_CONTAINED_BY"
             elif (self.native_class_narrowing and isinstance(value.head, _subject_Name)
                   and value.head.value == "Node" and step.operator == "//"):
-                kind = "NARROWER_THAN"
+                kind = "IS_NARROWER_THAN"
             self.fact(kind, child, current)
             current = child
         if value.value_format is not None:

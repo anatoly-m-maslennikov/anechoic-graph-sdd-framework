@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 1
-  updated_at: '2026-11-23T04:32:26.395669+00:00'
+  version: 2
+  updated_at: "2026-11-24T23:12:55.813309+00:00"
 ---
 ## Summary
 
@@ -35,17 +35,6 @@ declare_entity(
         boundaries={
             'code': {
                 'imports': ['metrics__shared.code_rows', 'metrics__shared.spec_rows'],
-                'exports': {
-                    'metrics__shared.code_rows': {'shared': [
-                        'C69',
-                        'LAYER_4_ENGINE_STUDIO_C14/ARCHITECTURE_ANALYSIS_C73/CODE_AND_SPEC_METRICS_C76/CODE_AND_SPEC_METRICS_C76__tests',
-                    ]},
-                    'metrics__shared.spec_rows': {'shared': [
-                        'C30',
-                        'LAYER_4_ENGINE_STUDIO_C14/ARCHITECTURE_ANALYSIS_C73/CODE_AND_SPEC_METRICS_C76/CODE_AND_SPEC_METRICS_C76__tests',
-                    ]},
-                    'metrics__shared.is_measurement_input': {'shared': ['C61', 'C68']},
-                },
             },
             'state': {'reads': ['captured code inventory and Current Spec measurements'], 'writes': []},
         },

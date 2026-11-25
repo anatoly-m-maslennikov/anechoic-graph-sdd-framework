@@ -183,7 +183,7 @@ class SubjectProjectionViewTests(unittest.TestCase):
 
     def test_level_one_keeps_primary_tree_and_source_backed_namespace(self):
         document = views.render_primary_projection(projection(namespace=True), 1)
-        self.assertIn("NARROWER_THAN: `/`", document)
+        self.assertIn("IS_NARROWER_THAN: `/`", document)
         self.assertIn("Node", document)
         self.assertIn("\t/ Child", document)
         self.assertIn("## Namespace context", document)

@@ -134,7 +134,7 @@ def _revision_header(header):
     return result
 
 
-def _state_bytes(raw, bounds, path, version, body, status):
+def _state_bytes(raw, bounds, path, version, body, status, *, preserve_updated_at=False):
     header = raw[bounds[0]:bounds[1]].decode('utf-8')
     try:
         node = yaml.compose(header, Loader=yaml.SafeLoader)
@@ -143,7 +143,7 @@ def _state_bytes(raw, bounds, path, version, body, status):
             raise ValueError('Invalid state')
         fields = states[0].value
         values = {'status': status, 'version': version}
-        if any(key.value == 'updated_at' for key, _ in fields):
+        if not preserve_updated_at and any(key.value == 'updated_at' for key, _ in fields):
             values['updated_at'] = datetime.now(timezone.utc).isoformat()
         edits = []
         family = [value for key, value in node.value if key.value == 'atom_family']

@@ -7,9 +7,6 @@ tier: 1
 context:
   template: DECISION
   lens: DES
-relations:
-  IS_REFERENCE:
-  - AN-S-3361@2
 state:
   status: draft
   version: 1

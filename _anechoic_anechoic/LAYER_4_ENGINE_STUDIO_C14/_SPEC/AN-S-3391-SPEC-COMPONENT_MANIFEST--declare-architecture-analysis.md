@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 1
-  updated_at: '2026-11-23T04:32:26.395669+00:00'
+  version: 2
+  updated_at: "2026-11-24T23:12:55.813309+00:00"
 ---
 ## Summary
 
@@ -36,7 +36,7 @@ declare_entity(
         component_id='C73',
         name='Architecture Analysis',
         lens_whitelist=['DES', 'SPEC'],
-        boundaries={'code': {'imports': [], 'exports': {}}},
+        boundaries={'code': {'imports': []}},
     ),
 )
 ```

@@ -49,7 +49,7 @@ class NarrowingResolution:
             constraints = self.claim_constraints(carrier)
             for constraint in constraints:
                 expression = constraint.get('expression')
-                if constraint.get('group') == 'instances' or constraint.get('kind') != 'relation_cardinality' or constraint.get('relation') != 'NARROWER_THAN' or (not isinstance(expression, str)):
+                if constraint.get('group') == 'instances' or constraint.get('kind') != 'relation_cardinality' or constraint.get('relation') != 'IS_NARROWER_THAN' or (not isinstance(expression, str)):
                     continue
                 selector = str(constraint.get('target_selector') or '').strip()
                 if not selector.startswith('@'):
@@ -64,12 +64,12 @@ class NarrowingResolution:
                 try:
                     _, facts, _ = subject_facts(expression)
                 except (_subject_SubjectNotationError, ValueError) as error:
-                    self.diagnostics.append(f'{self.source_name(carrier)}: NARROWER_THAN Claim is unsupported: {error}.')
+                    self.diagnostics.append(f'{self.source_name(carrier)}: IS_NARROWER_THAN Claim is unsupported: {error}.')
                     continue
                 source_names = {target, self.terminal_name(target)}
-                direct = [fact for fact in facts if fact['kind'] == 'NARROWER_THAN' and fact['source'] in source_names]
+                direct = [fact for fact in facts if fact['kind'] == 'IS_NARROWER_THAN' and fact['source'] in source_names]
                 if len(direct) != 1:
-                    self.diagnostics.append(f'{self.source_name(carrier)}: NARROWER_THAN Claim does not bind active Subject `{target}`.')
+                    self.diagnostics.append(f'{self.source_name(carrier)}: IS_NARROWER_THAN Claim does not bind active Subject `{target}`.')
                     continue
                 self.pending.append((target, direct[0]['target'], self.source_name(carrier), True))
 
@@ -114,17 +114,17 @@ class NarrowingResolution:
             child_node = by_identity.get(child)
             matches = ([by_identity[parent]] if parent in by_identity else terminals.get(parent, [])) if is_reference else [by_identity[parent]] if parent in by_identity else []
             if child_node is None or not matches:
-                self.diagnostics.append(f'{evidence}: NARROWER_THAN binding `{child}` -> `{parent}` has an undeclared endpoint.')
+                self.diagnostics.append(f'{evidence}: IS_NARROWER_THAN binding `{child}` -> `{parent}` has an undeclared endpoint.')
                 continue
             if is_reference and (len(matches) != 1 or len(matches[0]['source_bindings']) != 1):
-                self.diagnostics.append(f'{evidence}: NARROWER_THAN reference `{parent}` is ambiguous.')
+                self.diagnostics.append(f'{evidence}: IS_NARROWER_THAN reference `{parent}` is ambiguous.')
                 continue
             parent_node = matches[0]
             edge_id = _identifier('narrowing-edge:', [child_node['id'], parent_node['id']])
-            edge = self.edges.setdefault(edge_id, {'id': edge_id, 'kind': 'NARROWER_THAN', 'relation_source': child_node['id'], 'relation_target': parent_node['id'], 'source_bindings': set()})
+            edge = self.edges.setdefault(edge_id, {'id': edge_id, 'kind': 'IS_NARROWER_THAN', 'relation_source': child_node['id'], 'relation_target': parent_node['id'], 'source_bindings': set()})
             edge['source_bindings'].add(evidence)
         if 'Event Record' in by_identity and (not any((edge['relation_source'] == by_identity['Event Record']['id'] for edge in self.edges.values()))):
-            self.diagnostics.append('Event Record: no explicit NARROWER_THAN parent; rendered as a root.')
+            self.diagnostics.append('Event Record: no explicit IS_NARROWER_THAN parent; rendered as a root.')
         for row in [*self.nodes.values(), *self.edges.values()]:
             row['source_bindings'] = sorted(row['source_bindings'])
         graph = {'kind': 'current_declared_narrowing_tree', 'source_basis': 'current_declared_carriers', 'native_admission': 'not_performed', 'nodes': sorted(self.nodes.values(), key=lambda row: row['identity']), 'edges': sorted(self.edges.values(), key=lambda row: row['id']), 'diagnostics': sorted(set(self.diagnostics))}

@@ -1,6 +1,4 @@
 """Admit the deferred Archived population without replacing live rows."""
-import json
-
 import duckdb
 from starlette.responses import JSONResponse
 
@@ -101,7 +99,7 @@ def admit_archive(connection, data, manifest_sha256):
     connection.execute("BEGIN TRANSACTION")
     graph_dropped = False
     try:
-        row = connection.execute("SELECT id, model, structure FROM ops_generation").fetchone()
+        row = connection.execute("SELECT id, model FROM ops_generation").fetchone()
         if (row is None or row[0] != data["base_generation"] or not archive_pending(connection)
                 or not has_table(connection, "native_graph", "int_labels")):
             raise GenerationBaseChanged("Generation base changed or archive is complete")
@@ -117,7 +115,8 @@ def admit_archive(connection, data, manifest_sha256):
         _insert_edges(connection, edges)
         connection.execute("DROP PROPERTY GRAPH IF EXISTS anechoic")
         graph_dropped = True
-        components = {"C00", *json.loads(row[2])["components"]}
+        from .project_structure import component_ids
+        components = component_ids(connection)
         replace_native_graph(connection, data["snapshot"]["relation_types"], components)
         restore_property_graph(connection)
         generation = _digest({"kind": "archive_complete", "base_generation": row[0],

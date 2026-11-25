@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 3
-  updated_at: "2026-11-22T18:00:45.880865+00:00"
+  version: 4
+  updated_at: "2026-11-24T23:12:55.813309+00:00"
 ---
 # Manifest Build
 
@@ -25,10 +25,7 @@ declare_entity(
     instance=ComponentSeedManifest(
         component_seed_id='CS4',
         boundaries={
-            'code': {'imports': {'only': []}, 'exports': {
-                'manifest_build_CS4__shared': {'private': ['LAYER_4_ENGINE_STUDIO_C14/WORKERS_beta_C69/manifest_build_CS4/manifest_build_CS4__tests']},
-                'manifest_build_CS4__shared.manifest_input_signature': {'shared': ['C69', 'LAYER_4_ENGINE_STUDIO_C14/WORKERS_beta_C69/manifest_build_CS4/manifest_build_CS4__tests']},
-            }},
+            'code': {'imports': {'only': []}},
             'io': {
                 'server': {'build': {
                     'transport': 'cli',

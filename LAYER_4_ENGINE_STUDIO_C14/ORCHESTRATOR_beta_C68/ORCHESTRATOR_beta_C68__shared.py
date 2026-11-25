@@ -7,6 +7,7 @@ import threading
 import time
 from pathlib import Path
 
+from .build_jobs import BuildJobs
 from .abort import AbortJobs, WorkerAborted
 from .flow import Flow, safe_target
 from .generation import (
@@ -32,9 +33,9 @@ from .watcher_diagnostics import FOREGROUND_FENCE_MESSAGE, emit_record
 __all__ = ["GenerationJobs", "Handler", "Server"]
 
 
-class GenerationJobs(ArchiveJobs, GenerationWorker, AbortJobs, LifecycleJobs, Jobs):
+class GenerationJobs(BuildJobs, ArchiveJobs, GenerationWorker, AbortJobs, LifecycleJobs, Jobs):
     def __init__(self, instance_id, binding, database_socket, watch_code=False,
-                 worker_socket=None, worker_load_seconds=None):
+                 worker_socket=None, worker_load_seconds=None, *, skip_archives=False):
         super().__init__(instance_id)
         if not isinstance(binding, dict) or set(binding) != FIELDS - {"instance_id"}:
             raise ValueError("Invalid binding fields")
@@ -44,6 +45,7 @@ class GenerationJobs(ArchiveJobs, GenerationWorker, AbortJobs, LifecycleJobs, Jo
         self.database_socket = database_socket
         self.worker_socket = worker_socket
         self.worker_load_seconds = worker_load_seconds
+        self.skip_archives = skip_archives
         self.worker_mode = None
         self.stopping = threading.Event()
         self.process = None
@@ -83,34 +85,6 @@ class GenerationJobs(ArchiveJobs, GenerationWorker, AbortJobs, LifecycleJobs, Jo
                 pass
         if self.thread is not None and self.thread.is_alive():
             self.thread.join(1)
-
-    def build(self, request):
-        if not isinstance(request, dict) or set(request) not in (FIELDS, FIELDS | {"refresh_target"}):
-            return 400, {"error": {"code": "invalid_request", "message": "Invalid build fields"}}
-        target = request.get("refresh_target")
-        if "refresh_target" in request and (not isinstance(target, str) or not target):
-            return 400, {"error": {"code": "invalid_request", "message": "Invalid refresh target"}}
-        if request["instance_id"] != self.instance_id:
-            return 409, {"error": {"code": "instance_mismatch", "message": "Instance does not match"}}
-        if {key: request[key] for key in FIELDS - {"instance_id"}} != self.binding:
-            return 409, {"error": {"code": "binding_mismatch", "message": "Binding does not match"}}
-        with self.lock:
-            if self.stopping.is_set():
-                return 503, {"error": {"code": "orchestrator_stopping", "message": "Orchestrator is stopping"}}
-            job = self.inflight or self.pending
-            if job is not None and job["target"] != target:
-                return 409, {"error": {"code": "build_active", "message": "Another refresh is active"}}
-            if job is None:
-                job = self.pending = {"event": threading.Event(), "outcome": None, "target": target, "requests": [], "omitted_requests": 0}
-                self.watcher.queue.put({})
-            request_time = time.time()
-            if job is self.inflight and self.flow is not None:
-                self.flow.input("rebuild_request", target=safe_target(target), detail={"coalesced": True}, at=request_time, trigger=False)
-            elif len(job["requests"]) < 200:
-                job["requests"].append(request_time)
-            else:
-                job["omitted_requests"] += 1
-        return self._wait_build(job)
 
     def _wait_build(self, job):
         return wait_build(job, None)
@@ -170,9 +144,12 @@ class GenerationJobs(ArchiveJobs, GenerationWorker, AbortJobs, LifecycleJobs, Jo
             directory = str(Path(temporary).resolve(strict=True))
             started = time.monotonic()
             explicit = target is not None or self.inflight is not None
-            if explicit:
+            if explicit or (self.skip_archives and self.startup_capture):
                 reuse = paths = None
-            options, epoch = (({}, None) if reconciliation and self.startup_capture else
+            if self.skip_archives and paths and any(self._is_archive_path(str(Path(self.binding["root"]) / path))
+                                                    for path in paths):
+                paths = None
+            options, epoch = (({}, None) if reconciliation and self.startup_capture and not self.skip_archives else
                               self._capture_options(reuse, paths, explicit=explicit))
             if self.startup_capture and not options.get("incremental") and not reconciliation:
                 reuse = None
@@ -181,10 +158,15 @@ class GenerationJobs(ArchiveJobs, GenerationWorker, AbortJobs, LifecycleJobs, Jo
                     epoch, timeout=operation_timeout(45), run_id=(self.active or {}).get("run_id")) is not True:
                 raise ValueError(FOREGROUND_FENCE_MESSAGE)
             deferred = result.pop("deferred_archive", None)
-            if deferred is None and options.get("incremental"):
+            if self.skip_archives:
+                deferred = None
+            if deferred is None and options.get("incremental") and not self.skip_archives:
                 deferred = self._restart_archive(reuse, result)
             if deferred and (deferred["roots"] or deferred["snapshot"]["atoms"] or "checkpoint" in deferred):
                 result["archive_pending"] = True
+            if self.skip_archives and "paths" in result and any(
+                    atom["status_group"] == "Archived" for atom in result["snapshot"]["atoms"]):
+                raise DeltaRequiresReconciliation("Archived Atom requires foreground capture")
             if self.deferred_archive and paths is not None and deferred is None and self._needs_foreground(result):
                 raise DeltaRequiresReconciliation("Archive paths require foreground capture")
             captured = time.monotonic()
@@ -301,16 +283,21 @@ class GenerationJobs(ArchiveJobs, GenerationWorker, AbortJobs, LifecycleJobs, Jo
             severity = "ERROR" if self.startup_capture and not isinstance(error, (ValueError, WorkerIngestionFailure)) else "WARNING"
             emit_record(severity, "generation_failed", "generation", "failed", (self.active or {}).get("run_id"))
         if isinstance(error, WorkerIngestionFailure):
-            self._record_ingestion_issues(error.diagnostic["source"], error.diagnostic["issues"])
+            self._record_ingestion_issues(error.diagnostic["source"], error.diagnostic["issues"],
+                                          model_diagnostics=error.model_diagnostics)
             return
         self._record_ingestion_issues("build", [{
             "relative_path": None, "code": "generation_failed", "message": message,
             "atom_ref": None, "related_paths": [],
         }])
 
-    def _record_ingestion_issues(self, source, issues):
+    def _record_ingestion_issues(self, source, issues, *, model_diagnostics=None):
         try:
-            replace_ingestion_issues(self.database_socket, self.instance_id, source, issues)
+            if model_diagnostics is None:
+                replace_ingestion_issues(self.database_socket, self.instance_id, source, issues)
+            else:
+                replace_ingestion_issues(self.database_socket, self.instance_id, source, issues,
+                                         model_diagnostics=model_diagnostics)
         except (OSError, RuntimeError, http.client.HTTPException):
             emit_record("WARNING", "ingestion_issues_unavailable", "record_ingestion_issues", "degraded",
                         (self.active or {}).get("run_id"), details={"source": source})

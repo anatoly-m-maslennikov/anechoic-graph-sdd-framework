@@ -5,7 +5,7 @@ import subprocess
 import sys
 
 from .abort import WorkerAborted
-from .generation import MAX_WARM_DELTA_PATHS, parse_worker_result, worker_failure, worker_request
+from .generation import MAX_WARM_DELTA_PATHS, parse_worker_result, read_accepted_model, worker_failure, worker_request
 from .jobs import ENGINE
 from .warm_worker import validated_result as warm_result
 from .watcher_diagnostics import emit_record, report_graph_restart
@@ -24,6 +24,7 @@ class GenerationWorker:
                 self.worker_mode = "warm"
                 return result
         request = worker_request(self.binding, self.database_socket, self.instance_id, reuse, paths)
+        request["model_source"] = {"accepted_model": read_accepted_model(self.database_socket, self.instance_id)}
         request.update(options)
         stdout = self._communicate_worker(directory, request)
         result = parse_worker_result(stdout, reuse, paths, request.get("structure"),
@@ -64,6 +65,9 @@ class GenerationWorker:
         run_id = (run or {}).get("run_id")
         if not archive:
             stderr = report_graph_restart(stderr, run_id)
+        for line in stderr.splitlines():
+            if line.startswith(("Model candidate rejected:", "Model candidate could not compile Structure:")):
+                sys.stderr.write(line + "\n")
         if process.returncode:
             detail = stderr.rstrip().rsplit("\n", 1)[-1][-2048:] or f"exit status {process.returncode}"
             raise worker_failure(stdout, detail, run_id=run_id)

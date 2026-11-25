@@ -1,4 +1,4 @@
-"""Declared-only Current NARROWER_THAN tree projection."""
+"""Declared-only Current IS_NARROWER_THAN tree projection."""
 
 from pathlib import Path
 import sys
@@ -42,7 +42,7 @@ class NarrowingGraphTests(unittest.TestCase):
         graph, _ = compose_narrowing_graph([
             carrier("CA-R-0", "Node"), carrier("CA-R-1", "Node/Continuant"),
             carrier("CA-R-2", "Event Record", body=event_record_claim()),
-            carrier("CA-R-3", "Node/Other", body=claim("Other ((NARROWER_THAN)) Missing")),
+            carrier("CA-R-3", "Node/Other", body=claim("Other ((IS_NARROWER_THAN)) Missing")),
         ])
         names = {row["id"]: row["identity"] for row in graph["nodes"]}
         edges = {(names[row["relation_source"]], names[row["relation_target"]]) for row in graph["edges"]}
@@ -54,14 +54,14 @@ class NarrowingGraphTests(unittest.TestCase):
         graph, _ = compose_narrowing_graph([
             carrier("CA-R-0", "Node"), carrier("CA-R-1", "Node/Continuant"),
             carrier("CA-R-2", "Node/Continuant"),
-            carrier("CA-R-3", "Event Record", body=claim("Event Record ((NARROWER_THAN)) Continuant")),
+            carrier("CA-R-3", "Event Record", body=claim("Event Record ((IS_NARROWER_THAN)) Continuant")),
         ])
         self.assertTrue(any("reference `Continuant` is ambiguous" in row for row in graph["diagnostics"]))
 
     def test_instance_group_cannot_create_a_narrowing_edge(self):
         graph, _ = compose_narrowing_graph([
             carrier("CA-R-1", "Node"), carrier("CA-R-2", "Node/Continuant"),
-            carrier("CA-R-3", "Node/Actor", body=claim("# instances\nActor ((NARROWER_THAN)) @Continuant")),
+            carrier("CA-R-3", "Node/Actor", body=claim("# instances\nActor ((IS_NARROWER_THAN)) @Continuant")),
         ])
         names = {row["id"]: row["identity"] for row in graph["nodes"]}
         edges = {(names[row["relation_source"]], names[row["relation_target"]]) for row in graph["edges"]}
@@ -73,20 +73,20 @@ class NarrowingGraphTests(unittest.TestCase):
             carrier("CA-R-1", "Node/Continuant"),
             carrier("CA-R-2", "Node/Atom"),
             carrier("CA-R-3", "Node/Atom/(.Role := Method)"),
-            carrier("CA-R-4", "Node/Actor", body=claim("Actor ((NARROWER_THAN)) @Continuant")),
+            carrier("CA-R-4", "Node/Actor", body=claim("Actor ((IS_NARROWER_THAN)) @Continuant")),
             carrier("CA-R-5", "Event Record"),
             carrier("CA-R-5A", "Node/Continuant//ANECHOIC Framework"),
             carrier("CA-R-6", "Node/Atom.Status"),
-            carrier("CA-R-7", "Node/Node", body=claim("Node {:0+}((NARROWER_THAN)) Node")),
+            carrier("CA-R-7", "Node/Node", body=claim("Node {:0+}((IS_NARROWER_THAN)) Node")),
             carrier("CA-R-8", "CFEL", form="Entity Definition"),
             carrier("CA-R-9", "Carrier", form="Entity Definition"),
             carrier("CA-R-10", "Carrier/File", form="Entity Definition"),
             carrier("CA-R-11", "Carrier/File/Markdown", form="Entity Definition"),
             carrier("CA-R-12", "Term", form="Entity Definition"),
-            carrier("CA-R-13", "CFEL ((NARROWER_THAN)) @Carrier", form="Entity Definition"),
+            carrier("CA-R-13", "CFEL ((IS_NARROWER_THAN)) @Carrier", form="Entity Definition"),
             carrier("CA-R-14", "CFEL > Format/bool", form="Entity Definition"),
             carrier("CA-R-15", "Entity/Legacy", form="Entity Definition"),
-            carrier("CA-R-16", "Node/Atom", form="Relation Definition", body=claim("Atom ((NARROWER_THAN)) @Continuant")),
+            carrier("CA-R-16", "Node/Atom", form="Relation Definition", body=claim("Atom ((IS_NARROWER_THAN)) @Continuant")),
         ])
 
         nodes = {row["identity"]: row for row in graph["nodes"]}
@@ -103,7 +103,7 @@ class NarrowingGraphTests(unittest.TestCase):
         self.assertTrue(any("CFEL > Format/bool" in row for row in graph["diagnostics"]))
         self.assertTrue(any("Entity/Legacy" in row for row in graph["diagnostics"]))
         self.assertFalse(any("ANECHOIC Framework" in row for row in graph["diagnostics"]))
-        self.assertIn("Event Record: no explicit NARROWER_THAN parent; rendered as a root.", graph["diagnostics"])
+        self.assertIn("Event Record: no explicit IS_NARROWER_THAN parent; rendered as a root.", graph["diagnostics"])
         document = render_inherency(
             graph, provenance, updated_at="2026-11-02 00:00:00 +0400",
             source_selection="controlled Current fixture",
@@ -116,8 +116,8 @@ class NarrowingGraphTests(unittest.TestCase):
         graph, _ = compose_narrowing_graph([
             carrier("CA-R-0", "Node"),
             carrier("CA-R-1", "Node/Continuant"), carrier("CA-R-2", "Node/Continuant"),
-            carrier("CA-R-3", "Node/Actor", body=claim("Actor ((NARROWER_THAN)) @Continuant")),
-            carrier("CA-R-4", "Node/Aspect", body=claim("Aspect ((NARROWER_THAN)) @Missing")),
+            carrier("CA-R-3", "Node/Actor", body=claim("Actor ((IS_NARROWER_THAN)) @Continuant")),
+            carrier("CA-R-4", "Node/Aspect", body=claim("Aspect ((IS_NARROWER_THAN)) @Missing")),
         ])
         names = {row["id"]: row["identity"] for row in graph["nodes"]}
         edges = {(names[row["relation_source"]], names[row["relation_target"]]) for row in graph["edges"]}

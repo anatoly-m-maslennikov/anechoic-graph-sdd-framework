@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 6
-  updated_at: '2026-11-23T14:18:55.106032+00:00'
+  version: 7
+  updated_at: "2026-11-24T23:12:55.813309+00:00"
 ---
 
 ## Summary
@@ -33,10 +33,6 @@ declare_entity(
         boundaries={
             'code': {
                 'imports': {'only': ['C64']},
-                'exports': {
-                    'LAYER_3_PUBLIC_RELEASE_C64__shared.PublicReleaseError': {'private': ['LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/LAYER_3_PUBLIC_RELEASE_C64/LAYER_3_PUBLIC_RELEASE_C64__tests']},
-                    'LAYER_3_PUBLIC_RELEASE_C64__shared.run_public_release': {'private': ['parent', 'LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/LAYER_3_PUBLIC_RELEASE_C64/LAYER_3_PUBLIC_RELEASE_C64__tests']},
-                },
             },
             'io': {
                 'server': {

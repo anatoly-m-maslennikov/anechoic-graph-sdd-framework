@@ -25,7 +25,7 @@ def instance_edges(graph):
     identities = {node["id"]: node["identity"] for node in graph["nodes"]}
     return {
         (identities[edge["relation_source"]], identities[edge["relation_target"]])
-        for edge in graph["edges"] if edge["kind"] == "INSTANCE_OF"
+        for edge in graph["edges"] if edge["kind"] == "IS_INSTANCE_OF"
     }
 
 
@@ -34,8 +34,8 @@ class AspectClaimProjectionTests(unittest.TestCase):
         first = "PROJECT STRUCTURE//ANECHOIC <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+ Query Processing"
         second = "PROJECT STRUCTURE//ANECHOIC <+ Aspects <+ Other <+ Query Processing"
         graph, provenance = compose_enhanced_current_graph([
-            carrier("CA-R-1", "Unrelated Main Subject", f"({first}) ((INSTANCE_OF)) Aspect"),
-            carrier("CA-R-2", None, f"({second}) ((INSTANCE_OF)) Aspect"),
+            carrier("CA-R-1", "Unrelated Main Subject", f"({first}) ((IS_INSTANCE_OF)) Aspect"),
+            carrier("CA-R-2", None, f"({second}) ((IS_INSTANCE_OF)) Aspect"),
         ])
         edges = instance_edges(graph)
         self.assertIn((first, "Aspect"), edges)
@@ -47,12 +47,12 @@ class AspectClaimProjectionTests(unittest.TestCase):
             graph, provenance, updated_at="2026-11-11 00:00:00 +0000", source_selection="Fixture",
             projection_identity={"projection_id": "CA-PROJ-901", "named_selection": "Current Atoms"},
         )
-        self.assertIn(f"`INSTANCE_OF` `{first}` → `Aspect`", rendered)
-        self.assertIn(f"`INSTANCE_OF` `{second}` → `Aspect`", rendered)
+        self.assertIn(f"`IS_INSTANCE_OF` `{first}` → `Aspect`", rendered)
+        self.assertIn(f"`IS_INSTANCE_OF` `{second}` → `Aspect`", rendered)
 
     def test_typed_aspect_preserves_full_identity_and_provenance(self):
         path = "PROJECT STRUCTURE//ANECHOIC <+ Aspects <+ Engineering <+ Query Processing"
-        old = carrier("CA-R-1", path, f"# project_structure\n{path};\n({path}) ((INSTANCE_OF)) Aspect")
+        old = carrier("CA-R-1", path, f"# project_structure\n{path};\n({path}) ((IS_INSTANCE_OF)) Aspect")
         new = carrier("CA-R-1", path, "")
         new["body"] = ("## Claim\n### Formal Claim\n```python\n"
                        "from anechoic.formal_claims import declare_entity\n"
@@ -85,7 +85,7 @@ class AspectClaimProjectionTests(unittest.TestCase):
 
     def test_ordinary_claim_does_not_declare_aspect_membership(self):
         path = "PROJECT STRUCTURE//ANECHOIC <+ Aspects <+ Example"
-        row = carrier("CA-R-3", None, f"({path}) ((INSTANCE_OF)) Aspect")
+        row = carrier("CA-R-3", None, f"({path}) ((IS_INSTANCE_OF)) Aspect")
         row["read_view"]["type"] = "Requirement"
         graph, _ = compose_enhanced_current_graph([row])
         self.assertNotIn((path, "Aspect"), instance_edges(graph))

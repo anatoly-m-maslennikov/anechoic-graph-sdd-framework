@@ -130,7 +130,7 @@ def _formal_relations(constraints, declared, provenance, nodes, edges):
     for index, clause in enumerate(constraints):
         selector = clause.get("source_selector")
         if (not declared(clause) or clause.get("kind") != "relation_cardinality"
-                or clause.get("relation") != "INSTANCE_OF"
+                or clause.get("relation") != "IS_INSTANCE_OF"
                 or not isinstance(selector, str) or not selector.startswith("(") or not selector.endswith(")")
                 or clause.get("source_cardinality") is not None or clause.get("target_cardinality") is not None):
             continue
@@ -151,12 +151,12 @@ def _formal_relations(constraints, declared, provenance, nodes, edges):
                                                "occurrence_ids": [], "is_full_target": False})
             node["occurrence_ids"] = sorted(set(node["occurrence_ids"]) | {occurrence_id})
         source_id, target_id = (_identifier("subject:", identity) for identity in (source_identity, target_identity))
-        metadata = {"kind": "INSTANCE_OF", "forward_cardinality": None, "reverse_cardinality": None}
+        metadata = {"kind": "IS_INSTANCE_OF", "forward_cardinality": None, "reverse_cardinality": None}
         edge_id = _identifier("subject-edge:", [metadata, source_id, target_id])
         edge = edges.setdefault(edge_id, {**metadata, "id": edge_id, "relation_source": source_id,
                                           "relation_target": target_id, "occurrence_ids": []})
         edge["occurrence_ids"] = sorted(set(edge["occurrence_ids"]) | {occurrence_id})
-        relation = formal_relations.setdefault(edge_id, {"kind": "INSTANCE_OF", "source": source_identity,
+        relation = formal_relations.setdefault(edge_id, {"kind": "IS_INSTANCE_OF", "source": source_identity,
                                                           "target": target_identity, "occurrence_ids": []})
         relation["occurrence_ids"] = sorted(set(relation["occurrence_ids"]) | {occurrence_id})
     return formal_relations

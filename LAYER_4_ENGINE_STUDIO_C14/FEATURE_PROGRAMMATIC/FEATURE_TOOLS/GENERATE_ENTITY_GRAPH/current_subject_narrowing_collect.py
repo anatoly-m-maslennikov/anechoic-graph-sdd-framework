@@ -90,7 +90,7 @@ class NarrowingCollection:
             return False
         self.add_node(target, self.label(right, target), carrier)
         for fact in facts:
-            if fact['kind'] == 'NARROWER_THAN':
+            if fact['kind'] == 'IS_NARROWER_THAN':
                 self.pending.append((fact['source'], fact['target'], self.source_name(carrier), False))
         return True
 
@@ -106,7 +106,7 @@ class NarrowingCollection:
             return False
         references = {row['identity'] for row in supplied if row.get('declared_reference')}
         for fact in facts:
-            if fact['kind'] == 'NARROWER_THAN':
+            if fact['kind'] == 'IS_NARROWER_THAN':
                 self.pending.append((fact['source'], fact['target'], self.source_name(carrier), fact['target'] in references))
         return True
 
@@ -136,7 +136,7 @@ class NarrowingCollection:
             return False
         self.add_node(target, self.label(expression, target), carrier)
         for fact in () if native_class else facts:
-            if fact['kind'] == 'NARROWER_THAN':
+            if fact['kind'] == 'IS_NARROWER_THAN':
                 self.pending.append((fact['source'], fact['target'], self.source_name(carrier), False))
         return True
 

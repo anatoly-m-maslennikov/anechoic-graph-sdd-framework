@@ -45,15 +45,14 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
         return path
 
     def _install_status_fixture(self):
-        control = ".anechoic_anechoic"
-        ontology = Path(control) / "LAYER_1_META_ONTOLOGY_C9"
-        source = STUDIO.parent / "_anechoic_anechoic" / ontology.name
+        methodology = Path(self.control) / "LAYER_2_META_METHODOLOGY_C58"
+        source = STUDIO.parent / "_anechoic_anechoic" / "ONTOLOGY_SCORE_C82" / "OCCURRENT_METRONOME_C58"
         refs = ("AN-S-1928@4", "AN-S-1834@1", "AN-S-1831@1")
         rows = []
         for ref in refs:
             atom_id = ref.partition("@")[0]
-            original, = source.rglob(f"{atom_id}-DOM-*.md")
-            relative = ontology / original.relative_to(source)
+            original, = (source / "_DOM/MTD").rglob(f"{atom_id}-MTD-*.md")
+            relative = methodology / original.relative_to(source)
             path = self.root / relative
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes(original.read_bytes())

@@ -46,6 +46,27 @@ class IngestionIssuesTest(unittest.TestCase):
             self.assertEqual([], _query(client, 'SELECT source, relative_path FROM main.ops_ingestion_issues').json()['result']['rows'])
             self.assertEqual(400, _query(client, 'DELETE FROM main.ops_ingestion_issues').status_code)
 
+    def test_build_diagnostics_before_and_after_admission(self):
+        diagnostic = {"attempt_id": "try", "accepted_generation": "untrusted", "severity": "ERROR",
+                      "code": "invalid", "message": "bad Model", "atom_ref": None,
+                      "source_path": None, "subject": None}
+        payload = {**BINDING, "source": "build", "issues": [], "model_diagnostics": [diagnostic]}
+        with _server() as client:
+            response = client.put("/ingestion/issues", json=payload)
+            self.assertEqual(200, response.status_code, response.text)
+            self.assertEqual(200, client.put("/generation", json=_generation()).status_code)
+            query = "SELECT accepted_generation, code FROM mrt_diag_model_manifests"
+            self.assertEqual([[None, "invalid"]], _query(client, query).json()["result"]["rows"])
+            self.assertEqual(200, client.put("/ingestion/issues", json=payload).status_code)
+            self.assertEqual([["b" * 64, "invalid"]], _query(client, query).json()["result"]["rows"])
+            self.assertEqual(400, client.put("/ingestion/issues", json={**payload, "source": "atom"}).status_code)
+            self.assertEqual(400, client.put("/ingestion/issues", json={**payload, "model_diagnostics": [{}]}).status_code)
+            self.assertEqual([["b" * 64, "invalid"]], _query(client, query).json()["result"]["rows"])
+            self.assertEqual(200, client.put("/ingestion/issues", json={**BINDING, "source": "build", "issues": []}).status_code)
+            self.assertEqual([["b" * 64, "invalid"]], _query(client, query).json()["result"]["rows"])
+            self.assertEqual(200, client.put("/ingestion/issues", json={**payload, "model_diagnostics": []}).status_code)
+            self.assertEqual([], _query(client, query).json()["result"]["rows"])
+
     def test_legacy_migration_and_public_schema(self):
         connection = duckdb.connect()
         self.addCleanup(connection.close)

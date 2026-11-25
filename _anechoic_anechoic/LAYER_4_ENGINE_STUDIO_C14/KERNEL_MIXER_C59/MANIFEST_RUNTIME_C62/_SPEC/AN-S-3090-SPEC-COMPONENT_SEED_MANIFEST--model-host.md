@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 10
-  updated_at: "2026-11-22T14:18:40.355066+00:00"
+  version: 11
+  updated_at: "2026-11-24T23:12:55.813309+00:00"
 ---
 
 # Model Host
@@ -27,19 +27,7 @@ declare_entity(
         component_seed_id="CS2",
         boundaries={
             "code": {
-                "exports": {
-                    "model_host_CS2__shared.reviewed_native_model": {
-                        "private": [
-                            "LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP",
-                            "LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/FEATURE_MCP__tests",
-                            "C45",
-                            "C59",
-                            "LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_C59/MANIFEST_RUNTIME_C62/MANIFEST_RUNTIME_C62__tests",
-                            "LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_C59/MANIFEST_RUNTIME_C62/model_host_CS2/model_host_CS2__tests",
-                            "LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests",
-                        ],
-                    },
-                }
+
             }
         },
     ),

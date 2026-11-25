@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 8
-  updated_at: "2026-11-22T15:04:56.234992+00:00"
+  version: 9
+  updated_at: "2026-11-24T23:12:55.813309+00:00"
 ---
 
 # Structure Host
@@ -30,10 +30,6 @@ declare_entity(
                 "imports": [
                     "ADAPTERS_C30__shared.read_structure",
                 ],
-                "exports": {
-                    "structure_host_CS3__shared": None,
-                    "structure_host_CS3__shared.publish_structure": None,
-                },
             }
         },
     ),

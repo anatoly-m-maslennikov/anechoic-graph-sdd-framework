@@ -68,7 +68,7 @@ Changed ticket.
                "manifest_sha256": sha256(manifest.read_bytes()).hexdigest(), "project_prefix": "AN"}
     change = {"is_directory": False, "event_type": "modified", "old_path": str(ticket)}
     reuse = {"base_generation": "base", "inputs": {}, "graph_config": {},
-             "endpoints": {"CONTAINED_BY": [{"inverse_alias": "CONTAINS"}, False], "CONTAINS": [{}, True]}}
+             "endpoints": {"IS_CONTAINED_BY": [{"inverse_alias": "CONTAINS"}, False], "CONTAINS": [{}, True]}}
     return binding, change, reuse
 
 
@@ -143,6 +143,7 @@ class WorkerAbortTests(unittest.TestCase):
             def spawn(*args, **kwargs):
                 return real_popen([sys.executable, "-c", "import time; time.sleep(60)"], **kwargs)
             with (patch("ORCHESTRATOR_beta_C68.generation_worker.worker_request", return_value={}),
+                  patch("ORCHESTRATOR_beta_C68.generation_worker.read_accepted_model", return_value=None),
                   patch("ORCHESTRATOR_beta_C68.generation_worker.subprocess.Popen", side_effect=spawn),
                   patch(MODULE + ".admit_generation") as admit,
                   patch(MODULE + ".Flow.finish")):

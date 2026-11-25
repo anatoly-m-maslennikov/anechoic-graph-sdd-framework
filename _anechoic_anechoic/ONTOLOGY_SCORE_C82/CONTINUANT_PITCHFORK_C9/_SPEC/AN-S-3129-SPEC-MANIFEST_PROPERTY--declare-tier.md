@@ -1,0 +1,40 @@
+---
+atom_family: SPEC
+atom_id: AN-S-3129
+container:
+  component: C9
+tier: 2
+context:
+  lens: SPEC
+  template: manifest_property
+state:
+  status: "active"
+  version: 6
+  updated_at: "2026-11-25T16:00:37.850745+00:00"
+---
+
+## Summary
+
+Declare Tier
+
+## Claim scope
+
+MODEL//ANECHOIC <+ Graph/Node//Artifact//SSOT//Prescribed/Content/Atom//Specification//Contract//Component Contract.Header.Tier
+
+## Formal Manifest
+
+```python anechoic-edsl
+# Anechoic Python eDSL
+
+from anechoic.model import ComponentContract, Property, SpecAtom
+
+class Property3129(Property):
+    name = 'Tier'
+    bearer = SpecAtom.Header
+    property.value.allowed = (0,)
+    property.applies_to = (ComponentContract,)
+    field_options = {'kw_only': True}
+    property.cardinality = 1
+    property.value.cardinality = 1
+    property.value.format = int
+```

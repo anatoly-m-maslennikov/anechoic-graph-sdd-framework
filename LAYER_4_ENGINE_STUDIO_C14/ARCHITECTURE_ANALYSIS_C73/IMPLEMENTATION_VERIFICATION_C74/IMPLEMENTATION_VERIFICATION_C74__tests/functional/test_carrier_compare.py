@@ -56,9 +56,86 @@ class CarrierModelTests(unittest.TestCase):
                 target = Path(tmp) / rel
                 target.parent.mkdir(parents=True, exist_ok=True)
                 data = (ROOT / rel).read_bytes()
-                target.write_bytes(data.replace(b'AN-S-3303@15', b'AN-S-3303@14') if name == 'solution' else data)
+                target.write_bytes(data.replace(b'AN-S-3303@16-draft', b'AN-S-3303@15') if name == 'solution' else data)
             with self.assertRaisesRegex(ValueError, 'binding'):
                 formal_inputs(tmp)
+
+    def _spec_fixture(self, root, mutate=None):
+        for name, rel in _PATHS.items():
+            target = Path(root) / rel
+            target.parent.mkdir(parents=True, exist_ok=True)
+            data = (ROOT / rel).read_bytes()
+            target.write_bytes(mutate(name, data) if mutate else data)
+
+    @unittest.skipUnless(shutil.which('lean'), 'Lean is unavailable')
+    def test_formal_only_without_implementation(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self._spec_fixture(tmp)
+            with patch('ARCHITECTURE_ANALYSIS_C73.IMPLEMENTATION_VERIFICATION_C74.carrier_compare.generate',
+                       side_effect=AssertionError('implementation source used')), patch(
+                    'ARCHITECTURE_ANALYSIS_C73.IMPLEMENTATION_VERIFICATION_C74.carrier_compare._observations',
+                    side_effect=AssertionError('implementation executed')):
+                report = compare(tmp, formal_only=True)
+        self.assertEqual(report['status'], 'no_mismatch_in_cases')
+        self.assertEqual(len(report['cases']), 8)
+        self.assertIn('no inference', report['evidence']['scope'])
+        self.assertTrue(report['evidence']['coverage_unresolved'])
+        for direction in ('manifest_to_contract', 'manifest_to_solution'):
+            self.assertEqual(report['directions'][direction]['verdict'], 'unresolved')
+        self.assertEqual(report['directions']['contract_to_solution']['case_count'], 8)
+        self.assertTrue(all(v['verdict'] == 'no_mismatch_in_cases' for v in
+                            report['directions']['contract_to_solution']['behavioral_witnesses']))
+
+    @unittest.skipUnless(shutil.which('lean'), 'Lean is unavailable')
+    def test_manifest_with_imports_only(self):
+        def mutate(name, data):
+            if name != 'manifest':
+                return data
+            start = data.find(b"                'exports': {")
+            if start < 0:
+                return data
+            end = data.index(b'                },\n', start) + len(b'                },\n')
+            return data[:start] + data[end:]
+        with tempfile.TemporaryDirectory() as tmp:
+            self._spec_fixture(tmp, mutate)
+            blocks, evidence = formal_inputs(tmp)
+            with patch('ARCHITECTURE_ANALYSIS_C73.IMPLEMENTATION_VERIFICATION_C74.carrier_compare.formal_inputs',
+                       return_value=(blocks, evidence)):
+                report = compare(ROOT, '/missing/lean')
+            formal = compare(tmp, formal_only=True)
+        self.assertEqual(report['status'], 'unresolved')
+        self.assertIn('Lean executable unavailable', report['evidence']['unresolved'])
+        self.assertEqual(formal['status'], 'no_mismatch_in_cases')
+        self.assertEqual(len(formal['cases']), 8)
+        for direction in ('manifest_to_contract', 'manifest_to_solution'):
+            self.assertEqual(formal['directions'][direction]['verdict'], 'unresolved')
+        self.assertEqual(formal['findings'], [])
+
+    @unittest.skipUnless(shutil.which('lean'), 'Lean is unavailable')
+    def test_formal_only_solution_disagreement(self):
+        def mutate(name, data):
+            if name != 'solution':
+                return data
+            for prefix in (b'13, 10, 45, 45, 45', b'10, 45, 45, 45'):
+                original = b'[' + prefix + b', 13, 10]'
+                self.assertIn(original, data)
+                data = data.replace(original, b'[' + prefix + b', 13, 11]')
+            return data
+        with tempfile.TemporaryDirectory() as tmp:
+            self._spec_fixture(tmp, mutate)
+            report = compare(tmp, formal_only=True)
+        self.assertEqual(report['status'], 'mismatch')
+        body = report['directions']['contract_to_solution']['behavioral_witnesses'][1]
+        self.assertEqual(body['verdict'], 'mismatch')
+        self.assertTrue(body['differing_cases'])
+        self.assertTrue(any(f['kind'] == 'formal_disagreement' and f['body'] and f['raw']
+                            for f in report['findings']))
+
+    def test_formal_only_rejects_malformed_output(self):
+        result = SimpleNamespace(returncode=0, stdout='[true]', stderr='')
+        with patch('shutil.which', return_value='lean'), patch('subprocess.run', return_value=result):
+            report = compare(ROOT, formal_only=True)
+        self.assertEqual(report['status'], 'unresolved')
 
     def test_duplicate_function_is_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:

@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 21
-  updated_at: "2026-11-23T00:44:48.903947+00:00"
+  version: 22
+  updated_at: "2026-11-24T23:12:55.813309+00:00"
 ---
 ## Summary
 
@@ -28,8 +28,7 @@ declare_entity(
         component_id='C70',
         name='Workbench Backend Beta',
         lens_whitelist=['DES', 'SPEC'],
-        boundaries={'code': {'imports': {'only': ['WORKBENCH_BACKEND_beta_C70__shared.open_warm_worker']},
-                              'exports': {'WORKBENCH_BACKEND_beta_C70__shared.open_warm_worker': {'private': ['LAYER_4_ENGINE_STUDIO_C14/WORKBENCH_BACKEND_beta_C70/WORKBENCH_BACKEND_beta_C70__tests']}}},
+        boundaries={'code': {'imports': {'only': ['WORKBENCH_BACKEND_beta_C70__shared.open_warm_worker']}},
          'io': {'server': {'shared_workbench_api': {'transport': 'http',
                                                     'socket': 'private Unix socket',
                                                     'runner': 'managed_python',

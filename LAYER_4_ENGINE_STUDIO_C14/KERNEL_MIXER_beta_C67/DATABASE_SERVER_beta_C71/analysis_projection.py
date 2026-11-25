@@ -113,10 +113,10 @@ _RATIOS = """CREATE OR REPLACE VIEW biz_architecture_ratios AS
 WITH RECURSIVE ancestry AS (
  SELECT n.exact_ref, r.target_kind, r.target_ref FROM main.mrt_atom_references n JOIN main.mrt_atom_graph_relations r
  ON r.source_kind='Atom' AND r.source_ref=n.reference
- WHERE r.relation_type='CONTAINED_BY' AND NOT r.derived
+ WHERE r.relation_type='IS_CONTAINED_BY' AND NOT r.derived
  UNION SELECT a.exact_ref, r.target_kind, r.target_ref FROM ancestry a JOIN main.mrt_atom_graph_relations r
  ON a.target_kind='Atom' AND r.source_kind='Atom' AND r.source_ref=a.target_ref
- WHERE r.relation_type='CONTAINED_BY' AND NOT r.derived),
+ WHERE r.relation_type='IS_CONTAINED_BY' AND NOT r.derived),
 component_atoms AS (SELECT DISTINCT exact_ref, target_ref AS component_id FROM ancestry WHERE target_kind='Component'),
 scopes AS (SELECT scope_kind, scope_id FROM biz_architecture_code_metrics
  UNION SELECT 'Component', component_id FROM component_atoms JOIN biz_architecture_spec_metrics ON exact_ref=atom_ref

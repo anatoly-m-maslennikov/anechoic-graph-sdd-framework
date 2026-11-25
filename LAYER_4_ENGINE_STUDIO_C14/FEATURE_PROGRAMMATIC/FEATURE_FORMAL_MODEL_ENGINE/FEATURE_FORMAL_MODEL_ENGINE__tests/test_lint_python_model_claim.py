@@ -116,21 +116,21 @@ class LintPythonModelClaimTests(unittest.TestCase):
 
     def test_set_value_validates_relation_alias_without_changing_expression(self):
         from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_grouped_python_model_claim
-        options = dict(declared_addresses=['Relation'], relation_names=['NARROWER_THAN', 'HAS_NARROWER'])
-        source = "# model\nset_value(address='alias(Relation//NARROWER_THAN)', value='\"/\"')"
+        options = dict(declared_addresses=['Relation'], relation_names=['IS_NARROWER_THAN', 'HAS_NARROWER'])
+        source = "# model\nset_value(address='alias(Relation//IS_NARROWER_THAN)', value='\"/\"')"
         self.assertEqual((), lint_python_model_claim(source, **options))
-        self.assertEqual((('alias(Relation//NARROWER_THAN) == \"/\"', 'model'),),
+        self.assertEqual((('alias(Relation//IS_NARROWER_THAN) == \"/\"', 'model'),),
                          parse_grouped_python_model_claim(source))
         inverse = "set_value(address='alias(Relation//HAS_NARROWER)', value='/')"
         self.assertEqual((), lint_python_model_claim(inverse, **options))
         invalid = (
             "set_value(address='alias(Relation//narrower_than)', value='/')",
             "set_value(address='alias(Relation//MISSING)', value='/')",
-            "set_value(address='alias(Relation/NARROWER_THAN)', value='/')",
-            "set_value(address='alias(Relation//NARROWER_THAN', value='/')",
-            "set_value(address='alias(Relation//NARROWER_THAN)', value='')",
-            "set_value(address='alias(Relation//NARROWER_THAN)', value='\"\"')",
-            "set_value(address='alias(Relation//NARROWER_THAN)', value=1)",
+            "set_value(address='alias(Relation/IS_NARROWER_THAN)', value='/')",
+            "set_value(address='alias(Relation//IS_NARROWER_THAN', value='/')",
+            "set_value(address='alias(Relation//IS_NARROWER_THAN)', value='')",
+            "set_value(address='alias(Relation//IS_NARROWER_THAN)', value='\"\"')",
+            "set_value(address='alias(Relation//IS_NARROWER_THAN)', value=1)",
         )
         for claim in invalid:
             with self.subTest(claim=claim):

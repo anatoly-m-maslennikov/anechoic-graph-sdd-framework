@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 1
-  updated_at: '2026-11-23T04:32:26.395669+00:00'
+  version: 4
+  updated_at: '2026-11-25T08:57:44.413326+00:00'
 ---
 ## Summary
 
@@ -18,7 +18,7 @@ Declare Implementation Verification
 
 ## Purpose
 
-Derive bounded Lean models from authored implementation and Realization Graph facts, including code units, calls, conditions, and effects. Keep source references and report unresolved coverage. Compare with the Lean model supplied by Spec Engine when a matching Spec exists.
+Derive bounded Lean models from authored implementation and Realization Graph facts, including code units, calls, conditions, and effects. Keep source references and report unresolved coverage. Compare with the Lean model supplied by Spec Engine when a matching Spec exists. The verifier checks Manifest obligations against the Contract and Solution, and Contract obligations against the Solution.
 
 ## Formal manifest
 
@@ -39,29 +39,36 @@ declare_entity(
             'ADAPTERS_C30__shared.parse_carrier',
             'ADAPTERS_C30__shared.parse_component_manifest',
             'ADAPTERS_C30__shared.formal_claim_fences',
+            'atom_reference__pub.derive_atom_ref',
+            'carrier_framing__pub.framing_to_lean',
+            'carrier_framing__pub.parse_framing',
             'carrier_compare.compare',
             'carrier_model._SOURCE',
             'carrier_model.generate',
             'carrier_runtime_effects',
             'carrier_formal._PATHS',
             'carrier_formal.formal_inputs',
-        ]},
-        'exports': {
-            'carrier_compare.compare': {'private': [
-                'LAYER_4_ENGINE_STUDIO_C14/ARCHITECTURE_ANALYSIS_C73/IMPLEMENTATION_VERIFICATION_C74/IMPLEMENTATION_VERIFICATION_C74__tests/functional']},
-            'carrier_model._SOURCE': {'private': [
-                'LAYER_4_ENGINE_STUDIO_C14/ARCHITECTURE_ANALYSIS_C73/IMPLEMENTATION_VERIFICATION_C74/IMPLEMENTATION_VERIFICATION_C74__tests/functional']},
-            'carrier_model.generate': {'private': [
-                'LAYER_4_ENGINE_STUDIO_C14/ARCHITECTURE_ANALYSIS_C73/IMPLEMENTATION_VERIFICATION_C74/IMPLEMENTATION_VERIFICATION_C74__tests/functional']},
-            'carrier_runtime_effects': {'private': [
-                'LAYER_4_ENGINE_STUDIO_C14/ARCHITECTURE_ANALYSIS_C73/IMPLEMENTATION_VERIFICATION_C74/IMPLEMENTATION_VERIFICATION_C74__tests/functional']},
-            'carrier_formal._PATHS': {'private': [
-                'LAYER_4_ENGINE_STUDIO_C14/ARCHITECTURE_ANALYSIS_C73/IMPLEMENTATION_VERIFICATION_C74/IMPLEMENTATION_VERIFICATION_C74__tests/functional']},
-            'carrier_formal.formal_inputs': {'private': [
-                'LAYER_4_ENGINE_STUDIO_C14/ARCHITECTURE_ANALYSIS_C73/IMPLEMENTATION_VERIFICATION_C74/IMPLEMENTATION_VERIFICATION_C74__tests/functional']},
-        }},
-        'state': {'reads': ['selected carrier source and formal inputs'], 'writes': ['temporary Lean comparison file']},
-        'io': {'server': {'carrier_compare': {'transport': 'cli', 'runner': 'managed_python', 'module': 'ARCHITECTURE_ANALYSIS_C73.IMPLEMENTATION_VERIFICATION_C74.carrier_compare', 'arguments': ['--root <project-root>', '[--lean <executable>]']}}},
+        ]}},
+        'state': {
+            'reads': ['selected implementation source and formal inputs'],
+            'writes': ['temporary Lean comparison file', 'Lean files in the requested emit directory'],
+        },
+        'io': {
+            'server': {
+                'carrier_compare': {
+                    'transport': 'cli',
+                    'runner': 'managed_python',
+                    'module': 'ARCHITECTURE_ANALYSIS_C73.IMPLEMENTATION_VERIFICATION_C74.carrier_compare',
+                    'arguments': ['--root <project-root>', '[--lean <executable>]', '[--formal-only]'],
+                },
+                'backend_http_compare': {
+                    'transport': 'cli',
+                    'runner': 'managed_python',
+                    'module': 'ARCHITECTURE_ANALYSIS_C73.IMPLEMENTATION_VERIFICATION_C74.backend_http_compare',
+                    'arguments': ['--root <project-root>', '[--lean <executable>]', '[--emit <directory>]', '[--formal-only]'],
+                },
+            },
+        },
         },
     ),
 )

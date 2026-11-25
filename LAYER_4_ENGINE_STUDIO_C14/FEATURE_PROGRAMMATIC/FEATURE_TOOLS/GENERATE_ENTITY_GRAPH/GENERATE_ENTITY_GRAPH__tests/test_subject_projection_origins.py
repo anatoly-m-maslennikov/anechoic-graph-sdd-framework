@@ -39,13 +39,13 @@ class RuleOriginTests(unittest.TestCase):
     def test_unbounded_structural_fact_is_not_an_inherited_relation_rule(self):
         data = build_subject_projection_data([
             carrier("CA-R-1", "Node",
-                    "Node ((NARROWER_THAN)) Root;\nNode {::0+}((NARROWER_THAN)) Node;"),
-            carrier("CA-R-2", "Node/Child", "Node/Child ((NARROWER_THAN)) Node;"),
+                    "Node ((IS_NARROWER_THAN)) Root;\nNode {::0+}((IS_NARROWER_THAN)) Node;"),
+            carrier("CA-R-2", "Node/Child", "Node/Child ((IS_NARROWER_THAN)) Node;"),
         ])
         child = next(row for row in data["entities"] if row["identity"] == "Node/Child")
         self.assertEqual([], child["relation_rule_origins"]["overridden_here"])
         rule, = child["relation_rule_origins"]["inherited"]
-        self.assertEqual("Node {::0+}((NARROWER_THAN)) Node", rule["expression"])
+        self.assertEqual("Node {::0+}((IS_NARROWER_THAN)) Node", rule["expression"])
 
     def test_unrelated_ancestors_keep_both_inherited_rules(self):
         rules = [
@@ -121,7 +121,7 @@ class RuleOriginTests(unittest.TestCase):
         native = carrier("CA-R-2", "Node/Child", "")
         native["body"] = "## Claim\n\n### Formal Claim\n\n```python\n" + python + "\n```\n"
         data = build_subject_projection_data([
-            carrier("CA-R-1", "Node", "Node ((NARROWER_THAN)) Root;"),
+            carrier("CA-R-1", "Node", "Node ((IS_NARROWER_THAN)) Root;"),
             native,
         ])
         child = next(row for row in data["entities"] if row["identity"] == "Node/Child")

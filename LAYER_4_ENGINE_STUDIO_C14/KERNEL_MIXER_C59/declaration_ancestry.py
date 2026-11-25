@@ -14,7 +14,7 @@ from .declaration_cfel import filters
 
 S = TypeVar('S')
 _NAME = r'[A-Za-z_][A-Za-z_0-9 -]*?'
-_REL = re.compile(rf'^\s*({_NAME})\s*\(\((NARROWER_THAN|INSTANCE_OF)\)\)\s*(.+?)\s*$')
+_REL = re.compile(rf'^\s*({_NAME})\s*\(\((IS_NARROWER_THAN|IS_INSTANCE_OF)\)\)\s*(.+?)\s*$')
 _BINDING = re.compile(rf'^\s*({_NAME})\.Header\.(?:Context\.)?(Role|Form)\s*::\s*\[\s*in\s*\(([^()]*)\)\s*\]')
 _PROPERTY = re.compile(r'\.(?:Content|Header)(?=\.|\s|\[|\{|::|$)')
 

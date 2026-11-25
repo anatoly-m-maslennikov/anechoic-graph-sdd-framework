@@ -1,5 +1,6 @@
 import io
 import json
+import os
 from contextlib import redirect_stdout
 from pathlib import Path
 import sys
@@ -50,6 +51,22 @@ class SharedHostLauncherTests(unittest.TestCase):
         self.assertEqual("INFO", result["environment"]["ANECHOIC_LOG_LEVEL"])
         self.assertNotIn("ANECHOIC_PROJECT_ROOT", result["environment"])
         self.assertEqual([], runner.call_args_list)
+
+    def test_storage_settings_and_host_overrides_reach_compose(self):
+        self.settings.write_text(self.settings.read_text() +
+                                 '[project_defaults]\nworkbench_storage="memory"\njournal_storage="files"\n')
+        names = ("ANECHOIC_WORKBENCH_STORAGE", "ANECHOIC_JOURNAL_STORAGE")
+        environment = {key: value for key, value in os.environ.items() if key not in names}
+        with patch.dict(os.environ, environment, clear=True):
+            defaults = SharedMcpLauncher().prepare(self.settings, IMAGE)["environment"]
+            self.assertEqual(("memory", "files"), tuple(defaults[name] for name in names))
+            with patch.dict(os.environ, {names[0]: "disk", names[1]: "duckdb"}):
+                overrides = SharedMcpLauncher().prepare(self.settings, IMAGE)["environment"]
+            self.assertEqual(("disk", "duckdb"), tuple(overrides[name] for name in names))
+        compose = yaml.safe_load((Path(__file__).resolve().parents[1] / "docker/shared-mcp.compose.yaml").read_text())
+        container_env = compose["services"]["shared-mcp"]["environment"]
+        for name in names:
+            self.assertIsNone(container_env[name])
 
     def test_shared_launch_uses_file_logging_level_and_refuses_invalid_level(self):
         existing = self.settings.read_text()

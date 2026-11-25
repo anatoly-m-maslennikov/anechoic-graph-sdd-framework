@@ -152,7 +152,6 @@ class ImportGraphCases3:
             "state": "local", "io": {"client": [{"component": "C2", "interface": "run"}]}},
         }
         right = {"name": "Right", "layer": 1, "boundaries": {
-            "code": {"exports": {"api.exposed": None}},
             "io": {"server": {"run": {"transport": "cli", "path": "src/RIGHT_C2/api.py"}}}},
         }
         snapshot = {
@@ -192,7 +191,7 @@ class ImportGraphCases3:
         ], declarations)
         findings_sql = "SELECT written_specifier, status, reason FROM code_access_findings ORDER BY written_specifier"
         self.assertEqual([
-            ["from RIGHT_C2.api import exposed", "declared_bypass", "exact import and export declarations"],
+            ["from RIGHT_C2.api import exposed", "declared_bypass", "exact import declaration"],
             ["from RIGHT_C2.api import hidden", "denied", "code access rule"],
         ], await query(findings_sql))
 
@@ -278,7 +277,7 @@ class ImportGraphCases3:
                            "OR (source_ref = 'AN-T-009' AND target_ref = 'AN-T-010') "
                            "OR (source_kind = 'Component' AND source_ref = 'C0' "
                            "AND target_ref = 'AN-T-009')")
-        self.assertIn(['Atom', 'AN-T-010', 'Atom', 'AN-T-009', 'CONTAINED_BY', False], facts)
+        self.assertIn(['Atom', 'AN-T-010', 'Atom', 'AN-T-009', 'IS_CONTAINED_BY', False], facts)
         self.assertIn(['Atom', 'AN-T-009', 'Atom', 'AN-T-010', 'CONTAINS', True], facts)
         self.assertIn(['Component', 'C0', 'Atom', 'AN-T-009', 'CONTAINS', True], facts)
         self.assertEqual([], await rows('SELECT * FROM scope_units'))

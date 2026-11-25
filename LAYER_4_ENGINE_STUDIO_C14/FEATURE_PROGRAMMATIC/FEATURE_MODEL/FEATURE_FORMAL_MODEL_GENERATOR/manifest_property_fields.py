@@ -10,9 +10,10 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.atom_reference__pub import 
 
 _FIELD_METADATA = ("property_occurrence_cardinality", "value_cardinality",
                    "dependent_property_cardinality", "allowed_values",
+                   "dependent_property_value_cardinality", "dependent_property_value_format", "allowed_relation_names",
                    "minimum_value", "maximum_value")
-_PRIMARY_KEYS = {"entity_name", "entity_class", "entity_kind", "identity_properties"}
-_PATH = re.compile(r"[A-Za-z_][A-Za-z_0-9 -]*(?://[A-Za-z_][A-Za-z_0-9 -]*)*")
+_PRIMARY_KEYS = {"entity_name", "entity_class", "entity_kind", "identity_properties", "classifications"}
+_PATH = re.compile(r"[A-Za-z_][A-Za-z_0-9 -]*(?:(?://|/)[A-Za-z_][A-Za-z_0-9 -]*)*")
 _REF_INPUTS = ("Identity.Atom ID", "State.Version", "State.Status")
 _ATOM_PATHS = {"atom_id": _REF_INPUTS[0], "version": _REF_INPUTS[1], "status": _REF_INPUTS[2],
                "updated_at": "State.Updated At", "ref_id": "Ref ID"}
@@ -37,9 +38,9 @@ def _field_name(name):
 
 def _owner(path, names):
     if (not isinstance(path, str) or not _PATH.fullmatch(path)
-            or any(part != part.strip() for part in path.split("//"))):
+            or any(part != part.strip() for part in re.split(r"//|/", path))):
         raise ValueError(f"Invalid Primary owner path: {path}")
-    terminal = path.rsplit("//", 1)[-1]
+    terminal = re.split(r"//|/", path)[-1]
     matches = names.get(terminal, ())
     if len(matches) != 1:
         raise ValueError(f"Missing or ambiguous Primary owner: {path}")
@@ -152,6 +153,23 @@ def _check_property_fields(fields, groups, children, classes):
             raise ValueError(f"{path}: expected declared children {sorted(expected)}")
 
 
+def _record_group_child(base, separator, args, scopes, owner, names, classes, groups, children):
+    if separator:
+        group = base
+        if group not in groups:
+            suffix = base.partition(".")[2]
+            matches = [path for path in groups
+                       if path.partition(".")[2] == suffix
+                       and _subclass(owner, _owner(path.partition(".")[0], names), classes)]
+            if not matches:
+                raise ValueError(f"Unresolved Property group bearer: {base}")
+            if len(matches) != 1:
+                raise ValueError(f"Ambiguous Property group bearer: {base}")
+            group = matches[0]
+        if scopes is None:
+            children[group].add(args["entity_name"])
+
+
 def _property_fields(properties, names, classes, atom_paths):
     groups = _property_groups(properties)
     children = {path: set() for path in groups}
@@ -162,20 +180,7 @@ def _property_fields(properties, names, classes, atom_paths):
         primary, separator, _ = base.partition(".")
         owner = _owner(primary, names)
         scopes = args.get("applies_to_entity_classes")
-        if separator:
-            group = base
-            if group not in groups:
-                suffix = base.partition(".")[2]
-                matches = [path for path in groups
-                           if path.partition(".")[2] == suffix
-                           and _subclass(owner, _owner(path.partition(".")[0], names), classes)]
-                if not matches:
-                    raise ValueError(f"Unresolved Property group bearer: {base}")
-                if len(matches) != 1:
-                    raise ValueError(f"Ambiguous Property group bearer: {base}")
-                group = matches[0]
-            if scopes is None:
-                children[group].add(args["entity_name"])
+        _record_group_child(base, separator, args, scopes, owner, names, classes, groups, children)
         name = _field_name(args["entity_name"])
         if owner == atom and name in atom_paths and _relative_property_path(args) != atom_paths[name]:
             raise ValueError(f"Atom Property must be declared at {atom_paths[name]}")
@@ -183,7 +188,10 @@ def _property_fields(properties, names, classes, atom_paths):
             raise ValueError("Atom Ref ID cannot be redeclared on a subtype")
         if "derived_from_properties" in args and (owner != atom or name != "ref_id" or scopes is not None):
             raise ValueError("Only Atom Ref ID supports a derived Property")
-        if scopes is None and f"{base}.{args['entity_name']}" in groups:
+        if scopes is None and (f"{base}.{args['entity_name']}" in groups
+                               or (args.get("value_cardinality") == 0
+                                   and "dependent_property_cardinality" in args
+                                   and "value_format" not in args)):
             continue
         if scopes is not None:
             target = _override_target(scopes, name, owner, names, classes)
@@ -282,7 +290,7 @@ def __post_init__(self):
 def assemble_manifest_fields(claims, declarations):
     classes, imports, names, properties, identities = _index_classes(claims, declarations)
     header = any(args.get("entity_name") == "Header"
-                 and args.get("base_path", "").rsplit("//", 1)[-1] == "Atom"
+                 and args.get("base_path", "").rsplit("/", 1)[-1] == "Atom"
                  and args.get("value_cardinality") == 0 for args, _ in properties)
     atom_paths = _HEADER_ATOM_PATHS if header else _ATOM_PATHS
     ref_inputs = tuple(atom_paths[name] for name in ("atom_id", "version", "status"))

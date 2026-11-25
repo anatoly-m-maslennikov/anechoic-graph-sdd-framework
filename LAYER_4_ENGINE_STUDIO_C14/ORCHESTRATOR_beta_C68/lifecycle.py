@@ -9,7 +9,7 @@ import subprocess
 import sys
 import threading
 
-from .generation import admit_generation, read_structure, ticket_allocation
+from .generation import admit_generation, read_accepted_model, read_structure, ticket_allocation
 from .jobs import ENGINE, FIELDS, operation_timeout
 from .lifecycle_queries import lifecycle_context
 from .warm_worker import WarmLifecycleUnavailable, run_lifecycle
@@ -38,6 +38,15 @@ def _requires_project_capture(job, context, control):
     operation = job["name"]
     if not isinstance(ref, str):
         return False
+    if operation == "atom_lifecycle_promote_draft" and any(
+            carrier.get("_exact_ref") == ref and carrier.get("status_group") == "Draft"
+            and carrier.get("version") == target.get("version") and carrier.get("replaces")
+            for carrier in context["carriers"]):
+        return True
+    if operation == "atom_lifecycle_change_status" and "-S-" in ref and job["arguments"].get("targetStatus") == "active" and any(
+            carrier.get("id") == ref and carrier.get("status_group") == "Current"
+            and carrier.get("replaces") for carrier in context["carriers"]):
+        return True
     if "-T-" in ref:
         return context["has_descendants"] and operation in {
             "atom_lifecycle_promote_draft", "atom_lifecycle_change_status",
@@ -45,17 +54,20 @@ def _requires_project_capture(job, context, control):
     if operation not in {"atom_lifecycle_promote_draft", "atom_lifecycle_change_status", "atom_lifecycle_archive"}:
         return False
     atom_id = ref.partition("@")[0]
-    ontology = PurePosixPath(control, "LAYER_1_META_ONTOLOGY_C9")
+    control_root = PurePosixPath(control)
     custom = {PurePosixPath(control, directory, "CUSTOM_MODEL")
               for directory in ("__PROJECT_CONFIG", "002_PROJECT_CONFIG")}
-    model_inputs = {ontology, ontology / "_SPEC", *custom}
     for carrier in context["carriers"]:
         if carrier["id"] != atom_id:
             continue
         parent = PurePosixPath(carrier["source_path"]).parent
-        if ((carrier["status"] == "active" and parent in model_inputs)
-                or (job["arguments"].get("targetStatus") == "active"
-                    and any(parent.is_relative_to(scope) for scope in {ontology, *custom}))):
+        ontology = next((directory for directory in (parent, *parent.parents)
+                         if directory.is_relative_to(control_root) and directory != control_root
+                         and directory.name.endswith("_C9")), None)
+        sources = custom if ontology is None else custom | {ontology, ontology / "_SPEC", ontology / "_DES"}
+        if ((carrier["status"] == "active" and parent in sources)
+                or (job["arguments"].get("targetStatus") == "active" and
+                    (ontology is not None or any(parent.is_relative_to(scope) for scope in custom)))):
             return True
     return False
 
@@ -71,6 +83,8 @@ class LifecycleJobs:
             return 409, {"error": {"code": "instance_mismatch", "message": "Instance does not match"}}
         if {key: request[key] for key in FIELDS - {"instance_id"}} != self.binding:
             return 409, {"error": {"code": "binding_mismatch", "message": "Binding does not match"}}
+        if self.skip_archives:
+            return 409, {"error": {"code": "archive_disabled", "message": "Lifecycle requires archived Atom history"}}
         with self.lock:
             if self.stopping.is_set():
                 return 503, {"error": {"code": "orchestrator_stopping", "message": "Orchestrator is stopping"}}
@@ -100,13 +114,16 @@ class LifecycleJobs:
                     self.warm_capture = None
         else:
             outcome = self._run_cold_lifecycle(request)
-        if (not isinstance(outcome, dict) or set(outcome) != {"lifecycle", "delta", "projection_error"}
+        if (not isinstance(outcome, dict) or set(outcome) not in ({"lifecycle", "delta", "projection_error"},
+                                        {"lifecycle", "delta", "projection_error", "generation_candidate"})
                 or not isinstance(outcome["lifecycle"], dict)
                 or not isinstance(outcome["lifecycle"].get("outcome"), str)):
             raise ValueError("Lifecycle worker returned an invalid outcome")
         return outcome
 
     def _run_cold_lifecycle(self, request):
+        if self.skip_archives:
+            raise RuntimeError("archive_disabled: Lifecycle requires archived Atom history")
         env = {key: value for key, value in os.environ.items() if key != "PYTHONHOME"}
         env["PYTHONPATH"] = str(ENGINE)
         env["ANECHOIC_BETA_WORKER_PARENT_PID"] = str(os.getpid())
@@ -161,7 +178,10 @@ class LifecycleJobs:
         structure = context["structure"]
         if _requires_project_capture(job, context, self.binding["control_root"]):
             return base, structure, {}
-        return base, structure, {"lifecycle_context": {**context, "endpoints": reuse["endpoints"]}}
+        carriers = [{key: value for key, value in carrier.items() if key != "replaces"}
+                    for carrier in context["carriers"]]
+        context = {key: value for key, value in context.items() if key != "has_descendants"}
+        return base, structure, {"lifecycle_context": {**context, "carriers": carriers, "endpoints": reuse["endpoints"]}}
 
     def _execute_lifecycle(self, job):
         try:
@@ -184,6 +204,10 @@ class LifecycleJobs:
         projection = {"state": "ready", "generation": base}
         if reply["projection_error"] is not None:
             projection = self._projection_failure(reply["projection_error"])
+        elif "generation_candidate" in reply:
+            projection = self._admit_lifecycle_generation(reply["generation_candidate"])
+            if projection["state"] == "ready":
+                self.watcher.acknowledge(lifecycle.get("effects", []), archive_epoch=archive_epoch)
         elif reply["delta"] is not None:
             projection = self._admit_lifecycle_delta(reply["delta"], base)
             if projection["state"] == "ready":
@@ -192,6 +216,30 @@ class LifecycleJobs:
         if projection["state"] != "ready" and (uncertain or lifecycle.get("effects")):
             self.unconfirmed_lifecycle_write = True
         return {"lifecycle": lifecycle, "write_state": "known", "projection": projection}
+
+    def _admit_lifecycle_generation(self, candidate):
+        try:
+            fields = {"model_sha256", "model_descriptor_sha256", "structure_sha256"}
+            if not isinstance(candidate, dict) or set(candidate) != fields or any(
+                    not isinstance(value, str) or not value for value in candidate.values()):
+                raise ValueError("Invalid lifecycle generation candidate")
+            self.flow_context = {"lifecycle": True}
+            outcome = self._generate()
+            if outcome["state"] != "succeeded":
+                raise ValueError(outcome.get("message", "Lifecycle generation failed"))
+            model = read_accepted_model(self.database_socket, self.instance_id)
+            structure = read_structure(self.database_socket, self.instance_id,
+                                       {"base_generation": outcome["generation"]})
+            if (model is None or structure is None
+                    or model.get("model_sha256") != candidate["model_sha256"]
+                    or sha256(json.dumps(model, sort_keys=True).encode()).hexdigest()
+                    != candidate["model_descriptor_sha256"]
+                    or sha256(json.dumps(structure, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+                    != candidate["structure_sha256"]):
+                raise ValueError("Lifecycle generation did not admit the expected Model and Structure")
+            return {"state": "ready", "generation": outcome["generation"]}
+        except (OSError, ValueError, TypeError, KeyError, RuntimeError, http.client.HTTPException) as error:
+            return self._projection_failure(error)
 
     @staticmethod
     def _projection_failure(error):

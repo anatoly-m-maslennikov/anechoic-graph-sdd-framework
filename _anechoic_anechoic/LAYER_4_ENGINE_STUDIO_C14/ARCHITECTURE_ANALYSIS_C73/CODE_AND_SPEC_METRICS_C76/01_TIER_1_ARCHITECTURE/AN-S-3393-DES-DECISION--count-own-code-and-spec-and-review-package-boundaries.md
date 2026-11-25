@@ -10,9 +10,6 @@ context:
 relations:
   IS_SOLUTION_FOR:
   - AN-S-3397
-  IS_REFERENCE:
-  - AN-S-3390
-  - AN-S-3351
 state:
   status: active
   version: 1

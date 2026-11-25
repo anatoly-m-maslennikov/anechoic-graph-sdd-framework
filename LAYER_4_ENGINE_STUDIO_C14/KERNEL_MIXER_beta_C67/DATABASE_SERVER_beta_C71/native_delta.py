@@ -10,7 +10,8 @@ from starlette.responses import JSONResponse
 
 from .analysis_projection import apply_spec_delta, snapshot_sizes
 from .carrier_checkpoint import update_checkpoint
-from .generation import GenerationBaseChanged, _digest, replace_native_generation
+from .generation import FULL_GENERATION_BODY_LIMIT, GenerationBaseChanged, _digest, replace_native_generation
+from .project_structure import component_ids
 from .ingestion_issues import clear_issues
 from .native_atoms import stage_atom_rows, validate_native_snapshot, write_staged_atoms
 from .realization_projection import has_table
@@ -196,13 +197,13 @@ def apply_native_delta(connection, data, manifest_sha256, *, archive=False):
         raise ValueError("Invalid startup archive transition")
     connection.execute("BEGIN TRANSACTION")
     try:
-        rows = connection.execute("SELECT id, model, structure FROM ops_generation").fetchall()
+        rows = connection.execute("SELECT id, model FROM ops_generation").fetchall()
         if (len(rows) != 1 or rows[0][0] != data["base_generation"]
                 or not has_table(connection, "native_graph", "int_labels")
                 or not has_table(connection, "main", "mrt_atom_graph_relations")
                 or (archive and not archive_pending(connection))):
             raise GenerationBaseChanged("Generation base changed or is not native")
-        base, model, structure = rows[0]
+        base, model = rows[0]
         snapshot, old, new_edges, inverse = _validate_delta(connection, data, model, manifest_sha256, archive=archive)
         update_checkpoint(connection, data, delta=True)
         _finish_delta(connection, data, archive)
@@ -212,7 +213,7 @@ def apply_native_delta(connection, data, manifest_sha256, *, archive=False):
             connection.execute("COMMIT")
             return base
         _stage_owned_edges(connection, old, inverse)
-        components = {"C00", *json.loads(structure)["components"]}
+        components = component_ids(connection)
         if not archive:
             _write_lenses(connection, snapshot)
         _write_atoms(connection)
@@ -256,7 +257,8 @@ def native_generation_route(connection, instance_id, manifest_sha256, lock, read
             alternatives += tuple(fields | {"carrier_hashes"} for fields in alternatives)
             if delta:
                 alternatives += (allowed | {"carrier_hashes", "archive_pending"},)
-            data = await read_object(request, 64 * 1024 * 1024, *alternatives)
+            limit = 64 * 1024 * 1024 if delta else FULL_GENERATION_BODY_LIMIT
+            data = await read_object(request, limit, *alternatives)
             if data["instance_id"] != instance_id:
                 return error_response("foreign_instance", "Instance does not match", 403)
             with lock:

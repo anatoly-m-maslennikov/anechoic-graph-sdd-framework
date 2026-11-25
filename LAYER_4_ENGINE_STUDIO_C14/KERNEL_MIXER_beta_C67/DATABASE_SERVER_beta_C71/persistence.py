@@ -1,10 +1,13 @@
 """Open a private database bound to one Project manifest."""
 
+import json
 import os
 from pathlib import Path
 import stat
 
 from .query_engine import connect
+from .project_structure import ensure_structure_table, replace_structure
+from .model_projection import ensure_model_tables, replace_model_projection
 from .table_names import main_objects, migrate_legacy_names, sync_query_views
 
 
@@ -24,6 +27,23 @@ def database_path(value):
                 or stat.S_IMODE(info.st_mode) & 0o077):
             raise ValueError("Database file is unavailable or unsafe")
     return path
+
+
+def _migrate_structure(connection):
+    columns = {row[1] for row in connection.execute("PRAGMA table_info('ops_generation')").fetchall()}
+    if "structure" in columns:
+        rows = connection.execute("SELECT structure FROM ops_generation").fetchall()
+        if len(rows) > 1:
+            raise ValueError("Invalid retained generation")
+        facts = replace_structure(connection, rows[0][0]) if rows else None
+        if main_objects(connection).get("generation") == "VIEW":
+            connection.execute("DROP VIEW generation")
+        connection.execute("ALTER TABLE ops_generation DROP COLUMN structure")
+        connection.execute("ALTER TABLE ops_generation ADD COLUMN structure_facts VARCHAR")
+        if rows:
+            connection.execute("UPDATE ops_generation SET structure_facts = ?", [facts])
+        return True
+    return False
 
 
 def open_bound_database(value, manifest_sha256, instance_id):
@@ -51,7 +71,17 @@ def open_bound_database(value, manifest_sha256, instance_id):
             connection.execute("INSERT INTO ops_project_binding VALUES (?, ?)", [manifest_sha256, instance_id])
         migrated = migrate_legacy_names(connection, objects, legacy=legacy)
         connection.execute('CREATE TABLE IF NOT EXISTS mrt_atoms (reference VARCHAR PRIMARY KEY, "content.summary" VARCHAR)')
-        connection.execute("CREATE TABLE IF NOT EXISTS ops_generation (id VARCHAR, model VARCHAR, structure VARCHAR)")
+        connection.execute("CREATE TABLE IF NOT EXISTS ops_generation (id VARCHAR, model VARCHAR, structure_facts VARCHAR)")
+        ensure_structure_table(connection)
+        model_tables_missing = "mrt_model_entities" not in main_objects(connection)
+        ensure_model_tables(connection)
+        migrated = _migrate_structure(connection) or migrated
+        if model_tables_missing:
+            row = connection.execute("SELECT model FROM ops_generation").fetchone()
+            if row:
+                descriptor = json.loads(row[0])
+                if isinstance(descriptor.get("bindings"), dict):
+                    replace_model_projection(connection, descriptor)
         if migrated:
             sync_query_views(connection)
         connection.execute("COMMIT")

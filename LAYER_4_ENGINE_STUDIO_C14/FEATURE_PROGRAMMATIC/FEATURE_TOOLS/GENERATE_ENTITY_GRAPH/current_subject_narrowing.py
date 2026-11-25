@@ -9,7 +9,7 @@ class _Narrowing(NarrowingCollection, NarrowingResolution):
 
 
 def compose_narrowing_graph(carriers):
-    """Compose a declared-only NARROWER_THAN tree from Current carriers."""
+    """Compose a declared-only IS_NARROWER_THAN tree from Current carriers."""
     graph = _Narrowing()
     graph.collect(carriers)
     graph.claim_edges()

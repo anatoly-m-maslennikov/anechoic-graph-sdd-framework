@@ -38,6 +38,8 @@ RUN rm -rf /usr/local/bin/uv /usr/local/bin/uvx /usr/local/bin/pip* \
     && ! command -v git && ! command -v perl && ! command -v strip
 
 FROM scratch AS runtime_base
+ARG ANECHOIC_RUNTIME_PROFILE=dev-preprod
+ENV ANECHOIC_RUNTIME_PROFILE=${ANECHOIC_RUNTIME_PROFILE}
 COPY --from=runtime_build / /
 ARG RUNTIME_UID=1000
 ARG RUNTIME_GID=1000

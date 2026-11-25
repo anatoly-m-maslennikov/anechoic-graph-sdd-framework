@@ -7,10 +7,11 @@ import sys
 from hashlib import sha256
 from pathlib import Path, PurePosixPath
 from time import monotonic
-from types import SimpleNamespace
+from types import MappingProxyType, SimpleNamespace
 
 from .ADAPTERS_C30__pub import CEILINGS, ReadContext
 from .carrier_read__pub import parse_carrier
+from .model_ontology_path__pub import find_ontology_component, is_ontology_model_source
 from .native_carrier_placement__pub import ARCHIVE_DIRECTORY, TICKET_DIRECTORY, project_goal_filename
 from .native_generation_snapshot import row_summary, snapshot
 from .native_source_rows__pub import (
@@ -127,8 +128,34 @@ def _partition_archived(capture):
     return foreground, archived
 
 
+def _model_path(selection, path):
+    try:
+        relative = PurePosixPath(path).relative_to(selection.control_root.relative_to(selection.root).as_posix())
+    except (ValueError, TypeError):
+        return False
+    parts = relative.parts
+    return is_ontology_model_source(relative) or (
+        len(parts) == 3 and parts[0] in {"__PROJECT_CONFIG", "002_PROJECT_CONFIG"}
+        and parts[1] == "CUSTOM_MODEL" and relative.suffix == ".md")
+
+
+def _model_inputs(selection, capture, foreground, model_path):
+    rows = tuple({"source_path": PurePosixPath(row["source_path"]).relative_to(
+                      selection.control_root.relative_to(selection.root).as_posix()).as_posix(),
+                  "exact_ref": row["_exact_ref"], "metadata": row["header_json"],
+                  "body": row["_content_bytes"].decode("utf-8")}
+                 for row in foreground.atoms
+                 if row["status_group"] == "Current" and model_path(row["source_path"]))
+    issues = tuple(issue for issue in NativeCaptureError(capture).ingestion_issues
+                   if model_path(issue["relative_path"]))
+    component = find_ontology_component(selection.control_root)
+    return MappingProxyType({"rows": rows, "has_c9": component is not None,
+                             "issues": issues})
+
+
 def prepare_generation_snapshot(
     binding, *, include_hashes=False, watcher_guarded=False, archive_stage=None, archive_roots=(),
+    include_model_inputs=False,
 ):
     """Capture carriers once and recheck their versions and membership before use.
 
@@ -144,8 +171,19 @@ def prepare_generation_snapshot(
     capture = capture_native(selection, reader=reader, defer_currentness=True,
                              include_content_properties="archive-summary",
                              defer_archives=deferred, archive_roots=directories)
-    _check_capture(capture)
+    def model_path(path):
+        return _model_path(selection, path)
+
+    if not include_model_inputs or any(not model_path(path) for path in capture.errors):
+        _check_capture(capture)
+    if include_model_inputs and capture.errors and any(
+        not model_path(issue["relative_path"]) for issue in capture.ingestion_issues
+        if issue["code"].startswith("duplicate_")
+    ):
+        _check_capture(capture)
     foreground, archived = _partition_archived(capture) if deferred is not None else (capture, None)
+    if include_model_inputs:
+        model_inputs = _model_inputs(selection, capture, foreground, model_path)
 
     def finish(endpoints):
         result = snapshot(binding, foreground, endpoints)
@@ -159,7 +197,8 @@ def prepare_generation_snapshot(
                     snapshot(binding, archived, endpoints), _carrier_hashes(archived))
         return (result, _carrier_hashes(foreground)) if include_hashes else result
 
-    return (None if archive_stage == "archive" else _graph_config(selection)), finish
+    result = (None if archive_stage == "archive" else _graph_config(selection)), finish
+    return (*result, model_inputs) if include_model_inputs else result
 
 
 def _ticket_paths(selection, paths):

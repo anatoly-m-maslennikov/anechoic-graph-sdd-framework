@@ -94,7 +94,7 @@ def _cfel_relation_records(
             name = clause.get("relation") or notations.get(clause.get("relation_notation"))
             if not isinstance(name, str):
                 continue
-            if (name in {"NARROWER_THAN", "HAS_NARROWER", "INSTANCE_OF", "HAS_INSTANCE"}
+            if (name in {"IS_NARROWER_THAN", "HAS_NARROWER", "IS_INSTANCE_OF", "HAS_INSTANCE"}
                     and "{" not in clause.get("expression", "")):
                 continue
             selector = clause.get("written_source_selector", clause.get("source_selector"))

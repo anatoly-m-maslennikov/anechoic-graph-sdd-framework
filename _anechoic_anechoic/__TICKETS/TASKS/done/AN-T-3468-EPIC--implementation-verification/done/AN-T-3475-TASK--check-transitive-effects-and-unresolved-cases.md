@@ -7,11 +7,6 @@ priority: 2
 context:
   template: task
   label: Task
-relations:
-  IS_REFERENCE:
-  - AN-T-3473
-  - AN-T-3474
-  - AN-T-3471
 state:
   status: done
   version: 1

@@ -6,6 +6,7 @@ import re
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.component_manifest__pub import parse_component_manifest_fields as _fields
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.code_access_rules__pub import parse_code_access
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.lens_scopes__pub import compile_lens_groups, validate_lens_whitelist
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.atom_reference__pub import derive_atom_ref
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import native_header_view
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import select_manifest_carriers, manifest_inputs, manifest_state_fields
@@ -141,6 +142,12 @@ def compile_structure(selection, model) -> dict:  # noqa: C901
     directory_ids = set()
     pending = [(control, 'C00')]
     _walk_structure(reader, pending, inventories, directory_ids, project_fields, model, control, atoms, packages, components)
+    groups = compile_lens_groups(project_fields.get('parameters'))
+    for component in components.values():
+        try:
+            validate_lens_whitelist(component['fields'].get('lens_whitelist'), groups)
+        except ValueError as error:
+            raise ValueError(f"{component['source_path']}: {error}") from error
     if reader.currentness()['state'] != 'unchanged' or any(_directories(reader, root) != names for root, names in inventories.items()):
         raise ValueError('Structure sources changed during compilation')
     parameters = project_fields.get("parameters", {}).get("project", {})

@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 7
-  updated_at: "2026-11-22T14:26:08.640104+00:00"
+  version: 8
+  updated_at: "2026-11-24T23:12:55.813309+00:00"
 ---
 
 ## Summary
@@ -32,16 +32,6 @@ declare_entity(
         boundaries={
             'code': {
                 'imports': {'only': ['src.lib.lib__shared']},
-                'exports': {
-                    'FEATURE_WORKBENCH_FRONTEND__shared': None,
-                    'src.lib.lib__shared': {'shared': ['C46', 'LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND/src',
-                        'LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND/FEATURE_WORKBENCH_FRONTEND__tests']},
-                    'FEATURE_WORKBENCH_FRONTEND__shared.WorkbenchApi': None,
-                    'FEATURE_WORKBENCH_FRONTEND__shared.WorkspaceApi': None,
-                    'FEATURE_WORKBENCH_FRONTEND__shared.HttpOperationCaller': None,
-                    'FEATURE_WORKBENCH_FRONTEND__shared.McpAppTransport': None,
-                    'FEATURE_WORKBENCH_FRONTEND__shared.OperationCaller': None,
-                },
             },
             'io': {
                 'server': {

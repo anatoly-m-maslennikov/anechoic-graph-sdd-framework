@@ -14,10 +14,7 @@ state:
 relations:
   ANSWERS:
   - AN-S-3038
-  IS_REFERENCE:
-  - AN-S-4732
-  - AN-S-3292@9
-  - AN-S-3293
+
 ---
 
 ## Summary

@@ -14,6 +14,7 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.native_project_selection import NativeProjectSelection
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_carrier
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import CEILINGS, ReadContext, protected
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model_ontology_path__pub import component_path
 
 
 @dataclass(frozen=True)
@@ -50,7 +51,7 @@ def _pinned_bytes(reader: ReadContext, path: Path, ref_id: str, digest: str, *, 
     return raw
 
 
-def _check_header(path: Path, raw: bytes, kind: str, ref_id: str) -> None:
+def _check_header(path: Path, raw: bytes, kind: str, ref_id: str) -> dict:
     try:
         header = native_header_view(parse_carrier(raw, path).metadata)
     except ValueError as error:
@@ -61,6 +62,7 @@ def _check_header(path: Path, raw: bytes, kind: str, ref_id: str) -> None:
             or f'{identity.get("atom_id")}@{state["version"]}' != ref_id
             or state.get("status") != "active" or context.get("template") != kind):
         raise NativeWorkflowDefinitionError(f"Expected active native {kind} definition {ref_id}")
+    return context
 
 
 def bind_native_workflow(
@@ -120,12 +122,14 @@ def bind_status_specifications(
             raise NativeWorkflowDefinitionError(f"Invalid native status specification {ref}")
         path = Path(relative)
         if (path.is_absolute() or ".." in path.parts or path.as_posix() != relative
-                or not path.is_relative_to(selection.control_relative / "LAYER_1_META_ONTOLOGY_C9")
+                or not path.is_relative_to(selection.control_relative)
+                or component_path(path.relative_to(selection.control_relative), 'C58') is None
                 or path.suffix != ".md" or not path.name.startswith(atom_id + "-")):
             raise NativeWorkflowDefinitionError(f"Invalid native status specification path {ref}")
         full_path = selection.root / path
         raw = _pinned_bytes(reader, full_path, ref, digest, metadata_guard=True)
-        _check_header(full_path, raw, kind, ref)
+        if _check_header(full_path, raw, kind, ref).get('lens') != 'DOM/MTD':
+            raise NativeWorkflowDefinitionError(f"Expected DOM/MTD Lens for native status specification {ref}")
         _, delimiter, body = raw.partition(b"\n---\n")
         if not delimiter or sha256(body).hexdigest() != expected_body:
             raise NativeWorkflowDefinitionError(f"Native status specification body differs for {ref}")

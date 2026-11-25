@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 3
-  updated_at: '2026-11-22T11:23:40.206159+00:00'
+  version: 4
+  updated_at: "2026-11-24T23:12:55.813309+00:00"
 relations:
   CONTRIBUTES_TO:
   - AN-S-3330
@@ -33,7 +33,7 @@ declare_entity(
         name='WORKBENCH',
         lens_whitelist=['DES', 'DevOps', 'QA', 'SPEC', 'SWD'],
         boundaries={
-            'code': {'imports': [], 'exports': {}},
+            'code': {'imports': []},
             'io': {'client': {'workbench': {'component': 'C21', 'interface': 'workbench_http'}}},
             'state': {'reads': [], 'writes': []},
         },

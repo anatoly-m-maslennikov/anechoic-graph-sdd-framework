@@ -33,6 +33,17 @@ def project(root):
 
 
 class Kernel(BaseHTTPRequestHandler):
+    def do_GET(self):
+        if self.path.startswith('/model?'):
+            models = [payload['model'] for payload in self.server.payloads if 'model' in payload]
+            body = models[-1].encode() if models else b''
+            self.send_response(200 if models else 409)
+            self.send_header('Content-Length', str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+        else:
+            self.send_error(404)
+
     def do_PUT(self):
         payload = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
         if self.path == '/ingestion/issues':
@@ -121,7 +132,7 @@ def latest(path):
         conn.close()
 
 @contextmanager
-def watch_project(root, *, watch_code=False):
+def watch_project(root, *, watch_code=False, skip_archives=False):
     control, manifest = project(root)
     (control / '__TKT').mkdir()
     binding = {'root': str(root), 'control_root': control.name, 'manifest_path': manifest.name,
@@ -136,6 +147,8 @@ def watch_project(root, *, watch_code=False):
                    '--database-socket', str(root / 'kernel.sock')]
         if watch_code:
             command.append('--watch-code')
+        if skip_archives:
+            command.append('--skip-archives')
         with subprocess.Popen(command, cwd=ENGINE, env=env) as process:
             try:
                 wait_for(lambda: (latest(socket_path) or {}).get('generation') == '1', process)

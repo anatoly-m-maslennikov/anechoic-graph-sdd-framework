@@ -23,7 +23,7 @@ _SECTION_HEADING = re.compile(r"^body:\d+:(#{1,6})\s+(.+?)\s*$")
 _STRUCTURED_HEADINGS = frozenset({"summary", "scope", "claim", "details"})
 _DEFINITION = re.compile(r"^(?:a|an) (?P<term>.+?) \*\*means\*\* .+\.$", re.IGNORECASE)
 _CLASSIFICATION = re.compile(
-    r"^the Term (?P<term>.+?) \*\*must\*\* be \*\*(?:NARROWER_THAN|BROADER_THAN)\*\* .+\.$",
+    r"^the Term (?P<term>.+?) \*\*must\*\* be \*\*(?:IS_NARROWER_THAN|BROADER_THAN)\*\* .+\.$",
     re.IGNORECASE)
 
 

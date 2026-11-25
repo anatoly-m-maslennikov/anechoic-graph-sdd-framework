@@ -80,13 +80,13 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
         return bind_native_workflow(self.selection, **(binding | changes))
 
     def _status_binding(self):
-        ontology = Path(self.control) / "LAYER_1_META_ONTOLOGY_C9"
-        source = STUDIO.parent / "_anechoic_anechoic" / ontology.name
+        methodology = Path("ONTOLOGY_SCORE_C82") / "OCCURRENT_METRONOME_C58"
+        source = STUDIO.parent / "_anechoic_anechoic" / methodology
         rows = []
         for (native, _) in STATUS_SPECIFICATIONS.values():
             atom_id = native.partition("@")[0]
-            original, = source.rglob(f"{atom_id}-DOM-*.md")
-            relative = ontology / original.relative_to(source)
+            original, = source.rglob(f"{atom_id}-MTD-*.md")
+            relative = Path(self.control) / methodology / original.relative_to(source)
             path = self.root / relative
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes(original.read_bytes())

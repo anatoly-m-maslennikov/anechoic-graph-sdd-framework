@@ -4,11 +4,16 @@ import re
 
 from ARCHITECTURE_ANALYSIS_C73.CODE_AND_SPEC_METRICS_C76.metrics__shared import spec_rows
 
+from .atom_reference__pub import is_native_atom_reference
 from .markdown_content__pub import content_lines
 from .native_carrier_header__pub import native_header_view
+from .relation_declaration_catalog__pub import retired_archive_relations
 
 _HISTORICAL = {"ADVANCES": "SERVES", "IS_ADVANCED_BY": "IS_SERVED_BY",
-               "REFINES": "CONTRIBUTES_TO", "IS_REFINED_BY": "RECEIVES_CONTRIBUTION_FROM"}
+               "REFINES": "CONTRIBUTES_TO", "IS_REFINED_BY": "RECEIVES_CONTRIBUTION_FROM",
+               "CONTAINED_BY": "IS_CONTAINED_BY", "CHILD_OF": "IS_CHILD_OF",
+               "CHILDREN": "IS_PARENT_FOR", "NARROWER_THAN": "IS_NARROWER_THAN",
+               "INSTANCE_OF": "IS_INSTANCE_OF"}
 
 
 def _bindings(endpoints):
@@ -30,18 +35,19 @@ def _bindings(endpoints):
             or set(inverses) & set(inverses.values())):
         raise ValueError("Invalid native relation declarations")
     inverse = inverses | {value: key for key, value in inverses.items()}
-    if "CONTAINED_BY" not in inverse:
+    if not {"IS_CONTAINED_BY", "CONTAINED_BY"} & inverse.keys():
         raise ValueError("Native containment requires a declared inverse")
     return names, inverse
 
 
 def row_summary(row):
-    """Use the first Summary for display. Spec checks report duplicate headings."""
+    """Use the first nonblank line of the first Summary as the indexed title."""
     record = next((item for item in row["content_properties_json"] if item["property_path"] == ["summary"]), None)
     if record is None:
         return ""
     lines = content_lines(row["_content_bytes"].decode("utf-8"))
-    return "".join(lines[record["_body_start_line"]:record["_end_line"]]).strip()
+    summary = lines[record["_body_start_line"]:record["_end_line"]]
+    return next((line.strip() for line in summary if line.strip()), "")
 
 
 def _atoms(rows):
@@ -74,7 +80,7 @@ def _add_edge(edges, edge, names, inverse, references):
 def _target_kind(target):
     if isinstance(target, str) and re.fullmatch(r"C[0-9]+", target):
         return "Component"
-    if isinstance(target, str) and re.fullmatch(r"[A-Z]+-[STPC]-[0-9]+(?:@[1-9][0-9]*(?:-draft)?)?", target):
+    if is_native_atom_reference(target):
         return "Atom"
     raise ValueError("Invalid native relation target")
 
@@ -92,7 +98,10 @@ def _authored_edges(row, names, inverse):
     if direct in names and derived in relations:
         raise ValueError(f"Native relation {derived} is derived")
     citations, consolidated = set(), set()
+    retired = retired_archive_relations(row.get("status_group"), names)
     for name, targets in relations.items():
+        if name in retired:
+            continue
         if not isinstance(targets, list):
             raise ValueError("Native relation targets must be a list")
         for target in targets:
@@ -118,7 +127,10 @@ def snapshot(binding, capture, endpoints):
     atoms, references = _atoms(capture.atoms)
     edges = []
     for edge in capture.containment:
-        _add_edge(edges, dict(edge), names, inverse, references)
+        edge = dict(edge)
+        if edge["relation_type"] == "IS_CONTAINED_BY" and "IS_CONTAINED_BY" not in names:
+            edge["relation_type"] = "CONTAINED_BY"
+        _add_edge(edges, edge, names, inverse, references)
     for row in capture.atoms:
         for edge in _authored_edges(row, names, inverse):
             _add_edge(edges, edge, names, inverse, references)

@@ -46,7 +46,7 @@ class CandidateDefinitionEvidenceTests(unittest.TestCase):
         validate_candidate(raw, mention("Primary Entity", quote))
 
     def test_fixture_positive_classification_defines_its_own_target(self):
-        quote = "the Term Carrier **must** be **NARROWER_THAN** Primary Entity."
+        quote = "the Term Carrier **must** be **IS_NARROWER_THAN** Primary Entity."
         raw = source("Carrier", quote, role="Delivery")
         validate_candidate(raw, mention("Carrier", quote, kind="classification"))
 
@@ -87,9 +87,9 @@ class CandidateDefinitionEvidenceTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "explicit definition"):
             validate_candidate(raw, mention("Target", "an Other **means** an independently defined target."))
 
-        raw = source("Target", "the Term Target **must not** be **NARROWER_THAN** Parent.")
+        raw = source("Target", "the Term Target **must not** be **IS_NARROWER_THAN** Parent.")
         with self.assertRaisesRegex(ValueError, "positive classification"):
-            validate_candidate(raw, mention("Target", "the Term Target **must not** be **NARROWER_THAN** Parent.",
+            validate_candidate(raw, mention("Target", "the Term Target **must not** be **IS_NARROWER_THAN** Parent.",
                                             kind="classification"))
 
     def test_value_qualified_path_is_not_silently_truncated(self):

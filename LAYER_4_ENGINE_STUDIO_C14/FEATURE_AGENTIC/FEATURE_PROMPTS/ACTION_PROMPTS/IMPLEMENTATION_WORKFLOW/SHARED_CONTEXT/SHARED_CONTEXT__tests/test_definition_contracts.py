@@ -82,7 +82,7 @@ class SharedDefinitionContracts(unittest.TestCase):
         self.assertIn("same MCP operation", readme)
         self.assertIn("`submit_result`", readme)
         self.assertIn("does\nnot complete the Plan", readme)
-        self.assertIn("independent `child_of`", readme)
+        self.assertIn("independent `IS_TIER_GOVERNED_BY`", readme)
 
     def test_review_requires_explicit_phase_and_never_accepts_preliminary(self):
         review = (HERE / "CA-O-230.prompt.md").read_text()

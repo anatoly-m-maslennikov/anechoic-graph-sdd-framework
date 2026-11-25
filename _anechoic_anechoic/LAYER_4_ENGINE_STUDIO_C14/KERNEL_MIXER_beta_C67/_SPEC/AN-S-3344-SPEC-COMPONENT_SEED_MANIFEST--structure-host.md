@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 2
-  updated_at: "2026-11-22T12:39:43.763843+00:00"
+  version: 3
+  updated_at: "2026-11-24T23:12:55.813309+00:00"
 ---
 # Structure Host
 
@@ -25,7 +25,7 @@ declare_entity(
     instance=ComponentSeedManifest(
         component_seed_id='CS6',
         boundaries={
-            'code': {'imports': {'only': []}, 'exports': {'structure_host_CS6__shared.read_structure': 'shared'}},
+            'code': {'imports': {'only': []}},
             'state': {'reads': ['accepted Kernel generation'], 'writes': []},
         },
     ),

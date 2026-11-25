@@ -7,10 +7,6 @@ tier: 1
 context:
   template: DECISION
   lens: DES
-relations:
-  IS_REFERENCE:
-  - AN-S-2565
-  - AN-S-348
 state:
   status: active
   version: 1

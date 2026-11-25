@@ -23,7 +23,7 @@ def _aspect_statements(args: Mapping[str, Any]) -> tuple[str, str]:
         address = validate_aspect_instance(dict(args))
     except ValueError:
         raise ValueError("invalid Aspect instance address") from None
-    return address, f"({address}) ((INSTANCE_OF)) Aspect"
+    return address, f"({address}) ((IS_INSTANCE_OF)) Aspect"
 
 def _compile_dataclass_fields(declaration, args):
     if set(args) - {"entity_name", "entity_class", "incoming_model_relations"} or not {"entity_name", "entity_class"} <= set(args):
@@ -137,7 +137,7 @@ def compiler_model_statements(declaration: Mapping[str, Any], *, model_class_bin
     if declaration["kind"] == "entity" and ("structure_paths" in args or "aspect_memberships" in args):
         from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import validate_aspect_hierarchy
         paths, memberships = validate_aspect_hierarchy(dict(args))
-        return paths + tuple(f"({address}) ((INSTANCE_OF)) Aspect" for address in memberships)
+        return paths + tuple(f"({address}) ((IS_INSTANCE_OF)) Aspect" for address in memberships)
     if declaration["kind"] == "entity" and "allowed_classification_values" in args:
         return _compile_classifications(args)
     if declaration["kind"] == "entity" and args.get("instance", {}).get("type") == "Aspect":

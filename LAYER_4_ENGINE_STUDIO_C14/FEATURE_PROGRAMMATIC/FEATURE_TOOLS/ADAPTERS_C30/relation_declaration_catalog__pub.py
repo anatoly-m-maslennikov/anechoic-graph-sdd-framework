@@ -2,6 +2,15 @@
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30 import subject_notation__pub as notation
 
+_CITATION_NAMES = frozenset({'REFERENCES', 'IS_REFERENCE', 'HAS_REFERENCE', 'IS_REFERENCE_FOR'})
+
+
+def retired_archive_relations(status_group, declared_names):
+    """Keep archived citation data readable after the Model retires citations."""
+    if status_group == 'Archived' and _CITATION_NAMES.isdisjoint(declared_names):
+        return _CITATION_NAMES
+    return ()
+
 
 def build_relation_declaration_catalog(records: list) -> dict:
     """Assemble canonical Relations and their inverse aliases before Entity checks."""
@@ -13,10 +22,14 @@ def build_relation_declaration_catalog(records: list) -> dict:
         local = notation.namespace_local_expression(notation.parse_subject_expression(subject).expression)
         endpoint = local.endpoints[-1] if isinstance(local, notation.RelationChain) else local
         if not (isinstance(endpoint, notation.Path) and isinstance(endpoint.head, notation.Name)
-                and endpoint.head.value == "Relation" and len(endpoint.steps) == 1
-                and endpoint.steps[0].operator == "//"
-                and isinstance(endpoint.steps[0].operand, notation.Name)
-                and endpoint.steps[0].operand.value == args["relation_name"]):
+                and ((endpoint.head.value == "Relation" and len(endpoint.steps) == 1)
+                     or (endpoint.head.value == "Graph" and len(endpoint.steps) == 2
+                         and endpoint.steps[0].operator == "/"
+                         and isinstance(endpoint.steps[0].operand, notation.Name)
+                         and endpoint.steps[0].operand.value == "Relation"))
+                and endpoint.steps[-1].operator == "//"
+                and isinstance(endpoint.steps[-1].operand, notation.Name)
+                and endpoint.steps[-1].operand.value == args["relation_name"]):
             raise ValueError(f"{source}: declared Relation does not match its Main Subject")
         for name, reverse in ((args["relation_name"], False), (args.get("inverse_alias"), True)):
             if name is None:

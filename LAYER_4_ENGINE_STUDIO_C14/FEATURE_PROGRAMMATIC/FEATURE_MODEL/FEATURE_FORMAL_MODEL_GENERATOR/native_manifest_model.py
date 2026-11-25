@@ -26,6 +26,17 @@ _CLAIM_FILES = {
     "native-spec-template-claims.json": "285840cd66c360787502c9fc1797b46c8eae447cb224bdf51a8c37534462ad10",
 }
 
+_OLD_ATOM = "Node//Artifact//Atom"
+_NEW_ATOM = "Graph/Node//Artifact//SSOT//Prescribed/Content/Atom"
+_CHECK_TARGET_MIGRATION = {
+    _OLD_ATOM: _NEW_ATOM,
+    **{_OLD_ATOM + "//Spec Atom" + suffix: _NEW_ATOM + "//Specification" + suffix
+       for suffix in ("//Manifest//Project Manifest", "//Manifest//Component Manifest",
+                      "//Purpose", "//Contract")},
+    _OLD_ATOM + "//Spec Atom//Component Seed Manifest":
+        _NEW_ATOM + "//Specification//Manifest//Component Seed Manifest",
+}
+
 def reviewed_model_records():
     """Return normalized reviewed Claims, their originals, and a source fingerprint."""
     records, originals = [], {}
@@ -55,12 +66,15 @@ def reviewed_model_records():
 def admit_active_model_records(records):
     """Validate Active declarations and keep executable checks pinned."""
     reviewed, originals, _ = reviewed_model_records()
-    checks = {}
+    checks, targets = {}, {}
     for _, subject, claim in reviewed:
         declaration = parse_native_model_claim(claim)
         if check := declaration.get("instance_check"):
             target = model_class_target(subject, declaration["arguments"]["entity_name"])
-            checks[target] = check["source"]
+            checks[target] = (check["name"], check["parameter_type"], check["source"])
+            targets[target] = target
+            if target in _CHECK_TARGET_MIGRATION:
+                targets[_CHECK_TARGET_MIGRATION[target]] = target
     records = tuple(records)
     subjects = set()
     parsed = []
@@ -72,13 +86,17 @@ def admit_active_model_records(records):
         parsed.append((source, subject, declaration))
     seen = set()
     for source, subject, declaration in _merge_constraint_claims(parsed):
-        check = declaration.get("instance_check", {}).get("source")
+        check = declaration.get("instance_check")
         args = declaration["arguments"]
         target = model_class_target(subject, args.get("entity_name")) if "entity_class" in args else None
-        if check != checks.get(target):
+        original_target = targets.get(target)
+        expected = checks.get(original_target)
+        actual = (check["name"], check["parameter_type"], check["source"]) if check else None
+        if actual != expected or (check and (args.get("entity_class") != check["parameter_type"]
+                                              or original_target in seen)):
             raise ValueError(f"{source}: executable Model instance check differs from the approved review")
         if check:
-            seen.add(target)
+            seen.add(original_target)
     if checks.keys() - seen:
         raise ValueError("Active Model is missing reviewed instance checks")
     _check_relation_references(records)

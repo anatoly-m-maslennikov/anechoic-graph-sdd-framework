@@ -188,6 +188,18 @@ class ModelDeclarationSourceTests(unittest.TestCase):
             "target_endpoint={'entity_paths': ('Relation',)})\n```\n"))
         self.assertEqual(len(select_model_claims([relation_entity, link])), 2)
 
+    def test_relation_catalog_accepts_exact_legacy_and_graph_scopes(self):
+        declaration = {"kind": "relation", "arguments": {"relation_name": "LINKS", "inverse_alias": "LINKED_BY"}}
+        for path in ("Relation//LINKS", "Graph/Relation//LINKS"):
+            with self.subTest(path=path):
+                catalog = build_relation_declaration_catalog([("source", "MODEL//ANECHOIC <+ " + path, declaration)])
+                self.assertEqual(set(catalog), {"LINKS", "LINKED_BY"})
+                self.assertTrue(catalog["LINKED_BY"][1])
+        for subject in ("MODEL//ANECHOIC <+ Graph/Relation//OTHER", "MODEL//ANECHOIC <+ Graph//Relation//LINKS",
+                        "MODEL//ANECHOIC <+ Other/Relation//LINKS", "Graph/Relation//LINKS"):
+            with self.subTest(subject=subject), self.assertRaisesRegex(ValueError, "does not match"):
+                build_relation_declaration_catalog([("source", subject, declaration)])
+
     def test_relation_registry_resolves_derived_names_after_assembly(self):
         def relation(name, **args):
             return (name + ".md", "ANECHOIC_MODEL <+ CFEL <+ Relation//" + name,

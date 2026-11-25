@@ -263,14 +263,15 @@ def _import_edges(reference):
 
 def restore_property_graph(connection):
     """Reopen the graph catalog from the admitted tables."""
-    connection.execute("DROP PROPERTY GRAPH IF EXISTS anechoic")
     imports = has_table(connection, "main", "mrt_real_graph_import_nodes")
     native = has_table(connection, "native_graph", "int_reference")
     if not imports and not native:
+        connection.execute("DROP PROPERTY GRAPH IF EXISTS anechoic")
         return
     reference = "native_graph.int_reference" if native else "realization_internal.int_component_reference"
     vertices = [f"{reference} LABEL Reference"]
-    edges = native_edges(connection, reference) if native else []
+    edges = native_edges(connection, reference, realization=imports) if native else []
+    connection.execute("DROP PROPERTY GRAPH IF EXISTS anechoic")
     if imports:
         vertices.append("main.mrt_real_graph_import_nodes LABEL ImportNode")
         edges.extend(_import_edges(reference))

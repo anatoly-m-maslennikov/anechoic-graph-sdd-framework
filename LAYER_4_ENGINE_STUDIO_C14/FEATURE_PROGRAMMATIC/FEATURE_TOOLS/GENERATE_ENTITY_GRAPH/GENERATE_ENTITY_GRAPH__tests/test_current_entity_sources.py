@@ -259,11 +259,11 @@ class CurrentEntitySourcesTests(unittest.TestCase):
         }
         self.assertEqual(
             {
-                ("NARROWER_THAN", "Artifact/Atom", "Artifact"),
+                ("IS_NARROWER_THAN", "Artifact/Atom", "Artifact"),
                 ("IS_PROPERTY_OF", "Artifact/Atom.Status", "Artifact/Atom"),
                 ("IS_ALLOWED_VALUE_OF", "Artifact/Atom.Status:Active", "Artifact/Atom.Status"),
                 ("IS_PROPERTY_OF", "Workflow.State", "Workflow"),
-                ("NARROWER_THAN", "Atom/Content Role", "Atom"),
+                ("IS_NARROWER_THAN", "Atom/Content Role", "Atom"),
                 ("IS_ALLOWED_VALUE_OF", "Atom/Content Role:Plan", "Atom/Content Role"),
             },
             actual,

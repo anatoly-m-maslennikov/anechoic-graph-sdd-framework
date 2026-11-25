@@ -13,9 +13,10 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import
 
 from . import common, effects
 from .effects import _project_write_lock
-from .native_draft_guards import _check_owner, _summary, _validate_contract
+from .native_draft_guards import _check_owner, _summary, _validate_contract, is_c9_typed_manifest, _validate_c9_typed_manifest, _has_formal_declaration
 from .native_draft_source import _revision_header, _revision_root, _state_bytes, _task_path
 from .source import bind_query_reader
+from .native_replacement_promotion import _plan_replacements, _archive_replacements, _check_replacement_activation
 
 
 def _promote_revision(selection, target, status, draft, previous, current_rows,
@@ -38,42 +39,49 @@ def _promote_revision(selection, target, status, draft, previous, current_rows,
         paths.append(path)
     draft_path, previous_path = paths
     suffix = draft_path.name[len(target['ref_id']):]
-    if previous_path.name != atom_id + suffix:
+    typed = is_c9_typed_manifest(draft['header_json'])
+    if not typed and previous_path.name != atom_id + suffix:
         raise common.InputError('target', 'Draft and Current filename must agree.')
-    archive_path = root / ARCHIVE_DIRECTORY / f"{atom_id}@{previous['version']}{suffix}"
+    previous_suffix = previous_path.name[len(atom_id):]
+    archive_path = root / ARCHIVE_DIRECTORY / f"{atom_id}@{previous['version']}{previous_suffix if typed else suffix}"
     destination = (root / ('' if status in {'active', 'in_queue'} else status) / (atom_id + suffix)
                    if '-T-' in atom_id else root / READY_DIRECTORY / (atom_id + suffix) if '-S-' in atom_id else previous_path)
 
     with _project_write_lock(selection.root):
-        archive_path, destination, archive, promoted = _preflight_revision(
+        archive_path, destination, archive, promoted, capture = _preflight_revision(
             selection, status, draft, previous, current_rows, structure_snapshot, previous_capture,
             validate_project_spec_model, root, paths, archive_path, destination, atom_id, version)
-        return _commit_revision(selection, status, draft, previous, paths, archive_path,
-                                destination, archive, promoted, atom_id, version)
+        plans = _plan_replacements(selection, draft, current_rows, structure_snapshot, capture, previous=previous)
+        if status == 'active':
+            _check_replacement_activation([draft], capture.atoms, {row['id'] for row, *_ in plans})
+        archived = _archive_replacements(selection, plans, draft)
+        if archived['outcome'] != 'completed':
+            return archived
+        result = _commit_revision(selection, status, draft, previous, paths, archive_path,
+                                  destination, archive, promoted, atom_id, version)
+        result['effects'] = archived['effects'] + result['effects']
+        return result
 
 
 def _preflight_revision(selection, status, draft, previous, current_rows, structure_snapshot,
                         previous_capture, validate_project_spec_model, root, paths,
                         archive_path, destination, atom_id, version):
     from .native_draft import _validate_project_template
-
     draft_path, previous_path = paths
     try:
         capture, raw_draft, raw_previous, draft_bounds, previous_bounds, draft_body, previous_body = (
             _read_revision_sources(selection, draft, previous, previous_capture, paths, atom_id, version))
         draft_header, previous_header = draft['header_json'], previous['header_json']
+        typed = is_c9_typed_manifest(draft_header)
+        if typed:
+            _validate_c9_typed_manifest(draft_header, draft_body)
+            parameters = getattr(selection, 'parameters', None)
+            if draft_path != native_carrier_path(draft_header, _summary(draft_body), project_root=selection.control_root, owner_directory=root, parameters=parameters):
+                raise common.InputError('target', 'Draft path disagrees with its Header and Summary.')
         if '-S-' in atom_id:
             _validate_project_template(draft_header, validate_project_spec_model, draft_body)
-        contract_owner = _validate_contract(selection, draft_header, draft_body, draft_path, structure_snapshot, capture)
-        if contract_owner is not None:
-            if contract_owner != root:
-                raise common.InputError('container', 'Component Contract owner disagrees with its path.')
-            if (draft_path != native_carrier_path(draft_header, _summary(draft_body),
-                    project_root=selection.control_root, owner_directory=root)
-                    or previous_path != native_carrier_path(previous_header, _summary(previous_body),
-                    project_root=selection.control_root, owner_directory=root,
-                    parameters=getattr(selection, 'parameters', None))):
-                raise common.InputError('target', 'Component Contract paths disagree with their Headers and Summaries.')
+        _check_contract_paths(selection, draft_header, previous_header, draft_body, previous_body,
+                              paths, structure_snapshot, capture, root)
         if '-T-' in atom_id:
             owner = _check_owner(selection, native_header_view(previous_header)['context'].get('container'), current_rows, capture)
         if '-T-' in atom_id and 'atom_family' in previous_header:
@@ -82,20 +90,47 @@ def _preflight_revision(selection, status, draft, previous, current_rows, struct
                 raise common.InputError('target', 'Task paths disagree with their authored Headers and Summaries.')
             archive_path = _task_path(selection, previous_header, previous_body, 'archived', previous['version'], owner, root)
             destination = _task_path(selection, draft_header, draft_body, status, version, owner, root)
-        if (_revision_header(draft_header) != _revision_header(previous_header)
+        draft_revision, previous_revision = _revision_header(draft_header), _revision_header(previous_header)
+        if (typed and previous_header.get('atom_family') == 'SPEC'
+                and (previous_revision.get('context', {}).get('template') == draft_revision['context']['template']
+                     or (previous_revision.get('context', {}).get('template') is None and _has_formal_declaration(previous_body)))):
+            draft_revision = {**draft_revision, 'context': {k: v for k, v in draft_revision['context'].items() if k != 'template'}}
+            previous_revision = {**previous_revision, 'context': {k: v for k, v in previous_revision['context'].items() if k != 'template'}}
+        if any('IS_REPLACEMENT_FOR' in header.get('relations', {}) for header in (draft_header, previous_header)):
+            for revision in (draft_revision, previous_revision):
+                if isinstance(revision.get('relations'), dict):
+                    revision['relations'] = {k: v for k, v in revision['relations'].items() if k != 'IS_REPLACEMENT_FOR'}
+                    if not revision['relations']:
+                        revision.pop('relations')
+        if (draft_revision != previous_revision
                 or _summary(draft_body) != _summary(previous_body)):
             raise common.InputError('target', 'Only a body revision with unchanged Summary is supported.')
-        _check_promotion_destinations(archive_path, destination, previous_path, capture, atom_id)
-        archive = _state_bytes(raw_previous, previous_bounds, previous_path, previous['version'], previous_body, 'archived')
+        _check_promotion_destinations(archive_path, destination, previous_path, capture, previous['id'])
+        archive = _state_bytes(raw_previous, previous_bounds, previous_path, previous['version'], previous_body, 'archived', preserve_updated_at=True)
         promoted = _state_bytes(raw_draft, draft_bounds, draft_path, version, draft_body, status)
     except (common.InputError, common.SourceChanged):
         raise
     except (OSError, RuntimeError, TypeError, ValueError) as error:
         raise common.SourceChanged('Native sources are unavailable or changed.') from error
 
-    return archive_path, destination, archive, promoted
+    return archive_path, destination, archive, promoted, capture
 
 
+
+
+def _check_contract_paths(selection, draft_header, previous_header, draft_body, previous_body,
+                          paths, structure_snapshot, capture, root):
+    draft_path, previous_path = paths
+    contract_owner = _validate_contract(selection, draft_header, draft_body, draft_path, structure_snapshot, capture)
+    if contract_owner is not None:
+        if contract_owner != root:
+            raise common.InputError('container', 'Component Contract owner disagrees with its path.')
+        if (draft_path != native_carrier_path(draft_header, _summary(draft_body),
+                project_root=selection.control_root, owner_directory=root)
+                or previous_path != native_carrier_path(previous_header, _summary(previous_body),
+                project_root=selection.control_root, owner_directory=root,
+                parameters=getattr(selection, 'parameters', None))):
+            raise common.InputError('target', 'Component Contract paths disagree with their Headers and Summaries.')
 
 
 def _check_promotion_destinations(archive_path, destination, previous_path, capture, atom_id):

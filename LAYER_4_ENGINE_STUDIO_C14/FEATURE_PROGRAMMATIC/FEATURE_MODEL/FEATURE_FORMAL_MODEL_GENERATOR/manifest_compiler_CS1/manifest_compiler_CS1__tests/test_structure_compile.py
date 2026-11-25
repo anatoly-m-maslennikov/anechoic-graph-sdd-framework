@@ -142,6 +142,42 @@ class StructureTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'identity or parent'):
             compiler._component_inputs(COMPONENT, carrier, 'C00', 'AN')
 
+    def test_component_lens_groups(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            control = Path(tmp).resolve()
+            project = control / PROJECT.name
+            child = control / COMPONENT.name
+            second = control / 'AN-S-4000-SPEC-COMPONENT_MANIFEST--second.md'
+            groups = {'SWE': ['SWD', 'QA', 'DevOps'], 'SYS': ['SWE', 'DOM'],
+                      'BACKEND': ['API', 'SWE'], 'OTHER': ['SWD2', 'API']}
+            project.write_text(PROJECT.read_text().replace(
+                "'project': {", f"'project': {{\n                'lens_groups': {groups!r},", 1))
+            original = COMPONENT.read_text().replace('tier: 0\n', 'tier: 4\n', 1)
+            old_lenses = "lens_whitelist=['DES', 'DevOps', 'QA', 'SPEC', 'SWD']"
+
+            def write_component(path, lenses, content=original):
+                path.write_text(content.replace(old_lenses, f'lens_whitelist={lenses!r}'))
+
+            write_component(child, ['SWE', 'SWD', 'SWD/DBT'])
+            compiler.compile_structure(selection(control), Model())
+            write_component(child, ['SYS', 'BACKEND'])
+            with self.assertRaises(ValueError) as raised:
+                compiler.compile_structure(selection(control), Model())
+            for value in (child.name, 'SYS', 'BACKEND'):
+                self.assertIn(value, str(raised.exception))
+
+            write_component(child, ['SYS'])
+            write_component(second, ['BACKEND'], original.replace('AN-S-3039', 'AN-S-4000').replace('C14', 'C15'))
+            compiler.compile_structure(selection(control), Model())
+            second.unlink()
+            write_component(child, ['SWE', 'OTHER'])
+            compiler.compile_structure(selection(control), Model())
+
+            project.write_text(project.read_text().replace(
+                repr(groups), repr({'SYS': ['BACKEND'], 'BACKEND': ['SYS']})))
+            with self.assertRaisesRegex(ValueError, '(?i)cycle'):
+                compiler.compile_structure(selection(control), Model())
+
     def test_formal_fields(self):
         claim = '''## Claim\n\n### Formal Claim\n\n```python\nfrom anechoic.formal_claims import declare_entity\nfrom anechoic.model import ComponentManifest\ndeclare_entity(entity_name="Component Manifest", instance=ComponentManifest(component_id="C1", name="One", lens_whitelist=["SPEC"]))\n```\n'''
         self.assertEqual(compiler._fields(claim), {'component_id': 'C1', 'name': 'One', 'lens_whitelist': ['SPEC']})

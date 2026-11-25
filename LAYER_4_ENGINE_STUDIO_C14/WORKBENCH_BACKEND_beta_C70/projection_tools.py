@@ -25,6 +25,8 @@ TABLE_ALIASES.update({f"mrt_real_graph_{name}": name for name in (
     "import_edges", "package_imports", "package_external_imports", "code_units", "code_unit_calls",
     "test_edges", "tested_by_edges")})
 TABLE_ALIASES.update({
+    **{f"mrt_{name}": name for name in (
+        "project_structure", "model_entities", "model_properties", "diag_model_manifests")},
     "mrt_atom_graph_relations": "relations",
     "mrt_atom_references": "native_references",
     "mrt_flow_actions": "component_flows",

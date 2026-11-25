@@ -20,14 +20,14 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GR
 def _relation_identity_carriers() -> list[dict]:
     carriers = [
         relation_carrier(
-            "CA-R-901001", "Entity/Relation/Type: NARROWER_THAN", "Entities Graph"
+            "CA-R-901001", "Entity/Relation/Type: IS_NARROWER_THAN", "Entities Graph"
         ),
         relation_carrier(
-            "CA-R-901002", "Entity/Relation/Type: NARROWER_THAN", "Terms Graph"
+            "CA-R-901002", "Entity/Relation/Type: IS_NARROWER_THAN", "Terms Graph"
         ),
         relation_carrier("CA-R-901003", "IS_BORNE_BY", "Entities Graph", version=2),
         relation_carrier("CA-R-901004", "BORNE_BY", "Entities Graph"),
-        relation_carrier("CA-R-901005", "Entity/Relation/Type: NARROWER_THAN", "Entities Graph"),
+        relation_carrier("CA-R-901005", "Entity/Relation/Type: IS_NARROWER_THAN", "Entities Graph"),
         relation_carrier("CA-R-901007", "IS_ALLOWED_VALUE_OF", "Entities Graph"),
         {
             **relation_carrier("CA-R-901006", "a prose topic", "Entities Graph"),
@@ -53,19 +53,19 @@ class DeclarationSourcesTests(unittest.TestCase):
         self.assertEqual(
             set(rows),
             {
-                ("Entities Graph", "NARROWER_THAN"),
-                ("Terms Graph", "NARROWER_THAN"),
+                ("Entities Graph", "IS_NARROWER_THAN"),
+                ("Terms Graph", "IS_NARROWER_THAN"),
                 ("Entities Graph", "IS_BORNE_BY"),
                 ("Entities Graph", "BORNE_BY"),
                 ("Entities Graph", "IS_ALLOWED_VALUE_OF"),
             },
         )
-        self.assertEqual(len(rows[("Entities Graph", "NARROWER_THAN")]["sources"]), 2)
+        self.assertEqual(len(rows[("Entities Graph", "IS_NARROWER_THAN")]["sources"]), 2)
         self.assertEqual(
             rows[("Entities Graph", "IS_BORNE_BY")]["sources"][0]["version"], 2
         )
         self.assertEqual(
-            rows[("Entities Graph", "NARROWER_THAN")]["metadata"],
+            rows[("Entities Graph", "IS_NARROWER_THAN")]["metadata"],
             {
                 "meaning": None,
                 "direction": None,
@@ -77,7 +77,7 @@ class DeclarationSourcesTests(unittest.TestCase):
                 "exclusive_purpose": None,
             },
         )
-        self.assertTrue(rows[("Entities Graph", "NARROWER_THAN")]["evidence"])
+        self.assertTrue(rows[("Entities Graph", "IS_NARROWER_THAN")]["evidence"])
 
     def test_relation_candidates_without_unique_scope_graph_remain_unresolved(self):
         missing_scope = relation_carrier(

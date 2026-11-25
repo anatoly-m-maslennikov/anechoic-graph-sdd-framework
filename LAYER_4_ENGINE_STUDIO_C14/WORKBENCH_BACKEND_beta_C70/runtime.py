@@ -20,6 +20,7 @@ import httpx2
 
 from .WORKBENCH_BACKEND_beta_C70__shared import create_app, serve, socket_path
 from .peer_transport import operation_timeout, upstream
+from .runtime_profile import resolve_runtime_profile
 from .warm_worker import ENGINE, _stop, open_warm_worker
 
 ORCHESTRATOR = "ORCHESTRATOR_beta_C68.ORCHESTRATOR_beta_C68__shared"
@@ -106,7 +107,7 @@ class ProjectPeers:
         raise RuntimeError("Kernel did not admit an initial Beta generation")
 
 
-def database_path(root, storage, manifest_sha256, instance_id):
+def database_path(root, storage, manifest_sha256, instance_id, *, local_archives=None):
     """Return a private Beta database location, or use an in-memory database."""
     if not isinstance(manifest_sha256, str) or not re.fullmatch(r"[0-9a-f]{64}", manifest_sha256):
         raise ValueError("invalid_manifest_digest")
@@ -114,6 +115,8 @@ def database_path(root, storage, manifest_sha256, instance_id):
         return None
     if storage != "disk":
         raise ValueError("invalid_workbench_storage")
+    if local_archives not in (None, "load", "skip"):
+        raise ValueError("invalid_archive_mode")
     root = Path(root)
     if root.resolve(strict=True) != root:
         raise ValueError("project_declarations_stale")
@@ -128,7 +131,8 @@ def database_path(root, storage, manifest_sha256, instance_id):
     if directory.stat().st_mode & 0o077:
         raise ValueError("invalid_workbench_storage_path")
     identity = sha256(instance_id.encode()).hexdigest()
-    return directory / f"projection-{identity}-{manifest_sha256}.duckdb"
+    suffix = f"-dev-local-{local_archives}" if local_archives else ""
+    return directory / f"projection-{identity}-{manifest_sha256}{suffix}.duckdb"
 
 
 @contextmanager
@@ -136,9 +140,12 @@ def open_project_peers(path, instance_id, binding, stop, *, watch_code=False, st
                        journal_storage="files", journal_relative=None, result_ttl_seconds=None,
                        warm_worker=None):
     """Start and validate a Project's peers; stop both when the context exits."""
+    storage, journal_storage, archives = resolve_runtime_profile(storage, journal_storage)
     database, orchestrator, binding_file = (path / name for name in (
         "db.sock", "jobs.sock", "binding.json"))
-    db_path = database_path(binding["root"], storage, binding["manifest_sha256"], instance_id)
+    local_archives = archives if os.environ.get("ANECHOIC_RUNTIME_PROFILE") == "dev-local" else None
+    db_path = database_path(binding["root"], storage, binding["manifest_sha256"], instance_id,
+                            local_archives=local_archives)
     if journal_storage not in ("files", "duckdb"):
         raise ValueError("Invalid Work Journal storage")
     db_args = ("--project-root", binding["root"], "--journal-storage", journal_storage)
@@ -153,13 +160,14 @@ def open_project_peers(path, instance_id, binding, stop, *, watch_code=False, st
     if db_path is not None:
         db_args += ("--database-path", str(db_path))
     watch = ("--watch-code",) if watch_code else ()
+    archive_args = ("--skip-archives",) if archives == "skip" else ()
     worker_args = ("--worker-socket", warm_worker[0], "--worker-load-seconds", str(warm_worker[1])) if warm_worker else ()
     with binding_file.open("x", encoding="utf-8") as stream:
         json.dump(binding, stream)
     try:
         with _peer(DATABASE, database, instance_id, stop, "--manifest-sha256", binding["manifest_sha256"], *db_args) as kernel:
             with _peer(ORCHESTRATOR, orchestrator, instance_id, stop, "--binding-file", str(binding_file),
-                       "--database-socket", str(database), *watch, *worker_args) as jobs:
+                       "--database-socket", str(database), *watch, *archive_args, *worker_args) as jobs:
                 binding_file.unlink()
                 yield ProjectPeers(str(database), str(orchestrator), binding, kernel, jobs)
     finally:

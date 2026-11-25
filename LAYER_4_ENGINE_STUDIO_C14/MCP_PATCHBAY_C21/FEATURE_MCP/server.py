@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import os
 from pathlib import Path
 
 from MCP_PATCHBAY_C21.FEATURE_MCP.direct_gateway import native_runtime_gateway, startup_selection
@@ -13,6 +14,8 @@ def _serve_stdio(args, *, gateway_factory=None):
     if gateway_factory is not None:
         asyncio.run(gateway_factory(args.project_root, args.control_root).serve())
         return
+    os.environ.setdefault("ANECHOIC_RUNTIME_STACK", "beta")
+    os.environ.setdefault("ANECHOIC_RUNTIME_PROFILE", "dev-local")
     selection = startup_selection(args.project_root, args.control_root, args.instance_id, args.host_project_root)
     with native_runtime_gateway(selection) as gateway:
         asyncio.run(gateway.serve())

@@ -6,9 +6,6 @@ container:
 tier: 4
 context:
   lens: SWD
-relations:
-  IS_REFERENCE:
-  - AN-S-3116@1
 state:
   status: active
   version: 32

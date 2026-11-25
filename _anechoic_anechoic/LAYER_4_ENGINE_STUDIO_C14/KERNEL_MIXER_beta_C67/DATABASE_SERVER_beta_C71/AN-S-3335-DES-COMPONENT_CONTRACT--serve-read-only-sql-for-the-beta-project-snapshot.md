@@ -11,9 +11,9 @@ relations:
   ANSWERS:
   - AN-S-3333
 state:
-  status: active
-  version: 30
-  updated_at: "2026-11-23T10:26:33.104737+00:00"
+  status: "active"
+  version: 31
+  updated_at: "2026-11-25T13:22:23.549890+00:00"
 ---
 ## Summary
 
@@ -23,8 +23,9 @@ Serve read-only SQL for the Beta Project snapshot
 
 Admit the Model, Structure, native revisions and relations, and enabled Realization Graph
 in one transaction for the bound Project. Keep the prior generation on
-failed admission. Serve its exact artifact bytes and one read-only SQL
-SELECT per request, with no external access and at most 1,000 rows.
+failed admission. Serve the accepted Model artifact bytes and canonical Structure JSON reconstructed
+from accepted Structure rows and generation facts. Return the generation ID with
+the Structure. Serve one read-only SQL SELECT per request, with no external access and at most 1,000 rows.
 Keep a 16 MiB result budget in Kernel. Charge serialized result and
 SQL bytes with a 4 KiB minimum for each result. Limit each serialized
 result to 1 MiB. Refuse a new result or refresh

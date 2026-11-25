@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 35
-  updated_at: "2026-11-23T10:26:33.104737+00:00"
+  version: 36
+  updated_at: "2026-11-24T23:12:55.813309+00:00"
 ---
 
 ## Summary
@@ -52,26 +52,6 @@ declare_entity(
                     'FEATURE_TOOLS__shared.mcp_tool_blacklist',
                     'FEATURE_TOOLS__shared.rebind_native_selection',
                 ],
-                'exports': {
-                    'FEATURE_MODEL_VALIDATION__shared.open_serialized_model': {'private': [
-                        'C16', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_MODEL_VALIDATION/FEATURE_MODEL_VALIDATION__tests']},
-                    'FEATURE_MODEL_VALIDATION__shared.open_admitted_model': {'private': ['C16', 'C62', 'CS1', 'CS2']},
-                    'model_declaration_bindings.bind_model_declarations': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FEATURE_TOOLS__tests']},
-                    'FEATURE_MODEL_VALIDATION__shared.verify_model': {'private': ['CS1', 'CS2']},
-                    'FEATURE_MODEL_VALIDATION__shared': None,
-                    'FEATURE_MODEL_VALIDATION__shared.bind_model_declarations': {'shared': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_FORMAL_MODEL_GENERATOR/FEATURE_FORMAL_MODEL_GENERATOR__tests']},
-                    'model_field_validation.validate_model_fields': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_FORMAL_MODEL_GENERATOR/FEATURE_FORMAL_MODEL_GENERATOR__tests']},
-                    'FEATURE_MODEL_VALIDATION__shared.bind_reviewed_instance_check': None,
-                    'FEATURE_MODEL_VALIDATION__shared.check_code_access': {'shared': ['C59', 'C61', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_MODEL_VALIDATION/FEATURE_MODEL_VALIDATION__tests']},
-                    'FEATURE_MODEL_VALIDATION__shared.effective_relation_constraints': None,
-                    'FEATURE_MODEL_VALIDATION__shared.validate_relation_endpoint_levels': None,
-                    'FEATURE_MODEL_VALIDATION__shared.validate_relation_targets': None,
-                    'FEATURE_MODEL_VALIDATION__pub': 'public',
-                    'FEATURE_MODEL_VALIDATION__pub.validate_model_instance': 'public',
-                    'FEATURE_MODEL_VALIDATION__pub.BoundNativeModel': 'public',
-                    'FEATURE_MODEL_VALIDATION__shared.normalize_reviewed_claim': None,
-                    'FEATURE_MODEL_VALIDATION__shared.reviewed_claim_sha256': None,
-                },
             },
             'io': {'server': {'project_admission': {'transport': 'json_lines',
                                               'runner': 'managed_python',

@@ -8,10 +8,6 @@ context:
   template: DECISION
   lens: DES
 relations:
-  IS_REFERENCE:
-  - AN-S-3323@2
-  - AN-S-3361@2
-  - AN-S-3187@1
   IS_SOLUTION_FOR:
   - AN-S-3182@11
 state:

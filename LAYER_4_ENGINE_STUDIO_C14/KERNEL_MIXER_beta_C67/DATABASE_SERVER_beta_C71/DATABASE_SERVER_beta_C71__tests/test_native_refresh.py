@@ -57,7 +57,7 @@ class NativeRefreshTest(unittest.TestCase):
         self.assertEqual([["done", 3]], rows.json()["result"]["rows"])
         findings = _query(client, "SELECT source_key, status FROM code_access_findings")
         self.assertEqual([["module:pkg/a.py", "denied"]], findings.json()["result"]["rows"])
-        graph = _query(client, "FROM GRAPH_TABLE (anechoic MATCH (s:Reference)-[e:CONTAINED_BY]->(t:Reference) COLUMNS (s.ref AS source, t.ref AS target))")
+        graph = _query(client, "FROM GRAPH_TABLE (anechoic MATCH (s:Reference)-[e:IS_CONTAINED_BY]->(t:Reference) COLUMNS (s.ref AS source, t.ref AS target))")
         self.assertEqual([["AN-T-1", "C00"]], graph.json()["result"]["rows"])
 
     def assert_refused(self, client, base, generation, snapshot):
@@ -66,7 +66,7 @@ class NativeRefreshTest(unittest.TestCase):
         bad_digest = request(generation, snapshot) | {"snapshot_sha256": "0" * 64}
         self.assertEqual(400, client.put("/generation/native", json=bad_digest).status_code)
         bad_types = deepcopy(snapshot)
-        bad_types["relation_types"] = ["CONTAINED_BY"]
+        bad_types["relation_types"] = ["IS_CONTAINED_BY"]
         self.assertEqual(400, client.put("/generation/native", json=request(generation, bad_types)).status_code)
         foreign = request(generation, snapshot) | {"instance_id": "foreign"}
         self.assertEqual(403, client.put("/generation/native", json=foreign).status_code)
@@ -95,7 +95,7 @@ class NativeRefreshTest(unittest.TestCase):
                 self.assertEqual(409, client.put("/generation/native", json=payload).status_code)
                 self.assertEqual(artifacts, [client.get(path, params=BINDING).content for path in ("/model", "/structure")])
                 self.assertEqual([["uncertain"]], _query(client, "SELECT status FROM code_access_findings").json()["result"]["rows"])
-                self.assertEqual([["AN-T-1", "C00"]], _query(client, "FROM GRAPH_TABLE (anechoic MATCH (s:Reference)-[e:CONTAINED_BY]->(t:Reference) COLUMNS (s.ref AS source, t.ref AS target))").json()["result"]["rows"])
+                self.assertEqual([["AN-T-1", "C00"]], _query(client, "FROM GRAPH_TABLE (anechoic MATCH (s:Reference)-[e:IS_CONTAINED_BY]->(t:Reference) COLUMNS (s.ref AS source, t.ref AS target))").json()["result"]["rows"])
             with _server(database) as client:
                 self.assertEqual(generation, client.get("/health").json()["result"]["generation"])
                 self.assertEqual(artifacts, [client.get(path, params=BINDING).content for path in ("/model", "/structure")])

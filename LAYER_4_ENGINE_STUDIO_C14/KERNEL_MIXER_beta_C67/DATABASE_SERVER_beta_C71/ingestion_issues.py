@@ -1,7 +1,11 @@
 """Durable operational issues from source ingestion."""
 
+import json
+
 import duckdb
 from starlette.responses import JSONResponse
+
+from .model_projection import replace_model_diagnostics, validate_model_diagnostics
 
 SOURCES = frozenset({"atom", "archive", "realization", "build"})
 FIELDS = ("relative_path", "code", "message", "atom_ref", "related_paths")
@@ -72,14 +76,24 @@ def route(connection, instance_id, lock, read_object, error_response):
             with lock:
                 return JSONResponse({"result": {"rows": rows(connection)}})
         try:
-            data = await read_object(request, 64 * 1024 * 1024, {"instance_id", "source", "issues"})
+            fields = {"instance_id", "source", "issues"}
+            data = await read_object(request, 64 * 1024 * 1024, fields, fields | {"model_diagnostics"})
             if data["instance_id"] != instance_id:
                 return error_response("foreign_instance", "Instance does not match", 403)
             validate(data["source"], data["issues"])
+            if "model_diagnostics" in data:
+                if data["source"] != "build":
+                    raise ValueError("Model diagnostics require build source")
+                validate_model_diagnostics(data["model_diagnostics"], None)
             with lock:
                 connection.execute("BEGIN TRANSACTION")
                 try:
                     replace_issues(connection, data["source"], data["issues"])
+                    if "model_diagnostics" in data:
+                        row = connection.execute("SELECT model FROM ops_generation").fetchone()
+                        fingerprint = json.loads(row[0])["model_sha256"] if row else None
+                        diagnostics = validate_model_diagnostics(data["model_diagnostics"], fingerprint)
+                        replace_model_diagnostics(connection, diagnostics)
                     connection.execute("COMMIT")
                 except BaseException:
                     connection.execute("ROLLBACK")

@@ -68,7 +68,7 @@ def test_component_test_edge_uses_declared_structure(tmp_path):
                                              "non-test import from Test Package"]]
 
 
-def test_code_access_findings_use_authored_imports_and_exports(tmp_path):
+def test_code_access_findings_use_authored_imports(tmp_path):
     control = tmp_path / "_control"
     (control / "_SPEC").mkdir(parents=True)
     (control / "Widget_C9").mkdir()
@@ -79,7 +79,7 @@ def test_code_access_findings_use_authored_imports_and_exports(tmp_path):
     (provider / "parse.py").write_text("def run(): return 1\n")
     (caller / "run.py").write_text("from Widget.lib.parse import run\n")
     selector = "lib.parse.run"
-    code = {"imports": [selector], "exports": {selector: {"private": ["Widget/tests"]}}}
+    code = {"imports": [selector]}
     structure = {"model_sha256": "model", "project": {"ref": "AN-S-1", "sha256": "hash"},
                  "components": {"C9": {"parent": "C00", "ref": "AN-S-2", "sha256": "hash",
                          "fields": {"name": "Widget", "boundaries": {"code": code}},
@@ -90,7 +90,7 @@ def test_code_access_findings_use_authored_imports_and_exports(tmp_path):
         return [row for row in json.loads(result.stdout)["code_access_findings"] if row[1] == "Widget/tests/run.py"]
     assert findings() == [["module:Widget/tests/run.py", "Widget/tests/run.py", 1, 0,
                            "from Widget.lib.parse import run", "declared_bypass",
-                           "exact import and export declarations"]]
+                           "exact import declaration"]]
     code["imports"] = {"only": []}
     assert findings() == [["module:Widget/tests/run.py", "Widget/tests/run.py", 1, 0,
                            "from Widget.lib.parse import run", "denied", "code access rule"]]

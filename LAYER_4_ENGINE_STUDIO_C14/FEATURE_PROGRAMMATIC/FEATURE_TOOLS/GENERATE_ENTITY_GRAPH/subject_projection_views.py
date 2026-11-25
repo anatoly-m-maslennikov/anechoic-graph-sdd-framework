@@ -264,7 +264,7 @@ def render_primary_projection(data: Mapping[str, Any], level: int) -> str:
     if type(level) is not int or level not in {1, 2, 3, 4}:
         raise ValueError("Primary projection level must be 1, 2, 3, or 4")
     tree_lines = _tree(data)
-    lines = ["## Primary entities", "", "NARROWER_THAN: `/`", "", *_fence(tree_lines), ""]
+    lines = ["## Primary entities", "", "IS_NARROWER_THAN: `/`", "", *_fence(tree_lines), ""]
     lines.extend(_render_namespace(_namespace_rows(data)))
     if level >= 2:
         _render_properties(lines, data, level)

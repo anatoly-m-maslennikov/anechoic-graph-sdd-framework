@@ -27,7 +27,7 @@ from ..structure_host_CS6.structure_host_CS6__shared import read_structure
 from .carrier_checkpoint import reuse_route
 from .database_route import database_route
 from .archive_generation import archive_pending, archive_route
-from .generation import replace_generation
+from .generation import FULL_GENERATION_BODY_LIMIT, replace_generation
 from .flows import flow_route, initialize_flows
 from . import ingestion_issues
 from .native_delta import native_generation_route
@@ -74,7 +74,11 @@ def open_database(database_path=None, manifest_sha256=None, instance_id=None, jo
         connection.execute("COMMIT")
         if database_path is None:
             connection.execute('CREATE TABLE mrt_atoms (reference VARCHAR PRIMARY KEY, "content.summary" VARCHAR)')
-            connection.execute("CREATE TABLE ops_generation (id VARCHAR, model VARCHAR, structure VARCHAR)")
+            connection.execute("CREATE TABLE ops_generation (id VARCHAR, model VARCHAR, structure_facts VARCHAR)")
+            from .project_structure import ensure_structure_table
+            ensure_structure_table(connection)
+            from .model_projection import ensure_model_tables
+            ensure_model_tables(connection)
         else:
             if has_table(connection, "main", "mrt_real_graph_import_nodes"):
                 connection.execute("BEGIN TRANSACTION")
@@ -170,7 +174,8 @@ def _generation_route(connection, instance_id, manifest_sha256, lock, queries, w
             alternatives = (fields, fields | {"refresh_target"}, fields | {"reuse"}, fields | {"refresh_target", "reuse"})
             alternatives += tuple(option | {"carrier_hashes"} for option in alternatives)
             alternatives += tuple(option | {"archive_pending"} for option in alternatives)
-            data = await _read_object(request, 64 * 1024 * 1024, *alternatives)
+            alternatives += tuple(option | {"model_diagnostics"} for option in alternatives)
+            data = await _read_object(request, FULL_GENERATION_BODY_LIMIT, *alternatives)
             if data["instance_id"] != instance_id:
                 return _error("foreign_instance", "Instance does not match", 403)
             with lock:

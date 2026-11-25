@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 27
-  updated_at: "2026-11-23T10:26:33.104737+00:00"
+  version: 28
+  updated_at: "2026-11-24T23:12:55.813309+00:00"
 ---
 ## Summary
 
@@ -44,13 +44,7 @@ declare_entity(
                                            'manifest_build_CS4__shared.manifest_input_signature',
                                            'WORKERS_beta_C69__shared.python_context_restoration',
                                            'WORKERS_beta_C69__shared.python_import_order',
-                                           'WORKERS_beta_C69__shared.python_code_units']},
-                          'exports': {
-                              'WORKERS_beta_C69__shared.python_context_restoration': {'private': ['LAYER_4_ENGINE_STUDIO_C14/WORKERS_beta_C69/WORKERS_beta_C69__tests']},
-                              'WORKERS_beta_C69__shared.python_import_order': {'private': ['LAYER_4_ENGINE_STUDIO_C14/WORKERS_beta_C69/WORKERS_beta_C69__tests']},
-                              'WORKERS_beta_C69__shared.python_code_units': {'private': [
-                              'LAYER_4_ENGINE_STUDIO_C14/WORKERS_beta_C69/WORKERS_beta_C69__tests',
-                              'C74']}}},
+                                           'WORKERS_beta_C69__shared.python_code_units']}},
          'io': {'server': {'atom_snapshot': {'transport': 'cli',
                                              'runner': 'managed_python',
                                              'input': 'JSON Project binding or managed binding and reuse proof on stdin',

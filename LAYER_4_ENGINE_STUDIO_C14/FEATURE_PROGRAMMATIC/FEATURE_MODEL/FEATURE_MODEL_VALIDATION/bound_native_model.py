@@ -65,6 +65,7 @@ class BoundNativeModel:
             raise ValueError("Active Model is missing reviewed instance checks")
         self.relation_types = frozenset(self._endpoints)
         self._parent_relation = "IS_CHILD_OF" if "IS_CHILD_OF" in self.relation_types else "CHILD_OF"
+        self._containment_relation = "IS_CONTAINED_BY" if "IS_CONTAINED_BY" in self.relation_types else "CONTAINED_BY"
         self.relation_classifications = {
             name: args.get("inverse_classifications" if reverse else "classifications", {}).copy()
             for name, (args, reverse) in self._endpoints.items()
@@ -104,13 +105,13 @@ class BoundNativeModel:
         if component_id != "C00":
             raise ValueError("Project Manifest must be contained by Project C00")
         project = self._validate("Project", {}, {})
-        return self._validate("Project Manifest", fields, {"CONTAINED_BY": [project]})
+        return self._validate("Project Manifest", fields, {self._containment_relation: [project]})
 
     def validate_component_manifest(self, fields, parent_id):
         project = self._validate("Project", {}, {})
         parent = project if parent_id == "C00" else self._validate("Component", {}, {self._parent_relation: [project]})
         self._validate("Component", {}, {self._parent_relation: [parent]})
-        return self._validate("Component Manifest", fields, {"CONTAINED_BY": [parent]})
+        return self._validate("Component Manifest", fields, {self._containment_relation: [parent]})
 
     def validate_project_spec(self, template, header, owner_id, body=None):
         from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.atom_reference__pub import derive_atom_ref
@@ -122,7 +123,7 @@ class BoundNativeModel:
         atom_id = view["identity"]["atom_id"]
         fields = {"atom_id": atom_id, "version": state["version"],
                   "ref_id": derive_atom_ref(atom_id, state["version"], state["status"]),
-                  "tier": view["context"].get("tier")}
+                  "tier": view["context"].get("tier"), "lens": view["context"].get("lens")}
         if self.requires_atom_state:
             from types import SimpleNamespace
             fields.update(manifest_state_fields(SimpleNamespace(metadata=header), include_header=self.requires_atom_header))
@@ -156,10 +157,10 @@ class BoundNativeModel:
             end_line = tokens[end].map[0] if end < len(tokens) else len(lines)
             fields['guarantee'] = '\n'.join(lines[tokens[start].map[1]:end_line]).strip()
         project = self._validate("Project", {}, {})
-        return self._validate(name, fields, {"CONTAINED_BY": [project]})
+        return self._validate(name, fields, {self._containment_relation: [project]})
 
     def validate_component_seed_manifest(self, fields, owner_id):
         project = self._validate("Project", {}, {})
         owner = project if owner_id == "C00" else self._validate("Component", {}, {self._parent_relation: [project]})
-        return self._validate("Component Seed Manifest", fields, {"CONTAINED_BY": [owner]})
+        return self._validate("Component Seed Manifest", fields, {self._containment_relation: [owner]})
 

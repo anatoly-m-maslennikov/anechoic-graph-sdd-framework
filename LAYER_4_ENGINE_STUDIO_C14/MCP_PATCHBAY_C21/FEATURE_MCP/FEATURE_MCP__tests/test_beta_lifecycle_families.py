@@ -25,14 +25,11 @@ class BetaLifecycleFamilies(unittest.IsolatedAsyncioTestCase):
             subprocess.run(["git", "init", "--quiet", str(project)], check=True)
             make_project(project)
             control = project / "_anechoic_anechoic"
-            lens = "LAYER_1_META_ONTOLOGY_C9/_DES/AN-S-2272-DES--declare-evaluation-decision-form.md"
-            (control / lens).parent.mkdir()
-            shutil.copy2(ENGINE.parent / "_anechoic_anechoic" / lens, control / lens)
             source = ENGINE.parent / "_anechoic_anechoic/__PROJECT_CONFIG/AN-P-63-ACTION--author-atom-content-before-summary.md"
             shutil.copy2(source, control / "__PROJECT_CONFIG" / source.name)
             parameters = StdioServerParameters(command=sys.executable, args=[
                 "-B", "-P", "-m", "MCP_PATCHBAY_C21.FEATURE_MCP.server", "--project-root", str(project),
-            ], cwd=engine.parent, env={"PYTHONPATH": str(engine), "ANECHOIC_RUNTIME_STACK": "beta",
+            ], cwd=engine.parent, env={"PYTHONPATH": str(engine), "ANECHOIC_RUNTIME_STACK": "beta", "ANECHOIC_RUNTIME_PROFILE": "test",
                 "ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY": os.environ.get("ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY",
                     str(ENGINE.parent / ".anechoic_tmp/workbench/extensions"))})
             async with stdio_client(parameters) as streams, ClientSession(*streams) as client:

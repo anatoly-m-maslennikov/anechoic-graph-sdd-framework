@@ -194,7 +194,7 @@ declare_entity(
     entity_class=Atom,
     instance_check=check_atom_identity,
     instance_relation_constraints={
-        "CONTAINED_BY": {"target_entity_paths": ("Node//Artifact//Component", "Node//Artifact//Atom"), "targets_per_source": 1},
+        "IS_CONTAINED_BY": {"target_entity_paths": ("Node//Artifact//Component", "Node//Artifact//Atom"), "targets_per_source": 1},
     },
     population_unique_constraints=({"keys": ("Ref ID",)},),
 )
@@ -272,7 +272,7 @@ class Component(Artifact):
 
 declare_entity(entity_name="Component", entity_class=Component,
     instance_relation_constraints={
-        "CHILD_OF": {"target_entity_paths": ("Node//Artifact//Component",), "targets_per_source": 1},
+        "IS_CHILD_OF": {"target_entity_paths": ("Node//Artifact//Component",), "targets_per_source": 1},
     },
 )
 ```
@@ -289,7 +289,7 @@ class Project(Component):
     pass
 
 declare_entity(entity_name="Project", entity_class=Project,
-    instance_relation_constraints={"CHILD_OF": {"targets_per_source": 0}},
+    instance_relation_constraints={"IS_CHILD_OF": {"targets_per_source": 0}},
 )
 ```
 
@@ -401,14 +401,14 @@ declare_entity(entity_name="SSOT", entity_class=SSOT)
 
 ### Declaration 27
 
-MODEL//ANECHOIC <+ Relation//CHILD_OF
+MODEL//ANECHOIC <+ Relation//IS_CHILD_OF
 
 ```python
 from anechoic.formal_claims import declare_relation
 
 declare_relation(
-    relation_name="CHILD_OF",
-    inverse_alias="CHILDREN",
+    relation_name="IS_CHILD_OF",
+    inverse_alias="IS_PARENT_FOR",
     source_endpoint={"level": "instances", "entity_paths": ("Node//Artifact//Component",)},
     target_endpoint={"level": "instances", "entity_paths": ("Node//Artifact//Component",)},
     acyclic=True,
@@ -417,13 +417,13 @@ declare_relation(
 
 ### Declaration 28
 
-MODEL//ANECHOIC <+ Relation//CONTAINED_BY
+MODEL//ANECHOIC <+ Relation//IS_CONTAINED_BY
 
 ```python
 from anechoic.formal_claims import declare_relation
 
 declare_relation(
-    relation_name="CONTAINED_BY",
+    relation_name="IS_CONTAINED_BY",
     inverse_alias="CONTAINS",
     reverse_written_alias="<+",
     endpoint_pairs=(
@@ -565,7 +565,7 @@ declare_entity(
     entity_name="Project Manifest",
     entity_class=ProjectManifest,
     instance_relation_constraints={
-        "CONTAINED_BY": {"target_entity_paths": ("Node//Artifact//Component//Project",), "targets_per_source": 1},
+        "IS_CONTAINED_BY": {"target_entity_paths": ("Node//Artifact//Component//Project",), "targets_per_source": 1},
     },
     instance_check=check_project_manifest,
 )
@@ -594,7 +594,7 @@ declare_entity(
     entity_name="Component Manifest",
     entity_class=ComponentManifest,
     instance_relation_constraints={
-        "CONTAINED_BY": {"target_entity_paths": ("Node//Artifact//Component",), "targets_per_source": 1},
+        "IS_CONTAINED_BY": {"target_entity_paths": ("Node//Artifact//Component",), "targets_per_source": 1},
     },
     instance_check=check_component_manifest,
 )
@@ -637,7 +637,7 @@ declare_entity(
     entity_name="Project Goal",
     entity_class=ProjectGoal,
     instance_relation_constraints={
-        "CONTAINED_BY": {"target_entity_paths": ("Node//Artifact//Component//Project",), "targets_per_source": 1},
+        "IS_CONTAINED_BY": {"target_entity_paths": ("Node//Artifact//Component//Project",), "targets_per_source": 1},
     },
 )
 ```
@@ -661,7 +661,7 @@ declare_entity(
     entity_name="Contract",
     entity_class=Contract,
     instance_relation_constraints={
-        "CONTAINED_BY": {"target_entity_paths": ("Node//Artifact//Component",), "targets_per_source": 1},
+        "IS_CONTAINED_BY": {"target_entity_paths": ("Node//Artifact//Component",), "targets_per_source": 1},
     },
     instance_check=check_contract,
 )
@@ -708,7 +708,7 @@ declare_entity(
     entity_name="Component Seed Manifest",
     entity_class=ComponentSeedManifest,
     instance_relation_constraints={
-        "CONTAINED_BY": {"target_entity_paths": ("Node//Artifact//Component",), "targets_per_source": 1},
+        "IS_CONTAINED_BY": {"target_entity_paths": ("Node//Artifact//Component",), "targets_per_source": 1},
     },
     instance_check=check_component_seed_manifest,
 )

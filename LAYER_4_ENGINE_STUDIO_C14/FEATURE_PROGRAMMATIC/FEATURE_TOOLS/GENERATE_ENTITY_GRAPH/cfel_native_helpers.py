@@ -183,8 +183,8 @@ def _native_special(declaration: Mapping[str, Any], source: Mapping[str, Any]) -
         rows.append(_native_relation(source, left, right, notation="<+", expression=path, group=group))
     for address in memberships:
         left = f"({address})"
-        rows.append(_native_relation(source, left, "Aspect", relation="INSTANCE_OF",
-                                     expression=f"{left} ((INSTANCE_OF)) Aspect", group=group))
+        rows.append(_native_relation(source, left, "Aspect", relation="IS_INSTANCE_OF",
+                                     expression=f"{left} ((IS_INSTANCE_OF)) Aspect", group=group))
     for axis, values in args.get("allowed_classification_values", {}).items():
         for value in values:
             subject = args["entity_name"]

@@ -38,6 +38,7 @@ from .ADAPTERS_C30__pub import (
     validate_directory_components,
 )
 from .carrier_read__pub import CarrierError, ParsedCarrier, parse_carrier
+from .typed_manifest_node import parse_typed_manifest_node
 from .markdown_content__pub import (
     content_key, content_lines, direct_markdown, formal_claim_fences,
     parse_content, section_markdown, source_markdown,
@@ -278,6 +279,7 @@ __all__ = [
     "open_regular",
     "parse_structure",
     "parse_native_model_claim",
+    "parse_typed_manifest_node",
     "path_value",
     "project_root_container_view",
     "project_goal_filename",

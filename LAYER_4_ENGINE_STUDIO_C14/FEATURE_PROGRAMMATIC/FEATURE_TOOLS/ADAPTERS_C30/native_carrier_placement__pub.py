@@ -185,7 +185,7 @@ def _other_placement(family, context, status, revision, marker, root, owner_dire
     template = context.get('template')
     if family == 'PROJECT_CONFIG':
         root = Path(owner_directory) if atom_owned else root / PROJECT_CONFIG_DIRECTORY
-        if template == 'model_manifest':
+        if template in {'model_manifest', 'manifest_node', 'manifest_property', 'manifest_relation'}:
             if context['container'] != {'component': 'C00'}:
                 raise ValueError('Model Manifest requires the Project Component')
             root /= CUSTOM_MODEL_DIRECTORY

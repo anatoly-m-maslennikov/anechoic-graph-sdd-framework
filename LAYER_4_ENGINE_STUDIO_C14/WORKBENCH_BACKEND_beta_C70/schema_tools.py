@@ -10,7 +10,7 @@ def _valid_schema(value):
     if not isinstance(value, dict) or set(value) != {"tables"} or not isinstance(value["tables"], dict):
         return False
     for table, columns in value["tables"].items():
-        if table not in (*TABLES, *FLOW_HISTORY, "work_journal", "query_log", "ops_ingestion_issues", *TABLE_ALIASES) or not isinstance(columns, list):
+        if table not in (*TABLES, *FLOW_HISTORY, "work_journal", "query_log", "ops_ingestion_issues", *TABLE_ALIASES, *TABLE_ALIASES.values()) or not isinstance(columns, list):
             return False
         names = set()
         for column in columns:

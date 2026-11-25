@@ -113,6 +113,32 @@ For runtime installation and the isolated Docker HTTP transport, use
 [Project release tools](../FEATURE_PROJECT_TOOLS/README.md) and the
 [Docker runtime README](docker/README.md).
 
+### Runtime profiles
+
+Set `ANECHOIC_RUNTIME_PROFILE` to choose the Beta runtime settings. The local
+host launcher defaults to `dev-local`. Beta images default to `dev-preprod`.
+
+| Profile | Workbench | Journal | Archives |
+| --- | --- | --- | --- |
+| `dev-local` | `memory` | `files` | `skip` |
+| `dev-preprod` | `disk` | `duckdb` | `load` |
+| `test` | `memory` | `files` | `load` |
+| `prod` | `disk` | `duckdb` | `load` |
+
+Override each setting with `ANECHOIC_WORKBENCH_STORAGE`,
+`ANECHOIC_JOURNAL_STORAGE`, or `ANECHOIC_ARCHIVES`. An environment profile takes
+precedence over storage settings in the Project Manifest. Other Project
+settings, such as the file Journal path, still come from the Manifest.
+
+`skip` omits archived rows and Atom lifecycle mutations return
+`archive_disabled`. Set `ANECHOIC_ARCHIVES=load` before launch to enable
+history and lifecycle writes.
+
+Set `ANECHOIC_WORKBENCH_STORAGE=disk` in `dev-local` to persist the Workbench in
+`.anechoic_runtime/workbench/beta/`. Local filenames end in
+`-dev-local-skip.duckdb` or `-dev-local-load.duckdb`. Each is separate from the
+image's projection. Disk storage with `skip` is available in `dev-local`.
+
 ## Health and restart
 
 The configured loopback listener serves JSON readiness at `GET /health`.

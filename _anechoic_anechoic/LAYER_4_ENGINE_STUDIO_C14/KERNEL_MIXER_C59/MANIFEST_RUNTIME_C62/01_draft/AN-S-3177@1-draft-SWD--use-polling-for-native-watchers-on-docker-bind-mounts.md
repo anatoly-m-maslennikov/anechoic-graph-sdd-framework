@@ -6,9 +6,6 @@ container:
 tier: 4
 context:
   lens: SWD
-relations:
-  IS_REFERENCE:
-  - AN-S-2536
 state:
   status: draft
   version: 1

@@ -77,8 +77,8 @@ For every admitted local Atom, the Header.Container-derived IS_CONTAINED_BY targ
 - `Subject/ANECHOIC/Graph/Relation`
 - `Subject/ANECHOIC/Graph/Relation.Target Reference`
 - `Subject/ANECHOIC/Graph/Relation/Type`
-- `Subject/ANECHOIC/Graph/Relation/Type: child_of`
-- `Subject/ANECHOIC/Graph/Relation/Type: structural_parent`
+- `Subject/ANECHOIC/Graph/Relation/Type: IS_TIER_GOVERNED_BY`
+- `Subject/ANECHOIC/Graph/Relation/Type: HAS_STRUCTURAL_PARENT`
 - `Subject/ANECHOIC/Graph/Rule`
 
 The selection contains exact objects only, not strings, type members, or descendants; an unresolved address grants no admission.

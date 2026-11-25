@@ -7,10 +7,6 @@ priority: 2
 context:
   template: task
   label: Epic
-relations:
-  IS_REFERENCE:
-  - AN-S-3394
-  - AN-T-3008
 state:
   status: done
   version: 1

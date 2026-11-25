@@ -24,103 +24,49 @@ class CheckTests(unittest.TestCase):
                            asset._replace(target_path='pkg/runtime.json')):
             self.assertEqual((), check_code_access(ownership, {}, [occurrence]))
 
-    def test_entry_bypass_requires_both_exact_declarations(self):
-        target = 'app/src/lib/parse.ts'
-        selector = 'src.lib.parse.run'
-        code = {'imports': [selector], 'exports': {selector: {'private': ['app/tests']}}}
+    def test_imports_and_entry_bypasses(self):
         entries = {
-            'C46': {'id': 'C46', 'parent': None, 'path': 'app', 'kind': 'component',
-                    'fields': {'boundaries': {'code': code}}},
-            'app/src/lib': {'id': 'app/src/lib', 'parent': 'C46', 'path': 'app/src/lib',
-                            'kind': 'package', 'fields': {}},
-            'app/tests': {'id': 'app/tests', 'parent': 'C46', 'path': 'app/tests',
-                          'kind': 'package', 'fields': {}},
+            'root': {'id': 'root', 'parent': None, 'path': '.', 'kind': 'component', 'fields': {}},
+            'a': {'id': 'a', 'parent': 'root', 'path': 'a', 'kind': 'component', 'fields': {'layer': 2}},
+            'b': {'id': 'b', 'parent': 'root', 'path': 'b', 'kind': 'component', 'fields': {'layer': 1}},
+            'pkg': {'id': 'pkg', 'parent': 'b', 'path': 'b/lib', 'kind': 'package', 'fields': {}},
         }
-        ownership = CodeAccessOwnership(entries, {value['path']: key for key, value in entries.items()})
-        site = CodeAccessOccurrence('app/tests/run.ts', target, 'module', 'run', target, 1, 0, 'internal')
+        ownership = CodeAccessOwnership(entries, {v['path']: k for k, v in entries.items()})
+        def result(target, unit=None, bypass=False):
+            site = CodeAccessOccurrence('a/x.py', target, 'module', unit, target, 1, 0, 'internal')
+            return check_code_access(ownership, {}, [site], include_entry_bypasses=bypass)
+        self.assertEqual((), result('b/lib/api__shared.py'))
+        self.assertEqual((), result('b/lib/api__public.py', bypass=True))
+        self.assertEqual('denied', result('b/lib/api.py', 'run')[0].status)
+        entries['a']['fields']['boundaries'] = {'code': {'imports': ['b']}}
+        self.assertEqual('denied', result('b/lib/api.py', 'run')[0].status)
+        entries['a']['fields']['boundaries']['code']['imports'] = ['b.lib.api.run']
+        self.assertEqual('declared_bypass', result('b/lib/api.py', 'run', True)[0].status)
+        self.assertEqual('uncertain', result('b/lib/api.py', '*')[0].status)
+        entries['a']['fields']['boundaries']['code']['imports'] = {'only': []}
+        self.assertEqual('denied', result('b/lib/api__shared.py')[0].status)
+        entries['a']['fields']['boundaries']['code']['imports'] = ['b.lib.api']
+        self.assertEqual('declared_bypass', result('b/lib/api.py', 'run', True)[0].status)
+        entries['b']['fields']['layer'] = 2
+        self.assertEqual('sibling layer order', result('b/lib/api.py', 'run')[0].reason)
 
-        def status(occurrence=site):
-            return [finding.status for finding in check_code_access(
-                ownership, {}, [occurrence], include_entry_bypasses=True,
-            )]
-
-        self.assertEqual(['declared_bypass'], status())
-        self.assertEqual(['uncertain'], status(site._replace(unit='*')))
-        code['imports'] = ['siblings']
-        self.assertEqual(['undeclared_bypass'], status())
-        code['imports'] = {'only': []}
-        self.assertEqual(['denied'], status())
-        code['imports'] = [selector]
-        del code['exports'][selector]
-        self.assertEqual(['denied'], status())
-
-    def test_component_declares_a_nested_package_export(self):
-        code = {'imports': {'only': ['src.lib.lib__shared']},
-                'exports': {'src.lib.lib__shared': {'private': ['app/tests']}}}
-        ownership = CodeAccessOwnership(
-            {'C46': {'id': 'C46', 'parent': None, 'path': 'app', 'kind': 'component',
-                     'fields': {'boundaries': {'code': code}}},
-             'app/src/lib': {'id': 'app/src/lib', 'parent': 'C46', 'path': 'app/src/lib',
-                             'kind': 'package', 'fields': {}},
-             'app/tests': {'id': 'app/tests', 'parent': 'C46', 'path': 'app/tests',
-                           'kind': 'package', 'fields': {}}},
-            {'app': 'C46', 'app/src/lib': 'app/src/lib', 'app/tests': 'app/tests'},
-        )
-        target = 'app/src/lib/lib__shared.ts'
-        site = CodeAccessOccurrence('app/tests/run.ts', target, 'module', None, target, 1, 0, 'internal')
-        self.assertEqual((), check_code_access(ownership, {}, [site]))
-        self.assertEqual((), check_code_access(ownership, {}, [site], include_entry_bypasses=True))
-        code['exports']['src.lib.lib__shared'] = {'private': ['unrelated']}
+    def test_shared_entry_grant_outside_sibling_and_package_structure(self):
+        entries = {
+            'root': {'id': 'root', 'parent': None, 'path': '.', 'kind': 'component', 'fields': {}},
+            'a': {'id': 'a', 'parent': 'root', 'path': 'a', 'kind': 'component', 'fields': {}},
+            'b': {'id': 'b', 'parent': 'root', 'path': 'b', 'kind': 'component', 'fields': {}},
+            'nested': {'id': 'nested', 'parent': 'b', 'path': 'b/nested', 'kind': 'component', 'fields': {}},
+            'pkg': {'id': 'pkg', 'parent': 'nested', 'path': 'b/nested/lib', 'kind': 'package', 'fields': {}},
+            'peer': {'id': 'peer', 'parent': 'nested', 'path': 'b/nested/peer', 'kind': 'package', 'fields': {}},
+        }
+        ownership = CodeAccessOwnership(entries, {v['path']: k for k, v in entries.items()})
+        target = 'b/nested/lib/api__shared.py'
+        site = CodeAccessOccurrence('a/x.py', target, 'module', None, target, 1, 0, 'internal')
         self.assertEqual('denied', check_code_access(ownership, {}, [site])[0].status)
-
-    def test_marker_opt_in_and_spec_override(self):
-        entries = {
-            'root': {'id': 'root', 'parent': None, 'path': '.', 'kind': 'component', 'fields': {}},
-            'caller': {'id': 'caller', 'parent': 'root', 'path': 'caller', 'kind': 'package', 'fields': {}},
-            'provider': {'id': 'provider', 'parent': 'root', 'path': 'billing', 'kind': 'package', 'fields': {}},
-            'other': {'id': 'other', 'parent': 'caller', 'path': 'caller/other', 'kind': 'package', 'fields': {}},
-        }
-        ownership = CodeAccessOwnership(entries, {v['path']: k for k, v in entries.items()})
-        def occurrence(target, unit=None):
-            return CodeAccessOccurrence('caller/other/a.py', target, 'module', unit, 'alias', 1, 0, 'internal')
-        sites = [occurrence('billing/api.py', 'run'), occurrence('billing/open__public.py')]
-        sources = {'billing/api.py': None, 'billing/open__public.py': None}
-        self.assertEqual([p.written for p in check_code_access(ownership, sources, sites)], ['alias'])
-        entries['provider']['fields'] = {'boundaries': {'code': {'exports': {'billing.api.run': 'public'}}}}
-        self.assertEqual([p.written for p in check_code_access(ownership, sources, sites)], ['alias'])
-        entries['provider']['fields']['boundaries']['code']['exports'] = {}
-        self.assertEqual(len(check_code_access(ownership, sources, sites)), 2)
-        entries['provider']['fields'] = {}
-        self.assertEqual(len(check_code_access(ownership, {'billing/api.py': None}, sites[:1])), 1)
-        entries['other']['parent'] = 'root'
-        self.assertEqual(len(check_code_access(ownership, {'billing/api.py': None}, sites[:1])), 1)
-
-    def test_direct_visibility_is_provider_relative(self):
-        entries = {
-            'root': {'id': 'root', 'parent': None, 'path': '.', 'kind': 'component', 'fields': {}},
-            'provider': {'id': 'provider', 'parent': 'root', 'path': 'billing', 'kind': 'package', 'fields': {}},
-            'child': {'id': 'child', 'parent': 'provider', 'path': 'billing/child', 'kind': 'package', 'fields': {}},
-            'sibling': {'id': 'sibling', 'parent': 'root', 'path': 'sales', 'kind': 'package', 'fields': {}},
-            'descendant': {'id': 'descendant', 'parent': 'sibling', 'path': 'sales/sub', 'kind': 'package', 'fields': {}},
-            'other': {'id': 'other', 'parent': 'child', 'path': 'billing/child/other', 'kind': 'package', 'fields': {}},
-        }
-        ownership = CodeAccessOwnership(entries, {v['path']: k for k, v in entries.items()})
-        def allowed(source, target):
-            site = CodeAccessOccurrence(source, target, 'module', None, target, 1, 0, 'internal')
-            return not check_code_access(ownership, {target: None}, [site])
-        for target in ('billing/api__shared.py', 'billing/api__family_pub.py', 'billing/api__internal.py'):
-            for source in ('billing/a.py', 'root.py', 'sales/a.py'):
-                self.assertTrue(allowed(source, target), (source, target))
-            for source in ('billing/child/a.py', 'sales/sub/a.py', 'billing/child/other/a.py'):
-                self.assertFalse(allowed(source, target), (source, target))
-        for target in ('billing/api__pub.py', 'billing/api__public.py'):
-            self.assertTrue(allowed('sales/sub/a.py', target))
-        self.assertFalse(allowed('sales/a.py', 'billing/api.py'))
-        self.assertTrue(allowed('billing/a.py', 'billing/api.py'))
-        self.assertFalse(allowed('sales/a.py', 'billing/nested/api__family_pub.py'))
-        entries['provider']['fields'] = {'boundaries': {'code': {'exports': {'billing.api': 'public'}}}}
-        self.assertTrue(allowed('sales/sub/a.py', 'billing/api.py'))
-        self.assertFalse(allowed('sales/a.py', 'billing/api__pub.py'))
+        entries['a']['fields']['boundaries'] = {'code': {'imports': ['nested']}}
+        self.assertEqual((), check_code_access(ownership, {}, [site]))
+        self.assertEqual((), check_code_access(ownership, {}, [site._replace(source_path='b/nested/peer/a.py')]))
+        self.assertEqual((), check_code_access(ownership, {}, [site._replace(source_path='b/nested/a.py')]))
 
     def test_inherited_rules_and_uncertain_imports(self):
         entries = {

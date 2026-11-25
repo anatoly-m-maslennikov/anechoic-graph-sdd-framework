@@ -6,11 +6,6 @@ container:
 tier: 2
 context:
   lens: SWD
-relations:
-  IS_REFERENCE:
-  - AN-S-3187@1
-  - AN-S-3159@2
-  - AN-T-2921
 state:
   status: active
   version: 1

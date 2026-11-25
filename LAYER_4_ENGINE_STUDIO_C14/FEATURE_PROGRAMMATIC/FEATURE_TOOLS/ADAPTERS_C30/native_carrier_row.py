@@ -57,7 +57,7 @@ def _carrier_row(path: Path, root: Path, family: str, prefix: str, raw: bytes, *
         row["_source_lines"] = len(raw.splitlines())
     row["_exact_ref"] = exact
     canonical_row(row)
-    edge = {"source_kind": "Atom", "source_ref": row["ref"], "relation_type": "CONTAINED_BY",
+    edge = {"source_kind": "Atom", "source_ref": row["ref"], "relation_type": "IS_CONTAINED_BY",
             "target_kind": kind.title(), "target_ref": target, "derived": False}
     return row, edge
 

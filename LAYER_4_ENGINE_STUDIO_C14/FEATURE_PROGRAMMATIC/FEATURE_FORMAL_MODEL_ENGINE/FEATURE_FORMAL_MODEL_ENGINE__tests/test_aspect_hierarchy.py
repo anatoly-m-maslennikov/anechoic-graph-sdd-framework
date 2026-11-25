@@ -14,7 +14,7 @@ class AspectHierarchyTests(unittest.TestCase):
         claim = ('from anechoic.formal_claims import declare_entity\n'
                  f'declare_entity(entity_name="Project Structure", structure_paths=({a!r},), aspect_memberships=({b!r},))')
         parsed = parse_native_model_claim(claim)
-        self.assertEqual((a, f'({b}) ((INSTANCE_OF)) Aspect'), compiler_model_statements(parsed))
+        self.assertEqual((a, f'({b}) ((IS_INSTANCE_OF)) Aspect'), compiler_model_statements(parsed))
         for value in (None, 1, 'Node', (), ('Node',), ([],), (a, a), ('Atom <+ Aspects <+ X',)):
             bad = {'kind': 'entity', 'arguments': {'entity_name': 'Project Structure', 'structure_paths': value, 'aspect_memberships': ()}}
             if value == ():

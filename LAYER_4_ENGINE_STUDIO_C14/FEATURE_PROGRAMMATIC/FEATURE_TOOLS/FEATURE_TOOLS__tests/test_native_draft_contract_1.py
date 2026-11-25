@@ -20,6 +20,28 @@ import FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__tests.test_native_lifec
 
 
 class ComponentContractLifecycleTests(fixtures.ComponentContractLifecycleTests, unittest.TestCase):
+    def test_named_group_enables_its_lens(self):
+        manifest = self.selection.manifest_path
+        manifest.write_text(manifest.read_text().replace(
+            "lens_whitelist=['DES', 'SPEC']",
+            "lens_whitelist=['DOMAIN'], parameters={'project': {'lens_groups': {'DOMAIN': ['DOM/ONT']}}}",
+        ))
+        self.selection.manifest_sha256 = sha256(manifest.read_bytes()).hexdigest()
+        self.new['newAtom']['lens'] = 'DOM/ONT'
+
+        draft = self.create()['savedDraft']
+        self.assertEqual('completed', self.promote(draft['ref_id'], draft['version'])['outcome'])
+
+    def test_project_whitelist_enables_first_domain_contract(self):
+        manifest = self.selection.manifest_path
+        manifest.write_text(manifest.read_text().replace("['DES', 'SPEC']", "['DES', 'SPEC', 'DOM/ONT']"))
+        self.selection.manifest_sha256 = sha256(manifest.read_bytes()).hexdigest()
+        self.new['newAtom']['lens'] = 'DOM/ONT'
+
+        draft = self.create()['savedDraft']
+        self.assertIn('-ONT-COMPONENT_CONTRACT--', draft['path'])
+        self.assertEqual('completed', self.promote(draft['ref_id'], draft['version'])['outcome'])
+
     def test_new_contract_reports_a_busy_writer_without_effects(self):
         from unittest.mock import patch
 

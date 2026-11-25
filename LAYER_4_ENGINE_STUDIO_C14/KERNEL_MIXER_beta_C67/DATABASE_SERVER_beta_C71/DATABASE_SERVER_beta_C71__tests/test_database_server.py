@@ -127,7 +127,10 @@ class DatabaseServerTest(unittest.TestCase):
     def assert_equal_artifacts(self, client, payload, generation):
         for name in ("model", "structure"):
             response = client.get("/" + name, params=BINDING)
-            self.assertEqual(payload[name].encode(), response.content)
+            if name == "structure":
+                self.assertEqual(json.loads(payload[name]), response.json())
+            else:
+                self.assertEqual(payload[name].encode(), response.content)
             self.assertEqual(generation, response.headers["x-anechoic-generation"])
 
     def assert_rollbacks(self, client, payload, generation):

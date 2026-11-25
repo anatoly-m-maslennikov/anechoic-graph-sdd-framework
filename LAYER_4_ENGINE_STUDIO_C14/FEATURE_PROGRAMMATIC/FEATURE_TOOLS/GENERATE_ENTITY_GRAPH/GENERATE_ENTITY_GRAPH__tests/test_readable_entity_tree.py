@@ -16,7 +16,7 @@ STAMP = "2026-10-15 19:00:00 +0400"
 PROJECTION = {"projection_id": "CA-PROJ-900", "named_selection": "Controlled fixture"}
 
 
-def edge(child, parent, kind="NARROWER_THAN", **fields):
+def edge(child, parent, kind="IS_NARROWER_THAN", **fields):
     return dict(relation_source=child, relation_target=parent, kind=kind, **fields)
 
 
@@ -115,7 +115,7 @@ class ReadableEntityTreeTests(unittest.TestCase):
         details = document.split("### Shared\n", 1)[1].split("\n### ", 1)[0]
         for name in ("Shared.Status", "Shared.Status: Active", "Shared.Status/Special"):
             self.assertIn(name, details)
-        for relation in ("NARROWER_THAN", "IS_PROPERTY_OF", "IS_ALLOWED_VALUE_OF"):
+        for relation in ("IS_NARROWER_THAN", "IS_PROPERTY_OF", "IS_ALLOWED_VALUE_OF"):
             self.assertIn(relation, document)
         blocks = text_blocks(document)
         self.assertTrue(blocks)
@@ -138,10 +138,10 @@ class ReadableEntityTreeTests(unittest.TestCase):
         graph = {
             "nodes": [dict(id=key, identity=value) for key, value in names.items()],
             "edges": [
-                edge("instance", "kind", "INSTANCE_OF"),
+                edge("instance", "kind", "IS_INSTANCE_OF"),
                 edge("instance_status", "instance", "IS_BORNE_BY"),
                 edge("instance_value", "instance_status", "IS_ALLOWED_VALUE_OF"),
-                edge("child_kind", "kind", "NARROWER_THAN"),
+                edge("child_kind", "kind", "IS_NARROWER_THAN"),
                 edge("child_status", "child_kind", "IS_BORNE_BY"),
             ],
             "native_admission": "not_performed",
@@ -150,7 +150,7 @@ class ReadableEntityTreeTests(unittest.TestCase):
         main = primary(document)
         self.assertIn("\t// Workflow//Daily", main)
         self.assertIn("\t/ Workflow/Child", main)
-        self.assertIn("// INSTANCE_OF", document)
+        self.assertIn("// IS_INSTANCE_OF", document)
         self.assertIn("kind to named instance", document)
         self.assertIn("Workflow//Daily.Status", document)
         self.assertIn("Workflow//Daily.Status: Active", document)

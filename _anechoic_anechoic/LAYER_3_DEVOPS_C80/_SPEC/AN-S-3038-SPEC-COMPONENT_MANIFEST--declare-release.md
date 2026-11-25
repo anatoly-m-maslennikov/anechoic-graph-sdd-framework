@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 8
-  updated_at: '2026-11-23T14:26:46.661274+00:00'
+  version: 9
+  updated_at: "2026-11-24T23:12:55.813309+00:00"
 ---
 
 ## Summary
@@ -33,9 +33,6 @@ declare_entity(
         boundaries={
             'code': {
                 'imports': {'only': ['C27', 'C81', 'C63', 'C64']},
-                'exports': {
-                    'LAYER_2_RELEASE_C27__shared': {'private': ['LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/LAYER_2_RELEASE_C27__tests']},
-                },
             },
             'io': {
                 'server': {

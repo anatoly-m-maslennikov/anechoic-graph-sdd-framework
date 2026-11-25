@@ -80,6 +80,8 @@ def _environment(config, image):
         "ANECHOIC_MAX_LOADED_PROJECTS": str(getattr(config, "max_loaded_projects", 2)),
         "ANECHOIC_SHARED_RUNTIME_ID": config.shared_runtime_id,
         "ANECHOIC_LOG_LEVEL": config.log_level,
+        "ANECHOIC_WORKBENCH_STORAGE": os.environ.get("ANECHOIC_WORKBENCH_STORAGE", config.workbench_storage),
+        "ANECHOIC_JOURNAL_STORAGE": os.environ.get("ANECHOIC_JOURNAL_STORAGE", config.journal_storage),
     }
 
 

@@ -63,7 +63,7 @@ authority and does not make an unrelated parent or child applicable.
 
 When an implementation trace is required, use only current Atom IDs and the
 role lines `Requirement:`, `Method:`, `Evaluation:`, and `Delivery:`. Select
-the narrowest direct leaf for each independent `child_of` or `parent_of`
+the narrowest direct leaf for each independent `IS_TIER_GOVERNED_BY` or `GOVERNS_TIER_CONTRIBUTION`
 branch, include applicable policy leaves such as error, retry, or logging
 rules, omit an ancestor already covered by that leaf, and preserve separate
 blocks for independent branches. Many-to-many realization is valid only when

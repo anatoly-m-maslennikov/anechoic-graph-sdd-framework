@@ -11,12 +11,7 @@ state:
   status: active
   version: 1
   updated_at: '2026-11-23T22:27:55.792181+00:00'
-relations:
-  IS_REFERENCE:
-  - AN-S-1206
-  - AN-S-1902
-  - AN-S-3297
-  - AN-S-3360
+
 ---
 
 ## Summary

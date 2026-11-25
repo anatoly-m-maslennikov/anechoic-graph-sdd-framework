@@ -182,16 +182,16 @@ class ContractGraphTests(unittest.TestCase):
     def test_typed_relation_alias_and_inverse_are_source_bound_in_either_direction(self):
         def read(binding):
             return compose_contract_graph([
-                carrier("CA-R-1", "CFEL <+ Relation//NARROWER_THAN", body(
+                carrier("CA-R-1", "CFEL <+ Relation//IS_NARROWER_THAN", body(
                     "### Formal Claim", "```CFEL",
-                    'alias(Relation//NARROWER_THAN) == "/";',
+                    'alias(Relation//IS_NARROWER_THAN) == "/";',
                     binding,
-                    "Node ((NARROWER_THAN)) Node;", "```")),
+                    "Node ((IS_NARROWER_THAN)) Node;", "```")),
             ])["relations"][0]
 
-        forward = read("Relation//NARROWER_THAN ((HAS_INVERSE)) Relation//BROADER_THAN;")
-        reverse = read("Relation//BROADER_THAN <((HAS_INVERSE)) Relation//NARROWER_THAN;")
-        glyph = read("Relation//NARROWER_THAN <--> Relation//BROADER_THAN;")
+        forward = read("Relation//IS_NARROWER_THAN ((HAS_INVERSE)) Relation//BROADER_THAN;")
+        reverse = read("Relation//BROADER_THAN <((HAS_INVERSE)) Relation//IS_NARROWER_THAN;")
+        glyph = read("Relation//IS_NARROWER_THAN <--> Relation//BROADER_THAN;")
         self.assertEqual(["BROADER_THAN"], [row["name"] for row in forward["inverses"]])
         self.assertEqual(forward["inverses"], reverse["inverses"])
         self.assertEqual(forward["inverses"], glyph["inverses"])

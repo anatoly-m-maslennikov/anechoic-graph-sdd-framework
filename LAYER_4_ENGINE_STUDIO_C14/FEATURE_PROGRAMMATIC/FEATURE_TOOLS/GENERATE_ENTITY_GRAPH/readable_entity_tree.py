@@ -86,9 +86,9 @@ def _header(
         "Display selection: supplied graph nodes and Inherency relations; "
         "dependent entities appear in detail sections.",
         "",
-        "Notation: / NARROWER_THAN; // INSTANCE_OF; . IS_PROPERTY_OF; "
+        "Notation: / IS_NARROWER_THAN; // IS_INSTANCE_OF; . IS_PROPERTY_OF; "
         ": IS_ALLOWED_VALUE_OF; <+ CONTAINS (derived reverse of IS_CONTAINED_BY); >| HAS_CLASSIFICATION. Relations are traversed from broader to narrower, "
-        "kind to named instance (the source INSTANCE_OF direction is instance to kind), "
+        "kind to named instance (the source IS_INSTANCE_OF direction is instance to kind), "
         "bearer to dependent, Entity to allowed value, whole to part, and Entity to classification.",
         "",
         "This is a derived Projection, not independent model authority.",

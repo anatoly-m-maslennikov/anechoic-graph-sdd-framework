@@ -89,7 +89,7 @@ def _capture(selection, descriptors, max_numbers, lenses):
             row = {key: item[key] for key in ('ref', '_exact_ref', 'source_path', '_source_sha256', 'version', 'status', 'status_group', 'id')}
             row['header_json'] = {'context': {'container': {kind: item['owner_ref']}}}
         rows.append(row)
-        edges.append({'source_kind': 'Atom', 'source_ref': row['ref'], 'relation_type': 'CONTAINED_BY',
+        edges.append({'source_kind': 'Atom', 'source_ref': row['ref'], 'relation_type': 'IS_CONTAINED_BY',
                       'target_kind': kind.title(), 'target_ref': item['owner_ref'], 'derived': False})
     return IndexedLifecycleCapture(rows, edges, {}, captured.versions, tuple(descriptors), {key: int(value) for key, value in max_numbers.items()}, tuple(lenses))
 

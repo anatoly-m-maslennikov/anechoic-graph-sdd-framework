@@ -87,11 +87,14 @@ class WarmWorkerTests(unittest.TestCase):
             ColdWorker.result = result
             jobs = module.GenerationJobs("test", binding, "unused", worker_socket="unused", worker_load_seconds=1)
             with (patch("ORCHESTRATOR_beta_C68.generation_worker.warm_result", side_effect=AssertionError("warm worker called")),
+                  patch("ORCHESTRATOR_beta_C68.generation_worker.read_accepted_model", return_value=None) as read_model,
                   patch.object(subprocess, "Popen", return_value=ColdWorker()) as process,
                   patch.object(ColdWorker, "communicate", return_value=(json.dumps(result), "")) as communicate):
                 self.assertEqual(result, jobs._run_worker(directory, reuse, paths))
             self.assertEqual("cold", jobs.worker_mode)
             self.assertEqual(paths, json.loads(communicate.call_args.args[0])["paths"])
+            self.assertEqual({"accepted_model": None}, json.loads(communicate.call_args.args[0])["model_source"])
+            read_model.assert_called_once_with("unused", "test")
             process.assert_called_once()
 
     def test_accept_and_fallbacks(self):
@@ -111,14 +114,16 @@ class WarmWorkerTests(unittest.TestCase):
                                        (b'{"accepted":false}\n', "cold"),
                                        (b'{"accepted":true,"pid":123}\n{"result":null}\n', "cold"), ("wait", "cold")):
                 thread = broker(jobs.worker_socket, requests, response)
-                with patch.object(subprocess, "Popen", ColdWorker):
+                with (patch.object(subprocess, "Popen", ColdWorker),
+                      patch("ORCHESTRATOR_beta_C68.generation_worker.read_accepted_model", return_value=None)):
                     self.assertEqual(result, jobs._run_worker(directory, reuse, [path]))
                 thread.join(1)
                 self.assertEqual(expected, jobs.worker_mode)
                 (root / "broker").unlink()
             self.assertEqual({"kind", "start_by", "binding", "reuse", "paths"}, set(requests[0]))
             self.assertEqual("ticket_delta", requests[0]["kind"])
-            with patch.object(subprocess, "Popen", ColdWorker):
+            with (patch.object(subprocess, "Popen", ColdWorker),
+                  patch("ORCHESTRATOR_beta_C68.generation_worker.read_accepted_model", return_value=None)):
                 self.assertEqual(result, jobs._run_worker(directory, reuse, [path]))
             self.assertEqual("cold", jobs.worker_mode)
 

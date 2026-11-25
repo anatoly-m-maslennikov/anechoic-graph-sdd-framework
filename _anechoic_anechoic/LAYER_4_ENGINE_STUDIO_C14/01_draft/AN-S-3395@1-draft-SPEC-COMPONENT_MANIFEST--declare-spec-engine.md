@@ -18,7 +18,8 @@ Declare Spec Engine
 
 ## Purpose
 
-Validate lean Spec schemas and Python Formal Manifests. Compile each supported Python Formal Manifest to a common model and derive Lean and Mermaid from that model.
+Validate formal Manifests, Contracts, and Solutions. Compare their
+obligations and derive Lean and Mermaid from the same model.
 
 ## Formal manifest
 
@@ -32,6 +33,23 @@ declare_entity(
         component_id='C75',
         name='Spec Engine',
         lens_whitelist=['DES', 'SPEC'],
+        boundaries={
+            'io': {'server': {'verify_formal_chain': {'outcomes': {
+                'compared': {'must_effect': [
+                    ('C75.sources', 'validated'),
+                    ('C75.lean', 'generated'),
+                    ('C75.mermaid', 'generated'),
+                    ('C75.manifest_contract', 'compared'),
+                    ('C75.manifest_solution', 'compared'),
+                    ('C75.contract_solution', 'compared'),
+                    ('C75.comparison_complete', 'reported'),
+                ]},
+                'incomplete': {
+                    'must_effect': [('C75.diagnostics', 'reported')],
+                    'forbid_effect': ['C75.comparison_complete'],
+                },
+            }}}},
+        },
     ),
 )
 ```

@@ -70,7 +70,7 @@ declare_entity(entity_name="Dependencies", relation_name="IS_PROPERTY_OF",
         claim = ("from anechoic.formal_claims import declare_entity\n"
                  "from anechoic.model import Aspect\n"
                  f"declare_entity(entity_name='Query Processing', instance=Aspect(address={address!r}))\n")
-        self.assertEqual((address, f"({address}) ((INSTANCE_OF)) Aspect"), _compile(claim))
+        self.assertEqual((address, f"({address}) ((IS_INSTANCE_OF)) Aspect"), _compile(claim))
         from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.lint_python_model_claim__pub import lint_python_model_claim
         self.assertEqual((), lint_python_model_claim(claim, declared_addresses=["Aspect"], relation_names=[], python_class_bindings={"Aspect": ["Aspect"]}))
         invalid_claim = claim.replace("<+ Aspects <+", "<+ Invalid <+")

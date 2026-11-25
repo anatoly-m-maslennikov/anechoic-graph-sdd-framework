@@ -16,7 +16,7 @@ class NativeDeltaParityTest(unittest.TestCase):
                         "filename": "AN-T-2-TASK.md"}
         incoming = [
             {"source_kind": "Atom", "source_ref": "AN-T-2", "target_kind": "Atom", "target_ref": "AN-T-1",
-             "relation_type": "CONTAINED_BY", "derived": False},
+             "relation_type": "IS_CONTAINED_BY", "derived": False},
             {"source_kind": "Atom", "source_ref": "AN-T-1", "target_kind": "Atom", "target_ref": "AN-T-2",
              "relation_type": "CONTAINS", "derived": True},
         ]
@@ -41,7 +41,7 @@ class NativeDeltaParityTest(unittest.TestCase):
                 self.assertEqual(200, response.status_code, response.text)
                 for sql in (
                     "SELECT * FROM main.relations ORDER BY ALL",
-                    "FROM GRAPH_TABLE (anechoic MATCH (s:Reference)-[e:CONTAINED_BY]->(t:Reference) "
+                    "FROM GRAPH_TABLE (anechoic MATCH (s:Reference)-[e:IS_CONTAINED_BY]->(t:Reference) "
                     "COLUMNS (s.kind AS sk, s.ref AS sr, t.kind AS tk, t.ref AS tr)) ORDER BY ALL",
                     "FROM GRAPH_TABLE (anechoic MATCH (s:Reference)-[e:CONTAINS]->(t:Reference) "
                     "COLUMNS (s.kind AS sk, s.ref AS sr, t.kind AS tk, t.ref AS tr)) ORDER BY ALL",
@@ -50,6 +50,6 @@ class NativeDeltaParityTest(unittest.TestCase):
                     self.assertEqual(200, actual.status_code, actual.text)
                     self.assertEqual(200, expected.status_code, expected.text)
                     self.assertEqual(expected.json()["result"]["rows"], actual.json()["result"]["rows"])
-                graph = _query(incremental, "FROM GRAPH_TABLE (anechoic MATCH (s:Reference)-[e:CONTAINED_BY]->(t:Reference) COLUMNS (s.ref AS source, t.ref AS target)) ORDER BY ALL")
+                graph = _query(incremental, "FROM GRAPH_TABLE (anechoic MATCH (s:Reference)-[e:IS_CONTAINED_BY]->(t:Reference) COLUMNS (s.ref AS source, t.ref AS target)) ORDER BY ALL")
                 self.assertEqual([["AN-T-1", "C00"], ["AN-T-2", "AN-T-1"]] if count else
                                  [["AN-T-2", "AN-T-1"]], graph.json()["result"]["rows"])

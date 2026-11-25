@@ -123,7 +123,7 @@ class JournalTableTest(unittest.TestCase):
             selection = SimpleNamespace(root=root, control_root=control, manifest_path=manifest, project_prefix="AN",
                                         manifest_sha256=sha256(manifest.read_bytes()).hexdigest())
             capture = capture_native(selection)
-            bindings = dict(relation_types={"CONTAINED_BY", "CONTAINS"}, inverses={"CONTAINED_BY": "CONTAINS"})
+            bindings = dict(relation_types={"IS_CONTAINED_BY", "CONTAINS"}, inverses={"IS_CONTAINED_BY": "CONTAINS"})
             database = root / "projection.duckdb"
             options = dict(extension_directory=extension_directory(APP_ROOT.parents[1]), native=True,
                            journal_path=database, journal_disk=True)

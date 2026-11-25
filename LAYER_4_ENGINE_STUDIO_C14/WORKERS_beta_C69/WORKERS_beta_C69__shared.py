@@ -6,6 +6,7 @@ from functools import partial
 from hashlib import sha256
 import json
 import os
+import shutil
 from pathlib import Path
 import sys
 import subprocess
@@ -46,14 +47,24 @@ def _run_job(module, payload, *arguments):
     engine = Path(__file__).resolve().parents[1]
     env = {key: value for key, value in os.environ.items() if key != "PYTHONHOME"}
     env["PYTHONPATH"] = str(engine)
-    result = subprocess.run([sys.executable, "-B", "-P", "-m", module, *arguments], input=json.dumps(payload),
+    result = subprocess.run([sys.executable, "-B", "-P", "-m", module, *arguments], input=json.dumps(payload, default=str),
                             text=True, capture_output=True, cwd=engine, env=env)
     if result.returncode:
         job = module.rsplit(".", 1)[-1]
         if job == "realization_graph" and (details := _graph_consistency(result.stderr)) is not None:
             raise _BuildFailure(job, "realization_graph failed: Project source or dependency inputs changed during capture",
                                 graph_consistency=details)
-        raise _BuildFailure(job, f"{job} failed: " + result.stderr[-2048:])
+        error = _BuildFailure(job, f"{job} failed: " + result.stderr[-2048:])
+        try:
+            diagnostics = json.loads(result.stdout).get("model_diagnostics")
+            if isinstance(diagnostics, list) and diagnostics:
+                error.model_diagnostics = diagnostics
+                for issue in diagnostics:
+                    if isinstance(issue, dict):
+                        print("Model candidate rejected: " + str(issue.get("message", "invalid Model")), file=sys.stderr)
+        except (ValueError, TypeError, AttributeError):
+            pass
+        raise error
     if result.stderr:
         sys.stderr.write(result.stderr[-8192:])
     return json.loads(result.stdout)
@@ -119,6 +130,10 @@ def _rebuild_graph(binding, config, structure, endpoints, *, watcher_guarded=Fal
 def _compile(binding, stage):
     module = "WORKERS_beta_C69.manifest_build_CS4.manifest_build_CS4__shared"
     receipt = _run_job(module, binding, "--output-dir", str(stage))
+    return _read_compile_receipt(binding, stage, receipt)
+
+
+def _read_compile_receipt(binding, stage, receipt):
     fields = {"manifest_sha256", "model_sha256", "model_descriptor_sha256", "structure_sha256"}
     if not isinstance(receipt, dict) or set(receipt) != fields or receipt["manifest_sha256"] != binding["manifest_sha256"]:
         raise ValueError("Invalid Manifest build receipt")
@@ -131,18 +146,71 @@ def _compile(binding, stage):
     return receipt, json.loads(structure), json.loads(model)["bindings"]["endpoints"]
 
 
-def build_generation(binding, output, *, managed=False, watcher_guarded=False, foreground=False):
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
-        prepare_generation_snapshot,
-    )
+class _ModelAttemptFailure(ValueError):
+    def __init__(self, error, diagnostics):
+        super().__init__(str(error))
+        self.model_diagnostics = diagnostics
+
+
+def _compile_ingested(binding, stage, inputs, source, *, fallback=None, diagnostics=None):
+    if not isinstance(source, dict) or set(source) != {"accepted_model"}:
+        raise ValueError("Invalid accepted Model source")
+    model_inputs = {"rows": inputs["rows"], "has_c9": inputs["has_c9"],
+                    "issues": list(inputs["issues"]), "accepted_model": source["accepted_model"]}
+    previous = [] if diagnostics is None else diagnostics
+    if fallback is not None:
+        for child in stage.iterdir():
+            shutil.rmtree(child) if child.is_dir() else child.unlink()
+        model_inputs["issues"].append({"code": "model_snapshot_invalid", "message": str(fallback)})
+    module = "WORKERS_beta_C69.manifest_build_CS4.manifest_build_CS4__shared"
+    try:
+        response = _run_job(module, {"binding": binding, "model_inputs": model_inputs},
+                            "--output-dir", str(stage), "--ingested-model")
+    except _BuildFailure as error:
+        if previous:
+            error.model_diagnostics = previous + getattr(error, "model_diagnostics", [])
+        raise
+    diagnostics = response.pop("model_diagnostics")
+    if not isinstance(diagnostics, list):
+        raise ValueError("Invalid Manifest build Model diagnostics")
+    for issue in diagnostics:
+        print("Model candidate rejected: " + str(issue.get("message", "invalid Model")), file=sys.stderr)
+    receipt, structure, endpoints = _read_compile_receipt(binding, stage, response)
+    return receipt, structure, endpoints, previous + diagnostics
+
+
+def _compile_and_capture(binding, stage, model_inputs, model_source, finish_snapshot):
+    compiled = (_compile(binding, stage) if model_source is None else
+                _compile_ingested(binding, stage, model_inputs, model_source))
+    try:
+        captured = finish_snapshot(compiled[2])
+    except ValueError as error:
+        if model_source is None:
+            raise
+        if compiled[3]:
+            raise _ModelAttemptFailure(error, compiled[3]) from error
+        compiled = _compile_ingested(binding, stage, model_inputs, model_source, fallback=error,
+                                     diagnostics=compiled[3])
+        try:
+            captured = finish_snapshot(compiled[2])
+        except (OSError, RuntimeError, TypeError, ValueError) as failure:
+            raise _ModelAttemptFailure(failure, compiled[3]) from failure
+    return compiled, captured
+
+
+def build_generation(binding, output, *, managed=False, watcher_guarded=False, foreground=False, model_source=None):
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import prepare_generation_snapshot
 
     output = Path(output)
     if (not output.is_absolute() or output.is_symlink() or not output.is_dir()
             or output.resolve(strict=True) != output or any(output.iterdir())):
         raise ValueError("Generation directory must be an existing empty canonical directory")
-    config, finish_snapshot = prepare_generation_snapshot(
+    captured = prepare_generation_snapshot(
         binding, include_hashes=True, watcher_guarded=watcher_guarded,
-        archive_stage="foreground" if foreground else None)
+        archive_stage="foreground" if foreground else None,
+        **({"include_model_inputs": True} if model_source is not None else {}))
+    config, finish_snapshot = captured[:2]
+    model_inputs = captured[2] if model_source is not None else None
     control = Path(binding["root"]) / binding["control_root"]
     if output == control or control in output.parents:
         raise ValueError("Generation directory must be outside the Project control root")
@@ -151,12 +219,20 @@ def build_generation(binding, output, *, managed=False, watcher_guarded=False, f
     with tempfile.TemporaryDirectory(prefix=".beta-job-", dir=output.parent) as temporary:
         stage = Path(temporary) / "generation"
         stage.mkdir()
-        receipt, structure, endpoints = _compile(binding, stage)
-        graph = _build_graph(binding, config, structure)
+        compiled, captured = _compile_and_capture(binding, stage, model_inputs, model_source, finish_snapshot)
+        receipt, structure, endpoints = compiled[:3]
+        snapshot, hashes, *deferred = captured
+        try:
+            graph = _build_graph(binding, config, structure)
+        except (OSError, RuntimeError, TypeError, ValueError) as error:
+            if model_source is not None and compiled[3]:
+                error.model_diagnostics = compiled[3]
+            raise
         receipt["graph_sha256"] = digest(graph)
-        snapshot, hashes, *deferred = finish_snapshot(endpoints)
         receipt["snapshot_sha256"] = digest(snapshot)
         result = {"snapshot": snapshot, "receipt": receipt, "graph": graph, "carrier_hashes": hashes}
+        if model_source is not None:
+            result["model_diagnostics"] = compiled[3]
         if foreground:
             roots, archived, archive_hashes = deferred
             result["deferred_archive"] = {"roots": roots, "snapshot": archived,
@@ -175,7 +251,7 @@ def _run(request, output):
         return build(request)
     if not isinstance(request, dict) or "binding" not in request or "reuse" not in request:
         return build_generation(request, output)
-    fields = set(request) - {"watcher_guarded", "foreground", "incremental"}
+    fields = set(request) - {"watcher_guarded", "foreground", "incremental", "model_source"}
     incremental = request.get("incremental", False)
     if any(type(request.get(key, False)) is not bool for key in ("incremental", "foreground", "watcher_guarded")):
         raise ValueError("Invalid managed Worker option")
@@ -200,7 +276,8 @@ def _run(request, output):
                          watcher_guarded=guarded, incremental=incremental, foreground=foreground)
         if native is not None:
             return native
-    return build_generation(binding, output, managed=True, watcher_guarded=guarded, foreground=foreground)
+    return build_generation(binding, output, managed=True, watcher_guarded=guarded, foreground=foreground,
+                            model_source=request.get("model_source"))
 
 
 def _capture_archive(binding, archive, watcher_guarded):
@@ -240,6 +317,8 @@ def main():
             traceback.print_exc()
             if isinstance(request, dict) and {"binding", "reuse"} <= request.keys():
                 failure = {"ingestion_failure": _ingestion_failure(error)}
+                if getattr(error, "model_diagnostics", None):
+                    failure["model_diagnostics"] = error.model_diagnostics
                 if isinstance(error, _BuildFailure) and error.graph_consistency is not None:
                     failure["graph_consistency"] = error.graph_consistency
                 print(json.dumps(failure, ensure_ascii=False))

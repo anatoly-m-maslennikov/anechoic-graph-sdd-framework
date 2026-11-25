@@ -166,6 +166,24 @@ def _check_relation_classifications(records: list, relations: dict) -> None:
                 raise ValueError(f"{name}: unadmitted Relation classification {axis}={value}")
 
 
+def _check_node_classifications(records: list, typed_sources: set) -> None:
+    allowed = {}
+    for source, subject, declaration in records:
+        args = declaration["arguments"]
+        if declaration["kind"] != "entity" or args.get("entity_name") != "Classification":
+            continue
+        for axis, values in args.get("allowed_classification_values", {}).items():
+            if subject != f"MODEL//ANECHOIC <+ Graph/Classification >| {axis}" or axis in allowed:
+                raise ValueError(f"{source}: ambiguous or invalid classification axis: {axis}")
+            allowed[axis] = values
+    for source, _, declaration in records:
+        args = declaration["arguments"]
+        if source in typed_sources and declaration["kind"] == "entity" and args.get("entity_kind") == "Primary":
+            for axis, value in args.get("classifications", {}).items():
+                if value not in allowed.get(axis, ()):
+                    raise ValueError(f"{source}: unadmitted Node classification {axis}={value}")
+
+
 def _check_manifest_property_bearers(parsed):
     owners = {model_class_target(subject, args["entity_name"])
               for _, subject, declaration in parsed
@@ -211,6 +229,12 @@ def _check_relation_references(records: list[tuple[str, str, str]]) -> None:
     )
     _check_manifest_property_bearers(parsed)
     relations = build_relation_declaration_catalog(parsed)
+    explicit = {name for name, (args, reverse) in relations.items()
+                if not reverse and 'derived_from' not in args}
+    for source, _, declaration in parsed:
+        names = declaration['arguments'].get('allowed_relation_names')
+        if names is not None and set(names) != explicit:
+            raise ValueError(f'{source}: allowed Relation names must match the explicit Model catalog')
     _check_relation_classifications(parsed, relations)
     addresses = {subject for _, subject, _ in records}
     addresses.update(_class_property_aliases(parsed))

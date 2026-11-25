@@ -11,13 +11,7 @@ state:
   status: active
   version: 1
   updated_at: '2026-11-23T17:59:16Z'
-relations:
-  IS_REFERENCE:
-  - AN-S-3346
-  - AN-S-4734
-  - AN-S-4736
-  - AN-S-4731
-  - AN-S-3360
+
 ---
 
 ## Summary

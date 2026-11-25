@@ -19,7 +19,7 @@ def _digest(value):
 def _native_generation():
     data = _generation()
     model = json.loads(data["model"])
-    model["bindings"]["endpoints"] = {"CONTAINED_BY": [{}, False], "CONTAINS": [{}, True]}
+    model["bindings"]["endpoints"] = {"IS_CONTAINED_BY": [{}, False], "CONTAINS": [{}, True]}
     data["model"] = json.dumps(model)
     data["receipt"]["model_descriptor_sha256"] = sha256(data["model"].encode()).hexdigest()
     atom = {"reference": "AN-T-1", "exact_ref": "AN-T-1@2", "summary": "second",
@@ -28,9 +28,9 @@ def _native_generation():
     archived = atom | {"reference": "AN-T-1@1", "exact_ref": "AN-T-1@1", "status_group": "Archived",
                       "status": "archived", "version": 1, "filename": "AN-T-1@1-TASK.md", "summary": "first"}
     relationship = {"source_kind": "Atom", "source_ref": "AN-T-1", "target_kind": "Component",
-                    "target_ref": "C00", "relation_type": "CONTAINED_BY", "derived": False}
+                    "target_ref": "C00", "relation_type": "IS_CONTAINED_BY", "derived": False}
     data["snapshot"] = {"schema_version": 2, "manifest_sha256": PIN, "atoms": [atom, archived],
-                        "relations": [relationship], "relation_types": ["CONTAINED_BY", "CONTAINS"]}
+                        "relations": [relationship], "relation_types": ["IS_CONTAINED_BY", "CONTAINS"]}
     data["receipt"]["snapshot_sha256"] = _digest(data["snapshot"])
     return data
 
@@ -57,6 +57,33 @@ class NativeAtomTest(unittest.TestCase):
                 self.assert_native_rows(client)
             with _server(path) as client:
                 self.assert_native_rows(client)
+
+    def test_realization_import_label_with_native_relation_type(self):
+        native = _native_generation()
+        model = json.loads(native["model"])
+        model["bindings"]["endpoints"].update({"IMPORTS": [{}, False], "IS_IMPORTED_BY": [{}, True]})
+        native["model"] = json.dumps(model)
+        native["receipt"]["model_descriptor_sha256"] = sha256(native["model"].encode()).hexdigest()
+        native["snapshot"]["relation_types"] += ["IMPORTS", "IS_IMPORTED_BY"]
+        native["receipt"]["snapshot_sha256"] = _digest(native["snapshot"])
+        native["graph"] = {"nodes": [["a", "module", "python", "a.py", "ok", None, None],
+                                      ["b", "module", "python", "b.py", "ok", None, None]],
+                           "occurrences": [["o", "a", "b", "b", 1, 0, "resolved", False]],
+                           "edges": [["a", "b", "o", False]], "test_edges": [], "read_issues": []}
+        native["receipt"]["graph_sha256"] = _digest(native["graph"])
+        with _server() as client:
+            response = client.put("/generation", json=native)
+            self.assertEqual(200, response.status_code, response.text)
+            graph = _query(client, "FROM GRAPH_TABLE (anechoic MATCH (s:ImportNode)-[e:Imports]->(t:ImportNode) COLUMNS (s.node_key AS source, t.node_key AS target))")
+            self.assertEqual(200, graph.status_code, graph.text)
+            self.assertEqual([["a", "b"]], graph.json()["result"]["rows"])
+            conflict = deepcopy(native)
+            conflict["snapshot"]["relations"].append(conflict["snapshot"]["relations"][0] | {"relation_type": "IMPORTS"})
+            conflict["receipt"]["snapshot_sha256"] = _digest(conflict["snapshot"])
+            refused = client.put("/generation", json=conflict)
+            self.assertNotEqual(200, refused.status_code, refused.text)
+            self.assertIn("Native IMPORTS relations conflict", refused.text)
+            self.assertEqual([["a", "b"]], _query(client, "FROM GRAPH_TABLE (anechoic MATCH (s:ImportNode)-[e:Imports]->(t:ImportNode) COLUMNS (s.node_key AS source, t.node_key AS target))").json()["result"]["rows"])
 
     def test_generation_with_migrated_current_journal_view(self):
         with TemporaryDirectory(dir="/tmp") as directory:
@@ -88,9 +115,9 @@ class NativeAtomTest(unittest.TestCase):
             self.assertEqual([[None, "AN-T-1@1"], ["AN-T-1", "AN-T-1@2"]], revisions.json()["result"]["rows"])
         for table in ("mrt_atom_graph_relations", "mrt_relations", "relations"):
             edges = _query(client, f"SELECT source_ref, target_ref, relation_type FROM {table}")
-            self.assertEqual([["AN-T-1", "C00", "CONTAINED_BY"]], edges.json()["result"]["rows"])
+            self.assertEqual([["AN-T-1", "C00", "IS_CONTAINED_BY"]], edges.json()["result"]["rows"])
         graph = _query(client, """
-            FROM GRAPH_TABLE (anechoic MATCH (s:Reference)-[e:CONTAINED_BY]->(t:Reference)
+            FROM GRAPH_TABLE (anechoic MATCH (s:Reference)-[e:IS_CONTAINED_BY]->(t:Reference)
                 COLUMNS (s.ref AS source, t.ref AS target))
         """)
         self.assertEqual(200, graph.status_code, graph.text)

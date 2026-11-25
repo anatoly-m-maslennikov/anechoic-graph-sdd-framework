@@ -40,7 +40,7 @@ class PersistenceTest(unittest.TestCase):
             with _server(path) as client:
                 self.assertEqual(generation, client.get("/health").json()["result"]["generation"])
                 self.assertEqual(data["model"], client.get("/model", params=BINDING).text)
-                self.assertEqual(data["structure"], client.get("/structure", params=BINDING).text)
+                self.assertEqual(json.loads(data["structure"]), client.get("/structure", params=BINDING).json())
                 self.assertEqual([["one", "first"]], _query(client, "SELECT * FROM atoms").json()["result"]["rows"])
                 self.assertEqual([], _query(client, "SELECT * FROM state_effect_findings").json()["result"]["rows"])
                 graph = _query(client, "FROM GRAPH_TABLE (anechoic MATCH (n:Reference)-[e:COMPONENT_IS_TESTED_BY]->"

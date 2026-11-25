@@ -7,6 +7,9 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
+
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model_ontology_path__pub import find_ontology_component
 
 from .WORKERS_beta_C69__tests__shared import generation_fixture
 
@@ -34,10 +37,15 @@ def invoke(binding, name, arguments, *, structure_sha256=None, indexed_task=None
 
 def copy_lifecycle_definitions(control):
     source = ENGINE.parent / "_anechoic_anechoic"
-    for relative in ("LAYER_1_META_ONTOLOGY_C9", "LAYER_1_META_ONTOLOGY_C9/_SPEC", "__PROJECT_CONFIG/CUSTOM_MODEL"):
+    ontology = find_ontology_component(source)
+    assert ontology is not None
+    for original, relative in ((ontology, "LAYER_1_META_ONTOLOGY_C9"),
+                               (ontology / "_SPEC", "LAYER_1_META_ONTOLOGY_C9/_SPEC"),
+                               (ontology / "_DES", "LAYER_1_META_ONTOLOGY_C9/_DES"),
+                               (source / "__PROJECT_CONFIG/CUSTOM_MODEL", "__PROJECT_CONFIG/CUSTOM_MODEL")):
         destination = control / relative
         destination.mkdir(parents=True, exist_ok=True)
-        for path in (source / relative).glob("*.md"):
+        for path in original.glob("*.md"):
             shutil.copy2(path, destination / path.name)
 
 
@@ -67,6 +75,41 @@ def ticket_asset_fixture(binding):
 
 
 class LifecycleWorkerTests(unittest.TestCase):
+    def test_indexed_context_omits_orchestrator_guard(self):
+        from WORKERS_beta_C69.lifecycle_worker import _validate_indexed
+        request = {'binding': {key: 'x' for key in ('root', 'control_root', 'manifest_path', 'manifest_sha256', 'project_prefix')},
+                   'name': 'atom_lifecycle_update', 'arguments': {}, 'base_generation': 'g', 'structure_sha256': 's',
+                   'lifecycle_context': {'structure': {}, 'ticket_labels': [], 'max_numbers': {}, 'carriers': [],
+                                         'lenses': [], 'model': None, 'endpoints': {}}}
+        self.assertEqual('lifecycle_context', _validate_indexed(request))
+        request['lifecycle_context']['has_descendants'] = False
+        with self.assertRaises(ValueError):
+            _validate_indexed(request)
+
+    def test_changed_model_requires_full_generation_even_with_same_structure(self):
+        from WORKERS_beta_C69 import lifecycle_worker as worker
+        before = {"model_sha256": "old", "model_descriptor_sha256": "old-descriptor", "structure_sha256": "same"}
+        after = {**before, "model_sha256": "new", "model_descriptor_sha256": "new-descriptor"}
+        request = {"binding": {}, "name": "promote", "arguments": {}, "base_generation": "base",
+                   "structure_sha256": "same"}
+        lifecycle = {"outcome": "completed", "effects": [{"state": "known"}]}
+        with patch.object(worker, "manifest_input_signature", side_effect=["before", "before", "after"]), \
+                patch.object(worker, "_compile", side_effect=[(before, None, {}), (after, None, {})]), \
+                patch.object(worker, "_run_job", return_value=lifecycle), \
+                patch.object(worker, "_delta", return_value={"paths": ["a"]}):
+            result = worker.run(request)
+        self.assertEqual(after, result["generation_candidate"])
+        self.assertIsNone(result["projection_error"])
+        lifecycle["outcome"] = "failed"
+        with patch.object(worker, "manifest_input_signature", side_effect=["before", "before", "after"]), \
+                patch.object(worker, "_compile", side_effect=[(before, None, {}), (after, None, {})]), \
+                patch.object(worker, "_run_job", return_value=lifecycle), \
+                patch.object(worker, "_delta", return_value={"paths": ["a"]}):
+            result = worker.run(request)
+        self.assertNotIn("generation_candidate", result)
+        self.assertIn("changed the admitted", result["projection_error"])
+        self.assertIsNone(result["delta"])
+
     def test_stale_structure_refuses_before_write(self):
         with tempfile.TemporaryDirectory(prefix="ane-lifecycle-", dir="/tmp") as directory:
             binding, _, _ = generation_fixture(directory)
@@ -110,10 +153,20 @@ class LifecycleWorkerTests(unittest.TestCase):
     def test_ticket_status_checks_installed_definitions(self):
         with tempfile.TemporaryDirectory(prefix="ane-lifecycle-", dir="/tmp") as directory:
             binding, _, _ = generation_fixture(directory)
-            source_root = ENGINE.parent / "_anechoic_anechoic" / "LAYER_1_META_ONTOLOGY_C9"
+            source_control = ENGINE.parent / "_anechoic_anechoic"
+            source_root = find_ontology_component(source_control)
+            assert source_root is not None
             control = Path(binding["root"]) / binding["control_root"]
-            shutil.copytree(source_root, control / "LAYER_1_META_ONTOLOGY_C9")
-            shutil.copytree(ENGINE.parent / "_anechoic_anechoic" / "__PROJECT_CONFIG" / "CUSTOM_MODEL",
+            ontology = control / "ONTOLOGY_SCORE_C82" / "CONTINUANT_PITCHFORK_C9"
+            shutil.copytree(source_root, ontology)
+            methodology = Path("ONTOLOGY_SCORE_C82/OCCURRENT_METRONOME_C58")
+            source = source_control / methodology
+            for atom in ("AN-S-1928", "AN-S-1834", "AN-S-1831"):
+                original, = (source / "_DOM/MTD").rglob(f"{atom}-MTD-*.md")
+                installed = control / methodology / original.relative_to(source)
+                installed.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(original, installed)
+            shutil.copytree(source_control / "__PROJECT_CONFIG" / "CUSTOM_MODEL",
                             control / "__PROJECT_CONFIG" / "CUSTOM_MODEL")
             def run(name, arguments):
                 result = invoke(binding, name, arguments)
@@ -136,7 +189,7 @@ class LifecycleWorkerTests(unittest.TestCase):
             rejected = run("atom_lifecycle_change_status", {"target": target, "targetStatus": "nonsense"})
             self.assertEqual("needs_input", rejected["outcome"])
             self.assertEqual([], rejected["effects"])
-            installed = next((control / "LAYER_1_META_ONTOLOGY_C9").rglob("AN-S-1831-*.md"))
+            installed, = (control / methodology / "_DOM/MTD").glob("AN-S-1831-MTD-*.md")
             installed.write_bytes(installed.read_bytes() + b"changed\n")
             blocked = run("atom_lifecycle_change_status", {"target": target, "targetStatus": "done"})
             self.assertEqual("blocked", blocked["outcome"], blocked)
@@ -239,7 +292,7 @@ class LifecycleWorkerTests(unittest.TestCase):
             manifest.unlink()
             indexed = {"max_number": "100", "manifest_ref": "AN-S-1@1", "component_ids": ["C00"],
                        "ticket_labels": ["Task"],
-                       "endpoints": {"CONTAINED_BY": [{"inverse_alias": "CONTAINS"}, False], "CONTAINS": [{}, True]}}
+                       "endpoints": {"IS_CONTAINED_BY": [{"inverse_alias": "CONTAINS"}, False], "CONTAINS": [{}, True]}}
             result = invoke(binding, "atom_lifecycle_create_draft", {"newAtom": {
                 "template": "task", "container": {"component": "C00"}, "body": "## Summary\n\nCanary.\n"}},
                 structure_sha256="admitted", indexed_task=indexed)

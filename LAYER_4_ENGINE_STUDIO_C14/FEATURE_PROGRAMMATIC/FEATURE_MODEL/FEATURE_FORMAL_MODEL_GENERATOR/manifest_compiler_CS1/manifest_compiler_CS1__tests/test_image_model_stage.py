@@ -85,6 +85,21 @@ class ImageModelStageTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, 'Duplicate'):
                     stage.stage_model(project, project, 5, None)
 
+    def test_staging_flattens_nested_component(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            project = Path(temporary).resolve()
+            (project / '.anechoic_tmp').mkdir()
+            spec = project / 'ONTOLOGY_SCORE_C82/CONTINUANT_PITCHFORK_C9/_SPEC'
+            spec.mkdir(parents=True)
+            (spec / 'claim.md').write_bytes(b'claim')
+
+            def compile_model(command, deadline):
+                self.assertEqual((Path(command[-1]) / stage.ONTOLOGY / 'claim.md').read_bytes(), b'claim')
+                return 'fingerprint'
+
+            with patch.object(stage, '_run', side_effect=compile_model):
+                self.assertEqual(stage.stage_model(project, project, 5, None), 'fingerprint')
+
     def test_staging_rejects_changed_sources_and_selector_mismatch(self):
         with tempfile.TemporaryDirectory() as temporary:
             project = Path(temporary)

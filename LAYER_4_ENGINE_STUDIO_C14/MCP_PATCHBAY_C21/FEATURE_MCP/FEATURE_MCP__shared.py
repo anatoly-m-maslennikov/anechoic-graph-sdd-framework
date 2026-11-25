@@ -1,5 +1,6 @@
 """MCP feature family interface."""
 
+import os
 from pathlib import Path
 import sys
 
@@ -26,14 +27,16 @@ def beta_runtime_arguments(selection, socket, workbench_storage=None, journal_st
             "--project-prefix", selection.project_prefix, "--project-name", selection.project_name]
     runtime = selection.parameters.get("runtime", {})
     workbench = runtime.get("workbench", {})
-    storage = workbench.get("storage", workbench_storage or "disk")
-    journal = runtime.get("journal", {}).get("storage", journal_storage or "files")
-    args += ["--workbench-storage", storage, "--journal-storage", journal]
+    profile = "ANECHOIC_RUNTIME_PROFILE" in os.environ
+    if not profile:
+        storage = workbench.get("storage", workbench_storage or "disk")
+        journal = runtime.get("journal", {}).get("storage", journal_storage or "files")
+        args += ["--workbench-storage", storage, "--journal-storage", journal]
     public_url = workbench.get("public_url")
     if isinstance(public_url, str) and public_url and "\0" not in public_url:
         args.append(f"--workbench-public-url={public_url}")
     journal_relative = selection.parameters.get("paths", {}).get("journal_root")
-    if journal == "files" and journal_relative is not None:
+    if journal_relative is not None:
         if not isinstance(journal_relative, str):
             raise ValueError("paths.journal_root must be a relative path")
         args += ["--journal-relative", journal_relative]

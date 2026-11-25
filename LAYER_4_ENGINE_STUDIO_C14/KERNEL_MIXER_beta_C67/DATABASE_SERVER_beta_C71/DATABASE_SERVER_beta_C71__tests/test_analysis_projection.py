@@ -16,7 +16,7 @@ class AnalysisProjectionTest(unittest.TestCase):
         db.execute('CREATE TABLE mrt_atom_references (reference VARCHAR, exact_ref VARCHAR)')
         db.execute('CREATE TABLE mrt_atom_graph_relations (source_kind VARCHAR, source_ref VARCHAR, target_kind VARCHAR, target_ref VARCHAR, relation_type VARCHAR, derived BOOLEAN)')
         db.execute("INSERT INTO mrt_atom_references VALUES ('AN-1', 'AN-1@1'), ('AN-2', 'AN-2@1')")
-        db.execute("INSERT INTO mrt_atom_graph_relations VALUES ('Atom','AN-1','Atom','AN-2','CONTAINED_BY',false), ('Atom','AN-2','Component','C1','CONTAINED_BY',false)")
+        db.execute("INSERT INTO mrt_atom_graph_relations VALUES ('Atom','AN-1','Atom','AN-2','IS_CONTAINED_BY',false), ('Atom','AN-2','Component','C1','IS_CONTAINED_BY',false)")
         db.execute('CREATE TABLE mrt_real_graph_package_imports (source_key VARCHAR, target_key VARCHAR, occurrence_count BIGINT)')
         db.execute("INSERT INTO mrt_real_graph_package_imports VALUES ('p', 'q', 3)")
         projection.prepare(db)

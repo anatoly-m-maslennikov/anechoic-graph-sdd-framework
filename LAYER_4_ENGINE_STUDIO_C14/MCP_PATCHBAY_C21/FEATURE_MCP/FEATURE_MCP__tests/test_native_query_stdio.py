@@ -39,8 +39,8 @@ def _native_inputs():
 
     return NativeQueryInputs(
         validate_manifest=validate_manifest,
-        relation_types=frozenset({"CONTAINED_BY", "CONTAINS"}),
-        inverses={"CONTAINED_BY": "CONTAINS"},
+        relation_types=frozenset({"IS_CONTAINED_BY", "CONTAINS"}),
+        inverses={"IS_CONTAINED_BY": "CONTAINS"},
         extension_directory=extension_directory(MCP.parents[2]),
         ticket_labels=("Task", "Subtask", "Sub-epic", "Epic", "Version"),
     )

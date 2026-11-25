@@ -19,6 +19,8 @@ class SchemaProjectionNamesTests(unittest.TestCase):
             "import_edges", "package_imports", "package_external_imports", "code_units", "code_unit_calls",
             "test_edges", "tested_by_edges")})
         expected.update({
+            **{f"mrt_{name}": name for name in (
+                "project_structure", "model_entities", "model_properties", "diag_model_manifests")},
             "mrt_atom_graph_relations": "relations",
             "mrt_atom_references": "native_references",
             "mrt_flow_actions": "component_flows",
@@ -61,6 +63,14 @@ class SchemaProjectionNamesTests(unittest.TestCase):
         self.assertFalse(_valid_schema({"tables": {"ops_generation_carrier_hashes": []}}))
         self.assertFalse(_valid_schema({"tables": {"biz_atoms": [status]}}))
         self.assertFalse(_valid_schema({"tables": {"mrt_relations": [status]}}))
+
+    def test_schema_accepts_model_projections_together(self):
+        names = ("project_structure", "model_entities", "model_properties", "diag_model_manifests")
+        tables = {table: [{"name": "id", "type": "VARCHAR"}]
+                  for name in names for table in (name, f"mrt_{name}")}
+        self.assertTrue(_valid_schema({"tables": tables}))
+        self.assertFalse(_valid_schema({"tables": tables | {"mrt_unknown": []}}))
+        self.assertFalse(_valid_schema({"tables": tables | {"ops_generation_carrier_hashes": []}}))
 
 
 class IngestionStatusTests(unittest.IsolatedAsyncioTestCase):

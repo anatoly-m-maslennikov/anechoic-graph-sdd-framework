@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 5
-  updated_at: '2026-11-22T11:23:40.206159+00:00'
+  version: 6
+  updated_at: "2026-11-24T23:12:55.813309+00:00"
 ---
 
 ## Summary
@@ -32,13 +32,6 @@ declare_entity(
         boundaries={
             'code': {
                 'imports': {'only': []},
-                'exports': {
-                    'FEATURE_CODEX_EXTENSION__shared': None,
-                    'FEATURE_CODEX_EXTENSION__shared.call': None,
-                    'FEATURE_CODEX_EXTENSION__shared.list_resources': None,
-                    'FEATURE_CODEX_EXTENSION__shared.read_resource': None,
-                    'FEATURE_CODEX_EXTENSION__shared.tools': None,
-                },
             },
             'state': {
                 'reads': ['bundled compatibility probe HTML', 'bundled Workbench MCP App HTML'],

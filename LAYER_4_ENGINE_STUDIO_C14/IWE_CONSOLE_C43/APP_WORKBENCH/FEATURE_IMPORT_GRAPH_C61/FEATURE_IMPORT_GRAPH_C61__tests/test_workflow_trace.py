@@ -6,7 +6,7 @@ import shutil
 import subprocess
 import unittest
 
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.workflow_spec import compile_workflow
+from SPEC_ENGINE_C75.workflow_model__pub import compile_workflow, parse_workflow
 
 LEAN = os.environ.get('LEAN_BIN') or shutil.which('lean')
 SCRIPT = Path(__file__).resolve().parents[1] / 'WorkflowTrace.lean'
@@ -32,6 +32,12 @@ def machine():
 
 
 class WorkflowCompilerTests(unittest.TestCase):
+    def test_parse_shared_workflow(self):
+        source = f"component_workflow(component='C61', action='run', machine={machine()!r})"
+        self.assertEqual(compile_workflow(parse_workflow(source)['machine']), compile_workflow(machine()))
+        with self.assertRaisesRegex(ValueError, 'unique string keys'):
+            parse_workflow("component_workflow(component='C61', action='run', machine={'id': 1, 'id': 2})")
+
     def test_model_and_mermaid(self):
         result = compile_workflow(machine())
         states = result['model']['states']

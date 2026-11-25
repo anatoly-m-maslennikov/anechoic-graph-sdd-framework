@@ -22,7 +22,7 @@ _RELATION = re.compile(
     rf"(?P<target>.+)$"
 )
 _GROUPED_INSTANCE_RELATION = re.compile(
-    r"^\((?P<source>[^()]+)\)\s*\(\(INSTANCE_OF\)\)\s*(?P<target>[^()]+)$"
+    r"^\((?P<source>[^()]+)\)\s*\(\(IS_INSTANCE_OF\)\)\s*(?P<target>[^()]+)$"
 )
 _RELATION_WITHOUT_TARGET = re.compile(
     rf"^(?P<source>.+?)\s*\{{:(?P<forward_minimum>0|[1-9][0-9]*)(?P<forward_tail>\+|\.\.(?P<forward_maximum>0|[1-9][0-9]*))?\}}\s*"

@@ -12,7 +12,7 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import
 )
 
 _ENDPOINTS = {
-    "CONTAINED_BY": [{"inverse_alias": "CONTAINS"}, False],
+    "IS_CONTAINED_BY": [{"inverse_alias": "CONTAINS"}, False],
     "CONTAINS": [{}, True],
     "HAS_REFERENCE": [{"inverse_alias": "IS_REFERENCE_FOR"}, False],
     "IS_REFERENCE_FOR": [{}, True],

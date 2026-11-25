@@ -47,7 +47,7 @@ def _project(root):
     task.parent.mkdir(parents=True)
     task.write_text(
         "---\natom_family: TKT\natom_id: EX-T-1\ncontainer:\n  component: C00\npriority: 2\n"
-        "relations:\n  CHILD_OF: [EX-S-1]\n"
+        "relations:\n  IS_CHILD_OF: [EX-S-1]\n"
         "context:\n  template: task\nstate:\n  status: active\n  version: 1\n"
         "  updated_at: '2026-11-19T00:00:00Z'\n---\n\n## Summary\n\nExample task\n",
         encoding="utf-8",
@@ -302,13 +302,13 @@ class BetaMcpTest(unittest.IsolatedAsyncioTestCase):
         reply = await client.call_tool("query_run", query)
         self.assertEqual([["EX-T-1", "EX-T-1@1", 1]], reply.structured_content["rows"])
         graph = await client.call_tool("query_run", {"sql": """
-            FROM GRAPH_TABLE (anechoic MATCH (s:Reference)-[e:CONTAINED_BY]->(t:Reference)
+            FROM GRAPH_TABLE (anechoic MATCH (s:Reference)-[e:IS_CONTAINED_BY]->(t:Reference)
                 COLUMNS (s.ref AS source, t.ref AS target)) WHERE source = 'EX-T-1'
         """})
         self.assertEqual([["EX-T-1", "C00"]], graph.structured_content["rows"])
         authored = await client.call_tool("query_run", {"sql": """
             SELECT target_ref FROM relations WHERE source_ref = 'EX-T-1'
-            AND NOT derived AND relation_type = 'CHILD_OF'
+            AND NOT derived AND relation_type = 'IS_CHILD_OF'
         """})
         self.assertEqual([["EX-S-1"]], authored.structured_content["rows"])
         metrics = await client.call_tool("query_run", {"sql": """

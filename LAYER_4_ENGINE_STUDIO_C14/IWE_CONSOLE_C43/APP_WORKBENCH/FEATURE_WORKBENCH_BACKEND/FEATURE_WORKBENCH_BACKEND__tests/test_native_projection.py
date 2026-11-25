@@ -41,8 +41,15 @@ class NativeProjectionTests(unittest.TestCase):
 
     def test_authored_relation_to_config_exact_reference(self):
         row = {"ref": "AN-P-1", "header_json": {"relations": {"REFERENCES": ["AN-C-2@3-draft"]}}}
-        edges = list(native_projection._authored_edges(row))
+        edges = list(native_projection._authored_edges(row, {"IS_REFERENCE"}))
         self.assertEqual(("Atom", "AN-C-2@3-draft"), (edges[0]["target_kind"], edges[0]["target_ref"]))
+
+    def test_archived_citations_are_omitted_when_the_relation_is_retired(self):
+        row = {"ref": "AN-S-1@1", "status_group": "Archived", "header_json": {"relations": {
+            "IS_REFERENCE": ["AN-S-2"], "SERVES": ["AN-S-3"],
+        }}}
+        edges = list(native_projection._authored_edges(row, {"SERVES"}))
+        self.assertEqual([("SERVES", "AN-S-3")], [(edge["relation_type"], edge["target_ref"]) for edge in edges])
 
     def test_historical_relations_project_to_declared_successors(self):
         relations = {
@@ -96,8 +103,8 @@ class NativeProjectionTests(unittest.TestCase):
         source.write_text("---\n" + yaml.safe_dump(header) + "---\n\n## Summary\n\nTask\n")
         store = QueryStore(extension_directory=EXTENSIONS, native=True)
         self.addCleanup(store.close)
-        bindings = dict(relation_types={"CONTAINED_BY", "CONTAINS", "REFERENCES"},
-                        inverses={"CONTAINED_BY": "CONTAINS"})
+        bindings = dict(relation_types={"IS_CONTAINED_BY", "CONTAINS", "REFERENCES"},
+                        inverses={"IS_CONTAINED_BY": "CONTAINS"})
         project_native(store, capture_native(self.selection), component_ids=["C99"], **bindings)
         old_path = PurePosixPath(source.relative_to(self.root).as_posix())
         target = source.parent / "moved" / source.name
@@ -139,7 +146,7 @@ class NativeProjectionTests(unittest.TestCase):
         source = self.write("AN-T-09--task.md", "AN-T-09", "active", 2)
         store = QueryStore(extension_directory=EXTENSIONS, native=True)
         self.addCleanup(store.close)
-        bindings = dict(relation_types={"CONTAINED_BY", "CONTAINS"}, inverses={"CONTAINED_BY": "CONTAINS"})
+        bindings = dict(relation_types={"IS_CONTAINED_BY", "CONTAINS"}, inverses={"IS_CONTAINED_BY": "CONTAINS"})
         project_native(store, capture_native(self.selection), **bindings)
         path = PurePosixPath(source.relative_to(self.root).as_posix())
         callbacks = []
@@ -159,7 +166,7 @@ class NativeProjectionTests(unittest.TestCase):
         capture.atoms.sort(key=lambda row: row["id"] != "AN-T-09")
         store = QueryStore(extension_directory=EXTENSIONS, native=True)
         self.addCleanup(store.close)
-        bindings = dict(relation_types={"CONTAINED_BY", "CONTAINS"}, inverses={"CONTAINED_BY": "CONTAINS"})
+        bindings = dict(relation_types={"IS_CONTAINED_BY", "CONTAINS"}, inverses={"IS_CONTAINED_BY": "CONTAINS"})
         project_native(store, capture, component_ids=["C99"], **bindings)
         path = PurePosixPath(source.relative_to(self.root).as_posix())
         source.write_text(source.read_text().replace("Example", "Changed"))
@@ -184,7 +191,7 @@ class NativeProjectionTests(unittest.TestCase):
         store = QueryStore(extension_directory=EXTENSIONS)
         self.addCleanup(store.close)
         capture = capture_native(self.selection)
-        bindings = dict(relation_types={"CONTAINED_BY", "CONTAINS"}, inverses={"CONTAINED_BY": "CONTAINS"})
+        bindings = dict(relation_types={"IS_CONTAINED_BY", "CONTAINS"}, inverses={"IS_CONTAINED_BY": "CONTAINS"})
         project_native(store, capture, **bindings)
         query = 'SELECT reference, "content.summary" FROM atoms ORDER BY reference'
         expected = [["AN-S-001", "Example"], ["AN-S-002", "Model Host"],
@@ -208,8 +215,8 @@ class NativeProjectionTests(unittest.TestCase):
         self.addCleanup(store.close)
         with self.assertRaisesRegex(ValueError, "invalid carriers"):
             project_native(store, NativeCapture([], [], {"bad.md": "invalid"}),
-                           relation_types={"CONTAINED_BY", "CONTAINS"},
-                           inverses={"CONTAINED_BY": "CONTAINS"})
+                           relation_types={"IS_CONTAINED_BY", "CONTAINS"},
+                           inverses={"IS_CONTAINED_BY": "CONTAINS"})
         self.assertEqual([], store.run("SELECT * FROM atoms")["rows"])
 
     def test_canonical_authored_relations_use_admitted_types(self):
@@ -224,7 +231,7 @@ class NativeProjectionTests(unittest.TestCase):
         capture = capture_native(self.selection)
         store = QueryStore(extension_directory=EXTENSIONS)
         self.addCleanup(store.close)
-        bindings = {"CONTAINED_BY": "CONTAINS"}
+        bindings = {"IS_CONTAINED_BY": "CONTAINS"}
         with self.assertRaisesRegex(ValueError, "Undeclared native relation: REFERENCES"):
             project_native(store, capture, relation_types=set(bindings) | set(bindings.values()), inverses=bindings)
         project_native(store, capture, relation_types=set(bindings) | set(bindings.values()) | {"REFERENCES"},
@@ -267,7 +274,7 @@ class NativeProjectionTests(unittest.TestCase):
         self.assertEqual(header, next(row for row in capture.atoms if row["id"] == "AN-T-09")["header_json"])
         store = QueryStore(extension_directory=EXTENSIONS)
         self.addCleanup(store.close)
-        inverse = {"CONTAINED_BY": "CONTAINS", "IS_REFERENCE": "HAS_REFERENCE"}
+        inverse = {"IS_CONTAINED_BY": "CONTAINS", "IS_REFERENCE": "HAS_REFERENCE"}
         types = set(inverse) | set(inverse.values())
         project_native(store, capture, relation_types=types, inverses=inverse)
         facts = store.run("SELECT source_ref, target_ref, relation_type, derived FROM relations "
@@ -295,8 +302,8 @@ class NativeProjectionTests(unittest.TestCase):
         self.addCleanup(store.close)
         for _ in range(2):
             project_native(store, capture_native(self.selection),
-                           relation_types={"CONTAINED_BY", "CONTAINS", "DEPENDS_ON", "SUPPORTS"},
-                           inverses={"CONTAINED_BY": "CONTAINS", "DEPENDS_ON": "SUPPORTS"})
+                           relation_types={"IS_CONTAINED_BY", "CONTAINS", "DEPENDS_ON", "SUPPORTS"},
+                           inverses={"IS_CONTAINED_BY": "CONTAINS", "DEPENDS_ON": "SUPPORTS"})
         facts = store.run("SELECT source_ref, target_ref, relation_type, derived FROM relations")["rows"]
         self.assertIn(["AN-T-09", "AN-S-001@1", "DEPENDS_ON", False], facts)
         self.assertIn(["AN-S-001@1", "AN-T-09", "SUPPORTS", True], facts)

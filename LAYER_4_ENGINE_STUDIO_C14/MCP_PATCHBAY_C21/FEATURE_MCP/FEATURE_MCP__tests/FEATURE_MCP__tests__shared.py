@@ -4,6 +4,7 @@ from pathlib import Path
 import shutil
 
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import select_runtime_project
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model_ontology_path__pub import find_ontology_component
 
 ROOT = Path(__file__).resolve().parents[4]
 CONTROL = '_anechoic_anechoic'
@@ -17,10 +18,17 @@ def project(root):
     (root / manifest).write_text(text.replace("'storage': 'disk'", "'storage': 'memory'")
                                  .replace("'journal': {'storage': 'duckdb'}", "'journal': {'storage': 'files'}"))
     (control / '_SPEC').mkdir()
-    for name in ('AN-S-3039-SPEC-COMPONENT_MANIFEST--declare-engine-studio.md',
-                 'AN-S-3040-SPEC-COMPONENT_MANIFEST--declare-meta-ontology.md'):
-        shutil.copy2(source / '_SPEC' / name, control / '_SPEC' / name)
-    for name in ('LAYER_1_META_ONTOLOGY_C9', 'LAYER_1_META_ONTOLOGY_C9/_SPEC', '__PROJECT_CONFIG/CUSTOM_MODEL'):
+    ontology = find_ontology_component(source)
+    assert ontology is not None
+    for relative in ('_SPEC/AN-S-3039-SPEC-COMPONENT_MANIFEST--declare-engine-studio.md',
+                     '_SPEC/AN-S-4909-SPEC-COMPONENT_MANIFEST--declare-ontology-score.md',
+                     'ONTOLOGY_SCORE_C82/_SPEC/AN-S-3040-SPEC-COMPONENT_MANIFEST--declare-meta-ontology.md',
+                     'ONTOLOGY_SCORE_C82/_SPEC/AN-S-3042-SPEC-COMPONENT_MANIFEST--declare-meta-methodology.md'):
+        destination = control / relative
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source / relative, destination)
+    ontology = ontology.relative_to(source)
+    for name in (ontology, ontology / '_SPEC', ontology / '_DES', '__PROJECT_CONFIG/CUSTOM_MODEL'):
         dest = control / name
         dest.mkdir(parents=True, exist_ok=True)
         for path in (source / name).glob('*.md'):

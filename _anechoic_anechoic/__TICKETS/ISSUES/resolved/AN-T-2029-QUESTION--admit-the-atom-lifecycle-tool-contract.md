@@ -6,9 +6,6 @@ container:
 priority: 2
 context:
   template: question
-relations:
-  IS_REFERENCE:
-  - AN-S-3160@5
 state:
   status: resolved
   version: 21

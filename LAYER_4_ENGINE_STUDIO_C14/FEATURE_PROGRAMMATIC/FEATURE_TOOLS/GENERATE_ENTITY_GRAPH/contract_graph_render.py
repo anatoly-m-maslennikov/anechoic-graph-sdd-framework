@@ -162,7 +162,7 @@ def _render_entities(lines, graph):
         if entity["kind"] == "instance":
             instance_of = entity["instance_of"]
             lines.append(
-                "- INSTANCE_OF declared Kind effective contracts; no instance contract is copied: "
+                "- IS_INSTANCE_OF declared Kind effective contracts; no instance contract is copied: "
                 f"`{instance_of['target'] or 'unresolved'}` — "
                 f"{', '.join(instance_of['effective_source_refs']) or 'no declared Kind source in selection'}"
             )

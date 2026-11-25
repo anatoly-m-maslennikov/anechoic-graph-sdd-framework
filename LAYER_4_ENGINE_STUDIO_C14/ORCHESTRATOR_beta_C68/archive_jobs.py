@@ -39,6 +39,9 @@ class ArchiveJobs:
         self.live_generation = None
 
     def _capture_options(self, reuse, paths, *, explicit=False):
+        if self.skip_archives:
+            epoch = self.watcher.capture_epoch(trace=True) if self.thread is not None and not explicit else None
+            return {"foreground": True, "watcher_guarded": epoch is not None}, epoch
         if explicit:
             return {}, None
         if paths is not None:
@@ -80,6 +83,8 @@ class ArchiveJobs:
         return location.is_relative_to(control) and "09_archived" in location.relative_to(control).parts
 
     def _partition_archive_changes(self, changes):
+        if self.skip_archives:
+            return [live for change in changes if (live := self._foreground_change(change)) is not None]
         if self.deferred_archive is None:
             return changes
         live = []
@@ -91,6 +96,19 @@ class ArchiveJobs:
             if not deferred or not all(deferred):
                 live.append(change)
         return live
+
+    def _foreground_change(self, change):
+        if not change:
+            return change
+        paths = [change.get("old_path"), change.get("new_path")]
+        archived = [self._is_archive_path(path) for path in paths]
+        if not any(archived):
+            return change
+        if all(archived[index] or not path for index, path in enumerate(paths)):
+            return None
+        index = 1 if archived[0] else 0
+        return {**change, "old_path": paths[index], "new_path": None,
+                "event_type": "created" if index else "deleted"}
 
     def _accept_live_generation(self, generation, result, deferred):
         self.live_generation = generation
@@ -109,7 +127,7 @@ class ArchiveJobs:
             self.archive_dirty |= any(previous.get(key) != deferred.get(key) for key in keys)
 
     def _run_archive(self):
-        if self.startup_capture or self.stopping.is_set():
+        if self.skip_archives or self.startup_capture or self.stopping.is_set():
             return
         if self.archive_thread is not None:
             if self.archive_thread.is_alive():

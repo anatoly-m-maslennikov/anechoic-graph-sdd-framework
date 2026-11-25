@@ -27,8 +27,9 @@ CA-M-432. Partition responsibility into:
 - `ADAPTERS`: backend access, including governing Configuration.
 - `SINGLE_ACTIONS`: target-specific operations.
 - `SCHEDULERS`: batch and Workflow scheduling driven by recorded results.
-- `WORKFLOWS`: concrete O sequences.
 - `ACTION_ENGINE`: queue consumption, execution, and result recording.
+
+Tool Workflows (C18) own concrete Workflow sequences under AN-S-2481@25.
 
 ## Details
 

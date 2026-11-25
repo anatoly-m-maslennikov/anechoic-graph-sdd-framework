@@ -58,9 +58,10 @@ class Server(socketserver.ThreadingMixIn, socketserver.UnixStreamServer):
     daemon_threads = True
 
     def __init__(self, socket_path, instance_id, binding=None, database_socket=None, watch_code=False,
-                 worker_socket=None, worker_load_seconds=None):
+                 worker_socket=None, worker_load_seconds=None, skip_archives=False):
         from .ORCHESTRATOR_beta_C68__shared import GenerationJobs
-        self.jobs = (GenerationJobs(instance_id, binding, database_socket, watch_code, worker_socket, worker_load_seconds)
+        self.jobs = (GenerationJobs(instance_id, binding, database_socket, watch_code, worker_socket, worker_load_seconds,
+                                    skip_archives=skip_archives)
                      if binding is not None else Jobs(instance_id))
         super().__init__(socket_path, Handler)
         os.chmod(socket_path, 0o600)
@@ -73,6 +74,7 @@ def main():
     parser.add_argument("--binding-file")
     parser.add_argument("--database-socket")
     parser.add_argument("--watch-code", action="store_true")
+    parser.add_argument("--skip-archives", action="store_true")
     parser.add_argument("--worker-socket")
     parser.add_argument("--worker-load-seconds", type=float)
     args = parser.parse_args()
@@ -80,6 +82,8 @@ def main():
         parser.error("--instance-id must not be empty")
     if bool(args.binding_file) != bool(args.database_socket):
         parser.error("--binding-file and --database-socket must be supplied together")
+    if args.skip_archives and not args.binding_file:
+        parser.error("--skip-archives requires a managed Project binding")
     if bool(args.worker_socket) != (args.worker_load_seconds is not None):
         parser.error("--worker-socket and --worker-load-seconds must be supplied together")
     if args.worker_load_seconds is not None and (not math.isfinite(args.worker_load_seconds) or args.worker_load_seconds <= 0):
@@ -89,7 +93,7 @@ def main():
         with open(args.binding_file, encoding="utf-8") as stream:
             binding = json.load(stream)
     with Server(args.socket, args.instance_id, binding, args.database_socket, args.watch_code,
-                args.worker_socket, args.worker_load_seconds) as server:
+                args.worker_socket, args.worker_load_seconds, args.skip_archives) as server:
         signal.signal(signal.SIGTERM, signal.default_int_handler)
         try:
             if binding is not None:

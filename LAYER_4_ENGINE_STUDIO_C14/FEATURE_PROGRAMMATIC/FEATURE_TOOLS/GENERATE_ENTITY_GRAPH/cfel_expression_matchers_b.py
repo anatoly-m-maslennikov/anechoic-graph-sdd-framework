@@ -51,7 +51,7 @@ def _match_10(expression, group, operator, source, records, diagnostics):
             written_target = grouped_instance.group("target").strip()
             records.append(_record(
                 source, expression, "relation_cardinality", source_selector=written_source,
-                relation="INSTANCE_OF", relation_notation=None, target_selector=written_target,
+                relation="IS_INSTANCE_OF", relation_notation=None, target_selector=written_target,
                 source_cardinality=None, target_cardinality=None, written_direction="forward",
                 written_source_selector=written_source, written_target_selector=written_target,
                 written_source_cardinality=None, written_target_cardinality=None,

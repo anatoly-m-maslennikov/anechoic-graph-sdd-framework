@@ -14,11 +14,7 @@ state:
 relations:
   ANSWERS:
   - AN-S-3290
-  IS_REFERENCE:
-  - AN-S-4733
-  - AN-S-4734
-  - AN-S-3346
-  - AN-S-3287
+
 ---
 
 ## Summary

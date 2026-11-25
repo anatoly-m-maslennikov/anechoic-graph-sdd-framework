@@ -7,11 +7,6 @@ tier: 1
 context:
   template: DECISION
   lens: DES
-relations:
-  IS_REFERENCE:
-  - AN-S-3187@1
-  - AN-S-3188@1
-  - AN-T-2989@1
 state:
   status: active
   version: 2

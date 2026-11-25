@@ -40,7 +40,7 @@ def _refs(value: object) -> list[str]:
 def _tree(data: Mapping[str, Any]) -> list[str]:
     graph = data["tree"]
     nodes = read_nodes(graph["nodes"])
-    narrowing = [edge for edge in graph["edges"] if edge["kind"] == "NARROWER_THAN"]
+    narrowing = [edge for edge in graph["edges"] if edge["kind"] == "IS_NARROWER_THAN"]
     children, _, _, _ = read_edges(narrowing, nodes)
     lines, _, _ = primary_tree(nodes, children, set(nodes))
     return lines

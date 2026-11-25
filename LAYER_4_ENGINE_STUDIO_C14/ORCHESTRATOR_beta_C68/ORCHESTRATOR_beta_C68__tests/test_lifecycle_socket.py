@@ -129,9 +129,45 @@ class LifecycleSocketTests(unittest.TestCase):
         self.assertFalse(lifecycle._requires_project_capture(task, context | {"has_descendants": False}, control))
         spec = {"name": "atom_lifecycle_archive", "arguments": {"target": {"ref_id": "AN-S-2"}}}
         carrier = {"id": "AN-S-2", "status": "active"}
-        for parent, expected in (("LAYER_1_META_ONTOLOGY_C9/_SPEC", True), ("_SPEC", False)):
+        for parent, expected in (("LAYER_1_META_ONTOLOGY_C9/_SPEC", True),
+                                 ("ONTOLOGY_SCORE_C82/CONTINUANT_PITCHFORK_C9/_DES", True), ("_SPEC", False)):
             row = carrier | {"source_path": f"{control}/{parent}/AN-S-2-SPEC--claim.md"}
             self.assertEqual(expected, lifecycle._requires_project_capture(spec, context | {"carriers": [row]}, control))
+
+    def test_replacement_promotion_uses_project_capture(self):
+        lifecycle = importlib.import_module("ORCHESTRATOR_beta_C68.lifecycle")
+        job = {"name": "atom_lifecycle_promote_draft", "arguments": {
+            "target": {"ref_id": "AN-S-3196@3-draft", "version": 3}, "targetStatus": "ready"}}
+        draft = {"id": "AN-S-3196", "_exact_ref": "AN-S-3196@3-draft", "version": 3,
+                 "status_group": "Draft", "status": "draft", "source_path": "control/_SPEC/draft.md",
+                 "replaces": True}
+        context = {"has_descendants": False, "carriers": [draft]}
+        self.assertTrue(lifecycle._requires_project_capture(job, context, "control"))
+        self.assertFalse(lifecycle._requires_project_capture(job, context | {"carriers": [draft | {"replaces": False}]}, "control"))
+        self.assertFalse(lifecycle._requires_project_capture(job, context | {"carriers": [draft | {"version": 2}]}, "control"))
+        job["name"] = "atom_lifecycle_update"
+        self.assertFalse(lifecycle._requires_project_capture(job, context, "control"))
+        jobs = lifecycle.LifecycleJobs()
+        jobs.startup_capture, jobs.deferred_archive = False, None
+        jobs.generation_reuse = {"base_generation": "base", "endpoints": {}}
+        jobs.database_socket, jobs.instance_id = "socket", "test"
+        jobs.binding = {"project_prefix": "AN", "control_root": "control"}
+        context["structure"] = {}
+        with patch.object(lifecycle, "lifecycle_context", return_value=context):
+            _, _, facts = jobs._lifecycle_inputs(job)
+        self.assertNotIn("replaces", facts["lifecycle_context"]["carriers"][0])
+        self.assertNotIn("has_descendants", facts["lifecycle_context"])
+
+    def test_ready_spec_with_outgoing_replacement_uses_project_capture_for_activation(self):
+        lifecycle = importlib.import_module("ORCHESTRATOR_beta_C68.lifecycle")
+        job = {"name": "atom_lifecycle_change_status", "arguments": {
+            "target": {"ref_id": "AN-S-2", "version": 1}, "targetStatus": "active"}}
+        row = {"id": "AN-S-2", "status_group": "Current", "status": "ready",
+               "source_path": "control/02_ready/AN-S-2-SPEC--claim.md", "replaces": True}
+        context = {"has_descendants": False, "carriers": [row]}
+        self.assertTrue(lifecycle._requires_project_capture(job, context, "control"))
+        self.assertFalse(lifecycle._requires_project_capture(job, context | {"carriers": [row | {"replaces": False}]},
+                                                             "control"))
 
     def test_real_lifecycle_and_generation_admission(self):
         engine = Path(__file__).resolve().parents[2]

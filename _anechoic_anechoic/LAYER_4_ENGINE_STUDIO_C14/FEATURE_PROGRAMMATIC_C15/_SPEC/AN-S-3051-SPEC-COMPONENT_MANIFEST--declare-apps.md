@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 2
-  updated_at: '2026-11-22T11:23:40.206159+00:00'
+  version: 3
+  updated_at: "2026-11-24T23:12:55.813309+00:00"
 ---
 
 ## Summary
@@ -29,7 +29,7 @@ declare_entity(
         component_id='C20',
         name='APPS',
         lens_whitelist=['DES', 'DevOps', 'QA', 'SPEC', 'SWD'],
-        boundaries={'code': {'imports': [], 'exports': {}}},
+        boundaries={'code': {'imports': []}},
     ),
 )
 ```

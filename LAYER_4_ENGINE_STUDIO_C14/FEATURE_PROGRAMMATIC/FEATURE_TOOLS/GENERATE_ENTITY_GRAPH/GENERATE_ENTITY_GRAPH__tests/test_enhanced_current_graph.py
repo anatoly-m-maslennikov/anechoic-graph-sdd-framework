@@ -165,12 +165,12 @@ Node: [string]{:1}
         self.assertIn(("MODEL", "ANECHOIC"), containment)
 
     def test_inverse_glyph_projects_distinct_relation_endpoints(self) -> None:
-        nodes, facts, _ = subject_facts("Relation//NARROWER_THAN <--> Relation//BROADER_THAN")
-        self.assertTrue({"Relation//NARROWER_THAN", "Relation//BROADER_THAN"} <=
+        nodes, facts, _ = subject_facts("Relation//IS_NARROWER_THAN <--> Relation//BROADER_THAN")
+        self.assertTrue({"Relation//IS_NARROWER_THAN", "Relation//BROADER_THAN"} <=
                         {row["identity"] for row in nodes})
         inverse = [row for row in facts if row["kind"] == "HAS_INVERSE"]
         self.assertEqual(1, len(inverse))
-        self.assertEqual(("Relation//NARROWER_THAN", "Relation//BROADER_THAN"),
+        self.assertEqual(("Relation//IS_NARROWER_THAN", "Relation//BROADER_THAN"),
                          (inverse[0]["source"], inverse[0]["target"]))
 
     def test_bare_legacy_namespace_subjects_remain_literal_without_containment(self) -> None:

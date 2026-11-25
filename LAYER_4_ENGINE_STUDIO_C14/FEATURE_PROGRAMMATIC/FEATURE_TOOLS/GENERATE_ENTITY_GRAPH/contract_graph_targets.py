@@ -31,7 +31,7 @@ def _component_target(
     ``CFEL <+`` declares a component family. Its right endpoint can itself be
     a component, a dependent Property of a component, or one named component
     instance. These are catalog records only: composition never becomes
-    NARROWER_THAN evidence.
+    IS_NARROWER_THAN evidence.
     """
 
     expression = namespace_local_expression(expression) or expression

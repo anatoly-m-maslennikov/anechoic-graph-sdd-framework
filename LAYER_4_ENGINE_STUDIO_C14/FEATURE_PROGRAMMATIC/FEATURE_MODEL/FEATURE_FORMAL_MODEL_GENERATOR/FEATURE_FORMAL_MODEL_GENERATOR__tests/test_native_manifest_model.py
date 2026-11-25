@@ -231,8 +231,8 @@ class NativeManifestModelTests(unittest.TestCase):
 
     def test_upgraded_parent_relation_is_used_for_manifest_validation(self):
         records, _, _ = native_manifest_model.reviewed_model_records()
-        upgraded = [(path, subject.replace("CHILD_OF", "IS_CHILD_OF").replace("CHILDREN", "HAS_CHILDREN"),
-                     claim.replace("CHILD_OF", "IS_CHILD_OF").replace("CHILDREN", "HAS_CHILDREN"))
+        upgraded = [(path, subject.replace("CHILD_OF", "IS_CHILD_OF").replace("CHILDREN", "IS_PARENT_FOR").replace("CONTAINED_BY", "IS_CONTAINED_BY"),
+                     claim.replace("CHILD_OF", "IS_CHILD_OF").replace("CHILDREN", "IS_PARENT_FOR").replace("CONTAINED_BY", "IS_CONTAINED_BY"))
                     for path, subject, claim in records]
         model = native_manifest_model._NativeModel(records=upgraded)
         fields = {"atom_id": "AN-S-124", "ref_id": "AN-S-124@1", "version": 1,

@@ -14,8 +14,7 @@ state:
 relations:
   ANSWERS:
   - AN-S-3055
-  IS_REFERENCE:
-  - AN-S-3346
+
 ---
 
 ## Summary

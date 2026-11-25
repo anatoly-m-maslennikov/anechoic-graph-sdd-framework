@@ -4,6 +4,7 @@ import json
 import re
 
 from .jobs import UnixConnection
+from .generation import read_structure
 
 
 _SQL = '''WITH RECURSIVE
@@ -15,7 +16,7 @@ _SQL = '''WITH RECURSIVE
         r.target_kind AS owner_kind, r.target_ref AS owner_ref
       FROM main.atoms a JOIN main.native_references n USING (reference)
       LEFT JOIN main.relations r ON r.source_kind='Atom' AND r.source_ref=a.reference
-        AND r.relation_type='CONTAINED_BY' AND NOT r.derived
+        AND r.relation_type='IS_CONTAINED_BY' AND NOT r.derived
     ),
     owners(id) AS (
       SELECT id FROM (SELECT {owner_lit} AS id WHERE {owner_lit} <> ''
@@ -32,7 +33,7 @@ _SQL = '''WITH RECURSIVE
               AND NOT derived AND target_ref={target_lit}) AND n.status_group='Current') AS should_read
       FROM native n WHERE n.id={target_lit} OR n.id IN (SELECT id FROM owners)
         OR n.id IN {sources} AND n.status_group='Current'
-        OR n.ref IN (SELECT source_ref FROM main.relations WHERE relation_type='CONTAINED_BY'
+        OR n.ref IN (SELECT source_ref FROM main.relations WHERE relation_type='IS_CONTAINED_BY'
             AND NOT derived AND target_kind='Atom' AND target_ref={target_lit})
         OR n.ref IN (SELECT source_ref FROM main.relations WHERE relation_type='IS_REPLACEMENT_FOR'
             AND NOT derived AND target_ref={target_lit}) AND n.status_group='Current'
@@ -42,14 +43,16 @@ _SQL = '''WITH RECURSIVE
         ltrim(regexp_extract(reference, '^{prefix}-([TS])-([0-9]+)(@|$)', 2), '0') AS number
       FROM main.atoms WHERE {numbers} AND starts_with(reference, '{prefix}-')
     ),
-    SELECT g.id, g.structure, {model_sql}, json_extract(g.model, '$.ticket_labels')::VARCHAR,
+    SELECT g.id, {model_sql}, json_extract(g.model, '$.ticket_labels')::VARCHAR,
       coalesce((SELECT arg_max(number, (length(number), number)) FROM numbers WHERE family='T' AND number<>''), '0'),
       coalesce((SELECT arg_max(number, (length(number), number)) FROM numbers WHERE family='S' AND number<>''), '0'),
       coalesce((SELECT to_json(list(struct_pack(ref := ref, _exact_ref := exact_ref, source_path := path,
         _source_sha256 := CASE WHEN should_read THEN json_extract_string((SELECT hashes FROM main.generation_carriers), '/' || replace(replace(path, '~', '~0'), '/', '~1')) ELSE NULL END, version := version, status := status, status_group := status_group,
-        id := id, owner_kind := owner_kind, owner_ref := owner_ref, read := should_read)))::VARCHAR
+        id := id, owner_kind := owner_kind, owner_ref := owner_ref, read := should_read,
+        replaces := EXISTS(SELECT 1 FROM main.relations r WHERE r.source_kind='Atom' AND r.source_ref=selected.ref
+          AND r.relation_type='IS_REPLACEMENT_FOR' AND NOT r.derived))))::VARCHAR
         FROM selected), '[]'),
-      EXISTS(SELECT 1 FROM main.relations WHERE relation_type='CONTAINED_BY' AND NOT derived
+      EXISTS(SELECT 1 FROM main.relations WHERE relation_type='IS_CONTAINED_BY' AND NOT derived
         AND target_kind='Atom' AND target_ref={target_lit}) OR EXISTS(SELECT 1 FROM native parent JOIN native child
         ON starts_with(child.path, regexp_replace(parent.path, '[.]md$', '') || '/')
         WHERE parent.id={target_lit} AND (parent.ref={exact_lit} OR parent.status_group='Current')), 
@@ -81,7 +84,7 @@ def lifecycle_sql(prefix, name, arguments):
     template = new.get('template') if isinstance(new, dict) else None
     needs_model = (is_create and isinstance(template, str) and template in {'project_contract', 'axiom', 'applicable_principle'}
                    or '-S-' in target_id and name in {'atom_lifecycle_promote_draft', 'atom_lifecycle_change_status'})
-    model_sql = 'g.model' if needs_model else 'NULL'
+    model_sql = "json_merge_patch(g.model::JSON, '{\"declarations\":null,\"ticket_labels\":null}')::VARCHAR" if needs_model else 'NULL'
     return _SQL.format(prefix=prefix, target_lit=target_lit, exact_lit=exact_lit, owner_lit=owner_lit,
                        sources=sources, numbers=numbers, model_sql=model_sql)
 
@@ -95,11 +98,14 @@ def lifecycle_context(socket_path, instance_id, base, prefix, name, arguments):
         if response.status != 200:
             raise ValueError('Kernel refused lifecycle context query')
         rows = json.loads(response.read())['result']['rows']
-    if not isinstance(rows, list) or len(rows) != 1 or len(rows[0]) != 9 or rows[0][0] != base:
+    if not isinstance(rows, list) or len(rows) != 1 or len(rows[0]) != 8 or rows[0][0] != base:
         raise ValueError('Kernel generation changed before lifecycle context query')
-    _, structure, model, labels, ticket, spec, carriers, descendants, lenses = rows[0]
+    _, model, labels, ticket, spec, carriers, descendants, lenses = rows[0]
+    structure = read_structure(socket_path, instance_id, {"base_generation": base})
+    if structure is None:
+        raise ValueError('Kernel generation changed before lifecycle Structure read')
     model = json.loads(model) if model is not None else None
-    structure, labels, carriers, lenses = map(json.loads, (structure, labels, carriers, lenses))
+    labels, carriers, lenses = map(json.loads, (labels, carriers, lenses))
     if (not isinstance(structure, dict) or model is not None and not isinstance(model, dict) or not isinstance(labels, list)
             or not all(isinstance(x, str) for x in labels) or not isinstance(carriers, list)
             or not isinstance(lenses, list) or not all(isinstance(x, str) for x in lenses)
