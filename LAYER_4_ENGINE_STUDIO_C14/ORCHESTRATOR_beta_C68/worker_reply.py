@@ -83,6 +83,14 @@ class _Unchanged(_Reply):
     unchanged: Literal[True]
 
 
+class _GraphOnly(BaseModel):
+    model_config = ConfigDict(strict=True, extra="forbid")
+    base_generation: str
+    graph: InstanceOf[dict]
+    graph_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    reuse: _Reuse
+
+
 def _validate(model, value, message):
     try:
         return model.model_validate(value)
@@ -143,6 +151,15 @@ def parse_archive_result(stdout):
     result = json.loads(stdout)
     reply = _validate(_Archive, result, "Worker returned invalid Archive result")
     return _shallow(reply, result)
+
+
+def parse_graph_result(stdout, base):
+    result = json.loads(stdout)
+    if not isinstance(result, dict) or result.get("base_generation") != base:
+        raise ValueError("Worker returned an unexpected graph base")
+    if set(result) == {"base_generation", "unchanged"} and result["unchanged"] is True:
+        return result
+    return _validate(_GraphOnly, result, "Worker returned an invalid startup graph").model_dump()
 
 
 def parse_worker_result(stdout, reuse, paths, structure=None, *, foreground=False):

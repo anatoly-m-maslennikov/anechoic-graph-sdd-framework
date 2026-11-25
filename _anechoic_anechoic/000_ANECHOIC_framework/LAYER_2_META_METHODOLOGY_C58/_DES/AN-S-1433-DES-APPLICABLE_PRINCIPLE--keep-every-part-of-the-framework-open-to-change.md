@@ -25,3 +25,9 @@ Keep every part of the framework open to change
 ### Prose Claim
 
 The Operator can change any part of their ANECHOIC instance to meet the Project’s needs.
+
+## Details
+
+### Examples
+
+An Operator adapts the Project task review workflow to add a documentation check before acceptance. The workflow now fits the Project’s needs.

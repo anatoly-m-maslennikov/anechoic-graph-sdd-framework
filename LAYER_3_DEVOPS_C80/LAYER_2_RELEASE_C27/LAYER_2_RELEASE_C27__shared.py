@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 import argparse
-from contextlib import redirect_stdout
+from contextlib import contextmanager, redirect_stdout
 import json
 import os
 from pathlib import Path
@@ -24,6 +24,8 @@ def _arguments(argv: list[str] | None) -> argparse.Namespace:
         command = commands.add_parser(operation)
         command.add_argument("--project-root", type=Path, default=REPOSITORY)
         command.add_argument("--run-id", required=True)
+        if operation in ("local", "build-image", "verify-image"):
+            _engine_argument(command)
         if operation == "public":
             command.add_argument("--base", default="origin/main", help="PR base Git ref")
             command.add_argument("--head", default="amm/dev", help="PR head Git ref")
@@ -38,6 +40,7 @@ def _arguments(argv: list[str] | None) -> argparse.Namespace:
         elif operation == "local":
             _local_arguments(command)
     run_image = commands.add_parser("run-image")
+    _engine_argument(run_image)
     run_image.add_argument("--host-settings", type=Path)
     run_image.add_argument("--image", required=True)
     run_image.add_argument("--apply", action="store_true")
@@ -49,16 +52,40 @@ def _arguments(argv: list[str] | None) -> argparse.Namespace:
             and re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", arguments.run_id) is None):
         parser.error("--run-id must contain only letters, digits, dots, underscores, or hyphens")
     if arguments.operation == "local":
-        target, revision = arguments.target_project_root, arguments.source_revision
-        if (target is None) != (revision is None):
-            parser.error("--target-project-root and --source-revision must be supplied together")
-        if revision is not None and re.fullmatch(r"(?:[0-9a-f]{40}|[0-9a-f]{64})", revision) is None:
-            parser.error("--source-revision must be an exact lowercase Git commit SHA")
+        _validate_local_arguments(parser, arguments)
     return arguments
 
 
+def _engine_argument(command):
+    command.add_argument("--engine", choices=("orbstack", "docker"),
+                         default="orbstack" if sys.platform == "darwin" else "docker",
+                         help="container engine (default: %(default)s)")
+
+
+@contextmanager
+def _engine_environment(engine):
+    if engine is None:
+        yield
+        return
+    saved = {key: os.environ.get(key) for key in ("DOCKER_CONTEXT", "DOCKER_HOST")}
+    docker_context = "desktop-linux" if sys.platform == "darwin" else "default"
+    os.environ["DOCKER_CONTEXT"] = "orbstack" if engine == "orbstack" else docker_context
+    os.environ.pop("DOCKER_HOST", None)
+    try:
+        yield
+    finally:
+        for key, value in saved.items():
+            if value is None:
+                os.environ.pop(key, None)
+            else:
+                os.environ[key] = value
+
+
 def _local_arguments(command):
-    command.add_argument("--resume", action="store_true", help="continue the recorded Local Release")
+    mode = command.add_mutually_exclusive_group()
+    mode.add_argument("--resume", action="store_true", help="continue the recorded Local Release")
+    mode.add_argument("--status", action="store_true", help="read the recorded Local Release progress")
+    mode.add_argument("--prepare-environment", action="store_true", help="provision and verify the checkout's test dependencies")
     command.add_argument("--target-project-root", type=Path, help="Project receiving the verified release")
     command.add_argument("--source-revision", help="exact Git commit for a separate release source")
     command.add_argument(
@@ -69,6 +96,18 @@ def _local_arguments(command):
         "--test-module", action="append", dest="test_modules", metavar="PATH",
         help="repeatable relative source test module for focused validation",
     )
+
+
+def _validate_local_arguments(parser, arguments):
+    target, revision = arguments.target_project_root, arguments.source_revision
+    if (arguments.status or arguments.prepare_environment) and any(
+        value is not None for value in (target, revision, arguments.image_mode, arguments.test_modules)
+    ):
+        parser.error("--status and --prepare-environment each take a single --project-root")
+    if (target is None) != (revision is None):
+        parser.error("--target-project-root and --source-revision must be supplied together")
+    if revision is not None and re.fullmatch(r"(?:[0-9a-f]{40}|[0-9a-f]{64})", revision) is None:
+        parser.error("--source-revision must be an exact lowercase Git commit SHA")
 
 
 def _read_draft(path: Path | None) -> dict[str, object] | None:
@@ -141,6 +180,12 @@ def _invalid_selection(run_id):
 def _run_local(root, arguments):
     from LAYER_2_LOCAL_RELEASE_C63.LAYER_2_LOCAL_RELEASE_C63__shared import run_local_release, run_snapshot_release
 
+    if arguments.status:
+        return run_local_release(root, run_id=arguments.run_id, mode="status")
+    if arguments.prepare_environment:
+        result = run_local_release(root, run_id=arguments.run_id, mode="prepare")
+        result.update(run_id=arguments.run_id, project_root=str(root))
+        return result
     options = {}
     if arguments.test_modules is not None:
         options["test_modules"] = tuple(arguments.test_modules)
@@ -196,8 +241,10 @@ def _invoke_public(root: Path, arguments: argparse.Namespace) -> dict[str, objec
 
 def main(argv: list[str] | None = None) -> int:
     arguments = _arguments(argv)
+    maintenance = getattr(arguments, "status", False) or getattr(arguments, "prepare_environment", False)
+    engine = None if maintenance else getattr(arguments, "engine", None)
     try:
-        with redirect_stdout(sys.stderr):
+        with _engine_environment(engine), redirect_stdout(sys.stderr):
             result = _invoke(arguments)
     except KeyboardInterrupt:
         result = {

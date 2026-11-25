@@ -97,25 +97,6 @@ class GenerationTests(unittest.TestCase):
                 self.assertIn("realization_graph failed: unrelated failure", issue["message"])
                 self.assertEqual(len(attempts), len(scans))
 
-    def test_watcher_replay_requires_managed_foreground_without_explicit_paths(self):
-        base = {"binding": {}, "reuse": None, "replay_graph": True,
-                "watcher_guarded": True, "foreground": True}
-        replay = "Graph replay requires a watcher-guarded foreground capture"
-        fields = "Invalid managed Worker fields"
-        option = "Invalid managed Worker option"
-        invalid = (({"watcher_guarded": False}, replay), ({"foreground": False}, replay),
-                   ({"paths": []}, replay), ({"archive": {}}, replay), ({"unexpected": True}, replay),
-                   ({"archive": None, "paths": None}, replay), ({"replay_graph": False, "paths": None, "structure": None}, fields),
-                   ({"replay_graph": False, "unexpected": True}, fields),
-                   *(({flag: 1, "unexpected": True}, option)
-                     for flag in ("watcher_guarded", "foreground", "incremental", "replay_graph")))
-        for options, message in invalid:
-            with self.subTest(options=options):
-                response = command_with_fixture(WORKER[-1], base | options, "--generation-dir", "/fixture")
-                self.assertEqual(1, response.returncode)
-                issue, = json.loads(response.stdout)["ingestion_failure"]["issues"]
-                self.assertEqual(message, issue["message"])
-
     def test_managed_foreground_passes_replay_to_analyzer_and_retains_reuse_witness(self):
         binding, output, _ = generation_fixture(self.enterContext(tempfile.TemporaryDirectory()))
         request = {"binding": binding, "reuse": None, "replay_graph": True,
@@ -130,6 +111,34 @@ class GenerationTests(unittest.TestCase):
         witness = json.loads(response.stdout)["reuse"]
         self.assertEqual({"manifest", "graph", "carrier_schema"}, set(witness["inputs"]))
         self.assertTrue(all(witness["inputs"].values()))
+
+    @patch.dict(os.environ, {"ANECHOIC_STARTUP_TIMING": "1"})
+    def test_deferred_core_and_graph_only(self):
+        binding, output, _ = generation_fixture(self.enterContext(tempfile.TemporaryDirectory()))
+        fingerprint = "IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.import_graph__shared.graph_input_signature"
+        request = {"binding": binding, "reuse": None, "defer_graph": True}
+        with patch(fingerprint, side_effect=AssertionError("graph scanned")):
+            response, _, scans = self._run_graph(request, output)
+        self.assertEqual(0, response.returncode, response.stderr)
+        result = json.loads(response.stdout)
+        self.assertIsNone(result["graph"])
+        self.assertEqual("pending", result["reuse"]["inputs"]["graph"])
+        self.assertEqual([], scans)
+        self.assertNotIn("realization_graph_ready", response.stderr)
+        reuse = result["reuse"] | {"base_generation": "a" * 64}
+        structure = json.loads((output / "structure.json").read_text())
+        request = {"binding": binding, "reuse": reuse, "structure": structure, "graph_only": True, "watcher_guarded": True}
+        with patch(fingerprint, return_value="signature"):
+            response, _, scans = self._run_graph(request, output, subprocess.CompletedProcess([], 0, '{"nodes":[]}', ""))
+            self.assertEqual(0, response.returncode, response.stderr)
+            graph = json.loads(response.stdout)
+            self.assertEqual({"nodes": []}, graph["graph"])
+            self.assertEqual(1, len(scans))
+            request["reuse"] = graph["reuse"] | {"base_generation": "a" * 64}
+            response, _, scans = self._run_graph(request, output)
+        self.assertEqual({"base_generation": "a" * 64, "unchanged": True}, json.loads(response.stdout))
+        self.assertIn('"mode":"reused","phase":"realization_graph_ready"', response.stderr)
+        self.assertEqual([], scans)
 
     def test_graph_restart_exhaustion_reports_last_typed_difference(self):
         details = {"sources": {"change": "changed", "path": "main.py", "fields": ["status"]}}

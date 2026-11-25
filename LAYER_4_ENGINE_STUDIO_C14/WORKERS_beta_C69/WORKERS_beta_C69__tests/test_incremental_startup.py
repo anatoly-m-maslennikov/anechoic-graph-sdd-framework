@@ -74,6 +74,42 @@ class IncrementalStartupTest(unittest.TestCase):
         with TemporaryDirectory(dir=self.tmp.name) as output:
             return self.run_worker(Path(output).resolve(), request)
 
+    def test_watcher_replay_requires_managed_foreground_without_explicit_paths(self):
+        base = {"binding": {}, "reuse": None, "replay_graph": True,
+                "watcher_guarded": True, "foreground": True}
+        replay = "Graph replay requires a watcher-guarded foreground capture"
+        fields = "Invalid managed Worker fields"
+        option = "Invalid managed Worker option"
+        invalid = (({"watcher_guarded": False}, replay), ({"foreground": False}, replay),
+                   ({"paths": []}, replay), ({"archive": {}}, replay), ({"unexpected": True}, replay),
+                   ({"archive": None, "paths": None}, replay), ({"replay_graph": False, "paths": None, "structure": None}, fields),
+                   ({"replay_graph": False, "unexpected": True}, fields),
+                   *(({flag: 1, "unexpected": True}, option)
+                     for flag in ("watcher_guarded", "foreground", "incremental", "replay_graph", "defer_graph", "graph_only")))
+        for options, message in invalid:
+            with self.subTest(options=options):
+                response = command_with_fixture(WORKER, base | options, "--generation-dir", "/fixture")
+                self.assertEqual(1, response.returncode)
+                issue, = json.loads(response.stdout)["ingestion_failure"]["issues"]
+                self.assertEqual(message, issue["message"])
+
+    def test_deferred_warm_start_ignores_graph_input_changes(self):
+        self.reuse["graph_config"] = {"include": []}
+        self.reuse["inputs"]["graph"] = "old-graph-signature"
+        (self.root / "changed.py").write_text("value = 1\n")
+        request = {"binding": self.binding, "reuse": self.reuse, "watcher_guarded": True,
+                   "incremental": True, "foreground": True, "defer_graph": True}
+        signature = "IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.import_graph__shared.graph_input_signature"
+        with (patch(signature, side_effect=AssertionError("graph scanned")),
+              patch.dict(os.environ, {"ANECHOIC_STARTUP_TIMING": "1"}),
+              TemporaryDirectory(dir=self.tmp.name) as output):
+            response = command_with_fixture(WORKER, request, "--generation-dir", str(Path(output).resolve()))
+        self.assertEqual(0, response.returncode, response.stderr)
+        self.assertEqual({"base_generation": "a" * 64, "unchanged": True}, json.loads(response.stdout))
+        self.assertIn('"mode":"reused","phase":"model_ready"', response.stderr)
+        self.assertIn('"mode":"reused","phase":"structure_ready"', response.stderr)
+        self.assertNotIn("realization_graph_ready", response.stderr)
+
     def test_timing_reports_compilation_and_checkpoint_reuse(self):
         def events(response):
             prefix = "ANECHOIC_STARTUP_TIMING "
@@ -81,7 +117,7 @@ class IncrementalStartupTest(unittest.TestCase):
 
         with patch.dict(os.environ, {"ANECHOIC_STARTUP_TIMING": "1"}):
             with TemporaryDirectory(dir=self.tmp.name) as output:
-                cold = command_with_fixture(WORKER, {"binding": self.binding, "reuse": None, "foreground": True},
+                cold = command_with_fixture(WORKER, {"binding": self.binding, "reuse": None, "foreground": True, "defer_graph": True},
                                             "--generation-dir", str(Path(output).resolve()))
             self.assertEqual(0, cold.returncode, cold.stderr)
             modes = {event["phase"]: event.get("mode") for event in events(cold)}

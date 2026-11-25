@@ -60,6 +60,7 @@ async function run(page: Page, expectedRows = 12) {
   const request = page.waitForRequest((item) => interfaceRequest(item, 'view_run'));
   await page.keyboard.press('Meta+Enter');
   await request;
+  await expect(page.locator('.results-panel .status-badge')).toHaveText('Ready', { timeout: browserTimeout(15_000) });
   await expect(page.getByRole('grid')).toBeVisible({ timeout: browserTimeout(15_000) });
   await expect(page.locator('.result-summary').first()).toContainText(`${expectedRows} rows`);
 }

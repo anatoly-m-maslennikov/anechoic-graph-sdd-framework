@@ -33,6 +33,7 @@ from .lifecycle import LifecycleJobs
 from .retry import COVERAGE_RECOVERED, CurrentnessRetry as CurrentnessRetry, source_changed
 from .server import Handler, Server, main
 from .startup_checkpoint import CHECKPOINT_FIELDS, ReuseRecord
+from .startup_graph import StartupGraphJobs
 from .watcher_diagnostics import FOREGROUND_FENCE_MESSAGE, emit_record
 from .watcher_poll import PollComplete
 
@@ -42,7 +43,7 @@ __all__ = [
 ]
 
 
-class GenerationJobs(ArchiveJobs, GenerationWorker, AbortJobs, LifecycleJobs, QueuedJobs, Jobs):
+class GenerationJobs(ArchiveJobs, StartupGraphJobs, GenerationWorker, AbortJobs, LifecycleJobs, QueuedJobs, Jobs):
     def __init__(self, instance_id, binding, database_socket, watch_code=False,
                  worker_socket=None, worker_load_seconds=None, *, skip_archives=False):
         super().__init__(instance_id)
@@ -57,25 +58,23 @@ class GenerationJobs(ArchiveJobs, GenerationWorker, AbortJobs, LifecycleJobs, Qu
         self.skip_archives = skip_archives
         self.worker_mode = None
         self.stopping = threading.Event()
-        self.process = None
-        self.warm_capture = None
-        self.aborted_run = None
+        self.process = self.warm_capture = self.aborted_run = None
         from .watcher import SourceWatcher
         root = Path(binding["root"])
         self.watcher = SourceWatcher(root, root / binding["control_root"], watch_code=watch_code,
                                      defer_archives=True)
         self.thread = None
-        self.pending = None
-        self.inflight = None
+        self.pending = self.inflight = None
         self.generation_reuse = None
         self.flow = None
         self.flow_context = None
         self.startup_capture = False
         self._initialize_archive()
+        self._initialize_startup_graph()
 
     def start(self):
         self.watcher.start()
-        self.startup_capture = self.startup_replay = True
+        self.startup_capture = self.startup_replay = self.graph_queued = True
         self.thread = threading.Thread(target=self._watch, daemon=True)
         self.thread.start()
 
@@ -87,6 +86,7 @@ class GenerationJobs(ArchiveJobs, GenerationWorker, AbortJobs, LifecycleJobs, Qu
                     job.event.set()
         self.watcher.close()
         self._close_archive()
+        self._close_startup_graph()
         with self.lock:
             try:
                 self._stop_worker()

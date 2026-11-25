@@ -49,6 +49,7 @@ class Peer(BaseHTTPRequestHandler):
                 result["archive_pending"] = pending
         else:
             result["startup_replay_pending"] = getattr(self.server, "startup_replay_pending", True)
+            result["watcher_active"] = getattr(self.server, "watcher_active", True)
         self.reply({"result": result})
 
     def do_POST(self):
@@ -199,6 +200,19 @@ class ProjectionTest(unittest.TestCase):
         self.assertEqual("ready", self.clients[0].get("/health").json()["state"])
         self.assertEqual([[42]], self.call(0, "query_run", sql)["result"]["value"]["rows"])
         self.assertEqual(1, sum(method == "POST" for method, _, _ in database.requests))
+
+    def test_watcher_and_orchestrator_gate_direct_health_and_shared_queries(self):
+        database, jobs = self.servers[:2]
+        database.ready, jobs.startup_replay_pending = True, False
+        sql = {"sql": "SELECT 42", "result_delivery": "inline"}
+        for index in (0, 1):
+            self.assertIn("result", self.call(index, "query_run", sql))
+        jobs.watcher_active = False
+        self.assertEqual("degraded", self.clients[0].get("/health").json()["state"])
+        self.assertEqual("project_build_unavailable", self.call(1, "query_run", sql)["error"]["code"])
+        jobs.watcher_active, jobs.unreachable = True, True
+        self.assertEqual("unavailable", self.clients[0].get("/health").json()["state"])
+        self.assertEqual("shared_gateway_failure", self.call(1, "query_run", sql)["error"]["code"])
 
     def test_manifest_gate_blocks_new_calls_but_drains_accepted_call(self):
         database, jobs = self.servers[:2]

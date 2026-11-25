@@ -28,3 +28,9 @@ The creation or evolution of this Project's Implementation.
 ### Prose Claim
 
 Keep ANECHOIC’s specification complete enough to rebuild the framework without relying on its current implementation.
+
+## Details
+
+### Examples
+
+A developer uses the specification to rebuild a missing tool and checks its behavior against the stated contract.

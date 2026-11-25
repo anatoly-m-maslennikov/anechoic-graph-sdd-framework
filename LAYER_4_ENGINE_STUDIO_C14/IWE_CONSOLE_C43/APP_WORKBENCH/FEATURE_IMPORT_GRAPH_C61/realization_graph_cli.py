@@ -166,16 +166,16 @@ def _build(request, derive_rows=None, measure=None, *, watcher_replay=False):
     nodes, occurrences, edges, test_edges, test_keys = resolve_realization(
         root, sources, roots, components=components, python_image_imports=images,
     )
-    ownership, findings = None, []
+    ownership, sites = None, ()
     if components is not None:
         packages, sites = code_access_occurrences(root, sources, roots, python_image_imports=images)
         paths = {parent.as_posix() for path in sources for parent in (Path(path).parent, *Path(path).parent.parents)}
         paths.update(node[3] for node in nodes if node[1] == "package" and node[3])
         paths.update(set(components) | packages)
         ownership = build_code_access_ownership(root, root / control, snapshot, paths, allow_unrealized=True)
-        findings = [(f"module:{problem.path}", problem.path, problem.line, problem.column,
-                     problem.written, problem.status, problem.reason)
-                    for problem in check_code_access(ownership, sources, sites, include_entry_bypasses=True)]
+    findings = [(f"module:{problem.path}", problem.path, problem.line, problem.column,
+                 problem.written, problem.status, problem.reason)
+                for problem in check_code_access(ownership, sources, sites, include_entry_bypasses=True)]
     extra, state_findings = _state_projection(root, sources, occurrences, ownership, derive_rows)
     nodes = [(*node, "Test Package" if node[0] in test_keys else None) for node in nodes]
     if measure is not None:

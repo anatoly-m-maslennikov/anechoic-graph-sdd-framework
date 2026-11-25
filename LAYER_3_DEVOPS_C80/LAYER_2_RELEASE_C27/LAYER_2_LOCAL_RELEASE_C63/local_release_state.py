@@ -1,6 +1,7 @@
 """Persist Local Release evidence before and after each phase."""
 import json
 import os
+import stat
 import sys
 import tomllib
 from datetime import datetime, timezone
@@ -89,7 +90,10 @@ def atomic_write(path, text):
 
 def _read(path):
     try:
-        with path.open(encoding="utf-8") as source:
+        descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+        with os.fdopen(descriptor, encoding="utf-8") as source:
+            if not stat.S_ISREG(os.fstat(source.fileno()).st_mode):
+                raise ValueError("invalid journal file")
             raw = source.read(32 * 1024 * 1024 + 1)
         if len(raw) > 32 * 1024 * 1024:
             raise ValueError("oversized journal")
@@ -106,6 +110,8 @@ def _checked(data, run_id):
             or not isinstance(data.get("options"), list) or len(data["options"]) != 2
             or not isinstance(data.get("logs"), dict)
             or not isinstance(data.get("proofs", {}), dict)
+            or ("docker_context" in data and data["docker_context"] is not None
+                and not isinstance(data["docker_context"], str))
             or not _checked_failures(data.get("failures", []))
             or (data.get("result") is not None and not isinstance(data["result"], dict))):
         raise LocalReleaseError("local-release-resume-journal-invalid")
@@ -159,6 +165,9 @@ class Journal:
             if not self.path.is_file():
                 raise LocalReleaseError("local-release-resume-run-missing")
             self.data = _checked(_read(self.path), run_id)
+            if ("docker_context" in self.data
+                    and self.data["docker_context"] != os.environ.get("DOCKER_CONTEXT")):
+                raise LocalReleaseError("local-release-resume-docker-context-changed")
             if (self.data["binding"] != binding(selection)
                     or not _same_source_binding(self.data.get("source_binding"), source_binding)):
                 raise LocalReleaseError("local-release-resume-binding-changed")
@@ -166,7 +175,8 @@ class Journal:
             if self.path.exists():
                 raise LocalReleaseError("local-release-run-id-exists")
             self.data = {"schema": 2, "run_id": run_id, "binding": binding(selection), "options": options,
-                         "source_binding": source_binding, "done": [], "working": None, "logs": {}, "proofs": {}}
+                         "source_binding": source_binding, "docker_context": os.environ.get("DOCKER_CONTEXT"),
+                         "done": [], "working": None, "logs": {}, "proofs": {}}
             self.data["delivery_seen"] = _delivery_record(root)[1]
             self.save()
 
@@ -195,6 +205,10 @@ class Journal:
             self.save()
         except OSError:
             pass
+
+    def record_logs(self, paths):
+        self.data["logs"].update(paths)
+        self.save()
 
     def staging(self):
         value = self.data.get("staging")

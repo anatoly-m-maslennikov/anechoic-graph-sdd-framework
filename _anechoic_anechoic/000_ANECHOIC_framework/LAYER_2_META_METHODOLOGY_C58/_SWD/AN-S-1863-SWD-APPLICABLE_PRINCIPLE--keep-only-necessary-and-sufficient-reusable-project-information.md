@@ -24,3 +24,9 @@ Keep only necessary and sufficient reusable project information
 ### Prose Claim
 
 Keep only the reusable information needed to understand, govern, operate, and change the Project.
+
+## Details
+
+### Examples
+
+A reusable setup guide keeps the steps needed to configure the Project and omits a one-time troubleshooting transcript.

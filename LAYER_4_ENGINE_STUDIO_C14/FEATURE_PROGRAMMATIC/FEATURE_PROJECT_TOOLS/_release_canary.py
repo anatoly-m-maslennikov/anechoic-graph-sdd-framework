@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from contextlib import contextmanager, suppress
+from errno import ENOTEMPTY
 from hashlib import file_digest, sha256
 import json
 import os
@@ -12,7 +13,7 @@ import stat
 import re
 import subprocess
 import sys
-from tempfile import TemporaryDirectory
+from tempfile import mkdtemp
 import time
 from pathlib import Path
 from urllib.request import ProxyHandler, build_opener
@@ -198,6 +199,20 @@ def _copy_runtime_settings(root: Path, project: Path, selection: dict) -> None:
             stream.write(data)
 
 
+def _remove_late_finder_metadata(function, path, error) -> None:
+    if function is not os.rmdir or getattr(error, "errno", None) != ENOTEMPTY:
+        raise error
+    directory = os.open(path, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    try:
+        name = ".DS_Store"
+        if os.listdir(directory) != [name] or not stat.S_ISREG(os.stat(name, dir_fd=directory, follow_symlinks=False).st_mode):
+            raise error
+        os.unlink(name, dir_fd=directory)
+    finally:
+        os.close(directory)
+    os.rmdir(path)
+
+
 def verify_candidate_image(root: Path, package: Path, image: str, *, run_id: str, selection: dict) -> str:
     """Start the immutable image and verify that MCP serves a real query."""
     if not re.fullmatch(r"sha256:[0-9a-f]{64}", image):
@@ -205,10 +220,21 @@ def verify_candidate_image(root: Path, package: Path, image: str, *, run_id: str
     staging = _workspace(root, package, run_id)
     selection = _selection(selection)
     _verify_manifest(root, selection)
-    with TemporaryDirectory(prefix="canary-attempt-", dir=staging) as directory:
-        attempt = Path(directory)
+    attempt = Path(mkdtemp(prefix="canary-attempt-", dir=staging))
+    failure = None
+    try:
         with _candidate_tag(root, attempt, image, run_id):
             return _verify_candidate_image(root, selection, package, attempt, image)
+    except BaseException as error:
+        failure = error
+        raise
+    finally:
+        try:
+            shutil.rmtree(attempt, onexc=_remove_late_finder_metadata)
+        except Exception as error:
+            if failure is None:
+                raise
+            failure.add_note(f"Canary attempt cleanup failed: {error}")
 
 
 def _verify_candidate_image(root: Path, selection, package: Path, attempt: Path, image: str) -> str:

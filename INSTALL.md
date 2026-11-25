@@ -17,7 +17,8 @@ Use the supplied framework checkout as the working directory. Inspect existing c
 - A supplied checkout containing `LAYER_5_USER_SETUP_C65/setup.py` and
   `LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/setup/`.
 - Git and `uv` available on the host.
-- Docker installed and running.
+- A running container engine: OrbStack or Docker Desktop on macOS, Docker on
+  Linux or WSL 2. The Docker CLI and Compose plugin must be available.
 - The Codex CLI, if you select Codex integration.
 
 On Windows, use Docker Desktop in Linux-container mode and enable integration
@@ -47,6 +48,10 @@ To set up multiple Project repositories under one containing folder, use `--proj
 
 ## Options
 
+- Use `--engine orbstack|docker` to select the container engine. On macOS,
+  OrbStack is the default; use `--engine docker` for Docker Desktop. On Linux
+  and WSL 2, Docker is the default. Setup selects the matching Docker context
+  for its commands without changing the host's current context.
 - Add `--agent codex` (or `--codex`) to install the user-wide hook and register the loopback MCP endpoint. Ask the user to review and trust the hook in Codex with `/hooks`. See the [Codex hooks documentation](https://learn.chatgpt.com/docs/hooks).
 - Add `--host-settings PATH` to select a settings file. By default, it is `anechoic/runtime.toml` under `XDG_CONFIG_HOME`, or `~/.config/anechoic/runtime.toml` when `XDG_CONFIG_HOME` is unset. See the [settings example](LAYER_5_USER_SETUP_C65/runtime.example.toml).
 - Set `level` in `[logging]` to choose the machine-wide Studio log level for the next Shared runtime launch. Accepted values are `DEBUG`, `INFO`, `WARNING`, and `ERROR`. The default is `INFO`.

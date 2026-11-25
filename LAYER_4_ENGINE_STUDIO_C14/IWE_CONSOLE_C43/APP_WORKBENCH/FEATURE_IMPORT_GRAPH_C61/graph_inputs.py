@@ -15,6 +15,7 @@ from dulwich.ignore import default_user_ignore_filter_path
 from dulwich.repo import Repo
 
 from ARCHITECTURE_ANALYSIS_C73.CODE_AND_SPEC_METRICS_C76.metrics__shared import is_measurement_input
+from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.FEATURE_MODEL_VALIDATION__shared import check_code_access
 from .resolution import _environment_root, _roots
 from .source import ImportSite, Source, _RESOLUTION_INPUTS, _discover, _iter_files, _root_path, _stat_signature
 from .state_effects import _CHECKER, _LANGUAGES
@@ -214,6 +215,7 @@ def graph_input_signature(root: Path, config: dict) -> str | None:
             str(root), config, sys.version, sorted(sys.stdlib_module_names), sorted(sys.builtin_module_names),
             _stat_signature(Path(sys.executable)), _git_inputs(root), _python_inputs(root, requested, probe),
             identities, _web_inputs(root, sources, items, probe), probes, lean,
+            _content_identity(Path(check_code_access.__code__.co_filename)),
         ]
         return sha256(json.dumps(witness, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
     except (ChecksumMismatch, FileFormatException, OSError, KeyError, RuntimeError, TypeError, ValueError,

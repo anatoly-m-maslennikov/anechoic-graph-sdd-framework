@@ -27,3 +27,9 @@ Represent systems through explicit graphs
 ### Prose Claim
 
 Represent Project decisions, structure, artifacts, and other objects as connected graphs. Use their connections to find information, trace the effects of changes, and support checks.
+
+## Details
+
+### Examples
+
+A Project graph connects a decision to the artifacts that depend on it. When the decision changes, the team can find the affected artifacts through those connections.

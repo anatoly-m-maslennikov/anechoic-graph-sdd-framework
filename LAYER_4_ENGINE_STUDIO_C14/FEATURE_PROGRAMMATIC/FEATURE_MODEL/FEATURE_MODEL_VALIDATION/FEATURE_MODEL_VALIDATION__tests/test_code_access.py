@@ -59,8 +59,8 @@ class CodeAccessTests(unittest.TestCase):
         from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.code_access_rules__pub import module_visibility
         for name in ('x__shared', 'x__family_pub', 'x__internal'):
             self.assertEqual(module_visibility(name), 'shared')
-        for name in ('x__public', 'x__pub'):
-            self.assertEqual(module_visibility(name), 'public')
+        self.assertEqual(module_visibility('x__public'), 'public')
+        self.assertIsNone(module_visibility('x__pub'))
 
 
 class ParseCodeAccessTests(unittest.TestCase):

@@ -177,17 +177,29 @@ def build_graph(
     return state
 
 
+def _check_native_imports(connection: Any, state: GraphState) -> None:
+    if any(records and name.casefold() == "imports" for name, records in state.edges.items()) and connection.execute(
+        "SELECT 1 FROM information_schema.tables WHERE table_catalog = current_database() "
+        "AND table_schema = 'main' AND table_name = 'import_nodes'"
+    ).fetchone():
+        raise ValueError("Native IMPORTS relations conflict with realization Imports graph label")
+
+
 def register_graph(connection: Any, state: GraphState) -> None:
     """Register the current Atom graph and any published import projection."""
+    _check_native_imports(connection, state)
     vertices = ["internal.reference LABEL Reference"]
+    projected_edges: list[str] = []
+    add_import_projection(connection, vertices, projected_edges)
     edges = [
         f"internal.{table} SOURCE KEY(source_kind, source_ref) "
         "REFERENCES internal.reference(kind, ref) "
         "DESTINATION KEY(target_kind, target_ref) REFERENCES internal.reference(kind, ref) "
         f"LABEL {quote_identifier(relation_type)}"
         for relation_type, table in state.tables.items()
+        if not (projected_edges and relation_type.casefold() == "imports")
     ]
-    add_import_projection(connection, vertices, edges)
+    edges.extend(projected_edges)
     sql = "CREATE PROPERTY GRAPH anechoic VERTEX TABLES (" + ", ".join(vertices) + ")"
     if edges:
         sql += " EDGE TABLES (" + ", ".join(edges) + ")"
@@ -199,6 +211,7 @@ def update_graph(
     atom_rows: Iterable[Mapping[str, object]], scope_rows: Iterable[Mapping[str, object]],
 ) -> GraphState:
     """Apply changed graph facts; a changed relation type layout needs a new graph declaration."""
+    _check_native_imports(connection, current)
     if set(previous.edges) != set(current.edges):
         connection.execute("DROP PROPERTY GRAPH anechoic")
         connection.execute("DROP SCHEMA internal CASCADE")
@@ -289,6 +302,7 @@ def apply_graph_delta(
     candidate, removed_references, added_references, removed_edges, added_edges = graph_delta_state(
         previous, delta, relation_types,
     )
+    _check_native_imports(connection, candidate)
     for edge in removed_edges:
         table = candidate.tables[edge[4]]
         connection.execute(

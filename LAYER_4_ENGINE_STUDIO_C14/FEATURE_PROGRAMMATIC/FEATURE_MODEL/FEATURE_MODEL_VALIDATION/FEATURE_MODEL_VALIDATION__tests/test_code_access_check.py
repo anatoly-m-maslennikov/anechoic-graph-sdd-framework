@@ -54,6 +54,10 @@ class CheckTests(unittest.TestCase):
         code['imports'] = [selector]
         del code['exports'][selector]
         self.assertEqual(['denied'], status())
+        del code['exports']
+        code['imports'] = ['siblings']
+        self.assertEqual([], status(replace(site, target_path='app/src/lib/parse__public.ts')))
+        self.assertEqual(['denied'], status(replace(site, target_path='app/src/lib/parse__pub.ts')))
 
     def test_component_declares_a_nested_package_export(self):
         code = {'imports': {'only': ['src.lib.lib__shared']},
@@ -114,8 +118,8 @@ class CheckTests(unittest.TestCase):
                 self.assertTrue(allowed(source, target), (source, target))
             for source in ('billing/child/a.py', 'sales/sub/a.py', 'billing/child/other/a.py'):
                 self.assertFalse(allowed(source, target), (source, target))
-        for target in ('billing/api__pub.py', 'billing/api__public.py'):
-            self.assertTrue(allowed('sales/sub/a.py', target))
+        self.assertTrue(allowed('sales/sub/a.py', 'billing/api__public.py'))
+        self.assertFalse(allowed('sales/sub/a.py', 'billing/api__pub.py'))
         self.assertFalse(allowed('sales/a.py', 'billing/api.py'))
         self.assertTrue(allowed('billing/a.py', 'billing/api.py'))
         self.assertFalse(allowed('sales/a.py', 'billing/nested/api__family_pub.py'))

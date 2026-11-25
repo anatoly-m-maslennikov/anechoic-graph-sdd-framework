@@ -148,7 +148,7 @@ class LocalReleaseRun(ResumableRelease):
                 self.selection, self.run_id, None if self.default_runner else self.runner,
                 self.test_log_paths, verify=_verify_package, target=_target, named_file=tempfile.NamedTemporaryFile,
                 logged_process=partial(run_logged_test_process, lock_fd=self.lock_fd),
-                failed_output=_failed_test_output, **self._test_gate_options(),
+                failed_output=_failed_test_output, record_logs=self.journal.record_logs, **self._test_gate_options(),
             )
         finally:
             self.test_log_path = self.test_log_paths.get(log_phase)

@@ -27,3 +27,9 @@ Make Project state and ongoing work visible
 ### Prose Claim
 
 Show what is running, what has changed, what is blocked or failing, and what resources are being used.
+
+## Details
+
+### Examples
+
+A Project view shows a running task, its changes, its resource use, and a blocked task. The Operator can see the current work and where attention is needed.

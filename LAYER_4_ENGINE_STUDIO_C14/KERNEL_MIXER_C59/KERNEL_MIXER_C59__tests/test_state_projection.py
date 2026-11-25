@@ -65,7 +65,10 @@ class StateProjectionTests(TestCase):
         selection = SimpleNamespace(root='root')
         sources = {'a.py': object()}
         with patch(f'{_BOUNDARY_TABLES}.analyze_state', return_value=[]) as analyze:
-            self.assertEqual(([], [], []), prepare_boundaries(selection, None, sources, [], None, {}))
+            declarations, findings, state = prepare_boundaries(selection, None, sources, [], None, {})
+        self.assertEqual(([], []), (declarations, state))
+        self.assertEqual([('module:a.py', 'a.py', None, None, 'Package entry', 'denied',
+                           'Expected one __shared or __public entry in ., found 0')], findings)
         analyze.assert_called_once_with('root', sources, ownership=None)
 
     def test_lint_reports_denied_and_silent_actions(self):

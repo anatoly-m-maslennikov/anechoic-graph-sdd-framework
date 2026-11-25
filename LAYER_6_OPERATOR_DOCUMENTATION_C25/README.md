@@ -13,6 +13,9 @@ image. Resume reuses completed phases whose inputs and evidence still match.
 When only the canary inputs change, continue with the same image and its
 passing image tests. Runtime changes require a new image and image checks.
 
+Use `local --status --run-id <id>` to check the run and find its test logs.
+For a split release, pass the target as `--project-root`.
+
 Once installation starts, resume with the recorded artifact. Local Release
 checks the files and container before repeating an effect. After verified
 startup, a cleanup failure resumes cleanup alone. Use a new run ID for a
@@ -28,8 +31,8 @@ host Release command. It builds the candidate and runs the official image
 suite and canary. The source version and installed runtime stay unchanged.
 
 Local Release and image verification check pinned Chromium, DuckPGQ, and
-locked frontend dependencies at the start. Use the reported setup or cache
-path to fix a prerequisite before rerunning the command.
+locked frontend dependencies at the start. Run `local --prepare-environment
+--project-root <source> --run-id <id>` to set up and recheck these prerequisites.
 
 ## Release to a selected Project
 

@@ -195,7 +195,7 @@ class ImportGraphCases2:
 
 
     async def test_sidecar_only_refresh_reads_only_affected_owner_and_updates_audit(self):
-        from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.trace_bindings__shared import _read_pins
+        from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.import_graph__shared import _read_pins
 
         owner, store, sidecar, other_sidecar, module_sidecar = self._prepare_sidecars()
 
@@ -204,7 +204,7 @@ class ImportGraphCases2:
 
         other = ('src/other', 'implements', 'AN-S-001', 1)
         module = ('src/app/main.py', 'implements', 'AN-S-10', 2)
-        with patch('IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.trace_bindings__shared._read_pins', wraps=_read_pins) as reads, \
+        with patch('IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.trace_bindings._read_pins', wraps=_read_pins) as reads, \
              patch.object(owner, '_prepare_realization', wraps=owner._prepare_realization) as prepare:
             async def expect(pin, state):
                 async with asyncio.timeout(6):

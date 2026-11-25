@@ -1,8 +1,10 @@
 """Check captured import occurrences against resolved owner boundaries."""
 
+from collections import defaultdict
+from pathlib import PurePosixPath
+
 from pydantic import ConfigDict
 from pydantic.dataclasses import dataclass
-from pathlib import PurePosixPath
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.code_access_rules__pub import module_visibility, parse_code_access
 
@@ -12,11 +14,39 @@ from .code_access import allows_import
 @dataclass(config=ConfigDict(strict=True, extra="forbid"), frozen=True)
 class CodeAccessProblem:
     path: str
-    line: int
-    column: int
+    line: int | None
+    column: int | None
     written: str
     status: str
     reason: str
+
+
+def _is_entry(path):
+    return path.stem.endswith(("__shared", "__public"))
+
+
+def _package_entry_problems(sources):
+    folders = defaultdict(list)
+    parents = {}
+    for name in sorted(sources):
+        path = PurePosixPath(name)
+        if path.name.endswith((".d.ts", ".d.cts", ".d.mts")):
+            continue
+        folders[path.parent].append(path)
+        for parent in path.parent.parents:
+            if parent.parts:
+                parents.setdefault(parent, path)
+    problems = []
+    for folder in sorted(folders.keys() | parents.keys()):
+        files = folders.get(folder, ())
+        count = sum(_is_entry(file) for file in files)
+        if count != 1:
+            anchor = files[0] if files else parents[folder]
+            problems.append(CodeAccessProblem(
+                anchor.as_posix(), None, None, "Package entry", "denied",
+                f"Expected one __shared or __public entry in {folder}, found {count}",
+            ))
+    return problems
 
 
 def _component_lineage(ownership, owner):
@@ -90,8 +120,10 @@ def _in_test_package(directory):
 
 
 def check_code_access(ownership, sources, occurrences, *, include_entry_bypasses=False):  # noqa: C901
-    """Check captured imports and optionally report direct access outside an entry."""
-    problems = []
+    """Check import access and enforce entry rules when requested."""
+    problems = _package_entry_problems(sources) if include_entry_bypasses else []
+    if ownership is None:
+        return tuple(problems)
     rules = {key: parse_code_access(owner['fields'].get('boundaries'))
              for key, owner in ownership.entries.items()}
     for site in occurrences:
@@ -125,9 +157,7 @@ def check_code_access(ownership, sources, occurrences, *, include_entry_bypasses
         reason, declared = _access_decision(site, caller, provider, ownership, rules)
         if reason is not None:
             report('denied', reason)
-        elif include_entry_bypasses and not (
-            site.target_kind == 'module' and path.stem.endswith('__shared')
-        ):
+        elif include_entry_bypasses and not (site.target_kind == 'module' and _is_entry(path)):
             if declared:
                 report('declared_bypass', 'exact import and export declarations')
             else:

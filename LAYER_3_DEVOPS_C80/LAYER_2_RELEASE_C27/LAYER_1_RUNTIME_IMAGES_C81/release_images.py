@@ -160,12 +160,15 @@ class ImageManager(ImageInputIdentity):
         seen, seen_directories = set(), set()
         def fail(error):
             raise error
-        for current, directories, names in os.walk(context, followlinks=False, onerror=fail):
+        for current, directories, names in os.walk(context, topdown=False, followlinks=False, onerror=fail):
             for name in directories:
                 path = Path(current) / name
                 relative = path.relative_to(context).as_posix()
-                if path.is_symlink() or not path.is_dir() or relative not in expected_directories:
+                if path.is_symlink() or not path.is_dir():
                     raise RuntimeError("unsafe image context")
+                if relative not in expected_directories:
+                    path.rmdir()
+                    continue
                 seen_directories.add(relative)
             for name in names:
                 path = Path(current) / name
@@ -221,12 +224,12 @@ class ImageManager(ImageInputIdentity):
                 destination.chmod(mode)
             if self.identity(use_packaged_assets=True) != identity:
                 raise RuntimeError("image inputs changed")
-            self._verify_context(context, identity)
             labels = self._expected_labels(identity)
             label_args = tuple(arg for key, value in labels.items() for arg in ("--label", f"{key}={value}"))
             role = _candidate_role(identity)
             iidfile = stage / "image.id"
             self._run(_PRUNE_BUILD_CACHE, cwd=context, buildx=buildx)
+            self._verify_context(context, identity)
             self._run(("docker", "build", "--iidfile", str(iidfile), *label_args, "--platform", self.platform,
                        *(("--target", identity.stack) if identity.stack != "current" else ()),
                        "--build-arg", f"RUNTIME_UID={self.uid}", "--build-arg", f"RUNTIME_GID={self.gid}",

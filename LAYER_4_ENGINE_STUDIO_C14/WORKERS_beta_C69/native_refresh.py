@@ -62,21 +62,26 @@ def carrier_schema():
         return None
 
 
-def artifact_inputs(binding, config, *, watcher_guarded=False):
-    from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.import_graph__shared import (
-        graph_input_signature,
-    )
-
+def artifact_inputs(binding, config, *, watcher_guarded=False, defer_graph=False):
     from .manifest_build_CS4.manifest_build_CS4__shared import manifest_input_signature
 
     manifest = manifest_input_signature(binding, watcher_guarded=watcher_guarded)
     schema = carrier_schema()
     if manifest is None or schema is None:
         return None
-    graph = "disabled" if config is None else graph_input_signature(Path(binding["root"]), config)
+    if config is None:
+        graph = "disabled"
+    elif defer_graph:
+        graph = "pending"
+    else:
+        from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.import_graph__shared import (
+            graph_input_signature,
+        )
+
+        graph = graph_input_signature(Path(binding["root"]), config)
     if graph is None:
         return None
-    if config is not None:
+    if config is not None and not defer_graph:
         try:
             folder = Path(__file__).resolve().parent
             analyzers = [sha256((folder / name).read_bytes()).hexdigest() for name in _GRAPH_ANALYZERS]
@@ -163,7 +168,7 @@ def _mark_load_start(foreground, archive, paths, validation_ns, comparison_ns):
         mark_startup_timing("non_archived_load_started", changed_paths=len(paths),
                             checkpoint_validation_ns=validation_ns, comparison_ns=comparison_ns)
 
-def startup_incremental(binding, reuse, *, before=None, foreground=False, archive_roots=None, watcher_guarded=False):
+def startup_incremental(binding, reuse, *, before=None, foreground=False, archive_roots=None, watcher_guarded=False, defer_graph=False):
     from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
         UnrepresentableCarrierDelta, native_carrier_hashes,
     )
@@ -201,7 +206,8 @@ def startup_incremental(binding, reuse, *, before=None, foreground=False, archiv
             result = _startup_delta(binding, reuse, current, paths, archive=archive)
         except UnrepresentableCarrierDelta:
             return incompatible
-    if before is not None and artifact_inputs(binding, reuse.graph_config, watcher_guarded=True) != before:
+    graph_option = {"defer_graph": True} if defer_graph else {}
+    if before is not None and artifact_inputs(binding, reuse.graph_config, watcher_guarded=True, **graph_option) != before:
         raise ValueError("Artifact inputs changed during incremental capture")
     return result
 

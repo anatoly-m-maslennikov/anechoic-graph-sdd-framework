@@ -27,3 +27,9 @@ Prioritize problems by the rework they can cause
 ### Prose Claim
 
 Put the most effort into early checks and lasting fixes where a problem would force the most downstream work to be redone.
+
+## Details
+
+### Examples
+
+Before a team builds several reports, it checks a data model error that would affect all of them. Fixing the model first avoids rebuilding the reports later.

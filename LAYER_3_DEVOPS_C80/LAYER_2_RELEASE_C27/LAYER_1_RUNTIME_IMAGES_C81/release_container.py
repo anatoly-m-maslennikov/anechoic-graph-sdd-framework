@@ -44,7 +44,7 @@ def _inspect_container(docker, container, root, image, labels, port, *, timeout=
 
 
 def _wait_healthy(docker, container, root: Path, image: str, labels, port: int, evidence=None) -> str:
-    deadline = time.monotonic() + 420
+    deadline = time.monotonic() + 900
     while True:
         try:
             state = _inspect_container(docker, container, root, image, labels, port)

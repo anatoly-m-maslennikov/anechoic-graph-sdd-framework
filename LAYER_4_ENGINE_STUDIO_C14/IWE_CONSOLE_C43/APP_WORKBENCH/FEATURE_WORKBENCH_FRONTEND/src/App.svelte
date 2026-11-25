@@ -3,7 +3,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { standaloneContext } from './standalone_context';
-  import { performAction, synchronizeDraft, gridColumn, gridRow, type Tab } from './app_actions';
+  import { performAction, synchronizeDraft, gridCommands, type Tab } from './app_actions';
   import { Button, CommandPalette, NameDialog, OpenSavedDialog, Preferences, ResultsTable, SavedPanel, SqlEditor, SyncStatus, ViewTabs } from './lib/lib__shared';
   import { WorkbenchApi, WorkspaceApi, migrateLegacyDraft, formatSql, cleanAfterSave, newView, persistable, restore, storageKey, workspaceTabs } from './lib/lib__shared';
   import type { Command, PreferenceCommand, NativeBootstrap, OperationCaller, GridState, QueryLogItem, QueryResult, ResultDisplayPreferences, SavedIdentity, SavedItem, Schema, SourceSyncStatus, WorkspaceState, WorkspaceView } from './lib/lib__shared';
@@ -199,7 +199,11 @@
     resultDisplay = next; if (sizingChanged) gridLayoutVersion += 1;
     if (next.rowSizing === 'fixed' && active?.result) void page(active.result.offset, next.fixedPageSize);
   }
-  function setGrid(next: GridState) { grid = next; if (active?.result) void page(0, active.result.page_size, next); }
+  function setGrid(next: GridState) {
+    if (!active?.result || active.busy) return;
+    grid = next;
+    void page(0, active.result.page_size, next);
+  }
   function adaptPage(size: number, geometry: string) {
     const result = active?.result; if (!result || resultDisplay.rowSizing !== 'adaptive') return;
     const key = `${result.query_id}:${gridLayoutVersion}:${JSON.stringify(grid)}:${geometry}`;
@@ -231,9 +235,6 @@
   }
   function focusSql() { view = 'view'; collapsed = false; requestAnimationFrame(() => document.querySelector<HTMLElement>('.cm-content')?.focus()); }
   function focusResults() { view = 'view'; requestAnimationFrame(() => document.querySelector<HTMLElement>('.results-panel')?.focus()); }
-  function resultValue(value: unknown) { if (value === null) return 'NULL'; try { return typeof value === 'object' ? JSON.stringify(value) : String(value); } catch { return String(value); } }
-  function copyResult(value: unknown) { void navigator.clipboard?.writeText(resultValue(value)).catch(() => {}); }
-  function filterGrid() { const column = gridColumn(active); if (column < 0) return; const value = window.prompt(`Filter ${active!.result!.columns[column].name}`, grid.filters.find((item) => item.column === column)?.value ?? ''); if (value === null) return; const filters = grid.filters.filter((item) => item.column !== column); if (value) filters.push({ column, operator: 'contains', value }); setGrid({ ...grid, filters }); }
   function buildCommands(): Command[] {
     const busy = !workspaceReady || !active || active.busy || savedBusy; const result = active?.result;
     return [
@@ -244,9 +245,7 @@
       { id: 'rename', label: 'Rename View', enabled: workspaceReady && !!active, run: renameActiveView }, { id: 'duplicate', label: 'Duplicate View', enabled: workspaceReady && !!active && !active.busy && !savedBusy, run: () => active && duplicateView(active.id) }, { id: 'close', label: 'Close View', enabled: workspaceReady && !!active, run: () => active && closeView(active.id) },
       { id: 'run', label: 'Run', shortcut: 'Cmd+Enter', enabled: !busy, run: () => action('run') }, { id: 'check', label: 'Check', shortcut: 'Shift+Cmd+Enter', enabled: !busy, run: () => action('check') }, { id: 'format', label: 'Format', enabled: !busy, run: formatActive }, { id: 'save', label: 'Run & Save', enabled: !busy, run: requestSave }, { id: 'save-view', label: 'Save View', enabled: !busy, run: () => saveView() },
       { id: 'hide', label: collapsed ? 'Show editor' : 'Hide editor', enabled: !!active, run: () => collapsed = !collapsed }, { id: 'previous-page', label: 'Previous result page', enabled: !!result && result.offset > 0 && !busy, run: () => result && page(Math.max(0, result.offset - result.page_size)) }, { id: 'next-page', label: 'Next result page', enabled: !!result?.has_more && !busy, run: () => result && page(result.offset + result.rows.length) },
-      { id: 'grid-copy-value', label: 'Result grid: Copy cell value', enabled: !!result, run: () => { const row = gridRow(active); const column = gridColumn(active); if (row >= 0 && column >= 0) copyResult(result!.rows[row][column]); } }, { id: 'grid-show-value', label: 'Result grid: Show full cell value', enabled: !!result, run: () => { const row = gridRow(active); const column = gridColumn(active); if (row >= 0 && column >= 0) window.alert(resultValue(result!.rows[row][column])); } }, { id: 'grid-copy-row', label: 'Result grid: Copy row', enabled: !!result, run: () => { const row = gridRow(active); if (row >= 0) copyResult(result!.rows[row]); } },
-      { id: 'grid-sort-asc', label: 'Result grid: Sort column ascending', enabled: !!result, run: () => { const column = gridColumn(active); if (column >= 0) setGrid({ ...grid, sort: [...grid.sort.filter((item) => item.column !== column), { column, direction: 'asc' }] }); } }, { id: 'grid-sort-desc', label: 'Result grid: Sort column descending', enabled: !!result, run: () => { const column = gridColumn(active); if (column >= 0) setGrid({ ...grid, sort: [...grid.sort.filter((item) => item.column !== column), { column, direction: 'desc' }] }); } },
-      { id: 'grid-group-asc', label: 'Result grid: Group column ascending', enabled: !!result, run: () => { const column = gridColumn(active); if (column >= 0) setGrid({ ...grid, group_by: { column, direction: 'asc' } }); } }, { id: 'grid-group-desc', label: 'Result grid: Group column descending', enabled: !!result, run: () => { const column = gridColumn(active); if (column >= 0) setGrid({ ...grid, group_by: { column, direction: 'desc' } }); } }, { id: 'grid-clear-group', label: 'Result grid: Clear grouping', enabled: !!grid.group_by, run: () => setGrid({ ...grid, group_by: undefined }) }, { id: 'grid-filter', label: 'Result grid: Filter column', enabled: !!result, run: filterGrid }, { id: 'grid-clear-filter', label: 'Result grid: Clear filter', enabled: grid.filters.length > 0, run: () => setGrid({ ...grid, filters: [] }) },
+      ...gridCommands(() => active, () => grid, setGrid),
       ...preferenceCommands.map((command) => ({ ...command, enabled: true })),
     ];
   }
@@ -296,7 +295,7 @@
   </section>
     <section class="results-panel" tabindex="-1"><div class="status-line"><span class="status-badge">{active.busy ? 'Working' : 'Ready'}</span><span class="notice" role="status" aria-label="Query check">
       {#if !check}Not checked{:else if 'error' in check}Invalid: {check.error}{:else if check.result.valid}Valid: {check.result.row_count} rows, {check.result.column_count} columns.{:else}Invalid{/if}
-    </span></div>{#if active.result}<ResultsTable result={active.result} display={resultDisplay} {grid} layoutVersion={gridLayoutVersion} ondisplaychange={setResultDisplay} ongridchange={setGrid} oncapacity={adaptPage} /><nav class="query-actions" aria-label="Result pages"><Button disabled={active.busy || active.result.offset === 0} onclick={() => page(Math.max(0, active.result!.offset - active.result!.page_size))}>Previous</Button><Button disabled={active.busy || !active.result.has_more} onclick={() => page(active.result!.offset + active.result!.rows.length)}>Next</Button></nav>{/if}</section>{/if}
+    </span></div>{#if active.result}<ResultsTable result={active.result} busy={active.busy} display={resultDisplay} {grid} layoutVersion={gridLayoutVersion} ondisplaychange={setResultDisplay} ongridchange={setGrid} oncapacity={adaptPage} /><nav class="query-actions" aria-label="Result pages"><Button disabled={active.busy || active.result.offset === 0} onclick={() => page(Math.max(0, active.result!.offset - active.result!.page_size))}>Previous</Button><Button disabled={active.busy || !active.result.has_more} onclick={() => page(active.result!.offset + active.result!.rows.length)}>Next</Button></nav>{/if}</section>{/if}
   {#if storageError}<p class="error" role="alert">{storageError}</p>{/if}
 </div></section></main>
 <OpenSavedDialog open={openSavedDialog} busy={savedBusy} onopen={openSaved} onclose={() => openSavedDialog = false} />

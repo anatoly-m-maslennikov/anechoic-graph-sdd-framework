@@ -202,6 +202,9 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
         runner, _ = self._runner()
 
         def passed(argv, cwd, log, *, env=None, lock_fd=None):
+            phase = argv[argv.index("--phase") + 1]
+            status = run_local_release(self.root, run_id="later-failed", mode="status")
+            self.assertEqual(status["test_log_paths"][phase], Path(log.name).relative_to(self.root).as_posix())
             log.write(b"complete test evidence\n")
             return subprocess.CompletedProcess(argv, 0, "bounded tail", "")
 
@@ -230,6 +233,8 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
         self.assertNotEqual(receipt, report)
         self.assertIn("Simple local release failed", report.read_text(encoding="utf-8"))
         self.assertEqual(original, receipt.read_bytes())
+        status = run_local_release(self.root, run_id=run_id, mode="status")
+        self.assertEqual(("completed", completed["receipt_path"]), (status["release_outcome"], status["report_path"]))
         self.assertEqual(completed, run_local_release(self.root, run_id=run_id, runner=runner, resume=True))
 
 

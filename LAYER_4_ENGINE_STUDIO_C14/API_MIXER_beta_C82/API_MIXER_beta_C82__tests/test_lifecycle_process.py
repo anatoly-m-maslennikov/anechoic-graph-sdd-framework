@@ -35,6 +35,7 @@ class Handler(BaseHTTPRequestHandler):
             result.update(manifest_sha256=DIGEST, ready=True, generation="generation")
         else:
             result["startup_replay_pending"] = False
+            result["watcher_active"] = True
         self.reply({"result": result})
 
     def do_POST(self):

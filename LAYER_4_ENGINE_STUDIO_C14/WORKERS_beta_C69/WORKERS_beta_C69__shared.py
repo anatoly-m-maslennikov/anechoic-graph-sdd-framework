@@ -19,7 +19,7 @@ from .generation_batches import _write_generation_batches
 from .python_code_units import python_code_units as python_code_units
 from .python_context_restoration import python_context_restoration as python_context_restoration
 from .python_import_order import python_import_order as python_import_order
-from .native_refresh import _reuse_hint, _ticket_delta, artifact_inputs, digest, refresh, reusable_graph, startup_incremental
+from .native_refresh import _mark_reused, _reuse_hint, _ticket_delta, artifact_inputs, digest, refresh, reusable_graph, startup_incremental
 
 sys.dont_write_bytecode = True
 
@@ -214,7 +214,7 @@ def _publish_generation(output, identity, stage, result, batch_full):
 
 
 def build_generation(binding, output, *, managed=False, watcher_guarded=False, foreground=False,
-                     replay_graph=False, model_source=None, batch_full=False):
+                     replay_graph=False, model_source=None, batch_full=False, defer_graph=False):
     from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
         prepare_generation_snapshot,
     )
@@ -233,14 +233,16 @@ def build_generation(binding, output, *, managed=False, watcher_guarded=False, f
     if output == control or control in output.parents:
         raise ValueError("Generation directory must be outside the Project control root")
     identity = output.stat()
-    inputs = artifact_inputs(binding, config, watcher_guarded=watcher_guarded) if managed else None
+    graph_option = {"defer_graph": True} if defer_graph else {}
+    inputs = artifact_inputs(binding, config, watcher_guarded=watcher_guarded, **graph_option) if managed else None
     with tempfile.TemporaryDirectory(prefix=".beta-job-", dir=output.parent) as temporary:
         stage = Path(temporary) / "generation"
         stage.mkdir()
         compiled, captured = _compile_and_capture(binding, stage, model_inputs, model_source, finish_snapshot)
         receipt, structure, endpoints = compiled[:3]
         snapshot, hashes, *deferred = captured
-        graph = _generation_graph(binding, config, structure, compiled, model_source, replay_graph)
+        graph = (None if defer_graph and config is not None else
+                 _generation_graph(binding, config, structure, compiled, model_source, replay_graph))
         receipt["graph_sha256"] = digest(graph)
         receipt["snapshot_sha256"] = digest(snapshot)
         result = {"snapshot": snapshot, "receipt": receipt, "graph": graph, "carrier_hashes": hashes}
@@ -252,11 +254,43 @@ def build_generation(binding, output, *, managed=False, watcher_guarded=False, f
                                           "carrier_hashes": archive_hashes, "endpoints": endpoints}
         if managed:
             reusable = (inputs is not None and reusable_graph(graph)
-                        and artifact_inputs(binding, config, watcher_guarded=watcher_guarded) == inputs)
+                        and artifact_inputs(binding, config, watcher_guarded=watcher_guarded, **graph_option) == inputs)
             result["reuse"] = {"inputs": inputs, "graph_config": config, "endpoints": endpoints} if reusable else None
         _publish_generation(output, identity, stage, result, batch_full)
     return result
 
+
+
+def _graph_only(binding, reuse, structure, guarded):
+    if reuse is None or reuse.graph_config is None or not isinstance(structure, dict):
+        raise ValueError("Graph-only capture requires reuse, graph config, and structure")
+    config = reuse.graph_config
+    before = artifact_inputs(binding, config, watcher_guarded=guarded)
+    if (before is None or before.get("manifest") != reuse.inputs.get("manifest")
+            or before.get("carrier_schema") != reuse.inputs.get("carrier_schema")):
+        raise ValueError("Core artifact inputs changed before graph capture")
+    if before == reuse.inputs:
+        mark_startup_timing("realization_graph_ready", mode="reused")
+        return {"base_generation": reuse.base_generation, "unchanged": True}
+    graph = _build_graph(binding, config, structure)
+    if not reusable_graph(graph) or artifact_inputs(binding, config, watcher_guarded=guarded) != before:
+        raise ValueError("Graph inputs changed during capture")
+    return {"base_generation": reuse.base_generation, "graph": graph, "graph_sha256": digest(graph),
+            "reuse": {"inputs": before, "graph_config": config, "endpoints": reuse.endpoints}}
+
+
+def _deferred_incremental(binding, reuse, foreground, guarded):
+    if reuse is None:
+        return None
+    before = artifact_inputs(binding, reuse.graph_config, watcher_guarded=guarded, defer_graph=True)
+    if (before is None or before.get("manifest") != reuse.inputs.get("manifest")
+            or before.get("carrier_schema") != reuse.inputs.get("carrier_schema")):
+        return None
+    result = startup_incremental(binding, reuse, before=before, foreground=foreground,
+                                 watcher_guarded=guarded, defer_graph=True)
+    if result is not None:
+        _mark_reused(foreground, reuse.graph_config, graph=False)
+    return result
 
 
 def _run(request, output):
@@ -267,15 +301,21 @@ def _run(request, output):
     admitted = _managed_request(request)
     binding, reuse = admitted.binding, _reuse_hint(admitted.reuse)
     guarded, foreground, incremental = admitted.watcher_guarded, admitted.foreground, admitted.incremental
+    if admitted.graph_only:
+        return _graph_only(binding, reuse, admitted.structure, guarded)
     if "archive" in admitted.model_fields_set:
         if incremental:
             return startup_incremental(binding, reuse, archive_roots=admitted.archive["roots"], watcher_guarded=guarded)
         return _capture_archive(binding, admitted.archive, guarded)
+    if admitted.defer_graph and incremental and admitted.paths is None:
+        native = _deferred_incremental(binding, reuse, foreground, guarded)
+        if native is not None:
+            return native
     if foreground and admitted.paths is not None:
         native = _ticket_delta(binding, reuse, admitted.paths)
         if native is not None:
             return native
-    elif not foreground or incremental:
+    elif not admitted.defer_graph and (not foreground or incremental):
         native = refresh(binding, reuse, partial(_capture, watcher_guarded=guarded), admitted.paths, admitted.structure,
                          partial(_rebuild_graph, watcher_guarded=guarded and not incremental,
                                  replay_graph=admitted.replay_graph),
@@ -283,7 +323,8 @@ def _run(request, output):
         if native is not None:
             return native
     return build_generation(binding, output, managed=True, watcher_guarded=guarded, foreground=foreground,
-                            replay_graph=admitted.replay_graph, model_source=admitted.model_source, batch_full=admitted.batch_full)
+                            replay_graph=admitted.replay_graph, model_source=admitted.model_source, batch_full=admitted.batch_full,
+                            defer_graph=admitted.defer_graph)
 
 
 def _capture_archive(binding, archive, watcher_guarded):

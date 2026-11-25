@@ -25,3 +25,9 @@ Make governed commitments and results checkable
 
 
 Before relying on a work commitment or result, establish a usable way to check it.
+
+## Details
+
+### Examples
+
+A release commitment includes a check that shows whether the required tests passed.

@@ -19,6 +19,8 @@ class _ManagedRequest(BaseModel):
     foreground: bool = False
     incremental: bool = False
     replay_graph: bool = False
+    defer_graph: bool = False
+    graph_only: bool = False
     model_source: dict[str, object] | None = None
 
     @model_validator(mode="after")
@@ -26,6 +28,8 @@ class _ManagedRequest(BaseModel):
         variant = self.model_fields_set & {"paths", "structure", "archive"}
         if self.replay_graph and (not self.watcher_guarded or not self.foreground or variant - {"structure"}):
             raise ValueError(_REPLAY_ERROR)
+        if self.graph_only and (self.defer_graph or variant != {"structure"}):
+            raise ValueError(_FIELDS_ERROR)
         if len(variant) > 1:
             raise ValueError(_FIELDS_ERROR)
         return self

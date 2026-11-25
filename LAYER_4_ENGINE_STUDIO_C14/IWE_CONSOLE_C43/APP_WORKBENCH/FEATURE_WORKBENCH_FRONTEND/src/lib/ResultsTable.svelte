@@ -5,8 +5,8 @@
   import 'tabulator-tables/dist/css/tabulator.min.css';
   import type { GridState, QueryResult, ResultDisplayPreferences } from './types';
 
-  let { result, display, grid, layoutVersion = 0, ondisplaychange, ongridchange, oncapacity }: {
-    result: QueryResult; display: ResultDisplayPreferences; grid: GridState; layoutVersion?: number;
+  let { result, busy = false, display, grid, layoutVersion = 0, ondisplaychange, ongridchange, oncapacity }: {
+    result: QueryResult; busy?: boolean; display: ResultDisplayPreferences; grid: GridState; layoutVersion?: number;
     ondisplaychange: (next: ResultDisplayPreferences) => void; ongridchange: (next: GridState) => void;
     oncapacity: (size: number, geometry: string) => void;
   } = $props();
@@ -23,7 +23,7 @@
   function inputLimit(value: string) { if (positive(value)) updateDisplay({ contentLimit: Number(value) }); }
   function records() { return result.rows.map((row, rowIndex) => Object.fromEntries(result.columns.map((_column, index) => [`c${index}`, row[index]]).concat([['__row', rowIndex]]))); }
   function setSort(index: number, direction: 'asc' | 'desc') { ongridchange({ ...grid, sort: [...grid.sort.filter((item) => item.column !== index), { column: index, direction }] }); }
-  function setFilter(index: number) { const value = window.prompt(`Filter ${result.columns[index].name}`, grid.filters.find((item) => item.column === index)?.value ?? ''); if (value === null) return; const filters = grid.filters.filter((item) => item.column !== index); if (value) filters.push({ column: index, operator: 'contains', value }); ongridchange({ ...grid, filters }); }
+  function setFilter(index: number) { if (busy) return; const value = window.prompt(`Filter ${result.columns[index].name}`, grid.filters.find((item) => item.column === index)?.value ?? ''); if (value === null) return; const filters = grid.filters.filter((item) => item.column !== index); if (value) filters.push({ column: index, operator: 'contains', value }); ongridchange({ ...grid, filters }); }
   function copy(text: string) { void navigator.clipboard?.writeText(text).catch(() => {}); }
   function cellMenu() { return [
     { label: 'Cell Copy value', action: (_event: Event, cell: any) => copy(valueText(cell.getValue())) },
@@ -61,7 +61,7 @@
       data: records(), layout: 'fitDataStretch', height: host.style.height, index: '__row', columnDefaults: { headerSort: false }, popupContainer: '.workbench', rowContextMenu: rowMenu(),
       groupBy: group ? (row: Record<string, unknown>) => groupKey(row[`c${group.column}`]) : false,
       groupHeader: (key: unknown) => `${escape(result.columns[group?.column ?? 0]?.name ?? '')}: ${escape(valueText(originalGroupValue(key)))} (${counts.get(String(key)) ?? '—'})`,
-      columns: visibleColumns.map(({ column, index }) => ({ field: `c${index}`, title: `<span class="column-name">${escape(column.name)}</span><small class="column-type">${escape(column.type)}</small>`, formatter: (cell: any) => `<div class="cell-value">${escape(displayText(cell.getValue()))}</div>`, contextMenu: cellMenu(), headerContextMenu: headerMenu(index) })),
+      columns: visibleColumns.map(({ column, index }) => ({ field: `c${index}`, title: `<span class="column-name">${escape(column.name)}</span><small class="column-type">${escape(column.type)}</small>`, formatter: (cell: any) => `<div class="cell-value">${escape(displayText(cell.getValue()))}</div>`, contextMenu: cellMenu(), headerContextMenu: () => busy ? [] : headerMenu(index) })),
     });
     table = candidate; builtKey = gridKey();
     candidate.on('tableBuilt', () => {

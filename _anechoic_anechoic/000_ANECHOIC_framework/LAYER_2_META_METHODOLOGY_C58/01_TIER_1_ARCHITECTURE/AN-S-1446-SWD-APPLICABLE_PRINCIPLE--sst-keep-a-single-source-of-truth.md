@@ -25,3 +25,9 @@ SST — Keep a Single Source of Truth
 ### Prose Claim
 
 Keep one source of truth for each piece of Project information. Make copies from that source instead of editing each copy separately.
+
+## Details
+
+### Examples
+
+A Project maintains a decision in one source and generates a view from it. When the decision changes, the view can be refreshed from that source.

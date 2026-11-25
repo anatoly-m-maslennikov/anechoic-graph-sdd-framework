@@ -9,6 +9,7 @@ import duckdb
 
 from .result_grid import grid_page, parse_grid
 from .result_values import result_value
+from .table_names import _REAL_GRAPH_NAMES, _DIAG_NAMES, PUBLIC_NAMES
 
 
 def validate_preview(value):
@@ -25,8 +26,31 @@ def validate_select(connection, sql):
         raise ValueError("SQL must contain exactly one SELECT statement")
 
 
+class ProjectGraphPending(ValueError):
+    """A query needs the configured Realization Graph before it is published."""
+
+
+def _guard_pending_graph(connection, sql):
+    try:
+        row = connection.execute("SELECT witness FROM ops_generation_reuse").fetchone()
+    except duckdb.CatalogException:
+        return
+    if not row or json.loads(row[0]).get("inputs", {}).get("graph") != "pending":
+        return
+    names = set(_REAL_GRAPH_NAMES) | set(_DIAG_NAMES)
+    names |= {PUBLIC_NAMES[name] for name in names}
+    names |= {"mrt_" + name for name in _REAL_GRAPH_NAMES | _DIAG_NAMES}
+    names |= {"package_coupling", "architecture_code_metrics", "architecture_ratios", "package_review_profiles", "package_largest_files"}
+    names |= {PUBLIC_NAMES[name] for name in names if name in PUBLIC_NAMES}
+    tables = {name.lower().split('.')[-1] for name in connection.get_table_names(sql)}
+    graph_labels = r"\b(importnode|codeunit|imports|tests|is_tested_by|tests_component|component_is_tested_by|moduleincludes|calls)\b"
+    if tables & names or ("graph_table" in sql.lower() and re.search(graph_labels, sql, re.I)):
+        raise ProjectGraphPending("Configured Realization Graph is pending")
+
+
 def query(connection, sql, *, in_transaction=False, preview=None):
     validate_select(connection, sql)
+    _guard_pending_graph(connection, sql)
     if not in_transaction:
         connection.execute("BEGIN TRANSACTION READ ONLY")
     try:

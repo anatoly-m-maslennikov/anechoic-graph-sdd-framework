@@ -77,7 +77,7 @@ class WarmWorkerTests(unittest.TestCase):
             binding = {"root": directory, "control_root": "control", "manifest_path": "manifest",
                        "manifest_sha256": "a" * 64, "project_prefix": "AN"}
             jobs = module.GenerationJobs("test", binding, "unused")
-            reuse = {"base_generation": "old"}
+            reuse = {"base_generation": "old", "inputs": {"manifest": "m"}, "graph_config": None, "endpoints": {}}
             result = {"base_generation": "old", "paths": [["control/__TKT", "AN-T-1--task.md"]],
                       "snapshot": {}, "snapshot_sha256": "hash"}
             with (patch.object(jobs, "_run_worker", return_value=result),

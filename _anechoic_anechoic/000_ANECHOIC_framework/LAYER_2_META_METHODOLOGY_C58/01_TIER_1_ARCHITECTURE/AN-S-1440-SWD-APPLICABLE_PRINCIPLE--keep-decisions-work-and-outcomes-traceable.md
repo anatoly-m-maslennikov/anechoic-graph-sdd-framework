@@ -27,3 +27,9 @@ Keep decisions, work, and outcomes traceable
 ### Prose Claim
 
 Link decisions to their reasons, the work based on them, and the results observed. Keep enough history to follow those links as the Project changes.
+
+## Details
+
+### Examples
+
+A decision records its reason and links to the work based on it and the observed result. A later reviewer can follow how the decision affected the Project.

@@ -27,3 +27,9 @@ Reduce the overhead of applying the framework
 ### Prose Claim
 
 Apply the framework using fewer LLM tokens, less Operator effort, and less waiting time, without weakening required Project outcomes.
+
+## Details
+
+### Examples
+
+An AI Agent reuses a recorded decision when it prepares a related task. The Operator does not have to repeat the decision, and the task retains the agreed outcome.

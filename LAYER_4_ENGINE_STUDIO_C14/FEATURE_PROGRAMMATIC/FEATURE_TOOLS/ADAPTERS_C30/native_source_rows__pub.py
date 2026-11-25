@@ -158,7 +158,8 @@ def _capture_inputs(reader, selection, input_paths, manifest, incremental, previ
 
 
 def _native_carrier_hashes(selection, *, foreground=False, archive_roots=None, watcher_guarded=False):
-    reader = startup_reader(selection.root, "foreground_hashes" if foreground else None)
+    reader = startup_reader(selection.root, "foreground_hashes" if foreground else None,
+                            archive=archive_roots is not None)
     manifest = check_native_manifest(reader, selection, None)
     hashes = {}
     deferred = set() if foreground else None

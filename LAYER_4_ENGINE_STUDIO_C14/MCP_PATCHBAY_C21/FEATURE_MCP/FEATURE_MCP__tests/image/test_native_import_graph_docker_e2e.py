@@ -69,6 +69,14 @@ class _CanaryProject:
             "--env", docker_deadline_env(), image, "mcp-http",
         ], text=True, timeout=image_timeout(60)).strip()
         cls._wait_ready()
+        deadline = monotonic() + 60
+        while observing(cls.container, deadline):
+            status, payload = request(cls.api + "/schema", method="POST", payload={})
+            if status == 200 and "import_nodes" in payload.get("tables", {}):
+                break
+            sleep(.2)
+        else:
+            raise RuntimeError("Canary Import Graph schema failed to become ready")
 
     @classmethod
     def _wait_ready(cls):

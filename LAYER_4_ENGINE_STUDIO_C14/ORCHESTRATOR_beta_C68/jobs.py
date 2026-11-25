@@ -153,6 +153,7 @@ class QueuedJobs:
                 elif any(changes) or due or job is not None:
                     self._run_queued_generation(retry, job, changes, due)
             self._run_archive()
+            self._run_startup_graph()
 
     def _run_queued_lifecycle(self, job):
         try:

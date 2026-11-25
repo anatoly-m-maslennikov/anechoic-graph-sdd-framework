@@ -68,7 +68,7 @@ class Readiness:
         if problem := self.guard():
             return manifest_state(problem)
         try:
-            startup = await self.startup() if not self.admitted else None
+            startup = await self.startup()
             health = KernelHealth.model_validate((await peer(self.database, "GET", "/health"))["result"])
             if health.instance_id != self.instance or health.manifest_sha256 != self.digest:
                 raise ValueError("Invalid Kernel binding")
@@ -92,6 +92,8 @@ class Readiness:
         health = JobsHealth.model_validate((await peer(self.jobs, "GET", "/health"))["result"])
         if health.instance_id != self.instance:
             raise ValueError("Invalid Orchestrator binding")
+        if not health.watcher_active:
+            return {"state": "degraded", **failure("project_build_unavailable", "The Project watcher is unavailable")}
         if not health.startup_replay_pending:
             return None
         runs = WorkerRuns.model_validate((await peer(self.jobs, "GET", "/jobs/worker-runs",

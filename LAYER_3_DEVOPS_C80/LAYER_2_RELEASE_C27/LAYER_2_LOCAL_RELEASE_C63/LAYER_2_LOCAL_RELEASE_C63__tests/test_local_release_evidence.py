@@ -40,7 +40,7 @@ class LocalReleaseEvidenceTests(SimpleReleaseFixture, unittest.TestCase):
 
         self.assertEqual(("failed", "preflight_tests"), (result["outcome"], result["failed_step"]), result)
         self.assertIn(str(interpreter), result["error"])
-        self.assertIn("Prepare the pinned Engine test environment", result["error"])
+        self.assertIn("release.py local --prepare-environment", result["error"])
         self.assertFalse(interpreter.parents[1].exists())
         self.start_container.assert_not_called()
 

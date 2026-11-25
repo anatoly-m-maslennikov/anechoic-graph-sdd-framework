@@ -89,6 +89,20 @@ class ReleaseImageOwnershipTests(unittest.TestCase):
         self.assertNotIn(("docker", "image", "rm", older), docker.calls)
         self.assertFalse(cleanup.pending)
 
+    def test_absent_predecessor_needs_no_cleanup_in_this_context(self) -> None:
+        image = "sha256:" + "1" * 64
+        owner = owner_labels(fixtures.ROOT, "c" * 64, ".anechoic_anechoic")
+        for inventory_fails in (False, True):
+            with self.subTest(inventory_fails=inventory_fails):
+                docker = OwnedDocker()
+                if inventory_fails:
+                    docker.fail = ("docker", "image", "ls", "--all")
+                cleanup = Cleanup(owner=owner, images={image})
+                cleanup_obsolete_images(fixtures.ROOT, fixtures.CURRENT, fixtures.FINGER, cleanup,
+                                        docker.run, previous_image=image)
+                self.assertEqual(inventory_fails, cleanup.pending)
+                self.assertFalse(any(call[-1] == image for call in docker.calls))
+
     def test_owned_orphan_removed_without_container_link_or_commit_gate(self) -> None:
         docker = OwnedDocker()
         image = "sha256:" + "1" * 64

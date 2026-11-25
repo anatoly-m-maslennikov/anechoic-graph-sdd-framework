@@ -8,8 +8,8 @@ context:
   lens: DES
 state:
   status: active
-  version: 2
-  updated_at: '2026-11-12T18:36:59.009278+00:00'
+  version: 3
+  updated_at: '2026-11-24T14:38:16.546723+00:00'
 ---
 ## Summary
 
@@ -31,7 +31,7 @@ declare_entity(
         name='OPERATOR_DOCUMENTATION',
         label='LAYER',
         ordered=True,
-        order_number=3,
+        order_number=6,
         container='anechoic',
     ),
 )

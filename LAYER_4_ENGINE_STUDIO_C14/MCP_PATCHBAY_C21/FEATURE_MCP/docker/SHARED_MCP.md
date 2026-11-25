@@ -71,9 +71,9 @@ started/ready claim. No `--apply` invocation is implied by this document.
 
 The shared listener publishes one loopback host port configured by
 `shared_mcp.http_port` to container port `8092`, with MCP at `/anechoic/mcp` and health
-at `/anechoic/health`. Do not start it on the current production port `56317`; preserve
-the legacy runtime there until a coordinated replacement is authorized. Tests
-use non-production ports and fakes.
+at `/anechoic/health`. Use a separate port from the existing production listener
+until a coordinated replacement is authorized. Tests use non-production ports
+and fakes.
 
 The launcher does not claim a build, deployment, scheduling, stop or cleanup
 operation beyond the explicit command requested by its Operator.

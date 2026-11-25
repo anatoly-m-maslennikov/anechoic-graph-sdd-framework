@@ -73,7 +73,7 @@ async def bound_health(binding, lease):
     if (kernel.instance_id != binding.instance_id or kernel.manifest_sha256 != binding.manifest_sha256
             or jobs.instance_id != binding.instance_id):
         raise ValueError("project_declarations_stale")
-    if not kernel.ready or not kernel.generation or jobs.startup_replay_pending:
+    if not kernel.ready or not kernel.generation or jobs.startup_replay_pending or not jobs.watcher_active:
         return failure("project_build_unavailable", "The Project projection is unavailable")
     return None
 

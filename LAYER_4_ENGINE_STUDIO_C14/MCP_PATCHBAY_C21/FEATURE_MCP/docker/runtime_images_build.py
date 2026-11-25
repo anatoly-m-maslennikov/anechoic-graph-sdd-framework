@@ -10,7 +10,7 @@ try:
     from .image_metadata import OCI_VERSION_LABEL
     from .image_provenance import label_arguments
     from .runtime_images_common import (
-        DOCKERFILE, DOCKERIGNORE, FINGERPRINT_LABEL, SCHEMA, SCHEMA_LABEL,
+        DOCKERFILE, FINGERPRINT_LABEL, SCHEMA, SCHEMA_LABEL,
         TOOL_REGISTRY, _GENERATED_ASSETS, ImageError, ImageIdentity,
     )
 except ImportError:
@@ -18,7 +18,7 @@ except ImportError:
     from MCP_PATCHBAY_C21.FEATURE_MCP.docker.image_metadata import OCI_VERSION_LABEL
     from MCP_PATCHBAY_C21.FEATURE_MCP.docker.image_provenance import label_arguments
     from MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_images_common import (
-        DOCKERFILE, DOCKERIGNORE, FINGERPRINT_LABEL, SCHEMA, SCHEMA_LABEL,
+        DOCKERFILE, FINGERPRINT_LABEL, SCHEMA, SCHEMA_LABEL,
         TOOL_REGISTRY, _GENERATED_ASSETS, ImageError, ImageIdentity,
     )
 
@@ -41,7 +41,6 @@ class ImageBuild:
         self._assemble(context, identity)
         iidfile = attempt / "image.id"
         self._current(identity, use_packaged_assets=use_packaged_assets)
-        self._verify_context(context, identity)
         stack = self._stack_input(context)[0]
         target = ("--target", stack) if stack != "current" else ()
         command = ("docker", "build", "--iidfile", str(iidfile),
@@ -56,6 +55,7 @@ class ImageBuild:
                    "--file", str(context / DOCKERFILE), str(context))
         self._run(("docker", "buildx", "prune", "--force", "--max-used-space", "4GB",
                    "--min-free-space", "2GB"), code="BUILD_FAILED", cwd=context, buildx_config=buildx)
+        self._verify_context(context, identity)
         self._run(command, code="BUILD_FAILED", cwd=context, buildx_config=buildx)
         self._current(identity, use_packaged_assets=use_packaged_assets)
         self._verify_context(context, identity)
@@ -113,20 +113,22 @@ class ImageBuild:
             raise self._input_error()
 
         try:
-            ignore_finder = self._file(context, DOCKERIGNORE).read_bytes().rstrip().endswith(b"\n**/.DS_Store")
-            for current, directories, names in os.walk(context, followlinks=False, onerror=unavailable):
+            for current, directories, names in os.walk(context, topdown=False, followlinks=False, onerror=unavailable):
                 folder = Path(current)
                 for name in directories:
                     path = folder / name
                     relative = path.relative_to(context).as_posix()
-                    if (relative not in expected_directories
-                            or path.is_symlink() or not path.is_dir()):
+                    if path.is_symlink() or not path.is_dir():
                         raise self._input_error()
+                    if relative not in expected_directories:
+                        path.rmdir()
+                        continue
                     observed_directories.add(relative)
                 for name in names:
                     path = folder / name
                     relative = path.relative_to(context).as_posix()
-                    if ignore_finder and name == ".DS_Store" and not path.is_symlink() and path.is_file():
+                    if name == ".DS_Store" and not path.is_symlink() and path.is_file():
+                        path.unlink(missing_ok=True)
                         continue
                     if relative not in expected or path.is_symlink() or not path.is_file():
                         raise self._input_error()

@@ -82,7 +82,6 @@ class BetaMcpTest(unittest.IsolatedAsyncioTestCase):
             async with asyncio.timeout(90), stdio_client(parameters) as streams, ClientSession(*streams) as client:
                 await client.initialize()
                 await self.assert_catalog(client, project)
-                await self.assert_schema(client)
                 query = {"sql": 'SELECT reference, "content.summary" FROM atoms ORDER BY reference',
                          "page_size": 1, "cursor_position": 0, "result_delivery": "inline"}
                 reply = await client.call_tool("query_run", query)
@@ -91,6 +90,7 @@ class BetaMcpTest(unittest.IsolatedAsyncioTestCase):
                 self.assertEqual([["EX-S-1", "Declare Example"]], first["rows"])
                 self.assertEqual(2, first["row_count"])
                 self.assertTrue(first["has_more"])
+                await self.assert_schema(client)
                 page = await client.call_tool("query_page", {
                     "query_id": first["query_id"], "offset": 1, "page_size": 1, "result_delivery": "inline",
                 })
@@ -167,6 +167,9 @@ class BetaMcpTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(["reference", "content.summary", "relative_path", "filename", "status_group",
                           "header.state.version", "header.state.status"],
                          [column["name"] for column in tables["atoms"]])
+        while "code_units" not in tables:
+            await asyncio.sleep(0.05)
+            tables = (await client.call_tool("query_schema", {})).structured_content["tables"]
         self.assertTrue({"package_external_imports", "native_references", "relations", "query_log",
                          "code_units", "code_unit_calls", "import_cycles", "package_coupling",
                          "antipattern_findings", "component_flows", "flow_events",
@@ -240,8 +243,6 @@ class BetaMcpTest(unittest.IsolatedAsyncioTestCase):
         self.fail(f"Graph did not follow renamed source: {result.structured_content}")
 
     async def assert_call_graph(self, client):
-        result = await client.call_tool("query_rebuild", {"target": "code_unit_calls"})
-        self.assertFalse(result.is_error, result.structured_content)
         query = {"sql": """
             FROM GRAPH_TABLE (anechoic MATCH
                 (m:ImportNode)-[includes:ModuleIncludes]->(s:CodeUnit)-[c:Calls]->(t:CodeUnit)

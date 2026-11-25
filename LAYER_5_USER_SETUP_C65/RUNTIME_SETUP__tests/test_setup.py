@@ -5,6 +5,7 @@ from io import StringIO
 import json
 from pathlib import Path
 import subprocess
+import sys
 import tempfile
 import tomllib
 import unittest
@@ -24,6 +25,37 @@ class RuntimeSetupTests(unittest.TestCase):
 
     def arguments(self, *values):
         return parse_arguments(["install", "--settings", str(self.settings), *values])
+
+    def test_engine_selection_and_preflight_context(self):
+        for platform, option, engine, context in (
+            ("darwin", (), "orbstack", "orbstack"),
+            ("darwin", ("--engine", "docker"), "docker", "desktop-linux"),
+            ("linux", (), "docker", "default"),
+            ("linux", ("--engine", "orbstack"), "orbstack", "orbstack"),
+        ):
+            with self.subTest(platform=platform, option=option), patch.object(sys, "platform", platform):
+                arguments = self.arguments("--projects-root", str(self.project), *option)
+                preflight = Mock()
+                command = Mock(side_effect=[
+                    {"outcome": "completed", "image_id": self.image},
+                    {"ready": True, "http_port": 8092, "image": self.image},
+                ])
+                with (patch.dict("os.environ", {"DOCKER_HOST": "bad-host"}),
+                      patch.dict(install.__globals__, {"_preflight": preflight, "_run_json": command})):
+                    install(arguments, source=self.base)
+                env = preflight.call_args.args[1]
+                self.assertEqual(context, env["DOCKER_CONTEXT"])
+                self.assertNotIn("DOCKER_HOST", env)
+                for call in command.call_args_list:
+                    self.assertEqual(("--engine", engine), call.args[2][1:3])
+
+    def test_preflight_uses_selected_context_for_both_checks(self):
+        env = {"DOCKER_CONTEXT": "orbstack"}
+        with (patch.dict(install.__globals__, {"_available": Mock()}),
+              patch.object(subprocess, "run", return_value=subprocess.CompletedProcess([], 0)) as run):
+            install.__globals__["_preflight"](False, env)
+        self.assertEqual(2, run.call_count)
+        self.assertTrue(all(call.kwargs["env"] is env for call in run.call_args_list))
 
     def test_child_commands_select_their_own_project_and_environment(self):
         source = Path("/framework")
@@ -102,7 +134,7 @@ class RuntimeSetupTests(unittest.TestCase):
             result = install(arguments, source=self.base)
         self.assertEqual("completed", result["outcome"])
         self.assertEqual("projects", result["mode"])
-        preflight.assert_called_once_with(True)
+        self.assertTrue(preflight.call_args.args[0])
         self.assertEqual(RELEASE, command.call_args_list[0].args[1])
         self.assertEqual(RELEASE, command.call_args_list[1].args[1])
         launch_args = command.call_args_list[1].args[2]

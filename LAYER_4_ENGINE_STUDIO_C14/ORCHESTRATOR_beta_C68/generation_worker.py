@@ -111,19 +111,15 @@ class ForegroundInputsChanged(ValueError):
 
 
 class GenerationWorker:
+    def health(self):
+        status = super().health()
+        status["watcher_active"] = (self.thread is not None and self.thread.is_alive()
+                                    and self.watcher.capture_epoch() is not None)
+        return status
+
     def _capture_generation(self, directory, reuse, paths, *, explicit, reconciliation, strict):
-        options, epoch = (({}, None) if reconciliation and not self.skip_archives else
-                          self._capture_options(reuse, paths, explicit=explicit))
         replay = self.thread is not None and not (explicit or strict)
-        if strict:
-            epoch = None
-            if options:
-                options["watcher_guarded"] = False
-                options.pop("incremental", None)
-        elif replay and epoch is None and paths is not None:
-            raise ForegroundCoverageLost(FOREGROUND_FENCE_MESSAGE)
-        elif replay and epoch is not None and paths is None and options.get("foreground") and self.watcher.watch_code:
-            options["replay_graph"] = True
+        options, epoch = self._generation_options(reuse, paths, explicit, reconciliation, strict, replay)
         if self.startup_capture and not options.get("incremental") and not reconciliation:
             reuse = None
         timeout = operation_timeout(45)
@@ -149,6 +145,22 @@ class GenerationWorker:
                 raise error(FOREGROUND_FENCE_MESSAGE)
         return result, reuse, options
 
+    def _generation_options(self, reuse, paths, explicit, reconciliation, strict, replay):
+        options, epoch = (({}, None) if reconciliation and not self.skip_archives else
+                          self._capture_options(reuse, paths, explicit=explicit))
+        if strict:
+            epoch = None
+            if options:
+                options["watcher_guarded"] = False
+                options.pop("incremental", None)
+        elif replay and epoch is None and paths is not None:
+            raise ForegroundCoverageLost(FOREGROUND_FENCE_MESSAGE)
+        if not explicit and (self.graph_queued or self.graph_thread is not None):
+            options["defer_graph"] = True
+        elif replay and epoch is not None and paths is None and options.get("foreground") and self.watcher.watch_code:
+            options["replay_graph"] = True
+        return options, epoch
+
     def _run_worker(self, directory, reuse, paths, **options):
         if self.worker_socket and paths is not None and len(paths) <= MAX_WARM_DELTA_PATHS:
             try:
@@ -170,40 +182,23 @@ class GenerationWorker:
         self.worker_mode = "cold"
         return result
 
-    def _communicate_worker(self, directory, request, *, archive=False):
+    def _communicate_worker(self, directory, request, *, archive=False, graph=False):
         env = process_environment()
         env["ANECHOIC_BETA_WORKER_PARENT_PID"] = str(os.getpid())
         timed = env.get("ANECHOIC_STARTUP_TIMING") == "1"
-        if timed:
-            from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import mark_startup_timing
-        slot = "archive_process" if archive else "process"
-        with self.lock:
-            if self.stopping.is_set():
-                raise RuntimeError("Orchestrator is stopping")
-            try:
-                process = subprocess.Popen(
-                [sys.executable, "-B", "-P", "-m", "WORKERS_beta_C69.WORKERS_beta_C69__shared",
-                 "--generation-dir", directory], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE, text=True, cwd=ENGINE, env=env, start_new_session=True)
-            except Exception:
-                if not archive:
-                    self._flow_effect("worker_started", outcome="failed")
-                raise
-            if not archive:
-                if timed:
-                    mark_startup_timing("worker_started", mode="cold")
-                self._flow_effect("worker_started", outcome="succeeded")
-            setattr(self, slot, process)
+        slot = "archive_process" if archive else "graph_process" if graph else "process"
+        process = self._start_cold_worker(directory, env, timed, slot)
         try:
             stdout, stderr = process.communicate(json.dumps(request))
         finally:
             with self.lock:
                 setattr(self, slot, None)
                 aborted = (self.archive_run.state == "aborting" if archive else
-                           self.active is not None and self.aborted_run == self.active.run_id)
+                           not graph and self.active is not None and self.aborted_run == self.active.run_id)
         if aborted:
             raise WorkerAborted("Worker aborted")
-        run_id = getattr(self.archive_run if archive else self.active, "run_id", None)
+        run = self.archive_run if archive else None if graph else self.active
+        run_id = getattr(run, "run_id", None)
         if timed:
             stderr = _forward_startup_timing(stderr)
         if not archive:
@@ -213,8 +208,30 @@ class GenerationWorker:
             raise worker_failure(stdout, detail, run_id=run_id)
         if stderr.strip():
             emit_record("WARNING", "worker_stderr_present", "capture", "degraded", run_id,
-                        details={"phase": "archive" if archive else "foreground"})
+                        details={"phase": "archive" if archive else "graph" if graph else "foreground"})
         return stdout
+
+    def _start_cold_worker(self, directory, env, timed, slot):
+        foreground = slot == "process"
+        with self.lock:
+            if self.stopping.is_set():
+                raise RuntimeError("Orchestrator is stopping")
+            try:
+                process = subprocess.Popen(
+                    [sys.executable, "-B", "-P", "-m", "WORKERS_beta_C69.WORKERS_beta_C69__shared",
+                     "--generation-dir", directory], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE, text=True, cwd=ENGINE, env=env, start_new_session=True)
+            except Exception:
+                if foreground:
+                    self._flow_effect("worker_started", outcome="failed")
+                raise
+            if foreground:
+                if timed:
+                    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import mark_startup_timing
+                    mark_startup_timing("worker_started", mode="cold")
+                self._flow_effect("worker_started", outcome="succeeded")
+            setattr(self, slot, process)
+        return process
 
     def _run_warm_worker(self, reuse, paths):
         try:

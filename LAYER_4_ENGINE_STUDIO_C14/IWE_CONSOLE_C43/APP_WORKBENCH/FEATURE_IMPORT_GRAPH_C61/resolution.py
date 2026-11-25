@@ -237,7 +237,10 @@ def resolve_realization(
     root = root.resolve()
     nodes, occurrences, edges = resolve(root, sources, python_roots, python_image_imports=python_image_imports)
     packages = {row[3]: row[0] for row in nodes if row[1] == "package" and row[3] is not None}
-    targets = (components or {}) | packages
+    targets = packages | (components or {})
+    for _, kind, _, path, _, owner in nodes:
+        if kind == "module" and owner and PurePosixPath(path).stem != "_bypass__shared":
+            targets[PurePosixPath(path).parent.as_posix()] = owner
     test_edges = []
     test_keys = set()
     for path, key in sorted(packages.items()):

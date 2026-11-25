@@ -126,6 +126,13 @@ def _container_references(root: Path, runner: Runner | None, image: str) -> bool
     ).strip())
 
 
+def _image_inventory(root, runner):
+    images = set(run_docker(root, runner, "image", "ls", "--all", "--no-trunc", "--quiet").splitlines())
+    if any(IMAGE.fullmatch(image) is None for image in images):
+        raise ValueError("Docker cleanup identifiers are invalid")
+    return images
+
+
 def _purge_test_images(root, runner, candidates, protected, cleanup):
     removed = set()
     for image in sorted(candidates.keys() - protected):
@@ -150,7 +157,7 @@ def _purge_test_images(root, runner, candidates, protected, cleanup):
             cleanup.notes.append(f"Test image {image} retained: checkout busy or removal unverified.")
     if removed:
         try:
-            remaining = set(run_docker(root, runner, "image", "ls", "--all", "--no-trunc", "--quiet").splitlines())
+            remaining = _image_inventory(root, runner)
             cleanup.notes.extend(f"Purged test image {image}." for image in sorted(removed - remaining))
             cleanup.notes.extend(f"Test image {image} still exists in Docker." for image in sorted(removed & remaining))
             cleanup.pending |= bool(removed & remaining)
@@ -225,28 +232,15 @@ def _discover_images(
     return owned, candidates
 
 
-def cleanup_obsolete_images(
-    root: Path,
-    current_image: str,
-    fingerprint: str,
-    cleanup: Cleanup,
-    runner: Runner | None = None,
-    *,
-    previous_image: str | None = None,
-    previous_images: tuple[str, ...] = (),
-) -> None:
-    try:
-        owned, candidates = _discover_images(root, runner, current_image, cleanup)
-        active_images = {image for _, image, _ in open_artifacts(root) if isinstance(image, str)}
-    except OSError, RuntimeError, ValueError, subprocess.TimeoutExpired:
-        cleanup.pending = True
-        cleanup.notes.append("Runtime image discovery unavailable; unproven images retained.")
-        return
-    protected, retained = {current_image}, 0
-    for image in (*previous_images, previous_image):
+def _retain_previous_images(root, runner, history, present, protected, cleanup):
+    retained = 0
+    for image in history:
         if image is None or image in protected:
             continue
         protected.add(image)
+        if IMAGE.fullmatch(image) and image not in present:
+            cleanup.notes.append(f"Previous image {image} is absent from the selected Docker context.")
+            continue
         try:
             if not _has_owner(image_labels(root, runner, image), cleanup.owner):
                 raise ValueError("Previous image ownership unproven")
@@ -257,6 +251,30 @@ def cleanup_obsolete_images(
             cleanup.notes.append(f"Image {image} retained: previous image ownership unproven.")
         if retained == 2:
             break
+    return retained
+
+
+def cleanup_obsolete_images(
+    root: Path,
+    current_image: str,
+    fingerprint: str,
+    cleanup: Cleanup,
+    runner: Runner | None = None,
+    *,
+    previous_image: str | None = None,
+    previous_images: tuple[str, ...] = (),
+) -> None:
+    history = (*previous_images, previous_image)
+    try:
+        owned, candidates = _discover_images(root, runner, current_image, cleanup)
+        present = _image_inventory(root, runner) if any(history) else set()
+        active_images = {image for _, image, _ in open_artifacts(root) if isinstance(image, str)}
+    except OSError, RuntimeError, ValueError, subprocess.TimeoutExpired:
+        cleanup.pending = True
+        cleanup.notes.append("Runtime image discovery unavailable; unproven images retained.")
+        return
+    protected = {current_image}
+    retained = _retain_previous_images(root, runner, history, present, protected, cleanup)
     for image in owned:
         if retained == 2:
             break

@@ -73,9 +73,9 @@ class ImageGoldenTests(ImageFixture, unittest.TestCase):
             with self.assertRaises(ImageError):
                 manager._current(before)
 
-    def test_context_allows_finder_metadata_only_when_docker_excludes_it(self) -> None:
+    def test_context_removes_empty_directories_and_regular_finder_metadata(self) -> None:
         source = self.source_fixture()
-        (source / DOCKERIGNORE).write_text(".git\n**/.DS_Store\n")
+        (source / DOCKERIGNORE).write_text(".git\n")
         manager = self.manager(source, lambda *_a, **_k: self.fail("Docker is not needed"))
         identity = manager.identity()
         context = self.fixture_root / "context"
@@ -83,8 +83,13 @@ class ImageGoldenTests(ImageFixture, unittest.TestCase):
         manager._assemble(context, identity)
         metadata = context / ".DS_Store"
         metadata.touch()
+        (context / "empty/nested").mkdir(parents=True)
+        (context / "metadata-only/nested").mkdir(parents=True)
+        (context / "metadata-only/nested/.DS_Store").touch()
         manager._verify_context(context, identity)
-        metadata.unlink()
+        self.assertFalse(metadata.exists())
+        self.assertFalse((context / "empty").exists())
+        self.assertFalse((context / "metadata-only").exists())
         metadata.symlink_to(context / "version.toml")
         with self.assertRaises(ImageError):
             manager._verify_context(context, identity)

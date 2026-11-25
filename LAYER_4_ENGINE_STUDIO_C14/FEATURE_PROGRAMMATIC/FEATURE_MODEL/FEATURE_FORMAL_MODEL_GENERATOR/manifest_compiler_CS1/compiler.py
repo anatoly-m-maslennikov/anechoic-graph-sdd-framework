@@ -14,7 +14,7 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import
 
 from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.FEATURE_MODEL_VALIDATION__shared import open_admitted_model
 from .active_model_sources import read_active_model_sources
-from .structure_compile__shared import compile_structure
+from .structure_compile import compile_structure
 
 
 def write_model(directory: Path, control_root: Path, *, verify_lean: bool = False) -> str:

@@ -1,4 +1,5 @@
 """Project SPEC lifecycle against the real MCP Backend and active Model."""
+import asyncio
 import os
 from pathlib import Path
 import tempfile
@@ -82,8 +83,27 @@ class ProjectSpecLifecycleProcessTests(unittest.IsolatedAsyncioTestCase):
     async def check_invalid_then_restore(self, artifact, operation, target, status):
         path = self.root / artifact['path']
         original = path.read_text()
-        path.write_text(original.replace('The output is available.', ' '))
-        result = await self.gateway.call(None, types.CallToolRequestParams(
-            name='atom_lifecycle_' + operation, arguments={'target': target, 'targetStatus': status}))
-        self.assertNotEqual('completed', result.structured_content['status'], result.structured_content)
-        path.write_text(original)
+        invalid = original.replace('\nExample\n', '\nExample.\n').replace('The output is available.', ' ')
+        path.write_text(invalid)
+        try:
+            await self.wait_for_summary(target['ref_id'], 'Example.')
+            result = await self.call(operation, {'target': target, 'targetStatus': status}, expected='failed')
+            self.assertEqual([{'code': 'invalid_input', 'field': 'newAtom', 'message':
+                              'Project SPEC does not satisfy the compiled Model: Project Contract requires Guarantee prose'}],
+                             result['errors'])
+            self.assertEqual([], result['effects'])
+        finally:
+            path.write_text(original)
+        await self.wait_for_summary(target['ref_id'], 'Example')
+
+    async def wait_for_summary(self, ref, summary):
+        async with asyncio.timeout(15):
+            while True:
+                result = await self.gateway.call(None, types.CallToolRequestParams(name='query_run', arguments={
+                    'sql': f'''SELECT "content.summary" FROM atoms WHERE reference = '{ref}' ''',
+                    'result_delivery': 'inline',
+                }))
+                self.assertFalse(result.is_error, result.structured_content)
+                if result.structured_content['rows'] == [[summary]]:
+                    return
+                await asyncio.sleep(0.1)

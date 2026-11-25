@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 import sys
 
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.trace_bindings__shared import PACKAGE_SUFFIX, SUFFIX, _read_pins
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.import_graph__shared import PACKAGE_SUFFIX, SUFFIX, _read_pins
 
 PILOT = Path('LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH')
 EXCLUDED = {'FEATURE_WORKBENCH_CODEX', 'FEATURE_CODEX_EXTENSION', 'node_modules',

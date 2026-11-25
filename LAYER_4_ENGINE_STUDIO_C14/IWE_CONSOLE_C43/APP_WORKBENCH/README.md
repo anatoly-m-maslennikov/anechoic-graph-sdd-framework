@@ -178,7 +178,7 @@ From a terminal, send the same SQL to Workbench's read-only endpoint. For exampl
 ```sh
 curl -sS -H 'Content-Type: application/json' \
   --data '{"sql":"SELECT * FROM package_imports LIMIT 20","result_delivery":"inline"}' \
-  http://localhost:56317/anechoic/Anechoic/api/run
+  http://localhost:7777/anechoic/Anechoic/api/run
 ```
 
 Native Workbench stores its projection, parsed imports, and live result tables

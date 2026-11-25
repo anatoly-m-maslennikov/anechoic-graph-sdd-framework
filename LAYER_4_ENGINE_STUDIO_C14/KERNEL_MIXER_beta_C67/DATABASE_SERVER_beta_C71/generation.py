@@ -32,7 +32,7 @@ class _ReuseInputs(BaseModel):
     @field_validator("manifest", "graph", "carrier_schema", mode="before")
     @classmethod
     def validate_digest(cls, value, info):
-        if not isinstance(value, str) or (info.field_name != "graph" or value != "disabled") and _HEX.fullmatch(value) is None:
+        if not isinstance(value, str) or (info.field_name != "graph" or value not in {"disabled", "pending"}) and _HEX.fullmatch(value) is None:
             raise ValueError("Invalid reuse witness")
         return value
 

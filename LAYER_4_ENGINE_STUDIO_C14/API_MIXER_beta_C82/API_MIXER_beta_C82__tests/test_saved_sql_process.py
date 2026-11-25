@@ -44,7 +44,7 @@ class Jobs(BaseHTTPRequestHandler):
         pass
 
     def do_GET(self):
-        payload = {"result": {"instance_id": INSTANCE, "pid": os.getpid(), "startup_replay_pending": False}}
+        payload = {"result": {"instance_id": INSTANCE, "pid": os.getpid(), "startup_replay_pending": False, "watcher_active": True}}
         value = json.dumps(payload).encode()
         self.send_response(200)
         self.send_header("Content-Length", str(len(value)))

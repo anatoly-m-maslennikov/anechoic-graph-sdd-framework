@@ -62,12 +62,12 @@ class SharedInitialControlTests(unittest.IsolatedAsyncioTestCase):
                     self.assertEqual("shared_gateway_failure", (await query)["error"]["code"])
                     status = await invoke("workbench_status", {})
                     self.assertEqual("live_index", status["result"]["value"]["mode"])
-                    recovered = await invoke("query_run", {"sql": "SELECT 42", "result_delivery": "inline"})
-                    self.assertEqual([[42]], recovered["result"]["value"]["rows"])
             finally:
                 if not query.done():
                     query.cancel()
                     await asyncio.gather(query, return_exceptions=True)
+            recovered = await invoke("query_run", {"sql": "SELECT 42", "result_delivery": "inline"})
+            self.assertEqual([[42]], recovered["result"]["value"]["rows"])
 
     async def start(self, module, env, *arguments):
         process = await asyncio.create_subprocess_exec(sys.executable, "-B", "-P", "-m", module, *arguments,

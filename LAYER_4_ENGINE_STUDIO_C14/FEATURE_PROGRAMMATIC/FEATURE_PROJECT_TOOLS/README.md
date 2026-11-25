@@ -31,6 +31,15 @@ The full suite discovers and runs the retained test modules. Each module has a
 finite 60-minute budget. Host and Docker pools are bounded separately, and the
 same immutable test image is shared by disposable Project stacks.
 
+Static checks and the Realization Graph require exactly one direct
+`__shared` or `__public` entry in each folder with executable source files.
+The rule covers Test Packages. It counts files in that folder and excludes
+TypeScript declaration files.
+
+Parent Packages with executable source only in descendants use an empty
+shared entry such as `_bypass__shared.py`. Child Package access follows the
+declared Code Access rules. Remove empty source directories.
+
 Fresh Local-release image builds carry exact Project ownership, Project name and
 the full build-time owning-repository HEAD commit ID; missing or invalid name or
 HEAD stops fresh preparation before building. Name and HEAD record provenance;

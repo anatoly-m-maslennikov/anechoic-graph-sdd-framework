@@ -67,6 +67,7 @@ class PeerHandler(BaseHTTPRequestHandler):
             value.update(manifest_sha256=self.server.digest, ready=True, generation="g1")
         else:
             value["startup_replay_pending"] = False
+            value["watcher_active"] = True
         self.reply({"result": value})
 
     def do_POST(self):

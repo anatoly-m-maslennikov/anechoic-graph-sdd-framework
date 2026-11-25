@@ -25,3 +25,9 @@ MECE — Cover the whole with non-overlapping parts
 ### Prose Claim
 
 When we split something into parts, include everything within the chosen boundaries and put each item in only one part.
+
+## Details
+
+### Examples
+
+A team assigns every task in a release to exactly one status bucket. The buckets are open, done, and canceled. The buckets cover all release tasks without overlap.

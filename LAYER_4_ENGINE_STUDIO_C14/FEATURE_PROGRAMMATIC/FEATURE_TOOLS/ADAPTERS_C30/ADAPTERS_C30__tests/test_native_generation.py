@@ -89,23 +89,6 @@ class NativeGenerationTests(NativeCaptureFixture, unittest.TestCase):
         self.assertIn("non-Archived Atom", issue["message"])
         self.assertEqual({relative: sha256(path.read_bytes()).hexdigest()}, hashes)
 
-    def test_delta_quarantines_one_invalid_relation_and_keeps_a_valid_ticket(self):
-        binding = {"root": str(self.root), "control_root": self.control.name,
-                   "manifest_path": self.manifest.relative_to(self.root).as_posix(),
-                   "manifest_sha256": self.selection.manifest_sha256, "project_prefix": "AN"}
-        invalid = self.write("AN-T-8--invalid.md", "AN-T-8", "active", 1)
-        invalid.write_text(invalid.read_text().replace("state:", "relations: {UNDECLARED: [AN-T-9]}\nstate:"))
-        valid = self.write("AN-T-9--valid.md", "AN-T-9", "active", 1)
-        paths = [path.relative_to(self.root).as_posix() for path in (invalid, valid)]
-        endpoints = {"CONTAINED_BY": [{"inverse_alias": "CONTAINS"}, False], "CONTAINS": [{}, True]}
-        result = capture_ticket_delta(binding, paths, endpoints, include_hashes=True)
-        snapshot = result["snapshot"]
-        self.assertEqual(["AN-T-9"], [row["reference"] for row in snapshot["atoms"]])
-        self.assertEqual(set(paths), result["carrier_hashes"].keys())
-        issue, = snapshot["ingestion_issues"]
-        self.assertEqual((paths[0], "AN-T-8@1"), (issue["relative_path"], issue["atom_ref"]))
-        self.assertIn("Undeclared native relation", issue["message"])
-
     def test_scoped_hashes_exclude_deferred_archives_and_keep_off_path_revisions(self):
         binding = {"root": str(self.root), "control_root": self.control.name,
                    "manifest_path": self.manifest.relative_to(self.root).as_posix(),

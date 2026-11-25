@@ -27,3 +27,9 @@ Reserve the Operator’s attention for key decisions
 ### Prose Claim
 
 Save the Operator’s time and attention for decisions where their judgment matters most.
+
+## Details
+
+### Examples
+
+An AI Agent fixes routine spelling errors and brings a proposed change in Project scope to the Operator. The Operator can focus on the decision that needs their judgment.

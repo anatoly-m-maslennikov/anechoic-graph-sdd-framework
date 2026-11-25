@@ -78,11 +78,15 @@ def write_receipt(root, receipt, run_id, image_mode, test_scope, test_selection,
     return receipt.relative_to(root).as_posix()
 
 
+def failure_path(root, run_id):
+    relative = Path(".anechoic_runtime/simple_local_release/reports/failures") / f"{run_id}.md"
+    return _project_path(root, relative, label="simple-report")
+
+
 def write_failure(root, run_id, failed_step, image_mode, test_scope, test_selection,
                   error, test_log_paths, endpoint, cleanup_note, cleanup, staging_note):
-    relative = Path(".anechoic_runtime/simple_local_release/reports/failures") / f"{run_id}.md"
     try:
-        report = _project_path(root, relative, label="simple-report")
+        report = failure_path(root, run_id)
         report.parent.mkdir(parents=True, exist_ok=True)
         atomic_write(
             report,
@@ -100,6 +104,6 @@ def write_failure(root, run_id, failed_step, image_mode, test_scope, test_select
             + ("Docker cleanup:\n" + "\n".join([cleanup_note, *cleanup.notes]) + "\n\n" if cleanup is not None else "")
             + staging_note,
         )
-        return relative.as_posix()
+        return report.relative_to(root).as_posix()
     except (LocalReleaseError, OSError):
         return None

@@ -52,8 +52,11 @@ def test_component_test_edge_uses_declared_structure(tmp_path):
     tests = component / "Widget__tests"
     tests.mkdir(parents=True)
     (tests / "test_widget.py").write_text("pass\n")
+    (tests / "tests__shared.py").write_text("pass\n")
+    (component / "_bypass__shared.py").touch()
     (component / "child").mkdir()
     (component / "child" / "main.py").write_text("import Widget.Widget__tests.test_widget\n")
+    (component / "child" / "child__public.py").write_text("pass\n")
     structure = {"model_sha256": "model", "project": {"ref": "AN-S-1", "sha256": "hash"},
                  "components": {"C9": {"parent": "C00", "ref": "AN-S-2", "sha256": "hash",
                                          "fields": {"name": "Widget"},
@@ -76,8 +79,11 @@ def test_code_access_findings_use_authored_imports_and_exports(tmp_path):
     provider, caller = component / "lib", component / "tests"
     provider.mkdir(parents=True)
     caller.mkdir()
+    (component / "_bypass__shared.py").touch()
     (provider / "parse.py").write_text("def run(): return 1\n")
     (caller / "run.py").write_text("from Widget.lib.parse import run\n")
+    (provider / "lib__shared.py").write_text("pass\n")
+    (caller / "tests__shared.py").write_text("pass\n")
     selector = "lib.parse.run"
     code = {"imports": [selector], "exports": {selector: {"private": ["Widget/tests"]}}}
     structure = {"model_sha256": "model", "project": {"ref": "AN-S-1", "sha256": "hash"},
@@ -94,3 +100,42 @@ def test_code_access_findings_use_authored_imports_and_exports(tmp_path):
     code["imports"] = {"only": []}
     assert findings() == [["module:Widget/tests/run.py", "Widget/tests/run.py", 1, 0,
                            "from Widget.lib.parse import run", "denied", "code access rule"]]
+
+
+def test_package_entry_findings_include_grouping_folders_without_structure(tmp_path):
+    files = {
+        "missing/main.py": "pass\n",
+        "missing/child/child__shared.py": "pass\n",
+        "many/a__shared.py": "pass\n",
+        "many/b__public.py": "pass\n",
+        "group/child/child__shared.py": "",
+        "marked/_bypass__shared.py": "",
+        "marked/child/child__shared.py": "",
+        "tests__tests/test_main.py": "pass\n",
+        "alias/alias__pub.py": "pass\n",
+        "public/public__public.py": "pass\n",
+        "shared/shared__shared.py": "pass\n",
+        "declarations/types.d.ts": "export type T = string;\n",
+        "declarations/types.d.cts": "export type T = string;\n",
+        "declarations/types.d.mts": "export type T = string;\n",
+        "assets/style.css": "body {}\n",
+    }
+    for relative, content in files.items():
+        path = tmp_path / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content, encoding="utf-8")
+    result = run_provider(tmp_path, {})
+    assert result.returncode == 0, result.stderr
+    rows = json.loads(result.stdout)["code_access_findings"]
+    assert rows == [
+        ["module:alias/alias__pub.py", "alias/alias__pub.py", None, None, "Package entry", "denied",
+         "Expected one __shared or __public entry in alias, found 0"],
+        ["module:group/child/child__shared.py", "group/child/child__shared.py", None, None,
+         "Package entry", "denied", "Expected one __shared or __public entry in group, found 0"],
+        ["module:many/a__shared.py", "many/a__shared.py", None, None, "Package entry", "denied",
+         "Expected one __shared or __public entry in many, found 2"],
+        ["module:missing/main.py", "missing/main.py", None, None, "Package entry", "denied",
+         "Expected one __shared or __public entry in missing, found 0"],
+        ["module:tests__tests/test_main.py", "tests__tests/test_main.py", None, None, "Package entry", "denied",
+         "Expected one __shared or __public entry in tests__tests, found 0"],
+    ]

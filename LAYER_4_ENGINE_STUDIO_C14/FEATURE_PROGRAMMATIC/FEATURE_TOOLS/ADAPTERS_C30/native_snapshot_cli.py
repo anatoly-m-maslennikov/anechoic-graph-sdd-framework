@@ -143,7 +143,8 @@ def prepare_generation_snapshot(
     if archive_stage not in (None, "foreground", "archive") or (archive_roots and archive_stage != "archive"):
         raise ValueError("Invalid generation archive stage")
     selection = _selection(binding)
-    reader = startup_reader(selection.root, "foreground_capture" if archive_stage == "foreground" else None)
+    reader = startup_reader(selection.root, "foreground_capture" if archive_stage == "foreground" else None,
+                            archive=archive_stage == "archive")
     deferred = set() if archive_stage == "foreground" else None
     directories = _archive_directories(selection, archive_roots) if archive_stage == "archive" else None
     capture = capture_native(selection, reader=reader, defer_currentness=True,

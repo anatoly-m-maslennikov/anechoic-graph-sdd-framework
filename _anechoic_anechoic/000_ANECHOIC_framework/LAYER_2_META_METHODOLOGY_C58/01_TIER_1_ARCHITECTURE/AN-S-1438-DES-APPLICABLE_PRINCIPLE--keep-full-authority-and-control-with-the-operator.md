@@ -25,3 +25,9 @@ Keep full authority and control with the Operator
 ### Prose Claim
 
 The Operator has the final say over the Project and its ANECHOIC instance. The Operator can delegate authority to AI Agents, change it, or withdraw it, and can observe, guide, stop, and recover important work.
+
+## Details
+
+### Examples
+
+An Operator delegates a task to an AI Agent, observes its progress, and stops it when the task moves outside the intended scope. The Operator retains control of the work.

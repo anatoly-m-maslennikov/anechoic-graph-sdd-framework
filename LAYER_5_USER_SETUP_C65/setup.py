@@ -26,6 +26,9 @@ def parse_arguments(argv: list[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(required=True)
     install = commands.add_parser("install", help="build and start the local runtime")
+    install.add_argument("--engine", choices=("orbstack", "docker"),
+                         default="orbstack" if sys.platform == "darwin" else "docker",
+                         help="container engine (default: %(default)s)")
     target = install.add_mutually_exclusive_group()
     target.add_argument("--project", type=Path, help="mount one repository")
     target.add_argument("--projects-root", type=Path, help="mount a directory of repositories")
@@ -52,16 +55,17 @@ def _available(command: str) -> None:
         raise ValueError(f"Install {command} and make it available on PATH")
 
 
-def _preflight(use_codex: bool) -> None:
+def _preflight(use_codex: bool, env: dict[str, str]) -> None:
     for command in ("git", "uv", "docker"):
         _available(command)
     if use_codex:
         _available("codex")
+    label = "OrbStack" if env["DOCKER_CONTEXT"] == "orbstack" else "Docker"
     for command, message in (
-        (("docker", "info", "--format", "{{.ServerVersion}}"), "Start Docker and wait for its engine"),
+        (("docker", "info", "--format", "{{.ServerVersion}}"), f"Start {label} and wait for its engine"),
         (("docker", "compose", "version"), "Install the Docker Compose plugin"),
     ):
-        result = subprocess.run(command, capture_output=True, check=False, timeout=20)
+        result = subprocess.run(command, capture_output=True, check=False, timeout=20, env=env)
         if result.returncode:
             raise ValueError(message)
 
@@ -122,19 +126,23 @@ def _initialize(source: Path, values: Settings, arguments: argparse.Namespace) -
 
 def install(arguments: argparse.Namespace, *, source: Path = SOURCE) -> dict:
     values, create_settings = select_settings(arguments)
-    _preflight(arguments.agent == "codex")
+    env = os.environ.copy()
+    env.pop("DOCKER_HOST", None)
+    env["DOCKER_CONTEXT"] = ("orbstack" if arguments.engine == "orbstack" else
+                             "desktop-linux" if sys.platform == "darwin" else "default")
+    _preflight(arguments.agent == "codex", env)
     initialized = _initialize(source, values, arguments)
     if create_settings:
         write_settings(values)
     build = _run_json(
-        source, RELEASE, ("build-image", "--project-root", str(source), "--run-id", f"setup-{uuid.uuid4().hex[:12]}"),
+        source, RELEASE, ("build-image", "--engine", arguments.engine, "--project-root", str(source), "--run-id", f"setup-{uuid.uuid4().hex[:12]}"),
         action="build image", timeout=900,
     )
     image = build.get("image_id")
     if build.get("outcome") != "completed" or not isinstance(image, str) or not IMAGE.fullmatch(image):
         raise ValueError("The image build did not return an immutable image ID")
     launch = _run_json(
-        source, RELEASE, ("run-image", "--host-settings", str(values.path), "--image", image, "--apply", "--verify-mcp",
+        source, RELEASE, ("run-image", "--engine", arguments.engine, "--host-settings", str(values.path), "--image", image, "--apply", "--verify-mcp",
                            "--startup-timeout", "420", "--readiness-timeout", "420"),
         action="start Docker", timeout=1320,
     )

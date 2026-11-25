@@ -35,7 +35,7 @@ from .native_delta import native_generation_route
 from .persistence import open_bound_database
 from .query_engine import connect
 from .query_history import QueryHistory
-from .query_results import QueryResults
+from .query_results import ProjectGraphPending, QueryResults
 from .query_schema import public_schema
 from .query_settings import result_ttl
 from .realization_projection import has_table, prepare, restore_property_graph
@@ -139,6 +139,8 @@ def _workspace_route(store, instance_id, lock, history, saved_queries):
                     provider = store
                 result = provider.invoke(operation, arguments)
             return JSONResponse({"result": result})
+        except ProjectGraphPending as error:
+            return _error("project_graph_pending", str(error), 409)
         except (ValueError, TypeError, UnicodeError, duckdb.Error) as error:
             return _error("workspace_error", str(error), 400)
         except OSError:
@@ -161,6 +163,8 @@ def _rebuild_route(connection, instance_id, lock, queries, workspaces, journal_s
                 if workspaces is not None:
                     workspaces.replace_results(replacements)
             return JSONResponse({"result": {"result_ids": {key: value["query_id"] for key, value in replacements.items()}}})
+        except ProjectGraphPending as error:
+            return _error("project_graph_pending", str(error), 409)
         except (ValueError, TypeError, duckdb.Error) as error:
             return _error("invalid_query", str(error), 400)
         except (OSError, RuntimeError):

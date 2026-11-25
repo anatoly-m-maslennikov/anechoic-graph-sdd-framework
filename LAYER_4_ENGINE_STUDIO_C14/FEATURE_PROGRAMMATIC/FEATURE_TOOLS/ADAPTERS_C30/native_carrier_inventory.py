@@ -15,8 +15,8 @@ type ScanMode = Literal["foreground_capture", "foreground_hashes"]
 
 
 class StartupReadContext(ReadContext):
-    def __init__(self, root: Path, mode: ScanMode):
-        super().__init__(roots=[str(root)], limits=dict(CEILINGS))
+    def __init__(self, root: Path, mode: ScanMode, limits: dict[str, int]):
+        super().__init__(roots=[str(root)], limits=limits)
         self.mode = mode
         self.census_ns = 0
         self.carrier_count = 0
@@ -54,10 +54,13 @@ class StartupReadContext(ReadContext):
                             carrier_count=self.carrier_count, bytes_read=self.bytes_read, **self._timings)
 
 
-def startup_reader(root: Path, mode: ScanMode | None = None) -> ReadContext:
+def startup_reader(root: Path, mode: ScanMode | None = None, *, archive: bool = False) -> ReadContext:
+    limits = dict(CEILINGS)
+    if archive:
+        del limits["timeout_seconds"]
     if mode is not None and startup_timing_enabled():
-        return StartupReadContext(root, mode)
-    return ReadContext(roots=[str(root)], limits=dict(CEILINGS))
+        return StartupReadContext(root, mode, limits)
+    return ReadContext(roots=[str(root)], limits=limits)
 
 
 def root_carriers(reader, selection, *, remember=True):

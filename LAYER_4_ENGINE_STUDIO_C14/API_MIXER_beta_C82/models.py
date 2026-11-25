@@ -148,6 +148,7 @@ class KernelHealth(PeerHealth):
 
 class JobsHealth(PeerHealth):
     startup_replay_pending: bool
+    watcher_active: bool
 
 
 class WorkerRun(BaseModel):

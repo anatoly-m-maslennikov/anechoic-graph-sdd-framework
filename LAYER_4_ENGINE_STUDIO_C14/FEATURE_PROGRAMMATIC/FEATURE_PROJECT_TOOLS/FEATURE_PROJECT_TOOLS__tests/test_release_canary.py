@@ -1,4 +1,5 @@
 """Check that the candidate probe isolates and removes its own container."""
+from errno import ENOTEMPTY
 import io
 from hashlib import sha256
 import json
@@ -15,6 +16,66 @@ from .. import test_suite__shared as suite
 
 
 class CanaryTests(unittest.TestCase):
+    def test_cleanup_recovers_only_late_regular_finder_metadata(self):
+        root = Path(self.enterContext(tempfile.TemporaryDirectory())).resolve()
+        sentinel = root / "sentinel"
+        sentinel.write_text("preserve")
+        remove_directory = release_canary.os.rmdir
+        for entry in ("metadata", "symlink", "unexpected"):
+            folders = []
+            injected = False
+
+            def verify(_root, _selection, _package, attempt, _image):
+                folder = attempt / "canary-project" / "ontology"
+                folder.mkdir(parents=True)
+                folders.append(folder)
+                return "endpoint"
+
+            def rmdir(path, **kwargs):
+                nonlocal injected
+                if Path(path).name == "ontology" and not injected:
+                    injected = True
+                    name = "unexpected" if entry == "unexpected" else ".DS_Store"
+                    late = folders[0] / name
+                    if entry == "symlink":
+                        late.symlink_to(sentinel)
+                    else:
+                        late.touch()
+                return remove_directory(path, **kwargs)
+
+            with (self.subTest(entry=entry),
+                  patch.object(release_canary, "_workspace", return_value=root),
+                  patch.object(release_canary, "_selection"),
+                  patch.object(release_canary, "_verify_manifest"),
+                  patch.object(release_canary, "_verify_candidate_image", side_effect=verify),
+                  patch.object(release_canary.subprocess, "run"),
+                  patch.object(release_canary.os, "rmdir", new=rmdir)):
+                args = (root, root / "package", "sha256:" + "c" * 64)
+                if entry == "metadata":
+                    self.assertEqual("endpoint", release_canary.verify_candidate_image(*args, run_id="scope", selection={}))
+                    self.assertFalse(folders[0].parent.parent.exists())
+                else:
+                    with self.assertRaises(OSError) as caught:
+                        release_canary.verify_candidate_image(*args, run_id="scope", selection={})
+                    self.assertEqual(ENOTEMPTY, caught.exception.errno)
+                    self.assertTrue(folders[0].exists())
+        self.assertEqual("preserve", sentinel.read_text())
+
+    def test_cleanup_failure_preserves_primary_canary_failure(self):
+        root = Path(self.enterContext(tempfile.TemporaryDirectory())).resolve()
+        failure = release_canary.CanaryError("canary probe failed")
+        with (patch.object(release_canary, "_workspace", return_value=root),
+              patch.object(release_canary, "_selection"),
+              patch.object(release_canary, "_verify_manifest"),
+              patch.object(release_canary, "_verify_candidate_image", side_effect=failure),
+              patch.object(release_canary.subprocess, "run"),
+              patch.object(release_canary.shutil, "rmtree", side_effect=OSError("cleanup failed")),
+              self.assertRaises(release_canary.CanaryError) as caught):
+            release_canary.verify_candidate_image(root, root / "package", "sha256:" + "c" * 64,
+                                                  run_id="scope", selection={})
+        self.assertIs(failure, caught.exception)
+        self.assertIn("cleanup failed", failure.__notes__[0])
+
     def test_mcp_probe_requires_a_working_query_on_the_loopback_port(self):
         with (
             patch("httpx2.AsyncClient") as client,

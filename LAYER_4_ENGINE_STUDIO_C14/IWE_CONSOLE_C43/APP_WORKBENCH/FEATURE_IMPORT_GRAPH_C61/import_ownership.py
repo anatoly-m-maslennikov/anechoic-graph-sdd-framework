@@ -5,6 +5,8 @@ from collections import defaultdict
 from pathlib import Path, PurePosixPath
 import sys
 
+from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.FEATURE_MODEL_VALIDATION__shared import check_code_access
+
 from .code_access_occurrences import code_access_occurrences
 from .source import capture
 from .web_imports import _WEB
@@ -91,12 +93,15 @@ def main():
     if failed:
         print("import ownership: use the framework-local Node, TypeScript and Svelte parsers to check web imports",
               file=sys.stderr)
+    for problem in check_code_access(None, sources, (), include_entry_bypasses=True):
+        failed = True
+        print(problem.reason, file=sys.stderr)
     for site, name, (owner, original) in check(sources, sites):
         failed = True
         package = PurePosixPath(owner).parent.as_posix()
         symbol = original if original is not None else PurePosixPath(owner).stem
         print(f"{site.source_path}:{site.line}:{site.column + 1}: {name} passes through {site.target_path}. "
-              f"Import {symbol} from the defining Package's __shared entry ({package}).", file=sys.stderr)
+              f"Import {symbol} from the defining Package's entry ({package}).", file=sys.stderr)
     return int(failed)
 
 

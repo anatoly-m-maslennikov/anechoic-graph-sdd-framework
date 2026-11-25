@@ -7,7 +7,7 @@ import duckdb
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, ValidationError, field_validator
 from starlette.responses import JSONResponse
 
-from .query_results import query, validate_preview
+from .query_results import ProjectGraphPending, query, validate_preview
 from .result_delivery import deliver, validate_delivery
 from .saved_query_runs import save_run_fields, validate_name
 
@@ -117,6 +117,8 @@ def database_route(connection, instance_id, lock, queries, journal_sync, project
                     return error("invalid_query", issue[1], 400)
                 result = _result(connection, queries, admitted, project_root, saved_queries)
             return JSONResponse({"result": result})
+        except ProjectGraphPending as exc:
+            return error("project_graph_pending", str(exc), 409)
         except (ValueError, TypeError, duckdb.Error) as exc:
             return error("invalid_query", str(exc), 400)
         except (OSError, RuntimeError):

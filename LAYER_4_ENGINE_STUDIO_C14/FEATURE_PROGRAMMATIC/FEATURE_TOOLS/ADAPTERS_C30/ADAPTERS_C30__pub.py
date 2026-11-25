@@ -90,7 +90,7 @@ class ReadContext:
         return value
 
     def checkpoint(self) -> None:
-        if (time.monotonic() - self.started >= self.limits["timeout_seconds"]
+        if ("timeout_seconds" in self.limits and time.monotonic() - self.started >= self.limits["timeout_seconds"]
                 and os.getenv("ANECHOIC_TEST_IMAGE_DEADLINES") != "0"):
             raise LimitReached("timeout_seconds")
 

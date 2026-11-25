@@ -16,10 +16,16 @@ def _json(value):
     return None if value is None else json.dumps(value, default=dict)
 
 
+def _findings(ownership, sources, occurrences=()):
+    return [(f'module:{problem.path}', problem.path, problem.line, problem.column,
+             problem.written, problem.status, problem.reason)
+            for problem in check_code_access(ownership, sources, occurrences, include_entry_bypasses=True)]
+
+
 def prepare_boundaries(selection, snapshot, sources, nodes, python_roots, component_paths, python_image_imports=None):
     """Build rows from the same captured sources used for the import graph."""
     if snapshot is None:
-        return [], [], analyze_state(selection.root, sources, ownership=None)
+        return [], _findings(None, sources), analyze_state(selection.root, sources, ownership=None)
     package_nodes = {node[3]: node[0] for node in nodes if node[1] == 'package' and node[3]}
     package_paths, occurrences = code_access_occurrences(
         selection.root, sources, python_roots, python_image_imports=python_image_imports,
@@ -27,7 +33,6 @@ def prepare_boundaries(selection, snapshot, sources, nodes, python_roots, compon
     ownership = build_code_access_ownership(selection.root, selection.control_root, snapshot,
                                             package_paths | set(package_nodes) | set(component_paths),
                                             allow_unrealized=True)
-    problems = check_code_access(ownership, sources, occurrences, include_entry_bypasses=True)
     declarations = []
     for kind, records in (('Component', snapshot.components), ('Component Seed', snapshot.packages)):
         for identity, record in records.items():
@@ -40,10 +45,7 @@ def prepare_boundaries(selection, snapshot, sources, nodes, python_roots, compon
             parent = record.parent if kind == 'Component' else record.component
             declarations.append((kind, identity, node_key, parent, path, record.ref,
                                  record.fields.get('layer'), *(_json(boundaries.get(key)) for key in ('code', 'state', 'io'))))
-    findings = [(f'module:{problem.path}', problem.path, problem.line, problem.column,
-                 problem.written, problem.status, problem.reason)
-                for problem in problems]
-    return declarations, findings, analyze_state(selection.root, sources, ownership=ownership)
+    return declarations, _findings(ownership, sources, occurrences), analyze_state(selection.root, sources, ownership=ownership)
 
 
 def replace_boundaries(connection, data):

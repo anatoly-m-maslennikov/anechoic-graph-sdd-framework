@@ -121,9 +121,12 @@ def _authored_edges(row, names, inverse):
 
 
 def _project_carrier(row, containment, names, inverse):
-    edges, references = [], {row["ref"]}
+    edges, references, unknown = [], {row["ref"]}, set()
     _add_edge(edges, dict(containment), names, inverse, references)
     for edge in _authored_edges(row, names, inverse):
+        if edge["relation_type"] not in names:
+            unknown.add(edge["relation_type"])
+            continue
         _add_edge(edges, edge, names, inverse, references)
     lens = native_header_view(row["header_json"]).get("context", {}).get("lens")
     if lens is not None and (not isinstance(lens, str) or not lens.strip() or lens != lens.strip()):
@@ -134,7 +137,7 @@ def _project_carrier(row, containment, names, inverse):
         raise ValueError("Invalid native Atom path")
     if row["version"] >= 2**63:
         raise ValueError("Native Atom version exceeds the indexed range")
-    return edges, lens
+    return edges, lens, unknown
 
 
 def snapshot(binding, capture, endpoints, *, manifest_path):
@@ -143,13 +146,15 @@ def snapshot(binding, capture, endpoints, *, manifest_path):
     issues = list(capture.ingestion_issues)
     for row, containment in zip(capture.atoms, capture.containment, strict=True):
         try:
-            projected, lens = _project_carrier(row, containment, names, inverse)
+            projected, lens, unknown = _project_carrier(row, containment, names, inverse)
         except ValueError as error:
             if row["source_path"] == manifest_path:
                 raise
             issues.append(_issue(row["source_path"], "invalid_value", str(error), row["_exact_ref"]))
             continue
         rows.append(row)
+        issues.extend(_issue(row["source_path"], "invalid_value", f"Undeclared native relation: {name}",
+                             row["_exact_ref"]) for name in sorted(unknown))
         edges.extend(projected)
         if lens is not None and row["status_group"] == "Current" and "-S-" in row["ref"]:
             lenses.append([row["ref"], lens])

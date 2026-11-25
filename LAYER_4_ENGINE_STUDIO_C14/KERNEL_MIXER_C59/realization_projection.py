@@ -6,7 +6,7 @@ from . import boundary_tables
 from .component_metrics import realization_component_paths
 from .import_cache import read_import_sources, replace_import_sources
 from .import_tables import replace_imports
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.trace_bindings__shared import is_trace_path, native_trace_snapshot
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.import_graph__shared import is_trace_path, native_trace_snapshot
 from .spec_trace import replace_native_traces
 
 

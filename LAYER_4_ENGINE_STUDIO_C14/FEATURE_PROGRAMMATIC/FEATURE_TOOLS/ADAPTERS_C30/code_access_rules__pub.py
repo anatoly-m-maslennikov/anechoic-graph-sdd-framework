@@ -10,7 +10,7 @@ def module_visibility(stem):
     """Return the visibility of a marked Module filename stem."""
     if stem.endswith(('__shared', '__family_pub', '__internal')):
         return 'shared'
-    if stem.endswith(('__pub', '__public')):
+    if stem.endswith('__public'):
         return 'public'
     return None
 

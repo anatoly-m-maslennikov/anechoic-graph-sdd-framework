@@ -25,3 +25,9 @@ Let the Operator inspect framework execution
 ### Prose Claim
 
 Give the Operator access to relevant framework execution evidence and known limitations.
+
+## Details
+
+### Examples
+
+An Operator inspects a Run record to see its result and any reported errors.

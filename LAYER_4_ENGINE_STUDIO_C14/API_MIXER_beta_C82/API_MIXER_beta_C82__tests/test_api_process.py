@@ -62,7 +62,7 @@ class Peer(BaseHTTPRequestHandler):
         if self.server.kind == "db":
             result.update(manifest_sha256=DIGEST, ready=True, generation="g1", archive_pending=False)
         else:
-            result["startup_replay_pending"] = False
+            result.update(startup_replay_pending=False, watcher_active=True)
         self.reply({"result": result})
 
     def do_POST(self):

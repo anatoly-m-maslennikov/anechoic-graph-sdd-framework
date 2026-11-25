@@ -16,7 +16,10 @@ from LAYER_1_RUNTIME_IMAGES_C81.LAYER_1_RUNTIME_IMAGES_C81__shared import (
 _ROOT = Path(__file__).resolve().parents[3]
 _LOGS = Path(".anechoic_tmp/simple_local_release")
 _SUITE = "FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/test_suite__pub.py"
-_PREFLIGHT_SETUP = "Prepare the pinned Engine test environment and rerun the prerequisite checks."
+_PREFLIGHT_SETUP = (
+    "Prepare the pinned Engine test environment with release.py local --prepare-environment "
+    "--project-root <source-checkout> --run-id <id>."
+)
 
 
 def _gate_command(root, suite_phase, engine, source_bound):
@@ -103,11 +106,13 @@ def _injected_gate(runner, argv, cwd):
 
 
 def _run_gate_command(root, cwd, run_id, suite_phase, argv, runner, log_paths, *, engine,
-                      target, named_file, logged_process, log_directory):
+                      target, named_file, logged_process, log_directory, record_logs):
     if runner is not None and log_directory is None:
         return _injected_gate(runner, argv, cwd)
     with _open_log(root, log_directory, run_id, suite_phase, target, named_file) as log:
         log_paths[suite_phase] = Path(log.name).relative_to(root).as_posix()
+        if record_logs is not None:
+            record_logs(log_paths)
         print(f"Local release tests; output log: {log_paths[suite_phase]}", file=sys.stderr, flush=True)
         if runner is not None:
             result = _injected_gate(runner, argv, cwd)
@@ -124,7 +129,8 @@ def _run_gate_command(root, cwd, run_id, suite_phase, argv, runner, log_paths, *
 
 def run_gate(root, suite_phase, candidate_image, package, package_identity, selection, run_id, runner, log_paths,
              *, verify, target, named_file, logged_process, failed_output, source_root=None,
-             source_bound=False, canary_root=None, log_directory=None, canary_settings_sha256=None):
+             source_bound=False, canary_root=None, log_directory=None, canary_settings_sha256=None,
+             record_logs=None):
     cwd = source_root or root
     source_bound = source_bound or source_root is not None
     engine = (cwd if source_bound else _ROOT) / "LAYER_4_ENGINE_STUDIO_C14"
@@ -141,7 +147,7 @@ def run_gate(root, suite_phase, candidate_image, package, package_identity, sele
         argv += _canary_arguments(cwd, package, selection, run_id, canary_root, canary_settings_sha256)
     result = _run_gate_command(root, cwd, run_id, log_phase, argv, runner, log_paths, engine=engine,
                                target=target, named_file=named_file, logged_process=logged_process,
-                               log_directory=log_directory)
+                               log_directory=log_directory, record_logs=record_logs)
     if getattr(result, "returncode", 1) != 0:
         detail = failed_output(root, run_id, result, log_path=log_paths.get(log_phase))
         if suite_phase == "preflight":

@@ -56,9 +56,9 @@ def check(root):
                 return 1
         print("Static check: import ownership", flush=True)
         ownership = subprocess.run(
-            (sys.executable, "-B", "-m", "LAYER_4_ENGINE_STUDIO_C14.IWE_CONSOLE_C43.APP_WORKBENCH."
+            (sys.executable, "-B", "-m", "IWE_CONSOLE_C43.APP_WORKBENCH."
              "FEATURE_IMPORT_GRAPH_C61.import_ownership", str(root.resolve())),
-            cwd=FRAMEWORK, check=False, timeout=90,
+            cwd=FRAMEWORK / CODE_ROOTS[0], check=False, timeout=90,
         ).returncode
         if ownership:
             return ownership

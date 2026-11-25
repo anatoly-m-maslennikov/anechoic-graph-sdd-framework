@@ -25,3 +25,9 @@ Test costly assumptions before building on them
 ### Prose Claim
 
 Check assumptions that would force substantial rework if wrong.
+
+## Details
+
+### Examples
+
+Before building a large import workflow, a team tests whether the source data contains stable identifiers. The test can reveal a costly mismatch before the team builds on that assumption.

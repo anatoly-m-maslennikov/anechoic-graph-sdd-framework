@@ -100,8 +100,8 @@ def _clear_target(target: Path, *, root: Path, preserve: frozenset[str], label: 
         _clear_owned(child, label=label)
 
 
-def _clear_owned(path: Path, *, label: str) -> None:
-    """Clear one owned entry while retaining ignored descendants unchanged."""
+def _clear_owned(path: Path, *, label: str, remove_finder_metadata: bool = False) -> None:
+    """Clear one owned entry and retain ignored input files by default."""
 
     try:
         mode = path.lstat().st_mode
@@ -115,9 +115,12 @@ def _clear_owned(path: Path, *, label: str) -> None:
     if not stat.S_ISDIR(mode):
         raise LocalReleaseError(f"local-release-{label}-unsafe")
     for child in path.iterdir():
-        if _ignored(child.name):
+        finder_metadata = (
+            remove_finder_metadata and child.name == ".DS_Store" and not child.is_symlink() and child.is_file()
+        )
+        if _ignored(child.name) and not finder_metadata:
             continue
-        _clear_owned(child, label=label)
+        _clear_owned(child, label=label, remove_finder_metadata=remove_finder_metadata)
     try:
         path.rmdir()
     except OSError:

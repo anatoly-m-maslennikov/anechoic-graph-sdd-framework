@@ -106,6 +106,8 @@ async def run_query(database, instance, name, arguments, *, context=None):
         response = await peer(database, "POST", "/database", json={"instance_id": instance, **fields})
         if "error" in response:
             error = response["error"]
+            if isinstance(error, dict) and error.get("code") == "project_graph_pending":
+                return failure("project_graph_pending", error["message"])
             return failure("query_error", str(error.get("message", "Query failed")) if isinstance(error, dict) else "Query failed")
         value = response["result"]
         if name == "query_check":

@@ -15,6 +15,7 @@ class SkipArchivesTests(unittest.TestCase):
         self.binding = {"root": str(root), "control_root": "control", "manifest_path": "manifest.md",
                         "manifest_sha256": "a" * 64, "project_prefix": "AN"}
         self.jobs = orchestrator.GenerationJobs("test", self.binding, "socket", skip_archives=True)
+        self.reuse = {"base_generation": "old", "inputs": {}, "graph_config": None, "endpoints": {}}
         self.jobs.watcher = Mock()
         self.jobs.watcher.capture_epoch.return_value = ("watcher", 1)
         self.jobs.watcher.capture_fence.return_value = True
@@ -30,13 +31,13 @@ class SkipArchivesTests(unittest.TestCase):
             for startup, target, reconciliation in ((True, None, False), (False, None, False),
                                                       (False, "manual", False), (False, None, True)):
                 self.jobs.startup_capture = startup
-                self.jobs._attempt_generation(target, {"base_generation": "old"}, ["control/a.md"],
+                self.jobs._attempt_generation(target, self.reuse, ["control/a.md"],
                                               reconciliation=reconciliation)
         for index, call in enumerate(worker.call_args_list):
             if index in (0, 2):
                 self.assertEqual((None, None), call.args[1:])
             else:
-                self.assertEqual(({"base_generation": "old"}, ["control/a.md"]), call.args[1:])
+                self.assertEqual((self.reuse, ["control/a.md"]), call.args[1:])
             self.assertTrue(call.kwargs["foreground"])
         self.assertTrue(all("archive_pending" not in call.args[1] for call in admit.call_args_list))
         self.assertIsNone(self.jobs.deferred_archive)
@@ -53,12 +54,12 @@ class SkipArchivesTests(unittest.TestCase):
     def test_defensive_archive_delta_forces_foreground_capture(self):
         with (patch.object(self.jobs, "_run_worker", return_value={"snapshot": {}}) as worker,
               patch.object(self.jobs, "_admit_live_result", return_value={"generation": "new"})):
-            self.jobs._attempt_generation(None, {"base_generation": "old"}, ["control/09_archived/a.md"])
+            self.jobs._attempt_generation(None, self.reuse, ["control/09_archived/a.md"])
         self.assertIsNone(worker.call_args.args[2])
         self.assertTrue(worker.call_args.kwargs["foreground"])
 
     def test_off_path_archived_delta_reconciles_before_admission(self):
-        reuse = {"base_generation": "old"}
+        reuse = self.reuse
         delta = {"paths": [["control/__TKT", "AN-T-1--task.md"]],
                  "snapshot": {"atoms": [{"status_group": "Archived"}]}}
         foreground = {"snapshot": {"atoms": []}, "deferred_archive": {

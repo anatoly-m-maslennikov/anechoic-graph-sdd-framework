@@ -113,7 +113,7 @@ def _cleanup_staging(root: Path, staging: Path | None) -> str:
     if staging is None:
         return ""
     try:
-        _clear_owned(staging, label="temporary-package")
+        _clear_owned(staging, label="temporary-package", remove_finder_metadata=True)
     except (LocalReleaseError, OSError):
         pass
     return f"Retained temporary staging: `{staging.relative_to(root).as_posix()}`.\n" if os.path.lexists(staging) else ""

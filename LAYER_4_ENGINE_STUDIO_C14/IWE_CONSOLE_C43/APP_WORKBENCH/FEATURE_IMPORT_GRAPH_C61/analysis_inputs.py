@@ -3,7 +3,7 @@
 from pathlib import PurePosixPath
 
 from .source import _event_path, _git_ignored, _iter_files, _stat_signature
-from .trace_bindings__shared import native_trace_snapshot
+from .trace_bindings import native_trace_snapshot
 
 
 def _read_size(path, expected, *, asset=False):

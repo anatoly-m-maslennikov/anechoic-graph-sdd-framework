@@ -12,17 +12,15 @@ from .analysis_projection import apply_spec_delta, snapshot_sizes
 from .carrier_checkpoint import update_checkpoint
 from .generation import FULL_GENERATION_BODY_LIMIT, GenerationBaseChanged, _digest, replace_native_generation
 from .ingestion_issues import clear_archive_failure, duplicate_dependencies, replace_carrier_issues
+from .pending_graph import replace_pending_graph
 from .native_atoms import stage_atom_rows, validate_native_snapshot, write_staged_atoms
 from .realization_projection import has_table
-
 
 _CARRIER = re.compile(r"([A-Z][A-Z0-9]*-[STPC]-[0-9]+)(@[1-9][0-9]*(?:-draft)?)?[-.].*\.md\Z")
 _EDGE = ("source_kind", "source_ref", "target_kind", "target_ref", "relation_type", "derived")
 
-
 class DeltaReconciliationRequired(ValueError):
     """The retained state cannot safely receive a bounded delta."""
-
 
 def _paths(value):
     if not isinstance(value, list) or not value or len(value) > 1024:
@@ -279,6 +277,8 @@ def native_generation_route(connection, instance_id, manifest_sha256, lock, read
             alternatives = (allowed,) if delta else (allowed, allowed | {"graph", "graph_sha256"},
                                                  allowed | {"graph", "graph_sha256", "reuse"})
             alternatives += tuple(fields | {"carrier_hashes"} for fields in alternatives)
+            if not delta:
+                alternatives += ({"instance_id", "base_generation", "graph", "graph_sha256", "reuse"},)
             if delta:
                 alternatives += (allowed | {"carrier_hashes", "archive_pending"},)
             limit = 64 * 1024 * 1024 if delta else FULL_GENERATION_BODY_LIMIT
@@ -286,7 +286,8 @@ def native_generation_route(connection, instance_id, manifest_sha256, lock, read
             if data["instance_id"] != instance_id:
                 return error_response("foreign_instance", "Instance does not match", 403)
             with lock:
-                generation = (apply_native_delta if delta else replace_native_generation)(connection, data, manifest_sha256)
+                generation = (replace_pending_graph(connection, data) if "snapshot" not in data
+                              else (apply_native_delta if delta else replace_native_generation)(connection, data, manifest_sha256))
             return JSONResponse({"result": {"generation": generation}})
         except GenerationBaseChanged as error:
             return error_response("generation_base_changed", str(error), 409)

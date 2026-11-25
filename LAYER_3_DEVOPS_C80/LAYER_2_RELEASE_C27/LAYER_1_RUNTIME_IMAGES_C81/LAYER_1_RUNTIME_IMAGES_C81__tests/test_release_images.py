@@ -119,6 +119,7 @@ class ReleaseImagesTests(ReleaseImageFixture):
 
         provenance = {**self.provenance, "project_root": str(self.package)}
         def manager(source, temporary, *, project_root, build_provenance, source_provider):
+            (temporary / ".DS_Store").touch()
             self.manager = images.ImageManager(source, project_root=project_root, build_temp_root=temporary,
                                                build_provenance=build_provenance, executor=self.docker,
                                                source_provider=source_provider)
@@ -205,19 +206,22 @@ class ReleaseImagesTests(ReleaseImageFixture):
                 if path.parent != directory:
                     path.parent.rmdir()
 
-    def test_build_removes_finder_metadata_from_the_context(self):
+    def test_build_removes_empty_directories_and_finder_metadata_from_the_context(self):
         manager = self.make_manager()
-        verify = manager._verify_context
 
-        def add_metadata(context, identity):
-            paths = [context / ".DS_Store", context / images.ENGINE / ".DS_Store"]
-            for path in paths:
-                path.write_bytes(b"Finder metadata")
-            verify(context, identity)
-            self.assertFalse(any(path.exists() for path in paths))
+        def populate_context(argv, *, cwd, **kwargs):
+            if argv[:3] == ["docker", "buildx", "prune"]:
+                (cwd / "empty/nested").mkdir(parents=True)
+                (cwd / "metadata-only/nested").mkdir(parents=True)
+                for path in (cwd / ".DS_Store", cwd / images.ENGINE / ".DS_Store", cwd / "metadata-only/nested/.DS_Store"):
+                    path.write_bytes(b"Finder metadata")
+            if argv[:2] == ["docker", "build"]:
+                self.assertFalse((cwd / "empty").exists())
+                self.assertFalse((cwd / "metadata-only").exists())
+            return self.docker(argv, cwd=cwd, **kwargs)
 
-        with patch.object(manager, "_verify_context", side_effect=add_metadata):
-            self.assertEqual(self.image, manager.resolve())
+        manager.executor = populate_context
+        self.assertEqual(self.image, manager.resolve())
         self.assertFalse(any(Path(path).name == ".DS_Store" for path in self.captured))
 
     def test_context_changes_and_wrong_image_labels_fail_closed(self):
