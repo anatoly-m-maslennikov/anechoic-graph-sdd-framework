@@ -19,7 +19,7 @@ APP = Path(__file__).resolve().parents[1]
 import MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared as images  # noqa: E402
 import MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared as image_inputs  # noqa: E402
 import selectors
-from MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_backend import ProjectMcpBackend  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import ProjectMcpBackend  # noqa: E402
 
 
 IMAGE_ID = "sha256:" + "a" * 64

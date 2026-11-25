@@ -8,9 +8,9 @@ context:
   template: component_manifest
   lens: SPEC
 state:
-  status: active
-  version: 55
-  updated_at: "2026-11-23T10:26:33.104737+00:00"
+  status: "active"
+  version: 61
+  updated_at: "2026-11-24T21:13:07.026065+00:00"
 ---
 ## Summary
 
@@ -31,6 +31,15 @@ declare_entity(
         boundaries={
             'code': {
                 'imports': [
+                    'VALIDATE_ATOMS.validate_atoms_workers.validate_atoms_workers__shared.validate_graph_rule_body',
+                    'VALIDATE_ATOMS.validate_atoms_workers.validate_atoms_workers__shared.validated_graph_rule_payload',
+                    'COMPILE_APPLICABLE_METHODOLOGY.methodology_paths__shared.declaration_source_pins',
+                    'COMPILE_APPLICABLE_METHODOLOGY.methodology_paths__shared.DEFAULT_SETTINGS_NAME',
+                    'COMPILE_APPLICABLE_METHODOLOGY.methodology_paths__shared.INSTANCE_SETTINGS_RELATIVE',
+                    'RELEASE_VERSION.RELEASE_VERSION__shared.resolve_methodology_layout',
+                    'RELEASE_VERSION.RELEASE_VERSION__shared.ReleaseInventoryError',
+                    'RELEASE_VERSION.RELEASE_VERSION__shared.persistent_regular_files',
+                    'RELEASE_VERSION.RELEASE_VERSION__shared.refuse_secret_path',
                     'ADAPTERS_C30__shared.ProjectSettingsValueError',
                     'ADAPTERS_C30__shared.control_root',
                     'ADAPTERS_C30__shared.project_identity_prefix',
@@ -45,7 +54,20 @@ declare_entity(
                     'FEATURE_TOOLS__shared.classify_failure',
                     'FEATURE_TOOLS__shared.configured_timezone',
                     'FEATURE_TOOLS__shared.current_timestamp',
+                    'FEATURE_TOOLS__shared.effective_root_container_header',
                     'FEATURE_TOOLS__shared.emit_failure_diagnostic',
+                    'FEATURE_TOOLS__shared.header_scalar',
+                    'FEATURE_TOOLS__shared.LIFECYCLE_TOOLS',
+                    'FEATURE_TOOLS__shared.NativeDefinitionPin',
+                    'FEATURE_TOOLS__shared.NativeWorkflowDefinitionError',
+                    'FEATURE_TOOLS__shared.ProjectMcpBootstrapError',
+                    'FEATURE_TOOLS__shared.bind_native_workflow',
+                    'FEATURE_TOOLS__shared.bind_status_specifications',
+                    'FEATURE_TOOLS__shared.deploy_project_mcp_bootstrap',
+                    'FEATURE_TOOLS__shared.execute_native_lifecycle',
+                    'FEATURE_TOOLS__shared.legacy_settings_to_manifest',
+                    'FEATURE_TOOLS__shared.parse_header',
+                    'FEATURE_TOOLS__shared.report_failure',
                     'FEATURE_TOOLS__shared.make_technical_logger',
                     'FEATURE_TOOLS__shared.operation_error_boundary',
                     'FEATURE_TOOLS__shared.project_identity',
@@ -56,6 +78,12 @@ declare_entity(
                     'FEATURE_TOOLS__shared.runtime_process_boundary_module',
                     'FEATURE_TOOLS__shared.runtime_project_root',
                     'GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared._claims',
+                    'GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared.build_subject_audits',
+                    'GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared.compose_declaration_catalog',
+                    'GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared.render_declarations',
+                    'GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared.render_subject_audit',
+                    'GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared.resolve_relation_authorities',
+                    'GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared.select_model_subjects',
                     'GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared._clause',
                     'GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared._formal_fence',
                     'GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared._rule_groups',
@@ -75,11 +103,15 @@ declare_entity(
                     'GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared.extract_claim_constraints',
                     'GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared.preview_constraints_from_paths',
                     'ADAPTERS_C30__shared.CarrierError',
+                    'ADAPTERS_C30__shared.UniqueSafeLoader',
+                    'ADAPTERS_C30__shared.check_yaml_resources',
                     'ADAPTERS_C30__shared.ParsedCarrier',
                     'ADAPTERS_C30__shared.content_key',
                     'ADAPTERS_C30__shared.content_lines',
                     'ADAPTERS_C30__shared.parse_carrier',
                     'ADAPTERS_C30__shared.parse_content',
+                    'ADAPTERS_C30__shared.unfenced_atx_headings',
+                    'VALIDATE_ATOMS.validate_atoms_workers.validate_atoms_workers__shared.inspect_graph_rule',
                     'ADAPTERS_C30__shared.source_markdown',
                     'ADAPTERS_C30__shared.capture_native',
                     'ADAPTERS_C30__shared.capture_indexed_lifecycle',
@@ -225,6 +257,30 @@ declare_entity(
                     'FEATURE_FORMAL_MODEL_ENGINE.FEATURE_FORMAL_MODEL_ENGINE__shared.verify_packaged_dependencies_check',
                 ],
                 'exports': {
+                    'VALIDATE_ATOMS.validate_atoms_workers.validate_atoms_workers__shared.validate_graph_rule_body': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/VALIDATE_ATOMS/validate_atoms_workers/validate_atoms_workers__tests']},
+                    'VALIDATE_ATOMS.validate_atoms_workers.validate_atoms_workers__shared.validated_graph_rule_payload': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/VALIDATE_ATOMS/validate_atoms_workers/validate_atoms_workers__tests']},
+                    'COMPILE_APPLICABLE_METHODOLOGY.methodology_paths__shared.declaration_source_pins': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/COMPILE_APPLICABLE_METHODOLOGY/COMPILE_APPLICABLE_METHODOLOGY__tests']},
+                    'COMPILE_APPLICABLE_METHODOLOGY.methodology_paths__shared.DEFAULT_SETTINGS_NAME': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/COMPILE_APPLICABLE_METHODOLOGY/COMPILE_APPLICABLE_METHODOLOGY__tests']},
+                    'COMPILE_APPLICABLE_METHODOLOGY.methodology_paths__shared.INSTANCE_SETTINGS_RELATIVE': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/COMPILE_APPLICABLE_METHODOLOGY/COMPILE_APPLICABLE_METHODOLOGY__tests']},
+                    'RELEASE_VERSION.RELEASE_VERSION__shared.resolve_methodology_layout': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/RELEASE_VERSION/RELEASE_VERSION__tests']},
+                    'RELEASE_VERSION.RELEASE_VERSION__shared.ReleaseInventoryError': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/RELEASE_VERSION/RELEASE_VERSION__tests']},
+                    'RELEASE_VERSION.RELEASE_VERSION__shared.persistent_regular_files': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/RELEASE_VERSION/RELEASE_VERSION__tests']},
+                    'RELEASE_VERSION.RELEASE_VERSION__shared.refuse_secret_path': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/RELEASE_VERSION/RELEASE_VERSION__tests']},
+                    'FEATURE_TOOLS__shared.effective_root_container_header': {'private': [
+                        'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ATOM_LIFECYCLE']},
+                    'FEATURE_TOOLS__shared.header_scalar': {'private': [
+                        'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/COMPILE_APPLICABLE_METHODOLOGY',
+                        'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FEATURE_TOOLS__tests']},
+                    'VALIDATE_ATOMS.validate_atoms_workers.validate_atoms_workers__shared.inspect_graph_rule': {'private': [
+                        'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/GENERATE_ENTITY_GRAPH']},
+                    'FEATURE_TOOLS__shared.NativeDefinitionPin': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FEATURE_TOOLS__tests']},
+                    'FEATURE_TOOLS__shared.NativeWorkflowDefinitionError': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FEATURE_TOOLS__tests']},
+                    'FEATURE_TOOLS__shared.ProjectMcpBootstrapError': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FEATURE_TOOLS__tests']},
+                    'FEATURE_TOOLS__shared.bind_native_workflow': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FEATURE_TOOLS__tests']},
+                    'FEATURE_TOOLS__shared.bind_status_specifications': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FEATURE_TOOLS__tests']},
+                    'FEATURE_TOOLS__shared.deploy_project_mcp_bootstrap': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FEATURE_TOOLS__tests']},
+                    'FEATURE_TOOLS__shared.legacy_settings_to_manifest': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FEATURE_TOOLS__tests']},
+                    'FEATURE_TOOLS__shared.parse_header': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FEATURE_TOOLS__tests']},
                     'FEATURE_TOOLS__shared.ProjectSelection': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ATOM_LIFECYCLE', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FEATURE_TOOLS__tests']},
                     'FEATURE_TOOLS__shared.SETTINGS_PATH': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/COMPILE_APPLICABLE_METHODOLOGY', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/COMPILE_APPLICABLE_METHODOLOGY/COMPILE_APPLICABLE_METHODOLOGY__tests', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/GENERATE_ENTITY_GRAPH']},
                     'FEATURE_TOOLS__shared.TechnicalDiagnosticLogger': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FEATURE_TOOLS__tests']},
@@ -246,6 +302,12 @@ declare_entity(
                     'FEATURE_TOOLS__shared.runtime_process_boundary_module': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FEATURE_TOOLS__tests']},
                     'FEATURE_TOOLS__shared.runtime_project_root': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ATOM_LIFECYCLE', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FEATURE_TOOLS__tests']},
                     'GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared._claims': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/GENERATE_ENTITY_GRAPH/GENERATE_ENTITY_GRAPH__tests']},
+                    'GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared.build_subject_audits': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/GENERATE_ENTITY_GRAPH/GENERATE_ENTITY_GRAPH__tests']},
+                    'GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared.compose_declaration_catalog': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/GENERATE_ENTITY_GRAPH/GENERATE_ENTITY_GRAPH__tests']},
+                    'GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared.render_declarations': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/GENERATE_ENTITY_GRAPH/GENERATE_ENTITY_GRAPH__tests']},
+                    'GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared.render_subject_audit': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/GENERATE_ENTITY_GRAPH/GENERATE_ENTITY_GRAPH__tests']},
+                    'GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared.resolve_relation_authorities': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/GENERATE_ENTITY_GRAPH/GENERATE_ENTITY_GRAPH__tests']},
+                    'GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared.select_model_subjects': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/GENERATE_ENTITY_GRAPH/GENERATE_ENTITY_GRAPH__tests']},
                     'GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared._clause': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/GENERATE_ENTITY_GRAPH/GENERATE_ENTITY_GRAPH__tests']},
                     'GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared._formal_fence': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/GENERATE_ENTITY_GRAPH/GENERATE_ENTITY_GRAPH__tests']},
                     'GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared._rule_groups': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/GENERATE_ENTITY_GRAPH/GENERATE_ENTITY_GRAPH__tests']},
@@ -332,10 +394,12 @@ declare_entity(
                     'FEATURE_TOOLS__pub.ProjectSelectionError': 'public',
                     'FEATURE_TOOLS__shared.declared_release_entrypoint': {'private': ['C45']},
                     'FEATURE_TOOLS__shared.discover_native_project': 'public',
-                    'FEATURE_TOOLS__shared.LIFECYCLE_TOOLS': {'private': ['C59']},
+                    'FEATURE_TOOLS__shared.LIFECYCLE_TOOLS': {'private': ['C59',
+                        'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FEATURE_TOOLS__tests']},
                     'FEATURE_TOOLS__shared.bind_native_runtime': {'private': ['C59']},
                     'FEATURE_TOOLS__shared.indexed_draft_runner': {'private': ['C69']},
-                    'FEATURE_TOOLS__shared.execute_native_lifecycle': {'private': ['C59']},
+                    'FEATURE_TOOLS__shared.execute_native_lifecycle': {'private': ['C59',
+                        'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FEATURE_TOOLS__tests']},
                     'FEATURE_TOOLS__shared.is_native_control_name': 'public',
                     'FEATURE_TOOLS__shared.mcp_tool_blacklist': 'public',
                     'FEATURE_TOOLS__shared.rebind_native_selection': 'public',

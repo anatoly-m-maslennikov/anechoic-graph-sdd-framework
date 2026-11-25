@@ -12,6 +12,8 @@ from unittest.mock import patch
 
 from ORCHESTRATOR_beta_C68.ORCHESTRATOR_beta_C68__shared import GenerationJobs
 
+from .ORCHESTRATOR_beta_C68__tests__shared import RunFixture
+
 MODULE = "ORCHESTRATOR_beta_C68.ORCHESTRATOR_beta_C68__shared"
 WARM_BROKER = """
 import os
@@ -70,7 +72,6 @@ Changed ticket.
     reuse = {"base_generation": "base", "inputs": {}, "graph_config": {},
              "endpoints": {"CONTAINED_BY": [{"inverse_alias": "CONTAINS"}, False], "CONTAINS": [{}, True]}}
     return binding, change, reuse
-
 
 class WorkerAbortTests(unittest.TestCase):
     def test_warm_abort_reaps_child_and_preserves_broker(self):
@@ -143,6 +144,7 @@ class WorkerAbortTests(unittest.TestCase):
             def spawn(*args, **kwargs):
                 return real_popen([sys.executable, "-c", "import time; time.sleep(60)"], **kwargs)
             with (patch("ORCHESTRATOR_beta_C68.generation_worker.worker_request", return_value={}),
+                  patch("ORCHESTRATOR_beta_C68.generation_worker.read_accepted_model", return_value={}),
                   patch("ORCHESTRATOR_beta_C68.generation_worker.subprocess.Popen", side_effect=spawn),
                   patch(MODULE + ".admit_generation") as admit,
                   patch(MODULE + ".Flow.finish")):
@@ -163,7 +165,7 @@ class WorkerAbortTests(unittest.TestCase):
                 self.assertEqual(409, jobs.abort({"instance_id": "instance", "run_id": run_id})[0])
                 thread.join(5)
                 self.assertFalse(thread.is_alive())
-                self.assertEqual(("aborted", run_id), (jobs.latest["state"], jobs.latest["run_id"]))
+                self.assertEqual(("aborted", run_id), (jobs.latest.state, jobs.latest.run_id))
                 self.assertIsNone(jobs.status()["active"])
                 admit.assert_not_called()
 
@@ -172,8 +174,8 @@ class WorkerAbortTests(unittest.TestCase):
             binding = {"root": directory, "control_root": "control", "manifest_path": "m",
                        "manifest_sha256": "a" * 64, "project_prefix": "AN"}
             jobs = GenerationJobs("instance", binding, "/tmp/unused")
-            jobs.active = {"run_id": "run"}
-            jobs.lifecycle_job = {"event": threading.Event()}
+            jobs.active = RunFixture(state="running", started_at=0, run_id="run")
+            jobs.lifecycle_job = object()
             self.assertEqual(409, jobs.abort({"instance_id": "instance", "run_id": "run"})[0])
             jobs.lifecycle_job = None
             self.assertEqual(409, jobs.abort({"instance_id": "instance", "run_id": "run"})[0])

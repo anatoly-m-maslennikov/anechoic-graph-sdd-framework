@@ -3,7 +3,7 @@ import subprocess
 from tempfile import TemporaryDirectory
 import unittest
 
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.source import _git_ignored
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.import_graph__shared import git_ignored
 
 
 class GitIgnoreTests(unittest.TestCase):
@@ -32,5 +32,5 @@ class GitIgnoreTests(unittest.TestCase):
                 )
                 self.assertIn(result.returncode, (0, 1))
                 expected = {item.decode() for item in result.stdout.split(b"\0") if item}
-                self.assertEqual(_git_ignored(root, names), expected)
-            self.assertEqual(_git_ignored(base, names), set())
+                self.assertEqual(git_ignored(root, names), expected)
+            self.assertEqual(git_ignored(base, names), set())

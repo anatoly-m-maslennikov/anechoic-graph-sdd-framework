@@ -3,10 +3,11 @@
 from collections.abc import Iterator
 from contextlib import contextmanager
 from contextvars import ContextVar
-from dataclasses import dataclass
+from pydantic import ConfigDict
+from pydantic.dataclasses import dataclass
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True, slots=True, config=ConfigDict(strict=True, extra="forbid"))
 class RuntimeRequestContext:
     session_id: str | None = None
 

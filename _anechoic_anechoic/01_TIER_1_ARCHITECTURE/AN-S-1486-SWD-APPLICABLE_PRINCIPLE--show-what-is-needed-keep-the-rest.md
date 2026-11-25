@@ -26,3 +26,9 @@ Show what is needed; keep the rest
 ### Prose Claim
 
 Show enough information for the current task without unnecessary context. Keep other retained information recoverable.
+
+## Details
+
+### Examples
+
+A task view shows the decision and its immediate options while the Project record retains the earlier analysis. The Operator can decide quickly and retrieve the analysis when needed.

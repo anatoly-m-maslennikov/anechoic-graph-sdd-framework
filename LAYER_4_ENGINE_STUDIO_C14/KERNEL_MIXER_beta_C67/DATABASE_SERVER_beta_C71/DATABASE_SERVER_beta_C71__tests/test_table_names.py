@@ -7,22 +7,24 @@ import unittest
 
 import duckdb
 
-from ..DATABASE_SERVER_beta_C71__shared import open_database
-from ..query_results import QueryResults
-from .DATABASE_SERVER_beta_C71__tests__shared import PIN
+from .DATABASE_SERVER_beta_C71__tests__shared import BINDING, PIN, _query, _server
 
 
 class TableNamesTest(unittest.TestCase):
     def test_open_database_upgrades_previous_prefix_names(self):
         with TemporaryDirectory(prefix="ane-db-names-", dir="/tmp") as directory:
             path = Path(directory).resolve() / "first-prefix.duckdb"
-            with open_database(str(path), PIN, "instance") as connection:
+            with _server(path):
+                pass
+            with duckdb.connect(str(path)) as connection:
                 connection.execute("CREATE TABLE mrt_import_read_issues (relative_path VARCHAR, error_message VARCHAR)")
                 connection.execute("INSERT INTO mrt_import_read_issues VALUES ('bad.py', 'failed to read')")
                 connection.execute("CREATE VIEW import_read_issues AS SELECT * FROM mrt_import_read_issues")
                 connection.execute("CREATE TABLE ops_carrier_hashes (carrier_sha256_by_path VARCHAR)")
                 connection.execute("INSERT INTO ops_carrier_hashes VALUES (?)", [json.dumps({"a.py": "a" * 64})])
-            with open_database(str(path), PIN, "instance") as connection:
+            with _server(path):
+                pass
+            with duckdb.connect(str(path), read_only=True) as connection:
                 for name in ("mrt_diag_import_read_issues", "mrt_import_read_issues", "import_read_issues"):
                     self.assertEqual([("bad.py", "failed to read")],
                                      connection.execute(f"SELECT * FROM {name}").fetchall())
@@ -40,20 +42,16 @@ class TableNamesTest(unittest.TestCase):
             self._write_legacy_database(path)
             path.chmod(0o600)
 
-            connection = open_database(str(path), PIN, "instance")
-            try:
+            with _server(path) as client:
+                self._assert_selection_accepts_both_names(client)
+            with duckdb.connect(str(path), read_only=True) as connection:
                 self._assert_canonical_rows(connection)
                 self._assert_public_compatibility(connection)
-                self._assert_selection_accepts_both_names(connection)
-            finally:
-                connection.close()
-
-            reopened = open_database(str(path), PIN, "instance")
-            try:
-                self._assert_canonical_rows(reopened)
-                self._assert_public_compatibility(reopened)
-            finally:
-                reopened.close()
+            with _server(path):
+                pass
+            with duckdb.connect(str(path), read_only=True) as connection:
+                self._assert_canonical_rows(connection)
+                self._assert_public_compatibility(connection)
 
     @staticmethod
     def _write_legacy_database(path):
@@ -116,12 +114,15 @@ class TableNamesTest(unittest.TestCase):
             connection.execute("SELECT * FROM flow_events").fetchall(),
         )
 
-    def _assert_selection_accepts_both_names(self, connection):
+    def _assert_selection_accepts_both_names(self, client):
         for sql in ("SELECT reference FROM atoms", "SELECT reference FROM mrt_atoms"):
             for target in ("atoms", "mrt_atoms"):
-                queries = QueryResults()
-                query_id = queries.run(connection, sql, 10)["query_id"]
-                self.assertEqual({query_id}, set(queries._selection(connection, target)))
+                response = _query(client, sql, page_size=10)
+                self.assertEqual(200, response.status_code, response.text)
+                query_id = response.json()["result"]["query_id"]
+                rebuilt = client.post('/results/rebuild', json={**BINDING, 'target': target})
+                self.assertEqual(200, rebuilt.status_code, rebuilt.text)
+                self.assertIn(query_id, rebuilt.json()['result']['result_ids'])
 
 
 if __name__ == "__main__":

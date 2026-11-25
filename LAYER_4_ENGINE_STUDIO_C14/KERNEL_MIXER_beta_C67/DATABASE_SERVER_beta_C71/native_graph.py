@@ -22,9 +22,13 @@ def replace_native_graph(connection, relation_types, components):
         )
 
 
-def native_edges(connection, reference):
+def native_edges(connection, reference, realization=False):
     edges = []
     for index, label in connection.execute("SELECT ordinal, name FROM native_graph.int_labels ORDER BY ordinal").fetchall():
+        if realization and label.casefold() == "imports":
+            if connection.execute(f"SELECT 1 FROM native_graph.int_relation_{int(index)} LIMIT 1").fetchone():
+                raise ValueError("Native IMPORTS relations conflict with realization Imports graph label")
+            continue
         quoted = '"' + label.replace('"', '""') + '"'
         edges.append(f"native_graph.int_relation_{int(index)} SOURCE KEY(source_kind, source_ref) REFERENCES {reference}(kind, ref) "
                      f"DESTINATION KEY(target_kind, target_ref) REFERENCES {reference}(kind, ref) LABEL {quoted}")

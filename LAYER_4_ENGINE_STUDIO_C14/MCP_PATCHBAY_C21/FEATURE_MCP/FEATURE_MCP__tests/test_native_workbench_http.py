@@ -16,8 +16,8 @@ from starlette.applications import Starlette
 from . import test_native_query_stdio as fixture
 from .native_workbench_http_cases import NativeWorkbenchStateCases
 from .native_query_test_support import create_native_gateway
-from MCP_PATCHBAY_C21.FEATURE_MCP.direct_gateway import startup_selection
-from MCP_PATCHBAY_C21.FEATURE_MCP.workbench_web import routes
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import select_runtime_project as startup_selection
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import workbench_routes as routes
 
 
 class NativeWorkbenchHttpTests(NativeWorkbenchStateCases, unittest.IsolatedAsyncioTestCase):

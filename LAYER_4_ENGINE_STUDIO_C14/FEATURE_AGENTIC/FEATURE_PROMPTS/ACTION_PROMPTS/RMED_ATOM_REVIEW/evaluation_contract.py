@@ -4,6 +4,8 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any
 
+from pydantic import BaseModel
+
 from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.review_context import ReviewContext, probability, strings, text
 from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.review_evidence import validate_obligations, validate_subject_inventory
 from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.report_quality import validate_report_quality
@@ -24,6 +26,15 @@ LOCAL_GROUPS = {
 
 
 WRITING_GROUPS = {"writing": ("writing",), **{k: v for k, v in LOCAL_GROUPS.items() if k != "cce"}}
+
+
+class EvaluationSummary(BaseModel):
+    atoms: int = 0
+    fully_passed_atoms: int = 0
+    atoms_with_confirmed_findings: int = 0
+    atoms_with_coverage_gaps: int = 0
+    check_counts: dict[str, dict[str, int]]
+    review_profile: str | None = None
 
 
 def groups_for(contract_version: int) -> dict[str, tuple[str, ...]]:
@@ -210,16 +221,14 @@ def summarize_evaluations(evaluations: list[dict[str, Any]], *, context: ReviewC
     instead of turning partial coverage into either a pass or invented errors.
     Require one evaluation per source; callers select the intended attempt.
     """
-    summary: dict[str, Any] = {
-        "atoms": 0, "fully_passed_atoms": 0, "atoms_with_confirmed_findings": 0,
-        "atoms_with_coverage_gaps": 0, "check_counts": {
+    summary = EvaluationSummary(
+        check_counts={
             check: {"passed": 0, "failed": 0, "blocked": 0,
                     "atoms_with_findings": 0, "findings": 0}
             for checks in groups_for(context.report_contract).values() for check in checks
         },
-    }
-    if context.report_contract in (6, 7):
-        summary['review_profile'] = 'atom_local'
+        review_profile="atom_local" if context.report_contract in (6, 7) else None,
+    )
     seen: set[str] = set()
     for evaluation in evaluations:
         if not isinstance(evaluation, dict) or not isinstance(evaluation.get("parts"), list):
@@ -232,13 +241,13 @@ def summarize_evaluations(evaluations: list[dict[str, Any]], *, context: ReviewC
         if path in seen:
             raise ValueError("summary contains repeated source path")
         seen.add(path)
-        summary["atoms"] += 1
-        summary["fully_passed_atoms"] += merged["result"] == "passed"
-        summary["atoms_with_coverage_gaps"] += bool(merged["coverage_gaps"])
-        summary["atoms_with_confirmed_findings"] += any(c["findings"] for c in merged["checks"])
+        summary.atoms += 1
+        summary.fully_passed_atoms += merged["result"] == "passed"
+        summary.atoms_with_coverage_gaps += bool(merged["coverage_gaps"])
+        summary.atoms_with_confirmed_findings += any(c["findings"] for c in merged["checks"])
         for check in merged["checks"]:
-            counts = summary["check_counts"][check["id"]]
+            counts = summary.check_counts[check["id"]]
             counts[check["status"]] += 1
             counts["atoms_with_findings"] += bool(check["findings"])
             counts["findings"] += len(check["findings"])
-    return summary
+    return summary.model_dump(exclude_none=True)

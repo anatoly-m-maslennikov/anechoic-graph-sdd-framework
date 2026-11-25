@@ -4,7 +4,7 @@ import hashlib
 import json
 from pathlib import Path
 import unittest
-from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.continuation import checkpoint_sha256, next_action, progress_sha256
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared import checkpoint_sha256, next_action, progress_sha256
 
 
 def pin(path, text="bytes"):

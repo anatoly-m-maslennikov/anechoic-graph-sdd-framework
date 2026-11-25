@@ -1,0 +1,28 @@
+{
+  "title": "Release canary MCP backend coupling",
+  "invariant": "The candidate canary initializes public MCP directly without importing the Engine MCP backend.",
+  "scope": "Recognized canary AST patterns: candidate call path, backend import and health call, or release-owned loopback MCP initialization. This does not establish runtime failure or Docker behavior. Unsupported probe shapes are unresolved.",
+  "before": {
+    "revision": "c42d315338167bcf419be33e974ea46895389661",
+    "source": "LAYER_5_FRAMEWORK_DELIVERY/RELEASE_VERSION/release_canary.py",
+    "fixture": "before.py.txt",
+    "sha256": "1d4d742b0cd0613e24bdbf270f88cc6ab9ee2244a026baa6e1b75dfeea8e67a7"
+  },
+  "fixed": {
+    "revision": "aaf926d0a855dea26b5dea52591e5ae92c3aa4ee",
+    "source": "LAYER_5_FRAMEWORK_DELIVERY/RELEASE_VERSION/release_canary.py",
+    "fixture": "fixed.py.txt",
+    "sha256": "9a9131980e7b1cce85521e471cb0f922b04057420aaead59eeda776b8aaaa6f8"
+  },
+  "checks": [
+    {
+      "file": "before.lean",
+      "stdout_suffix": "false\n"
+    },
+    {
+      "file": "fixed.lean",
+      "stdout_suffix": "true\n"
+    }
+  ],
+  "analyzer": "analyze.py"
+}

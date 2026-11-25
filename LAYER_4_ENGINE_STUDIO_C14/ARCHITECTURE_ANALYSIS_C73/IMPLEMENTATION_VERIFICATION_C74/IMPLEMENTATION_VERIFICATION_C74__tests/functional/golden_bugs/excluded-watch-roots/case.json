@@ -1,0 +1,23 @@
+{
+  "title": "Excluded top-level import graph watch roots",
+  "invariant": "When the project root has a directory exclusion filter, an excluded top-level directory is not covered by a recursive watch, and an eligible included top-level directory is covered.",
+  "scope": "Historical SourceWatcher constructor and start scheduling snippets. The Lean witness models the recursive coverage decision for a top-level child; it does not prove Python-to-Lean equivalence, nested exclusions, runtime delivery, thread counts, or performance.",
+  "before": {
+    "revision": "a3700ec7ebaf5d067cf7cf2bf73c2b41470844c3",
+    "source": "LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/source_watcher.py",
+    "fixture": "before.py.txt",
+    "sha256": "48f27d656ece8b1c82247055beff17b250928ec4c5ede91ead2877fe58149de6"
+  },
+  "fixed": {
+    "revision": "2eca8dd38d582433c5428c54210482ebc9546f75",
+    "source": "LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/source_watcher.py",
+    "fixture": "fixed.py.txt",
+    "sha256": "3a85eb21840f43a2c4c101f2a8e40a1ae39614779ee73c2a082b845a9292dfd7"
+  },
+  "checks": [
+    {
+      "file": "regression.lean"
+    }
+  ],
+  "analyzer": "analyze.py"
+}

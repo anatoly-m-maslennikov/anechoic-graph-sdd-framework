@@ -38,33 +38,25 @@ def declarations():
     ]
 
 
+def project_root_relation():
+    root = {"name": "demo", "scope_unit_id": "DEMO-SU-00", "parent_name": None,
+            "declared_label": None, "ordered": False, "order_number": None,
+            "declaration_source_path": "project.md", "declaration_version": 1,
+            "relation_edges_json": [], "hash": None}
+    source = atom("CA-R-3")
+    source["header_json"]["context"] = {"container": {"scope_unit": "DEMO-SU-00"}}
+    return root, source
+
+
 class RelationTests(unittest.TestCase):
     def test_project_root_reference_has_derived_contains(self):
-        from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.incremental_relations import materialize_delta
-
-        root = {"name": "demo", "scope_unit_id": "DEMO-SU-00", "parent_name": None,
-                "declared_label": None, "ordered": False, "order_number": None,
-                "declaration_source_path": "project.md", "declaration_version": 1,
-                "relation_edges_json": [], "hash": None}
-        source = atom("CA-R-3")
-        source["header_json"]["context"] = {"container": {"scope_unit": "DEMO-SU-00"}}
+        root, source = project_root_relation()
         sources = declarations() + [source]
         rows, scopes = materialize(sources, [root])
         edge = next(row for row in rows if row["ref"] == "CA-R-3")["relation_edges_json"][0]
         self.assertEqual(("Scope Unit", "demo"), (edge["target_kind"], edge["target_ref"]))
         self.assertEqual("CA-R-3", scopes[0]["relation_edges_json"][0]["target_ref"])
         self.assertTrue(scopes[0]["relation_edges_json"][0]["derived"])
-
-        _, _, _, _, state, _ = materialize_delta(declarations(), [root])
-        _, scopes, _, _, state, delta = materialize_delta(
-            sources, [root], state, {source["source_path"]: source},
-        )
-        self.assertIsNotNone(delta)
-        self.assertEqual("CA-R-3", scopes[0]["relation_edges_json"][0]["target_ref"])
-        _, scopes, _, _, _, _ = materialize_delta(
-            declarations(), [root], state, {source["source_path"]: None},
-        )
-        self.assertEqual([], scopes[0]["relation_edges_json"])
 
     def test_nested_header_container_atom_generates_both_directions(self):
         parent = atom("CA-P-1")

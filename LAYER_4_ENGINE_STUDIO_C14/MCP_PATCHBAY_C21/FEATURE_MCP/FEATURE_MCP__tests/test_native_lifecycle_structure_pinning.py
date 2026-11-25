@@ -7,9 +7,6 @@ import unittest
 
 import yaml
 
-MCP = Path(__file__).resolve().parents[1]
-PROGRAMMATIC = MCP.parents[1] / 'FEATURE_PROGRAMMATIC'
-
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import capture_native
 
 
@@ -85,6 +82,7 @@ declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Te
 
         class Capture:
             versions = capture.versions
+            carrier_hashes = capture.carrier_hashes
             errors = capture.errors
             ingestion_issues = capture.ingestion_issues
             containment = capture.containment

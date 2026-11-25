@@ -4,15 +4,45 @@ from hashlib import sha256
 import json
 import re
 
+from pydantic import BaseModel, ConfigDict, ValidationError, field_validator
+
 from .analysis_projection import replace_spec, snapshot_sizes
 from .carrier_checkpoint import update_checkpoint
-from .ingestion_issues import clear_issues
+from .ingestion_issues import clear_issues, replace_carrier_issues
 from .native_atoms import replace_native_atoms, validate_native_snapshot
 from .native_graph import replace_native_graph
 from .realization_projection import has_table, replace, restore_property_graph, validate
 from .table_names import sync_query_views
+from .project_structure import replace_structure
+from .model_projection import replace_model_diagnostics, replace_model_projection, validate_model_diagnostics
+
+FULL_GENERATION_BODY_LIMIT = 128 * 1024 * 1024
 
 _HEX = re.compile(r"[0-9a-f]{64}\Z")
+
+
+
+class _ReuseInputs(BaseModel):
+    model_config = ConfigDict(strict=True, extra="forbid")
+
+    manifest: str
+    graph: str
+    carrier_schema: str | None = None
+
+    @field_validator("manifest", "graph", "carrier_schema", mode="before")
+    @classmethod
+    def validate_digest(cls, value, info):
+        if not isinstance(value, str) or (info.field_name != "graph" or value != "disabled") and _HEX.fullmatch(value) is None:
+            raise ValueError("Invalid reuse witness")
+        return value
+
+
+class _ReuseWitness(BaseModel):
+    model_config = ConfigDict(strict=True, extra="forbid")
+
+    inputs: _ReuseInputs
+    graph_config: dict | None
+    endpoints: dict
 
 
 def _legacy_atoms(snapshot, manifest_sha256):
@@ -82,36 +112,32 @@ def _validate_generation(data, manifest_sha256):
     if native:
         if _digest(snapshot) != receipt["snapshot_sha256"]:
             raise ValueError("Native snapshot digest mismatch")
-        validate_native_snapshot(snapshot, manifest_sha256)
+        records = validate_native_snapshot(snapshot, manifest_sha256, descriptor["bindings"])
         endpoints = descriptor["bindings"].get("endpoints")
         if not isinstance(endpoints, dict) or set(endpoints) != set(snapshot["relation_types"]):
             raise ValueError("Snapshot relation types differ from the admitted Model")
     else:
         _legacy_atoms(snapshot, manifest_sha256)
+        records = None
     graph = data["graph"]
     if _digest(graph) != receipt["graph_sha256"]:
         raise ValueError("Graph digest mismatch")
     components = {"C00", *s["components"]}
-    return native, snapshot, model, structure, validate(graph, components), components
+    return native, snapshot, model, structure, validate(graph, components), components, records
 
 
 def _write_reuse(connection, data, model):
     witness = data.get("reuse")
     if witness is not None:
-        if (not isinstance(witness, dict) or set(witness) != {"inputs", "graph_config", "endpoints"}
-                or not isinstance(witness["inputs"], dict)
-                or set(witness["inputs"]) - {"carrier_schema"} != {"manifest", "graph"}
-                or not isinstance(witness["inputs"]["manifest"], str)
-                or _HEX.fullmatch(witness["inputs"]["manifest"]) is None
-                or not isinstance(witness["inputs"]["graph"], str)
-                or (witness["inputs"]["graph"] != "disabled" and _HEX.fullmatch(witness["inputs"]["graph"]) is None)
-                or ("carrier_schema" in witness["inputs"] and
-                    (not isinstance(witness["inputs"]["carrier_schema"], str)
-                     or _HEX.fullmatch(witness["inputs"]["carrier_schema"]) is None))
-                or not (witness["graph_config"] is None or isinstance(witness["graph_config"], dict))
-                or not isinstance(witness["endpoints"], dict)
-                or witness["endpoints"] != json.loads(model, object_pairs_hook=_unique)["bindings"].get("endpoints")):
+        if not isinstance(witness, dict) or not isinstance(witness.get("inputs"), dict):
             raise ValueError("Invalid reuse witness")
+        try:
+            record = _ReuseWitness.model_validate(witness)
+        except ValidationError as error:
+            raise ValueError("Invalid reuse witness") from error
+        if record.endpoints != json.loads(model, object_pairs_hook=_unique)["bindings"].get("endpoints"):
+            raise ValueError("Invalid reuse witness")
+        witness = record.model_dump(exclude_unset=True)
     elif "reuse" in data:
         raise ValueError("Invalid reuse witness")
     connection.execute("CREATE TABLE IF NOT EXISTS ops_generation_reuse (witness VARCHAR)")
@@ -132,38 +158,50 @@ def _native_graph_payload(data, components, identity):
     return graph
 
 
+def _replace_snapshot(connection, native, snapshot, components, records):
+    if native:
+        replace_native_atoms(connection, snapshot, *records)
+        replace_native_graph(connection, snapshot["relation_types"], components)
+    else:
+        connection.execute("DELETE FROM mrt_atoms")
+        if atoms := snapshot["atoms"]:
+            connection.executemany("INSERT INTO mrt_atoms VALUES (?, ?)", [(a["reference"], a["summary"]) for a in atoms])
+
+
 def replace_generation(connection, data, manifest_sha256, *, stage_refresh=None):
-    native, snapshot, model, structure, graph, components = _validate_generation(data, manifest_sha256)
+    native, snapshot, model, structure, graph, components, records = _validate_generation(data, manifest_sha256)
+    diagnostics = (validate_model_diagnostics(data["model_diagnostics"], json.loads(model)["model_sha256"])
+                   if "model_diagnostics" in data else None)
     pending = data.get("archive_pending", False)
     if type(pending) is not bool or (pending and (not native or "carrier_hashes" not in data
-            or any(row["status_group"] == "Archived" for row in snapshot["atoms"]))):
+            or any(row.status_group == "Archived" for row in records[0]))):
         raise ValueError("Invalid pending archive generation")
     identity = {"receipt": data["receipt"], "snapshot": snapshot}
     if pending:
         identity["archive_pending"] = True
+    if diagnostics is not None:
+        identity["model_diagnostics"] = diagnostics
     generation = _digest(identity)
     if not native and has_table(connection, "main", "mrt_atom_graph_relations"):
         raise ValueError("Cannot replace a native generation with the legacy snapshot format")
     connection.execute("BEGIN TRANSACTION")
     try:
         connection.execute("DROP PROPERTY GRAPH IF EXISTS anechoic")
-        if native:
-            replace_native_atoms(connection, snapshot)
-            replace_native_graph(connection, snapshot["relation_types"], components)
-        else:
-            connection.execute("DELETE FROM mrt_atoms")
-            if atoms := snapshot["atoms"]:
-                connection.executemany("INSERT INTO mrt_atoms VALUES (?, ?)", [(a["reference"], a["summary"]) for a in atoms])
+        _replace_snapshot(connection, native, snapshot, components, records)
         replace(connection, graph, components)
         if native and has_table(connection, "main", "biz_architecture_spec_metrics"):
             replace_spec(connection, snapshot_sizes(snapshot))
         connection.execute("DELETE FROM ops_generation")
+        replace_model_projection(connection, json.loads(model, object_pairs_hook=_unique))
+        if diagnostics is not None:
+            replace_model_diagnostics(connection, diagnostics)
+        replace_structure(connection, structure)
         connection.execute("INSERT INTO ops_generation VALUES (?, ?, ?)", [generation, model, structure])
         from .archive_generation import set_archive_pending
         set_archive_pending(connection, pending)
         _write_reuse(connection, data, model)
         update_checkpoint(connection, data)
-        clear_issues(connection, "atom")
+        replace_carrier_issues(connection, snapshot, archive_pending=pending)
         clear_issues(connection, "build")
         sync_query_views(connection)
         captured = stage_refresh() if stage_refresh is not None else None
@@ -184,8 +222,8 @@ def _finish_native_checkpoint(connection, data):
 
     set_archive_pending(connection, False)
     update_checkpoint(connection, data)
-    for source in ("archive", "atom", "build"):
-        clear_issues(connection, source)
+    replace_carrier_issues(connection, data["snapshot"])
+    clear_issues(connection, "build")
 
 
 def replace_native_generation(connection, data, manifest_sha256):
@@ -202,8 +240,9 @@ def replace_native_generation(connection, data, manifest_sha256):
         snapshot, digest = data["snapshot"], data["snapshot_sha256"]
         if not isinstance(digest, str) or _HEX.fullmatch(digest) is None or _digest(snapshot) != digest:
             raise ValueError("Native snapshot digest mismatch")
-        validate_native_snapshot(snapshot, manifest_sha256)
-        endpoints = json.loads(model, object_pairs_hook=_unique)["bindings"].get("endpoints")
+        bindings = json.loads(model, object_pairs_hook=_unique)["bindings"]
+        records = validate_native_snapshot(snapshot, manifest_sha256, bindings)
+        endpoints = bindings.get("endpoints")
         if not isinstance(endpoints, dict) or set(endpoints) != set(snapshot["relation_types"]):
             raise ValueError("Snapshot relation types differ from the admitted Model")
         components = {"C00", *json.loads(structure, object_pairs_hook=_unique)["components"]}
@@ -212,7 +251,7 @@ def replace_native_generation(connection, data, manifest_sha256):
         generation = _digest(identity)
         connection.execute("DROP PROPERTY GRAPH IF EXISTS anechoic")
         graph_dropped = True
-        replace_native_atoms(connection, snapshot)
+        replace_native_atoms(connection, snapshot, *records)
         replace_native_graph(connection, snapshot["relation_types"], components)
         if graph is None:
             restore_property_graph(connection)

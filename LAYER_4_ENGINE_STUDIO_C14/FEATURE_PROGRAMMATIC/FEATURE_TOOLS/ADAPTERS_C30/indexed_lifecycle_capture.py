@@ -1,16 +1,21 @@
 """Build bounded lifecycle capture from indexed carrier evidence."""
-from dataclasses import dataclass, field
+from dataclasses import field
 from pathlib import PurePosixPath
 import os
 import re
 import stat
 from typing import Any
 
+from pydantic import field_validator
+from pydantic.dataclasses import dataclass
+
 from .ADAPTERS_C30__pub import ReadContext, open_regular
 from .atom_reference__pub import derive_atom_ref
 from .native_carrier_header__pub import native_header_view
 from .native_carrier_placement__pub import project_goal_filename
-from .native_source_rows__pub import NativeCapture, CURRENT_STATUSES, _container, capture_native
+from .native_source_rows__pub import (
+    NativeCapture, CURRENT_STATUSES, _container, _preserve_capture_data, capture_native,
+)
 
 
 @dataclass(frozen=True)
@@ -18,6 +23,8 @@ class IndexedLifecycleCapture(NativeCapture):
     carriers: tuple[dict[str, Any], ...] = ()
     max_numbers: dict[str, int] = field(default_factory=dict)
     lenses: tuple[str, ...] = ()
+
+    _validate_index_facts = field_validator("carriers", "max_numbers", "lenses", mode="wrap")(_preserve_capture_data)
 
 
 def capture_indexed_lifecycle(selection: Any, carriers, max_numbers, *, lenses=()) -> IndexedLifecycleCapture:

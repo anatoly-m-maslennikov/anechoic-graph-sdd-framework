@@ -1,6 +1,9 @@
 from __future__ import annotations
-from dataclasses import dataclass
 from dataclasses import field
+
+from pydantic import ConfigDict
+from pydantic.dataclasses import dataclass
+
 from .atom_fields import (
     AtomConcernContext as AtomConcernContext,
     AtomContainer as AtomContainer,
@@ -29,23 +32,26 @@ from .value_formats import (
 )
 
 
-@dataclass
+_STRICT = ConfigDict(strict=True, extra="forbid")
+
+
+@dataclass(config=_STRICT)
 class Node:
     pass
 
-@dataclass
+@dataclass(config=_STRICT)
 class CardinalityContract:
     pass
 
-@dataclass
+@dataclass(config=_STRICT)
 class Carrier:
     pass
 
-@dataclass
+@dataclass(config=_STRICT)
 class Relation:
     pass
 
-@dataclass
+@dataclass(config=_STRICT)
 class Term:
     name: str
 
@@ -107,7 +113,6 @@ class Actor(Continuant):
 
 @dataclass
 class Atom(Continuant):
-    pass
     header: AtomHeader = field(metadata={'property_occurrence_cardinality': 1, 'value_cardinality': 0, 'dependent_property_cardinality': {'minimum': 0, 'maximum': None}})
     content: AtomContent = field(metadata={'property_occurrence_cardinality': 1, 'value_cardinality': 0, 'dependent_property_cardinality': {'minimum': 0, 'maximum': None}})
 

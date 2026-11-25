@@ -1,0 +1,28 @@
+{
+  "title": "Preserve the local release result identity",
+  "invariant": "The local release result includes the requested run ID and resolved project root, while preserving the runner diagnostic fields.",
+  "scope": "Local operation after successful argument and project root validation; the runner returns a mutable dictionary without run_id or project_root and includes diagnostic fields.",
+  "before": {
+    "revision": "d4f37d2bbf1e21f61401d411a59585bcdfa5b62f",
+    "source": "LAYER_5_FRAMEWORK_DELIVERY/release.py",
+    "fixture": "before.py.txt",
+    "sha256": "ee90ab73a5109450a1f5af0cb588da46b8af232560919de8eb877354c295a836"
+  },
+  "fixed": {
+    "revision": "57780604c0998c1fb686f617965ab6f76a6ba5c0",
+    "source": "LAYER_5_FRAMEWORK_DELIVERY/release.py",
+    "fixture": "fixed.py.txt",
+    "sha256": "78d4b8d9c324fdbbf4ae5ee8cac548d35269cbde3262eb8453eb1ca0ffc11a00"
+  },
+  "checks": [
+    {
+      "file": "before.lean",
+      "stdout_suffix": "false\n"
+    },
+    {
+      "file": "fixed.lean",
+      "stdout_suffix": "true\n"
+    }
+  ],
+  "analyzer": "analyze.py"
+}

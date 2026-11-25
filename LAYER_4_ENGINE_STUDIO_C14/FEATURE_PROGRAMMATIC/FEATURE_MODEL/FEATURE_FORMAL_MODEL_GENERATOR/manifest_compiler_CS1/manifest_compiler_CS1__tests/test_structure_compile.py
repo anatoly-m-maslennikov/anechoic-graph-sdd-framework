@@ -5,12 +5,13 @@ import shutil
 import tempfile
 from types import SimpleNamespace
 import unittest
+from unittest.mock import patch
 
 import yaml
 
 ROOT = Path(__file__).resolve().parents[6]
-from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.manifest_compiler_CS1 import structure_compile__shared as compiler  # noqa: E402
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import canonical_native_header, native_header_view  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.manifest_compiler_CS1.manifest_compiler_CS1__shared import compile_structure  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import CarrierError, LimitReached, ReadContext, canonical_native_header, native_header_view  # noqa: E402
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_read__pub import parse_carrier  # noqa: E402
 
 CONTROL = ROOT / '_anechoic_anechoic'
@@ -20,8 +21,9 @@ PROJECT = ROOT / 'AN-S-3037-SPEC-PROJECT_MANIFEST--declare-anechoic.md'
 COMPONENT = CONTROL / '_SPEC/AN-S-3039-SPEC-COMPONENT_MANIFEST--declare-engine-studio.md'
 
 
-def selection(control):
-    project = PROJECT if control == CONTROL else control / PROJECT.name
+def selection(control, project=None):
+    if project is None:
+        project = PROJECT if control == CONTROL else control / PROJECT.name
     raw = project.read_bytes()
     meta = native_header_view(parse_carrier(raw, project).metadata)
     ref = f"{meta['identity']['atom_id']}@{meta['state']['version']}"
@@ -41,8 +43,45 @@ class Model:
 
 
 class StructureTests(unittest.TestCase):
+    def _standalone_project(self):
+        root = Path(self.enterContext(tempfile.TemporaryDirectory())).resolve()
+        control, project = root / "control", root / PROJECT.name
+        (control / "_SPEC").mkdir(parents=True)
+        shutil.copyfile(PROJECT, project)
+        return control, selection(control, project)
+
+    def test_ordinary_specs_may_be_malformed_unreadable_or_oversized(self):
+        control, selected = self._standalone_project()
+        spec = control / "_SPEC"
+        child = spec / COMPONENT.name
+        child.write_text(COMPONENT.read_text().replace("tier: 0\n", "tier: 4\n", 1))
+        (control / "AN-S-4000-SPEC-REQUIREMENT--bad.md").write_text("---\ninvalid: [\n---\n")
+        (spec / "AN-S-4001-SPEC-REQUIREMENT--unreadable.md").symlink_to(spec / "missing.md")
+        oversized = spec / "AN-S-4002-SPEC-REQUIREMENT--oversized.md"
+        oversized.touch()
+        read = ReadContext.read
+
+        def limited(reader, path, **options):
+            if path == oversized:
+                raise LimitReached("max_file_bytes")
+            return read(reader, path, **options)
+
+        with patch.object(ReadContext, "read", limited):
+            result = compile_structure(selected, Model())
+        self.assertEqual(f"_SPEC/{COMPONENT.name}", result["components"]["C14"]["source_path"])
+
+    def test_conventional_structure_manifests_still_require_readable_valid_headers(self):
+        control, selected = self._standalone_project()
+        for filename in (COMPONENT.name, "AN-S-4000-SPEC-COMPONENT_SEED_MANIFEST--required.md"):
+            with self.subTest(filename=filename):
+                path = control / "_SPEC" / filename
+                path.write_text("---\ninvalid: [\n---\n")
+                with self.assertRaises(CarrierError):
+                    compile_structure(selected, Model())
+                path.unlink()
+
     def test_live_sources(self):
-        result = compiler.compile_structure(selection(CONTROL), Model())
+        result = compile_structure(selection(CONTROL), Model())
         self.assertTrue({'C14', 'C59', 'C62'} <= result['components'].keys())
         runtime = result['components']['C62']
         self.assertEqual(runtime['parent'], 'C59')
@@ -56,7 +95,9 @@ class StructureTests(unittest.TestCase):
         self.assertEqual(result['components']['C14']['source_path'], f'_SPEC/{COMPONENT.name}')
         self.assertEqual(json.loads(json.dumps(result)), result)
         self.assertEqual(result['packages']['CS1']['component'], 'C50')
-        self.assertEqual(result['packages']['CS1']['ref'], 'AN-S-3089@4')
+        seed = CONTROL / result['packages']['CS1']['source_path']
+        seed_header = native_header_view(parse_carrier(seed.read_bytes(), seed).metadata)
+        self.assertEqual(result['packages']['CS1']['ref'], f"AN-S-3089@{seed_header['state']['version']}")
 
     def test_pin_duplicates_parent_and_changes(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -67,32 +108,32 @@ class StructureTests(unittest.TestCase):
             child.write_text(COMPONENT.read_text().replace('tier: 0\n', 'tier: 4\n', 1))
             (control / '__EXAMPLE_C14').mkdir()
             selected = selection(control)
-            result = compiler.compile_structure(selected, Model())
+            result = compile_structure(selected, Model())
             self.assertEqual(result['project']['sha256'], selected.manifest_sha256)
             selected.manifest_ref = 'AN-S-3037@99'
             with self.assertRaisesRegex(ValueError, 'pin changed'):
-                compiler.compile_structure(selected, Model())
+                compile_structure(selected, Model())
             selected.manifest_ref = selection(control).manifest_ref
             duplicate = control / 'AN-S-4000-SPEC-PROJECT_MANIFEST--duplicate.md'
             duplicate.write_text(project.read_text().replace('AN-S-3037', 'AN-S-4000'))
             with self.assertRaisesRegex(ValueError, 'exactly one'):
-                compiler.compile_structure(selected, Model())
+                compile_structure(selected, Model())
             duplicate.unlink()
             child.write_text(child.read_text().replace('component: C00', 'component: C14'))
             with self.assertRaisesRegex(ValueError, 'identity or parent'):
-                compiler.compile_structure(selected, Model())
+                compile_structure(selected, Model())
             child.write_text(COMPONENT.read_text().replace('tier: 0\n', 'tier: 4\n', 1))
             (control / 'FIRST_C14').mkdir()
             (control / 'SECOND_C14').mkdir()
             with self.assertRaisesRegex(ValueError, 'Duplicate Component directory'):
-                compiler.compile_structure(selected, Model())
+                compile_structure(selected, Model())
             (control / 'FIRST_C14').rmdir()
             (control / 'SECOND_C14').rmdir()
             class MutatingModel(Model):
                 def validate_component_manifest(self, fields, parent_id):
                     child.write_text(child.read_text() + '\n')
             with self.assertRaisesRegex(ValueError, 'changed'):
-                compiler.compile_structure(selected, MutatingModel())
+                compile_structure(selected, MutatingModel())
 
     def test_component_manifest_in_spec_and_duplicate_across_layouts(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -102,11 +143,11 @@ class StructureTests(unittest.TestCase):
             spec.mkdir()
             content = COMPONENT.read_text().replace('tier: 0\n', 'tier: 4\n', 1)
             (spec / COMPONENT.name).write_text(content)
-            result = compiler.compile_structure(selection(control), Model())
+            result = compile_structure(selection(control), Model())
             self.assertEqual(result['components']['C14']['source_path'], f'_SPEC/{COMPONENT.name}')
             (control / COMPONENT.name).write_text(content)
             with self.assertRaisesRegex(ValueError, 'Duplicate'):
-                compiler.compile_structure(selection(control), Model())
+                compile_structure(selection(control), Model())
 
     def test_canonical_component_classified_by_header(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -118,7 +159,7 @@ class StructureTests(unittest.TestCase):
             header['tier'] = 4
             path = control / 'AN-S-3039-SPEC-OTHER--engine.md'
             path.write_text(f'---\n{yaml.safe_dump(header)}---{body}')
-            result = compiler.compile_structure(selection(control), Model())
+            result = compile_structure(selection(control), Model())
             self.assertEqual(path.name, result['components']['C14']['source_path'])
 
     def test_component_carrier_symlink_is_rejected(self):
@@ -127,24 +168,34 @@ class StructureTests(unittest.TestCase):
             shutil.copyfile(PROJECT, control / PROJECT.name)
             (control / COMPONENT.name).symlink_to(COMPONENT)
             with self.assertRaises(OSError):
-                compiler.compile_structure(selection(control), Model())
+                compile_structure(selection(control), Model())
 
     def test_component_manifest_requires_tier_four(self):
+        control, selected = self._standalone_project()
+        path = control / '_SPEC' / COMPONENT.name
         raw = COMPONENT.read_text()
         _, frontmatter, body = raw.split('---', 2)
         header = yaml.safe_load(frontmatter)
         header['tier'] = 4
-        carrier = parse_carrier(f'---\n{yaml.safe_dump(header)}---{body}'.encode(), COMPONENT)
-        fields = compiler._component_inputs(COMPONENT, carrier, 'C00', 'AN')
+        path.write_text(f'---\n{yaml.safe_dump(header)}---{body}')
+        fields = compile_structure(selected, Model())['components']['C14']['fields']
         self.assertEqual(fields['tier'], 4)
         header['tier'] = 0
-        carrier = parse_carrier(f'---\n{yaml.safe_dump(header)}---{body}'.encode(), COMPONENT)
+        path.write_text(f'---\n{yaml.safe_dump(header)}---{body}')
         with self.assertRaisesRegex(ValueError, 'identity or parent'):
-            compiler._component_inputs(COMPONENT, carrier, 'C00', 'AN')
+            compile_structure(selected, Model())
 
     def test_formal_fields(self):
         claim = '''## Claim\n\n### Formal Claim\n\n```python\nfrom anechoic.formal_claims import declare_entity\nfrom anechoic.model import ComponentManifest\ndeclare_entity(entity_name="Component Manifest", instance=ComponentManifest(component_id="C1", name="One", lens_whitelist=["SPEC"]))\n```\n'''
-        self.assertEqual(compiler._fields(claim), {'component_id': 'C1', 'name': 'One', 'lens_whitelist': ['SPEC']})
+        control, selected = self._standalone_project()
+        _, frontmatter, _ = COMPONENT.read_text().split('---', 2)
+        header = yaml.safe_load(frontmatter)
+        header['tier'] = 4
+        path = control / '_SPEC' / COMPONENT.name
+        path.write_text(f'---\n{yaml.safe_dump(header)}---\n{claim}')
+        fields = compile_structure(selected, Model())['components']['C1']['fields']
+        self.assertEqual({key: fields[key] for key in ('component_id', 'name', 'lens_whitelist')},
+                         {'component_id': 'C1', 'name': 'One', 'lens_whitelist': ['SPEC']})
 
 
 if __name__ == '__main__':

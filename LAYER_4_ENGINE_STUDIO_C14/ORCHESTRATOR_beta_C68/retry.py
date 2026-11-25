@@ -2,6 +2,7 @@
 import time
 
 
+COVERAGE_RECOVERED = "coverage_recovered"
 _CURRENTNESS = (
     "Native Project carriers changed during capture",
     "Native Project carriers changed during generation",

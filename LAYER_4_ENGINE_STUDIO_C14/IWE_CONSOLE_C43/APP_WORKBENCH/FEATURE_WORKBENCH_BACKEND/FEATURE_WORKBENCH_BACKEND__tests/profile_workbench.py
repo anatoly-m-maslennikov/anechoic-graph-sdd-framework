@@ -57,7 +57,7 @@ def output_directory(project_root: Path, requested: Path | None) -> Path:
 
 def _code_hashes() -> dict[str, str]:
     paths = [
-        *(BACKEND_ROOT / name for name in ("source_reader.py", "source_rows.py", "incremental_relations.py")),
+        *(BACKEND_ROOT / name for name in ("source_reader.py", "source_rows.py")),
         *(KERNEL_ROOT / name for name in ("query_store.py", "content_schema.py", "projection_delta.py", "relations.py")),
     ]
     paths.append(TOOLS_ROOT / "ADAPTERS_C30/markdown_content__pub.py")
@@ -137,12 +137,12 @@ def _measure_rebuilds(store, reader, atom_rows, scope_rows, relation_types, repo
         })
 
 
-def _capture_and_measure(project_root, database_directory, report, SourceReader, QueryStore, materialize_delta):
+def _capture_and_measure(project_root, database_directory, report, SourceReader, QueryStore, materialize):
     initial_started = time.perf_counter()
     reader = SourceReader(project_root)
     raw_atoms, raw_scopes = reader.capture()
     report["source_hashes_before"] = _source_digest(project_root, raw_atoms, raw_scopes)
-    atom_rows, scope_rows, relation_types, _inverse, _state, _delta = materialize_delta(raw_atoms, raw_scopes)
+    atom_rows, scope_rows, relation_types, _inverse, _cache = materialize(raw_atoms, raw_scopes)
     extension = os.environ.get("ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY")
     store = QueryStore(
         extension_directory=Path(extension) if extension else None,
@@ -154,7 +154,6 @@ def _capture_and_measure(project_root, database_directory, report, SourceReader,
         store.close()
     report["dataset"] = {"atom_count": len(raw_atoms), "scope_unit_count": len(raw_scopes)}
     report["source_hashes_after"] = _source_digest(project_root, raw_atoms, raw_scopes)
-    return reader, raw_atoms, raw_scopes, atom_rows, scope_rows, relation_types, _inverse, _state, _delta, store
 
 
 def _write_profile_artifacts(profiler, started, output, database_directory, report):
@@ -183,8 +182,7 @@ def _write_profile_artifacts(profiler, started, output, database_directory, repo
 def profile(project_root: Path, output: Path) -> dict[str, Any]:
     """Profile one initial index plus exactly three isolated full rebuilds."""
     _imports()
-    from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.incremental_relations import materialize_delta
-    from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import QueryStore
+    from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import QueryStore, materialize_with_registry
     from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__shared import SourceReader
 
     report: dict[str, Any] = {
@@ -208,7 +206,7 @@ def profile(project_root: Path, output: Path) -> dict[str, Any]:
     tracemalloc.start(TRACE_FRAMES)
     profiler.enable()
     try:
-        _captured = _capture_and_measure(project_root, database_directory, report, SourceReader, QueryStore, materialize_delta)
+        _capture_and_measure(project_root, database_directory, report, SourceReader, QueryStore, materialize_with_registry)
     except BaseException as caught:
         error = caught
         report["error"] = {"type": type(caught).__name__, "message": str(caught)}

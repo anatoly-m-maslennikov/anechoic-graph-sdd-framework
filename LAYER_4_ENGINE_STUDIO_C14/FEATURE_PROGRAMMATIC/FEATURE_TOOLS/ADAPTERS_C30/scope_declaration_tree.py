@@ -3,17 +3,20 @@
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
-from dataclasses import dataclass
 from pathlib import Path
 from types import MappingProxyType
 from typing import Any
 
+from pydantic import ConfigDict
+from pydantic.dataclasses import dataclass
+
 from .scope_carrier__pub import ScopeDeclarationError
 
 PROJECT = "PROJECT"
+_STRICT = ConfigDict(strict=True, extra="forbid")
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, config=_STRICT)
 class ScopeDelegation:
     name: str
     atom_id: str
@@ -26,7 +29,7 @@ class ScopeDelegation:
     topic_path: tuple[str, ...] | None = None
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, config=_STRICT)
 class ScopeUnitDeclaration:
     """One parsed source; paths are derived only after the complete tree is known."""
 
@@ -64,7 +67,7 @@ def _component(declaration: ScopeUnitDeclaration, *, authority: bool) -> str:
     return "_".join(part for part in parts if part)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, config=_STRICT)
 class ScopeUnitDeclarations:
     """Validated declaration tree plus the selected-source provenance."""
 

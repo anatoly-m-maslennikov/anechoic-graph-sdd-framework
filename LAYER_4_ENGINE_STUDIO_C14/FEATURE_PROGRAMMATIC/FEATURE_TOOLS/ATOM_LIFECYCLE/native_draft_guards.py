@@ -179,7 +179,10 @@ def _validate_contract(selection, header, body, path, snapshot, capture):
     owner = _contract_owner(selection, component, context.get('lens'), snapshot, capture)
     candidate = {**header, 'state': {**header['state'], 'status': 'active'}}
     try:
-        read_component_contract(path, SimpleNamespace(metadata=candidate, body=body), component, selection.project_prefix)
+        read_component_contract(
+            path, SimpleNamespace(metadata=candidate, body=body),  # pragma: anechoic-model-adapter - carrier parser
+            component, selection.project_prefix,
+        )
         _native_slug(body)
     except (ValueError, TypeError, KeyError) as error:
         raise common.InputError('target', 'Invalid Component Contract Header or Guarantee.') from error

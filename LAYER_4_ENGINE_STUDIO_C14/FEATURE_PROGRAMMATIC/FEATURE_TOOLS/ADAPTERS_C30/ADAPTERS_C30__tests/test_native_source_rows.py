@@ -23,7 +23,6 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__tests.ADAPTER
 
 class NativeCaptureTests(NativeCaptureFixture, unittest.TestCase):
     def test_ingestion_issues_report_malformed_and_duplicate_carriers(self):
-        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_snapshot_cli import _check_capture
         malformed = self.control / "malformed.md"
         malformed.write_text("---\ninvalid: [\n---\n")
         first = self.write("AN-T-8--first.md", "AN-T-8", "active", 1)
@@ -38,15 +37,14 @@ class NativeCaptureTests(NativeCaptureFixture, unittest.TestCase):
             issues = [i for i in result.ingestion_issues if i["code"] == code]
             self.assertEqual(relatives, sorted(i["relative_path"] for i in issues))
             self.assertTrue(all(i["related_paths"] == relatives for i in issues))
-        with self.assertRaisesRegex(ValueError, "Native capture failed") as caught:
-            _check_capture(result)
-        self.assertEqual(result.ingestion_issues, caught.exception.ingestion_issues)
+        self.assertEqual({"AN-S-001"}, {row["ref"] for row in result.atoms})
         second.unlink()
         third.unlink()
         updated = capture_native(self.selection, previous=result,
                                  paths={PurePosixPath(second.relative_to(self.root).as_posix()),
                                         PurePosixPath(third.relative_to(self.root).as_posix())})
         self.assertFalse(any(i["code"].startswith("duplicate_") for i in updated.ingestion_issues))
+        self.assertEqual({"AN-S-001", "AN-T-8"}, {row["ref"] for row in updated.atoms})
 
     def test_indexed_capture_reads_only_addressed_and_detects_drift(self):
         path = self.write("AN-T-8--task.md", "AN-T-8", "active", 1)
@@ -249,7 +247,7 @@ class NativeCaptureTests(NativeCaptureFixture, unittest.TestCase):
         self.write("two/AN-S-1--two.md", "AN-S-1", "active", 2)
         self.write("AN-T-2--bad.md", "AN-T-2", "bogus", 1)
         result = capture_native(self.selection)
-        self.assertEqual(2, len(result.errors))
+        self.assertEqual(3, len(result.errors))
         self.assertTrue(any("Duplicate" in error for error in result.errors.values()))
         self.assertTrue(any("status" in error for error in result.errors.values()))
 

@@ -1,12 +1,14 @@
 """Explicit build provenance, separate from source and immutable image identity."""
 
 
-from dataclasses import dataclass
 from pathlib import PurePosixPath
 import re
 
+from pydantic import ConfigDict
+from pydantic.dataclasses import dataclass
 
-@dataclass(frozen=True)
+
+@dataclass(frozen=True, config=ConfigDict(strict=True, extra="forbid"))
 class ImageBuildProvenance:
     project_id: str
     project_root: str

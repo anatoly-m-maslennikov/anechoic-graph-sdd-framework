@@ -14,7 +14,7 @@ from starlette.applications import Starlette
 
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import read_import_sources
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import publish_imports
-from MCP_PATCHBAY_C21.FEATURE_MCP.workbench_web import routes
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import workbench_routes as routes
 
 
 _INVERSE_TEST_COMPONENT = """

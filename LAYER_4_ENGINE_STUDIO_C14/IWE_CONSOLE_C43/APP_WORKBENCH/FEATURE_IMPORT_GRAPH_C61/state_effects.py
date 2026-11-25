@@ -19,6 +19,10 @@ _CHECKER = Path(__file__).with_name("ActionEffects.lean")
 _LANGUAGES = frozenset(("python", "javascript", "typescript"))
 
 
+class _SourceVersionChanged(ValueError):
+    pass
+
+
 def _diagnostic(message):
     print(f"state analysis: {message}", file=sys.stderr)
 
@@ -53,17 +57,20 @@ def _policy(path, ownership):
 
 def _read(root, path, source):
     file = root / path
-    if not file.is_relative_to(root) or file.resolve(strict=True) != file:
-        raise ValueError("source path changed or left the Project")
+    try:
+        if not file.is_relative_to(root) or file.resolve(strict=True) != file:
+            raise ValueError("source path changed or left the Project")
+        if _stat_signature(file) != source.signature:
+            raise _SourceVersionChanged("source changed after graph capture")
+        if source.language == "python":
+            with tokenize.open(file) as handle:
+                content = handle.read()
+        else:
+            content = file.read_text(encoding="utf-8")
+    except FileNotFoundError as error:
+        raise _SourceVersionChanged("source removed after graph capture") from error
     if _stat_signature(file) != source.signature:
-        raise ValueError("source changed after graph capture")
-    if source.language == "python":
-        with tokenize.open(file) as handle:
-            content = handle.read()
-    else:
-        content = file.read_text(encoding="utf-8")
-    if _stat_signature(file) != source.signature:
-        raise ValueError("source changed during state analysis")
+        raise _SourceVersionChanged("source changed during state analysis")
     return content
 
 

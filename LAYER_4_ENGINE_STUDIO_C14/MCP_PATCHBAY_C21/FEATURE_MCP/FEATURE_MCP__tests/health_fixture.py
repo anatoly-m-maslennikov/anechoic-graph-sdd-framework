@@ -13,7 +13,7 @@ from mcp.client.streamable_http import streamable_http_client
 
 
 APP = Path(__file__).resolve().parents[1]
-from MCP_PATCHBAY_C21.FEATURE_MCP.http_server import create_app  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import create_http_app as create_app  # noqa: E402
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import MCP_PATH  # noqa: E402
 
 

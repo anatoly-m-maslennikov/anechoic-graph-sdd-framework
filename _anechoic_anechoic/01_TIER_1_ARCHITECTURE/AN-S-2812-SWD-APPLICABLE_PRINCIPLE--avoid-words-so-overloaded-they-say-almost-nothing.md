@@ -27,6 +27,8 @@ Do not choose a term that already means too many different things. Choose a name
 
 ## Details
 
+### Examples
+
 These examples show how to replace overloaded terms. They illustrate the principle; they do not define mandatory ANECHOIC keywords.
 
 | Overloaded term | What it hides | More specific names |

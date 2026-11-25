@@ -11,6 +11,8 @@ import shutil
 import tempfile
 from pathlib import Path
 
+from pydantic import BaseModel, ConfigDict
+
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import carrier_status_folder
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.COMPILE_APPLICABLE_METHODOLOGY.methodology_paths__shared import (
     LAYERS, ROLES, ROLE_BY_DIRECTORY, ROLE_ORDER, RELATION_KINDS, MethodologyPaths,
@@ -27,6 +29,23 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.COMPILE_APPLICABLE_METHODOLOGY.methodolo
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.COMPILE_APPLICABLE_METHODOLOGY.methodology_conflicts import (
     sha256_bytes, candidate_sort_key, frontier_digest, detect_conflicts,
 )
+
+
+class _CompilationReport(BaseModel):
+    model_config = ConfigDict(strict=True, extra="forbid")
+
+    structural_source_layers: list[str]
+    contributing_source_layers: list[str]
+    source_frontier_digest: str
+    eligible_candidate_count: int
+    conflict_count: int
+    unresolved_conflict_count: int
+    conflicts: list[dict[str, object]]
+    diagnostics: list[dict[str, object]]
+    excluded_candidates: list[dict[str, object]]
+    selected_candidate_count: int
+    output_plan: list[dict[str, object]]
+    can_apply: bool
 
 
 def selected_sort_key(candidate: Candidate) -> tuple[object, ...]:
@@ -273,20 +292,20 @@ def compile_report(root: Path, places: MethodologyPaths | None = None) -> tuple[
     digest = frontier_digest(candidates)
     conflicts = detect_conflicts(candidates)
     selected = sorted(candidates, key=selected_sort_key)
-    report: dict[str, object] = {
-        "structural_source_layers": [name for name, _, _ in LAYERS],
-        "contributing_source_layers": ["CORE_META_MODEL", "INSTALLED_EXTENSIONS", "PROJECT_CONFIGURATION"],
-        "source_frontier_digest": digest,
-        "eligible_candidate_count": len(candidates),
-        "conflict_count": len(conflicts),
-        "unresolved_conflict_count": len(conflicts),
-        "conflicts": conflicts,
-        "diagnostics": diagnostics,
-        "excluded_candidates": [item for item in diagnostics if item.get("code") == "source-excluded"],
-        "selected_candidate_count": len(selected),
-        "output_plan": output_plan(selected),
-        "can_apply": not any(
+    report = _CompilationReport(
+        structural_source_layers=[name for name, _, _ in LAYERS],
+        contributing_source_layers=["CORE_META_MODEL", "INSTALLED_EXTENSIONS", "PROJECT_CONFIGURATION"],
+        source_frontier_digest=digest,
+        eligible_candidate_count=len(candidates),
+        conflict_count=len(conflicts),
+        unresolved_conflict_count=len(conflicts),
+        conflicts=conflicts,
+        diagnostics=diagnostics,
+        excluded_candidates=[item for item in diagnostics if item.get("code") == "source-excluded"],
+        selected_candidate_count=len(selected),
+        output_plan=output_plan(selected),
+        can_apply=not any(
             item.get("code") not in {"source-excluded"} for item in diagnostics
         ) and not conflicts,
-    }
-    return report, selected, source_snapshot
+    )
+    return report.model_dump(), selected, source_snapshot

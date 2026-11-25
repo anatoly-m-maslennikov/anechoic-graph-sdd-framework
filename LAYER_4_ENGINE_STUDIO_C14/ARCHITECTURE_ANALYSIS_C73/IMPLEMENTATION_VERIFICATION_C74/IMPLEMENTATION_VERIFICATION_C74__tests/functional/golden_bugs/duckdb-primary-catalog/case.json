@@ -1,0 +1,28 @@
+{
+  "title": "Reject attached catalog matches",
+  "invariant": "A native reference lookup is restricted to the current DuckDB catalog.",
+  "scope": "The lookup sees an attached catalog containing main.native_references, with no such table in the primary catalog.",
+  "before": {
+    "revision": "171a0658cb50e616a299571032abd024d3e51033",
+    "source": "LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_beta_C67/DATABASE_SERVER_beta_C71/native_atoms.py",
+    "fixture": "before.py.txt",
+    "sha256": "10b3f06a4ee96da7e83956fd6bc38e039e246750972b3ce658ea66f960006437"
+  },
+  "fixed": {
+    "revision": "145f2a62b89a54f21275ccac0514142f9c55ff2e",
+    "source": "LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_beta_C67/DATABASE_SERVER_beta_C71/native_atoms.py",
+    "fixture": "fixed.py.txt",
+    "sha256": "1c244f580cb3c4d7a069a45b299e2697b2c6ad3daccc7faf90cdfcde269aa14e"
+  },
+  "checks": [
+    {
+      "file": "before.lean",
+      "stdout_suffix": "true\n"
+    },
+    {
+      "file": "fixed.lean",
+      "stdout_suffix": "false\n"
+    }
+  ],
+  "analyzer": "analyze.py"
+}

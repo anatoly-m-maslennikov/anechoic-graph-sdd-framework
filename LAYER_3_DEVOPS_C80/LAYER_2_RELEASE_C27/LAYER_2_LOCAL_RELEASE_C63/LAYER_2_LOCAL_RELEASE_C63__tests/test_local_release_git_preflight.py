@@ -39,7 +39,7 @@ class LocalReleaseGitPreflightTests(unittest.TestCase):
                     "?? .env.local\n" if mode == "residual-dirty" else "",
                     "",
                 )
-            if "--phase" in argv and argv[argv.index("--phase") + 1] == "image":
+            if "--phase" in argv and argv[argv.index("--phase") + 1] == "canary":
                 return subprocess.CompletedProcess(
                     argv, 0, "ANECHOIC_CANARY_ENDPOINT http://127.0.0.1:49152/anechoic/mcp\n", ""
                 )

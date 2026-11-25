@@ -1,0 +1,32 @@
+{
+  "title": "CRLF empty frontmatter closing bounds",
+  "invariant": "The closing separator starts at or after opening_end - 1; the CRLF empty frontmatter case returns bounds (5, 4, 10) and body X.",
+  "scope": "Bounded regression for frontmatter_bounds and source_body on the concrete bytes ---\\r\\n---\\r\\nX. Models are generated from the preserved historical full source files by C74 carrier_model. The old third re.search argument is flags, not a start position. The fixed compiled regex uses pos. This case does not prove equivalence for other inputs or Python-to-Lean translation. Restore scope: carrier_body__pub.py only; historical LAYER_3 became LAYER_4 at bf0488bff6a15a601c537f7b3e670d70aa451bf0 with identical source bytes.",
+  "before": {
+    "revision": "b9b01240deca7615e06b7895f1b36c65eeb789a7",
+    "source": "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ADAPTERS_C30/carrier_body__pub.py",
+    "fixture": "before.py.txt",
+    "sha256": "e6d409db2ba8950eb48c59764e6efaff20dc9a05fd31b05fc9d0b2126227e19c"
+  },
+  "fixed": {
+    "revision": "b5f7ed526648296a768f701f6af1027ec80a349a",
+    "source": "LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ADAPTERS_C30/carrier_body__pub.py",
+    "fixture": "fixed.py.txt",
+    "sha256": "666a099246c6427a50f910056b656c0c31a6a475c4f807cf2a53c86b8d81db2d"
+  },
+  "contract": {
+    "path": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/FEATURE_TOOLS_C16/ADAPTERS_C30/AN-S-3303-SWD-COMPONENT_CONTRACT--read-guarded-filesystem-inputs.md",
+    "atom_id": "AN-S-3303",
+    "status": "active",
+    "version": 15,
+    "sha256": "baab5eec99df8b25181de59682e17bc075961f2c2b371782b32d497a8d3ffff3",
+    "formal_sha256": "fa8f9bb503ebadc77234e0138f79de0d88d1a462054237149fbd8221c2215300"
+  },
+  "checks": [
+    {
+      "file": "regression.lean",
+      "stdout_suffix": "carrier-crlf-bounds: old mismatch; fixed matches\n"
+    }
+  ],
+  "analyzer": "analyze.py"
+}

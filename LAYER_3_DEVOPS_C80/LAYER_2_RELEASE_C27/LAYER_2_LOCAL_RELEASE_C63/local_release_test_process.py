@@ -70,6 +70,7 @@ def _cancel_and_forward(process, error: BaseException, forward) -> None:
 
 def run_logged_test_process(
     argv: tuple[str, ...], cwd: Path, log: BinaryIO, *, env: dict[str, str] | None = None,
+    lock_fd: int | None = None,
 ) -> subprocess.CompletedProcess[str]:
     """Keep complete output on disk, forwarding chunks and retaining only a tail.
 
@@ -98,6 +99,7 @@ def run_logged_test_process(
             process = subprocess.Popen(
                 argv, cwd=cwd, stdout=log, stderr=subprocess.STDOUT, env=env,
                 start_new_session=os.name == "posix",
+                pass_fds=(lock_fd,) if lock_fd is not None else (),
             )
             while True:
                 forward()

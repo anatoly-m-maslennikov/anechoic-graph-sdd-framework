@@ -25,3 +25,9 @@ Give Operators clear guidance for using the framework
 ### Prose Claim
 
 Provide the Operator with enough clear guidance to use the framework efficiently toward their Project goals.
+
+## Details
+
+### Examples
+
+A new Operator follows a short guide to define a Project goal and select the next task. The guide helps the Operator start work without searching through the full framework.

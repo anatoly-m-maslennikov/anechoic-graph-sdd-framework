@@ -7,6 +7,9 @@ from pathlib import Path
 import re
 import stat
 import sys
+from typing import Literal
+
+from pydantic import BaseModel, ConfigDict
 
 from .work_journal import MAX_DATABASE_EVENT_BYTES, _fingerprint, _open_directory
 
@@ -17,6 +20,19 @@ _LEGACY_ID = re.compile(r"[qw]_[0-9a-f]{32}")
 _LEGACY_DIRECTORY = (".anechoic_runtime", "workbench", "saved_queries")
 _EVENT_FIELDS = {"saved_query_id", "kind", "sql", "saved_at"}
 _WORDS = re.compile(r"\S+")
+
+
+class _SavedQueryRecord(BaseModel):
+    model_config = ConfigDict(strict=True, extra="forbid", frozen=True)
+
+    saved_query_id: str
+    kind: Literal["query", "view"]
+    sql: str
+    saved_at: str | None = None
+    name: str | None = None
+
+    def as_event(self):
+        return self.model_dump(exclude_none=True)
 
 
 def validate_saved_query_id(value):
@@ -48,7 +64,7 @@ def _journal_record(event):
     name = event.get("name")
     if name is not None and _text(name).strip():
         record["name"] = name
-    return record
+    return _SavedQueryRecord.model_validate(record)
 
 
 def _journal_items(events, saved_query_id=None):
@@ -61,7 +77,7 @@ def _journal_items(events, saved_query_id=None):
         except ValueError:
             print(f"saved query skipped: Work Journal {SAVED_QUERY_AUTHOR} event {number}", file=sys.stderr)
             continue
-        key = record["saved_query_id"]
+        key = record.saved_query_id
         if items.setdefault(key, record) != record:
             raise ValueError("conflicting saved query ID")
     return items
@@ -85,11 +101,11 @@ def _legacy_record(directory, saved_query_id):
             raise ValueError("saved query file is too large or changed")
     text = data.decode("utf-8")
     if saved_query_id.startswith("q_"):
-        return {"saved_query_id": saved_query_id, "kind": "query", "sql": text}, info.st_mtime
+        return _SavedQueryRecord(saved_query_id=saved_query_id, kind="query", sql=text), info.st_mtime
     document = json.loads(text)
     if not isinstance(document, dict) or set(document) != {"sql"}:
         raise ValueError("saved query file is invalid")
-    return {"saved_query_id": saved_query_id, "kind": "view", "sql": _text(document["sql"])}, info.st_mtime
+    return _SavedQueryRecord(saved_query_id=saved_query_id, kind="view", sql=_text(document["sql"])), info.st_mtime
 
 
 def _legacy_items(project_root):
@@ -106,11 +122,11 @@ def _legacy_items(project_root):
                     continue
                 try:
                     record, mtime = _legacy_record(directory, saved_query_id)
-                    record["saved_at"] = datetime.fromtimestamp(mtime, UTC).isoformat()
+                    saved_at = datetime.fromtimestamp(mtime, UTC).isoformat()
                 except (OSError, ValueError, RecursionError, OverflowError):
                     print(f"saved query skipped: {project_root.joinpath(*_LEGACY_DIRECTORY, entry.name)}", file=sys.stderr)
                     continue
-                yield record
+                yield record.model_copy(update={"saved_at": saved_at})
     finally:
         os.close(directory)
 
@@ -123,7 +139,7 @@ def load_saved_query(project_root, events, saved_query_id):
             directory = _open_directory(project_root, _LEGACY_DIRECTORY, create=False, same_device=True)
             try:
                 record, _ = _legacy_record(directory, saved_query_id)
-                return record
+                return record.as_event()
             finally:
                 os.close(directory)
         except (OSError, ValueError, RecursionError) as error:
@@ -131,18 +147,18 @@ def load_saved_query(project_root, events, saved_query_id):
     record = _journal_items(events, saved_query_id).get(saved_query_id)
     if record is None:
         raise ValueError("saved query is unavailable")
-    return record
+    return record.as_event()
 
 
 def _metadata(record):
     preview = ""
-    for word in _WORDS.finditer(record["sql"]):
+    for word in _WORDS.finditer(record.sql):
         if preview:
             preview += " "
-        preview += record["sql"][word.start():min(word.end(), word.start() + 150 - len(preview))]
+        preview += record.sql[word.start():min(word.end(), word.start() + 150 - len(preview))]
         if len(preview) == 150:
             break
-    return {key: value for key, value in record.items() if key != "sql"} | {"preview": preview}
+    return record.model_dump(exclude_none=True, exclude={"sql"}) | {"preview": preview}
 
 
 def list_saved_queries(project_root, events, limit=20):
@@ -151,5 +167,5 @@ def list_saved_queries(project_root, events, limit=20):
         raise ValueError("limit must be an integer from 1 to 1000")
     items = list(_journal_items(events).values())
     items.extend(_legacy_items(project_root))
-    items.sort(key=lambda item: (item["saved_at"], item["saved_query_id"]), reverse=True)
+    items.sort(key=lambda item: (item.saved_at, item.saved_query_id), reverse=True)
     return {"items": [_metadata(item) for item in items[:limit]]}

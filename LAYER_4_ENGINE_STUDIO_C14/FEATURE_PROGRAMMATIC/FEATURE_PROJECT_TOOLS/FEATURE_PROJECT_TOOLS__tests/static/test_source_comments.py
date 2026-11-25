@@ -2,7 +2,7 @@
 
 import unittest
 
-from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS import (
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.test_suite__shared import (
     source_comments as lint,
 )
 

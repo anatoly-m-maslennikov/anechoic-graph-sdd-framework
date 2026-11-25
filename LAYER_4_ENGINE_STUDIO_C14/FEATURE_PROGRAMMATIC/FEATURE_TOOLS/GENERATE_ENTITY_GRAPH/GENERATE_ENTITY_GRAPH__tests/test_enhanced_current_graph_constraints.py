@@ -9,7 +9,7 @@ TOOL = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(TOOL.parent), str(TOOL)]
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import extract_claim_constraints
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.current_entity_sources import build_current_model_graph
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import read_current_model_carriers
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import compose_enhanced_current_graph
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import render_model
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__tests.enhanced_graph_test_support import carrier, property_population_records, fenced_scope_records
@@ -252,7 +252,7 @@ Workflow {:2}<((IS_CONTAINED_BY)){:1} Step;
             write("CA-R-9005", "Requirement", "Declaration", "Node/Occurrent")
             write("CA-R-9006", "Requirement", "Rule", "(Node, Node/**, .**)")
 
-            graph, _ = build_current_model_graph(source_root, root)
+            graph, _ = compose_enhanced_current_graph(read_current_model_carriers(source_root, root))
 
         self.assertEqual(
             ["Node", "Node/Continuant", "Node/Occurrent"],

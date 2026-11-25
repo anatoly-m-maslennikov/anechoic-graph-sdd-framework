@@ -1,22 +1,26 @@
 """Class assembly uses native Python inheritance without executing Claims."""
 
+from dataclasses import asdict, fields, is_dataclass
 from graphlib import CycleError
 from pathlib import Path
 import sys
 import importlib
 from tempfile import TemporaryDirectory
+from types import ModuleType
 import unittest
+
+from pydantic import ValidationError
+from pydantic.dataclasses import is_pydantic_dataclass
 from importlib.util import module_from_spec, spec_from_file_location
 from unittest.mock import patch
-
-PROGRAMMATIC = Path(__file__).resolve().parents[3]
 
 from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.FEATURE_FORMAL_MODEL_GENERATOR__shared import (
     assemble_model_classes, assemble_model_modules, build_model_class_source, select_model_declarations,
 )
-from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.FEATURE_MODEL_VALIDATION__shared import bind_model_declarations
+from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.FEATURE_MODEL_VALIDATION__shared import (
+    bind_model_declarations, validate_model_instance,
+)
 from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_field_validation import validate_model_fields
-from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.FEATURE_MODEL_VALIDATION__pub import validate_model_instance
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_native_model_claim
 
 
@@ -83,7 +87,12 @@ class ModelClassAssemblyTests(unittest.TestCase):
                     project = importlib.import_module("model_fixture.project").Project
                     scope_unit = importlib.import_module("model_fixture.scope_unit").ScopeUnit
                     self.assertTrue(issubclass(project, scope_unit))
-                    self.assertEqual(project("test").status, "Ready")
+                    self.assertTrue(is_pydantic_dataclass(project))
+                    self.assertEqual(asdict(project("test")), {"name": "test", "status": "Ready"})
+                    with self.assertRaises(ValidationError):
+                        project(123)
+                    with self.assertRaises(ValidationError):
+                        project("test", extra=True)
                     self.assertEqual(__import__("typing").get_type_hints(project)["status"],
                                      __import__("typing").Literal["Ready"])
                 finally:
@@ -100,6 +109,29 @@ class ModelClassAssemblyTests(unittest.TestCase):
                  declaration("Detail").replace("    pass", "    item: Item"))
         with self.assertRaises(CycleError):
             assemble_model_modules([item, cycle])
+
+    def test_nested_property_mapping_is_admitted_as_typed_model(self):
+        imports = "from anechoic.formal_claims import declare_entity\nfrom dataclasses import dataclass, field\n"
+        child = imports + ("@dataclass\nclass Child:\n    name: str\n"
+                           "declare_entity(entity_name='Child', entity_class=Child)\n")
+        parent = imports + ("from anechoic.model import Child\n@dataclass\nclass Parent:\n"
+                            "    child: Child = field(metadata={'property_occurrence_cardinality': 1, "
+                            "'dependent_property_cardinality': 1, 'value_cardinality': 0})\n"
+                            "declare_entity(entity_name='Parent', entity_class=Parent)\n")
+        module = ModuleType("nested_property_fixture")
+        with patch.dict(sys.modules, {module.__name__: module}):
+            exec(assemble_model_classes([child, parent]), vars(module))
+            values = {"child": {"name": "valid"}}
+            instance = validate_model_instance(
+                module.Parent, properties=values, outgoing_relations={}, relation_declarations={module.Parent: {}},
+                model_types={}, checks={}, population_declarations={module.Parent: ()}, population_peers={},
+            )
+            self.assertIsInstance(instance.child, module.Child)
+            self.assertEqual(asdict(instance), values)
+            self.assertTrue(is_dataclass(instance) and is_pydantic_dataclass(type(instance)))
+            self.assertEqual(fields(module.Parent)[0].metadata["dependent_property_cardinality"], 1)
+            with self.assertRaises(ValidationError):
+                module.Child(name=1)
 
     def test_missing_parent_and_cycle_are_rejected(self):
         with self.assertRaisesRegex(ValueError, "Missing Model parent"):
@@ -144,7 +176,23 @@ class ModelClassAssemblyTests(unittest.TestCase):
         )
         namespace = {}
         exec(assemble_model_classes([claim]), namespace)
+        self.assertTrue(is_pydantic_dataclass(namespace["Item"]))
         self.assertEqual("hello", namespace["Item"]("hello").name)
+        with self.assertRaises(ValidationError):
+            namespace["Item"](123)
+
+    def test_claim_dataclass_options_remain_effective(self):
+        claim = declaration("Item").replace("@dataclass", "@dataclass(frozen=True, slots=True, kw_only=True)")
+        claim = claim.replace("    pass", "    name: str = 'default'")
+        namespace = {}
+        exec(assemble_model_classes([claim]), namespace)
+        item = namespace["Item"]()
+        self.assertTrue(is_pydantic_dataclass(type(item)))
+        self.assertEqual(asdict(item), {"name": "default"})
+        with self.assertRaises(AttributeError):
+            item.name = "changed"
+        with self.assertRaises(ValidationError):
+            namespace["Item"]("positional")
 
     def test_quoted_annotation_is_rejected_before_runtime_type_resolution(self):
         claim = declaration("Item").replace("    pass", '    name: "open(\'file\', \'w\')"')

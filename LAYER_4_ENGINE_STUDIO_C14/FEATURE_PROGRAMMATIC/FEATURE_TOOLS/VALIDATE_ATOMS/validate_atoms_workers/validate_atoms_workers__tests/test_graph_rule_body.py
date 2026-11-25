@@ -9,7 +9,7 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.VALIDATE_ATOMS.validate_atoms_workers.graph_rule_body import (  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.VALIDATE_ATOMS.validate_atoms_workers.validate_atoms_workers__shared import (  # noqa: E402
     validate_graph_rule_body,
     validated_graph_rule_payload,
 )

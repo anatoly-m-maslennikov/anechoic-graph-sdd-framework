@@ -16,14 +16,15 @@ from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (  # noqa: E402
     declared_header_schema,
 )
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import QueryStore  # noqa: E402
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_header_schema import SourceHeaderSchema  # noqa: E402
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__shared import SourceReader  # noqa: E402
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__tests._source_reader_fixture import SourceReaderFixture  # noqa: E402
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import extension_directory  # noqa: E402
 
 
 from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__tests.workbench_schema_fixture import WorkbenchSchemaFixture, atom
 
 
-class WorkbenchSchemaAssetTests(WorkbenchSchemaFixture):
+class WorkbenchSchemaAssetTests(WorkbenchSchemaFixture, SourceReaderFixture):
     def test_mode_one_uses_canonical_adapter_paths_and_alias_reads_only(self) -> None:
         declaration = atom(
             "CA-R-DECL", form="Declaration", body="""## Claim
@@ -124,35 +125,27 @@ Atom.Header.Version:: [string]{::1};
 
 
     def test_mode_one_declaration_changes_are_the_schema_boundary(self) -> None:
-        original = atom("CA-R-DECL", form="Declaration", body="""## Claim
-
-### Formal Claim
-
-```CFEL
-Atom.Header.Version:: [int]{::1};
-```
-""")
-        state = SourceHeaderSchema()
-        state.rebuild([original])
-        assert state.schema is not None
-        original_schema = state.schema
-        same_shape = dict(original, version=2)
-        self.assertFalse(state.update({same_shape["source_path"]: same_shape}))
-        assert state.schema is not None
-        self.assertEqual(2, state.schema.columns[0].rules[0].source.version)
-        changed_body = """## Claim
-
-### Formal Claim
-
-```CFEL
-Atom.Header.Version:: [string]{::1};
-```
-"""
-        type_changed = dict(
-            same_shape, version=3, content_markdown=changed_body, _content_bytes=changed_body.encode("utf-8"),
+        SourceReaderFixture.setUp(self)
+        reader = SourceReader(self.root, schema_mode=1)
+        path = self._write_atom(
+            "MAIN", "04_requirement", "CA-R-3-header.md", atom_id="CA-R-3", form="Declaration",
+            body="## Claim\n\n### Formal Claim\n\n```CFEL\nAtom.Header.Example:: [int]{::0..1};\n```\n",
         )
-        self.assertTrue(state.update({type_changed["source_path"]: type_changed}))
-        self.assertEqual(original_schema.shape, state.schema.shape)
+        reader.capture()
+        self.assertEqual("BIGINT", reader.header_schema.columns[0].format)
+        initial_shape = reader.header_schema.shape
+        change = [{"operation": "update", "new_path": path.relative_to(self.root).as_posix()}]
+        original = path.read_text()
+        path.write_text(original.replace("version: 1", "version: 2"))
+        reader.capture(change)
+        self.assertIsNotNone(reader.capture_delta)
+        self.assertEqual(initial_shape, reader.header_schema.shape)
+        self.assertEqual(2, reader.header_schema.columns[0].rules[0].source.version)
+        path.write_text(original.replace("version: 1", "version: 3").replace("[int]", "[string]"))
+        reader.capture(change)
+        self.assertIsNone(reader.capture_delta)
+        self.assertEqual("VARCHAR", reader.header_schema.columns[0].format)
+        self.assertNotEqual(initial_shape, reader.header_schema.shape)
 
 
     def test_equal_header_validation_shapes_ignore_distinct_provenance(self) -> None:

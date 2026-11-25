@@ -6,7 +6,7 @@ import tempfile
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.RELEASE_VERSION.release_inventory import (  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.RELEASE_VERSION.RELEASE_VERSION__shared import (  # noqa: E402
     ReleaseInventoryError,
     persistent_regular_files,
     refuse_secret_path,

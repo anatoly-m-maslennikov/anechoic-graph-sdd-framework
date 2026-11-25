@@ -15,10 +15,10 @@ from .local_release_runner import LocalReleaseRun
 def run_local_release(project_root: Path | str, *, run_id: str,
                       runner: Callable[[tuple[str, ...], Path], Any] | None = None,
                       test_modules: tuple[str, ...] | None = None,
-                      image_mode: str = "refresh") -> dict[str, object]:
-    """Run the direct local release without candidate selection or recovery state."""
+                      image_mode: str | None = None, resume: bool = False) -> dict[str, object]:
+    """Start a Local Release or continue its recorded phases."""
     try:
-        release = LocalReleaseRun(project_root, run_id, runner, test_modules, image_mode)
+        release = LocalReleaseRun(project_root, run_id, runner, test_modules, image_mode, resume=resume)
     except LocalReleaseError as error:
         if str(error) != "local-release-project-selection-invalid":
             raise

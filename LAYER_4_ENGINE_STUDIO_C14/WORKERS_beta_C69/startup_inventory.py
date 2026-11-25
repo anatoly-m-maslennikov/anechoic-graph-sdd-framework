@@ -20,9 +20,8 @@ def folder_hashes(hashes):
             for folder, rows in folders.items()}
 
 
-def changed_paths(previous, current, folders):
-    if not isinstance(folders, dict) or folders != folder_hashes(previous):
-        raise ValueError("Invalid folder checkpoint")
+def changed_paths(previous, current):
+    folders = folder_hashes(previous)
     new_folders = folder_hashes(current)
     changed = {folder for folder in folders.keys() | new_folders.keys() if folders.get(folder) != new_folders.get(folder)}
     return sorted(path for path in previous.keys() | current.keys()

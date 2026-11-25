@@ -1,0 +1,24 @@
+def _migration_rows(rows, migration_refs):
+    exact_refs = {row["_exact_ref"] for row in rows}
+    if len(exact_refs) != len(rows):
+        raise ValueError("Duplicate native exact references")
+    legacy = []
+    paths = {}
+    seen = set()
+    for old_ref, original_path, target_ref in migration_refs:
+        path = PurePosixPath(original_path)
+        if (path.is_absolute() or PureWindowsPath(original_path).drive or "\\" in original_path
+                or "\x00" in original_path or ".." in path.parts or path.suffix != ".md"
+                or original_path != path.as_posix() or target_ref not in exact_refs):
+            raise ValueError("Invalid native migration path or exact reference")
+        if paths.setdefault(original_path, target_ref) != target_ref:
+            raise ValueError(f"Conflicting exact references for native migration path {original_path!r}")
+        if old_ref is None:
+            continue
+        key = old_ref, original_path
+        # A reviewed migration can assign a new version to a path-bound revision.
+        if not re.fullmatch(r"[A-Z]+-[A-Z]-[0-9]+@[1-9][0-9]*(?:-draft)?", old_ref) or key in seen:
+            raise ValueError("Invalid legacy migration reference")
+        seen.add(key)
+        legacy.append((old_ref, original_path, target_ref))
+    return legacy, list(paths.items())

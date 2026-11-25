@@ -1,0 +1,23 @@
+{
+  "title": "Preserve native direct-update response shape",
+  "invariant": "A native direct-update response preserves the earlier public response shape and does not add the backend artifact field.",
+  "scope": "NativeLifecycleProvider.call for atom_lifecycle_direct_update with an ordinary non-workflow backend result. The modeled inputs are completed status and backend artifact presence. Compatibility is measured against the pre-regression response shape, not a general rule for other lifecycle operations.",
+  "before": {
+    "revision": "714fbf4a4fcc5884ff61cdf48467f8583e1d4530",
+    "source": "LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/registry_lifecycle_provider.py",
+    "fixture": "before.py.txt",
+    "sha256": "d345e4c7d9042568f01728c80964b7e23cdc0c4413241d3499ce76faa97a95c6"
+  },
+  "fixed": {
+    "revision": "f6711a40b59bd2fa022ee19b48e7c10319b4c88f",
+    "source": "LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/registry_lifecycle_provider.py",
+    "fixture": "fixed.py.txt",
+    "sha256": "3e13ee601e4e90182639d4c2cb93186a85f66e0cc4612287fd4e5995d2397935"
+  },
+  "checks": [
+    {
+      "file": "check.lean"
+    }
+  ],
+  "analyzer": "analyze.py"
+}

@@ -16,21 +16,34 @@ from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (  # noqa: E402
     compile_content_schema,
 )
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_content  # noqa: E402
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_content_schema import SourceContentSchema  # noqa: E402
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__tests._source_reader_fixture import SourceReaderFixture  # noqa: E402
 
 
 from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__tests.content_schema_fixture import ContentSchemaFixture
 
 
-class ContentDeclarationSchemaTests(ContentSchemaFixture):
+class ContentDeclarationSchemaTests(ContentSchemaFixture, SourceReaderFixture):
     def test_ancestry_only_changes_trigger_content_shape_comparison(self) -> None:
-        property_rule = self.declaration("CA-R-8", "Workflow.Content.Mermaid Scheme:: {::1};")
-        ancestry = self.declaration("CA-R-9", "Atom/(.Header.Role := Operations)/Workflow;")
-        state = SourceContentSchema()
-        state.rebuild([property_rule])
-        self.assertTrue(state.changes_schema({ancestry["source_path"]: ancestry}))
-        state.rebuild([property_rule, ancestry])
-        self.assertTrue(state.changes_schema({ancestry["source_path"]: None}))
+        SourceReaderFixture.setUp(self)
+        self._write_atom(
+            "MAIN", "04_requirement", "CA-R-8-property.md", atom_id="CA-R-8", form="Declaration",
+            body="## Claim\n\n### Formal Claim\n\n```CFEL\nWorkflow.Content.Mermaid Scheme:: {::1};\n```\n",
+        )
+        self.reader.capture()
+        initial_shape = self.reader.content_schema.shape
+        ancestry = self._write_atom(
+            "MAIN", "04_requirement", "CA-R-9-ancestry.md", atom_id="CA-R-9", form="Declaration",
+            body="## Claim\n\n### Formal Claim\n\n```CFEL\nAtom/(.Header.Role := Operations)/Workflow;\n```\n",
+        )
+        relative = ancestry.relative_to(self.root).as_posix()
+        self.reader.capture([{"operation": "create", "new_path": relative}])
+        self.assertIsNone(self.reader.capture_delta)
+        self.assertIn("content.mermaid_scheme", self.reader.content_schema.names)
+        self.assertNotEqual(initial_shape, self.reader.content_schema.shape)
+        ancestry.unlink()
+        self.reader.capture([{"operation": "remove", "old_path": relative}])
+        self.assertIsNone(self.reader.capture_delta)
+        self.assertEqual(initial_shape, self.reader.content_schema.shape)
 
 
     def test_declared_children_produce_rmed_claim_columns_and_keep_legacy_prose(self) -> None:

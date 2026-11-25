@@ -5,10 +5,13 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from concurrent.futures import CancelledError as FutureCancelledError
-from dataclasses import dataclass, field, replace
+from dataclasses import field, replace
 from functools import wraps
 import inspect
 from typing import Any, Literal, ParamSpec, TypeVar, cast
+
+from pydantic import ConfigDict
+from pydantic.dataclasses import dataclass
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.technical_diagnostics import TechnicalDiagnosticLogger
 
@@ -29,7 +32,7 @@ class ExplicitBlockingRuntimeFailure(Exception):
         super().__init__(message)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True, slots=True, config=ConfigDict(strict=True, extra="forbid"))
 class FailureRecord:
     """A caller-neutral classification; the caller still owns its response shape."""
 

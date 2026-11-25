@@ -1,0 +1,24 @@
+{
+  "title": "Namespace import shadow traversal",
+  "invariant": "Shadow traversal survives an import clause with no default name and continues into the namespace import.",
+  "scope": "The findShadow AST and direct scan invocation for an import clause with no default name. The model assumes earlier scan steps succeed and does not prove JavaScript semantics, downstream analysis, or correctness for other source shapes. Unsupported shapes are unresolved.",
+  "before": {
+    "revision": "archived BB thread thr_86zjijbcaj event 65416 command output, uncommitted source",
+    "source": "LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_IMPORT_GRAPH_C61/web_state_cases.mjs",
+    "fixture": "before.mjs.txt",
+    "sha256": "c8f06b2a7c9de44d9076d583f746b854a5c35f7c354e56bd7c6830cce469fa9e"
+  },
+  "fixed": {
+    "revision": "f94af35a1901683b9f9999f2c7d8177b8795d149",
+    "source": "LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_IMPORT_GRAPH_C61/web_state_cases.mjs",
+    "fixture": "fixed.mjs.txt",
+    "sha256": "82847ed02411846c5214f769c508a0dd3dbcaa56d3ef09ae5912993d9ad9c954"
+  },
+  "provenance": "Before is the complete cat output ending at the script catch block, from BB thread thr_86zjijbcaj events 65415-65416; the crash is recorded at 65409 and the patch at 65476-65477. Fixed is a later Git witness, not a claim of byte identity to the immediate patch.",
+  "checks": [
+    {
+      "file": "regression.lean"
+    }
+  ],
+  "analyzer": "analyze.py"
+}

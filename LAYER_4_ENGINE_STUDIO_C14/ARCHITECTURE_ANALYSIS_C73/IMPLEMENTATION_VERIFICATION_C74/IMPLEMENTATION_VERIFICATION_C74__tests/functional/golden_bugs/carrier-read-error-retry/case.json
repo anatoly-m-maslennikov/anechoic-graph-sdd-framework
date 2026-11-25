@@ -1,0 +1,23 @@
+{
+  "title": "Retry source after a read error",
+  "invariant": "A previous read error is retried on the next capture when the source still exists, even when its signature is unchanged and the change event is unrelated.",
+  "scope": "Existing source, previous read_error, unchanged signature, and an unrelated nonempty incremental change; assumes discovery finds the included source and its read succeeds.",
+  "before": {
+    "revision": "944aca2f1bee111d79a12f454fe8f16f8707c268",
+    "source": "LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_IMPORT_GRAPH_C61/source.py",
+    "fixture": "before.py.txt",
+    "sha256": "5da06410dcd83d943efa16709cfe4aa30a677cd5fce63d2a9317a4c8c6f3797e"
+  },
+  "fixed": {
+    "revision": "f9907347820506396eacecc2126277e0d7270183",
+    "source": "LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_IMPORT_GRAPH_C61/source.py",
+    "fixture": "fixed.py.txt",
+    "sha256": "d8d67599464919a4da4fccfb91df20897afdc206240fe82c83fa57b710db748e"
+  },
+  "checks": [
+    {
+      "file": "check.lean"
+    }
+  ],
+  "analyzer": "analyze.py"
+}

@@ -11,7 +11,7 @@ from unittest import mock
 
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.source_watcher__pub import SourceWatcher  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import SourceWatcher  # noqa: E402
 
 
 class _Observer:
@@ -74,8 +74,8 @@ class SourceWatcherTests(unittest.TestCase):
         watcher.start()
         self.addCleanup(watcher.close)
         self.assertIn((str(self.root.absolute()), False), observer.schedules)
-        watcher._modified(str(self.root / 'AN-S-1-SPEC-PROJECT_GOAL--goal.md'), False)
-        watcher._modified(str(self.root / 'outside' / 'nested.md'), False)
+        observer.handler.on_modified(self.event(self.root / 'AN-S-1-SPEC-PROJECT_GOAL--goal.md'))
+        observer.handler.on_modified(self.event(self.root / 'outside' / 'nested.md'))
         self.assertEqual([{'operation': 'update', 'old_path': None,
                            'new_path': 'AN-S-1-SPEC-PROJECT_GOAL--goal.md'}], watcher.changes(0))
 
@@ -145,9 +145,7 @@ class SourceWatcherTests(unittest.TestCase):
             (str(directory.resolve(strict=False)), False),
             (str(destination.resolve()), False),
         ], self.observer.schedules)
-        self.assertIn(self.watcher._control_root, self.watcher._watched_directories)
-        self.assertIn(destination.resolve(), self.watcher._watched_directories)
-        self.assertEqual(2, len(self.watcher._watched_directories))
+        self.assertEqual([str(directory.resolve())], self.observer.unscheduled)
 
     def test_native_large_directory_move_watches_destination_before_move_record(self) -> None:
         source = self.control / "source" / "batch"
@@ -182,7 +180,6 @@ class SourceWatcherTests(unittest.TestCase):
             ))
 
         self.assertEqual([(str(self.control), True)], self.observer.schedules)
-        self.assertNotIn(destination.resolve(), self.watcher._watched_directories)
         self.assertEqual([
             {
                 "operation": "remove",
@@ -243,11 +240,12 @@ class SourceWatcherTests(unittest.TestCase):
         self.assertEqual("file.py", self.watcher.changes(0)[0]["new_path"])
 
     def test_positive_timeout_collects_one_fixed_event_window(self) -> None:
-        self.watcher._record("create", None, ".anechoic_example/first.md")
+        event = self.event(self.control / "first.md")
+        self.observer.handler.on_created(event)
 
         def add_update() -> None:
             time.sleep(0.01)
-            self.watcher._record("update", None, ".anechoic_example/first.md")
+            self.observer.handler.on_modified(event)
 
         worker = threading.Thread(target=add_update)
         worker.start()

@@ -305,7 +305,7 @@ for entry points, shared dependencies and verification limits. This code-first
 retirement does not claim that the corresponding methodology Atoms have already
 been reconciled or that an installed runtime has been replaced.
 
-The Release uv Project provides three host commands in the `release` environment.
+Run the host Release commands in the locked `release` environment.
 
 - **Local Release** checkpoints eligible changes and runs static checks and
   configured host functional checks before the build. The image suite runs
@@ -317,6 +317,7 @@ The Release uv Project provides three host commands in the `release` environment
   description and Version History entry. The Operator handles publication.
 - **Build image** returns the immutable image ID for the checked-out source without
   deploying it or changing the Version.
+- **Verify image** runs the image suite and canary on the exact candidate.
 
 Use an Operator command to start a release. After production verification,
 Local Release keeps the current image and two previous Project images. It removes
@@ -337,6 +338,9 @@ independently of MCP. Regular
 Project MCP runs in Docker on localhost without a password; the
 [launcher documentation](LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/README.md)
 describes Project selection and endpoint startup.
+
+See [Operator Documentation](LAYER_6_OPERATOR_DOCUMENTATION_C25/README.md)
+to resume a release, verify an image, or release to a selected Project.
 
 Local numbering adds or increments the fourth component (`0.4.2.1` →
 `0.4.2.2`). Public numbering increments the third and removes the fourth

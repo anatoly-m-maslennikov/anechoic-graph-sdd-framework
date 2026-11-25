@@ -7,9 +7,7 @@ import unittest
 from unittest.mock import patch
 
 from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__tests import test_source_reader as fixtures
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND import source_reader_capture
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.generate_relation_registry import compile_project_registry
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.generate_workbench_schema import compile_project_schema
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__tests.workbench_schema_fixture import generate_asset
 
 
 class SourceDiscoveryTests(unittest.TestCase):
@@ -82,7 +80,7 @@ class SourceDiscoveryTests(unittest.TestCase):
         self.fixture._capture()
         source = self.source("new-owner/entry.md", "CA-R-791")
         with patch.object(self.reader, "_inventory_paths", side_effect=AssertionError("unexpected full scan")), \
-             patch.object(source_reader_capture, "read_scope_unit_declarations", side_effect=AssertionError("unexpected Scope scan")):
+             self.fixture.source_reads() as reads:
             def capture(operation, old=None, new=None):
                 return self.reader.capture([{
                     "operation": operation,
@@ -107,6 +105,7 @@ class SourceDiscoveryTests(unittest.TestCase):
             self.assertNotIn("CA-R-791", {row["id"] for row in capture("remove", old=moved)})
             capture("create", new=self.root / "outside.md")
             self.assertFalse(self.reader.capture_changed)
+        self.assertTrue(self.fixture.declaration_paths().isdisjoint(reads))
 
     def test_archiving_and_duplicate_deltas_keep_each_carrier(self):
         original = self.source("loose/current.md", "CA-R-790")
@@ -215,11 +214,15 @@ relation(source="Relation//INVERSE", name="HAS_INVERSE", target="Relation//DIREC
 ```
 """)
         inverse.write_text(inverse.read_text().replace("subjects: {}", "subjects:\n  active: CFEL <+ Relation//INVERSE"))
-        schema = json.loads(compile_project_schema(self.root))
+        schema_data = generate_asset(self.root, "generate_workbench_schema.py")
+        self.assertEqual(schema_data, generate_asset(self.root, "generate_workbench_schema.py"))
+        schema = json.loads(schema_data)
         columns = schema["modes"]["2"]["content"]["content_columns"]
         self.assertEqual(["content.summary"], [column["name"] for column in columns])
         self.assertIn(declaration.relative_to(self.root).as_posix(), {item["path"] for item in schema["sources"]})
-        registry = json.loads(compile_project_registry(self.root))
+        registry_data = generate_asset(self.root, "generate_relation_registry.py")
+        self.assertEqual(registry_data, generate_asset(self.root, "generate_relation_registry.py"))
+        registry = json.loads(registry_data)
         self.assertEqual(["DIRECT", "INVERSE"], registry["registered_names"])
         self.assertEqual([{"direct": "DIRECT", "inverse": "INVERSE"}], registry["inverse_bindings"])
         self.assertEqual({"CA-R-796", "CA-R-797"}, {item["atom_id"] for item in registry["sources"]})
@@ -256,11 +259,11 @@ relation(source="Relation//PROJECTED", name="HAS_INVERSE", target="Relation//COP
         atoms, _, _ = self.fixture._capture()
         self.assertFalse({"CA-R-795", "CA-R-796", "CA-R-797"} & {row["id"] for row in atoms})
 
-        schema = json.loads(compile_project_schema(self.root))
+        schema = json.loads(generate_asset(self.root, "generate_workbench_schema.py"))
         columns = schema["modes"]["2"]["content"]["content_columns"]
         self.assertEqual(["content.summary"], [column["name"] for column in columns])
         self.assertIn(declaration.relative_to(self.root).as_posix(), {item["path"] for item in schema["sources"]})
-        registry = json.loads(compile_project_registry(self.root))
+        registry = json.loads(generate_asset(self.root, "generate_relation_registry.py"))
         self.assertEqual(["DIRECT", "INVERSE"], registry["registered_names"])
         self.assertEqual({"CA-R-796"}, {item["atom_id"] for item in registry["sources"]})
 
@@ -286,7 +289,7 @@ subject_path(address="Relation//CURRENT")
         )
         atoms, _, _ = self.fixture._capture()
         self.assertEqual(str(copied.relative_to(self.root)), next(row["source_path"] for row in atoms if row["id"] == "CA-R-810"))
-        registry = json.loads(compile_project_registry(self.root))
+        registry = json.loads(generate_asset(self.root, "generate_relation_registry.py"))
         self.assertIn("CURRENT", registry["registered_names"])
         self.assertNotIn("STALE", registry["registered_names"])
         pin = next(row for row in registry["sources"] if row["atom_id"] == "CA-R-810")
@@ -299,7 +302,7 @@ subject_path(address="Relation//CURRENT")
             "MAIN", "04_requirement", "native.md", atom_id="CA-R-809", version=2,
             form="Declaration", body=template.format("Current Field"),
         )
-        schema = json.loads(compile_project_schema(self.root))
+        schema = json.loads(generate_asset(self.root, "generate_workbench_schema.py"))
         for mode in ("1", "2"):
             columns = schema["modes"][mode]["content"]["content_columns"]
             self.assertEqual(["content.current_field"], [column["name"] for column in columns])
@@ -320,7 +323,7 @@ subject_path(address="Relation//CURRENT")
 subject_path(address="Relation//VALID")
 ```
 """)
-        registry = json.loads(compile_project_registry(self.root))
+        registry = json.loads(generate_asset(self.root, "generate_relation_registry.py"))
         self.assertIn("VALID", registry["registered_names"])
 
 

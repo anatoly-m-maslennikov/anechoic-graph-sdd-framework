@@ -12,6 +12,7 @@ import stat
 import re
 import subprocess
 import sys
+from tempfile import TemporaryDirectory
 import time
 from pathlib import Path
 from urllib.request import ProxyHandler, build_opener
@@ -19,6 +20,9 @@ from urllib.request import ProxyHandler, build_opener
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import project_goal_filename
 
 from .full_suite_docker import IMAGE_DEADLINES, image_deadline_mode, image_timeout
+
+_RUNTIME_SETTINGS = Path(".anechoic_runtime/anechoic_runtime_settings.toml")
+_RUNTIME_SETTINGS_LIMIT = 65536
 
 class CanaryError(Exception):
     pass
@@ -99,11 +103,11 @@ def _mcp_ready(port: int, timeout: float | None, *, query_enabled: bool = True) 
 
 
 @contextmanager
-def _candidate_tag(root: Path, staging: Path, image: str, run_id: str):
+def _candidate_tag(root: Path, attempt: Path, image: str, run_id: str):
     if not isinstance(run_id, str) or re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", run_id) is None:
         raise CanaryError("local-release-canary-run-id-invalid")
-    attempt = sha256(str(staging).encode()).hexdigest()[:16]
-    tag = f"anechoic-runtime:candidate-{run_id[:96]}-{attempt}"
+    token = sha256(str(attempt).encode()).hexdigest()[:16]
+    tag = f"anechoic-runtime:candidate-{run_id[:96]}-{token}"
     try:
         subprocess.run(["docker", "image", "tag", image, tag], cwd=root, check=True,
                        capture_output=True, text=True, timeout=image_timeout(30))
@@ -125,7 +129,12 @@ def _candidate_tag(root: Path, staging: Path, image: str, run_id: str):
 def _selection(value: object) -> dict:
     fields = {"control_root", "manifest_path", "manifest_ref", "manifest_sha256",
               "project_name", "project_prefix", "query_enabled"}
-    if not isinstance(value, dict) or set(value) != fields:
+    if not isinstance(value, dict) or set(value) - {"runtime_settings_sha256"} != fields:
+        raise CanaryError("local-release-canary-selection-invalid")
+    runtime_digest = value.get("runtime_settings_sha256")
+    if runtime_digest is not None and (
+        not isinstance(runtime_digest, str) or re.fullmatch(r"[0-9a-f]{64}", runtime_digest) is None
+    ):
         raise CanaryError("local-release-canary-selection-invalid")
     control, manifest = value["control_root"], value["manifest_path"]
     name, prefix, ref, digest = (value[key] for key in
@@ -153,6 +162,42 @@ def _verify_manifest(root: Path, selection: dict) -> None:
             raise CanaryError("local-release-canary-manifest-changed")
 
 
+def _runtime_settings(root: Path) -> bytes | None:
+    source = root / _RUNTIME_SETTINGS
+    try:
+        directory = os.open(source.parent, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+        try:
+            fd = os.open(source.name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=directory)
+        finally:
+            os.close(directory)
+    except FileNotFoundError:
+        return None
+    except OSError as error:
+        raise CanaryError("local-release-canary-runtime-settings-unsafe") from error
+    with os.fdopen(fd, "rb") as stream:
+        info = os.fstat(stream.fileno())
+        if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1:
+            raise CanaryError("local-release-canary-runtime-settings-unsafe")
+        data = stream.read(_RUNTIME_SETTINGS_LIMIT + 1)
+    if len(data) > _RUNTIME_SETTINGS_LIMIT:
+        raise CanaryError("local-release-canary-runtime-settings-too-large")
+    return data
+
+
+def _copy_runtime_settings(root: Path, project: Path, selection: dict) -> None:
+    data = _runtime_settings(root)
+    observed = sha256(data).hexdigest() if data is not None else None
+    if "runtime_settings_sha256" in selection and observed != selection["runtime_settings_sha256"]:
+        raise CanaryError("local-release-canary-runtime-settings-changed")
+    destination = project / _RUNTIME_SETTINGS
+    if destination.parent.is_symlink() or destination.exists() or destination.is_symlink():
+        raise CanaryError("local-release-canary-runtime-settings-unsafe")
+    if data is not None:
+        destination.parent.mkdir(exist_ok=True)
+        with destination.open("xb") as stream:
+            stream.write(data)
+
+
 def verify_candidate_image(root: Path, package: Path, image: str, *, run_id: str, selection: dict) -> str:
     """Start the immutable image and verify that MCP serves a real query."""
     if not re.fullmatch(r"sha256:[0-9a-f]{64}", image):
@@ -160,13 +205,15 @@ def verify_candidate_image(root: Path, package: Path, image: str, *, run_id: str
     staging = _workspace(root, package, run_id)
     selection = _selection(selection)
     _verify_manifest(root, selection)
-    with _candidate_tag(root, staging, image, run_id):
-        return _verify_candidate_image(root, selection, package, staging, image)
+    with TemporaryDirectory(prefix="canary-attempt-", dir=staging) as directory:
+        attempt = Path(directory)
+        with _candidate_tag(root, attempt, image, run_id):
+            return _verify_candidate_image(root, selection, package, attempt, image)
 
 
-def _verify_candidate_image(root: Path, selection, package: Path, staging: Path, image: str) -> str:
-    project = staging / "canary-project"
-    cidfile = staging / "canary-container-id"
+def _verify_candidate_image(root: Path, selection, package: Path, attempt: Path, image: str) -> str:
+    project = attempt / "canary-project"
+    cidfile = attempt / "canary-container-id"
     if "," in str(project):
         raise CanaryError("local-release-canary-path-invalid")
     try:
@@ -200,6 +247,7 @@ def _start_canary_container(
         if source.is_symlink() or not source.is_file() or destination.exists() or destination.is_symlink():
             raise CanaryError("canary-copy-unsafe")
         shutil.copyfile(source, destination)
+    _copy_runtime_settings(root, project, selection)
     _verify_manifest(project, selection)
     subprocess.run(["git", "init", "--quiet", str(project)], cwd=root, check=True,
                    capture_output=True, text=True, timeout=image_timeout(30))
@@ -225,7 +273,7 @@ def _await_canary(root: Path, container: str, port: int, *, query_enabled: bool)
     while time.monotonic() < deadline:
         try:
             with _HTTP.open(base + "/anechoic/health", timeout=min(3, deadline - time.monotonic())) as response:
-                if json.load(response).get("ready") is True:
+                if json.load(response).get("state") == "ready":
                     break
         except (OSError, ValueError):
             pass

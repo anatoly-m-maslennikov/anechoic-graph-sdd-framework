@@ -7,7 +7,6 @@ import os
 from pathlib import Path
 import sys
 
-MCP = Path(__file__).resolve().parents[1]
 PROJECT_ROOT = Path("/project")
 ENGINE = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ENGINE))
@@ -44,36 +43,35 @@ def _shared_mcp_command():
     ]
 
 
+def _project_mcp_command(mode):
+    command = [sys.executable, "-B", "-P", "-m", "MCP_PATCHBAY_C21.FEATURE_MCP.server",
+               "--project-root", str(PROJECT_ROOT)]
+    if mode == "mcp-http":
+        command += ["--transport", "streamable-http"]
+    for flag, key in (
+        ("--control-root", "ANECHOIC_CONTROL_ROOT"),
+        ("--instance-id", "ANECHOIC_PROJECT_INSTANCE_ID"),
+        ("--host-project-root", "ANECHOIC_HOST_PROJECT_ROOT"),
+    ):
+        if key in os.environ:
+            command += [flag, os.environ[key]]
+    return command
+
+
 def _exec_service(mode):
-    if mode == "shared-mcp":
-        command = _shared_mcp_command()
-    else:
-        paths = {
-            "mcp": MCP / "server.py",
-            "mcp-http": MCP / "server.py",
-        }
-        if mode not in paths:
-            raise ValueError("unsupported runtime mode")
-        command = [sys.executable, "-B", "-P", "-m", "MCP_PATCHBAY_C21.FEATURE_MCP.server", "--project-root", str(PROJECT_ROOT)]
-        if mode == "mcp-http":
-            command += ["--transport", "streamable-http"]
-        if mode in {"mcp", "mcp-http"}:
-            for flag, key in (
-                ("--control-root", "ANECHOIC_CONTROL_ROOT"),
-                ("--instance-id", "ANECHOIC_PROJECT_INSTANCE_ID"),
-                ("--host-project-root", "ANECHOIC_HOST_PROJECT_ROOT"),
-            ):
-                if key in os.environ:
-                    command += [flag, os.environ[key]]
+    if mode not in RUNTIME_MODES:
+        raise ValueError("unsupported runtime mode")
+    stack = os.environ.get("ANECHOIC_RUNTIME_STACK")
+    command = _shared_mcp_command() if mode == "shared-mcp" else _project_mcp_command(mode)
     environment = {**{k: v for k, v in os.environ.items() if k != "PYTHONHOME"}, "PYTHONPATH": str(ENGINE)}
     try:
         environment["ANECHOIC_LOG_LEVEL"] = direct_log_level()
     except ValueError as error:
         raise ExplicitStartupFailure("invalid_log_level") from error
-    if mode == "shared-mcp" and environment.get("ANECHOIC_RUNTIME_STACK") == "beta":
+    if mode == "shared-mcp" and stack == "beta_next":
         from MCP_PATCHBAY_C21.FEATURE_MCP.docker.shared_supervisor import supervise
         return supervise(command, environment, environment["ANECHOIC_HOST_SETTINGS"])
-    if mode == "mcp-http" and environment.get("ANECHOIC_RUNTIME_STACK") == "beta":
+    if mode == "mcp-http" and stack == "beta_next":
         from MCP_PATCHBAY_C21.FEATURE_MCP.docker.shared_supervisor import supervise_project
         return supervise_project(command, environment, PROJECT_ROOT)
     try:

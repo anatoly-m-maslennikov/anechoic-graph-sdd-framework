@@ -14,7 +14,7 @@ APP = Path(__file__).resolve().parents[1]
 DOCKER = APP / "docker"
 TOOLS = APP.parents[1] / "FEATURE_PROGRAMMATIC" / "FEATURE_TOOLS"
 
-from MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_launcher import (  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import (  # noqa: E402
     Launcher,
 )
 

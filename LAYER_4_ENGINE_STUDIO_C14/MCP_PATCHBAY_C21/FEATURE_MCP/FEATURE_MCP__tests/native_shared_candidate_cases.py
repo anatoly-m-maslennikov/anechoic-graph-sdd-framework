@@ -18,14 +18,14 @@ import httpx2
 from mcp.client.session import ClientSession
 from mcp.client.streamable_http import streamable_http_client
 
-from . import test_native_startup as fixture
+from .FEATURE_MCP__tests__shared import write_manifest
 from .native_shared_core_recovery import KILL_CHILD, assert_core_recovery
 from .workbench_docker_support import defer_container_cleanup, docker_deadline_env, image_timeout, observing
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import HEALTH_PATH, MCP_PATH
 
 
 _MCP_MODULE = "MCP_PATCHBAY_C21.FEATURE_MCP.shared_http_server"
-_BETA_BACKEND_MODULE = "WORKBENCH_BACKEND_beta_C70.shared_runtime"
+_BETA_BACKEND_MODULE = "API_MIXER_beta_C82.shared_runtime"
 
 
 class SharedCandidateCases:
@@ -51,7 +51,7 @@ class SharedCandidateCases:
             project = projects / name
             project.mkdir(parents=True)
             subprocess.run(["git", "init", "--quiet", str(project)], check=True)
-            fixture.RuntimeSelectionTests.manifest(
+            write_manifest(
                 None, project / f"_anechoic_{name}", name=name,
                 prefix=name.upper(), component="C00",
                 parameters={"project": {"root": {"prefix": "underscore"}}},
@@ -65,7 +65,10 @@ class SharedCandidateCases:
             ["docker", "image", "inspect", "--format", "{{json .Config.Env}}", image],
             timeout=image_timeout(10), text=True,
         )
-        self._shared_candidate_beta = "ANECHOIC_RUNTIME_STACK=beta" in json.loads(environment)
+        env = set(json.loads(environment))
+        self._shared_candidate_beta_next = "ANECHOIC_RUNTIME_STACK=beta_next" in env
+        self._shared_candidate_beta = self._shared_candidate_beta_next
+        self._backend_module = _BETA_BACKEND_MODULE
         defaults = '\n[project_defaults]\nworkbench_storage="memory"\n' if self._shared_candidate_beta else ""
         settings = host / "MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime.toml"
         settings.write_text(
@@ -81,6 +84,7 @@ class SharedCandidateCases:
             "--cap-drop", "ALL", "--security-opt", "no-new-privileges:true",
             "--tmpfs", "/tmp:size=128m,mode=1777", "--memory", "1536m",
             "--publish", "127.0.0.1::8092", "--mount", f"type=bind,src={host},dst={host}",
+            *(["-e", "ANECHOIC_RUNTIME_PROFILE=test"] if self._shared_candidate_beta_next else []),
             "-e", f"ANECHOIC_HOST_SETTINGS={settings}", "-e", docker_deadline_env(), image, "shared-mcp",
         ], timeout=image_timeout(40), text=True).strip()
         self.assertRegex(container, r"\A[a-f0-9]{64}\Z")
@@ -99,7 +103,7 @@ class SharedCandidateCases:
         while observing(container, deadline):
             try:
                 with opener.open(base + HEALTH_PATH, timeout=image_timeout(2)) as response:
-                    if json.load(response)["ready"] is True:
+                    if json.load(response)["state"] == "ready":
                         return
             except HTTPError as error:
                 error.close()
@@ -145,18 +149,19 @@ class SharedCandidateCases:
     def _assert_project_processes(self, projects):
         processes, listing = self._processes()
         mcp = self._one(processes, _MCP_MODULE, listing)
-        beta = [item for item in processes if _BETA_BACKEND_MODULE in item[2]]
+        beta = [item for item in processes if self._backend_module in item[2]]
         current = [item for item in processes if "FEATURE_WORKBENCH_BACKEND.shared_backend_process" in item[2]]
         self.assertEqual(1, len(beta) + len(current), listing)
         self.assertEqual(self._shared_candidate_beta, bool(beta), listing)
         if beta:
             backend = beta[0]
-            owner = self._one(processes, "WORKBENCH_BACKEND_beta_C70.shared_peer_owner", listing)
+            owner_module = "ORCHESTRATOR_beta_C68.shared_peer_owner"
+            owner = self._one(processes, owner_module, listing)
             self.assertEqual({mcp[1]}, {backend[1], owner[1]}, listing)
             self.assertTrue(any(pid == mcp[1] and "docker/entrypoint.py" in command
                                 for pid, _, command in processes), listing)
             peer_processes = self._assert_beta_processes(processes, backend[0], owner[0], listing)
-            return {_MCP_MODULE: mcp[0], _BETA_BACKEND_MODULE: backend[0], "peer_processes": peer_processes}
+            return {_MCP_MODULE: mcp[0], self._backend_module: backend[0], "peer_processes": peer_processes}
         backend = current[0]
         self.assertEqual(mcp[0], backend[1], listing)
         self._assert_current_processes(processes, backend[0], projects, listing)
@@ -175,7 +180,7 @@ class SharedCandidateCases:
         self.fail(f"Shared runtime did not replace {module}: {listing}")
 
     async def _assert_shared_restarts(self, endpoint, projects, http, query_ids, previous):
-        for module in (_BETA_BACKEND_MODULE, _MCP_MODULE):
+        for module in (self._backend_module, _MCP_MODULE):
             with self.subTest(restarted=module):
                 await asyncio.to_thread(self._restart_shared_child, endpoint, module, previous[module])
                 async with streamable_http_client(endpoint, http_client=http) as streams, ClientSession(*streams) as session:
@@ -218,8 +223,7 @@ class SharedCandidateCases:
     def _assert_beta_processes(self, processes, backend, owner, listing):
         admissions = [item for item in processes if "FEATURE_MODEL_VALIDATION.project_admission__pub" in item[2]]
         admission_parents = {parent for _, parent, _ in admissions}
-        self.assertIn(backend, admission_parents, listing)
-        self.assertLessEqual(admission_parents, {backend, owner}, listing)
+        self.assertEqual({owner}, admission_parents, listing)
         self.assertEqual(len(admissions), len(admission_parents), listing)
         worker = self._one([item for item in processes if item[1] == owner],
                            "WORKERS_beta_C69.warm_worker", listing)

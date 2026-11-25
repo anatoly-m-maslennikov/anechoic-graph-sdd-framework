@@ -1,11 +1,14 @@
 """Validated native Manifest input shared by selection and MCP tests."""
 
-from dataclasses import dataclass, field
+from dataclasses import field
+
+from pydantic import ConfigDict
+from pydantic.dataclasses import dataclass
 
 from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_field_validation import validate_model_fields
 
 
-@dataclass
+@dataclass(config=ConfigDict(strict=True, extra="forbid", hide_input_in_errors=True))
 class ProjectManifest:
     atom_id: str
     ref_id: str

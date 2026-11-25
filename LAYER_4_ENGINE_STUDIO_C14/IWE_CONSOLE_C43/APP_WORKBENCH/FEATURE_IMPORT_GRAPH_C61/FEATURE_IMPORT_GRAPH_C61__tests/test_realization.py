@@ -8,13 +8,61 @@ from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import patch
 
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61 import realization_graph_cli as cli
 from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.import_graph__shared import (
-    capture, relevant_change, resolve_realization,
+    capture, relevant_change, resolve_realization, run_graph_build,
 )
 
 
+_GRAPH_CLI = "IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.realization_graph_cli"
+
+
 class RealizationTests(unittest.TestCase):
+    def _run_graph(self, request, **options):
+        stdin = StringIO(json.dumps(request))
+        stdout, stderr = StringIO(), StringIO()
+        with patch.object(sys, "stdin", stdin), redirect_stdout(stdout), redirect_stderr(stderr):
+            status = run_graph_build(**options)
+        return status, stdout.getvalue(), stderr.getvalue()
+
+    def test_watcher_replay_uses_one_source_capture(self):
+        root = self._temporary_project()
+        (root / "main.py").write_text("import pathlib\n")
+        request = {"root": str(root), "config": {}}
+        status, expected, stderr = self._run_graph(request)
+        self.assertEqual(0, status, stderr)
+
+        def change_other_files(*args):
+            (root / ".git" / "unrelated").write_text("transient\n")
+            (root / ".anechoic_runtime").mkdir()
+            return {}
+
+        with (patch(f"{_GRAPH_CLI}.capture", wraps=capture) as capture_sources,
+              patch(f"{_GRAPH_CLI}._manifests") as capture_manifests):
+            status, actual, stderr = self._run_graph(request, derive_rows=change_other_files, watcher_replay=True)
+        self.assertEqual(0, status, stderr)
+        self.assertEqual(json.loads(expected), json.loads(actual))
+        capture_sources.assert_called_once_with(root, None, ())
+        capture_manifests.assert_not_called()
+
+    def test_watcher_replay_reports_git_ignore_changes_without_external_paths(self):
+        root = self._temporary_project()
+        (root / "main.py").write_text("import pathlib\n")
+        excluded = root / ".git" / "info" / "exclude"
+
+        def change(*args):
+            excluded.write_text("main.py\n")
+            return {}, []
+
+        with patch(f"{_GRAPH_CLI}._state_projection", change):
+            status, stdout, stderr = self._run_graph({"root": str(root), "config": {}}, watcher_replay=True)
+        self.assertEqual(1, status)
+        self.assertEqual("", stdout)
+        self.assertNotIn(str(root), stderr)
+        report = json.loads(stderr)
+        self.assertEqual("realization_graph_inputs_changed", report["code"])
+        self.assertEqual({"resolution_inputs": {"change": "changed", "fields": ["stat_signature"]}},
+                         report["details"])
+
     def test_consistency_failure_reports_both_maps_without_rescans(self):
         root = Path(self.enterContext(TemporaryDirectory())).resolve()
         source, dependency = root / "main.py", root / "pyproject.toml"
@@ -26,24 +74,40 @@ class RealizationTests(unittest.TestCase):
             dependency.write_text("[tool.fixture]\n")
             return {}, []
 
-        stdin = StringIO(json.dumps({"root": str(root), "config": {}}))
-        stdout, stderr = StringIO(), StringIO()
-        with (patch.object(sys, "stdin", stdin), patch.object(cli, "_state_projection", change),
-              patch.object(cli, "capture", wraps=cli.capture) as capture_sources,
-              patch.object(cli, "_manifests", wraps=cli._manifests) as capture_manifests,
-              redirect_stdout(stdout), redirect_stderr(stderr)):
-            self.assertEqual(1, cli.main())
-        self.assertEqual((2, 2), (capture_sources.call_count, capture_manifests.call_count))
-        self.assertEqual("", stdout.getvalue())
-        self.assertNotIn(str(root), stderr.getvalue())
-        report = json.loads(stderr.getvalue())
+        with (patch(f"{_GRAPH_CLI}._state_projection", change),
+              patch(f"{_GRAPH_CLI}.capture", wraps=capture) as capture_sources):
+            status, stdout, stderr = self._run_graph({"root": str(root), "config": {}})
+        self.assertEqual(1, status)
+        self.assertEqual(2, capture_sources.call_count)
+        self.assertEqual("", stdout)
+        self.assertNotIn(str(root), stderr)
+        report = json.loads(stderr)
         self.assertEqual(("ERROR", "realization_graph_inputs_changed"), (report["severity"], report["code"]))
         self.assertEqual({
             "resolution_inputs": {"change": "changed", "path": "pyproject.toml", "fields": ["stat_signature"]},
             "sources": {"change": "changed", "path": "main.py", "fields": ["signature", "imports"]},
         }, report["details"])
-        self.assertEqual({"change": "removed"}, cli._first_difference({"secret-name.py": "before"}, {}))
-        self.assertEqual({"change": "added", "path": "added.py"}, cli._first_difference({}, {"added.py": "after"}))
+
+    def test_source_change_reports_safe_paths_only(self):
+        cases = (("secret-name.py", {"change": "removed"}), ("added.py", {"change": "added", "path": "added.py"}))
+        for name, details in cases:
+            with self.subTest(name=name), TemporaryDirectory() as temporary:
+                root = Path(temporary).resolve()
+                path = root / name
+                if details["change"] == "removed":
+                    path.write_text("import os\n")
+
+                def change(*args):
+                    if path.exists():
+                        path.unlink()
+                    else:
+                        path.write_text("import os\n")
+                    return {}, []
+
+                with patch(f"{_GRAPH_CLI}._state_projection", change):
+                    status, stdout, stderr = self._run_graph({"root": str(root), "config": {}})
+                self.assertEqual((1, ""), (status, stdout))
+                self.assertEqual(details, json.loads(stderr)["details"]["sources"])
 
     def _temporary_project(self):
         tmp_path = Path(self.enterContext(TemporaryDirectory())).resolve()

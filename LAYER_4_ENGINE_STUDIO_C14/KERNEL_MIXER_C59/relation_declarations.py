@@ -1,6 +1,7 @@
 """Read Relation contributions from Formal Claims."""
 
-from dataclasses import dataclass
+from pydantic import ConfigDict
+from pydantic.dataclasses import dataclass
 import re
 import sys
 
@@ -12,7 +13,7 @@ _LITERAL_RELATION = re.compile(rf"Relation//({_NAME})\Z")
 _BINDINGS = {"HAS_INVERSE", "IS_INVERSE_ALIAS_FOR"}
 
 
-@dataclass(frozen=True)
+@dataclass(config=ConfigDict(strict=True, extra="forbid", hide_input_in_errors=True), frozen=True)
 class RegistryContribution:
     names: frozenset[str]
     inverses: tuple[tuple[str, str], ...]

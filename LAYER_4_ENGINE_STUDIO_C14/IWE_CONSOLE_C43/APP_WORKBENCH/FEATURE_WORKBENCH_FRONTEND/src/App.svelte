@@ -55,7 +55,7 @@
   function showView(id: string) {
     if (view === 'view' && activeId === id) return;
     activeId = id; view = 'view'; grid = { sort: [], filters: [] }; fetchRemoteResult(id);
-    if (boundApi) void boundApi.focus(id).then(({ active_view_id }) => activeId = active_view_id).catch((error) => fail(id, error));
+    if (boundApi) void boundApi.focus(id).catch((error) => fail(id, error));
   }
   function showUtility(next: 'settings' | 'saved') { view = next; if (next === 'saved') void refreshSaved(); }
   function applyServerView(server: WorkspaceView, replace = false) {
@@ -90,7 +90,11 @@
   }
   async function refreshWorkspace() {
     if (!boundApi) return;
-    try { applyBinding(await boundApi.get()); } catch (error) { storageError = message(error); }
+    try {
+      const state = await boundApi.get();
+      const selected = state.views.some((view) => view.id === activeId);
+      applyBinding(selected ? { ...state, active_view_id: activeId } : state);
+    } catch (error) { storageError = message(error); }
   }
   async function migrateUnboundDraft(state: WorkspaceState, draft: ReturnType<typeof restore>) {
     if (!boundApi || !standaloneBinding || !draft || localStorage.getItem(migrationKey) === 'done') return;

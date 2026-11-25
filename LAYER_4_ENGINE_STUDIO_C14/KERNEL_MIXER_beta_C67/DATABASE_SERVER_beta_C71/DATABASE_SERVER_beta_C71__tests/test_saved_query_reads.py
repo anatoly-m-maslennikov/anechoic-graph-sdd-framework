@@ -132,3 +132,13 @@ class SavedQueryReadsTest(unittest.TestCase):
             self.assertTrue(all("sql" not in item and item["preview"] == "x" * 149 + " " for item in items))
             self.assertEqual(21, len(self.result(_call(client, "query_saved_list", {"limit": 1000}))["items"]))
         self.assertEqual(rows, self.source.read_bytes())
+
+
+    def test_journal_record_keeps_legacy_normalization(self):
+        event = _event(FILE_ID, "worksheet", name="  ")
+        malformed = [_event(str(uuid7())) | changes for changes in ({"extra": 1}, {"name": 1}, {"sql": None})]
+        self.source.write_bytes(b"".join(map(_line, [event, *malformed])))
+        with self.server("files") as client:
+            self.assertEqual(_event(FILE_ID, "view"), self.result(_call(client, "query_load", {"reference": FILE_ID})))
+            items = self.result(_call(client, "query_saved_list", {}))["items"]
+            self.assertEqual([FILE_ID], [item["saved_query_id"] for item in items])

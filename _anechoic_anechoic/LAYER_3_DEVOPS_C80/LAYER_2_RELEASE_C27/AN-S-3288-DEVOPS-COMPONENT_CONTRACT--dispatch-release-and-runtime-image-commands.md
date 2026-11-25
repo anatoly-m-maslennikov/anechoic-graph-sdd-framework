@@ -9,14 +9,14 @@ context:
   lens: DevOps
 state:
   status: active
-  version: 14
-  updated_at: '2026-11-23T14:45:10.920666+00:00'
+  version: 18
+  updated_at: '2026-11-24T18:19:55.278865+00:00'
 relations:
   ANSWERS:
   - AN-S-3038
   IS_REFERENCE:
   - AN-S-4732
-  - AN-S-3292@9
+  - AN-S-3292@13
   - AN-S-3293
 ---
 
@@ -34,11 +34,21 @@ UV_PROJECT_ENVIRONMENT="$PWD/LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/.venv-releas
     python -B "$PWD/LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/release.py" --help
 ```
 
-Replace `--help` with `local --project-root <root> --run-id <id>` for Local Release or `public --project-root <root> --run-id <id>` for Public Release. Use `build-image --project-root <root> --run-id <id>` to build only the image. `run-image` delegates launch to the Engine shared MCP launcher.
+Use `local --project-root <root> --run-id <id>` for a same-Project release.
+For an explicit target, use
+`local --project-root <source> --source-revision <full SHA> --target-project-root <target> --run-id <id>`.
+Continue with `--resume`, the same Run ID, and the same Project bindings.
+For a split run, pass the current exact source revision. After delivery starts,
+pass the revision recorded at the delivery claim.
 
-The child Contracts define arguments and results for Runtime Images (AN-S-4732),
-Local Release (AN-S-3292), and Public Release (AN-S-3293).
+Use `verify-image --project-root <source> --run-id <id>` for the image
+gate. C63 handles these commands under AN-S-3292.
 
-The host dispatches image commands to C81, Local Release to C63, and Public Release to C64. Release code imports no Project code outside the Release subtree.
+Use `public --project-root <root> --run-id <id>` for Public Release
+through C64 under AN-S-3293. Use `build-image --project-root <root>
+--run-id <id>` to build an image through C81 under AN-S-4732.
+`run-image` delegates launch to the Engine shared MCP launcher.
+
+Release code imports no Project code outside the Release subtree.
 
 The command writes one JSON result to stdout and sends progress to stderr. Exit 0 means completed. Exit 1 means another reported outcome. Exit 2 means invalid CLI usage. Exit 130 means interruption. `--help` lists the commands and exits 0.

@@ -8,9 +8,9 @@ context:
   template: component_manifest
   lens: SPEC
 state:
-  status: active
-  version: 2
-  updated_at: '2026-11-23T14:50:07.521599+00:00'
+  status: "active"
+  version: 4
+  updated_at: "2026-11-24T21:14:47.665241+00:00"
 ---
 
 ## Summary
@@ -43,6 +43,9 @@ declare_entity(
                     ],
                 },
                 'exports': {
+                    'LAYER_1_RUNTIME_IMAGES_C81__shared.find_release_container': {'private': ['C63']},
+                    'LAYER_1_RUNTIME_IMAGES_C81__shared.reconcile_release_container': {'private': ['C63']},
+                    'LAYER_1_RUNTIME_IMAGES_C81__shared.verify_release_container': {'private': ['C63', 'LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/LAYER_1_RUNTIME_IMAGES_C81/LAYER_1_RUNTIME_IMAGES_C81__tests']},
                     'release_assets.LocalReleaseError': {'private': ['LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/LAYER_1_RUNTIME_IMAGES_C81/LAYER_1_RUNTIME_IMAGES_C81__tests']},
                     'release_container.start_container': {'private': ['LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/LAYER_1_RUNTIME_IMAGES_C81/LAYER_1_RUNTIME_IMAGES_C81__tests']},
                     'runtime_build': {'private': ['LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/LAYER_1_RUNTIME_IMAGES_C81/LAYER_1_RUNTIME_IMAGES_C81__tests']},

@@ -8,9 +8,9 @@ context:
   template: component_manifest
   lens: SPEC
 state:
-  status: active
-  version: 5
-  updated_at: '2026-11-22T11:23:40.206159+00:00'
+  status: "active"
+  version: 6
+  updated_at: "2026-11-24T21:35:30.943198+00:00"
 ---
 
 ## Summary
@@ -31,9 +31,9 @@ declare_entity(
         lens_whitelist=['DES', 'DevOps', 'QA', 'SWD'],
         boundaries={
             'code': {
-                'imports': {'only': []},
+                'imports': {'only': ['FEATURE_CODEX_EXTENSION__shared']},
                 'exports': {
-                    'FEATURE_CODEX_EXTENSION__shared': None,
+                    'FEATURE_CODEX_EXTENSION__shared': {'private': ['LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_CODEX_EXTENSION/FEATURE_CODEX_EXTENSION__tests']},
                     'FEATURE_CODEX_EXTENSION__shared.call': None,
                     'FEATURE_CODEX_EXTENSION__shared.list_resources': None,
                     'FEATURE_CODEX_EXTENSION__shared.read_resource': None,

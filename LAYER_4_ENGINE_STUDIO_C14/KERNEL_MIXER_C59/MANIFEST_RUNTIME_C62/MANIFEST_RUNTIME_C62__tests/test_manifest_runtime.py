@@ -23,7 +23,7 @@ ENGINE = ROOT / "LAYER_4_ENGINE_STUDIO_C14"
 PROGRAMMATIC = ENGINE / "FEATURE_PROGRAMMATIC"
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import resolve_native_project  # noqa: E402
-from KERNEL_MIXER_C59.MANIFEST_RUNTIME_C62 import runtime  # noqa: E402
+from KERNEL_MIXER_C59.MANIFEST_RUNTIME_C62.MANIFEST_RUNTIME_C62__shared import run_manifest_runtime  # noqa: E402
 from KERNEL_MIXER_C59.MANIFEST_RUNTIME_C62.model_host_CS2.model_host_CS2__shared import reviewed_native_model  # noqa: E402
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import read_structure  # noqa: E402
 from .kernel_probe import kernel_process, wait_ready, write_reviewed_declarations  # noqa: E402
@@ -61,17 +61,9 @@ def _runtime_fixture(root):
 
 def _runtime_observers():
     failed = Event()
-    real_compile = runtime._compile
     processes = []
     builders = []
     real_popen = subprocess.Popen
-
-    def compile_checked(*args, **kwargs):
-        try:
-            return real_compile(*args, **kwargs)
-        except RuntimeError:
-            failed.set()
-            raise
 
     def record_process(*args, **kwargs):
         process = real_popen(*args, **kwargs)
@@ -85,37 +77,53 @@ def _runtime_observers():
                 "FEATURE_FORMAL_MODEL_GENERATOR.manifest_compiler_CS1.compiler"
             ):
                 builders.append(process)
+                communicate = process.communicate
+
+                def tracked_communicate(*args, **kwargs):
+                    result = communicate(*args, **kwargs)
+                    if process.returncode:
+                        failed.set()
+                    return result
+
+                process.communicate = tracked_communicate
         return process
 
-    return failed, processes, builders, compile_checked, record_process
+    return failed, processes, builders, record_process
 
 
 class ManifestRuntimeTests(unittest.TestCase):
     def test_test_image_mode_controls_current_startup_compiler_wait(self):
         switch = "ANECHOIC_TEST_IMAGE_DEADLINES"
-        selection = SimpleNamespace(root=Path("/project"),
-                                    control_relative=Path("_anechoic"),
-                                    manifest_sha256="a" * 64)
-        result = subprocess.CompletedProcess([], 0, stdout=b"{}")
-        orchestrator = SimpleNamespace(run_worker=Mock(return_value=result))
-        with patch.dict(os.environ):
+        with tempfile.TemporaryDirectory() as temporary, patch.dict(os.environ, {"ANECHOIC_RUNTIME_NAMESPACE": "docker"}):
+            root = Path(temporary).resolve()
+            control = root / "_anechoic"
+            control.mkdir()
+            selection = SimpleNamespace(root=root, control_root=control, control_relative=Path("_anechoic"),
+                                        manifest_sha256="a" * 64)
+            result = subprocess.CompletedProcess([], 1, stdout=b"", stderr=b"compiler failed")
+            orchestrator = SimpleNamespace(run_worker=Mock(return_value=result))
             os.environ.pop(switch, None)
             for setting, expected in ((None, 15), ("1", 15), ("0", None)):
                 if setting is not None:
                     os.environ[switch] = setting
-                with self.subTest(setting=setting):
-                    self.assertEqual(b"{}", runtime._compile(
-                        selection, Path("/stage"), "--build-model",
-                        orchestrator=orchestrator))
-                    call = orchestrator.run_worker.call_args
-                    self.assertEqual(call.kwargs["timeout"], expected)
+                with self.subTest(setting=setting), self.assertRaisesRegex(RuntimeError, "compiler failed"):
+                    with run_manifest_runtime(selection, orchestrator=orchestrator):
+                        self.fail("A failed compiler must not yield")
+                self.assertEqual(orchestrator.run_worker.call_args.kwargs["timeout"], expected)
 
-    def test_relevant_named_lens_and_revision_directories(self):
-        control = Path(".anechoic_project")
-        manifest = control / "AN-S-1-SPEC-PROJECT_MANIFEST--project.md"
-        self.assertTrue(runtime._relevant(str(control / "AN-S-2-DOM-COMPONENT_MANIFEST--component.md"), control, manifest))
-        for directory in ("01_draft", "02_ready", "09_archived", "000_draft", "099_archived"):
-            self.assertFalse(runtime._relevant(str(control / directory / "AN-S-2-SPEC-COMPONENT_SEED_MANIFEST--seed.md"), control, manifest))
+    def _assert_watcher_filter(self, control, builders):
+        before = len(builders)
+        path = control / "AN-S-2-DOM-COMPONENT_MANIFEST--component.md"
+        path.write_text("---\ninvalid: [\n---\n")
+        self._wait_for(lambda: len(builders) > before)
+        self._wait_for(lambda: builders[-1].poll() is not None)
+        before = len(builders)
+        for name in ("01_draft", "02_ready", "09_archived", "000_draft", "099_archived"):
+            folder = control / name
+            folder.mkdir(exist_ok=True)
+            (folder / "AN-S-2-SPEC-COMPONENT_SEED_MANIFEST--seed.md").write_text("ignored")
+        time.sleep(2.1)
+        self.assertEqual(len(builders), before)
 
     def _wait_for(self, predicate):
         deadline = time.monotonic() + 15
@@ -149,7 +157,7 @@ with (open_admitted_model(generation, fingerprint, digest) as first,
     assert first._types['Component Manifest'] is not second._types['Component Manifest']
 assert not any('FEATURE_FORMAL_MODEL_GENERATOR' in name for name in sys.modules)
 """, bound_model.fingerprint, hashlib.sha256((generation / "model.json").read_bytes()).hexdigest()],
-            cwd=generation, env=runtime._environment(), check=True)
+            cwd=generation, env={**os.environ, "PYTHONPATH": str(ENGINE)}, check=True)
         return descriptor
 
     def _assert_worker(self, client, instance, kind, status):
@@ -199,33 +207,43 @@ assert not any('FEATURE_FORMAL_MODEL_GENERATOR' in name for name in sys.modules)
         self.assertEqual(descriptor["model_sha256"], read_structure(active).model_sha256)
 
     def test_startup_rejects_tampered_generation_before_yield(self):
-        real_compile = runtime._compile
         for target in ("descriptor", "module", "structure", "fingerprint"):
             with self.subTest(target=target), tempfile.TemporaryDirectory() as temporary:
                 root = Path(temporary).resolve()
                 *_, selection = _runtime_fixture(root)
                 generations = []
+                real_popen = subprocess.Popen
 
-                def tamper(*args, **kwargs):
-                    compiled = real_compile(*args, **kwargs)
-                    generation = args[1]
+                def record_process(*args, **kwargs):
+                    process = real_popen(*args, **kwargs)
+                    command = args[0]
+                    if "--build-model" not in command:
+                        return process
+                    generation = Path(command[command.index("--build-model") - 1])
                     generations.append(generation)
-                    if target in {"structure", "fingerprint"}:
-                        result = json.loads(compiled)
-                        if target == "structure":
-                            result["structure"]["components"] = []
-                        else:
-                            result["structure"]["model_sha256"] = "b" * 64
-                        return json.dumps(result).encode()
-                    path = (generation / "model.json" if target == "descriptor" else
-                            generation / "anechoic_runtime_model/component_manifest.py")
-                    path.write_bytes(path.read_bytes() + b"\n")
-                    return compiled
+                    communicate = process.communicate
+
+                    def tamper(*args, **kwargs):
+                        stdout, stderr = communicate(*args, **kwargs)
+                        if target in {"structure", "fingerprint"}:
+                            result = json.loads(stdout)
+                            if target == "structure":
+                                result["structure"]["components"] = []
+                            else:
+                                result["structure"]["model_sha256"] = "b" * 64
+                            return json.dumps(result).encode(), stderr
+                        path = (generation / "model.json" if target == "descriptor" else
+                                generation / "anechoic_runtime_model/component_manifest.py")
+                        path.write_bytes(path.read_bytes() + b"\n")
+                        return stdout, stderr
+
+                    process.communicate = tamper
+                    return process
 
                 with (patch.dict("os.environ", {"ANECHOIC_RUNTIME_NAMESPACE": "docker"}),
-                      patch.object(runtime, "_compile", side_effect=tamper)):
+                      patch.object(subprocess, "Popen", side_effect=record_process)):
                     with self.assertRaisesRegex(ValueError, "model (descriptor |module )?hash mismatch|components must be an object"):
-                        with runtime.run_manifest_runtime(selection):
+                        with run_manifest_runtime(selection):
                             self.fail("A tampered generation must not be yielded")
                 self.assertEqual(1, len(generations))
                 self.assertFalse(generations[0].exists())
@@ -234,15 +252,16 @@ assert not any('FEATURE_FORMAL_MODEL_GENERATOR' in name for name in sys.modules)
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary).resolve()
             control, ontology, component, original, model, selection = _runtime_fixture(root)
-            failed, processes, builders, compile_checked, record_process = _runtime_observers()
+            failed, processes, builders, record_process = _runtime_observers()
             with (patch.dict("os.environ", {"ANECHOIC_RUNTIME_NAMESPACE": "docker"}),
-                  patch.object(runtime, "_compile", side_effect=compile_checked),
-                  patch.object(runtime.subprocess, "Popen", side_effect=record_process)):
-                with runtime.run_manifest_runtime(selection) as (generation, active, bound_model):
+                  patch.object(subprocess, "Popen", side_effect=record_process)):
+                with run_manifest_runtime(selection) as (generation, active, bound_model):
                     descriptor = self._assert_generation(generation, model, bound_model, builders, processes)
+                    self._assert_watcher_filter(control, builders)
+                    failed.clear()
                     self._assert_refresh(active, control, ontology, component, original, failed, descriptor, generation)
                 previous_builders = len(builders)
-                with runtime.run_manifest_runtime(selection) as (_, active, bound_model):
+                with run_manifest_runtime(selection) as (_, active, bound_model):
                     self.assertEqual(previous_builders + 1, len(builders))
                     self.assertEqual([], processes)
                     self.assertNotEqual(descriptor["model_sha256"], read_structure(active).model_sha256)
@@ -251,7 +270,7 @@ assert not any('FEATURE_FORMAL_MODEL_GENERATOR' in name for name in sys.modules)
         with tempfile.TemporaryDirectory(prefix="c62-", dir="/tmp") as temporary:
             root = Path(temporary).resolve()
             _, _, component, original, _, selection = _runtime_fixture(root)
-            environment = {**runtime._environment(), "ANECHOIC_RUNTIME_NAMESPACE": "docker",
+            environment = {**{**os.environ, "PYTHONPATH": str(ENGINE)}, "ANECHOIC_RUNTIME_NAMESPACE": "docker",
                            "ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY": str(ROOT / ".anechoic_tmp/workbench/extensions")}
             with kernel_process(root, selection, environment) as (process, client, instance, log):
                 wait_ready(process, client, log, root / "kernel.sock")
@@ -277,7 +296,7 @@ assert not any('FEATURE_FORMAL_MODEL_GENERATOR' in name for name in sys.modules)
         with tempfile.TemporaryDirectory(prefix="c62-", dir="/tmp") as temporary:
             root = Path(temporary).resolve()
             *_, selection = _runtime_fixture(root)
-            with kernel_process(root, selection, runtime._environment(), digest="b" * 64) as (process, _, _, log):
+            with kernel_process(root, selection, {**os.environ, "PYTHONPATH": str(ENGINE)}, digest="b" * 64) as (process, _, _, log):
                 process.wait(timeout=30)
                 log.seek(0)
                 self.assertNotEqual(0, process.returncode)

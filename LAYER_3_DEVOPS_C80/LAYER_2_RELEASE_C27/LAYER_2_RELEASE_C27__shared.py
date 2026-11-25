@@ -20,7 +20,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 def _arguments(argv: list[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="operation", required=True)
-    for operation in ("local", "public", "build-image", "prepare-local"):
+    for operation in ("local", "public", "build-image", "verify-image", "prepare-local"):
         command = commands.add_parser(operation)
         command.add_argument("--project-root", type=Path, default=REPOSITORY)
         command.add_argument("--run-id", required=True)
@@ -36,19 +36,7 @@ def _arguments(argv: list[str] | None) -> argparse.Namespace:
                                  metavar="PATH", help="literal repository-relative file addition, edit, or deletion")
             command.add_argument("--port", required=True, type=int, help="isolated loopback MCP port")
         elif operation == "local":
-            command.add_argument(
-                "--image-mode",
-                choices=("refresh", "existing"),
-                default="refresh",
-                help="candidate image mode; both use the checked-in build assets",
-            )
-            command.add_argument(
-                "--test-module",
-                action="append",
-                dest="test_modules",
-                metavar="PATH",
-                help="repeatable relative source test module for focused validation",
-            )
+            _local_arguments(command)
     run_image = commands.add_parser("run-image")
     run_image.add_argument("--host-settings", type=Path)
     run_image.add_argument("--image", required=True)
@@ -56,7 +44,31 @@ def _arguments(argv: list[str] | None) -> argparse.Namespace:
     run_image.add_argument("--verify-mcp", action="store_true")
     run_image.add_argument("--startup-timeout", type=int, default=420)
     run_image.add_argument("--readiness-timeout", type=int, default=420)
-    return parser.parse_args(argv)
+    arguments = parser.parse_args(argv)
+    if (arguments.operation in ("local", "verify-image")
+            and re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", arguments.run_id) is None):
+        parser.error("--run-id must contain only letters, digits, dots, underscores, or hyphens")
+    if arguments.operation == "local":
+        target, revision = arguments.target_project_root, arguments.source_revision
+        if (target is None) != (revision is None):
+            parser.error("--target-project-root and --source-revision must be supplied together")
+        if revision is not None and re.fullmatch(r"(?:[0-9a-f]{40}|[0-9a-f]{64})", revision) is None:
+            parser.error("--source-revision must be an exact lowercase Git commit SHA")
+    return arguments
+
+
+def _local_arguments(command):
+    command.add_argument("--resume", action="store_true", help="continue the recorded Local Release")
+    command.add_argument("--target-project-root", type=Path, help="Project receiving the verified release")
+    command.add_argument("--source-revision", help="exact Git commit for a separate release source")
+    command.add_argument(
+        "--image-mode", choices=("refresh", "existing"),
+        help="candidate image mode; both use the checked-in build assets",
+    )
+    command.add_argument(
+        "--test-module", action="append", dest="test_modules", metavar="PATH",
+        help="repeatable relative source test module for focused validation",
+    )
 
 
 def _read_draft(path: Path | None) -> dict[str, object] | None:
@@ -78,9 +90,12 @@ def _read_draft(path: Path | None) -> dict[str, object] | None:
 def _invoke(arguments: argparse.Namespace) -> dict[str, object]:
     if arguments.operation == "run-image":
         return _run_image(arguments)
-    root = arguments.project_root.resolve(strict=True)
-    if arguments.project_root.is_symlink() or not root.is_dir() or root == Path(root.anchor):
-        raise ValueError("release-project-root-invalid")
+    try:
+        root = _project_root(arguments.project_root)
+    except (OSError, ValueError):
+        if arguments.operation in ("local", "verify-image"):
+            return _invalid_selection(arguments.run_id)
+        raise
     pattern = (
         r"[A-Za-z0-9][A-Za-z0-9._:-]*"
         if arguments.operation == "public"
@@ -101,18 +116,54 @@ def _invoke(arguments: argparse.Namespace) -> dict[str, object]:
         from LAYER_1_RUNTIME_IMAGES_C81.LAYER_1_RUNTIME_IMAGES_C81__shared import build_image
 
         return build_image(root, run_id=arguments.run_id)
-    if arguments.operation == "local":
-        from LAYER_2_LOCAL_RELEASE_C63.LAYER_2_LOCAL_RELEASE_C63__shared import run_local_release
+    if arguments.operation == "verify-image":
+        from LAYER_2_LOCAL_RELEASE_C63.LAYER_2_LOCAL_RELEASE_C63__shared import verify_image
 
-        options = {}
-        if arguments.test_modules is not None:
-            options["test_modules"] = tuple(arguments.test_modules)
-        result = run_local_release(
-            root, run_id=arguments.run_id, image_mode=arguments.image_mode, **options
-        )
+        return verify_image(root, run_id=arguments.run_id)
+    if arguments.operation == "local":
+        return _run_local(root, arguments)
+    return _invoke_public(root, arguments)
+
+
+def _project_root(supplied):
+    root = supplied.resolve(strict=True)
+    if supplied.is_symlink() or not root.is_dir() or root == Path(root.anchor):
+        raise ValueError("release-project-root-invalid")
+    return root
+
+
+def _invalid_selection(run_id):
+    return {"outcome": "failed", "run_id": run_id, "failed_step": "validate_project_selection",
+            "error_type": "LocalReleaseError", "error": "local-release-project-selection-invalid",
+            "effects": []}
+
+
+def _run_local(root, arguments):
+    from LAYER_2_LOCAL_RELEASE_C63.LAYER_2_LOCAL_RELEASE_C63__shared import run_local_release, run_snapshot_release
+
+    options = {}
+    if arguments.test_modules is not None:
+        options["test_modules"] = tuple(arguments.test_modules)
+    if arguments.resume:
+        options["resume"] = True
+    if arguments.image_mode is not None:
+        options["image_mode"] = arguments.image_mode
+    if arguments.target_project_root is None:
+        if not arguments.resume:
+            options.setdefault("image_mode", "refresh")
+        result = run_local_release(root, run_id=arguments.run_id, **options)
         result.update(run_id=arguments.run_id, project_root=str(root))
         return result
-    return _invoke_public(root, arguments)
+    try:
+        target = _project_root(arguments.target_project_root)
+    except (OSError, ValueError):
+        return _invalid_selection(arguments.run_id)
+    result = run_snapshot_release(
+        root, target_root=target, source_revision=arguments.source_revision, run_id=arguments.run_id, **options,
+    )
+    result.update(run_id=arguments.run_id, source_root=str(root), target_root=str(target),
+                  source_revision=arguments.source_revision)
+    return result
 
 
 def _run_image(arguments: argparse.Namespace) -> dict[str, object]:

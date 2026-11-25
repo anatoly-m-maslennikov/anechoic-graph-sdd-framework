@@ -209,14 +209,17 @@ class RenderEntityTreeTests(unittest.TestCase):
         outside = self.root / "unrelated.md"
         outside.write_bytes(b"unrelated bytes\n")
         self.output.symlink_to(outside)
+        linked_folder = self.projection / "linked"
+        linked_folder.symlink_to(self.root, target_is_directory=True)
         before = self.source_bytes()
-        for destination in (outside, self.output):
+        for destination in (outside, self.output, linked_folder / self.output.name):
             result = self.run_cli(destination)
             with self.subTest(destination=destination.name):
                 self.assertEqual(1, result.returncode)
                 self.assertIn("Output must be a non-symlink path", result.stderr)
                 self.assertEqual(b"unrelated bytes\n", outside.read_bytes())
                 self.assertTrue(self.output.is_symlink())
+                self.assertFalse((self.root / self.output.name).exists())
                 self.assertEqual(before, self.source_bytes())
 
 

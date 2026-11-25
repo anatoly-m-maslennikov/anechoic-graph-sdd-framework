@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import hashlib
-from dataclasses import dataclass
+from pydantic import ConfigDict
+from pydantic.dataclasses import dataclass
 from typing import Any
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import carrier_read_view
@@ -16,7 +17,7 @@ _SOURCE_ROLES = {
 }
 
 
-@dataclass(frozen=True)
+@dataclass(config=ConfigDict(strict=True, extra="forbid", hide_input_in_errors=True), frozen=True)
 class Obligation:
     code: str
     authority: list[Record]
@@ -24,7 +25,7 @@ class Obligation:
     reason: str
 
 
-@dataclass(frozen=True)
+@dataclass(config=ConfigDict(strict=True, extra="forbid", hide_input_in_errors=True), frozen=True)
 class AuthorityContext:
     bindings: list[Record]
     required: int

@@ -9,7 +9,6 @@ import duckdb
 
 from KERNEL_MIXER_C59.component_metrics import measure_components, refresh_spec_sizes
 from KERNEL_MIXER_C59.native_projection import replace_component_metrics
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import StructureSnapshot
 
 
 class ComponentMetricsTest(unittest.TestCase):
@@ -37,7 +36,7 @@ class ComponentMetricsTest(unittest.TestCase):
                 {'id': 'CA-S-2', 'ref': 'CA-S-2', 'status_group': 'Draft', '_source_bytes': 100, '_content_bytes': b'draft'},
             ], containment=[{'source_ref': 'CA-S-1', 'target_kind': 'Component', 'target_ref': 'C1'}])
             component_paths = {'.': 'C00', 'parent': 'C1', 'parent/child': 'C2'}
-            snapshot = StructureSnapshot('model', {}, {'C1': None, 'C2': None}, {})
+            snapshot = SimpleNamespace(components={'C1': None, 'C2': None})
             package_paths = {'p': 'parent', 't': 'parent/parent__tests',
                              'cp': 'parent/child', 'ct': 'parent/child/child__tests'}
             nodes = [(key, 'package', 'python', path, None, None) for key, path in package_paths.items()]

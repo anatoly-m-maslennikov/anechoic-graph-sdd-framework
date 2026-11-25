@@ -12,7 +12,9 @@ import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from threading import Event
-from time import sleep
+from time import monotonic, sleep
+
+from pydantic import BaseModel, ConfigDict
 
 
 def _stop(process, *, graceful=False):
@@ -50,8 +52,8 @@ class Child:
                 self.socket.unlink(missing_ok=True)
 
 
-def _service(name, path, settings):
-    return [sys.executable, "-B", "-P", "-m", "WORKBENCH_BACKEND_beta_C70." + name,
+def _service(module, path, settings):
+    return [sys.executable, "-B", "-P", "-m", module,
             "--socket", str(path), "--host-settings", settings]
 
 
@@ -81,6 +83,13 @@ def _sealed_version(selection):
     return version
 
 
+
+class _LifecycleHealth(BaseModel):
+    model_config = ConfigDict(strict=True, extra="ignore")
+
+    instance_id: str
+    lifecycle_active: bool
+
 def _lifecycle_idle(owner, jobs_socket, instance_id):
     if owner.process is None or owner.process.poll() is not None:
         return True
@@ -90,9 +99,10 @@ def _lifecycle_idle(owner, jobs_socket, instance_id):
         with httpx2.Client(transport=httpx2.HTTPTransport(uds=str(jobs_socket)),
                            base_url="http://private", timeout=0.5, trust_env=False) as client:
             response = client.get("/health")
-            value = response.json()["result"]
-            return (response.status_code == 200 and value["instance_id"] == instance_id
-                    and value["lifecycle_active"] is False)
+            if response.status_code != 200:
+                return False
+            value = _LifecycleHealth.model_validate(response.json()["result"])
+            return value.instance_id == instance_id and value.lifecycle_active is False
     except (httpx2.HTTPError, ValueError, KeyError, TypeError):
         return False
 
@@ -105,9 +115,24 @@ class ManifestReload:
         self.gate = directory / "api.draining"
         self.transport = self.gate.with_suffix(".transport")
         self.transport.touch(mode=0o600, exist_ok=False)
-        self.selection = select()
-        self.version = _sealed_version(self.selection)
+        self.selection = self.version = None
+        self.retry_at = 0
         self.rejected = ()
+
+    def admit_initial(self, owner, backend):
+        try:
+            selected = self.select()
+            version = _sealed_version(selected)
+            commands = self.arguments(selected, backend.socket)
+        except (AttributeError, OSError, TypeError, ValueError):
+            if not self.gate.exists():
+                self.gate.write_text("project_manifest_invalid", encoding="ascii")
+                print("WARNING: Project Manifest is missing or invalid", file=sys.stderr, flush=True)
+            self.retry_at = monotonic() + 1
+            return False
+        self.configure(selected, version, owner, backend, commands)
+        self.gate.unlink(missing_ok=True)
+        return True
 
     def configure(self, selected, version, owner, backend, commands):
         owner.command, backend.command = commands
@@ -120,10 +145,16 @@ class ManifestReload:
         socket = self.directory / "api.sock"
         owner = Child([], environment, parent_pipe=True)
         backend = Child([], environment, parent_pipe=True, socket=socket)
-        self.configure(self.selection, self.version, owner, backend, self.arguments(self.selection, socket))
+        self.admit_initial(owner, backend)
         return owner, backend
 
     def refresh(self, owner, backend, mcp, stopping):
+        if self.selection is None:
+            if monotonic() < self.retry_at or not self.admit_initial(owner, backend):
+                return False
+            if not stopping.is_set():
+                owner.ensure()
+            return True
         version = _manifest_version(self.selection.manifest_path)
         if version == self.version and not self.gate.exists():
             return True
@@ -163,16 +194,26 @@ class ManifestReload:
                 sleep(0.25)
 
 
-def _run_services(owner, backend, mcp, ready, stopping, *, restart_owner, reload=None):
+def _run_services(owner, backend, mcp, ready, stopping, *, restart_owner, reload=None, diagnostics=None):
     admitted = serving = False
-    owner.ensure()
+    if owner.command:
+        owner.ensure()
     while not stopping.is_set():
         if reload is not None and not reload.refresh(owner, backend, mcp, stopping):
+            if diagnostics is not None and (mcp.process is None or mcp.process.poll() is not None):
+                diagnostics.ensure()
             stopping.wait(0.25)
             continue
+        if stopping.is_set():
+            break
         owner_exited = owner.process.poll() is not None
         if not owner_exited and ready():
             backend.ensure()
+            if diagnostics is not None and diagnostics.process is not None:
+                if not backend.socket.is_socket():
+                    stopping.wait(0.25)
+                    continue
+                diagnostics.stop()
             mcp.ensure()
             admitted = serving = True
         elif restart_owner and serving:
@@ -200,12 +241,16 @@ def _supervise(command, environment, configure, *, restart_owner=False):
             if stopping.is_set():
                 return 0
             mcp_environment = {**environment, "ANECHOIC_BETA_BACKEND_SOCKET": str(backend.socket)}
+            diagnostics = None
             if reload is not None:
                 mcp_environment["ANECHOIC_BETA_DIRECT_TRANSPORT_GATE"] = str(reload.gate)
+                diagnostics = Child(command, {**mcp_environment, "ANECHOIC_BETA_DIRECT_DIAGNOSTICS": "1"})
+                stack.callback(diagnostics.stop)
             mcp = Child(command, mcp_environment)
             for service in (owner, backend, mcp):
                 stack.callback(service.stop)
-            return _run_services(owner, backend, mcp, ready, stopping, restart_owner=restart_owner, reload=reload)
+            return _run_services(owner, backend, mcp, ready, stopping, restart_owner=restart_owner,
+                                 reload=reload, diagnostics=diagnostics)
     finally:
         for sig, handler in previous.items():
             signal.signal(sig, handler)
@@ -214,8 +259,11 @@ def _supervise(command, environment, configure, *, restart_owner=False):
 def supervise(command, environment, settings):
     def configure(directory):
         owner_socket, backend_socket = directory / "owner.sock", directory / "api.sock"
-        owner = Child(_service("shared_peer_owner", owner_socket, settings), environment, parent_pipe=True)
-        backend = Child(_service("shared_runtime", backend_socket, settings)
+        owner_module = "ORCHESTRATOR_beta_C68.shared_peer_owner"
+        owner = Child(_service(owner_module, owner_socket, settings),
+                      environment, parent_pipe=True)
+        module = "API_MIXER_beta_C82.shared_runtime"
+        backend = Child(_service(module, backend_socket, settings)
                         + ["--peer-owner-socket", str(owner_socket)], environment,
                         parent_pipe=True, socket=backend_socket)
         return owner, backend, owner_socket.is_socket, None
@@ -226,12 +274,10 @@ def supervise(command, environment, settings):
 def _direct_arguments(selection, socket):
     from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import beta_runtime_arguments
 
-    runtime = selection.parameters.get("runtime", {})
-    if (runtime.get("workbench", {}).get("storage", "disk") not in ("disk", "memory")
-            or runtime.get("journal", {}).get("storage", "files") not in ("files", "duckdb")):
-        raise ValueError("The Project Manifest declares unsupported storage")
-    arguments = [sys.executable, "-B", "-P", "-m", *beta_runtime_arguments(selection, socket)]
-    return arguments + ["--role", "peer-owner"], arguments + ["--role", "api"]
+    module, *args = beta_runtime_arguments(selection, socket)
+    owner = ["ORCHESTRATOR_beta_C68.project_peer_owner", *args]
+    prefix = [sys.executable, "-B", "-P", "-m"]
+    return [*prefix, *owner], [*prefix, module, *args, "--role", "api"]
 
 
 def supervise_project(command, environment, project_root):

@@ -74,9 +74,11 @@ test('waits for the initial Workspace binding before accepting SQL input', async
   try {
     await page.goto(url); await openStarted;
     await expect(editor(page)).toHaveAttribute('contenteditable', 'false');
+    await expect(editor(page)).toHaveAttribute('aria-readonly', 'true');
     await expect(page.getByRole('button', { name: 'Run Cmd+Enter' })).toBeDisabled();
     releaseOpen();
     await expect(editor(page)).toBeEditable();
+    await expect(editor(page)).toHaveAttribute('aria-readonly', 'false');
     await replaceSql(page, 'SELECT 31 AS bound_input');
     const run = page.waitForRequest((request) => request.method() === 'POST' && request.postDataJSON()?.operation === 'view_run');
     await runSql(page); await run;

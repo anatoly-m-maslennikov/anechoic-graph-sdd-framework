@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 import subprocess
 
-_SCANNER = Path(__file__).with_name('web_state_cases.mjs')
+_SCANNER = Path(__file__).with_name('web_state_cases.ts')
 
 
 def web_state_cases(sources: dict[str, str], call_sites: dict[str, list[list]] | None = None) -> dict[str, list[dict]]:

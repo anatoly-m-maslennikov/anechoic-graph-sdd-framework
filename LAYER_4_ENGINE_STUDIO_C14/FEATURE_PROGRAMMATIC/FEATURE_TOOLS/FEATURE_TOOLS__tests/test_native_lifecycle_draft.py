@@ -1,6 +1,7 @@
+from dataclasses import replace
 from hashlib import sha256
+import json
 from pathlib import Path
-from types import SimpleNamespace
 import sys
 import tempfile
 import unittest
@@ -11,7 +12,8 @@ TOOLS = Path(__file__).resolve().parents[1]
 ENGINE = TOOLS.parents[1]
 sys.path[:0] = [str(TOOLS), str(ENGINE / 'IWE_CONSOLE_C43')]
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import capture_native
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import capture_native, parse_structure
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import NativeProjectSelection
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import InputError, SourceChanged
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import create_draft, promote_draft
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import canonical_native_header
@@ -26,8 +28,12 @@ class NativeDraftTests(unittest.TestCase):
         self.control.mkdir()
         manifest = self.write('AN-S-1-PROJECT_MANIFEST--manifest.md', 'AN-S-1')
         self.path = self.write('001_TICKETS/TASKS/AN-T-1-TASK--example.md', 'AN-T-1')
-        self.selection = SimpleNamespace(root=self.root, control_root=self.control, manifest_path=manifest,
-                                         manifest_sha256=sha256(manifest.read_bytes()).hexdigest(), project_prefix='AN')
+        self.selection = NativeProjectSelection(
+            root=self.root, control_root=self.control, control_relative=self.control.relative_to(self.root),
+            instance_id='a' * 64, project_name='Test', project_prefix='AN',
+            manifest_path=manifest, manifest_ref='AN-S-1@1',
+            manifest_sha256=sha256(manifest.read_bytes()).hexdigest(),
+        )
         self.rows = capture_native(self.selection).atoms
         self.params = {'sourceCurrent': {'ref_id': 'AN-T-1', 'version': 1},
                        'changes': {'body': '\n# Summary\n\nExample\n\n## Details\n\nNew\n'}}
@@ -151,7 +157,7 @@ from anechoic.model import ProjectManifest
 declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Test', prefix='AN', lens_whitelist=['DES', 'SPEC']))
 ```
 """)
-        self.selection.manifest_sha256 = sha256(manifest.read_bytes()).hexdigest()
+        self.selection = replace(self.selection, manifest_sha256=sha256(manifest.read_bytes()).hexdigest())
 
     def spec(self, name, atom_id, lens='DES', component='C9'):
         path = self.write(name, atom_id)
@@ -191,13 +197,17 @@ class ComponentContractLifecycleTests:
         NativeRevisionCarrierTests.setUp(self)
         manifest = self.selection.manifest_path
         manifest.write_text(manifest.read_text().replace('component: C0}', 'component: C00}'))
-        self.selection.manifest_sha256 = sha256(manifest.read_bytes()).hexdigest()
+        self.selection = replace(self.selection, manifest_sha256=sha256(manifest.read_bytes()).hexdigest())
         declaration = self.spec('AN-S-2-SPEC--component.md', 'AN-S-2', lens='SPEC', component='C0')
         self.spec('UNIT_C9/__DES/AN-S-4-DES--example.md', 'AN-S-4')
-        self.record = SimpleNamespace(source_path=declaration.relative_to(self.control).as_posix(),
-                                      sha256=sha256(declaration.read_bytes()).hexdigest(),
-                                      parent='C00', lens_whitelist=None)
-        self.snapshot = SimpleNamespace(components={'C9': self.record}, component=lambda key: {'C9': self.record}[key])
+        self.snapshot = parse_structure(json.dumps({'model_sha256': 'model',
+            'project': {'ref': 'AN-S-1@1', 'sha256': sha256(manifest.read_bytes()).hexdigest()},
+            'components': {'C9': {'parent': 'C00', 'ref': 'AN-S-2@1',
+                'sha256': sha256(declaration.read_bytes()).hexdigest(),
+                'fields': {'name': 'Unit', 'lens_whitelist': None},
+                'source_path': declaration.relative_to(self.control).as_posix()}},
+            'packages': {}}).encode())
+        self.record = self.snapshot.components['C9']
         self.body = '\n## Summary\n\nImport graph contract\n\n## Guarantee\n\nThe graph includes imports.\n'
         self.new = {'newAtom': {'template': 'component_contract', 'container': {'component': 'C9'},
                                 'lens': 'DES', 'body': self.body}}

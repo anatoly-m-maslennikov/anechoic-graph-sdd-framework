@@ -4,20 +4,19 @@
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
-from dataclasses import dataclass, field
 from typing import Any
 
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import ContentSchema, FormalStatement, content_schema_from_statements, declaration_statements
 
 
-@dataclass
 class SourceContentSchema:
     """Keep Content declarations in memory; source files remain authoritative."""
 
-    schema: ContentSchema | None = None
-    _contributions: dict[str, tuple[FormalStatement, ...]] = field(default_factory=dict)
-    _rows: dict[str, Mapping[str, Any]] = field(default_factory=dict)
-    _bindings: dict[str, set[str]] = field(default_factory=dict)
+    def __init__(self, schema: ContentSchema | None = None) -> None:
+        self.schema = schema
+        self._contributions: dict[str, tuple[FormalStatement, ...]] = {}
+        self._rows: dict[str, Mapping[str, Any]] = {}
+        self._bindings: dict[str, set[str]] = {}
 
     def reset(self) -> None:
         self.schema = None

@@ -18,3 +18,9 @@ Place cross-module Requirements at their owning Package
 ## Concern
 
 How should the pilot trace a Requirement whose behavior is split across several Modules? CA-R-2727@20 spans `App.svelte` and `ViewTabs.svelte`; CA-R-2776@10 spans `App.svelte` and `SavedPanel.svelte`. Pinning both Requirements in every contributing Module produces many-to-many links. The reviewed policy allows a shared Claim to be pinned once in the smallest owning Package. Should the pilot use that rule for this cluster and reserve Module pins for independently implemented Claims?
+
+## Disposition
+
+Use one C43 Solution, AN-S-4801@2, for the shared Workbench handoff.
+Pin it in the C46 Frontend and C70 Beta Backend Packages. AN-S-2550@22
+and AN-S-1943@10 retain the detailed requirements for this pilot.

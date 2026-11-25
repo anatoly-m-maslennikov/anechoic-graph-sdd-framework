@@ -19,7 +19,7 @@ class LocalReleaseCleanupTests(unittest.TestCase):
         output = ("d" * 40 if argv[:2] == ("git", "rev-parse") else
                   "ANECHOIC_CANARY_ENDPOINT http://127.0.0.1:49152/anechoic/mcp\n"
                   if any(Path(part).name == "test_suite__pub.py" for part in argv)
-                  and "--phase" in argv and argv[argv.index("--phase") + 1] == "image" else "")
+                  and "--phase" in argv and argv[argv.index("--phase") + 1] == "canary" else "")
         return subprocess.CompletedProcess(argv, 0, output, "")
 
     def fixture(self) -> tuple[local_tests.SimpleLocalReleaseTests, docker_tests.DockerFixture]:

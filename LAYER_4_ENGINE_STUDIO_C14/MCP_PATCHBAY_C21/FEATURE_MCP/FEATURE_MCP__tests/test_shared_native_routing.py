@@ -21,7 +21,7 @@ TOOLS = APP.parents[1] / "FEATURE_PROGRAMMATIC" / "FEATURE_TOOLS"
 
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import extension_directory  # noqa: E402
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import MCP_PATH  # noqa: E402
-from MCP_PATCHBAY_C21.FEATURE_MCP.shared_http_server import create_app  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import create_shared_http_app as create_app  # noqa: E402
 from . import test_native_startup as fixtures  # noqa: E402
 
 

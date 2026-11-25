@@ -1,12 +1,50 @@
 """Exercise the default startup checkpoint and deferred Archive protocol."""
+from contextlib import redirect_stderr
+from io import StringIO
 import json
+import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from threading import Event
 import unittest
 from unittest.mock import Mock, patch
 
 from .. import ORCHESTRATOR_beta_C68__shared as orchestrator
-from .. import archive_jobs
+from .ORCHESTRATOR_beta_C68__tests__shared import RunFixture, kernel_server
+
+
+TIMING_PREFIX = "ANECHOIC_STARTUP_TIMING "
+
+
+def timing_records(buffer):
+    return [json.loads(line.removeprefix(TIMING_PREFIX)) for line in buffer.getvalue().splitlines()
+            if line.startswith(TIMING_PREFIX)]
+
+class ReplayCapture:
+    def __init__(self, jobs):
+        self.jobs = jobs
+        self.started = [Event() for _ in range(3)]
+        self.release = [Event() for _ in range(2)]
+        self.final_admission = Event()
+        self.calls = []
+        self.admissions = []
+
+    def capture(self, directory, reuse, paths, **options):
+        step = len(self.calls)
+        self.calls.append((paths, self.jobs.status()["latest"]))
+        self.started[step].set()
+        if step < len(self.release) and not self.release[step].wait(5):
+            raise RuntimeError("Test capture was not released")
+        witness = {"inputs": {}, "graph_config": None, "endpoints": {}}
+        result = {"snapshot": {"atoms": []}, "reuse": witness}
+        return result | ({"paths": paths} if paths else {})
+
+    def admit(self, *args):
+        generation = str(len(self.admissions) + 1)
+        self.admissions.append(generation)
+        if generation == "3":
+            self.final_admission.set()
+        return {"generation": generation}
 
 
 class StartupArchiveCheckpointTests(unittest.TestCase):
@@ -24,6 +62,30 @@ class StartupArchiveCheckpointTests(unittest.TestCase):
                       "graph_config": None, "endpoints": {}, "carrier_hashes": {"control/a.md": "b" * 64,
                           "control/09_archived/a.md": "c" * 64},
                       "folder_hashes": {"control": "d" * 64, "control/09_archived": "e" * 64}}
+
+    def test_live_timing_follows_successful_startup_admission_only(self):
+        root = Path(self.jobs.binding["root"])
+        for field in ("model", "structure"):
+            (root / (field + ".json")).write_text("{}")
+        cases = (("full", "disabled", {}), ("native_delta", "none", {"paths": []}),
+                 ("reused", "deferred", {"unchanged": True, "archive_pending": True}))
+        with kernel_server(root) as kernel, patch.dict(os.environ, ANECHOIC_STARTUP_TIMING="1"):
+            self.jobs.database_socket = str(root / "kernel.sock")
+            for mode, archive, result in cases:
+                with self.subTest(mode=mode), redirect_stderr(StringIO()) as stderr:
+                    self.jobs.startup_capture = True
+                    self.jobs.skip_archives = archive == "disabled"
+                    kernel.reject = True
+                    with self.assertRaisesRegex(RuntimeError, "Kernel rejected generation"):
+                        self.jobs._admit_live_result(str(root), result, None, None)
+                    self.assertFalse(timing_records(stderr))
+                    kernel.reject = False
+                    self.assertEqual(mode, self.jobs._admit_live_result(str(root), result, None, None)["kind"])
+                    self.jobs.startup_capture = False
+                    self.jobs._admit_live_result(str(root), result, None, None)
+                    record, = timing_records(stderr)
+                    self.assertGreater(record.pop("timestamp_ns"), 0)
+                    self.assertEqual({"phase": "non_archived_load_ended", "mode": mode, "archive": archive}, record)
 
     def test_unchanged_live_reconciles_previously_known_archive_after_all_roots_removed(self):
         unchanged = {"base_generation": "old", "unchanged": True}
@@ -52,7 +114,7 @@ class StartupArchiveCheckpointTests(unittest.TestCase):
             self.assertEqual({"foreground": True, "watcher_guarded": epoch is not None}, worker.call_args.kwargs)
 
     def test_failed_foreground_fence_keeps_legacy_error_and_passes_run_id(self):
-        self.jobs.active = {"run_id": "a" * 32}
+        self.jobs.active = RunFixture(state="running", started_at=0, run_id="a" * 32)
         for fence in (False, None):
             with self.subTest(fence=fence), patch.object(self.jobs, "_run_worker", return_value={}):
                 self.jobs.watcher.capture_fence.return_value = fence
@@ -60,6 +122,83 @@ class StartupArchiveCheckpointTests(unittest.TestCase):
                     self.jobs._attempt_generation(None, None)
                 self.assertEqual("a" * 32, self.jobs.watcher.capture_fence.call_args.kwargs["run_id"])
         self.jobs.watcher.capture_epoch.assert_called_with(trace=True)
+
+    def test_replay_coverage_loss_discards_result_and_runs_strict_reconciliation(self):
+        self.jobs.thread = object()
+        self.jobs.watcher.watch_code = False
+        self.jobs.watcher.replay_fence.return_value = None
+        with (patch.object(self.jobs, "_run_worker", side_effect=[{"snapshot": {}}, {"snapshot": {}}]) as worker,
+              patch.object(self.jobs, "_admit_live_result", return_value={"generation": "new"}) as admit):
+            self.assertEqual("succeeded", self.jobs._generate(startup=True)["state"])
+        self.assertEqual([{"foreground": True, "watcher_guarded": True},
+                          {"foreground": True, "watcher_guarded": False}],
+                         [call.kwargs for call in worker.call_args_list])
+        admit.assert_called_once()
+
+    def test_run_snapshot_preserves_result_ids_and_replay_state(self):
+        outcome = {"state": "succeeded", "generation": "g", "result_ids": {"old": "new"}}
+        with patch.object(self.jobs, "_attempt_with_recovery", return_value=outcome):
+            self.jobs._generate()
+        self.jobs.startup_replay = True
+        latest = self.jobs.status()["latest"]
+        self.assertEqual("running", latest["state"])
+        latest["result_ids"]["old"] = "changed"
+        self.jobs.startup_replay = False
+        latest = self.jobs.status()["latest"]
+        self.assertEqual(("succeeded", {"old": "new"}), (latest["state"], latest["result_ids"]))
+        self.assertNotIn("retrying", latest)
+
+    def test_failed_replay_capture_retries_only_with_a_queued_source_change(self):
+        self.jobs.thread = object()
+        self.jobs.watcher.watch_code = False
+        self.jobs.watcher.replay_fence.return_value = True
+        self.jobs.watcher.foreground_events.side_effect = [0, 1, 1, 1]
+        error = ValueError("Original ingestion issue")
+        with (patch.object(self.jobs, "_run_worker", side_effect=error),
+              patch.object(self.jobs, "_record_ingestion_failure") as record):
+            changed = self.jobs._generate(startup=True)
+            stable = self.jobs._generate(startup=True)
+        self.assertTrue(changed["retrying"])
+        self.assertEqual("Original ingestion issue", stable["message"])
+        self.assertNotIn("retrying", stable)
+        self.assertEqual([error, error], [call.args[0] for call in record.call_args_list])
+
+    def test_startup_replays_a_finite_batch_before_reporting_ready(self):
+        root = Path(self.enterContext(TemporaryDirectory())).resolve()
+        control = root / "_anechoic_replay"
+        tickets = control / "__TKT"
+        tickets.mkdir(parents=True)
+        binding = self.jobs.binding | {"root": str(root), "control_root": control.name}
+        jobs = orchestrator.GenerationJobs("test", binding, "socket")
+        self.addCleanup(jobs.close)
+        replay = ReplayCapture(jobs)
+        for event in replay.release:
+            self.addCleanup(event.set)
+        with (patch.object(orchestrator, "read_reuse", return_value=None),
+              patch.object(jobs, "_run_worker", side_effect=replay.capture),
+              patch.object(jobs, "_admit_live_result", side_effect=replay.admit),
+              patch.object(jobs, "_run_archive")):
+            jobs.start()
+            self.assertTrue(replay.started[0].wait(3))
+            for count in (1, 2):
+                (tickets / f"AN-T-{count}--task.md").touch()
+            replay.release[0].set()
+            self.assertTrue(replay.started[1].wait(5))
+            self.assertEqual(["1"], replay.admissions)
+            self.assertEqual("running", jobs.status()["latest"]["state"])
+            self.assertTrue(jobs.health()["startup_replay_pending"])
+            request = binding | {"instance_id": "test", "name": "atom_lifecycle_update", "arguments": {}}
+            self.assertEqual("startup_replay_pending", jobs.lifecycle(request)[1]["error"]["code"])
+            (tickets / "AN-T-3--task.md").touch()
+            replay.release[1].set()
+            self.assertTrue(replay.started[2].wait(5))
+            self.assertTrue(replay.final_admission.wait(5))
+            self.assertFalse(jobs.health()["startup_replay_pending"])
+            jobs.close()
+        self.assertEqual([[f"{control.name}/__TKT/AN-T-{index}--task.md" for index in indices]
+                          for indices in ((1, 2), (3,))], [call[0] for call in replay.calls[1:]])
+        follow_up_status = replay.calls[2][1]
+        self.assertEqual(("succeeded", "2"), (follow_up_status["state"], follow_up_status["generation"]))
 
     def test_archive_delta_admits_against_latest_live_generation(self):
         self.jobs.deferred_archive = self.jobs._restart_archive(self.reuse, {"unchanged": True})
@@ -73,11 +212,34 @@ class StartupArchiveCheckpointTests(unittest.TestCase):
         self.assertTrue(request["incremental"])
         self.assertEqual(archive, request["reuse"])
         self.jobs.live_generation = "latest"
-        with patch.object(archive_jobs, "admit_generation", return_value={"generation": "complete"}) as admit:
+        root = Path(self.jobs.binding["root"])
+        with (kernel_server(root) as kernel, patch.dict(os.environ, ANECHOIC_STARTUP_TIMING="1"),
+              redirect_stderr(StringIO()) as stderr):
+            self.jobs.database_socket = str(root / "kernel.sock")
+            kernel.reject = True
+            with self.assertRaisesRegex(RuntimeError, "Kernel rejected generation"):
+                self.jobs._admit_archive(result)
+            self.assertFalse(timing_records(stderr))
+            kernel.reject = False
             self.jobs._admit_archive(result)
-        self.assertEqual("latest", admit.call_args.args[3]["base_generation"])
-        self.assertTrue(admit.call_args.kwargs["archive"])
+        record, = timing_records(stderr)
+        self.assertGreater(record.pop("timestamp_ns"), 0)
+        self.assertEqual({"phase": "archive_load_ended", "mode": "native_delta"}, record)
+        self.assertEqual(["/generation/archive"] * 2, kernel.paths)
+        self.assertEqual([old | {"instance_id": "test", "base_generation": "latest"}] * 2, kernel.payloads)
         self.assertIsNone(self.jobs.deferred_archive)
+
+    def test_full_archive_reply_requires_closed_envelope(self):
+        request = {"reuse": None, "archive": {"roots": (), "endpoints": {}}}
+        valid = {"snapshot": {"atoms": []}, "carrier_hashes": {"control/a.md": "hash"}}
+        self.jobs._communicate_worker = Mock(return_value=json.dumps(valid))
+        self.assertEqual(valid, self.jobs._run_archive_worker("/test", request))
+        for invalid in (valid | {"extra": 1}, {"snapshot": {}},
+                        valid | {"snapshot": []}, valid | {"carrier_hashes": []}):
+            with self.subTest(invalid=invalid):
+                self.jobs._communicate_worker.return_value = json.dumps(invalid)
+                with self.assertRaisesRegex(ValueError, "Worker returned invalid Archive result"):
+                    self.jobs._run_archive_worker("/test", request)
 
     def test_archive_incompatibility_recaptures_only_archive(self):
         captured = {"snapshot": {"atoms": [], "relations": []}, "carrier_hashes": {}}

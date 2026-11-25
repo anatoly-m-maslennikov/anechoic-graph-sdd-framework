@@ -18,6 +18,27 @@ def _stage(path, event):
 
 
 class WorkJournalTest(unittest.TestCase):
+    def test_invalid_inbox_bytes_remain_available_for_correction(self):
+        root = Path(self.enterContext(TemporaryDirectory(dir="/tmp"))).resolve()
+        inbox = root / ".anechoic_runtime/workbench/journal-inbox"
+        inbox.mkdir(parents=True, mode=0o700)
+        record = uuid7()
+        source = inbox / f"{record}.json"
+        with _server(None, "--project-root", str(root), "--journal-storage", "duckdb") as client:
+            self.assertEqual(200, client.put("/generation", json=_generation()).status_code)
+            for invalid in (
+                b'{"author":1,"event":null,"local_date":"2026-11-22"}',
+                b'{"author":"test-author","event":null,"local_date":"2026-11-22"}\n',
+            ):
+                source.write_bytes(invalid)
+                response = _query(client, ROWS)
+                self.assertEqual(409, response.status_code, response.text)
+                self.assertEqual("journal_unavailable", response.json()["error"]["code"])
+                self.assertEqual(invalid, source.read_bytes())
+            _stage(source, [None, 1, "value"])
+            self.assert_rows(client, [[str(record), 1, "test-author", "2026-11-22"]])
+            self.assertFalse(source.exists())
+
     def test_journal_survives_restart_with_either_projection_storage(self):
         for in_memory in (True, False):
             with self.subTest(in_memory=in_memory), TemporaryDirectory(dir="/tmp") as directory:

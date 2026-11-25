@@ -9,9 +9,8 @@ import unittest
 HERE = Path(__file__).resolve().parent.parent
 
 from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared import ReviewContext, merge_evaluations
-from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.layout_repair_gate import authority_digest
-from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.layout_subject_repair_gate import admit_layout_subject_recoding
-from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.repair__tests.test_layout_repair_gate import fixture as layout_fixture, rebind
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.repair_gate__shared import admit_layout_subject_recoding, authority_digest
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.repair__tests.test_layout_repair_gate import digest, fixture as layout_fixture, rebind
 from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__tests.RMED_ATOM_REVIEW__tests__shared import source
 
 
@@ -37,8 +36,7 @@ def _bind_combined_evidence(data):
     data['preflight'].update(expected)
     data['preflight']['identity_assessment'].update(expected)
     data['preflight']['final_review'].update(source=expected['outputs'][0], context_sha256=final_context.sha256)
-    from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.layout_repair_gate import _digest
-    data['preflight']['final_review']['evaluation_sha256'] = _digest(data['final_evaluation'])
+    data['preflight']['final_review']['evaluation_sha256'] = digest(data['final_evaluation'])
     data['preflight']['freshness'].update(source=expected['source'], authority_sha256=authority_digest(data['context']))
     data['proposal']['disposition'] = 'layout_subject_recoding'
     data['permission']['dispositions'] = ['layout_subject_recoding']
@@ -132,8 +130,7 @@ def rebind_final(data):
     data['preflight'].update(expected)
     data['preflight']['identity_assessment'].update(expected)
     data['preflight']['final_review'].update(source=binding, context_sha256=final_context.sha256)
-    from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.layout_repair_gate import _digest
-    data['preflight']['final_review']['evaluation_sha256'] = _digest(data['final_evaluation'])
+    data['preflight']['final_review']['evaluation_sha256'] = digest(data['final_evaluation'])
     data['preflight']['freshness'].update(source=expected['source'],
                                           authority_sha256=authority_digest(data['context']))
 

@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parents[3]
 FRONTEND = (
     Path(CODE_ROOTS[0]) / "IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND"
 )
-WEB_SUFFIXES = {".js", ".mjs", ".ts", ".svelte", ".css", ".html"}
+WEB_SUFFIXES = {".js", ".mjs", ".cjs", ".ts", ".cts", ".svelte", ".css", ".html"}
 DOCKER_FILES = {"Dockerfile", "Dockerfile.dockerignore", ".dockerignore"}
 EDITORCONFIG_DIRECTIVE = r"editorconfig-checker-disable-line\b"
 PYTHON_DIRECTIVE = re.compile(
@@ -84,12 +84,15 @@ def remove_line_comments(
     return edits
 
 
-def source_paths(root: Path) -> list[Path]:
+def source_paths(root: Path, suffixes: set[str] | None = None,
+                 roots: tuple[str, ...] = CODE_ROOTS) -> list[Path]:
     result = subprocess.check_output(
-        ["git", "ls-files", "-z", "--cached", "--others", "--exclude-standard", "--", *CODE_ROOTS],
+        ["git", "ls-files", "-z", "--cached", "--others", "--exclude-standard", "--", *roots],
         cwd=root,
     )
     paths = {Path(item.decode("utf-8")) for item in result.split(b"\0") if item}
+    if suffixes is not None:
+        return sorted(path for path in paths if path.suffix in suffixes)
     return sorted(path for path in paths
                   if path.suffix in WEB_SUFFIXES | {".py"} or path.name in DOCKER_FILES)
 
@@ -98,7 +101,7 @@ def web_edits(root: Path, files: list[dict[str, str]]) -> list[list[tuple[int, i
     if not files:
         return []
     result = subprocess.run(
-        ["node", str(root / FRONTEND / "scripts/source-comments.mjs")],
+        ["node", str(root / FRONTEND / "scripts/source-comments.ts")],
         input=json.dumps(files), encoding="utf-8", capture_output=True, check=False,
     )
     if result.returncode:

@@ -1,0 +1,76 @@
+"""Check JSON Atom Header observations with the pilot Lean predicate.
+
+Run as a module with CONTROL_ROOT; provide a nonempty JSON array on stdin.
+Each item has family, model_class, status, tier and priority keys.
+"""
+import json
+import os
+from pathlib import Path
+import shutil
+import subprocess
+import sys
+import tempfile
+
+from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.FEATURE_FORMAL_MODEL_GENERATOR__shared import (
+    admit_active_model_records, compile_native_bindings, reviewed_model_records,
+)
+from ...manifest_compiler_CS1__shared import read_active_model_sources, render_atom_header_lean
+
+
+def _text(value):
+    if any(ord(char) < 32 or 0x7f <= ord(char) <= 0x9f or 0xd800 <= ord(char) <= 0xdfff for char in value):
+        return "String.ofList [" + ", ".join(f"Char.ofNat {ord(char)}" for char in value) + "]"
+    return json.dumps(value, ensure_ascii=False)
+
+
+def _value(value):
+    if value is None:
+        return 'none'
+    if isinstance(value, str):
+        return f'some (.text {_text(value)})'
+    if type(value) is int:
+        return f'some (.integer ({value}))'
+    return 'some .other'
+
+
+def _observations(rows):
+    if not isinstance(rows, list) or not rows:
+        raise ValueError('expected a nonempty observation array')
+    result = []
+    for index, row in enumerate(rows):
+        if (not isinstance(row, dict) or set(row) != {'family', 'model_class', 'status', 'tier', 'priority'}
+                or not all(isinstance(row[k], str) for k in ('family', 'model_class'))):
+            raise ValueError(f'invalid observation {index}')
+        args = [_text(row['family']), _text(row['model_class'])]
+        args.extend(_value(row[key]) for key in ('status', 'tier', 'priority'))
+        result.append(f'example : atomHeaderValid ⟨{", ".join(args)}⟩ = true := by decide')
+    return '\n'.join(result) + '\n'
+
+
+def main():
+    if len(sys.argv) != 2:
+        raise ValueError('expected CONTROL_ROOT argument')
+    control = Path(sys.argv[1])
+    if not control.is_dir():
+        raise ValueError('CONTROL_ROOT is not a directory')
+    ontology = control / 'LAYER_1_META_ONTOLOGY_C9'
+    declarations = read_active_model_sources(control, ontology)
+    if not ontology.exists() and not ontology.is_symlink():
+        if declarations:
+            raise ValueError('Custom Model sources require an active C9 Model')
+        records, originals, _ = reviewed_model_records()
+    else:
+        records, originals, _ = admit_active_model_records(declarations)
+    bindings = compile_native_bindings(records, originals)
+    program = render_atom_header_lean(records, bindings) + _observations(json.load(sys.stdin))
+    executable = os.environ.get('LEAN_BIN') or shutil.which('lean')
+    if not executable:
+        raise ValueError('Lean executable is missing; install Lean or set LEAN_BIN')
+    with tempfile.TemporaryDirectory(prefix='anechoic-header-lean-') as directory:
+        path = Path(directory) / 'Header.lean'
+        path.write_text(program, encoding='utf-8')
+        subprocess.run([executable, str(path)], timeout=120, check=True)
+
+
+if __name__ == '__main__':
+    main()

@@ -1,0 +1,21 @@
+def overlaps (a b : List (Nat × Nat)) : Bool :=
+  a.all fun (key, value) => b.all fun (otherKey, otherValue) =>
+    key != otherKey || value == otherValue
+
+def firstOverlap : List (Nat × List (Nat × Nat)) → Option (Nat × Nat)
+  | [] => none
+  | (i, guard) :: rest =>
+      match rest.find? (fun (_, other) => overlaps guard other) with
+      | some (j, _) => some (i, j)
+      | none => firstOverlap rest
+
+def reachable : Nat → List Nat → List Nat
+  | 0, seen => seen
+  | fuel + 1, seen => reachable fuel (edges.foldl (fun found (src, dst) =>
+      if found.contains src && !found.contains dst then dst :: found else found) seen)
+
+def reaches (fuel source target : Nat) : Bool :=
+  (reachable fuel [source]).contains target
+
+def finishes (fuel state : Nat) : Bool :=
+  finals.any fun final => reaches fuel state final

@@ -5,8 +5,7 @@ import unittest
 
 HERE = Path(__file__).resolve().parents[1]
 
-from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW import batch_admission  # noqa: E402
-from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared import GROUPS  # noqa: E402
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared import GROUPS, admit_batch  # noqa: E402
 from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__tests.test_split_evaluation import (SOURCE_TEXT, context, part, source)  # noqa: E402
 from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__tests.test_subject_accounting import response as subject_response  # noqa: E402
 from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__tests.test_positive_observations import context5, response as contract5_part  # noqa: E402
@@ -32,9 +31,22 @@ def parts_for(binding):
     return reports
 
 
+def local_candidate(path):
+    packet = packet6()
+    candidate_source = source(path, "MOCK-R-001", SOURCE_TEXT)
+    packet["sources"][0] = candidate_source
+    binding = candidate_source["binding"]
+    packet["candidate_bindings"] = [binding]
+    review_context = contract.ReviewContext(packet)
+    reports = [part6(group) for group in contract.LOCAL_GROUPS]
+    for report in reports:
+        report.update(source=binding, context_sha256=review_context.sha256)
+    return binding, review_context, reports
+
+
 class BatchAdmissionTests(unittest.TestCase):
     def admit(self, parts=None, candidates=None, review_context=None, **kwargs):
-        return batch_admission.admit_batch(
+        return admit_batch(
             candidates or [candidate()], parts if parts is not None else raw_parts(),
             review_context or context(), **kwargs)
 
@@ -170,18 +182,11 @@ class BatchAdmissionTests(unittest.TestCase):
 
     def test_combines_independent_local_contexts(self):
         first = candidate()
-        packet = packet6()
-        second_source = source("second.md", "MOCK-R-001", SOURCE_TEXT)
-        packet["sources"][0] = second_source
-        packet["candidate_bindings"] = [second_source["binding"]]
-        second_context = contract.ReviewContext(packet)
-        second_parts = [part6(group) for group in contract.LOCAL_GROUPS]
-        for report in second_parts:
-            report.update(source=second_source["binding"], context_sha256=second_context.sha256)
+        second, second_context, second_parts = local_candidate("second.md")
         result = self.admit(
             {"mock.md": [part6(group) for group in contract.LOCAL_GROUPS],
              "second.md": second_parts},
-            candidates=[first, second_source["binding"]],
+            candidates=[first, second],
             review_context={"mock.md": context6(), "second.md": second_context})
         self.assertEqual(result["admission"], "accepted", result["reasons"])
         self.assertEqual(result["summary"]["fully_passed_atoms"], 2)
@@ -209,11 +214,12 @@ class BatchAdmissionTests(unittest.TestCase):
         self.assertEqual(len(summary["check_counts"]), 6)
 
     def test_rejects_mixed_review_profiles_instead_of_merging_coverage(self):
-        local = self.admit({"mock.md": [part6(group) for group in contract.LOCAL_GROUPS]},
-                           review_context=context6())["summary"]
-        legacy = self.admit(raw_contract5_parts(), review_context=context5())["summary"]
-        with self.assertRaisesRegex(ValueError, "same review profile"):
-            batch_admission._combine_summaries([local, legacy])
+        local, local_context, reports = local_candidate("local.md")
+        result = self.admit(raw_contract5_parts() | {"local.md": reports},
+                            candidates=[candidate(), local],
+                            review_context={"mock.md": context5(), "local.md": local_context})
+        self.assertEqual(result["admission"], "rejected")
+        self.assertIn("same review profile", result["reasons"][0])
 
 
 if __name__ == "__main__":

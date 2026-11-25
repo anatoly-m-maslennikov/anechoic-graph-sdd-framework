@@ -8,6 +8,8 @@ import stat
 from uuid import uuid4, uuid7
 from fcntl import flock, LOCK_EX
 
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
 
 _DIRECTORY = (".anechoic_runtime", "workbench", "beta", "workspaces")
 _DIRECTORY_FLAGS = os.O_DIRECTORY | os.O_NOFOLLOW | os.O_RDONLY
@@ -45,6 +47,43 @@ def _nonnegative(value, field):
     return value
 
 
+class _View(BaseModel):
+    model_config = ConfigDict(strict=True, extra="forbid")
+
+    id: str
+    sql: str
+    cursor_position: int = Field(ge=0)
+    revision: int = Field(ge=0)
+    name: str | None = None
+
+    @field_validator("id", "sql", "name", mode="before")
+    @classmethod
+    def validate_text(cls, value, info):
+        return _text(value, "view_id" if info.field_name == "id" else info.field_name,
+                     nonempty=info.field_name != "sql")
+
+
+class _Workspace(BaseModel):
+    model_config = ConfigDict(strict=True, extra="forbid")
+
+    workspace_id: str
+    project_root: str
+    active_view_id: str
+    views: list[_View] = Field(min_length=1)
+
+    @field_validator("workspace_id", mode="before")
+    @classmethod
+    def validate_id(cls, value):
+        return _text(value, "workspace_id", nonempty=True)
+
+    @model_validator(mode="after")
+    def validate_binding(self):
+        ids = {view.id for view in self.views}
+        if len(ids) != len(self.views) or self.active_view_id not in ids:
+            raise ValueError("invalid workspace view binding")
+        return self
+
+
 def _filename(workspace_id):
     return f"{sha256(workspace_id.encode()).hexdigest()}.json"
 
@@ -59,13 +98,13 @@ def _read_document(directory, filename):
 
 
 def _write_document(directory, document):
-    filename = _filename(document["workspace_id"])
+    filename = _filename(document.workspace_id)
     temporary = f".{uuid4().hex}.tmp"
     flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
     fd = os.open(temporary, flags, 0o600, dir_fd=directory)
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as stream:
-            json.dump(document, stream, ensure_ascii=False, separators=(",", ":"))
+            json.dump(document.model_dump(exclude_none=True), stream, ensure_ascii=False, separators=(",", ":"))
             stream.flush()
             os.fsync(stream.fileno())
         os.replace(temporary, filename, src_dir_fd=directory, dst_dir_fd=directory)
@@ -77,31 +116,30 @@ def _write_document(directory, document):
 
 
 def _new_view():
-    return {"id": str(uuid7()), "sql": "", "cursor_position": 0, "revision": 0}
+    return _View(id=str(uuid7()), sql="", cursor_position=0, revision=0)
 
 
 def _view_list(document):
     return {
-        "workspace_id": document["workspace_id"],
-        "active_view_id": document["active_view_id"],
-        "views": [{key: value for key, value in view.items() if key != "sql"} for view in document["views"]],
+        "workspace_id": document.workspace_id,
+        "active_view_id": document.active_view_id,
+        "views": [view.model_dump(exclude={"sql"}, exclude_none=True) for view in document.views],
     }
 
 
 def _view_response(document, view):
-    return {"workspace_id": document["workspace_id"], "view_id": view["id"]} | view
+    return {"workspace_id": document.workspace_id, "view_id": view.id} | view.model_dump(exclude_none=True)
 
 
 def _duplicate(views, source):
-    names = [view.get("name") or f"View {index + 1}" for index, view in enumerate(views)]
+    names = [view.name or f"View {index + 1}" for index, view in enumerate(views)]
     index = views.index(source)
     base_name = names[index]
     suffix = 1
     while f"{base_name}({suffix})" in names:
         suffix += 1
-    view = _new_view() | {
-        "sql": source["sql"], "cursor_position": source["cursor_position"], "name": f"{base_name}({suffix})",
-    }
+    view = _new_view()
+    view.sql, view.cursor_position, view.name = source.sql, source.cursor_position, f"{base_name}({suffix})"
     views.insert(index + 1, view)
     return view
 
@@ -132,26 +170,9 @@ class WorkspaceStore:
 
     def _read(self, directory, filename):
         try:
-            document = _read_document(directory, filename)
-            workspace_id = _text(document["workspace_id"], "workspace_id", nonempty=True)
-            views = document["views"]
-            if (set(document) != {"workspace_id", "project_root", "active_view_id", "views"}
-                    or filename != _filename(workspace_id) or document["project_root"] != str(self._root)
-                    or not isinstance(views, list) or not views):
+            document = _Workspace.model_validate(_read_document(directory, filename))
+            if filename != _filename(document.workspace_id) or document.project_root != str(self._root):
                 raise ValueError("invalid workspace document")
-            ids = set()
-            for view in views:
-                required = {"id", "sql", "cursor_position", "revision"}
-                if set(view) not in (required, required | {"name"}):
-                    raise ValueError("invalid workspace view")
-                ids.add(_text(view["id"], "view_id", nonempty=True))
-                _text(view["sql"], "sql")
-                if "name" in view:
-                    _text(view["name"], "name", nonempty=True)
-                _nonnegative(view["cursor_position"], "cursor_position")
-                _nonnegative(view["revision"], "revision")
-            if len(ids) != len(views) or document["active_view_id"] not in ids:
-                raise ValueError("invalid workspace view binding")
             return document
         except FileNotFoundError:
             raise
@@ -163,7 +184,7 @@ class WorkspaceStore:
         for filename in os.listdir(directory):
             if filename.endswith(".json"):
                 try:
-                    ids.append(self._read(directory, filename)["workspace_id"])
+                    ids.append(self._read(directory, filename).workspace_id)
                 except (FileNotFoundError, ValueError):
                     continue
         return {"items": [{"workspace_id": value} for value in sorted(ids)]}
@@ -197,13 +218,13 @@ class WorkspaceStore:
                 if not opening:
                     raise ValueError("unknown workspace_id") from error
                 view = _new_view()
-                document = {"workspace_id": workspace_id, "project_root": str(self._root),
-                            "active_view_id": view["id"], "views": [view]}
+                document = _Workspace(workspace_id=workspace_id, project_root=str(self._root),
+                                      active_view_id=view.id, views=[view])
                 _write_document(directory, document)
-            if document["workspace_id"] != workspace_id:
+            if document.workspace_id != workspace_id:
                 raise ValueError("workspace is unavailable")
             if operation in ("workspace_open", "workspace_get"):
-                return document
+                return document.model_dump(exclude_none=True)
             if operation == "view_list":
                 return _view_list(document)
             return self._view_operation(operation, arguments, directory, document)
@@ -213,7 +234,7 @@ class WorkspaceStore:
             os.close(directory)
 
     def _view_operation(self, operation, arguments, directory, document):
-        views = document["views"]
+        views = document.views
         if operation == "view_create":
             position = arguments.get("position", "last")
             if position not in ("first", "last"):
@@ -221,13 +242,13 @@ class WorkspaceStore:
             view = _new_view()
             name = arguments.get("name")
             if name is not None and _text(name, "name").strip():
-                view["name"] = name
+                view.name = name
             views.insert(0 if position == "first" else len(views), view)
         else:
             if operation == "view_remove" and len(views) == 1:
                 raise ValueError("cannot remove the last view")
             view_id = _text(arguments["view_id"], "view_id", nonempty=True)
-            view = next((view for view in views if view["id"] == view_id), None)
+            view = next((view for view in views if view.id == view_id), None)
             if view is None:
                 raise ValueError("unknown view_id")
             if operation == "view_get":
@@ -236,34 +257,34 @@ class WorkspaceStore:
                 view = _duplicate(views, view)
             elif operation == "view_remove":
                 views.remove(view)
-                if document["active_view_id"] == view["id"]:
-                    document["active_view_id"] = views[0]["id"]
+                if document.active_view_id == view.id:
+                    document.active_view_id = views[0].id
             elif operation == "view_update":
                 self._update(view, arguments)
             elif operation == "view_rename":
                 name = _text(arguments["name"], "name")
                 if name.strip():
-                    view["name"] = name
+                    view.name = name
                 else:
-                    view.pop("name", None)
+                    view.name = None
         if operation in ("view_create", "view_duplicate", "view_focus"):
-            document["active_view_id"] = view["id"]
+            document.active_view_id = view.id
         _write_document(directory, document)
         if operation in ("view_create", "view_duplicate"):
-            return document | {"view_id": view["id"]}
+            return document.model_dump(exclude_none=True) | {"view_id": view.id}
         if operation == "view_remove":
             return _view_list(document)
         if operation == "view_focus":
-            return {"workspace_id": document["workspace_id"], "active_view_id": view["id"]}
+            return {"workspace_id": document.workspace_id, "active_view_id": view.id}
         return _view_response(document, view)
 
     @staticmethod
     def _update(view, arguments):
         if "cursor_position" in arguments:
-            view["cursor_position"] = _nonnegative(arguments["cursor_position"], "cursor_position")
+            view.cursor_position = _nonnegative(arguments["cursor_position"], "cursor_position")
         sql = _text(arguments["sql"], "sql")
         expected = _nonnegative(arguments["expected_revision"], "expected_revision")
-        if view["revision"] != expected:
+        if view.revision != expected:
             raise ValueError("expected_revision does not match")
-        view["sql"] = sql
-        view["revision"] += 1
+        view.sql = sql
+        view.revision += 1

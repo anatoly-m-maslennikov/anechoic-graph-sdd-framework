@@ -4,7 +4,8 @@
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping, Sequence
-from dataclasses import dataclass
+from pydantic import ConfigDict
+from pydantic.dataclasses import dataclass
 import re
 from typing import Any
 
@@ -30,7 +31,7 @@ _FORMAT = re.compile(
 _COLLECTION = re.compile(r"(?:0|1)\+|\d+\.\.(?:\d+|n)")
 
 
-@dataclass(frozen=True)
+@dataclass(config=ConfigDict(strict=True, extra="forbid", hide_input_in_errors=True), frozen=True)
 class HeaderRule:
     """One raw or resolved Header declaration and its narrow applicability."""
 

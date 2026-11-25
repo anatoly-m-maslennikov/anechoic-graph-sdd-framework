@@ -8,9 +8,9 @@ context:
   template: component_manifest
   lens: SPEC
 state:
-  status: active
-  version: 27
-  updated_at: "2026-11-23T10:26:33.104737+00:00"
+  status: "active"
+  version: 31
+  updated_at: "2026-11-25T10:31:29.590036+00:00"
 ---
 ## Summary
 
@@ -35,9 +35,13 @@ declare_entity(
         lens_whitelist=['DES', 'SPEC'],
         boundaries={'code': {'imports': {'only': ['metrics__shared.code_rows',
                                                 'ADAPTERS_C30__shared.capture_carrier_delta',
+                                                'ADAPTERS_C30__shared.UnrepresentableCarrierDelta',
                                                 'FEATURE_TOOLS__shared.indexed_draft_runner',
                                                 'ADAPTERS_C30__shared.capture_ticket_delta',
                                                 'ADAPTERS_C30__shared.prepare_generation_snapshot',
+                                                'ADAPTERS_C30__shared.NativeSnapshotChanged',
+                                                'ADAPTERS_C30__shared.owned_temporary_root',
+                                                'ADAPTERS_C30__shared.mark_startup_timing',
                                                 'ADAPTERS_C30__shared.native_carrier_hashes',
                                            'import_graph__shared.run_graph_build',
                                            'import_graph__shared.graph_input_signature',
@@ -55,7 +59,7 @@ declare_entity(
                                              'runner': 'managed_python',
                                              'input': 'JSON Project binding or managed binding and reuse proof on stdin',
                                              'managed_parent_env': 'ANECHOIC_BETA_WORKER_PARENT_PID',
-                                             'optional_managed_field_sets': [['paths'], ['structure']],
+                                             'optional_managed_field_sets': [['paths'], ['structure'], ['model_source'], ['batch_full']],
                                              'output': 'JSON Atom snapshot or paired '
                                                        'generation receipt and Graph, or base generation and native snapshot with digest on stdout',
                                              'optional_refresh_field_sets': [['paths'], ['graph', 'graph_sha256', 'reuse']],

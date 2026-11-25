@@ -1,0 +1,40 @@
+{
+  "title": "Ref ID follows the current Atom state",
+  "invariant": "After a valid Atom state change, reading Ref ID derives it from the current identity, version, and status.",
+  "scope": "The generated property or constructor slice, with valid status and no supplied Ref ID. The Lean proof treats the derivation helper as a function.",
+  "before": {
+    "revision": "dbe845aeafc18d2ac4c43a4ec45c951b05de8392",
+    "source": "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_FORMAL_MODEL_GENERATOR/manifest_property_fields.py",
+    "source_sha256": "91017ab2f74340df33cd746bb7a862a807080aac0f55c259798fe2a767857222",
+    "fixture": "before.py.txt",
+    "sha256": "fb3a2b0087727443e5b97444a43168be8cb99001c829ced40ef3c38889b1d2dc",
+    "additional_sources": [
+      {
+        "source": "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/native_atom_reference.py",
+        "sha256": "7fbecca3339a1eaa522fa9da5f44763f919c9bb8146471b6fb44bbc6fd2f1b3b"
+      }
+    ]
+  },
+  "fixed": {
+    "revision": "ff818184746b970f7df77f98a5a1bcb130ca1cd5",
+    "source": "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_FORMAL_MODEL_GENERATOR/manifest_property_fields.py",
+    "source_sha256": "ce4bd981e18a886c2a04b284ccf20778c6d1d1623fc932b887866db0b22bf6a8",
+    "fixture": "fixed.py.txt",
+    "sha256": "0c3ddc0b4707d317e89bfc58fca6e4157496a63c7a43c4a3c6d281c06f985347",
+    "additional_sources": [
+      {
+        "source": "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/native_atom_reference.py",
+        "sha256": "7fbecca3339a1eaa522fa9da5f44763f919c9bb8146471b6fb44bbc6fd2f1b3b"
+      }
+    ]
+  },
+  "checks": [
+    {
+      "file": "before.lean"
+    },
+    {
+      "file": "fixed.lean"
+    }
+  ],
+  "analyzer": "analyze.py"
+}

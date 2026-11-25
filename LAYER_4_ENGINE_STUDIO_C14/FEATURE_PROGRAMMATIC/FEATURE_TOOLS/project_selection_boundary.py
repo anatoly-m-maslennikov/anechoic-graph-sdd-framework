@@ -6,13 +6,19 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Any
 
+from pydantic import ConfigDict
+from pydantic.dataclasses import dataclass
+
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import CEILINGS, ReadContext
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import ProjectSelectionError
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_settings_carrier
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.project_selection_paths import SETTINGS_FILENAME, _control_relative, _instance_id, _project_root
 
 
-@dataclass(frozen=True)
+@dataclass(
+    frozen=True,
+    config=ConfigDict(strict=True, extra="forbid", arbitrary_types_allowed=True),
+)
 class _DeclarationBoundaryProof:
     root: Path
     marker_pins: Mapping[str, str | None]

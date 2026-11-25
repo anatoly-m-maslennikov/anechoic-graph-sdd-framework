@@ -6,17 +6,27 @@ from __future__ import annotations
 import json
 import re
 import shutil
+import stat
 import tempfile
-import tomllib
 from pathlib import Path
 from typing import Any
 
+import tomllib
 from LAYER_1_RUNTIME_IMAGES_C81.LAYER_1_RUNTIME_IMAGES_C81__shared import (
-    LocalReleaseError, RETIRED_ASSETS, TOOL_REGISTRY, ready_predecessor,
-    _LAYER_NAMES, _project_path, _walk_regular_files, _target, _file_identity, _verify_package,
+    _LAYER_NAMES,
+    RETIRED_ASSETS,
+    TOOL_REGISTRY,
+    LocalReleaseError,
+    _file_identity,
+    _ignored,
+    _project_path,
+    _target,
+    _verify_package,
+    _walk_regular_files,
+    ready_predecessor,
 )
-from .release_cleanup_images import read_ready_images
 
+from .release_cleanup_images import read_ready_images
 
 _GENERATED_ASSETS = frozenset({TOOL_REGISTRY})
 _BOOTSTRAP = Path("LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/start_mcp.py")
@@ -36,7 +46,41 @@ _ROOT_PACKAGE_EXCLUDES = frozenset({".anechoic_install", *map(str.casefold, (_DE
 _ROOT_PROJECT_GOAL = re.compile(r"[A-Z]+-S-[0-9]+-SPEC-PROJECT_GOAL--.+\.md")
 
 
-def _package_sources(root: Path, product: Path, package: Path, excluded: frozenset[str], manifest_path: Path):
+def _walk_package_tree(root, source, product, excluded, tracked):
+    if tracked is not None and source != product:
+        return _tracked_package_tree(root, source, excluded, tracked)
+    return _walk_regular_files(
+        source, excluded_directories=excluded,
+        excluded_root_prefix=(".anechoic_", "_anechoic_") if source == root else (),
+        excluded_root_directories=_ROOT_PACKAGE_EXCLUDES if source == root else frozenset(),
+        excluded_root_files=frozenset({".git"}) if source == root else frozenset(),
+    )
+
+
+def _tracked_package_tree(root, source, excluded, tracked):
+    prefix = source.relative_to(root)
+    result = []
+    for relative in sorted(tracked):
+        if not relative.is_relative_to(prefix):
+            continue
+        parts = relative.relative_to(prefix).parts
+        if not parts or any(_ignored(part) for part in parts):
+            continue
+        parents = tuple(part.casefold() for part in parts[:-1])
+        if set(parents) & excluded:
+            continue
+        if source == root and (parts == (".git",)
+                               or (parents and (parents[0] in _ROOT_PACKAGE_EXCLUDES
+                                               or parents[0].startswith((".anechoic_", "_anechoic_"))))):
+            continue
+        path = _project_path(root, relative, label="package-source", require_exists=True)
+        if not stat.S_ISREG(path.lstat().st_mode):
+            raise LocalReleaseError("local-release-package-source-unavailable")
+        result.append(path)
+    return result
+
+
+def _package_sources(root, product, package, excluded, manifest_path, tracked):
     trees = (
         (root, Path(".")),
         (product, Path(".")),
@@ -47,9 +91,7 @@ def _package_sources(root: Path, product: Path, package: Path, excluded: frozens
     for source, destination in trees:
         if source.is_symlink() or not source.is_dir():
             raise LocalReleaseError("local-release-package-source-unavailable")
-        members = _walk_regular_files(source, excluded_directories=excluded,
-                                      excluded_root_prefix=(".anechoic_", "_anechoic_") if source == root else (),
-                                      excluded_root_directories=_ROOT_PACKAGE_EXCLUDES if source == root else frozenset())
+        members = _walk_package_tree(root, source, product, excluded, tracked)
         if not members:
             raise LocalReleaseError("local-release-package-source-unavailable")
         inventories.append((source, members))
@@ -62,7 +104,8 @@ def _package_sources(root: Path, product: Path, package: Path, excluded: frozens
 
 
 def _prepare_package(root: Path, product: Path, package: Path, *,
-                     control_relative: Path, manifest_path: Path) -> dict[str, tuple[str, int]]:
+                     control_relative: Path, manifest_path: Path,
+                     tracked: frozenset[Path] | None = None) -> dict[str, tuple[str, int]]:
     if (len(control_relative.parts) != 1
             or not control_relative.name.startswith((".anechoic_", "_anechoic_"))):
         raise LocalReleaseError("local-release-project-selection-invalid")
@@ -70,7 +113,7 @@ def _prepare_package(root: Path, product: Path, package: Path, *,
     if not control_root.is_dir():
         raise LocalReleaseError("local-release-project-selection-invalid")
     excluded = frozenset({control_relative.name.casefold(), ".anechoic_runtime", ".anechoic_tmp", ".runtime", ".git", ".pytest_cache", "__pycache__", ".mypy_cache", ".ruff_cache", ".venv", ".vite", "node_modules"})
-    sources, inventories = _package_sources(root, product, package, excluded, manifest_path)
+    sources, inventories = _package_sources(root, product, package, excluded, manifest_path, tracked)
     expected = {}
     for source, relative in sources:
         expected[relative.as_posix()] = _file_identity(source)
@@ -78,9 +121,7 @@ def _prepare_package(root: Path, product: Path, package: Path, *,
         destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source, destination)
     for source, members in inventories:
-        current = _walk_regular_files(source, excluded_directories=excluded,
-                                      excluded_root_prefix=(".anechoic_", "_anechoic_") if source == root else (),
-                                      excluded_root_directories=_ROOT_PACKAGE_EXCLUDES if source == root else frozenset())
+        current = _walk_package_tree(root, source, product, excluded, tracked)
         if current != members:
             raise LocalReleaseError("local-release-package-source-changed")
     for source, relative in sources:

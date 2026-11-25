@@ -86,7 +86,7 @@ class FunctionalSuiteTests(unittest.TestCase):
         self.config([docker])
         result = self.run_cli()
         self.assertNotEqual(0, result.returncode)
-        self.assertIn("cannot include Docker", result.stderr)
+        self.assertIn("functional_test_modules must select host functional tests", result.stderr)
 
 
 if __name__ == "__main__":

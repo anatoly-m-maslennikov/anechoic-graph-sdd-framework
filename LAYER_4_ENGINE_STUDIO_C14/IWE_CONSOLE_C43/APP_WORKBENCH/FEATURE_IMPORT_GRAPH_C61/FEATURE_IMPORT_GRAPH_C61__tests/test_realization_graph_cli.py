@@ -53,7 +53,7 @@ def test_component_test_edge_uses_declared_structure(tmp_path):
     tests.mkdir(parents=True)
     (tests / "test_widget.py").write_text("pass\n")
     (component / "child").mkdir()
-    (component / "child" / "main.py").write_text("pass\n")
+    (component / "child" / "main.py").write_text("import Widget.Widget__tests.test_widget\n")
     structure = {"model_sha256": "model", "project": {"ref": "AN-S-1", "sha256": "hash"},
                  "components": {"C9": {"parent": "C00", "ref": "AN-S-2", "sha256": "hash",
                                          "fields": {"name": "Widget"},
@@ -63,6 +63,9 @@ def test_component_test_edge_uses_declared_structure(tmp_path):
     graph = json.loads(result.stdout)
     assert ["package:local:Widget/Widget__tests", "C9"] in graph["test_edges"]
     assert not any(row[0] == "C9" for row in graph["nodes"])
+    assert graph["code_access_findings"] == [["module:Widget/child/main.py", "Widget/child/main.py", 1, 0,
+                                             "Widget.Widget__tests.test_widget", "denied",
+                                             "non-test import from Test Package"]]
 
 
 def test_code_access_findings_use_authored_imports_and_exports(tmp_path):

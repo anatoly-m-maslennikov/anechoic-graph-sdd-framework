@@ -15,7 +15,7 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import
     parse_subject_expression as _subject_parse_subject_expression,
     render_subject as _subject_render_subject,
 )
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.header_yaml import header_scalar
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import header_scalar
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.COMPILE_APPLICABLE_METHODOLOGY.methodology_conflicts import sha256_bytes
 
 

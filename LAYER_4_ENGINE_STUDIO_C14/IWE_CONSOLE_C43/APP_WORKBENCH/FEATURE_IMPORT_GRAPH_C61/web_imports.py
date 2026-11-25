@@ -10,8 +10,8 @@ import subprocess
 
 _WEB = frozenset({'javascript', 'typescript', 'svelte'})
 _FRONTEND = Path(__file__).resolve().parent.parent / 'FEATURE_WORKBENCH_FRONTEND'
-_SCANNER = _FRONTEND / 'scripts' / 'import-graph-scanner.mjs'
-_EXTENSIONS = ('', '.ts', '.tsx', '.js', '.jsx', '.mjs', '.svelte')
+_SCANNER = _FRONTEND / 'scripts' / 'import-graph-scanner.ts'
+_EXTENSIONS = ('', '.ts', '.tsx', '.cts', '.js', '.jsx', '.mjs', '.cjs', '.svelte')
 _BUILTINS = frozenset('assert buffer child_process crypto events fs http https module os path process stream string_decoder test timers url util worker_threads zlib'.split())
 
 
@@ -74,7 +74,7 @@ def _dependency_file(root, site, file, probe=None):
     return dependency_file
 
 
-def _lookup_local(root, spec, site, file, dependency_file, sources, written, probe=None):
+def _lookup_local(root, spec, site, file, dependency_file, sources, written, probe, include_asset_target):
     if spec.startswith('/'):
         try:
             frontend = _FRONTEND.relative_to(root).as_posix()
@@ -99,11 +99,40 @@ def _lookup_local(root, spec, site, file, dependency_file, sources, written, pro
         if probe is not None:
             probe(asset)
         if asset.is_file() and not asset.is_symlink():
-            return written, None, 'asset'
+            return written, 'asset:' + value if include_asset_target else None, 'asset'
     return written, None, 'unresolved'
 
 
-def lookup_web(root, site, file, sources, nodes, *, probe=None):
+def _node_modules_package(root, spec, dependency_file, probe):
+    parts = PurePosixPath(spec).parts
+    if 'node_modules' not in parts:
+        return None
+    index = parts.index('node_modules')
+    tail = parts[index + 1:]
+    if not tail or any(part in ('.', '..', 'node_modules') for part in tail):
+        return None
+    length = 2 if tail[0].startswith('@') else 1
+    if len(tail) < length:
+        return None
+    package = '/'.join(tail[:length])
+    directory = root / dependency_file.parent
+    for part in parts[:index]:
+        directory = directory.parent if part == '..' else directory / part
+        if not directory.is_relative_to(root) or directory.resolve() != directory:
+            return None
+    target = directory / 'node_modules' / Path(*tail)
+    manifest = directory / 'package.json'
+    if probe is not None:
+        probe(manifest)
+        probe(target)
+    if (not directory.is_relative_to(root) or directory.resolve() != directory
+            or target.resolve() != target or manifest.is_symlink() or not manifest.is_file()):
+        return None
+    relative_manifest = PurePosixPath(manifest.relative_to(root).as_posix())
+    return package if package in _dependencies(root, relative_manifest, probe) else None
+
+
+def lookup_web(root, site, file, sources, nodes, *, probe=None, include_asset_target=False):
     written = site.module
     if written == '<dynamic>' or not written:
         return written, None, 'unresolved'
@@ -111,8 +140,15 @@ def lookup_web(root, site, file, sources, nodes, *, probe=None):
     if dependency_file is None:
         return written, None, 'unresolved'
     spec = written.split('?', 1)[0].split('#', 1)[0]
+    if spec.startswith('.') and 'node_modules' in PurePosixPath(spec).parts:
+        package = _node_modules_package(root, spec, dependency_file, probe)
+        if package is None:
+            return written, None, 'unresolved'
+        target = f'package:external:{package}'
+        nodes[target] = (target, 'package', 'javascript', None, None, None)
+        return written, target, 'external'
     if spec.startswith(('.', '/')):
-        return _lookup_local(root, spec, site, file, dependency_file, sources, written, probe)
+        return _lookup_local(root, spec, site, file, dependency_file, sources, written, probe, include_asset_target)
     package = '/'.join(spec.split('/')[:2]) if spec.startswith('@') else spec.split('/')[0]
     builtin_name = spec.removeprefix('node:').split('/')[0]
     builtin = builtin_name in _BUILTINS

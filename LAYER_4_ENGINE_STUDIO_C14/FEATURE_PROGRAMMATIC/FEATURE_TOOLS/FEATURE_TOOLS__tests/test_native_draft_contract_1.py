@@ -1,3 +1,4 @@
+from dataclasses import replace
 from hashlib import sha256
 from pathlib import Path
 from types import SimpleNamespace
@@ -38,7 +39,7 @@ class ComponentContractLifecycleTests(fixtures.ComponentContractLifecycleTests, 
         rows = capture_native(self.selection).atoms
         row = next(row for row in rows if row['id'] == 'AN-S-5' and row['status_group'] == 'Current')
         snapshot_path = self.root / 'structure.json'
-        self.selection.structure_snapshot = snapshot_path
+        self.selection = replace(self.selection, structure_snapshot=snapshot_path)
         data = {'model_sha256': 'model', 'project': {'ref': 'p', 'sha256': 'h'},
                 'components': {'C9': {'parent': 'C00', 'ref': 'r', 'sha256': 'h',
                                        'fields': {'name': 'Unit'}, 'source_path': self.record.source_path}}}
@@ -88,11 +89,13 @@ class ComponentContractLifecycleTests(fixtures.ComponentContractLifecycleTests, 
                 if case == 'bad_owner': request['newAtom']['container'] = {'component': 'bad'}
                 if case == 'lens': request['newAtom']['lens'] = 'MISSING'
                 if case == 'bad_lens': request['newAtom']['lens'] = None
-                if case == 'disabled': self.record.lens_whitelist = ('SPEC',)
-                if case == 'empty_whitelist': self.record.lens_whitelist = ()
+                if case in {'disabled', 'empty_whitelist'}:
+                    whitelist = ('SPEC',) if case == 'disabled' else ()
+                    self.record = replace(self.record, fields={**self.record.fields, 'lens_whitelist': whitelist})
+                    self.snapshot = replace(self.snapshot, components={'C9': self.record})
                 if case == 'no_whitelist':
                     manifest.write_bytes(old_manifest.replace(b", lens_whitelist=['DES', 'SPEC']", b''))
-                    self.selection.manifest_sha256 = sha256(manifest.read_bytes()).hexdigest()
+                    self.selection = replace(self.selection, manifest_sha256=sha256(manifest.read_bytes()).hexdigest())
                 if case == 'missing': request['newAtom']['body'] = self.body.replace('## Guarantee', '## Details')
                 if case == 'duplicate': request['newAtom']['body'] += '\n## Guarantee\n\nMore prose.\n'
                 if case == 'code': request['newAtom']['body'] = self.body.replace('The graph includes imports.', '```python\npass\n```')
@@ -100,9 +103,10 @@ class ComponentContractLifecycleTests(fixtures.ComponentContractLifecycleTests, 
                 with self.assertRaises((InputError, SourceChanged)):
                     create_draft(self.selection, request, current_rows=capture_native(self.selection).atoms,
                                  structure_snapshot=self.snapshot)
-                self.record.lens_whitelist = None
+                self.record = replace(self.record, fields={**self.record.fields, 'lens_whitelist': None})
+                self.snapshot = replace(self.snapshot, components={'C9': self.record})
                 manifest.write_bytes(old_manifest)
-                self.selection.manifest_sha256 = sha256(old_manifest).hexdigest()
+                self.selection = replace(self.selection, manifest_sha256=sha256(old_manifest).hexdigest())
                 self.assertFalse((self.control / 'UNIT_C9/01_draft').exists())
 
 
@@ -132,7 +136,7 @@ class ComponentContractLifecycleTests(fixtures.ComponentContractLifecycleTests, 
 
         manifest = self.selection.manifest_path
         manifest.write_text(manifest.read_text().replace("['DES', 'SPEC']", "['SPEC']"))
-        self.selection.manifest_sha256 = sha256(manifest.read_bytes()).hexdigest()
+        self.selection = replace(self.selection, manifest_sha256=sha256(manifest.read_bytes()).hexdigest())
         components = {}
         for cid, parent, path, lenses in (
                 ('C14', 'C00', 'AN-S-10-SPEC--c14.md', ['SPEC']),

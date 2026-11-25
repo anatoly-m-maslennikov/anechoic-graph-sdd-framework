@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from pydantic import ConfigDict
+from pydantic.dataclasses import dataclass
 
 
-@dataclass
+@dataclass(config=ConfigDict(strict=True, extra="forbid"))
 class ValueFormat:
     pass
 

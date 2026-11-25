@@ -14,7 +14,7 @@ from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import HeaderColumn
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import carrier_read_view
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import registry_contribution
 from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__shared import SourceReader
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_content_schema import SourceContentSchema
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__tests._source_reader_fixture import SourceReaderFixture
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import write_scope_unit_declarations
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import source_path, write_atom, write_settings
 
@@ -28,7 +28,7 @@ def atom(role, form, body):
     }
 
 
-class CarrierSerializationTests(unittest.TestCase):
+class CarrierSerializationTests(unittest.TestCase, SourceReaderFixture):
     def test_encoded_relation_declaration_is_admitted_without_changing_header(self):
         header = {"context": {"role": "requirement", "form": "relation_definition"}}
         row = atom("requirement", "relation_definition", "## Claim\n\n### Formal Claim\n\n```python\nsubject_path(address=\"Relation//RELATES_TO\")\n```\n") | {
@@ -68,17 +68,22 @@ class CarrierSerializationTests(unittest.TestCase):
         self.assertNotIn("content.summary.other", schema.names)
 
     def test_validation_does_not_extract_all_content_columns(self):
-        declaration = atom(
-            "Requirement", "Declaration", "## Claim\n\n### Formal Claim\n\n```CFEL\n"
+        SourceReaderFixture.setUp(self)
+        self._write_atom(
+            "MAIN", "04_requirement", "CA-R-8-model.md", atom_id="CA-R-8", form="Declaration",
+            body="## Claim\n\n### Formal Claim\n\n```CFEL\n"
             "Atom.Content.*[string]{::0+};\nAtom.Content.Objective:: {::1};\n```\n",
-        ) | {"source_path": "model.md"}
-        source = atom("Plan", "Plan", "## Objective\n\nOne.\n\n## Objective\n\nTwo.\n") | {
-            "source_path": "plan.md"
-        }
-        state = SourceContentSchema()
+        )
+        source = self._write_atom(
+            "MAIN", "03_plan", "CA-P-1-plan.md", atom_id="CA-P-1", form="Plan",
+            body="## Objective\n\nOne.\n\n## Objective\n\nTwo.\n",
+        )
+        source.write_text(source.read_text().replace('role: "Requirement"', 'role: "Plan"'))
         with patch.object(ContentSchema, "values", side_effect=AssertionError("validation extracted every column")):
-            errors = state.rebuild([declaration, source])
-        self.assertIn("plan.md", errors)
+            rows, _, diagnostics = self._capture()
+        self.assertNotIn("CA-P-1", {row["id"] for row in rows})
+        self.assertIn(source.relative_to(self.root).as_posix(), diagnostics)
+        self.assertIn("duplicate", diagnostics.casefold())
 
     def test_mode_one_header_rule_matches_serialized_role_and_form(self):
         rule = HeaderRule(
@@ -187,21 +192,24 @@ class CarrierSerializationTests(unittest.TestCase):
         self.assertIn("### Note", schema.values(legacy)["content.claim.prose_claim"])
 
     def test_observed_headings_do_not_change_wildcard_schema(self):
-        declaration = atom(
-            "Requirement", "Declaration",
-            "## Claim\n\n### Formal Claim\n\n```CFEL\nAtom.Content.*[string]{::0+};\n```\n",
-        ) | {"source_path": "model.md"}
-        first = atom("Plan", "Plan", "## Objective\n\nShip.\n") | {"source_path": "plan.md"}
-        changed = atom("Plan", "Plan", "## Objective\n\nShip later.\n") | {"source_path": "plan.md"}
-        added = atom("Plan", "Plan", "## Objective\n\nShip.\n\n## Scope\n\nAll.\n") | {
-            "source_path": "plan.md"
-        }
-        state = SourceContentSchema()
-        state.rebuild([declaration, first])
-        self.assertFalse(state.update({"plan.md": changed}))
-        self.assertFalse(state.update({"plan.md": added}))
-        state.rebuild([declaration, added])
-        self.assertFalse(state.update({"plan.md": first}))
+        SourceReaderFixture.setUp(self)
+        self._write_atom(
+            "MAIN", "04_requirement", "CA-R-8-model.md", atom_id="CA-R-8", form="Declaration",
+            body="## Claim\n\n### Formal Claim\n\n```CFEL\nAtom.Content.*[string]{::0+};\n```\n",
+        )
+        first = "## Objective\n\nShip.\n"
+        source = self._write_atom("MAIN", "03_plan", "CA-P-1-plan.md", atom_id="CA-P-1", form="Plan", body=first)
+        raw = source.read_text().replace('role: "Requirement"', 'role: "Plan"')
+        source.write_text(raw)
+        self.reader.capture()
+        shape = self.reader.content_schema.shape
+        relative = source.relative_to(self.root).as_posix()
+        for body in ("## Objective\n\nShip later.\n", first + "\n## Scope\n\nAll.\n", first):
+            source.write_text(raw.replace(first, body))
+            rows, _ = self.reader.capture([{"operation": "update", "new_path": relative}])
+            self.assertIn("CA-P-1", {row["id"] for row in rows})
+            self.assertIsNotNone(self.reader.capture_delta)
+            self.assertEqual(shape, self.reader.content_schema.shape)
 
     def test_current_and_draft_in_both_schema_modes(self):
         temporary_root = Path.cwd() / ".anechoic_tmp" / "APP_WORKBENCH__tests"

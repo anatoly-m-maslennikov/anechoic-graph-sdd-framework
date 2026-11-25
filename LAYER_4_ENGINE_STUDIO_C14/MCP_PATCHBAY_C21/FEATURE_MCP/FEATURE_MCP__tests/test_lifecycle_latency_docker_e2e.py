@@ -54,8 +54,28 @@ def operation_metrics(label, samples):
         **{f"p{p}_ms": round(ordered[ceil(p * len(ordered) / 100) - 1], 3)
            for p in (10, 90, 95)},
         "max_ms": round(ordered[-1], 3),
+        "samples_above_500_ms": sum(sample > 500 for sample in samples),
         "samples_ms": [round(sample, 3) for sample in samples],
     }
+
+
+def lifecycle_metrics(samples):
+    operations = [operation_metrics(label, times) for label, times in samples.items()]
+    return {
+        "operations": operations,
+        "overall": {
+            "max_ms": max(metrics["max_ms"] for metrics in operations),
+            "samples_above_500_ms": sum(metrics["samples_above_500_ms"] for metrics in operations),
+        },
+    }
+
+
+class LifecycleLatencyMetricsTest(unittest.TestCase):
+    def test_threshold_count_uses_unrounded_samples(self):
+        report = lifecycle_metrics({"First": [499.9999, 500, 500.0001], "Second": [725, 501, 499]})
+        self.assertEqual([500.0, 500.0, 500.0], report["operations"][0]["samples_ms"])
+        self.assertEqual([1, 2], [metrics["samples_above_500_ms"] for metrics in report["operations"]])
+        self.assertEqual({"max_ms": 725, "samples_above_500_ms": 3}, report["overall"])
 
 
 class LifecycleLatencyImageTest(unittest.TestCase):
@@ -84,7 +104,7 @@ class LifecycleLatencyImageTest(unittest.TestCase):
         return {
             "initial_atoms": initial_atoms,
             "measurement": "MCP request to SQL readback",
-            "operations": [operation_metrics(label, times) for label, times in samples.items()],
+            **lifecycle_metrics(samples),
         }
 
     async def _mismatch_diagnostics(self, client, baseline):

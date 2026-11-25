@@ -11,6 +11,7 @@ _SUFFIX_LANGUAGES = {
     ".mjs": "javascript",
     ".cjs": "javascript",
     ".ts": "typescript",
+    ".cts": "typescript",
     ".svelte": "svelte",
     ".bash": "script",
     ".bat": "batch",

@@ -13,9 +13,9 @@ APP = Path(__file__).resolve().parents[1]
 DOCKER = APP / "docker"
 TOOLS = APP.parents[1] / "FEATURE_PROGRAMMATIC" / "FEATURE_TOOLS"
 
-from MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_launcher import ImageError  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import ImageError  # noqa: E402
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import ProjectAdmissionError  # noqa: E402
-from MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_backend import ProjectMcpBackend  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import ProjectMcpBackend  # noqa: E402
 
 
 GOLDENS = Path(__file__).parent / "assets" / "launcher_golden" / "startup_output_cases.json"
@@ -34,7 +34,7 @@ class BackendImageModeTests(unittest.TestCase):
 
     def test_identity_uses_same_asset_mode_as_resolution(self):
         for build in (True, False):
-            with self.subTest(build_if_missing=build), patch("MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_backend.ImageManager") as factory:
+            with self.subTest(build_if_missing=build), patch("MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared.ImageManager") as factory:
                 manager = factory.return_value
                 manager.resolve.return_value = IMAGE_ID
                 manager.identity.return_value.fingerprint = FINGERPRINT
@@ -48,7 +48,7 @@ class BackendImageModeTests(unittest.TestCase):
                 manager._current.assert_called_once_with(manager.identity.return_value, use_packaged_assets=True)
 
     def test_changed_checkout_refuses_before_start(self):
-        with patch("MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_backend.ImageManager") as factory:
+        with patch("MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared.ImageManager") as factory:
             manager = factory.return_value
             manager.resolve.return_value = IMAGE_ID
             manager.identity.return_value.fingerprint = FINGERPRINT
@@ -60,7 +60,7 @@ class BackendImageModeTests(unittest.TestCase):
             start.assert_not_called()
 
     def test_fingerprint_must_match_digest_inspection(self):
-        with patch("MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_backend.ImageManager") as factory:
+        with patch("MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared.ImageManager") as factory:
             manager = factory.return_value
             manager.resolve.return_value = IMAGE_ID
             manager._inspect.side_effect = ImageError("IMAGE_REFUSED", "mismatch")

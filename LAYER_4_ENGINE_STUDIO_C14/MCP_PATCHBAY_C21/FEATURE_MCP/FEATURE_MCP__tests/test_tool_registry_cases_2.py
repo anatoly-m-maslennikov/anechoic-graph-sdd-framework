@@ -116,7 +116,7 @@ class ToolRegistryTests(ToolRegistryFixture, unittest.IsolatedAsyncioTestCase):
         ))
         self.assertTrue(invalid.is_error)
         self.assertEqual(["invalid_caller_context"], invalid.structured_content["diagnostics"])
-        from MCP_PATCHBAY_C21.FEATURE_MCP.runtime_request_context import (
+        from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import (
             RuntimeRequestContext, bind_request_context, current_request_context,
         )
         with bind_request_context(RuntimeRequestContext("existing")):

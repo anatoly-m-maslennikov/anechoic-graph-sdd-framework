@@ -27,3 +27,9 @@ Give the Operator enough information to decide
 ### Prose Claim
 
 Provide the Operator with the relevant information needed for Project decisions, without unnecessary detail.
+
+## Details
+
+### Examples
+
+Before the Operator selects a storage option, an AI Agent presents the cost, recovery needs, and main trade-off for each option. The Operator can choose with the relevant facts in view.

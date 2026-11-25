@@ -1,14 +1,14 @@
 """Exercise the guarded capture of changed Ticket paths."""
 
 from hashlib import sha256
+from os import utime
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from types import SimpleNamespace
 from unittest import TestCase
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
-    ReadContext, capture_carrier_delta, capture_ticket_delta,
+    ReadContext, capture_carrier_delta, capture_native, capture_ticket_delta,
 )
 
 _ENDPOINTS = {
@@ -100,6 +100,18 @@ class TicketDeltaTests(TestCase):
                                  [(row["reference"], row["summary"]) for row in snapshot["atoms"]])
                 self.assertEqual(set(_ENDPOINTS), {edge["relation_type"] for edge in snapshot["relations"]})
 
+    def test_accepts_file_metadata_that_settles_before_the_guarded_read(self):
+        ticket = self.write()
+        utime(ticket, (1, 1))
+
+        def capture_with_updated_metadata(*args, **kwargs):
+            ticket.touch()
+            return capture_native(*args, **kwargs)
+
+        with patch(_CAPTURE, side_effect=capture_with_updated_metadata):
+            delta = capture_ticket_delta(self.binding, [_PATH], _ENDPOINTS, include_hashes=True)
+        self.assertEqual(sha256(ticket.read_bytes()).hexdigest(), delta["carrier_hashes"][_PATH])
+
     def test_rename_and_delete_retain_absent_paths(self):
         ticket = self.write()
         renamed = ticket.rename(ticket.with_name("AN-T-2--renamed.md"))
@@ -160,8 +172,17 @@ class TicketDeltaTests(TestCase):
         with self.assertRaisesRegex(ValueError, "Manifest changed"):
             self.capture(_PATH)
         self.manifest.write_text("Pinned bytes")
-        mocked = SimpleNamespace(errors={}, versions={})
+        mocked = Mock(errors={}, versions={})
         with (patch(_CAPTURE, return_value=mocked),
+              self.assertRaisesRegex(ValueError, "paths changed during capture")):
+            self.capture(_PATH)
+
+        def capture_before_edit(*args, **kwargs):
+            result = capture_native(*args, **kwargs)
+            ticket.write_text(_TICKET + "\nAnother change.\n")
+            return result
+
+        with (patch(_CAPTURE, side_effect=capture_before_edit),
               self.assertRaisesRegex(ValueError, "paths changed during capture")):
             self.capture(_PATH)
         self.assertTrue(ticket.is_file())
@@ -192,7 +213,7 @@ class CarrierDeltaTests(TestCase):
         self.assertEqual({goal_path, _PATH, spec_path, config_path}, set(result["carrier_hashes"]))
         self.assertEqual(sorted(result["paths"]), result["paths"])
 
-    def test_refuses_non_carrier_paths_and_noncanonical_header(self):
+    def test_refuses_non_carrier_paths_and_reports_malformed_header(self):
         for path in (self.manifest.name, "_anechoic_test/000_ANECHOIC_framework/item.md",
                      "_anechoic_test/build.json", "outside.md", "_other/item.md",
                      "_anechoic_test/AN-S-8-SPEC-PROJECT_MANIFEST--other.md"):
@@ -200,8 +221,10 @@ class CarrierDeltaTests(TestCase):
                 self.capture(path)
         self.write(_PATH, _TICKET.replace("atom_family: TKT\natom_id: AN-T-2",
                                          "identity: {atom_id: AN-T-2}"))
-        with self.assertRaises(ValueError):
-            self.capture(_PATH)
+        snapshot = self.capture(_PATH)["snapshot"]
+        self.assertEqual([], snapshot["atoms"])
+        issue, = snapshot["ingestion_issues"]
+        self.assertEqual((_PATH, "invalid_schema"), (issue["relative_path"], issue["code"]))
 
     def test_deletion_links_and_changed_capture(self):
         path = "_anechoic_test/spec/AN-S-2--spec.md"
@@ -210,7 +233,7 @@ class CarrierDeltaTests(TestCase):
         alias.symlink_to(source)
         with self.assertRaises(OSError):
             self.capture(alias.relative_to(self.root).as_posix())
-        mocked = SimpleNamespace(errors={}, versions={})
+        mocked = Mock(errors={}, versions={})
         with (patch(_CAPTURE, return_value=mocked),
               self.assertRaisesRegex(ValueError, "paths changed during capture")):
             self.capture(path)

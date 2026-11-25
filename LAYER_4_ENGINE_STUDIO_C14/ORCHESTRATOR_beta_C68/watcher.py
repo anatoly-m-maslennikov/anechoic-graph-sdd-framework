@@ -9,26 +9,17 @@ import time
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
-from ARCHITECTURE_ANALYSIS_C73.CODE_AND_SPEC_METRICS_C76.metrics__shared import is_measurement_input
-
 from .generation import TICKET_ROOTS
+from .retry import COVERAGE_RECOVERED
+from .watcher_code import WatcherCode
 from .watcher_poll import ArchiveCoverage, PollingProof, polling_observer
 from .watcher_receipts import WriteReceipts
 
 
-SOURCE_SUFFIXES = frozenset(""".py .sh .js .mjs .cjs .ts .svelte .bash .bat .c .cc .cljs .clj .cpp
-.cs .cxx .dart .el .ex .exs .fish .fs .go .hs .java .jl .jsx .kt .kts .lua .m
-.mm .ml .php .pl .ps1 .r .rb .rs .scala .swift .tsx .zig .zsh""".split())
-RESOLUTION_INPUTS = {".gitignore", "pyproject.toml", "uv.lock", "package.json", "tsconfig.json"}
 MAX_TRACKED_TICKETS = 16384
-EXCLUDED = set(""".anechoic_archive .anechoic_install .anechoic_legacy .anechoic_runtime
-.anechoic_tmp .anechoic_anechoic .cache .git .hg .mypy_cache .nox .pytest_cache
-.ruff_cache .runtime .svn .tox .venv __pycache__ archive archives build coverage dist
-dist-packages env generated gen history node_modules out migration-evidence site-packages
-target temp tmp vendor venv""".split())
 
 
-class SourceWatcher(FileSystemEventHandler):
+class SourceWatcher(WatcherCode, FileSystemEventHandler):
     def __init__(self, root, control_root, watch_code=False, *, defer_archives=False):
         super().__init__()
         self.root = Path(root).absolute()
@@ -44,7 +35,11 @@ class SourceWatcher(FileSystemEventHandler):
         self.archive_observer = None
         self.ticket_observer = None
         self._proof = PollingProof(self.root)
+        self.managed_write = self._proof.sampling_lock
         self._archive_lock = Lock()
+        self._event_lock = Lock()
+        self._foreground_events = 0
+        self._observer_retry_at = 0
         self._archives = ArchiveCoverage(self.root, self.control_root, self._proof, defer_archives)
         self._ticket_lock = Lock()
         self._ticket_versions = {}
@@ -53,16 +48,16 @@ class SourceWatcher(FileSystemEventHandler):
         self._receipts = WriteReceipts(self.root, self._archives, MAX_TRACKED_TICKETS)
 
     def start(self):
-        if self.observer is not None:
+        with self._archive_lock:
+            if self._proof.closed or self.observer is not None:
+                return
+            self._start_foreground()
+        if not self.defer_archives:
+            self.start_ticket_watch()
+
+    def _start_foreground(self):
+        if self.watch_code and not self._seed_known_code():
             return
-        if self.watch_code:
-            for directory, folders, files in os.walk(self.root, followlinks=False):
-                base = Path(directory)
-                folders[:] = [name for name in folders if self._code_directory(base / name)]
-                for name in files:
-                    path = base / name
-                    if self._code_path(path):
-                        self.known_code.add(path)
         observer = polling_observer(self._visible_entries, self._archives)
         try:
             observer.schedule(self, str(self.root if self.watch_code else self.control_root), recursive=True)
@@ -75,8 +70,28 @@ class SourceWatcher(FileSystemEventHandler):
                 observer.join()
             raise
         self.observer = observer
-        if not self.defer_archives:
-            self.start_ticket_watch()
+
+    def restore_foreground(self):
+        """Reestablish polling after an emitter stopped, then request reconciliation."""
+        observer = self.observer
+        if (observer is not None and observer.is_alive() and observer.emitters
+                and all(emitter.is_alive() for emitter in observer.emitters)):
+            return
+        if time.monotonic() < self._observer_retry_at:
+            return
+        with self._archive_lock:
+            if self._proof.closed:
+                return
+            if observer is not None:
+                observer.stop()
+                observer.join()
+                self.observer = None
+            try:
+                self._start_foreground()
+            except (OSError, RuntimeError):
+                self._observer_retry_at = time.monotonic() + 1
+                return
+            self._queue_recovery()
 
     def start_ticket_watch(self):
         """Start optional native notifications after the foreground in phased mode."""
@@ -109,17 +124,30 @@ class SourceWatcher(FileSystemEventHandler):
             self.archive_observer = observer
             return self._proof.ready(observer, archive=True)
 
-    def capture_epoch(self, *, archive=False, trace=False):
+    def capture_epoch(self, *, archive=False, trace=False, dispatched=False):
         observer = self.archive_observer if archive else self.observer
-        return self._proof.epoch(observer, archive=archive, trace=trace)
+        return self._proof.epoch(observer, archive=archive, trace=trace, dispatched=dispatched)
 
     def capture_fence(self, epoch, *, archive=False, timeout=45, run_id=None):
         """Wait for a normal poll that began after capture and dispatched its changes."""
         observer = self.archive_observer if archive else self.observer
         return self._proof.fence(observer, epoch, archive=archive, timeout=timeout, run_id=run_id)
 
+    def replay_fence(self, epoch, *, timeout=45, run_id=None):
+        """Wait for post-capture polling to dispatch changes to the foreground queue."""
+        return self._proof.fence(self.observer, epoch, archive=False, timeout=timeout,
+                                 run_id=run_id, replay=True)
+
+    def foreground_events(self):
+        with self._event_lock:
+            return self._foreground_events
+
     def on_poll_complete(self, event):
-        self._proof.complete(event)
+        self._proof.complete(event, None if event.archive else self._queue_recovery)
+
+    def _queue_recovery(self):
+        self.queue.put({"old_path": str(self.control_root), "new_path": None, "event_type": COVERAGE_RECOVERED,
+                        "is_directory": True})
 
     def _start_ticket_observer(self):
         roots = [self.control_root / name for name in TICKET_ROOTS]
@@ -168,57 +196,37 @@ class SourceWatcher(FileSystemEventHandler):
                         or self._code_directory(path)):
                     yield entry
 
-    def _code_directory(self, path):
-        relative = path.relative_to(self.root)
-        return (not path.is_symlink() and all(
-            not part.startswith((".", "_anechoic_")) and part.casefold() not in EXCLUDED
-            for part in relative.parts))
-
-    def _code_path(self, path, directory=False):
-        try:
-            relative = path.relative_to(self.root)
-        except ValueError:
-            return False
-        parts = relative.parts
-        folders = parts if directory else parts[:-1]
-        if any(part.startswith((".", "_anechoic_")) for part in folders):
-            return False
-        if any(part.casefold() in EXCLUDED for part in parts):
-            return False
-        current = path
-        while current != self.root:
-            if current.is_symlink():
-                return False
-            current = current.parent
-        if directory:
-            return False
-        if (path.name.casefold() in RESOLUTION_INPUTS or path.suffix.casefold() in SOURCE_SUFFIXES
-                or is_measurement_input(relative)):
-            return True
-        try:
-            with path.open("rb") as stream:
-                shebang = stream.read(2) == b"#!"
-            return shebang or bool(path.stat().st_mode & (stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH))
-        except OSError:
-            return path in self.known_code
-
     def on_any_event(self, event):
         if event.event_type not in {"created", "deleted", "modified", "moved"}:
             return
+        with self._event_lock:
+            self._queue_event(event)
+
+    def _queue_event(self, event):
         paths = [Path(value).absolute() for value in
                  (event.src_path, getattr(event, "dest_path", None)) if value]
-        self._archives.source_change(event, paths)
+        foreground = self._archives.source_change(event, paths)
         if event.is_directory and event.event_type == "modified":
             return
-        relevant = False
+        if event.is_directory and all(any(path.is_relative_to(self.control_root / directory)
+                                          for directory in TICKET_ROOTS) for path in paths):
+            foreground = False
+        relevant = foreground
         for path in paths:
             markdown = (not event.is_directory and path.suffix.casefold() == ".md" and
                         (path.is_relative_to(self.control_root) or path.parent == self.root))
-            code = self.watch_code and self._code_path(path, event.is_directory)
-            if code and path.exists():
-                self.known_code.add(path)
-            if event.is_directory and self.watch_code:
-                code = any(known.is_relative_to(path) for known in self.known_code)
+            code = False
+            if event.is_directory and self.watch_code and path.is_relative_to(self.root):
+                code = self._code_directory(path) or any(known.is_relative_to(path) for known in self.known_code)
+            elif self.watch_code and not event.is_directory:
+                current_code = self._code_path(path) and path.exists()
+                code = current_code or path in self.known_code
+                if current_code:
+                    self.known_code.add(path)
+                else:
+                    self.known_code.discard(path)
+            if code and self._archives.root_for(path) is None:
+                foreground = True
             boundary = event.is_directory and (path == self.control_root or path == self._archives.root_for(path))
             relevant |= markdown or code or boundary
         ticket = not event.is_directory and bool(paths) and all(self._ticket_path(path) for path in paths)
@@ -228,7 +236,8 @@ class SourceWatcher(FileSystemEventHandler):
         if changed is not None:
             kind, paths = changed
             self.queue.put({"old_path": str(paths[0]), "new_path": str(paths[1]) if len(paths) > 1 else None,
-                            "event_type": kind, "is_directory": event.is_directory})
+                            "event_type": kind, "is_directory": event.is_directory, "observed_at": time.time()})
+            self._foreground_events += foreground
 
     def _ticket_path(self, path):
         if not path.is_relative_to(self.control_root) or path.suffix != ".md":
@@ -283,16 +292,18 @@ class SourceWatcher(FileSystemEventHandler):
         self._receipts.acknowledge(effects, archive_epoch)
 
     def changes(self, timeout):
+        """Read a batch through a fixed queue position as its sole consumer."""
         try:
             batch = [self.queue.get(timeout=timeout)]
         except Empty:
             batch = []
         deadline = time.monotonic() + min(timeout, 0.02)
-        while batch:
+        while batch and (remaining := deadline - time.monotonic()) > 0:
             try:
-                batch.append(self.queue.get(timeout=max(0, deadline - time.monotonic())))
+                batch.append(self.queue.get(timeout=remaining))
             except Empty:
                 break
+        batch.extend(self.queue.get_nowait() for _ in range(self.queue.qsize()))
         return self._receipts.filter(batch, self.capture_epoch(archive=True))
 
     def close(self):

@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import re
 import tomllib
-from dataclasses import dataclass
+from pydantic import ConfigDict
+from pydantic.dataclasses import dataclass
 from pathlib import Path
 from typing import Mapping
 
@@ -66,7 +67,7 @@ INSTANCE_SETTINGS_RELATIVE = Path("000_ANECHOIC_framework/anechoic_framework_set
 
 
 
-@dataclass(frozen=True)
+@dataclass(config=ConfigDict(strict=True, extra="forbid", hide_input_in_errors=True), frozen=True)
 class MethodologyPaths:
     source: Path = SOURCE_RELATIVE
     output: Path = OUTPUT_RELATIVE

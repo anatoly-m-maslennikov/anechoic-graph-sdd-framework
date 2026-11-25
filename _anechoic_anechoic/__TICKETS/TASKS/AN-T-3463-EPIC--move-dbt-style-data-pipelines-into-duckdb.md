@@ -30,6 +30,25 @@ Kernel admission refreshes affected keys in the same transaction.
 - [x] Reuse filtered Workbench results for page rows and totals. Use one status scan per schema table.
 - [x] Profile narrower lifecycle SQL. The tested shape was slower on 50,000 synthetic Atoms.
 - [ ] Profile actual lifecycle workloads before changing the selector or adding indexes or stored maxima.
+- [ ] Separate source and working fields from domain marts across all table families.
+
+### Separate source and working fields from domain marts
+
+Proposed design: combine `src_` and `int_` for persisted rows that use the
+same key. Keep each Atom's observed filename and path, expected destination
+filename and path, and generated Reference ID in one `src_atoms` row. Keep
+observed and derived fields distinct. Reuse temporary `int_` tables for
+transaction staging. Apply the same rule to every table family. Keep metrics
+and operational records in their existing layers.
+
+Publish only authoritative domain fields and derived Relations in `mrt_`.
+Omit filenames, paths, and generated Reference IDs from every mart. Retain
+authored domain identifiers and revision fields where applicable.
+
+Inventory every table and view. Migrate lifecycle, audit, and query callers
+to the appropriate layer, including Project-owned saved queries. Check all
+mart schemas and verify domain rows and Relations after both full and
+incremental admission.
 
 ## Decisions
 

@@ -3,7 +3,8 @@ from __future__ import annotations
 
 import ast
 from collections.abc import Callable, Iterable, Mapping
-from dataclasses import dataclass
+from pydantic import ConfigDict
+from pydantic.dataclasses import dataclass
 from hashlib import sha256
 from pathlib import Path
 import re
@@ -16,7 +17,7 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import CEILINGS, ReadContext, protected
 
 
-@dataclass(frozen=True)
+@dataclass(config=ConfigDict(strict=True, extra="forbid", hide_input_in_errors=True), frozen=True)
 class NativeDefinitionPin:
     ref_id: str
     relative_path: str

@@ -115,7 +115,8 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
                 mode = stat.S_IMODE(missing.stat().st_mode)
                 missing.unlink()
                 runner, calls = self._runner()
-                result = run_local_release(self.root, run_id="missing-input", runner=runner)
+                run_id = f"missing-{missing.name}"
+                result = run_local_release(self.root, run_id=run_id, runner=runner)
                 missing.write_bytes(payload)
                 missing.chmod(mode)
                 self.assertEqual("failed", result["outcome"])
@@ -123,7 +124,7 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
                 self.start_container.assert_not_called()
                 for target, snapshot in before.items():
                     self.assertEqual(snapshot, inventory(target))
-                self.assertEqual([], list((self.root / ".anechoic_tmp/simple_local_release").iterdir()))
+                self.assertEqual(1, len(list((self.root / ".anechoic_tmp/simple_local_release").glob(f"{run_id}-*"))))
 
 
     def test_installed_copies_are_checked_for_corruption(self):
@@ -137,7 +138,7 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
                         next(path for path in target.rglob("*") if path.is_file() and path.name != "config.toml").write_text("corrupt")
                 runner, _ = self._runner()
                 with patch.object(package_phases, "_copy_tree", corrupt):
-                    result = run_local_release(self.root, run_id="corrupt-copy", runner=runner)
+                    result = run_local_release(self.root, run_id=f"corrupt-{step}", runner=runner)
                 self.assertEqual("failed", result["outcome"])
                 self.assertEqual(step, result["failed_step"])
 

@@ -13,7 +13,7 @@ from typing import Any, Mapping, Sequence
 from urllib.parse import quote
 
 from .ADAPTERS_C30__pub import open_regular
-from .journal_settings__pub import configured_journal_root, current_timestamp, validated_journal_root
+from .journal_settings__pub import configured_journal_root, validated_journal_root
 from .project_database__pub import PROJECT_DATABASE
 
 
@@ -137,42 +137,6 @@ def _append_disk_event(root: Path, event: Any, author: str, local_date: str) -> 
         "record_id": record_id,
         "status": "staged",
     }
-
-
-def event_record(
-    *,
-    root: Path,
-    event: str,
-    action_id: str,
-    kind: str,
-    scope: str,
-    operation: str,
-    session_id: str,
-    subjects: list[str],
-    outputs: list[str],
-    preceding_event: str | None,
-    details: dict[str, str],
-    occurred_at: str | None = None,
-) -> dict[str, object]:
-    """Create a legacy v1 record without changing historic record semantics."""
-    record: dict[str, object] = {
-        "schema_version": 1,
-        "event_id": str(uuid.uuid4()),
-        "action_id": action_id,
-        "event": event,
-        "kind": kind,
-        "occurred_at": occurred_at or current_timestamp(root),
-        "session_id": session_id,
-        "structural_scope": scope,
-        "operation": operation,
-        "governed_subjects": subjects,
-        "produced_outputs": outputs,
-    }
-    if preceding_event:
-        record["preceding_event"] = preceding_event
-    if details:
-        record["details"] = details
-    return record
 
 
 def append_record(root: Path, record: dict[str, object]) -> Path:

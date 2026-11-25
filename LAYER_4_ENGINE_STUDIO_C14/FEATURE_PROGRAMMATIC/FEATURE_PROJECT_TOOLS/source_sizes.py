@@ -13,7 +13,7 @@ from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS import source_comments as source
 
 MODULE_LIMIT = 300
 FUNCTION_LIMIT = 45
-WEB_FUNCTIONS = {".js", ".mjs", ".ts", ".svelte"}
+WEB_FUNCTIONS = {".js", ".mjs", ".cjs", ".ts", ".cts", ".svelte"}
 
 
 def nonblank_lines(lines):
@@ -41,7 +41,7 @@ def python_functions(path, source):
 
 
 def web_functions(root, files):
-    script = sources.FRONTEND / "scripts/source-function-sizes.mjs"
+    script = sources.FRONTEND / "scripts/source-function-sizes.ts"
     result = subprocess.run(
         ["node", str(root / script)],
         input=json.dumps(files), encoding="utf-8",

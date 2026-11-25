@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
 from pathlib import Path
 from collections.abc import Iterable
 
+
+from pydantic import ConfigDict
+from pydantic.dataclasses import dataclass
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
     StatusModelError, canonical_role_name, carrier_read_view, carrier_status_folder, matches_named_value,
@@ -75,7 +77,7 @@ def _validate(data: object) -> tuple[tuple[str | None, str | None, str], ...]:
     return tuple(rows)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, config=ConfigDict(strict=True, extra="forbid"))
 class StatusModel:
     _rows: tuple[tuple[str | None, str | None, str], ...]
     candidate_schema: object | None = None

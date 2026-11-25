@@ -1,0 +1,26 @@
+{
+  "title": "Cancel unfinished descendant before parent",
+  "invariant": "For one valid Epic with one unfinished Current child, cancellation admits and selects the child for cancellation before the parent.",
+  "scope": "AST projection covers one valid companion and one unfinished child, with no cycles, concurrent changes, write errors or name collisions. Structural checks inspect the postorder traversal and action construction; Lean does not prove filesystem effects, all tree shapes or full Python equivalence.",
+  "evidence": "@thread:thr_86zjijbcaj#msg=42917,46203,46386",
+  "before": {
+    "revision": "024209ba79a726ee87f7c844884ddc175c3f7d3d",
+    "source": "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ATOM_LIFECYCLE/native_update.py",
+    "fixture": "before.py.txt",
+    "sha256": "d1f8944c52ca1a1177268fb60d5f12cb245d685e4a61bf8807ea28ce8fc2e5f2",
+    "git_blob": "d77461c7349002a7a5d4ee52cb69551dab02728a"
+  },
+  "fixed": {
+    "revision": "fc2956d4f84b1fcf2d2c4ba56a6e7349204157c9",
+    "source": "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ATOM_LIFECYCLE/native_update.py",
+    "fixture": "fixed.py.txt",
+    "sha256": "66df5f81fc4dbf60698b9781f4a6fe54ac6db061401e4bc2bda5f8fe4a743134",
+    "git_blob": "2bad5aaccca16b89e90203281507add3c844e8d3"
+  },
+  "checks": [
+    {
+      "file": "regression.lean"
+    }
+  ],
+  "analyzer": "analyze.py"
+}

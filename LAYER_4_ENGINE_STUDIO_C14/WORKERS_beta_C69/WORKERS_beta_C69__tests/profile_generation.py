@@ -1,19 +1,25 @@
 """Profile a Beta generation from an explicit native Project binding."""
 import argparse
 import cProfile
+from contextlib import contextmanager, redirect_stdout
 from hashlib import sha256
+from io import StringIO
 import json
-import os
 from pathlib import Path
 import runpy
 import subprocess
 import sys
+import tempfile
 import time
 import traceback
 from unittest.mock import patch
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import owned_temporary_root
-from WORKERS_beta_C69 import WORKERS_beta_C69__shared as worker
+WORKER = "WORKERS_beta_C69.WORKERS_beta_C69__shared"
+WORKER_SOURCE = Path(__file__).resolve().parents[1] / "WORKERS_beta_C69__shared.py"
+PROFILED_CHILDREN = {"WORKERS_beta_C69.manifest_build_CS4.manifest_build_CS4__shared", "WORKERS_beta_C69.realization_graph"}
+CAPTURE_STAGES = {"prepare_generation_snapshot": "capture_prepare",
+                  "prepare_generation_snapshot.<locals>.finish": "capture_finish"}
 
 
 def child(module, directory, arguments):
@@ -39,58 +45,101 @@ def child(module, directory, arguments):
         (directory / (module.rsplit('.', 1)[-1] + '-children.json')).write_text(json.dumps(calls))
 
 
-def instrument(directory, stages):
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30 import ADAPTERS_C30__shared as adapter
+def stage_time(stages, name, started):
+    wall, cpu = started
+    stages.append({'stage': name, 'wall_seconds': time.perf_counter() - wall,
+                   'worker_cpu_seconds': time.process_time() - cpu})
 
-    original_prepare = adapter.prepare_generation_snapshot
-    engine = Path(worker.__file__).resolve().parents[1]
 
-    def measure(name, call, *args, **kwargs):
-        wall, cpu = time.perf_counter(), time.process_time()
-        try:
-            return call(*args, **kwargs)
-        finally:
-            stages.append({'stage': name, 'wall_seconds': time.perf_counter() - wall,
-                           'worker_cpu_seconds': time.process_time() - cpu})
+@contextmanager
+def capture_timings(stages):
+    monitor = sys.monitoring
+    tool = 3
+    events = monitor.events
+    active = {}
 
-    def prepare(*args, **kwargs):
-        config, finish = measure('capture_prepare', original_prepare, *args, **kwargs)
-        return config, lambda *a, **kw: measure('capture_finish', finish, *a, **kw)
+    def enter(code, _offset):
+        name = CAPTURE_STAGES.get(code.co_qualname)
+        if name is None or Path(code.co_filename).name != "native_snapshot_cli.py":
+            return monitor.DISABLE
+        active.setdefault(code, []).append((time.perf_counter(), time.process_time()))
 
-    def job(module, payload, *arguments):
+    def leave(code, _offset, _result):
+        if active.get(code):
+            stage_time(stages, CAPTURE_STAGES[code.co_qualname], active[code].pop())
+
+    def returned(code, offset, result):
+        if code not in active:
+            return monitor.DISABLE
+        leave(code, offset, result)
+
+    monitor.use_tool_id(tool, "ANECHOIC Worker capture timings")
+    callbacks = ((events.PY_START, enter), (events.PY_RETURN, returned), (events.PY_UNWIND, leave))
+    try:
+        for event, callback in callbacks:
+            monitor.register_callback(tool, event, callback)
+        monitor.set_events(tool, events.PY_START | events.PY_RETURN | events.PY_UNWIND)
+        yield
+    finally:
+        monitor.set_events(tool, 0)
+        for event, _ in callbacks:
+            monitor.register_callback(tool, event, None)
+        monitor.free_tool_id(tool)
+
+
+@contextmanager
+def profile_children(directory, stages):
+    original = subprocess.run
+
+    def run(command, *args, **options):
+        if "-m" not in command:
+            return original(command, *args, **options)
+        index = command.index("-m")
+        module = command[index + 1]
+        if module not in PROFILED_CHILDREN:
+            return original(command, *args, **options)
+        profile_command = [*command[:index], str(Path(__file__).resolve()), '--child', module,
+                           '--child-output', str(directory), *command[index + 2:]]
         name = module.rsplit('.', 1)[-1]
-        env = {key: value for key, value in os.environ.items() if key != 'PYTHONHOME'}
-        env['PYTHONPATH'] = str(engine)
-        command = [sys.executable, '-B', str(Path(__file__).resolve()), '--child', module,
-                   '--child-output', str(directory), *arguments]
-        result = subprocess.run(command, input=json.dumps(payload), text=True, capture_output=True,
-                                cwd=engine, env=env)
-        (directory / (name + '-stderr.txt')).write_text(result.stderr)
-        if result.returncode:
-            raise worker._BuildFailure(name, f'{name} failed: {result.stderr[-2048:]}')
-        return json.loads(result.stdout)
+        started = (time.perf_counter(), time.process_time())
+        try:
+            result = original(profile_command, *args, **options)
+            (directory / (name + '-stderr.txt')).write_text(result.stderr)
+            return result
+        finally:
+            stage_time(stages, name, started)
 
-    def timed_job(module, payload, *arguments):
-        return measure(module.rsplit('.', 1)[-1], job, module, payload, *arguments)
+    with patch.object(subprocess, 'run', run):
+        yield
 
-    return adapter, prepare, timed_job
+
+def run_worker(binding, output, foreground):
+    argv = [WORKER, "--generation-dir", str(output)]
+    request = {"binding": binding, "reuse": None, "foreground": foreground}
+    stdout = StringIO()
+    with patch.object(sys, 'argv', argv), patch.object(sys, 'stdin', StringIO(json.dumps(request))), redirect_stdout(stdout):
+        try:
+            runpy.run_module(WORKER, run_name="__main__")
+        except SystemExit as requested:
+            if requested.code:
+                diagnostic = stdout.getvalue().strip()
+                raise RuntimeError(f"Worker exited with status {requested.code}: {diagnostic}") from requested
+    return json.loads(stdout.getvalue())
 
 
 def profile(binding, directory, foreground=False):
     stages = []
-    adapter, prepare, timed_job = instrument(directory, stages)
     output = directory / 'generation'
     output.mkdir()
     report = {'binding': binding, 'foreground': foreground, 'stages': stages,
-              'worker_source_sha256': sha256(Path(worker.__file__).read_bytes()).hexdigest(),
+              'worker_source_sha256': sha256(WORKER_SOURCE.read_bytes()).hexdigest(),
               'cpu_scope': 'worker process only; child Python CPU is in its pstats',
               'status': 'failed'}
     profiler = cProfile.Profile(time.process_time_ns, 1e-9)
     wall, cpu = time.perf_counter(), time.process_time()
     try:
-        with patch.object(adapter, 'prepare_generation_snapshot', prepare), patch.object(worker, '_run_job', timed_job):
-            result = profiler.runcall(worker._run, {'binding': binding, 'reuse': None,
-                                                   'foreground': foreground}, output)
+        with capture_timings(stages), profile_children(directory, stages):
+            result = profiler.runcall(run_worker, binding, output, foreground)
         report['status'] = 'ok'
         report['snapshot_counts'] = {key: len(value) for key, value in result['snapshot'].items()
                                      if isinstance(value, list)}
@@ -136,7 +185,6 @@ def main():
         parser.error('supply exactly one of --project-root and --binding')
     binding = json.loads(args.binding.read_text()) if args.binding else None
     root = Path(binding['root'] if binding else args.project_root).resolve(strict=True)
-    import tempfile
     directory = Path(tempfile.mkdtemp(prefix='generation-', dir=owned_temporary_root(root, 'beta-profile')))
     print(directory, flush=True)
     try:

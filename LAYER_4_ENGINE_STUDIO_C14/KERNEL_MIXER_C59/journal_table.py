@@ -10,6 +10,16 @@ import stat
 import uuid
 from typing import Any
 
+from pydantic import BaseModel, ConfigDict
+
+
+class _JournalRecord(BaseModel):
+    model_config = ConfigDict(strict=True, extra="forbid")
+
+    author: str
+    local_date: str
+    event: Any
+
 
 def _same_database(database_path: Path | None, journal_path: Path) -> bool:
     return database_path is not None and database_path.resolve() == journal_path.resolve()
@@ -78,23 +88,22 @@ def _read_record(directory, name, canonical_json_bytes, limit):
     if len(data) > limit or _fingerprint(before) != _fingerprint(after):
         raise RuntimeError(f"Work Journal inbox record is too large or changed: {name}")
     try:
-        row = json.loads(data)
-        if (not isinstance(row, dict) or set(row) != {"author", "local_date", "event"}
-                or not isinstance(row["author"], str) or not isinstance(row["local_date"], str)
-                or canonical_json_bytes(row) != data):
+        value = json.loads(data)
+        row = _JournalRecord.model_validate(value)
+        if canonical_json_bytes(value) != data:
             raise ValueError("invalid record")
     except (ValueError, TypeError, UnicodeError) as error:
         raise RuntimeError(f"invalid Work Journal inbox record: {name}") from error
     return row, _fingerprint(after)
 
 
-def _commit_record(connection, table, record_id, row):
+def _commit_record(connection, table, record_id, row: _JournalRecord):
     connection.execute("BEGIN TRANSACTION")
     try:
         connection.execute(
             f"INSERT INTO {table} SELECT ?, coalesce(max(position), 0) + 1, ?, ?, ? FROM {table} "
             "ON CONFLICT (record_id) DO NOTHING",
-            [record_id, row["author"], row["local_date"], json.dumps(row["event"], ensure_ascii=False)],
+            [record_id, row.author, row.local_date, json.dumps(row.event, ensure_ascii=False)],
         )
         connection.execute("COMMIT")
     except Exception:

@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 3
-  updated_at: "2026-11-22T18:00:45.880865+00:00"
+  version: 4
+  updated_at: "2026-11-25T10:31:29.590036+00:00"
 ---
 # Manifest Build
 
@@ -35,7 +35,8 @@ declare_entity(
                     'runner': 'managed_python',
                     'module': 'WORKERS_beta_C69.manifest_build_CS4.manifest_build_CS4__shared',
                     'arguments': ['--output-dir', '<empty-generation-directory>'],
-                    'input': 'pinned Project binding JSON on stdin',
+                    'optional_arguments': ['--ingested-model'],
+                    'input': 'pinned Project binding JSON or binding and captured Model sources on stdin',
                     'output': 'Model and Structure artifact hashes as JSON on stdout',
                 }},
                 'client': {'manifest_compiler': {

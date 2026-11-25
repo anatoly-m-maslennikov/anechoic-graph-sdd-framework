@@ -14,9 +14,9 @@ relations:
   IS_SOLUTION_FOR:
   - AN-S-3191@5
 state:
-  status: active
-  version: 3
-  updated_at: '2026-11-23T03:50:52.802684+00:00'
+  status: "active"
+  version: 4
+  updated_at: "2026-11-24T23:05:55.103235+00:00"
 ---
 ## Summary
 
@@ -27,7 +27,7 @@ Forward an admitted MCP Tool call to the shared Backend
 ### Prose Claim
 
 MCP forwards the Tool name, arguments, and caller context to the selected
-native or Beta Backend. It returns the Backend result or a failure.
+`current` or `beta_next` Backend. It returns the Backend result or a failure.
 
 ### Formal Claim
 
@@ -48,7 +48,7 @@ component_workflow(
                     {'target': 'responding', 'guard': {'type': 'matchesTrace', 'params':
                         {'kind': 'effect', 'target': 'C45', 'outcome': 'succeeded'}}},
                     {'target': 'responding', 'guard': {'type': 'matchesTrace', 'params':
-                        {'kind': 'effect', 'target': 'C70', 'outcome': 'succeeded'}}},
+                        {'kind': 'effect', 'target': 'C82', 'outcome': 'succeeded'}}},
                 ],
                 'tool_call_refused_or_failed': {'target': 'failed', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'output', 'outcome': 'failed'}}},

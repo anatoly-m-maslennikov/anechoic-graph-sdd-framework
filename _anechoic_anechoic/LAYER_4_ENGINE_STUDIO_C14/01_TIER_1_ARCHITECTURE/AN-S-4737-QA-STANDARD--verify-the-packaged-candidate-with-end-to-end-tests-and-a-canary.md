@@ -9,8 +9,8 @@ context:
   lens: QA
 state:
   status: active
-  version: 1
-  updated_at: '2026-11-23T17:59:16Z'
+  version: 2
+  updated_at: '2026-11-24T18:19:55.278865+00:00'
 relations:
   IS_REFERENCE:
   - AN-S-3346
@@ -46,8 +46,10 @@ suite runs.
 
 #### Canary
 
-Run one Canary for every candidate after End-to-End checks pass and before
-installation. Verify startup, MCP initialization, and a representative query.
+Require a passing Canary for each exact candidate after its End-to-End
+checks and before installation. An explicit continuation can repeat a failed
+Canary on the same verified image. Verify startup, MCP initialization, and
+a representative query.
 Use a ping when a query is unavailable. Wait for observable readiness and
 apply AN-S-4731 to liveness and abort behavior. A failed or incomplete
 required check stops release.

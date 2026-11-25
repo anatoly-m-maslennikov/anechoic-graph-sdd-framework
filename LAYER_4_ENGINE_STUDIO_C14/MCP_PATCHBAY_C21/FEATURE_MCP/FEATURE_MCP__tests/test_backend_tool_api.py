@@ -12,7 +12,7 @@ from mcp.client._memory import InMemoryTransport
 from mcp.client.session import ClientSession
 
 from . import test_api_backend_process as fixture
-from MCP_PATCHBAY_C21.FEATURE_MCP.direct_gateway import native_runtime_gateway
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import native_runtime_gateway
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import select_runtime_project
 from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__shared import NATIVE_TOOLS
 

@@ -25,3 +25,9 @@ Extend the framework without changing its core
 ### Prose Claim
 
 Let the Operator add capabilities without having to change the framework’s core.
+
+## Details
+
+### Examples
+
+An Operator adds a Project-specific Model without changing the framework core.

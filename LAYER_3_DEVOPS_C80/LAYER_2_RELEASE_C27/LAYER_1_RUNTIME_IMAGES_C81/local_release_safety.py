@@ -100,8 +100,8 @@ def _new_staging_directory(root: Path, prefix: str) -> Path:
 def _installation_lock(root: Path, selection):
     if selection.root != root:
         raise LocalReleaseError("local-release-temporary-project-mismatch")
-    with _release_lock(root, INSTALLATION_LOCK_PATH, "installation"):
-        yield
+    with _release_lock(root, INSTALLATION_LOCK_PATH, "installation") as descriptor:
+        yield descriptor
 
 
 @contextmanager
@@ -116,7 +116,7 @@ def _release_lock(root: Path, relative: Path, label: str):
                 fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
             except BlockingIOError as error:
                 raise LocalReleaseError(f"local-release-{label}-lock-busy") from error
-            yield
+            yield descriptor
         finally:
             os.close(descriptor)
 

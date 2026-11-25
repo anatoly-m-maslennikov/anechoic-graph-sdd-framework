@@ -1,10 +1,24 @@
 """Validate and partition a persisted carrier checkpoint."""
 from pathlib import PurePosixPath
 import re
+from typing import Any
+
+from pydantic import BaseModel, ConfigDict
 
 MAX_DELTA_PATHS = 1024
 CHECKPOINT_FIELDS = {"carrier_hashes", "folder_hashes", "archive_pending"}
 _SHA256 = re.compile(r"[0-9a-f]{64}\Z")
+
+
+class ReuseRecord(BaseModel):
+    model_config = ConfigDict(strict=True, extra="forbid")
+    base_generation: str
+    inputs: Any
+    graph_config: Any
+    endpoints: Any
+    carrier_hashes: Any = None
+    folder_hashes: Any = None
+    archive_pending: Any = None
 
 
 def compatible_checkpoint(reuse):

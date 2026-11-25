@@ -10,8 +10,7 @@ sys.path[:0] = [str(TOOL.parent), str(TOOL)]
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import compose_contract_graph
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import render_contract_graph
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import extract_claim_constraints
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.subject_projection_properties import _formal_claims
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import _claims, _formal_fence
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import build_subject_projection_data, render_primary_projection
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__tests.contract_graph_test_support import carrier, body
 
 
@@ -98,8 +97,8 @@ Actual root detail.
         entry = next(entry for entry in entries if entry["source"]["atom_id"] == "CA-R-2")
         self.assertEqual(raw, entry["python_blocks"][0]["block"])
         self.assertEqual("python", entry["python_blocks"][0]["label"])
-        _, projected, label = _claims(_formal_claims([entry]))[0]
-        self.assertEqual("```python\n" + raw + "```", _formal_fence(projected, label))
+        projection = build_subject_projection_data([carrier("CA-R-1", "Atom", body("Atom declaration.")), python])
+        self.assertIn("```python\n" + raw + "```", render_primary_projection(projection, 4))
 
     def test_python_claim_invalid_is_diagnostic_and_prose_and_operations_are_not_executed(self):
         bad = carrier("CA-R-1", "Atom", body("### Formal Claim", "```python", "execute()", "```"))

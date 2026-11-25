@@ -12,10 +12,10 @@ import time
 from typing import Any, Mapping
 from urllib.parse import urlsplit
 
-from MCP_PATCHBAY_C21.FEATURE_MCP.docker.mcp_paths import MCP_PATH
-from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import ImageError, ImageManager
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.mcp_paths import HEALTH_PATH, MCP_PATH
 from MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_docker_command import BackendError, _bounded_run
 from MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_log_level import direct_log_level
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_images_common import ImageError
 
 
 _DIRECTORY = Path(__file__).resolve().parent
@@ -75,6 +75,7 @@ class ProjectMcpBackend:
     def resolve_image(self, source_root, explicit_id, *, project_root, selection=None):
         self._image_evidence = None
         from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import ProjectBinding
+        from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import ImageManager
 
         if selection is not None and not isinstance(selection, ProjectBinding):
             raise ImageError("IMAGE_INPUT_UNAVAILABLE")
@@ -299,10 +300,11 @@ class ProjectMcpBackend:
         from mcp.client.streamable_http import streamable_http_client
 
         async with httpx2.AsyncClient(trust_env=False, follow_redirects=False, timeout=timeout) as client:
-            transport = streamable_http_client(url, http_client=client)
-            async with transport as streams:
-                async with ClientSession(*streams) as session:
-                    await session.initialize()
+            response = await client.get(url.removesuffix(MCP_PATH) + HEALTH_PATH)
+            if response.status_code != 200 or response.json().get("state") != "ready":
+                raise ValueError("Project is not ready")
+            async with streamable_http_client(url, http_client=client) as streams, ClientSession(*streams) as session:
+                await session.initialize()
 
     def health(self, full_mcp_url, timeout):
         try:

@@ -9,7 +9,7 @@ MCP_ROOT = Path(__file__).resolve().parents[1]
 FRONTEND_ROOT = MCP_ROOT.parents[1] / "IWE_CONSOLE_C43" / "APP_WORKBENCH" / "FEATURE_WORKBENCH_FRONTEND"
 
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import WORKBENCH_PATH  # noqa: E402
-from MCP_PATCHBAY_C21.FEATURE_MCP.backend_client import ToolProtocolError  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import ToolProtocolError  # noqa: E402
 
 
 PROJECT_NAME = "anechoic"

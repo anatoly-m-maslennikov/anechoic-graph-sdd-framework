@@ -1,0 +1,32 @@
+{
+  "title": "First Summary survives duplicate headings",
+  "invariant": "For a readable row with two Summary records, snapshot indexes the first Summary and preserves the source Markdown.",
+  "scope": "A bounded projection of native generation snapshot on a valid row whose content records and spans were already parsed. It does not prove parser correctness, startup behavior, Python semantics, absence of unrelated exceptions, or general Markdown preservation. Old and fixed fixtures are full files from their recorded Git revisions; checkout source discovery checks exact relevant AST shapes and returns unresolved for others. The archive-summary fast path added in the same fixed checkpoint is excluded; the test directly supplies two parsed records.",
+  "before": {
+    "revision": "a103320e69f7631d0d7fbadd5ce1d86edb6c1f2d",
+    "source": "LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ADAPTERS_C30/native_generation_snapshot.py",
+    "fixture": "before.py.txt",
+    "sha256": "2b439fb0e82255c58c07eac2c62b065650e23690f866fda4bee930bb519aa865",
+    "markdown_sha256": "be9b0532b6d5d2950d009d827ee0ec9687a4c47a5c5f3a74ca7991875c829dc6",
+    "markdown_source": "LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ADAPTERS_C30/markdown_content__pub.py",
+    "markdown_fixture": "before-markdown.py.txt"
+  },
+  "fixed": {
+    "revision": "bd09f6fd347c2030c4c158992085c92e807713a6",
+    "source": "LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ADAPTERS_C30/native_generation_snapshot.py",
+    "fixture": "fixed.py.txt",
+    "sha256": "46634e4e22ca86e39dd724b3aac07563cb3f863ebf00f92d8427d65859bc3fab",
+    "markdown_sha256": "be9b0532b6d5d2950d009d827ee0ec9687a4c47a5c5f3a74ca7991875c829dc6",
+    "markdown_source": "LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ADAPTERS_C30/markdown_content__pub.py",
+    "markdown_fixture": "fixed-markdown.py.txt"
+  },
+  "checks": [
+    {
+      "file": "regression.lean",
+      "stdout_suffix": "first-summary-survives-duplicate: old mismatch; fixed matches\n",
+      "sha256": "97b21f9b533212e1c8cc9272494ce3efcf8ddb38b19b024c06ebb71bc40f7bba"
+    }
+  ],
+  "analyzer_sha256": "812192eccdca0897237bcf19e7deaae4558e25023e79698403686b319b25672f",
+  "analyzer": "analyze.py"
+}

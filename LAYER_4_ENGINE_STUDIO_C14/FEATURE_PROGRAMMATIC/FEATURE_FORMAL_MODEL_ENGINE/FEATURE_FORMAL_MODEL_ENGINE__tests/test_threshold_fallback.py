@@ -6,7 +6,7 @@ PROGRAMMATIC = Path(__file__).resolve().parents[2]
 TOOLS = PROGRAMMATIC / "FEATURE_TOOLS"
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_native_model_claim, NativeModelClaimError
-from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.compiler_claim import compiler_model_statements
+from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.FEATURE_FORMAL_MODEL_ENGINE__shared import compiler_model_statements
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import THRESHOLD as CLAIM
 class ThresholdTests(unittest.TestCase):
  def test_constraints_and_fallback(self):

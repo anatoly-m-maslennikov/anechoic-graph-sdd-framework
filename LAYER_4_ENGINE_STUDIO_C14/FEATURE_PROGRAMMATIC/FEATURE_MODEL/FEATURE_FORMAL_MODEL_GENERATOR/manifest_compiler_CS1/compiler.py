@@ -10,13 +10,14 @@ from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.FEATURE_F
     load_native_model, model_module_name, reviewed_model_records,
 )
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import resolve_native_project
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import mark_startup_timing
 
 from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.FEATURE_MODEL_VALIDATION__shared import open_admitted_model
 from .active_model_sources import read_active_model_sources
 from .structure_compile__shared import compile_structure
 
 
-def write_model(directory: Path, control_root: Path) -> str:
+def write_model(directory: Path, control_root: Path, *, verify_lean: bool = False) -> str:
     """Write a complete generation into an empty staging directory."""
     ontology = control_root / "LAYER_1_META_ONTOLOGY_C9"
     declarations = read_active_model_sources(control_root, ontology)
@@ -24,10 +25,17 @@ def write_model(directory: Path, control_root: Path) -> str:
         if declarations:
             raise ValueError("Custom Model sources require an active C9 Model")
         declarations = None
+    return write_model_records(directory, declarations, verify_lean=verify_lean)
+
+
+def write_model_records(directory, declarations, *, verify_lean=False):
     records, originals, fingerprint = (
         reviewed_model_records() if declarations is None else admit_active_model_records(declarations)
     )
     bindings = compile_native_bindings(records, originals)
+    if verify_lean:
+        from .model_lean import verify_model_lean
+        verify_model_lean(records, bindings)
     sources = assemble_model_modules((claim for _, _, claim in records), dependency_order=True)
     package = directory / "anechoic_runtime_model"
     package.mkdir()
@@ -58,24 +66,42 @@ def load_generation_model(directory: Path):
     return model
 
 
-def main() -> None:
+def _parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("project_root", type=Path)
     parser.add_argument("control_root")
     parser.add_argument("project_manifest_sha256")
     parser.add_argument("generation", type=Path)
     parser.add_argument("--build-model", action="store_true")
+    parser.add_argument("--ingested-model", action="store_true")
+    parser.add_argument("--verify-lean", action="store_true")
     parser.add_argument("--attest-model", action="store_true")
     parser.add_argument("--model-descriptor-sha256")
     args = parser.parse_args()
-    if not args.build_model and args.model_descriptor_sha256 is None:
+    if args.verify_lean and not args.build_model:
+        parser.error("--verify-lean requires --build-model")
+    if args.ingested_model and (args.build_model or args.verify_lean or args.model_descriptor_sha256 is not None):
+        parser.error("--ingested-model cannot be combined with other Model options")
+    if not args.build_model and not args.ingested_model and args.model_descriptor_sha256 is None:
         parser.error("Structure refresh requires the admitted Model descriptor hash")
+    return args
+
+
+def main() -> None:
+    args = _parse_args()
+    if args.ingested_model:
+        from .model_ingestion import compile_ingested_cli
+        compile_ingested_cli(args)
+        return
     if args.build_model:
         bootstrap = resolve_native_project(args.project_root, args.control_root,
                                            validate_manifest=load_native_model().validate_manifest)
         if bootstrap.manifest_sha256 != args.project_manifest_sha256:
             raise ValueError("Project Manifest changed. Restart to apply its settings.")
-        write_model(args.generation, bootstrap.control_root)
+        if args.verify_lean:
+            write_model(args.generation, bootstrap.control_root, verify_lean=True)
+        else:
+            write_model(args.generation, bootstrap.control_root)
     descriptor = (args.generation / "model.json").read_bytes()
     digest = sha256(descriptor).hexdigest()
     if args.model_descriptor_sha256 is not None and digest != args.model_descriptor_sha256:
@@ -88,6 +114,7 @@ def main() -> None:
         if selection.manifest_sha256 != args.project_manifest_sha256:
             raise ValueError("Project Manifest changed. Restart to apply its settings.")
         snapshot = compile_structure(selection, model)
+        mark_startup_timing("structure_ready", mode="built")
         if args.build_model:
             data = json.loads(descriptor)
             data["ticket_labels"] = model.ticket_labels
@@ -99,6 +126,7 @@ def main() -> None:
             descriptor = json.dumps(data, sort_keys=True).encode("utf-8")
             (args.generation / "model.json").write_bytes(descriptor)
             digest = sha256(descriptor).hexdigest()
+        mark_startup_timing("model_ready", mode="built" if args.build_model else "reused")
     if args.attest_model:
         snapshot = {"structure": snapshot, "model_descriptor_sha256": digest}
     print(json.dumps(snapshot, separators=(",", ":"), sort_keys=True))

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import hashlib
 import json
 import os
@@ -10,6 +9,9 @@ from pathlib import Path
 import re
 import stat
 import tomllib
+
+from pydantic import ConfigDict
+from pydantic.dataclasses import dataclass
 
 
 SOURCE_LAYERS = ("LAYER_1_META_ONTOLOGY_C9", "LAYER_2_META_METHODOLOGY_C58")
@@ -35,21 +37,21 @@ _REQUIRED = (
     "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/uv.lock",
     "version.toml", DOCKERFILE, DOCKERIGNORE, *LICENSE_INPUTS, TOOL_REGISTRY,
 )
-_BETA_REQUIRED = tuple(ENGINE + "/" + path for path in (
+_BETA_ROOTS = frozenset({"KERNEL_MIXER_beta_C67", "ORCHESTRATOR_beta_C68", "WORKERS_beta_C69", "API_MIXER_beta_C82"})
+_BETA_REQUIRED = tuple(f"{ENGINE}/{path}" for path in (
+    "FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_MODEL_VALIDATION/project_admission__pub.py",
+    "FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ADAPTERS_C30/native_snapshot_cli.py",
+    "IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_IMPORT_GRAPH_C61/realization_graph_cli.py",
     "KERNEL_MIXER_beta_C67/DATABASE_SERVER_beta_C71/DATABASE_SERVER_beta_C71__shared.py",
-    "ORCHESTRATOR_beta_C68/ORCHESTRATOR_beta_C68__shared.py", "WORKERS_beta_C69/WORKERS_beta_C69__shared.py",
-    "ORCHESTRATOR_beta_C68/warm_worker.py", "WORKERS_beta_C69/warm_worker.py",
-    "WORKBENCH_BACKEND_beta_C70/WORKBENCH_BACKEND_beta_C70__shared.py",
-    "WORKBENCH_BACKEND_beta_C70/runtime.py", "WORKBENCH_BACKEND_beta_C70/shared_runtime.py",
-    "WORKBENCH_BACKEND_beta_C70/project_admission.py", "WORKBENCH_BACKEND_beta_C70/query_run.json",
-    "WORKBENCH_BACKEND_beta_C70/warm_worker.py", "WORKBENCH_BACKEND_beta_C70/shared_peer_owner.py",
+    "ORCHESTRATOR_beta_C68/ORCHESTRATOR_beta_C68__shared.py",
+    "ORCHESTRATOR_beta_C68/warm_worker.py",
+    "WORKERS_beta_C69/WORKERS_beta_C69__shared.py",
+    "WORKERS_beta_C69/warm_worker.py",
+    "ORCHESTRATOR_beta_C68/project_peer_owner.py", "ORCHESTRATOR_beta_C68/shared_peer_owner.py",
+    "API_MIXER_beta_C82/API_MIXER_beta_C82__shared.py", "API_MIXER_beta_C82/shared_runtime.py",
 ))
-_BETA_COMPONENTS = frozenset(path.split("/")[1] for path in _BETA_REQUIRED)
-_BETA_REQUIRED += (ENGINE + "/FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_MODEL_VALIDATION/project_admission__pub.py",
-                   ENGINE + "/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ADAPTERS_C30/native_snapshot_cli.py",
-                   ENGINE + "/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_IMPORT_GRAPH_C61/realization_graph_cli.py")
-_CURRENT_ONLY = frozenset({ENGINE + "/KERNEL_MIXER_C59",
-                           ENGINE + "/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND"})
+_BETA_DIRECTORY = re.compile(r"_beta_C[0-9]+\Z")
+_CURRENT_ONLY = frozenset({"KERNEL_MIXER_C59", "IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND"})
 
 
 def _excluded(name: str) -> bool:
@@ -57,6 +59,17 @@ def _excluded(name: str) -> bool:
             or name.startswith((".anechoic_", "_anechoic_"))
             or name == ".env" or name.startswith(".env.") or name.endswith(".env")
             or Path(name).suffix in {".pyc", ".pyo", ".pem", ".key"})
+
+
+def _include_engine_directory(path: Path, engine: Path, stack: str, beta_components: frozenset[str]) -> bool:
+    if _excluded(path.name):
+        return False
+    relative = path.relative_to(engine)
+    if stack != "current" and relative.as_posix() in _CURRENT_ONLY:
+        return False
+    if _BETA_DIRECTORY.search(path.name) is None:
+        return True
+    return stack != "current" and relative.parts[0] in beta_components
 
 
 def _stack_selector(root: Path) -> tuple[Path | None, str, str | None]:
@@ -75,18 +88,19 @@ def _stack_selector(root: Path) -> tuple[Path | None, str, str | None]:
         if len(data) > 65536:
             raise ValueError
         document = tomllib.loads(data.decode("utf-8"))
-        if set(document) != {"stack"} or document["stack"] not in ("current", "beta"):
+        if set(document) != {"stack"} or document["stack"] not in ("current", "beta_next"):
             raise ValueError
     except (OSError, UnicodeError, ValueError, TypeError) as error:
-        raise ValueError('invalid project.toml: expected only stack = "current" or "beta"') from error
+        raise ValueError('invalid project.toml: expected only stack = "current" or "beta_next"') from error
     return path, document["stack"], hashlib.sha256(data).hexdigest()
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, config=ConfigDict(strict=True, extra="forbid"))
 class ImageIdentity:
     fingerprint: str
     version: str
     manifest: tuple[tuple[str, str, int], ...]
+    stack: str
 
 
 class ImageInputIdentity:
@@ -96,7 +110,8 @@ class ImageInputIdentity:
             raise ValueError("image source unavailable")
         paths = []
         selector, stack, selector_digest = _stack_selector(root)
-        required = _REQUIRED if stack == "current" else _REQUIRED[:-1] + _BETA_REQUIRED
+        beta_components, stack_required = (_BETA_ROOTS, _BETA_REQUIRED) if stack == "beta_next" else (frozenset(), ())
+        required = _REQUIRED[:-1] + stack_required if beta_components else _REQUIRED
         for relative in required:
             path = root / relative
             if any((root / Path(*Path(relative).parts[:i])).is_symlink() for i in range(1, len(Path(relative).parts) + 1)) or not path.is_file():
@@ -106,12 +121,8 @@ class ImageInputIdentity:
             raise error
         for current, directories, names in os.walk(engine, followlinks=False, onerror=fail):
             directory = Path(current)
-            directories[:] = sorted(name for name in directories if not _excluded(name)
-                                    and (stack == "beta" or re.search(r"_beta_C[0-9]+\Z", name) is None)
-                                    and (stack != "beta" or (directory / name).relative_to(root).as_posix() not in _CURRENT_ONLY)
-                                    and (stack != "beta" or re.search(r"_beta_C[0-9]+\Z", name) is None
-                                         or (directory == engine and name in _BETA_COMPONENTS)
-                                         or (directory != engine and directory.relative_to(engine).parts[0] in _BETA_COMPONENTS)))
+            directories[:] = sorted(name for name in directories
+                                    if _include_engine_directory(directory / name, engine, stack, beta_components))
             if any(name == ".runtime" or name.startswith(".env") for name in directories):
                 raise ValueError("unsafe image input")
             for name in directories:
@@ -188,7 +199,7 @@ class ImageInputIdentity:
                        "build_arguments": {"RUNTIME_UID": self.uid, "RUNTIME_GID": self.gid},
                        "files": [row for row in manifest if row[0] not in LICENSE_INPUTS]}
             fingerprint = hashlib.sha256(json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False).encode("utf-8")).hexdigest()
-            return ImageIdentity(fingerprint, version, manifest)
+            return ImageIdentity(fingerprint, version, manifest, selection[1])
         except (OSError, UnicodeError, KeyError, TypeError) as error:
             raise ValueError("image source unavailable") from error
 

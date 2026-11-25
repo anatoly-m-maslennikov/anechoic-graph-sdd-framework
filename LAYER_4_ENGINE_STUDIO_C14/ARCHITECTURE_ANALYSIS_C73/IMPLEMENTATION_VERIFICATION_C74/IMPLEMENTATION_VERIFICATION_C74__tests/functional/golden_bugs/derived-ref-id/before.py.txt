@@ -1,0 +1,18 @@
+def _emit_derived(atom, classes):
+    reference = ast.parse(getsource(derive_atom_ref)).body[0]
+    reference.name = "_derive_ref_id"
+    reference.decorator_list = [ast.Name(id="staticmethod", ctx=ast.Load())]
+    classes[atom].body.append(reference)
+    classes[atom].body.append(ast.parse('''\
+def __post_init__(self):
+    if not isinstance(self.status, str) or not self.status.strip():
+        raise ValueError("Ref ID requires status")
+    expected = self._derive_ref_id(self.atom_id, self.version, self.status)
+    if self.ref_id is not None and self.ref_id != expected:
+        raise ValueError("Ref ID disagrees with Atom identity and State")
+    self.ref_id = expected
+''').body[0])
+
+def derive_atom_ref(atom_id: str, version: int, status: str) -> str:
+    suffix = "-draft" if status.casefold() == "draft" else ""
+    return f"{atom_id}@{version}{suffix}"

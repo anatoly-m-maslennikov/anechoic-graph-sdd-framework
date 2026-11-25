@@ -3,8 +3,11 @@ import hashlib
 import sys
 import tempfile
 import unittest
+from dataclasses import replace
 from pathlib import Path
 from unittest.mock import patch
+
+from pydantic import ValidationError
 
 TOOLS = Path(__file__).resolve().parents[1]
 ROOT = TOOLS.parents[2]
@@ -23,6 +26,15 @@ class LifecycleEffectsTest(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory(dir=parent)
         self.directory = Path(self.temp.name)
         self.addCleanup(self.temp.cleanup)
+
+    def test_result_preserves_mutable_receipts_and_rejects_nonlists(self):
+        effect_rows = [{"operation": "create", "target": "test.md", "state": "known", "evidence": "digest"}]
+        result = effects.Result(effect_rows)
+        self.assertIs(replace(result).effects, effect_rows)
+        result.errors.append({"code": "backend_failure", "field": None})
+        self.assertEqual([], effects.Result().errors)
+        with self.assertRaises(ValidationError):
+            effects.Result(tuple(effect_rows))
 
     def test_create_no_overwrite_replace_noop_and_remove(self):
         path = self.directory / "carrier.md"
@@ -63,6 +75,72 @@ class LifecycleEffectsTest(unittest.TestCase):
         self.assertEqual("unknown", result.effects[0]["state"])
         self.assertEqual("effect_uncertain", result.errors[0]["code"])
         self.assertEqual(b"one", path.read_bytes())
+
+    def test_staging_link_remains_until_direct_readback(self):
+        path = self.directory / "carrier.md"
+        link, read = effects.os.link, effects._read
+        staging_paths = []
+
+        def record_staging(staging, *args, **kwargs):
+            staging_paths.append(Path(staging))
+            link(staging, *args, **kwargs)
+
+        def read_while_staging_exists(parent, name):
+            if not staging_paths[0].exists():
+                raise FileNotFoundError(name)
+            return read(parent, name)
+
+        with (patch.object(effects.os, "link", side_effect=record_staging),
+              patch.object(effects, "_read", side_effect=read_while_staging_exists)):
+            result = effects.create(ROOT, path, b"one")
+
+        self.assertEqual([], result.errors)
+        self.assertEqual("known", result.effects[0]["state"])
+        self.assertEqual(b"one", path.read_bytes())
+        self.assertFalse(staging_paths[0].exists())
+        self.assertEqual(1, path.stat().st_nlink)
+
+    def test_missing_staging_name_still_verifies_carrier(self):
+        original_link = effects.os.link
+
+        def verify(state):
+            path = self.directory / f"{state}.md"
+            staging_paths = []
+
+            def link_then_remove_staging(staging, *args, **kwargs):
+                original_link(staging, *args, **kwargs)
+                staging = Path(staging)
+                staging.unlink()
+                staging_paths.append(staging)
+                if state == "missing":
+                    path.unlink()
+                elif state == "altered":
+                    path.write_bytes(b"changed")
+
+            with patch.object(effects.os, "link", side_effect=link_then_remove_staging):
+                result = effects.create(ROOT, path, b"one")
+
+            self.assertEqual(1, len(staging_paths))
+            self.assertFalse(staging_paths[0].exists())
+            if state == "intact":
+                self.assertEqual([], result.errors)
+                self.assertEqual("known", result.effects[0]["state"])
+                self.assertEqual(digest(b"one"), result.effects[0]["evidence"])
+                self.assertEqual(1, path.stat().st_nlink)
+                self.assertEqual(b"one", path.read_bytes())
+            else:
+                self.assertEqual("effect_uncertain", result.errors[0]["code"])
+                self.assertEqual("unknown", result.effects[0]["state"])
+                exception_type = "FileNotFoundError" if state == "missing" else "OSError"
+                self.assertEqual(f"filesystem operation failed ({exception_type})", result.errors[0]["message"])
+                if state == "missing":
+                    self.assertFalse(path.exists())
+                else:
+                    self.assertEqual(b"changed", path.read_bytes())
+
+        for state in ("intact", "missing", "altered"):
+            with self.subTest(state=state):
+                verify(state)
 
     def test_parent_symlink_and_project_escape_are_refused(self):
         directory = self.directory / "real"

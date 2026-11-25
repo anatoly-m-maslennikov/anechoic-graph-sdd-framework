@@ -24,7 +24,7 @@ from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.backend_tool_api im
 
 
 def _tool_fault(code, message, *, emit=False):
-    from MCP_PATCHBAY_C21.FEATURE_MCP.backend_client import ToolProtocolError
+    from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import ToolProtocolError
 
     return ToolProtocolError(code, message, tool_failure_result(code, message, emit=emit))
 
@@ -113,7 +113,7 @@ class WorkbenchTools:
 
 
 def local_gateway(root, *, native_query):
-    from MCP_PATCHBAY_C21.FEATURE_MCP.direct_gateway import DirectGateway
+    from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import DirectGateway
     gateway = DirectGateway(root, native_query=native_query, workbench=WorkbenchTools(query_owner=native_query))
     gateway._tool_client = FixtureToolClient(gateway)
     gateway.workbench.tool_client = gateway._tool_client

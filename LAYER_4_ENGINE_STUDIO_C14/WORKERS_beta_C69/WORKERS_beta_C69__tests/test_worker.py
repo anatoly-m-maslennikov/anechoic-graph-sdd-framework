@@ -1,6 +1,4 @@
-from contextlib import redirect_stderr, redirect_stdout
 from hashlib import sha256
-from io import StringIO
 import json
 import os
 from pathlib import Path
@@ -12,8 +10,7 @@ import tempfile
 import unittest
 from unittest.mock import Mock, patch
 
-from .. import WORKERS_beta_C69__shared as worker
-from .WORKERS_beta_C69__tests__shared import generation_fixture
+from .WORKERS_beta_C69__tests__shared import command_with_fixture, generation_fixture
 
 WORKER = [sys.executable, "-B", "-P", "-m", "WORKERS_beta_C69.WORKERS_beta_C69__shared"]
 
@@ -51,61 +48,104 @@ class GenerationTests(unittest.TestCase):
                       "severity": "ERROR", "details": details}
         return subprocess.CompletedProcess([], 1, "", "private raw child detail\n" + json.dumps(diagnostic))
 
+    def _run_graph(self, request, output, *replies):
+        original_run = subprocess.run
+        invocations, graph_calls = [], []
+        replies = iter(replies)
+
+        def launch(command, *args, **options):
+            if "-m" in command:
+                module = command[command.index("-m") + 1]
+                invocations.append(module)
+                if module == "WORKERS_beta_C69.realization_graph":
+                    graph_calls.append((command, json.loads(options["input"])))
+                    return next(replies)
+            return original_run(command, *args, **options)
+
+        with patch.object(subprocess, "run", side_effect=launch):
+            response = command_with_fixture(WORKER[-1], request, "--generation-dir", str(output))
+        return response, invocations, graph_calls
+
     def test_graph_restart_reuses_compilation_and_native_capture(self):
-        with tempfile.TemporaryDirectory() as directory:
-            binding, output, _ = generation_fixture(directory)
-            structure, config, endpoints = {"structure": "staged"}, {"include": []}, {"endpoint": {}}
-            finish = Mock(return_value=({"atoms": []}, {}))
-            stderr = StringIO()
-            with (patch("FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared.prepare_generation_snapshot",
-                        return_value=(config, finish)) as prepare,
-                  patch.object(worker, "_compile", return_value=({}, structure, endpoints)) as compile_stage,
-                  patch.object(subprocess, "run", side_effect=[
-                      self._graph_change("main.py"), subprocess.CompletedProcess([], 0, '{"nodes":[]}', "")]) as launch,
-                  redirect_stderr(stderr)):
-                result = worker.build_generation(binding, output)
-            self.assertEqual({"nodes": []}, result["graph"])
-            self.assertEqual(2, launch.call_count)
-            self.assertEqual(launch.call_args_list[0], launch.call_args_list[1])
-            command = launch.call_args.args[0]
-            self.assertEqual("WORKERS_beta_C69.realization_graph", command[-1])
-            self.assertEqual(structure, json.loads(launch.call_args.kwargs["input"])["structure"])
-            compile_stage.assert_called_once()
-            prepare.assert_called_once()
-            finish.assert_called_once_with(endpoints)
-            self.assertIn('"path":"main.py"', stderr.getvalue())
-            self.assertNotIn("private raw child detail", stderr.getvalue())
+        binding, output, _ = generation_fixture(self.enterContext(tempfile.TemporaryDirectory()))
+        config = {"include": []}
+        finish = Mock(return_value=({"atoms": []}, {}))
+        success = subprocess.CompletedProcess([], 0, '{"nodes":[]}', "")
+        with patch("FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared.prepare_generation_snapshot",
+                   return_value=(config, finish)) as prepare:
+            response, modules, scans = self._run_graph(binding, output, self._graph_change("main.py"), success)
+        self.assertEqual(0, response.returncode, response.stderr)
+        self.assertEqual({"nodes": []}, json.loads(response.stdout)["graph"])
+        self.assertEqual(2, len(scans))
+        self.assertEqual(scans[0], scans[1])
+        self.assertEqual(json.loads((output / "structure.json").read_text()), scans[0][1]["structure"])
+        self.assertEqual(1, sum(name.endswith(".manifest_build_CS4__shared") for name in modules))
+        prepare.assert_called_once()
+        finish.assert_called_once_with(json.loads((output / "model.json").read_text())["bindings"]["endpoints"])
+        self.assertIn('"path":"main.py"', response.stderr)
+        self.assertNotIn("private raw child detail", response.stderr)
 
     def test_unrelated_graph_failure_is_not_restarted(self):
         child = subprocess.CompletedProcess([], 1, "", "unrelated failure")
         for attempts in ([child], [self._graph_change("main.py"), child]):
-            with (self.subTest(launches=len(attempts)),
-                  patch.object(subprocess, "run", side_effect=attempts) as launch, redirect_stderr(StringIO())):
-                with self.assertRaisesRegex(ValueError, "realization_graph failed: unrelated failure"):
-                    worker._build_graph({"root": ".", "control_root": "control"}, {}, {})
-                self.assertEqual(len(attempts), launch.call_count)
+            with self.subTest(launches=len(attempts)), tempfile.TemporaryDirectory() as directory:
+                binding, output, _ = generation_fixture(directory)
+                request = {"binding": binding, "reuse": None}
+                response, _, scans = self._run_graph(request, output, *attempts)
+                self.assertEqual(1, response.returncode)
+                issue, = json.loads(response.stdout)["ingestion_failure"]["issues"]
+                self.assertIn("realization_graph failed: unrelated failure", issue["message"])
+                self.assertEqual(len(attempts), len(scans))
+
+    def test_watcher_replay_requires_managed_foreground_without_explicit_paths(self):
+        base = {"binding": {}, "reuse": None, "replay_graph": True,
+                "watcher_guarded": True, "foreground": True}
+        replay = "Graph replay requires a watcher-guarded foreground capture"
+        fields = "Invalid managed Worker fields"
+        option = "Invalid managed Worker option"
+        invalid = (({"watcher_guarded": False}, replay), ({"foreground": False}, replay),
+                   ({"paths": []}, replay), ({"archive": {}}, replay), ({"unexpected": True}, replay),
+                   ({"archive": None, "paths": None}, replay), ({"replay_graph": False, "paths": None, "structure": None}, fields),
+                   ({"replay_graph": False, "unexpected": True}, fields),
+                   *(({flag: 1, "unexpected": True}, option)
+                     for flag in ("watcher_guarded", "foreground", "incremental", "replay_graph")))
+        for options, message in invalid:
+            with self.subTest(options=options):
+                response = command_with_fixture(WORKER[-1], base | options, "--generation-dir", "/fixture")
+                self.assertEqual(1, response.returncode)
+                issue, = json.loads(response.stdout)["ingestion_failure"]["issues"]
+                self.assertEqual(message, issue["message"])
+
+    def test_managed_foreground_passes_replay_to_analyzer_and_retains_reuse_witness(self):
+        binding, output, _ = generation_fixture(self.enterContext(tempfile.TemporaryDirectory()))
+        request = {"binding": binding, "reuse": None, "replay_graph": True,
+                   "watcher_guarded": True, "foreground": True}
+        analyzer = "IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.import_graph__shared.graph_input_signature"
+        with patch(analyzer, return_value="fixture-graph-signature") as fingerprint:
+            response, _, scans = self._run_graph(request, output, subprocess.CompletedProcess([], 0, '{"nodes":[]}', ""))
+        self.assertEqual(0, response.returncode, response.stderr)
+        command, _ = scans[0]
+        self.assertEqual("--watcher-replay", command[-1])
+        self.assertEqual(2, fingerprint.call_count)
+        witness = json.loads(response.stdout)["reuse"]
+        self.assertEqual({"manifest", "graph", "carrier_schema"}, set(witness["inputs"]))
+        self.assertTrue(all(witness["inputs"].values()))
 
     def test_graph_restart_exhaustion_reports_last_typed_difference(self):
         details = {"sources": {"change": "changed", "path": "main.py", "fields": ["status"]}}
-        stdout, stderr = StringIO(), StringIO()
-        with (patch.object(sys, "argv", ["worker", "--generation-dir", "/fixture"]),
-              patch.object(sys, "stdin", StringIO('{"binding":{},"reuse":null}')),
-              patch.object(worker, "watch_managed_parent"),
-              patch.object(worker, "_run", side_effect=lambda *_: worker._build_graph(
-                  {"root": ".", "control_root": "control"}, {}, {})),
-              patch.object(subprocess, "run", side_effect=[
-                  self._graph_change("first.py"), self._graph_change("main.py")]) as launch,
-              redirect_stdout(stdout), redirect_stderr(stderr)):
-            self.assertEqual(1, worker.main())
-        self.assertEqual(2, launch.call_count)
-        reply = json.loads(stdout.getvalue())
+        binding, output, _ = generation_fixture(self.enterContext(tempfile.TemporaryDirectory()))
+        request = {"binding": binding, "reuse": None}
+        response, _, scans = self._run_graph(request, output, self._graph_change("first.py"), self._graph_change("main.py"))
+        self.assertEqual(1, response.returncode, response.stderr)
+        self.assertEqual(2, len(scans))
+        reply = json.loads(response.stdout)
         self.assertEqual(details, reply["graph_consistency"])
         issue, = reply["ingestion_failure"]["issues"]
         self.assertEqual("realization_scan_failed", issue["code"])
         self.assertIn("Project source or dependency inputs changed during capture after one Realization Graph restart",
                       issue["message"])
-        self.assertIn('"path":"first.py"', stderr.getvalue())
-        self.assertNotIn("private raw child detail", stdout.getvalue() + stderr.getvalue())
+        self.assertIn('"path":"first.py"', response.stderr)
+        self.assertNotIn("private raw child detail", response.stdout + response.stderr)
 
     def test_managed_refresh_reuses_artifacts_until_graph_inputs_change(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -113,8 +153,8 @@ class GenerationTests(unittest.TestCase):
             root = Path(binding["root"])
             tickets = root / binding["control_root"] / "__TICKETS"
             tickets.mkdir()
-            def run(folder, reuse, structure=None):
-                request = {"binding": binding, "reuse": reuse}
+            def run(folder, reuse, structure=None, **options):
+                request = {"binding": binding, "reuse": reuse, **options}
                 if structure is not None:
                     request["structure"] = structure
                 result = subprocess.run([*WORKER, "--generation-dir", str(folder)], capture_output=True,
@@ -144,6 +184,8 @@ class GenerationTests(unittest.TestCase):
             self.assertEqual(previous["inputs"]["manifest"], graph_refresh["reuse"]["inputs"]["manifest"])
             self.assertNotEqual(previous["inputs"]["graph"], graph_refresh["reuse"]["inputs"]["graph"])
             self.assertEqual({"inputs", "graph_config", "endpoints"}, set(graph_refresh["reuse"]))
+            self.assertEqual(graph_refresh, run(refreshed, previous, structure, foreground=True, incremental=True,
+                                                watcher_guarded=True, replay_graph=True))
             self.assertEqual([], list(refreshed.iterdir()))
             rebuilt = run(refreshed, previous)
             self.assertIn("receipt", rebuilt)
@@ -219,7 +261,8 @@ class GenerationTests(unittest.TestCase):
             task.write_text('---\nidentity:\n  atom_id: AN-T-1\ncontext:\n  container:\n    component: C0\nstate:\n  status: active\n  version: 1\n---\n\n## Summary\n\nTask\n')
             process = subprocess.Popen([*WORKER, '--generation-dir', str(output)],
                                        stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-            process.stdin.write(json.dumps(binding))
+            request = {"binding": binding, "reuse": None, "model_source": {"accepted_model": None}}
+            process.stdin.write(json.dumps(request))
             process.stdin.close()
             process.stdin = None
             stopped = None
@@ -243,6 +286,7 @@ class GenerationTests(unittest.TestCase):
                 stdout, stderr = process.communicate(timeout=30)
                 self.assertNotEqual(0, process.returncode, stdout + stderr)
                 self.assertIn('Native Project carriers changed', stderr)
+                self.assertNotIn("model_diagnostics", json.loads(stdout))
             finally:
                 if stopped:
                     os.kill(stopped, signal.SIGCONT)

@@ -7,6 +7,7 @@ from .source_row__pub import atom, canonical_row
 from .carrier_body__pub import source_body
 from .atom_reference__pub import derive_atom_ref
 from .native_carrier_header__pub import native_header_view
+from .native_carrier_placement__pub import PROJECT_CONFIG_DIRECTORY, TICKET_DIRECTORY
 from .carrier_read__pub import CarrierError, parse_carrier
 
 
@@ -71,4 +72,20 @@ def _container(container, atom_id: str, pattern: str) -> tuple[str, str]:
             or not re.fullmatch(target_pattern, target) or target == atom_id):
         raise ValueError("Invalid native container")
     return kind, target
+
+
+def _parse_captured_carrier(selection, path, tree, raw, include_content_properties):
+    family = {"_PMETA": "P", "__TKT": "T", "001_TICKETS": "T", "__TICKETS": "T",
+              "002_PROJECT_CONFIG": "PC", "__PROJECT_CONFIG": "PC",
+              PROJECT_CONFIG_DIRECTORY: "PC", TICKET_DIRECTORY: "T"}.get(tree, "S")
+    row, edge = _carrier_row(path, selection.root, family, selection.project_prefix, raw,
+                             include_content_properties=include_content_properties)
+    if tree is None and path != selection.manifest_path:
+        context = native_header_view(row["header_json"])["context"]
+        if (row["status"] != "active" or context.get("template") != "project_goal"
+                or context.get("container") != {"component": "C00"} or context.get("tier") != -1
+                or context.get("lens") != "SPEC"
+                or not path.name.startswith(row["id"] + "-")):
+            raise ValueError("Invalid repository-root Project Goal")
+    return row, edge
 

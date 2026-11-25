@@ -15,11 +15,16 @@ class ProjectStateTests(unittest.TestCase):
         self.assertEqual({'mcp-http'}, set(spec['services']))
         service = spec['services']['mcp-http']
         self.assertEqual('420s', service['healthcheck']['start_period'])
-        self.assertIn('http://127.0.0.1:8092/anechoic/health', service['healthcheck']['test'][-1])
+        probe = service['healthcheck']['test'][-1]
+        self.assertIn('http://127.0.0.1:8092/anechoic/health', probe)
+        self.assertIn("['state'] == 'ready'", probe)
         self.assertEqual(['mcp-http'], service['command'])
         self.assertEqual(['127.0.0.1:${ANECHOIC_MCP_HTTP_PORT:?Project Settings HTTP port is required}:8092'], service['ports'])
-        self.assertEqual([{'type': 'bind', 'source': '${ANECHOIC_PROJECT_ROOT}',
-                          'target': '/project'}], service['volumes'])
+        self.assertCountEqual([
+            {'type': 'bind', 'source': '${ANECHOIC_PROJECT_ROOT}', 'target': '/project'},
+            {'type': 'volume', 'source': 'framework-db', 'target': '/var/lib/anechoic'},
+        ], service['volumes'])
+        self.assertEqual('anechoic-framework-db', spec['volumes']['framework-db']['name'])
         self.assertTrue(service['read_only'])
         self.assertEqual('no', service['restart'])
         self.assertEqual(['/tmp:size=128m,mode=1777'], service['tmpfs'])

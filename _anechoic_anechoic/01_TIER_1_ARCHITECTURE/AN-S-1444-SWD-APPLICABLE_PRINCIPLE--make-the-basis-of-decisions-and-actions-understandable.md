@@ -27,3 +27,9 @@ Make the basis of decisions and actions understandable
 ### Prose Claim
 
 Show which Project information, instructions, and permissions guide important actions. Explain recorded decisions in plain language.
+
+## Details
+
+### Examples
+
+Before an important action, an AI Agent shows the Project information, instructions, and permissions that guide it. The Operator can understand the basis for the action.

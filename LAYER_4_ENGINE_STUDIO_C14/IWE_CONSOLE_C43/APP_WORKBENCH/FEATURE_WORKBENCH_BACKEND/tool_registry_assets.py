@@ -3,7 +3,9 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from pydantic import ConfigDict
+from pydantic.dataclasses import dataclass
+
 import hashlib
 import json
 from pathlib import Path
@@ -25,7 +27,7 @@ class ToolRegistryAssetError(ValueError):
     """One installed registry asset is missing, stale, or malformed."""
 
 
-@dataclass(frozen=True)
+@dataclass(config=ConfigDict(strict=True, extra="forbid"), frozen=True)
 class ProviderInventory:
     provider_id: str
     module: str
@@ -33,7 +35,7 @@ class ProviderInventory:
     descriptor_factory: str
 
 
-@dataclass(frozen=True)
+@dataclass(config=ConfigDict(strict=True, extra="forbid"), frozen=True)
 class ToolInventory:
     blacklist: tuple[str, ...]
     providers: tuple[ProviderInventory, ...]

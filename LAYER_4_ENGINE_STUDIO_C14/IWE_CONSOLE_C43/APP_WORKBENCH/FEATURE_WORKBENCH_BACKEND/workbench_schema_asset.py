@@ -3,11 +3,12 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import hashlib
 import json
 from pathlib import Path
 from typing import Any
+
+from pydantic import BaseModel, ConfigDict
 
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import ContentRule, ContentSchema, DeclarationSource, _schema_from_rules
 from .declared_classifications import compile_role_folders, compile_status_groups  # noqa: F401
@@ -19,9 +20,10 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import
 DEFAULT_SCHEMA_PATH = Path(__file__).with_name("workbench_schema.json")
 
 
-@dataclass(frozen=True)
-class SchemaCompilation:
+class SchemaCompilation(BaseModel):
     """The two admitted Header modes plus one declared Content schema."""
+
+    model_config = ConfigDict(strict=True, extra="forbid", frozen=True, arbitrary_types_allowed=True)
 
     mode_one: HeaderSchema
     mode_two: HeaderSchema
@@ -44,8 +46,11 @@ def compile_schema(
 ) -> SchemaCompilation:
     """Build both projections from the one accepted source capture."""
     return SchemaCompilation(
-        declared_header or declared_header_schema(compile_header_rules(atoms)),
-        infer_header_schema(atoms), content, status_groups, role_folders,
+        mode_one=declared_header or declared_header_schema(compile_header_rules(atoms)),
+        mode_two=infer_header_schema(atoms),
+        content=content,
+        status_groups=status_groups,
+        role_folders=role_folders,
     )
 
 
@@ -108,17 +113,7 @@ def load_image_schema(path: Path = DEFAULT_SCHEMA_PATH) -> SchemaCompilation:
                 or (payload["schema_version"] >= 3) != ("status_groups" in payload)
                 or (payload["schema_version"] == 4) != ("role_folders" in payload)):
             raise ValueError("unsupported schema asset version")
-        groups = payload.get("status_groups", [])
-        if (not isinstance(groups, list) or any(not isinstance(row, list) or len(row) != 3
-                or any(not isinstance(value, str) or not value for value in row) for row in groups)
-                or groups != sorted(groups) or len({tuple(row[:2]) for row in groups}) != len(groups)):
-            raise ValueError("invalid Status Groups")
-        folders = payload.get("role_folders")
-        if folders is not None and (not isinstance(folders, list) or any(
-                not isinstance(row, list) or len(row) != 2 or any(not isinstance(value, str) or not value for value in row)
-                for row in folders) or folders != sorted(folders)
-                or len({row[0] for row in folders}) != len(folders) or len({row[1] for row in folders}) != len(folders)):
-            raise ValueError("invalid Role folders")
+        groups, folders = _classification_rows(payload)
         _validate_source_pins(payload["sources"])
         modes = payload["modes"]
         if not isinstance(modes, dict) or set(modes) != {"1", "2"}:
@@ -131,10 +126,32 @@ def load_image_schema(path: Path = DEFAULT_SCHEMA_PATH) -> SchemaCompilation:
         headers = [_header_schema(modes[mode]["header"]) for mode in ("1", "2")]
         if any(headers[index].asset() != modes[mode]["header"] for index, mode in enumerate(("1", "2"))):
             raise ValueError("invalid header schema shape")
-        return SchemaCompilation(headers[0], headers[1], content, tuple(map(tuple, groups)),
-                                 None if folders is None else tuple(map(tuple, folders)))
+        return SchemaCompilation(
+            mode_one=headers[0],
+            mode_two=headers[1],
+            content=content,
+            status_groups=groups,
+            role_folders=folders,
+        )
     except (OSError, KeyError, TypeError, UnicodeError, ValueError) as exc:
         raise ValueError(f"invalid delivered Workbench schema: {exc}") from exc
+
+
+def _classification_rows(
+    payload: dict[str, Any],
+) -> tuple[tuple[tuple[str, str, str], ...], tuple[tuple[str, str], ...] | None]:
+    groups = payload.get("status_groups", [])
+    if (not isinstance(groups, list) or any(not isinstance(row, list) or len(row) != 3
+            or any(not isinstance(value, str) or not value for value in row) for row in groups)
+            or groups != sorted(groups) or len({tuple(row[:2]) for row in groups}) != len(groups)):
+        raise ValueError("invalid Status Groups")
+    folders = payload.get("role_folders")
+    if folders is not None and (not isinstance(folders, list) or any(
+            not isinstance(row, list) or len(row) != 2 or any(not isinstance(value, str) or not value for value in row)
+            for row in folders) or folders != sorted(folders)
+            or len({row[0] for row in folders}) != len(folders) or len({row[1] for row in folders}) != len(folders)):
+        raise ValueError("invalid Role folders")
+    return tuple(map(tuple, groups)), None if folders is None else tuple(map(tuple, folders))
 
 
 def _validate_source_pins(value: object) -> None:

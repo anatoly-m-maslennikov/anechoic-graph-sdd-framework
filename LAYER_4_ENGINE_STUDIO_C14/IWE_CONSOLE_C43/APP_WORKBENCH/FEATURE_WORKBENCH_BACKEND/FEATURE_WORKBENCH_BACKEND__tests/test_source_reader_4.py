@@ -11,7 +11,6 @@ APP_ROOT = Path(__file__).resolve().parents[3]
 TOOLS_ROOT = APP_ROOT.parent / "FEATURE_PROGRAMMATIC" / "FEATURE_TOOLS"
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import ScopeDeclarationError  # noqa: E402
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND import source_reader_capture  # noqa: E402
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import ReadContext  # noqa: E402
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import source_markdown  # noqa: E402
 from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__shared import SourceReader  # noqa: E402
@@ -145,11 +144,7 @@ class SourceReaderTests(SourceReaderFixture, unittest.TestCase):
         renamed = self._path("MAIN", "09_operations", "renamed.md")
 
         with (
-            patch.object(
-                source_reader_capture,
-                "read_scope_unit_declarations",
-                wraps=source_reader_capture.read_scope_unit_declarations,
-            ) as declarations,
+            self.source_reads() as reads,
             patch.object(self.reader, "_inventory_paths", wraps=self.reader._inventory_paths) as inventory,
         ):
             atoms, _scopes = self.reader.capture([{
@@ -176,7 +171,7 @@ class SourceReaderTests(SourceReaderFixture, unittest.TestCase):
             }])
 
         self.assertNotIn("CA-R-440", {row["id"] for row in atoms})
-        declarations.assert_not_called()
+        self.assertTrue(self.declaration_paths().isdisjoint(reads))
         inventory.assert_not_called()
 
 

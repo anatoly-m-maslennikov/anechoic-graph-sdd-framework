@@ -1,0 +1,32 @@
+{
+  "title": "Workflow guard overlap and final-state reachability",
+  "invariant": "Reject overlapping guards for one event and reachable states with no path to a final state.",
+  "scope": "Finite supplied compiler configs: scalar guard constraints and structural reachability. Recognizes only recorded JavaScript AST shapes; does not prove arbitrary JavaScript or runtime trace feasibility.",
+  "before": {
+    "revision": "BB thr_86zjijbcaj event 74101, before patches 74152 and 74355",
+    "source": "LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_IMPORT_GRAPH_C61/WORKFLOW_SPEC/WORKFLOW_SPEC__shared.mjs",
+    "source_sha256": "812633526d11c2f5598132eb6a2a6345d9d4e9a16e15212ce48738cc36206041",
+    "fixture": "before.mjs.txt",
+    "sha256": "812633526d11c2f5598132eb6a2a6345d9d4e9a16e15212ce48738cc36206041"
+  },
+  "fixed": {
+    "revision": "145f2a62b89a54f21275ccac0514142f9c55ff2e",
+    "source": "LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_IMPORT_GRAPH_C61/WORKFLOW_SPEC/WORKFLOW_SPEC__shared.mjs",
+    "source_sha256": "0653e1b2b251b5c709673c803d138c7b6105b3016ed5620d2592d1033361041a",
+    "fixture": "fixed.mjs.txt",
+    "sha256": "0653e1b2b251b5c709673c803d138c7b6105b3016ed5620d2592d1033361041a"
+  },
+  "checks": [
+    {
+      "file": "before.lean",
+      "stdout_suffix": "true\ntrue\n"
+    },
+    {
+      "file": "fixed.lean",
+      "stdout_suffix": "false\nfalse\n"
+    }
+  ],
+  "analyzer": "analyze.py",
+  "provenance": "Event 74101 runs cat WORKFLOW_SPEC__shared.mjs package.json; the first byte starts with the import and the module ends at the newline before the package JSON object. Fixed source is the Git blob at the pinned revision.",
+  "scenario": "Pass --scenario with a JSON compiler config: id, initial, states, on, target, and matchesTrace guard params. Detail values are scalar; every state must be structurally reachable and at least one final state is required."
+}

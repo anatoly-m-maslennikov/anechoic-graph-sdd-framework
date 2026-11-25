@@ -11,12 +11,8 @@ test('browser fetches inline rows while MCP defaults to files', async ({ page })
     if (input?.operation === 'view_fetch') fetched.push(input.arguments);
   });
   await page.goto(url.toString());
-  const editor = page.getByRole('textbox', { name: 'Query editor' });
-  await expect(editor).toBeEditable();
-  await editor.click();
-  await editor.press('ControlOrMeta+A');
-  await editor.pressSequentially('SELECT 42 AS inline_result');
-  await editor.press('Meta+Enter');
+  await replaceSql(page, 'SELECT 42 AS inline_result');
+  await page.getByRole('textbox', { name: 'Query editor' }).press('Meta+Enter');
   await expect(page.getByRole('grid')).toBeVisible();
   await expect(page.getByRole('grid')).toContainText('inline_result');
   await expect(page.getByRole('grid')).toContainText('42');

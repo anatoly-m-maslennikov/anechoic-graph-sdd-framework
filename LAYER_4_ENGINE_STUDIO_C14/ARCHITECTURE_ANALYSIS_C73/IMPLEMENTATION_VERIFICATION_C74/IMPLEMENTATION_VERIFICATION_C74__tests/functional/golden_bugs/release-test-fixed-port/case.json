@@ -1,0 +1,28 @@
+{
+  "title": "Release gate test accepts a configured valid port",
+  "invariant": "The real Project Manifest gate accepts any integer TCP port from 1 through 65535.",
+  "scope": "Historical release verification test_real_project_manifest port assertions; gate-test failure, not a runtime canary. Witness: configured Local Release port 51487.",
+  "analyzer": "analyze.py",
+  "before": {
+    "revision": "2a6cfde60cccfaee85d3972b4abee5f04e0dbfd9",
+    "source": "LAYER_5_FRAMEWORK_DELIVERY/RELEASE_VERSION/RELEASE_VERSION__tests/test_release_inputs.py",
+    "fixture": "before.py.txt",
+    "sha256": "838348318a91a1a73c3ae682093dcabc2dcb77b5254fc5f9be7543266a5781ce"
+  },
+  "fixed": {
+    "revision": "0382528dcd4f350a110b2cb0ac63b5559e781957",
+    "source": "LAYER_5_FRAMEWORK_DELIVERY/RELEASE_VERSION/RELEASE_VERSION__tests/test_release_inputs.py",
+    "fixture": "fixed.py.txt",
+    "sha256": "21189cae0262258b003ebc421bc3220f0015288b6121e77ea658a5d6eaf6be8a"
+  },
+  "checks": [
+    {
+      "file": "before.lean",
+      "stdout_suffix": "true\n"
+    },
+    {
+      "file": "fixed.lean",
+      "stdout_suffix": "false\n"
+    }
+  ]
+}

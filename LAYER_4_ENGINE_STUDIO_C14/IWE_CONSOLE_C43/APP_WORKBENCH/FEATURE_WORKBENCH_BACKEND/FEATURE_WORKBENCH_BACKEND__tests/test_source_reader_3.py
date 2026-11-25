@@ -2,14 +2,12 @@ from __future__ import annotations
 
 from pathlib import Path
 import unittest
-from unittest.mock import patch
 
 
 APP_ROOT = Path(__file__).resolve().parents[3]
 TOOLS_ROOT = APP_ROOT.parent / "FEATURE_PROGRAMMATIC" / "FEATURE_TOOLS"
 
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import write_scope_unit_declarations  # noqa: E402
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND import source_reader_validation  # noqa: E402
 from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__shared import SourceReader  # noqa: E402
 
 
@@ -70,19 +68,15 @@ class SourceReaderTests(SourceReaderFixture, unittest.TestCase):
 
     def test_unchanged_success_reuses_row_but_changed_invalid_source_drops_it(self) -> None:
         path = self._write_atom("MAIN", "02_analysis", "cached.md", atom_id="CA-R-411")
-        with patch.object(
-            source_reader_validation,
-            "parse_carrier",
-            wraps=source_reader_validation.parse_carrier,
-        ) as parse:
+        with self.source_reads() as reads:
             atoms, _scopes, stderr = self._capture()
-            first_calls = parse.call_count
+            first_calls = reads.count(path.resolve())
             self.assertEqual(stderr, "")
             self.assertGreater(first_calls, 0)
 
             atoms_again, _scopes_again, stderr_again = self._capture()
             self.assertEqual(stderr_again, "")
-            self.assertEqual(parse.call_count, first_calls)
+            self.assertEqual(first_calls, reads.count(path.resolve()))
             self.assertIn(path.relative_to(self.root).as_posix(), {row["source_path"] for row in atoms_again})
 
             path.write_text(
@@ -93,7 +87,7 @@ class SourceReaderTests(SourceReaderFixture, unittest.TestCase):
             changed_atoms, _scopes_changed, changed_stderr = self._capture()
             self.assertNotIn(path.relative_to(self.root).as_posix(), {row["source_path"] for row in changed_atoms})
             self.assertIn(path.relative_to(self.root).as_posix(), changed_stderr)
-            self.assertEqual(parse.call_count, first_calls + 1)
+            self.assertEqual(first_calls + 1, reads.count(path.resolve()))
             self.assertEqual(self.reader.excluded_count, 1)
 
             path.write_text(
@@ -103,7 +97,7 @@ class SourceReaderTests(SourceReaderFixture, unittest.TestCase):
             )
             repaired_atoms, _scopes_repaired, repaired_stderr = self._capture()
 
-            self.assertEqual(parse.call_count, first_calls + 2)
+            self.assertEqual(first_calls + 2, reads.count(path.resolve()))
         self.assertEqual(repaired_stderr, "")
         self.assertEqual(next(row["version"] for row in repaired_atoms if row["id"] == "CA-R-411"), 3)
         self.assertEqual(self.reader.excluded_count, 0)
@@ -111,32 +105,25 @@ class SourceReaderTests(SourceReaderFixture, unittest.TestCase):
 
     def test_release_cache_reparses_successes_but_keeps_failed_signatures(self) -> None:
         valid = self._write_atom("MAIN", "01_concern", "valid.md", atom_id="CA-R-415")
-        invalid = self._path("MAIN", "04_requirement", "CA-R-416-bad.md")
+        invalid = self._path("MAIN", "02_analysis", "CA-R-416-bad.md")
         invalid.write_text(
             "---\natom_id: CA-R-416\natom_id: CA-R-417\nrole: Requirement\n"
             "form: Definition\nstatus: Active\nversion: 1\n---\n# Summary\nBad\n",
             encoding="utf-8",
         )
 
-        with patch.object(
-            source_reader_validation,
-            "parse_carrier",
-            wraps=source_reader_validation.parse_carrier,
-        ) as parse:
+        with self.source_reads() as reads:
             atoms, _scopes, first_stderr = self._capture()
-            first_call_count = len(parse.call_args_list)
+            first_call_count = len(reads)
             self.assertIn(valid.relative_to(self.root).as_posix(), {row["source_path"] for row in atoms})
             self.assertIn(invalid.relative_to(self.root).as_posix(), first_stderr)
 
             self.reader.release_cache()
             atoms_again, _scopes_again, second_stderr = self._capture()
 
-            second_parsed_paths = {
-                Path(call.args[1]).resolve()
-                for call in parse.call_args_list[first_call_count:]
-            }
-            self.assertIn(valid.resolve(), second_parsed_paths)
-            self.assertNotIn(invalid.resolve(), second_parsed_paths)
+            second_reads = reads[first_call_count:]
+            self.assertIn(valid.resolve(), second_reads)
+            self.assertNotIn(invalid.resolve(), second_reads)
             self.assertIn(valid.relative_to(self.root).as_posix(), {row["source_path"] for row in atoms_again})
             self.assertNotIn(invalid.relative_to(self.root).as_posix(), {row["source_path"] for row in atoms_again})
             self.assertEqual(second_stderr, "")

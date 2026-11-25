@@ -1,9 +1,15 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, replace
-from typing import Mapping
+from dataclasses import replace
+from typing import Annotated, Mapping
 
-@dataclass(frozen=True)
+from pydantic import ConfigDict, ValidatorFunctionWrapHandler, WrapValidator
+from pydantic.dataclasses import dataclass
+
+
+_STRICT = ConfigDict(strict=True, extra="forbid")
+
+@dataclass(frozen=True, config=_STRICT)
 class GrammarSource:
     """One stable current grammar source selector, without observed evidence."""
 
@@ -11,7 +17,7 @@ class GrammarSource:
     path: str
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, config=_STRICT)
 class GrammarPin:
     """One immutable source pin supporting a grammar profile."""
 
@@ -21,7 +27,7 @@ class GrammarPin:
     sha256: str
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, config=_STRICT)
 class SubjectProfile:
     """Immutable syntax and declared grammar sources for one explicit profile."""
 
@@ -31,7 +37,7 @@ class SubjectProfile:
     grammar_pins: tuple[GrammarSource | GrammarPin, ...]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, config=_STRICT)
 class Span:
     """Half-open character offsets in the supplied Subject text."""
 
@@ -39,73 +45,80 @@ class Span:
     end: int
 
 
-@dataclass(frozen=True)
+def _validate_selector(
+    value: Mapping[str, str], validate: ValidatorFunctionWrapHandler,
+) -> Mapping[str, str]:
+    validate(value)
+    return value
+
+
+@dataclass(frozen=True, config=_STRICT)
 class InitialAtomSelector:
     """The syntax-only initial ``atom(...)`` component of an approved Subject."""
 
     literal: str
-    selector: Mapping[str, str]
+    selector: Annotated[Mapping[str, str], WrapValidator(_validate_selector)]
     entity_type_term: str = "Atom"
     span: Span | None = None
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, config=_STRICT)
 class Name:
     value: str
     span: Span
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, config=_STRICT)
 class ValueLiteral:
     value: str
     span: Span
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, config=_STRICT)
 class FormatReference:
     value: str
     span: Span
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, config=_STRICT)
 class Cardinality:
     minimum: int
     maximum: int | None
     span: Span
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, config=_STRICT)
 class Qualification:
     relative_path: Path
     span: Span
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, config=_STRICT)
 class DeclaredReference:
     entity: Name | Path
     span: Span
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, config=_STRICT)
 class SelectionGroup:
     members: tuple[Path | RelationChain, ...]
     span: Span
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, config=_STRICT)
 class SelectionSuffix:
     value: str
     span: Span
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, config=_STRICT)
 class PathStep:
     operator: str
     operand: Name | ValueLiteral | Qualification | DeclaredReference | Path | RelationChain | SelectionGroup | SelectionSuffix
     span: Span
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, config=_STRICT)
 class Path:
     head: Name | InitialAtomSelector | DeclaredReference | Path | RelationChain | SelectionGroup
     steps: tuple[PathStep, ...]
@@ -114,7 +127,7 @@ class Path:
     span: Span
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, config=_STRICT)
 class RelationLink:
     operator: str
     relation_type: Name | None
@@ -123,14 +136,14 @@ class RelationLink:
     span: Span
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, config=_STRICT)
 class RelationChain:
     endpoints: tuple[Path, ...]
     links: tuple[RelationLink, ...]
     span: Span
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, config=_STRICT)
 class ParsedSubject:
     source: str
     expression: Path | RelationChain

@@ -10,7 +10,6 @@ from pathlib import Path
 from unittest.mock import patch
 
 from ORCHESTRATOR_beta_C68 import ORCHESTRATOR_beta_C68__shared as module
-from ORCHESTRATOR_beta_C68.warm_worker import request
 
 
 class ColdWorker:
@@ -49,16 +48,28 @@ def broker(socket_path, requests, response):
 
 
 class WarmWorkerTests(unittest.TestCase):
+    def setUp(self):
+        model = patch("ORCHESTRATOR_beta_C68.generation_worker.read_accepted_model", return_value=None)
+        model.start()
+        self.addCleanup(model.stop)
+
     def test_deadline_free_acceptance_preserves_next_reply(self):
-        with tempfile.TemporaryDirectory() as directory:
+        with tempfile.TemporaryDirectory(prefix="ane-warm-", dir="/tmp") as directory:
             socket_path = str(Path(directory) / "broker")
+            binding = {"root": directory, "control_root": "control", "manifest_path": "manifest",
+                       "manifest_sha256": "a" * 64, "project_prefix": "AN"}
+            jobs = module.GenerationJobs("test", binding, "unused", worker_socket=socket_path, worker_load_seconds=1)
+            path = "control/__TKT/AN-T-1--task.md"
+            reuse = {"base_generation": "old"}
+            result = reuse | {"snapshot": {}, "snapshot_sha256": "hash",
+                              "paths": [["control/__TKT", "AN-T-1--task.md"]]}
             requests = []
-            response = b'{"accepted":true,"pid":123}\n{"result":{"ok":true}}\n'
+            response = b'{"accepted":true,"pid":123}\n' + json.dumps({"result": result}).encode() + b"\n"
             thread = broker(socket_path, requests, response)
             with patch.dict(os.environ, ANECHOIC_TEST_IMAGE_DEADLINES="0"):
-                self.assertEqual({"ok": True}, request(
-                    socket_path, 0, {}, {}, [], lambda _: True))
+                self.assertEqual(result, jobs._run_worker(directory, reuse, [path]))
             thread.join(1)
+            self.assertEqual("warm", jobs.worker_mode)
             self.assertIsNone(requests[0]["start_by"])
 
     def test_delta_status_reports_count_and_phase_times(self):
@@ -93,6 +104,26 @@ class WarmWorkerTests(unittest.TestCase):
             self.assertEqual("cold", jobs.worker_mode)
             self.assertEqual(paths, json.loads(communicate.call_args.args[0])["paths"])
             process.assert_called_once()
+
+    def test_full_reply_retains_closed_witness_and_deferred_shapes(self):
+        with tempfile.TemporaryDirectory() as directory:
+            binding = {"root": directory, "control_root": "control", "manifest_path": "manifest",
+                       "manifest_sha256": "a" * 64, "project_prefix": "AN"}
+            jobs = module.GenerationJobs("test", binding, "unused")
+            witness = {"inputs": {"manifest": "m"}, "graph_config": None, "endpoints": {}}
+            deferred = {"roots": ["control/09_archived"], "snapshot": {"atoms": []},
+                        "carrier_hashes": {}, "endpoints": {}}
+            reply = {"snapshot": {"atoms": []}, "receipt": {}, "graph": None,
+                     "reuse": witness, "carrier_hashes": {}, "deferred_archive": deferred}
+            with patch.object(jobs, "_communicate_worker", return_value=json.dumps(reply)):
+                self.assertEqual(reply, jobs._run_worker(directory, None, None, foreground=True))
+            invalid = ((reply | {"reuse": witness | {"extra": 1}}, "Worker returned invalid generation reuse witness"),
+                       (reply | {"deferred_archive": deferred | {"roots": {}}}, "Worker returned invalid deferred archive input"),
+                       (reply | {"extra": 1}, "Worker returned invalid generation"))
+            for value, message in invalid:
+                with self.subTest(message=message), patch.object(jobs, "_communicate_worker", return_value=json.dumps(value)):
+                    with self.assertRaisesRegex(ValueError, message):
+                        jobs._run_worker(directory, None, None, foreground=True)
 
     def test_accept_and_fallbacks(self):
         with tempfile.TemporaryDirectory() as directory:

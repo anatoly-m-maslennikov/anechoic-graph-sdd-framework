@@ -2,8 +2,21 @@
 
 from pathlib import Path
 import shutil
+import yaml
+
+from .workbench_docker_support import (
+    defer_container_cleanup as defer_container_cleanup,
+    docker_deadline_env as docker_deadline_env,
+    image_mcp_transport as image_mcp_transport,
+    image_timeout as image_timeout,
+    observing as observing,
+    request as request,
+)
 
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import select_runtime_project
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__tests.packaged_image_fixture__pub import (
+    packaged_identity_reader as packaged_identity_reader,
+)
 
 ROOT = Path(__file__).resolve().parents[4]
 CONTROL = '_anechoic_anechoic'
@@ -30,3 +43,19 @@ def project(root):
     for relative in selection.parameters['runtime']['workbench']['import_graph'].get('python_roots', ()):
         (root / relative).mkdir(parents=True, exist_ok=True)
     return selection
+
+
+def write_manifest(_case, control, *, name="Anechoic", prefix="AN", component="C00", parameters=None):
+    path = control / f"{prefix}-S-001-PROJECT_MANIFEST--declare.md"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    header = {"identity": {"atom_id": f"{prefix}-S-001"},
+              "context": {"container": {"component": component}, "tier": -1,
+                          "template": "project_manifest"},
+              "state": {"status": "active", "version": 1}}
+    runtime = f", parameters={parameters!r}" if parameters is not None else ""
+    path.write_text(f"---\n{yaml.safe_dump(header)}---\n\n## Claim\n\n### Formal Claim\n\n```python\n"
+                    "from anechoic.formal_claims import declare_entity\n"
+                    "from anechoic.model import ProjectManifest\n"
+                    f"declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name={name!r}, "
+                    f"prefix={prefix!r}{runtime}))\n```\n", encoding="utf-8")
+    return path

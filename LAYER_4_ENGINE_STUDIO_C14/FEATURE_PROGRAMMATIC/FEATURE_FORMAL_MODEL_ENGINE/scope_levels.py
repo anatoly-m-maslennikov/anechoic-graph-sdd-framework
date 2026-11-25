@@ -1,10 +1,12 @@
 """Evaluate a reviewed level Claim against explicitly declared Scope Unit data."""
 
-from dataclasses import dataclass
 from functools import cache
 
+from pydantic import ConfigDict
+from pydantic.dataclasses import dataclass
 
-@dataclass(frozen=True)
+
+@dataclass(frozen=True, config=ConfigDict(strict=True, extra="forbid"))
 class ScopeUnit:
     structural_level: int | None
     container: "ScopeUnit | None"

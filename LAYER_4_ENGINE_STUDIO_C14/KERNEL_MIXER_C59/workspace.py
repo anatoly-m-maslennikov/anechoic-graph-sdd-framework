@@ -9,6 +9,28 @@ from pathlib import Path
 from typing import Any
 import uuid
 
+from pydantic import BaseModel, ConfigDict, Field
+
+
+class WorkspaceView(BaseModel):
+    model_config = ConfigDict(strict=True, extra="allow")
+
+    id: str
+    sql: str
+    cursor_position: int
+    revision: int
+    name: str | None = None
+    result: dict[str, Any] | None = None
+
+
+class WorkspaceDocument(BaseModel):
+    model_config = ConfigDict(strict=True, extra="allow")
+
+    workspace_id: str
+    project_root: str
+    active_view_id: str
+    views: list[WorkspaceView] = Field(min_length=1)
+
 
 class WorkspaceStore:
     """Own one Project's small Workspace documents, never query-result rows."""
@@ -46,66 +68,67 @@ class WorkspaceStore:
     def _path(self, workspace_id: str) -> Path:
         return self._directory / f"{hashlib.sha256(workspace_id.encode()).hexdigest()}.json"
 
-    def _write(self, document: dict[str, Any]) -> None:
+    def _write(self, document: WorkspaceDocument) -> None:
+        exclude = None
         if self._transient_results:
-            document = dict(document, views=[dict(view) for view in document["views"]])
-            for view in document["views"]:
-                key = (document["workspace_id"], view["id"])
-                result = view.pop("result", None)
-                if result is None:
+            exclude = {"views": {"__all__": {"result"}}}
+            for view in document.views:
+                key = (document.workspace_id, view.id)
+                if view.result is None:
                     self._results.pop(key, None)
                 else:
-                    self._results[key] = result
+                    self._results[key] = view.result
         self._directory.mkdir(parents=True, exist_ok=True)
-        path = self._path(document["workspace_id"])
+        path = self._path(document.workspace_id)
         temporary = path.with_suffix(".tmp")
-        temporary.write_text(json.dumps(document, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+        value = document.model_dump(exclude_unset=True, exclude=exclude)
+        temporary.write_text(json.dumps(value, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
         temporary.replace(path)
 
-    def _read(self, workspace_id: object) -> dict[str, Any]:
+    def _read(self, workspace_id: object) -> WorkspaceDocument:
         value = self.text(workspace_id, "workspace_id")
         assert isinstance(value, str)
         try:
-            document = json.loads(self._path(value).read_text(encoding="utf-8"))
+            document = WorkspaceDocument.model_validate_json(self._path(value).read_bytes())
         except FileNotFoundError as error:
             raise ValueError("unknown workspace_id") from error
-        except (OSError, UnicodeError, json.JSONDecodeError) as error:
+        except (OSError, ValueError) as error:
             raise ValueError("workspace is unavailable") from error
-        if not isinstance(document, dict) or document.get("workspace_id") != value or not isinstance(document.get("views"), list) or not document["views"]:
+        if document.workspace_id != value:
             raise ValueError("workspace is unavailable")
         if self._transient_results:
-            for view in document["views"]:
-                view.pop("result", None)
-                result = self._results.get((value, view.get("id")))
-                if result is not None:
-                    view["result"] = dict(result)
+            for view in document.views:
+                result = self._results.get((value, view.id))
+                view.result = dict(result) if result is not None else None
+                if result is None:
+                    view.model_fields_set.discard("result")
         return document
 
     @staticmethod
-    def _view(document: dict[str, Any], view_id: object) -> dict[str, Any]:
+    def _view(document: WorkspaceDocument, view_id: object) -> WorkspaceView:
         if not isinstance(view_id, str) or not view_id:
             raise ValueError("view_id must be a non-empty string")
-        for view in document["views"]:
-            if isinstance(view, dict) and view.get("id") == view_id:
+        for view in document.views:
+            if view.id == view_id:
                 return view
         raise ValueError("unknown view_id")
 
     @staticmethod
-    def _public_view(view: dict[str, Any], sql: bool) -> dict[str, Any]:
-        value = {key: view[key] for key in ("id", "cursor_position", "revision")}
-        if "name" in view:
-            value["name"] = view["name"]
+    def _public_view(view: WorkspaceView, sql: bool) -> dict[str, Any]:
+        value = {"id": view.id, "cursor_position": view.cursor_position, "revision": view.revision}
+        if "name" in view.model_fields_set:
+            value["name"] = view.name
         if sql:
-            value["sql"] = view["sql"]
-        if "result" in view:
-            value["result"] = dict(view["result"])
+            value["sql"] = view.sql
+        if view.result is not None:
+            value["result"] = dict(view.result)
         return value
 
-    def _state(self, document: dict[str, Any]) -> dict[str, Any]:
+    def _state(self, document: WorkspaceDocument) -> dict[str, Any]:
         return {
-            "workspace_id": document["workspace_id"], "project_root": document["project_root"],
-            "active_view_id": document["active_view_id"],
-            "views": [self._public_view(view, True) for view in document["views"]],
+            "workspace_id": document.workspace_id, "project_root": document.project_root,
+            "active_view_id": document.active_view_id,
+            "views": [self._public_view(view, True) for view in document.views],
         }
 
     def open(self, session_id: object) -> dict[str, Any]:
@@ -116,8 +139,8 @@ class WorkspaceStore:
             if str(error) != "unknown workspace_id":
                 raise
         view_id = str(uuid.uuid7())
-        document = {"workspace_id": workspace_id, "project_root": str(self._root), "active_view_id": view_id,
-                    "views": [{"id": view_id, "sql": "", "cursor_position": 0, "revision": 0}]}
+        document = WorkspaceDocument(workspace_id=workspace_id, project_root=str(self._root), active_view_id=view_id,
+                                     views=[WorkspaceView(id=view_id, sql="", cursor_position=0, revision=0)])
         self._write(document)
         return self._state(document)
 
@@ -142,50 +165,44 @@ class WorkspaceStore:
             raise ValueError("position must be first or last")
         document = self._read(workspace_id)
         view_id = str(uuid.uuid7())
-        view: dict[str, Any] = {"id": view_id, "sql": "", "cursor_position": 0, "revision": 0}
+        view = WorkspaceView(id=view_id, sql="", cursor_position=0, revision=0)
         value = self.text(name, "name", required=False)
         if value is not None and value.strip():
-            view["name"] = value
-        document["views"].insert(0 if position == "first" else len(document["views"]), view)
-        document["active_view_id"] = view_id
+            view.name = value
+        document.views.insert(0 if position == "first" else len(document.views), view)
+        document.active_view_id = view_id
         self._write(document)
         return self._state(document) | {"view_id": view_id}
 
     def duplicate(self, workspace_id: object, view_id: object) -> dict[str, Any]:
         document = self._read(workspace_id)
         source = self._view(document, view_id)
-        source_index = document["views"].index(source)
+        source_index = document.views.index(source)
         display_names = {
-            view.get("name") if isinstance(view.get("name"), str) and view["name"].strip()
-            else f"View {index + 1}"
-            for index, view in enumerate(document["views"])
+            view.name if view.name and view.name.strip() else f"View {index + 1}"
+            for index, view in enumerate(document.views)
         }
-        base_name = source.get("name") if isinstance(source.get("name"), str) and source["name"].strip() else f"View {source_index + 1}"
+        base_name = source.name if source.name and source.name.strip() else f"View {source_index + 1}"
         suffix = 1
         while f"{base_name}({suffix})" in display_names:
             suffix += 1
         view_id = str(uuid.uuid7())
-        duplicate = {
-            "id": view_id,
-            "sql": source["sql"],
-            "cursor_position": source["cursor_position"],
-            "revision": 0,
-            "name": f"{base_name}({suffix})",
-        }
-        document["views"].insert(source_index + 1, duplicate)
-        document["active_view_id"] = view_id
+        duplicate = WorkspaceView(id=view_id, sql=source.sql, cursor_position=source.cursor_position,
+                                  revision=0, name=f"{base_name}({suffix})")
+        document.views.insert(source_index + 1, duplicate)
+        document.active_view_id = view_id
         self._write(document)
         return self._state(document) | {"view_id": view_id}
 
     def list_views(self, workspace_id: object) -> dict[str, Any]:
         document = self._read(workspace_id)
-        return {"workspace_id": document["workspace_id"], "active_view_id": document["active_view_id"],
-                "views": [self._public_view(view, False) for view in document["views"]]}
+        return {"workspace_id": document.workspace_id, "active_view_id": document.active_view_id,
+                "views": [self._public_view(view, False) for view in document.views]}
 
     def get_view(self, workspace_id: object, view_id: object) -> dict[str, Any]:
         document = self._read(workspace_id)
         view = self._view(document, view_id)
-        return {"workspace_id": document["workspace_id"], "view_id": view["id"]} | self._public_view(view, True)
+        return {"workspace_id": document.workspace_id, "view_id": view.id} | self._public_view(view, True)
 
     def update(
         self, workspace_id: object, view_id: object, sql: object,
@@ -196,18 +213,19 @@ class WorkspaceStore:
             raise ValueError("sql must be a string")
         document = self._read(workspace_id)
         view = self._view(document, view_id)
-        if view["revision"] != self.revision(expected_revision):
+        if view.revision != self.revision(expected_revision):
             raise ValueError("expected_revision does not match")
-        view["sql"], view["revision"] = text, view["revision"] + 1
+        view.sql, view.revision = text, view.revision + 1
         if cursor is not None:
-            view["cursor_position"] = self.cursor(cursor)
+            view.cursor_position = self.cursor(cursor)
         self._write(document)
         return self.get_view(workspace_id, view_id)
 
     @staticmethod
-    def _clear(view: dict[str, Any]) -> str | None:
-        result = view.pop("result", None)
-        query_id = result.get("query_id") if isinstance(result, dict) else None
+    def _clear(view: WorkspaceView) -> str | None:
+        query_id = view.result.get("query_id") if view.result is not None else None
+        view.result = None
+        view.model_fields_set.discard("result")
         return query_id if isinstance(query_id, str) else None
 
     def clear_result(self, workspace_id: object, view_id: object) -> tuple[dict[str, Any], str | None]:
@@ -219,7 +237,7 @@ class WorkspaceStore:
 
     def set_result(self, workspace_id: object, view_id: object, result: dict[str, Any]) -> dict[str, Any]:
         document = self._read(workspace_id)
-        self._view(document, view_id)["result"] = result
+        self._view(document, view_id).result = result
         self._write(document)
         return self.get_view(workspace_id, view_id)
 
@@ -233,11 +251,11 @@ class WorkspaceStore:
         if not self._directory.is_dir() or not replacements:
             return
         for path in self._directory.glob("*.json"):
-            document = json.loads(path.read_text(encoding="utf-8"))
+            document = WorkspaceDocument.model_validate_json(path.read_bytes())
             changed = False
-            for view in document["views"]:
-                result = view.get("result") if isinstance(view, dict) else None
-                if isinstance(result, dict) and result.get("query_id") in replacements:
+            for view in document.views:
+                result = view.result
+                if result is not None and result.get("query_id") in replacements:
                     result.update(replacements[result["query_id"]])
                     changed = True
             if changed:
@@ -245,9 +263,9 @@ class WorkspaceStore:
 
     def focus(self, workspace_id: object, view_id: object) -> dict[str, str]:
         document = self._read(workspace_id)
-        document["active_view_id"] = self._view(document, view_id)["id"]
+        document.active_view_id = self._view(document, view_id).id
         self._write(document)
-        return {"workspace_id": document["workspace_id"], "active_view_id": document["active_view_id"]}
+        return {"workspace_id": document.workspace_id, "active_view_id": document.active_view_id}
 
     def rename(self, workspace_id: object, view_id: object, name: object) -> dict[str, Any]:
         value = self.text(name, "name", required=False)
@@ -255,22 +273,21 @@ class WorkspaceStore:
             raise ValueError("name must be a string")
         document = self._read(workspace_id)
         view = self._view(document, view_id)
-        if value.strip():
-            view["name"] = value
-        else:
-            view.pop("name", None)
+        view.name = value if value.strip() else None
+        if view.name is None:
+            view.model_fields_set.discard("name")
         self._write(document)
         return self.get_view(workspace_id, view_id)
 
     def remove(self, workspace_id: object, view_id: object) -> tuple[dict[str, Any], str | None]:
         document = self._read(workspace_id)
-        if len(document["views"]) == 1:
+        if len(document.views) == 1:
             raise ValueError("cannot remove the last view")
         view = self._view(document, view_id)
         prior = self._clear(view)
-        document["views"].remove(view)
-        if document["active_view_id"] == view["id"]:
-            document["active_view_id"] = document["views"][0]["id"]
+        document.views.remove(view)
+        if document.active_view_id == view.id:
+            document.active_view_id = document.views[0].id
         self._write(document)
         return self.list_views(workspace_id), prior
 
@@ -282,12 +299,9 @@ class WorkspaceStore:
             return
         for path in self._directory.glob("*.json"):
             try:
-                document = json.loads(path.read_text(encoding="utf-8"))
-                if not isinstance(document, dict) or not isinstance(document.get("views"), list):
-                    continue
-                for view in document["views"]:
-                    if isinstance(view, dict):
-                        view.pop("result", None)
+                document = WorkspaceDocument.model_validate_json(path.read_bytes())
+                for view in document.views:
+                    self._clear(view)
                 self._write(document)
-            except (OSError, TypeError, UnicodeError, json.JSONDecodeError):
+            except (OSError, TypeError, ValueError):
                 continue

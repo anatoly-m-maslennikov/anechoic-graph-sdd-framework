@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from pydantic.dataclasses import dataclass
 import re
 import sys
 import time
@@ -29,7 +29,7 @@ def _query_failure(error: Exception) -> str:
     return "query failed during execution"
 
 
-@dataclass
+@dataclass(config={"strict": True, "extra": "forbid", "hide_input_in_errors": True})
 class _Result:
     columns: list[dict[str, Any]]
     row_count: int
@@ -207,17 +207,21 @@ class QueryResults:
                     continue
                 if not old.dependencies_unknown and not affected_tables.intersection(old.dependencies):
                     continue
-            new_id, result = self._materialize(old.sql, old.preview, admitted=True, source=old)
-            result.created_at, result.pinned, result.released = old.created_at, old.pinned, old.released
-            self._connection.execute(f"DROP TABLE workbench_results.{quote_identifier(old.table_name)}")
-            self._connection.execute(
-                f"ALTER TABLE workbench_results.{quote_identifier(result.table_name)} "
-                f"RENAME TO {quote_identifier(old.table_name)}"
-            )
-            result.table_name = old.table_name
+            new_id, result = self._stage_result_replacement(old)
             staged[old_id] = (new_id, result)
             affected_tables.add(old.table_name)
         return staged
+
+    def _stage_result_replacement(self, old: _Result) -> tuple[str, _Result]:
+        new_id, result = self._materialize(old.sql, old.preview, admitted=True, source=old)
+        result.created_at, result.pinned, result.released = old.created_at, old.pinned, old.released
+        self._connection.execute(f"DROP TABLE workbench_results.{quote_identifier(old.table_name)}")
+        self._connection.execute(
+            f"ALTER TABLE workbench_results.{quote_identifier(result.table_name)} "
+            f"RENAME TO {quote_identifier(old.table_name)}"
+        )
+        result.table_name = old.table_name
+        return new_id, result
 
     def commit_result_rebuild(self, staged: dict[str, tuple[str, _Result]]) -> dict[str, dict[str, Any]]:
         """Publish staged bookkeeping only after the caller commits SQL."""

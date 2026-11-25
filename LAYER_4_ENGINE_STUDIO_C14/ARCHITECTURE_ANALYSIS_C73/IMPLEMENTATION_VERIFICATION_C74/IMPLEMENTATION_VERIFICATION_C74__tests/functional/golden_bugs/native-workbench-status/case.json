@@ -1,0 +1,19 @@
+{
+  "title": "Native Workbench status admission and dispatch",
+  "invariant": "The registered workbench_status tool is admitted by the native gateway and dispatched to an available native owner status method.",
+  "scope": "Single native Project, registered workbench_status and no explicit blacklist. The model covers tool admission and native status dispatch, not live project startup or HTTP transport.",
+  "before": {
+    "revision": "8163998b5dcf9d6b96c38fdc7d2f3b25e5bcf1c4",
+    "source": "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MCP/direct_gateway.py",
+    "fixture": "before.py.txt",
+    "sha256": "21edd4a96786eba9279165bfa0856ad624913b889ef01a9b41e4844b08e40cd2"
+  },
+  "fixed": {
+    "revision": "65897c1f7aacd2ecd31eff88bf34de60e7405792",
+    "source": "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MCP/direct_gateway.py",
+    "fixture": "fixed.py.txt",
+    "sha256": "3df38d97c588acd8780ae54a88923ee9cc600da33ee5ad2cad1e403a8ec75f8e"
+  },
+  "checks": [{"file": "check.lean"}],
+  "analyzer": "analyze.py"
+}

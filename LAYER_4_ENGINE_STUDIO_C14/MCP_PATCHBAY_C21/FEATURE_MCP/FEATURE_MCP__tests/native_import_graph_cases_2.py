@@ -14,7 +14,7 @@ from starlette.applications import Starlette
 from . import test_native_query_stdio as fixture
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import read_import_sources
 from .native_query_test_support import create_native_gateway
-from MCP_PATCHBAY_C21.FEATURE_MCP.workbench_web import routes
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import workbench_routes as routes
 
 
 class ImportGraphCases2:

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import copy
 import json
+import os
 import sys
 import tempfile
 import unittest
@@ -15,8 +16,9 @@ TOOLS = Path(__file__).resolve().parents[2]
 PROJECT = Path(__file__).resolve().parents[5]
 sys.path.insert(0, str(TOOLS))
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30 import journal_settings__pub as journal_settings  # noqa: E402
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30 import work_journal__pub as journal  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (  # noqa: E402
+    append_record, append_sealed_events, configured_journal_root, journal_inbox, journal_storage,
+)
 
 
 def read_records(directory: Path) -> list[object]:
@@ -45,7 +47,7 @@ class PlainJournalTests(unittest.TestCase):
         self.directory = control / "_journal"
 
     def append(self, rows: list[object]) -> list[dict]:
-        return journal.append_sealed_events(self.root, rows, **self.partition)
+        return append_sealed_events(self.root, rows, **self.partition)
 
     def test_append_and_read_preserve_input_order_and_content(self) -> None:
         rows = [{"custom": "first\nline", "nested": ["Ω", {"value": 7}]}, {"custom": "second"}]
@@ -67,28 +69,28 @@ class PlainJournalTests(unittest.TestCase):
         (self.root / ".anechoic_anechoic").rename(visible)
         settings = visible / "anechoic_project_settings.toml"
         settings.write_text(settings.read_text().replace(".anechoic_anechoic", "_anechoic_anechoic"))
-        self.assertEqual(Path("_anechoic_anechoic/_journal"), journal_settings.configured_journal_root(self.root))
+        self.assertEqual(Path("_anechoic_anechoic/_journal"), configured_journal_root(self.root))
         self.append([{"visible": True}])
         self.assertEqual([{"visible": True}], read_records(visible / "_journal"))
         other = self.root / ".anechoic_other"
         other.mkdir()
         (other / "anechoic_project_settings.toml").write_text('[paths]\ncontrol_root = ".anechoic_other"\n')
         with self.assertRaisesRegex(RuntimeError, "missing or ambiguous"):
-            journal_settings.configured_journal_root(self.root)
+            configured_journal_root(self.root)
         self.assertEqual(Path("_anechoic_anechoic/_journal"),
-                         journal_settings.configured_journal_root(self.root, control_root="_anechoic_anechoic"))
+                         configured_journal_root(self.root, control_root="_anechoic_anechoic"))
 
     def test_storage_setting_defaults_and_validation(self) -> None:
-        self.assertEqual("files", journal_settings.journal_storage({}))
-        self.assertEqual("duckdb", journal_settings.journal_storage({"runtime": {"journal": {"storage": "duckdb"}}}))
+        self.assertEqual("files", journal_storage({}))
+        self.assertEqual("duckdb", journal_storage({"runtime": {"journal": {"storage": "duckdb"}}}))
         for value in (None, "invalid", [], {}):
             with self.subTest(value=value), self.assertRaises(ValueError):
-                journal_settings.journal_storage({"runtime": {"journal": {"storage": value}}})
+                journal_storage({"runtime": {"journal": {"storage": value}}})
 
     def test_disk_inbox_keeps_duplicate_records_in_order(self) -> None:
         rows = [{"value": 1}, {"value": 1}, {"value": 2}]
-        receipts = journal.append_sealed_events(self.root, rows, **self.partition, storage="duckdb")
-        inbox = journal.journal_inbox(self.root)
+        receipts = append_sealed_events(self.root, rows, **self.partition, storage="duckdb")
+        inbox = journal_inbox(self.root)
         files = sorted(inbox.glob("*.json"))
         self.assertEqual([receipt["record_id"] for receipt in receipts], [path.stem for path in files])
         self.assertEqual(rows, [json.loads(path.read_text())["event"] for path in files])
@@ -107,18 +109,29 @@ class PlainJournalTests(unittest.TestCase):
         outside = self.root / "outside"
         outside.mkdir()
         (self.root / ".anechoic_runtime").symlink_to(outside, target_is_directory=True)
-        with self.assertRaises(journal.PartialAppendError):
-            journal.append_sealed_events(self.root, [{}], **self.partition, storage="duckdb")
+        with self.assertRaises(OSError) as caught:
+            append_sealed_events(self.root, [{}], **self.partition, storage="duckdb")
+        self.assertEqual("journal-append-incomplete", caught.exception.code)
         self.assertEqual([], list(outside.iterdir()))
 
     def test_disk_failure_reports_completed_receipts(self) -> None:
-        original = journal._append_disk_event
-        with patch.object(journal, "_append_disk_event", side_effect=[original(self.root, 1, "observer", "2026-10-14"),
-                                                                     OSError("failed")]):
-            with self.assertRaises(journal.PartialAppendError) as caught:
-                journal.append_sealed_events(self.root, [1, 2], **self.partition, storage="duckdb")
+        inbox = journal_inbox(self.root)
+        publish = os.rename
+
+        def fail_second_publish(source, destination, **kwargs):
+            if any(inbox.glob("*.json")):
+                raise OSError("failed")
+            return publish(source, destination, **kwargs)
+
+        with patch.object(os, "rename", side_effect=fail_second_publish):
+            with self.assertRaises(OSError) as caught:
+                append_sealed_events(self.root, [1, 2], **self.partition, storage="duckdb")
+        self.assertEqual("journal-append-incomplete", caught.exception.code)
         self.assertEqual(1, len(caught.exception.completed_receipts))
         self.assertEqual(1, caught.exception.uncertain_event_index)
+        records = list(inbox.iterdir())
+        self.assertEqual(1, len(records))
+        self.assertEqual(1, json.loads(records[0].read_text())["event"])
 
     def test_duplicate_rows_and_reused_ids_are_not_filtered(self) -> None:
         row = {"event_id": "same-id", "value": "original", "event_digest": "supplied-value"}
@@ -149,7 +162,7 @@ class PlainJournalTests(unittest.TestCase):
 
     def test_partition_components_stay_inside_selected_journal_directory(self) -> None:
         row = {"author": "team/operator", "value": "unchanged"}
-        locations = journal.append_sealed_events(
+        locations = append_sealed_events(
             self.root, [row], author=row["author"], local_date="2026/10/14", timezone="UTC"
         )
         path = self.root / locations[0]["carrier"]
@@ -185,7 +198,7 @@ class PlainJournalTests(unittest.TestCase):
         old.write_bytes(original)
         rows = [{"occurred_at": "2026-10-14 01:02:03 +0000", "row": number,
                  "custom": ["unchanged", number]} for number in range(1001)]
-        locations = [journal.append_record(self.root, row) for row in rows]
+        locations = [append_record(self.root, row) for row in rows]
         parts = sorted(self.directory.glob("src-work-journal-2026-10-14-part-*.ndjson"))
         self.assertEqual([1000, 1], [len(path.read_bytes().splitlines()) for path in parts])
         self.assertEqual(parts[0], locations[999])
@@ -211,9 +224,9 @@ class PlainJournalTests(unittest.TestCase):
 
     def test_legacy_append_reports_fsync_failure_after_writing_unchanged_row(self) -> None:
         row = {"occurred_at": "2026-10-14 01:02:03 +0000", "unchanged": True}
-        with patch.object(journal.os, "fsync", side_effect=OSError("sync unavailable")):
+        with patch.object(os, "fsync", side_effect=OSError("sync unavailable")):
             with self.assertRaisesRegex(OSError, "sync unavailable"):
-                journal.append_record(self.root, row)
+                append_record(self.root, row)
         self.assertEqual([row], read_records(self.directory))
 
 if __name__ == "__main__":

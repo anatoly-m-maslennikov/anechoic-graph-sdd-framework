@@ -2,7 +2,7 @@
 
 import unittest
 
-from MCP_PATCHBAY_C21.FEATURE_MCP.health_observations import HealthObservations  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import HealthObservations  # noqa: E402
 
 
 class HealthIdentityTests(unittest.TestCase):

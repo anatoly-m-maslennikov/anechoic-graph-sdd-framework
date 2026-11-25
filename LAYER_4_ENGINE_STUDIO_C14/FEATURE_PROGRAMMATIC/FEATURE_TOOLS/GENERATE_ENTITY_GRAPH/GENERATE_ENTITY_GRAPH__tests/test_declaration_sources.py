@@ -10,8 +10,9 @@ TOOL = Path(__file__).resolve().parents[1]
 TOOLS = TOOL.parent
 sys.path[:0] = [str(TOOLS), str(TOOL)]
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.declaration_relations import resolve_relation_authorities  # noqa: E402
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.declaration_sources import compose_declaration_catalog  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import (  # noqa: E402
+    compose_declaration_catalog, resolve_relation_authorities,
+)
 
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__tests.declaration_source_fixtures import refresh_raw, relation_carrier
@@ -99,23 +100,27 @@ class DeclarationSourcesTests(unittest.TestCase):
         self.assertEqual(len(catalog["unresolved"]), 2)
         self.assertTrue(all("owning graph kind" in row["reason"] for row in catalog["unresolved"]))
 
-    def test_scope_does_not_admit_incidental_graph_mention_or_fenced_fake_scope(self):
+    def test_scope_requires_literal_atx_heading_outside_fences(self):
         incidental = relation_carrier("CA-R-901013", "IS_BORNE_BY", "Entities Graph")
         incidental["body"] = (
             "## Scope\n\nIS_BORNE_BY Relation is described here. The check applies to the Entities Graph.\n"
         )
         refresh_raw(incidental)
-        fenced = relation_carrier("CA-R-901014", "IS_BORNE_BY", "Entities Graph")
-        fenced["body"] = (
-            "```markdown\n## Scope\n\nIS_BORNE_BY Relation in the Entities Graph.\n```\n"
-            "## Claim\nReal body without a Scope.\n"
-        )
-        refresh_raw(fenced)
+        carriers = [incidental]
+        for index, body in enumerate((
+            "```markdown\n## Scope\n\nIS_BORNE_BY Relation in the Entities Graph.\n```\n",
+            "Scope\n-----\n\nIS_BORNE_BY Relation in the Entities Graph.\n",
+            "   ## Scope\n\nIS_BORNE_BY Relation in the Entities Graph.\n",
+        ), start=901014):
+            carrier = relation_carrier(f"CA-R-{index}", "IS_BORNE_BY", "Entities Graph")
+            carrier["body"] = body + "## Claim\nReal body without a carrier Scope.\n"
+            refresh_raw(carrier)
+            carriers.append(carrier)
 
-        catalog = compose_declaration_catalog([incidental, fenced])
+        catalog = compose_declaration_catalog(carriers)
 
         self.assertEqual(catalog["relation_types"], [])
-        self.assertEqual(len(catalog["unresolved"]), 2)
+        self.assertEqual(len(catalog["unresolved"]), len(carriers))
 
     def test_approved_relation_identity_resolver_requires_exact_unique_active_definition(self):
         def definition(atom_id):

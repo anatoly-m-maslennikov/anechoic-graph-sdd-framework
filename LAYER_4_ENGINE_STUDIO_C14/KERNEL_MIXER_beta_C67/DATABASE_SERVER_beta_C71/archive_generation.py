@@ -1,13 +1,14 @@
 """Admit the deferred Archived population without replacing live rows."""
 import json
+from pathlib import PurePosixPath
 
 import duckdb
 from starlette.responses import JSONResponse
 
 from .carrier_checkpoint import read_checkpoint, update_checkpoint
 from .generation import GenerationBaseChanged, _digest
-from .ingestion_issues import clear_issues
-from .native_atoms import stage_atom_rows, validate_native_snapshot, write_staged_atoms
+from .ingestion_issues import archive_path, clear_archive_failure, duplicate_dependencies, replace_issues
+from .native_atoms import DuplicateNativeAtom, stage_atom_rows, validate_native_snapshot, write_staged_atoms
 from .native_delta import DeltaReconciliationRequired, _inverse, _validate_edges, apply_native_delta
 from .native_graph import replace_native_graph
 from .realization_projection import has_table, restore_property_graph
@@ -37,7 +38,7 @@ def change_archive_pending(connection, base, pending):
             raise ValueError("Archive transition requires a retained carrier checkpoint")
         set_archive_pending(connection, pending)
         if not pending:
-            clear_issues(connection, "archive")
+            clear_archive_failure(connection)
         connection.execute("COMMIT")
         return row[0]
     except BaseException:
@@ -49,28 +50,52 @@ def _validate_archive(connection, data, manifest_sha256, model, *, replacing):
     snapshot = data["snapshot"]
     if _digest(snapshot) != data["snapshot_sha256"]:
         raise ValueError("Archive snapshot digest mismatch")
-    validate_native_snapshot(snapshot, manifest_sha256)
-    if any(row["status_group"] != "Archived" for row in snapshot["atoms"]):
+    bindings = json.loads(model)["bindings"]
+    try:
+        atoms, relations = validate_native_snapshot(snapshot, manifest_sha256, bindings)
+    except DuplicateNativeAtom as error:
+        raise DeltaReconciliationRequired("Archive snapshot contains a duplicate Atom group") from error
+    if any(row.status_group != "Archived" for row in atoms):
         raise ValueError("Archive admission accepts only Archived Atoms")
     if snapshot.get("spec_sizes") or snapshot.get("lifecycle_lenses"):
         raise ValueError("Archive admission cannot replace live projections")
-    inverse = _inverse(model, snapshot["relation_types"])
+    inverse = _inverse(bindings, snapshot["relation_types"])
     keys = ("source_kind", "source_ref", "target_kind", "target_ref", "relation_type", "derived")
-    edges = [tuple(row[key] for key in keys) for row in snapshot["relations"]]
+    edges = [tuple(getattr(row, key) for key in keys) for row in relations]
     _validate_edges(edges, inverse)
-    if replacing and any("09_archived" not in a["relative_path"].split("/") for a in snapshot["atoms"]):
+    if replacing and any("09_archived" not in a.relative_path.split("/") for a in atoms):
         raise ValueError("Archive replacement requires canonical archive paths")
-    removed = _remove_canonical_archive(connection) if replacing else []
-    stage_atom_rows(connection, snapshot["atoms"])
+    if replacing:
+        _remove_canonical_archive(connection)
+    stage_atom_rows(connection, atoms)
     collision = connection.execute('''SELECT 1 FROM main.mrt_atom_references n
-        JOIN int_admission_atoms a USING (reference)
-        UNION ALL SELECT 1 FROM main.mrt_atom_references n
-        JOIN int_admission_atoms a USING (exact_ref)
-        UNION ALL SELECT 1 FROM main.mrt_atom_references n
         JOIN int_admission_atoms a USING (relative_path, filename) LIMIT 1''').fetchone()
     if collision:
-        raise ValueError("Archived Atom collides with an admitted Atom")
-    return edges, removed
+        raise ValueError("Archived Atom path collides with an admitted Atom")
+    _validate_archive_issues(connection, snapshot, replacing=replacing)
+    _check_archive_duplicates(connection, snapshot)
+    return edges
+
+
+def _validate_archive_issues(connection, snapshot, *, replacing):
+    paths = [row["relative_path"] for row in snapshot.get("ingestion_issues", [])]
+    if replacing and any(not archive_path(path) for path in paths):
+        raise ValueError("Archive replacement requires canonical archive issue paths")
+    if paths and connection.execute("""SELECT 1 FROM main.mrt_atom_references
+            WHERE concat(CASE WHEN relative_path = '.' THEN '' ELSE relative_path || '/' END, filename)
+            IN (SELECT unnest(?)) LIMIT 1""", [paths]).fetchone():
+        raise ValueError("Archive issue path collides with an admitted Atom")
+
+
+def _check_archive_duplicates(connection, snapshot):
+    excluded = [row["atom_ref"] for row in snapshot.get("ingestion_issues", []) if row["code"] == "duplicate_revision"]
+    collision = connection.execute('''SELECT 1 FROM main.mrt_atom_references n
+        JOIN int_admission_atoms a USING (reference)
+        UNION ALL SELECT 1 FROM main.mrt_atom_references n JOIN int_admission_atoms a USING (exact_ref)
+        UNION ALL SELECT 1 FROM main.mrt_atom_references n
+        WHERE exact_ref IN (SELECT unnest(?::VARCHAR[])) LIMIT 1''', [excluded]).fetchone()
+    if collision or duplicate_dependencies(connection, snapshot, set()):
+        raise DeltaReconciliationRequired("Archive Atom collides with another Atom phase")
 
 
 def _insert_edges(connection, edges):
@@ -86,7 +111,6 @@ def _remove_canonical_archive(connection):
     connection.execute("""CREATE TEMP TABLE int_archive_replaced AS
         SELECT relative_path, filename, reference FROM main.mrt_atom_references
         WHERE status_group = 'Archived' AND list_contains(string_split(relative_path, '/'), '09_archived')""")
-    paths = connection.execute("SELECT relative_path, filename FROM int_archive_replaced").fetchall()
     connection.execute("""DELETE FROM main.mrt_atom_graph_relations
         WHERE (NOT derived AND source_kind = 'Atom' AND source_ref IN (SELECT reference FROM int_archive_replaced))
         OR (derived AND target_kind = 'Atom' AND target_ref IN (SELECT reference FROM int_archive_replaced))""")
@@ -94,7 +118,20 @@ def _remove_canonical_archive(connection):
         connection.execute(f"""DELETE FROM main.{table}
             WHERE (relative_path, filename) IN (SELECT relative_path, filename FROM int_archive_replaced)""")
     connection.execute("DROP TABLE int_archive_replaced")
-    return paths
+
+
+def _archive_checkpoint_paths(connection, data, *, replacing):
+    checkpoint = read_checkpoint(connection)
+    if checkpoint is None:
+        raise ValueError("Archive admission requires a retained carrier checkpoint")
+    snapshot = data["snapshot"]
+    paths = set(data["carrier_hashes"])
+    if replacing:
+        removed = {path for path in checkpoint if archive_path(path)}
+        if duplicate_dependencies(connection, snapshot, removed):
+            raise DeltaReconciliationRequired("Archive replacement touches a duplicate Atom group")
+        paths.update(removed)
+    return [[PurePosixPath(path).parent.as_posix(), PurePosixPath(path).name] for path in sorted(paths)]
 
 
 def admit_archive(connection, data, manifest_sha256):
@@ -108,11 +145,9 @@ def admit_archive(connection, data, manifest_sha256):
         replacing = data.get("replace", False)
         if type(replacing) is not bool:
             raise ValueError("Invalid archive replacement")
-        edges, removed = _validate_archive(connection, data, manifest_sha256, row[1], replacing=replacing)
-        if read_checkpoint(connection) is None:
-            raise ValueError("Archive admission requires a retained carrier checkpoint")
-        paths = [[a["relative_path"], a["filename"]] for a in data["snapshot"]["atoms"]]
-        update_checkpoint(connection, {**data, "paths": [*removed, *paths]}, delta=True)
+        edges = _validate_archive(connection, data, manifest_sha256, row[1], replacing=replacing)
+        paths = _archive_checkpoint_paths(connection, data, replacing=replacing)
+        update_checkpoint(connection, {**data, "paths": paths}, delta=True)
         write_staged_atoms(connection)
         _insert_edges(connection, edges)
         connection.execute("DROP PROPERTY GRAPH IF EXISTS anechoic")
@@ -124,7 +159,7 @@ def admit_archive(connection, data, manifest_sha256):
                               "snapshot_sha256": data["snapshot_sha256"]})
         connection.execute("UPDATE ops_generation SET id = ?", [generation])
         set_archive_pending(connection, False)
-        clear_issues(connection, "archive")
+        replace_issues(connection, "archive", data["snapshot"].get("ingestion_issues", []))
         connection.execute("DROP TABLE int_admission_atoms")
         connection.execute("COMMIT")
         return generation

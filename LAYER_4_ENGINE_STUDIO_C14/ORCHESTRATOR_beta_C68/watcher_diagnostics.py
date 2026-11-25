@@ -8,6 +8,9 @@ from pathlib import Path
 import re
 import sys
 from time import monotonic_ns
+from typing import Literal
+
+from pydantic import BaseModel, ConfigDict
 
 
 FOREGROUND_FENCE_MESSAGE = "Native Project carriers changed during generation"
@@ -25,6 +28,32 @@ _logger = logging.Logger("anechoic.studio.orchestrator", level=logging.DEBUG)
 _logger.addHandler(_Stderr())
 
 
+class _FenceObservation(BaseModel):
+    model_config = ConfigDict(strict=True, frozen=True)
+
+    kind: str
+    path: str | None = None
+    destination: str | None = None
+    errno: int | None = None
+    stat_fields: tuple[str, ...] = ()
+
+
+class _FenceFailure(BaseModel):
+    model_config = ConfigDict(strict=True, frozen=True)
+
+    code: Literal["watcher_fence_failed"]
+    component: Literal["C68"]
+    run_id: str
+    phase: Literal["archive", "foreground"]
+    reason: str
+    wait_ms: float
+    revision_before: int | None = None
+    revision_after: int | None = None
+    losses_before: int | None = None
+    losses_after: int | None = None
+    observation: _FenceObservation | None = None
+
+
 class FenceDiagnostics:
     def __init__(self, root):
         self.root = root
@@ -37,15 +66,8 @@ class FenceDiagnostics:
         first = self.first[archive]
         if first is None or key in first:
             return
-        first[key] = {"kind": kind}
-        for field, value in (("path", path), ("destination", destination)):
-            relative = self._relative(value)
-            if relative is not None:
-                first[key][field] = relative
-        if errno is not None:
-            first[key]["errno"] = errno
-        if stat_fields:
-            first[key]["stat_fields"] = stat_fields
+        first[key] = _FenceObservation(kind=kind, path=self._relative(path), destination=self._relative(destination),
+                                       errno=errno, stat_fields=stat_fields)
 
     def _relative(self, value):
         if value is None or self.root is None:
@@ -64,27 +86,29 @@ class FenceDiagnostics:
         if not isinstance(run_id, str) or re.fullmatch(r"[0-9a-f]{32}", run_id) is None:
             return None
         first = self.first[archive] or {}
-        record = {"code": "watcher_fence_failed", "component": "C68", "run_id": run_id,
-                  "phase": "archive" if archive else "foreground", "reason": reason,
-                  "wait_ms": round((monotonic_ns() - started) / 1_000_000, 3)}
+        evidence = None
         if epoch is not None:
-            record.update(revision_before=epoch[1], revision_after=revision, losses_before=epoch[2], losses_after=losses)
             observer_lost = reason in {"coverage_lost", "observer_stopped", "emitter_unavailable"}
             evidence = first.get("loss") if observer_lost else None
             if evidence is None and revision != epoch[1]:
                 evidence = first.get("change")
-            if evidence:
-                record["observation"] = evidence
-        return record
+        return _FenceFailure(code="watcher_fence_failed", component="C68", run_id=run_id,
+                             phase="archive" if archive else "foreground", reason=reason,
+                             wait_ms=round((monotonic_ns() - started) / 1_000_000, 3),
+                             revision_before=epoch[1] if epoch is not None else None,
+                             revision_after=revision if epoch is not None else None,
+                             losses_before=epoch[2] if epoch is not None else None,
+                             losses_after=losses if epoch is not None else None, observation=evidence)
 
 
 def report_fence_failure(record):
     if record is None:
         return
-    terminal = record["phase"] == "archive" and record["reason"] != "source_changed"
-    emit_record("ERROR" if terminal else "WARNING", record["code"], "watcher_fence",
-                "failed" if terminal else "retrying", record["run_id"],
-                details={"phase": record["phase"], "reason": record["reason"]}, fields=record)
+    terminal = record.phase == "archive" and record.reason != "source_changed"
+    emit_record("ERROR" if terminal else "WARNING", record.code, "watcher_fence",
+                "failed" if terminal else "retrying", record.run_id,
+                details={"phase": record.phase, "reason": record.reason},
+                fields=record.model_dump(exclude_none=True, exclude_defaults=True))
 
 
 _GRAPH_FIELDS = {"resolution_inputs": ("stat_signature",),

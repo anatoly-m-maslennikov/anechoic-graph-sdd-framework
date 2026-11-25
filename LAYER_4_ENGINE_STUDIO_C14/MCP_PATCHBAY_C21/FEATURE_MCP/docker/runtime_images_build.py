@@ -42,7 +42,8 @@ class ImageBuild:
         iidfile = attempt / "image.id"
         self._current(identity, use_packaged_assets=use_packaged_assets)
         self._verify_context(context, identity)
-        target = ("--target", "beta") if self._stack_input(context)[0] == "beta" else ()
+        stack = self._stack_input(context)[0]
+        target = ("--target", stack) if stack != "current" else ()
         command = ("docker", "build", "--iidfile", str(iidfile),
                    "--label", f"{SCHEMA_LABEL}={SCHEMA}",
                    "--label", f"{FINGERPRINT_LABEL}={identity.fingerprint}",

@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 7
-  updated_at: "2026-11-22T14:26:08.640104+00:00"
+  version: 9
+  updated_at: '2026-11-24T19:41:03.539929+00:00'
 ---
 
 ## Summary
@@ -46,11 +46,11 @@ declare_entity(
             'io': {
                 'server': {
                     'source_imports': {'transport': 'cli', 'runner': 'node',
-                                       'path': 'LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND/scripts/import-graph-scanner.mjs'},
+                                       'path': 'LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND/scripts/import-graph-scanner.ts'},
                     'source_function_sizes': {
                         'transport': 'cli',
                         'runner': 'node',
-                        'path': 'LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND/scripts/source-function-sizes.mjs',
+                        'path': 'LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND/scripts/source-function-sizes.ts',
                     },
                 },
                 'client': [{'component': 'C21', 'interface': 'workbench_http'}],

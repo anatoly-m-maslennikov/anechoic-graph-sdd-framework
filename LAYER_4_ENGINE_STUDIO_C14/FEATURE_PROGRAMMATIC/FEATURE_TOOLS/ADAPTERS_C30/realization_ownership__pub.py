@@ -1,13 +1,20 @@
 """Map admitted Structure owners to inventoried Python paths."""
 
-from dataclasses import dataclass, replace
+from dataclasses import replace
 from pathlib import Path, PurePosixPath
 
+from pydantic import ConfigDict, field_validator
+from pydantic.dataclasses import dataclass
 
-@dataclass(frozen=True)
+from .structure_snapshot__pub import _preserve_mapping
+
+
+@dataclass(frozen=True, config=ConfigDict(strict=True, extra="forbid"))
 class CodeAccessOwnership:
     entries: dict
     by_path: dict
+
+    _validate_indexes = field_validator("entries", "by_path", mode="wrap")(_preserve_mapping)
 
     def owner(self, path, kind='module'):
         path = PurePosixPath(path)

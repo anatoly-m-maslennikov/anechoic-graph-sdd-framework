@@ -9,8 +9,8 @@ context:
   lens: DES
 state:
   status: active
-  version: 7
-  updated_at: '2026-11-22T22:21:56.394406+00:00'
+  version: 8
+  updated_at: '2026-11-24T18:19:55.278865+00:00'
 relations:
   ANSWERS:
   - AN-S-3055
@@ -53,14 +53,18 @@ required test fails the gate.
 Use `--phase unit` to run source-side diagnostic tests and
 `--test-module` to focus that run.
 
-## Image tests
+## Image tests and canary
 
-Run `--phase image` with the Project root, immutable candidate image,
-staged package, run ID, and `--canary-selection`. The selection is a JSON
-object with `control_root`, `manifest_path`, `manifest_ref`,
-`manifest_sha256`, `project_name`, `project_prefix`, and `query_enabled`.
+Run `--phase image-tests` with the Project root and exact candidate image ID.
+Run `--phase canary` for a separate MCP canary on that verified candidate.
+The combined `--phase image` runs image tests before the canary.
 
-Run image tests against that candidate. Run the canary only after the image tests pass. Verify the pinned Manifest before using the staged Project. Start the
+For the canary, supply the staged package, run ID, and `--canary-selection`.
+The selection is a JSON object with `control_root`, `manifest_path`,
+`manifest_ref`, `manifest_sha256`, `project_name`, `project_prefix`, and
+`query_enabled`. Use `--canary-project-root` for a separate target Project.
+
+Verify the pinned Manifest before using the staged Project. Start the
 candidate, initialize MCP, and run a representative query. Use MCP ping
 when the Project excludes Run Query. Report the loopback MCP endpoint
 on success and clean up the disposable candidate resources.

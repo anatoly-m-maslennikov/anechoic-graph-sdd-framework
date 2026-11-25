@@ -44,8 +44,10 @@ def update_checkpoint(connection, data, *, delta=False):
         if not isinstance(hashes, dict) or not isinstance(snapshot, dict) or snapshot.get("schema_version") != 2:
             raise ValueError("Invalid carrier hashes")
         expected = {_path(atom["relative_path"], atom["filename"]) for atom in snapshot["atoms"]}
-        if (set(hashes) != expected or any(not isinstance(value, str) or re.fullmatch(r"[0-9a-f]{64}", value) is None
-                                           for value in hashes.values())):
+        rejected = {issue["relative_path"] for issue in snapshot.get("ingestion_issues", [])}
+        if (not expected <= hashes.keys() <= expected | rejected
+                or any(not isinstance(value, str) or re.fullmatch(r"[0-9a-f]{64}", value) is None
+                       for value in hashes.values())):
             raise ValueError("Invalid carrier hashes")
     connection.execute("CREATE TABLE IF NOT EXISTS ops_generation_carrier_hashes (carrier_sha256_by_path VARCHAR)")
     prior = connection.execute("SELECT carrier_sha256_by_path FROM ops_generation_carrier_hashes").fetchone()
@@ -94,6 +96,11 @@ def _reuse_result(connection):
     witness = json.loads(row[1])
     result = {"base_generation": row[0], **witness}
     hashes = read_checkpoint(connection)
+    if hashes is not None:
+        warning_paths = connection.execute("""SELECT DISTINCT relative_path FROM main.ops_ingestion_issues
+            WHERE source IN ('atom', 'archive') AND relative_path IS NOT NULL""").fetchall()
+        if any(path not in hashes for path, in warning_paths):
+            hashes = None
     if hashes is not None:
         result["carrier_hashes"] = hashes
     folders = _read_folders(connection, witness, hashes)

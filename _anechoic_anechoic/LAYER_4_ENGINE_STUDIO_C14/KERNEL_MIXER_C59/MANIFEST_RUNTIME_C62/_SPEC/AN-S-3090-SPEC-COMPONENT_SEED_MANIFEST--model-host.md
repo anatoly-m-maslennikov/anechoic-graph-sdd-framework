@@ -8,9 +8,9 @@ context:
   template: component_seed_manifest
   lens: SPEC
 state:
-  status: active
-  version: 10
-  updated_at: "2026-11-22T14:18:40.355066+00:00"
+  status: "active"
+  version: 11
+  updated_at: "2026-11-24T20:16:08.279131+00:00"
 ---
 
 # Model Host
@@ -27,6 +27,7 @@ declare_entity(
         component_seed_id="CS2",
         boundaries={
             "code": {
+                "imports": ["MANIFEST_RUNTIME_C62__shared.compile_reviewed_model"],
                 "exports": {
                     "model_host_CS2__shared.reviewed_native_model": {
                         "private": [

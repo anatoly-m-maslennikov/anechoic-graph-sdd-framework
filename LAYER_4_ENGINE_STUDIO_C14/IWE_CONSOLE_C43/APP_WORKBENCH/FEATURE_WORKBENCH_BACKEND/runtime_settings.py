@@ -1,34 +1,11 @@
-
-"""Read the fixed Workbench runtime retention setting at startup."""
+"""Read the legacy Workbench Header schema mode."""
 
 from __future__ import annotations
 
 from pathlib import Path
 import tomllib
 
-DEFAULT_RESULT_TTL_SECONDS = 3600
 DEFAULT_SCHEMA_MODE = 2
-
-
-def result_ttl_seconds(root: Path) -> int:
-    """Return the declared positive TTL without changing runtime settings."""
-    path = Path(root) / ".anechoic_runtime" / "anechoic_runtime_settings.toml"
-    if not path.exists():
-        return DEFAULT_RESULT_TTL_SECONDS
-
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import read_settings_carrier
-
-    try:
-        document = read_settings_carrier(path)
-    except (OSError, UnicodeError, tomllib.TOMLDecodeError) as error:
-        raise ValueError("invalid Workbench runtime settings") from error
-    workbench = document.get("workbench", {})
-    if not isinstance(workbench, dict):
-        raise ValueError("invalid Workbench runtime settings")
-    value = workbench.get("result_ttl_seconds", DEFAULT_RESULT_TTL_SECONDS)
-    if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
-        raise ValueError("workbench.result_ttl_seconds must be a positive integer")
-    return value
 
 
 def schema_mode(root: Path) -> int:

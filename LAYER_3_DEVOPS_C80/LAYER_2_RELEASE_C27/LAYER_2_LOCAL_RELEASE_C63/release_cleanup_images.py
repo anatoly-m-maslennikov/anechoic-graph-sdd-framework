@@ -22,6 +22,8 @@ from LAYER_1_RUNTIME_IMAGES_C81.LAYER_1_RUNTIME_IMAGES_C81__shared import (
 )
 from LAYER_1_RUNTIME_IMAGES_C81.LAYER_1_RUNTIME_IMAGES_C81__shared import INSTALLATION_LOCK_PATH
 
+from .local_release_state import open_artifacts
+
 
 _OWNER_KEYS = (
     "org.anechoic.project",
@@ -30,7 +32,7 @@ _OWNER_KEYS = (
 )
 _BROWSER_TEST_PREFIXES = ("anechoic-browser-", "anechoic-verified-browser-")
 _LEGACY_TEST_TAG = re.compile(
-    r"anechoic-runtime:\d+(?:\.\d+)+-(?:test|beta)-\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}Z-"
+    r"anechoic-runtime:\d+(?:\.\d+)+-(?:test|beta(?:-next)?)-\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}Z-"
 )
 
 
@@ -88,7 +90,7 @@ def _foreign_owner(labels: dict[str, str], owner: dict[str, str]) -> bool:
 
 def _test_tags(metadata) -> tuple[str, ...]:
     tags = tuple(metadata.RepoTags or ())
-    candidates = {f"anechoic-runtime:{role}-{metadata.Id[7:]}" for role in ("test", "beta")}
+    candidates = {f"anechoic-runtime:{role}-{metadata.Id[7:]}" for role in ("test", "beta", "beta-next")}
     short_id = metadata.Id[7:19]
     if all(tag in candidates or tag.partition(":")[0].startswith(_BROWSER_TEST_PREFIXES)
            or (tag.endswith(short_id) and _LEGACY_TEST_TAG.fullmatch(tag[:-len(short_id)])) for tag in tags):
@@ -129,7 +131,10 @@ def _purge_test_images(root, runner, candidates, protected, cleanup):
     for image in sorted(candidates.keys() - protected):
         owner = candidates[image]
         try:
-            with _candidate_checkout_lock(root, Path(owner["org.anechoic.host_project_root"])):
+            candidate_root = Path(owner["org.anechoic.host_project_root"])
+            with _candidate_checkout_lock(root, candidate_root):
+                if any(candidate == image for _, candidate, _ in open_artifacts(candidate_root)):
+                    continue
                 metadata = image_metadata(root, runner, image)
                 tags = _test_tags(metadata)
                 if not tags or not _has_owner(metadata.Config.Labels, owner):
@@ -232,12 +237,12 @@ def cleanup_obsolete_images(
 ) -> None:
     try:
         owned, candidates = _discover_images(root, runner, current_image, cleanup)
+        active_images = {image for _, image, _ in open_artifacts(root) if isinstance(image, str)}
     except OSError, RuntimeError, ValueError, subprocess.TimeoutExpired:
         cleanup.pending = True
         cleanup.notes.append("Runtime image discovery unavailable; unproven images retained.")
         return
-    protected = {current_image}
-    retained = 0
+    protected, retained = {current_image}, 0
     for image in (*previous_images, previous_image):
         if image is None or image in protected:
             continue
@@ -259,7 +264,7 @@ def cleanup_obsolete_images(
             protected.add(image)
             retained += 1
     _purge_test_images(root, runner, candidates, protected, cleanup)
-    for image in sorted(cleanup.images - protected - candidates.keys()):
+    for image in sorted(cleanup.images - protected - candidates.keys() - active_images):
         try:
             _remove_image(root, runner, image, current_image, cleanup)
         except OSError, RuntimeError, ValueError, subprocess.TimeoutExpired:

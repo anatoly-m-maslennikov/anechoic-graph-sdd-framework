@@ -3,12 +3,25 @@
 from __future__ import annotations
 
 from pathlib import Path
+import subprocess
+import sys
 import tempfile
 import unittest
 
 
 APP_ROOT = Path(__file__).resolve().parents[3]
 
+
+
+def generate_asset(project_root: Path, script: str) -> bytes:
+    launcher = Path(__file__).resolve().parents[1] / script
+    with tempfile.TemporaryDirectory() as directory:
+        output = Path(directory) / "asset.json"
+        subprocess.run(
+            [sys.executable, "-B", str(launcher), "--project-root", str(project_root), "--output", str(output)],
+            check=True, capture_output=True, text=True, timeout=60,
+        )
+        return output.read_bytes()
 
 
 def atom(

@@ -188,74 +188,101 @@ def manifest_input_signature(binding, *, watcher_guarded=False) -> str | None:
         if pinned not in project:
             raise ValueError("Pinned Project Manifest is not a compiler candidate")
         remaining = 1024 * 1024 * 1024
-        evidence = []
+        evidence, versions = [], []
         for path in files:
             checkpoint()
             digest, size, version = _read_digest(path, min(_FILE_LIMIT, remaining))
             if path == pinned and digest != binding["manifest_sha256"]:
                 raise ValueError("Project Manifest binding changed")
             remaining -= size
-            evidence.append((str(path), digest, version))
+            evidence.append((str(path), digest))
+            versions.append(version)
         checkpoint()
         payload = json.dumps((binding, directories, evidence), sort_keys=True, separators=(",", ":"))
-        return sha256(payload.encode()).hexdigest()
+        return sha256(payload.encode()).hexdigest(), versions
 
     try:
         _validate_binding(binding)
         root = Path(binding["root"])
         control = root / binding["control_root"]
         before = sample()
-        return before if before == sample() else None
+        return before[0] if before == sample() else None
     except (OSError, RuntimeError, TypeError, ValueError):
         return None
 
 
-def compile_generation(binding, stage):
+def compile_generation(binding, stage, model_inputs=None):
     env = {key: value for key, value in os.environ.items() if key != "PYTHONHOME"}
     env["PYTHONPATH"] = str(ENGINE)
+    model_args = ["--ingested-model"] if model_inputs is not None else ["--build-model"]
     result = subprocess.run(
         [sys.executable, "-B", "-P", "-m", COMPILER, binding["root"], binding["control_root"],
-         binding["manifest_sha256"], str(stage), "--build-model", "--attest-model"],
-        cwd=ENGINE, env=env, capture_output=True, check=False,
+         binding["manifest_sha256"], str(stage), *model_args, "--attest-model"],
+        cwd=ENGINE, env=env, input=(json.dumps(model_inputs, default=str).encode() if model_inputs is not None else None),
+        capture_output=True, check=False,
     )
     if result.returncode:
-        raise ValueError("Manifest compiler failed: " + result.stderr.decode(errors="replace")[-2048:])
+        stderr = result.stderr.decode(errors="replace")
+        error = ValueError("Manifest compiler failed: " + stderr[-2048:])
+        if model_inputs is not None:
+            try:
+                error.model_diagnostics = json.loads(stderr)["model_diagnostics"]
+            except (ValueError, KeyError, TypeError):
+                pass
+        raise error
+    if os.getenv("ANECHOIC_STARTUP_TIMING") == "1" and result.stderr:
+        sys.stderr.write(result.stderr[-8192:].decode(errors="replace"))
     artifact = json.loads(result.stdout)
     compiled = artifact["structure"]
     project = compiled["project"]
     if (project["sha256"] != binding["manifest_sha256"]
             or not project["ref"].startswith(binding["project_prefix"] + "-S-")):
         raise ValueError("Compiled Structure has a different Project binding")
+    if model_inputs is not None:
+        return compiled, artifact["model_descriptor_sha256"], artifact["model_diagnostics"]
     return compiled, artifact["model_descriptor_sha256"]
 
 
-def build(binding, output):
+def build(binding, output, model_inputs=None):
     output = Path(output)
     validate(binding, output)
     verify_pin(binding)
     with tempfile.TemporaryDirectory(prefix=".manifest-build-", dir=output.parent) as temporary:
         stage = Path(temporary) / "generation"
         stage.mkdir()
-        structure, descriptor_hash = compile_generation(binding, stage)
+        compiled = compile_generation(binding, stage, model_inputs=model_inputs)
+        structure, descriptor_hash = compiled[:2]
         raw = json.dumps(structure, sort_keys=True, separators=(",", ":")).encode()
         (stage / "structure.json").write_bytes(raw)
         verify_pin(binding)
         if output.is_symlink() or not output.is_dir() or any(output.iterdir()):
             raise ValueError("Output directory changed during build")
         os.replace(stage, output)
-    return {"manifest_sha256": binding["manifest_sha256"], "model_sha256": structure["model_sha256"],
-            "model_descriptor_sha256": descriptor_hash, "structure_sha256": sha256(raw).hexdigest()}
+    receipt = {"manifest_sha256": binding["manifest_sha256"], "model_sha256": structure["model_sha256"],
+               "model_descriptor_sha256": descriptor_hash, "structure_sha256": sha256(raw).hexdigest()}
+    if model_inputs is not None:
+        receipt["model_diagnostics"] = compiled[2]
+    return receipt
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output-dir", required=True)
+    parser.add_argument("--ingested-model", action="store_true")
     args = parser.parse_args()
     try:
-        result = build(json.load(sys.stdin), args.output_dir)
+        request = json.load(sys.stdin)
+        if args.ingested_model:
+            if not isinstance(request, dict) or set(request) != {"binding", "model_inputs"}:
+                raise ValueError("Invalid ingested Model build request")
+            result = build(request["binding"], args.output_dir, request["model_inputs"])
+        else:
+            result = build(request, args.output_dir)
         print(json.dumps(result, sort_keys=True, separators=(",", ":")))
     except (OSError, RuntimeError, TypeError, ValueError, subprocess.TimeoutExpired) as error:
         print(str(error), file=sys.stderr)
+        if args.ingested_model and getattr(error, "model_diagnostics", None):
+            print(json.dumps({"model_diagnostics": error.model_diagnostics}))
         return 1
     return 0
 

@@ -15,7 +15,7 @@ DOCKER = APP / "docker"
 
 from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import DOCKERIGNORE, RETIRED_ASSETS  # noqa: E402
 from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import ImageError, ImageManager, TOOL_REGISTRY  # noqa: E402
-from MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_backend import ProjectMcpBackend  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import ProjectMcpBackend  # noqa: E402
 
 
 IMAGE_ID = "sha256:" + "a" * 64
@@ -142,7 +142,7 @@ class ImageGoldenTests(ImageFixture, unittest.TestCase):
             (source / "LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/server.py").write_text("changed")
             return image
 
-        with patch("MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_backend.ImageManager", return_value=manager), \
+        with patch("MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared.ImageManager", return_value=manager), \
              patch.object(ProjectMcpBackend, "_native_package", return_value=object()), \
              patch.object(manager, "resolve", side_effect=resolve_then_change):
             with self.assertRaises(ImageError) as refused:

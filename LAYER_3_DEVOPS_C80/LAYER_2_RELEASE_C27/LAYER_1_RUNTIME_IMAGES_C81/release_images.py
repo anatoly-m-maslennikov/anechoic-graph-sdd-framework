@@ -23,13 +23,13 @@ _IMAGE = re.compile(r"sha256:[0-9a-f]{64}\Z")
 _SHA = re.compile(r"[0-9a-f]{64}\Z")
 _SCHEMA = "org.anechoic.runtime.schema"
 _FINGERPRINT = "org.anechoic.runtime.fingerprint"
+_STACK = "org.anechoic.runtime.stack"
 _VERSION = "org.opencontainers.image.version"
 _PRUNE_BUILD_CACHE = ("docker", "buildx", "prune", "--force", "--max-used-space", "4GB", "--min-free-space", "2GB")
 
 
 def _candidate_role(identity: ImageIdentity) -> str:
-    beta_entrypoint = ENGINE + "/WORKBENCH_BACKEND_beta_C70/WORKBENCH_BACKEND_beta_C70__shared.py"
-    return "beta" if any(path == beta_entrypoint for path, _, _ in identity.manifest) else "test"
+    return {"current": "test", "beta_next": "beta-next"}[identity.stack]
 
 
 def _unique(pairs):
@@ -134,6 +134,12 @@ class ImageManager(ImageInputIdentity):
         except (OSError, UnicodeError, subprocess.SubprocessError) as error:
             raise RuntimeError("Docker image operation unavailable") from error
 
+    def _expected_labels(self, identity: ImageIdentity) -> dict[str, str]:
+        labels = {_SCHEMA: "1", _FINGERPRINT: identity.fingerprint, _VERSION: identity.version, **self.labels}
+        if identity.stack == "beta_next":
+            labels[_STACK] = identity.stack
+        return labels
+
     def _inspect(self, image: str, identity: ImageIdentity):
         try:
             values = json.loads(self._run(("docker", "image", "inspect", image)), object_pairs_hook=_unique)
@@ -141,7 +147,7 @@ class ImageManager(ImageInputIdentity):
                 raise ValueError("invalid image inspection")
             row = values[0]
             labels = row["Config"]["Labels"]
-            expected = {_SCHEMA: "1", _FINGERPRINT: identity.fingerprint, _VERSION: identity.version, **self.labels}
+            expected = self._expected_labels(identity)
             if (row["Id"] != image or row.get("Os") != "linux" or row.get("Architecture") != self.platform.split("/")[1]
                     or not isinstance(labels, dict) or any(labels.get(k) != v for k, v in expected.items())):
                 raise ValueError("image identity differs")
@@ -163,6 +169,13 @@ class ImageManager(ImageInputIdentity):
                 seen_directories.add(relative)
             for name in names:
                 path = Path(current) / name
+                if name == ".DS_Store":
+                    try:
+                        if stat.S_ISREG(path.lstat().st_mode):
+                            path.unlink(missing_ok=True)
+                            continue
+                    except FileNotFoundError:
+                        continue
                 relative = path.relative_to(context).as_posix()
                 if (path.is_symlink() or not path.is_file() or relative not in expected
                         or (hashlib.sha256(path.read_bytes()).hexdigest(), path.stat().st_mode & 0o777) != expected[relative]):
@@ -209,13 +222,13 @@ class ImageManager(ImageInputIdentity):
             if self.identity(use_packaged_assets=True) != identity:
                 raise RuntimeError("image inputs changed")
             self._verify_context(context, identity)
-            labels = {_SCHEMA: "1", _FINGERPRINT: identity.fingerprint, _VERSION: identity.version, **self.labels}
+            labels = self._expected_labels(identity)
             label_args = tuple(arg for key, value in labels.items() for arg in ("--label", f"{key}={value}"))
             role = _candidate_role(identity)
             iidfile = stage / "image.id"
             self._run(_PRUNE_BUILD_CACHE, cwd=context, buildx=buildx)
             self._run(("docker", "build", "--iidfile", str(iidfile), *label_args, "--platform", self.platform,
-                       *(("--target", "beta") if role == "beta" else ()),
+                       *(("--target", identity.stack) if identity.stack != "current" else ()),
                        "--build-arg", f"RUNTIME_UID={self.uid}", "--build-arg", f"RUNTIME_GID={self.gid}",
                        "--file", str(context / DOCKERFILE), str(context)), cwd=context, buildx=buildx)
             if iidfile.is_symlink() or not iidfile.is_file() or iidfile.stat().st_size > 1024:

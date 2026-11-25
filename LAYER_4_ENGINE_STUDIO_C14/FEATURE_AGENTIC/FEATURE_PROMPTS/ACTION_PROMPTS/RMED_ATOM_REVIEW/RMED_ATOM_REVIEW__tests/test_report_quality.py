@@ -2,7 +2,7 @@
 from copy import deepcopy
 import unittest
 from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__tests.test_split_evaluation import context, contract, part as contract_part  # noqa: E402
-from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.report_quality import validate_report_quality  # noqa: E402
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared import validate_report_quality  # noqa: E402
 
 
 RAW = '# Summary\nValue\n\n## Scope\nobjects and participants\n\n## Claim\na Claim\n\n## Details\n'

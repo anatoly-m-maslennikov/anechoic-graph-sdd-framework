@@ -101,7 +101,8 @@ Local release reports phase and test-module progress on stderr. Its full test
 output is streamed to a log under `.anechoic_tmp/simple_local_release`, with
 the location printed before testing starts. Interruption during release execution
 retains that log and a failure report and exits 130. It stops the owned test
-processes. Earlier release changes remain available for manual handling.
+processes. To continue after a fix, use `local --resume --run-id <id>` with
+the original run ID and Project root.
 
 Release effects run on the host with Git and Docker. Local Release checkpoints
 safe, nonignored changes. Public Release reads Git and returns the drafts in JSON.
@@ -109,13 +110,20 @@ safe, nonignored changes. Public Release reads Git and returns the drafts in JSO
 ## Kept small
 
 These repository commands are separate from MCP.
-Automatic recovery/resume and legacy-layout compatibility are deferred.
-Failures stop and report the actual failed step for manual handling.
+Failures stop and report the failed step. The Operator starts any continuation.
 
 ## Engine Studio QA
 
 Run the required unit selection from the repository root in the locked `dev` environment.
 Use `--phase static` for static checks and static test modules.
+Static checks Python models, discriminated unions, authored JavaScript, and
+generated query contract drift. It reports possible dictionary records and
+validation optimizations for review.
+To fail Static when findings exist, set `enforce_source_languages = true` under
+`[tool.anechoic.test_suite]` in the Test Suite configuration.
+Use `--phase preflight` to check locked Workbench dependencies, load pinned DuckPGQ,
+and launch the pinned Chromium. Run it with `uv run --no-sync` in an existing
+environment. It reports the dependency directory or cache when a check fails.
 
 ```sh
 UV_PROJECT_ENVIRONMENT="$PWD/LAYER_4_ENGINE_STUDIO_C14/.venv-dev" PYTHONPATH="$PWD/LAYER_4_ENGINE_STUDIO_C14" \
@@ -134,7 +142,9 @@ declares intentional silence. Workbench and MCP expose the ordered evidence in
 `state_effect_findings`. Unsupported paths and unavailable tools remain unresolved.
 The image phase requires `--candidate-image` with an immutable sha256 image ID,
 `--canary-package`, `--canary-selection` as JSON, and `--run-id`. It runs image
-tests and then the canary; required skips fail.
+tests and then the canary; required skips fail. `--canary-project-root` sets a
+separate Project root for the canary and its staging package. The test suite
+uses `--project-root` for source tests and reports.
 
 ## Source comments
 

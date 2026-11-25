@@ -1,11 +1,15 @@
 
 """Immutable compiled placement bindings for lifecycle operations."""
+from collections.abc import Mapping
 from contextlib import contextmanager
 from contextvars import ContextVar
-from dataclasses import dataclass
 from pathlib import PurePosixPath
 from types import MappingProxyType
+from typing import Annotated
 import re
+
+from pydantic import ConfigDict, WrapValidator
+from pydantic.dataclasses import dataclass
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import canonical_role_name, named_value_token
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.placement_claim__pub import parse_placement_claim
@@ -31,12 +35,21 @@ def _folder(value, *, empty=False):
     return value
 
 
-@dataclass(frozen=True)
+def preserve_mapping(value, validate):
+    """Validate a mapping while keeping its identity and mutability."""
+    validate(value)
+    return value
+
+
+_PRESERVE_MAPPING = WrapValidator(preserve_mapping)
+
+
+@dataclass(frozen=True, config=ConfigDict(strict=True, extra="forbid"))
 class PlacementRules:
-    role_folders: object
-    _placements: object
-    _archive_aliases: object
-    sources: tuple
+    role_folders: Annotated[Mapping[str, str], _PRESERVE_MAPPING]
+    _placements: Annotated[Mapping[tuple[str, str], tuple[str, str]], _PRESERVE_MAPPING]
+    _archive_aliases: Annotated[Mapping[str, tuple[str, ...]], _PRESERVE_MAPPING]
+    sources: tuple[Annotated[Mapping[str, str | int], _PRESERVE_MAPPING], ...]
 
     def role_folder(self, role):
         try:

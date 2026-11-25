@@ -75,6 +75,9 @@ class DirectGateway:
     def ready(self, value):
         self._ready = value
 
+    def health_state(self):
+        return self._native_query.health_state() if self._ready else "unavailable"
+
     async def initialize(self):
         if self._ready:
             return

@@ -3,9 +3,12 @@
 
 from __future__ import annotations
 
+from pydantic import ConfigDict
+from pydantic.dataclasses import dataclass
+
 import argparse
 from copy import deepcopy
-from dataclasses import dataclass, replace
+from dataclasses import replace
 import hashlib
 import json
 import os
@@ -154,7 +157,7 @@ def _document(raw: bytes) -> tuple[Path, int, int, bool, str, str, str]:
     return root, port, maximum, single_project, workbench, journal, level
 
 
-@dataclass(frozen=True)
+@dataclass(config=ConfigDict(strict=True, extra="forbid"), frozen=True)
 class HostRuntimeConfig:
     """Immutable, provenance-carrying shared host settings."""
 

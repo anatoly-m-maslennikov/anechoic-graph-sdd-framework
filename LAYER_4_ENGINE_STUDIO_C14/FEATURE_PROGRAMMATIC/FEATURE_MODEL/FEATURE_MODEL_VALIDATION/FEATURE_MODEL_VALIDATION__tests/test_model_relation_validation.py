@@ -2,22 +2,30 @@
 
 import unittest
 
-from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_relation_validation import validate_model_relations
+from pydantic import ConfigDict
+from pydantic.dataclasses import dataclass
+
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_native_model_claim
 
+from ..FEATURE_MODEL_VALIDATION__shared import validate_model_instance
 
+
+@dataclass(config=ConfigDict(strict=True, extra="forbid"))
 class Node:
     pass
 
 
+@dataclass(config=ConfigDict(strict=True, extra="forbid"))
 class Item(Node):
     pass
 
 
+@dataclass(config=ConfigDict(strict=True, extra="forbid"))
 class SpecialItem(Item):
     pass
 
 
+@dataclass(config=ConfigDict(strict=True, extra="forbid"))
 class Container(Node):
     pass
 
@@ -32,31 +40,39 @@ class RelationValidationTests(unittest.TestCase):
         }
         self.model_types = {"Item": Item}
 
+    def admit(self, model_class, relations, declarations, model_types, *, endpoint_registry=None):
+        return validate_model_instance(
+            model_class, properties={}, outgoing_relations=relations,
+            relation_declarations=declarations, model_types=model_types, checks={},
+            population_declarations={owner: () for owner in model_class.__mro__[:-1]},
+            population_peers={}, endpoint_registry=endpoint_registry,
+        )
+
     def test_inherited_constraints_and_subtypes(self):
-        validate_model_relations(Node, {"LINKS": [SpecialItem()]}, self.declarations, self.model_types)
+        self.admit(Node, {"LINKS": [SpecialItem()]}, self.declarations, self.model_types)
         with self.assertRaisesRegex(ValueError, "target count"):
-            validate_model_relations(Node, {}, self.declarations, self.model_types)
+            self.admit(Node, {}, self.declarations, self.model_types)
         with self.assertRaisesRegex(ValueError, "invalid target kind"):
-            validate_model_relations(Node, {"LINKS": [Container()]}, self.declarations, self.model_types)
+            self.admit(Node, {"LINKS": [Container()]}, self.declarations, self.model_types)
 
     def test_local_override_and_other_local_relation(self):
-        validate_model_relations(Container, {"CONTAINS": [Item()]}, self.declarations, self.model_types)
+        self.admit(Container, {"CONTAINS": [Item()]}, self.declarations, self.model_types)
         with self.assertRaisesRegex(ValueError, "target count"):
-            validate_model_relations(Container, {"LINKS": [Item()], "CONTAINS": [Item()]},
+            self.admit(Container, {"LINKS": [Item()], "CONTAINS": [Item()]},
                                      self.declarations, self.model_types)
         with self.assertRaisesRegex(ValueError, "target count"):
-            validate_model_relations(Container, {}, self.declarations, self.model_types)
+            self.admit(Container, {}, self.declarations, self.model_types)
 
     def test_unknown_relation_and_unresolved_contract_fail(self):
         with self.assertRaisesRegex(ValueError, "Undeclared Relations"):
-            validate_model_relations(Node, {"OTHER": []}, self.declarations, self.model_types)
+            self.admit(Node, {"OTHER": []}, self.declarations, self.model_types)
         with self.assertRaisesRegex(ValueError, "Missing Relation Declaration"):
-            validate_model_relations(Container, {}, {Container: {}}, self.model_types)
+            self.admit(Container, {}, {Container: {}}, self.model_types)
         with self.assertRaisesRegex(ValueError, "unresolved target kind"):
-            validate_model_relations(Node, {"LINKS": [Item()]}, self.declarations, {})
+            self.admit(Node, {"LINKS": [Item()]}, self.declarations, {})
         self.declarations[Node]["LINKS"]["sources_per_target"] = 1
         with self.assertRaisesRegex(ValueError, "population validation"):
-            validate_model_relations(Node, {"LINKS": [Item()]}, self.declarations, self.model_types)
+            self.admit(Node, {"LINKS": [Item()]}, self.declarations, self.model_types)
 
     def test_endpoint_registry_enforces_paired_levels_and_inverse_direction(self):
         claim = parse_native_model_claim(
@@ -67,14 +83,14 @@ class RelationValidationTests(unittest.TestCase):
         declarations = {Node: {"KIND": {"targets_per_source": 1}}}
         registry = {"KIND": (claim, False), "KIND_OF": (claim, True)}
         types = {"Node": Node, "Item": Item}
-        validate_model_relations(Node, {"KIND": [Item]}, declarations, types, endpoint_registry=registry)
+        self.admit(Node, {"KIND": [Item]}, declarations, types, endpoint_registry=registry)
         with self.assertRaisesRegex(ValueError, "endpoint levels or kinds are not admitted"):
-            validate_model_relations(Node, {"KIND": [Item()]}, declarations, types, endpoint_registry=registry)
+            self.admit(Node, {"KIND": [Item()]}, declarations, types, endpoint_registry=registry)
         with self.assertRaisesRegex(ValueError, "endpoint levels or kinds are not admitted"):
-            validate_model_relations(Node, {"KIND_OF": [Item]}, {Node: {"KIND_OF": {}}}, types,
+            self.admit(Node, {"KIND_OF": [Item]}, {Node: {"KIND_OF": {}}}, types,
                                      endpoint_registry=registry)
         with self.assertRaisesRegex(ValueError, "Model target is not declared"):
-            validate_model_relations(Node, {"KIND": [Container]}, declarations, types,
+            self.admit(Node, {"KIND": [Container]}, declarations, types,
                                      endpoint_registry=registry)
 
     def test_explicit_endpoint_pairs_do_not_create_cross_level_links(self):
@@ -86,13 +102,13 @@ class RelationValidationTests(unittest.TestCase):
         )["arguments"]
         registry = {"LINKS": (claim, False)}
         types = {"Item": Item}
-        validate_model_relations(Node, {"LINKS": [Item()]}, self.declarations, types, endpoint_registry=registry)
+        self.admit(Node, {"LINKS": [Item()]}, self.declarations, types, endpoint_registry=registry)
         with self.assertRaisesRegex(ValueError, "endpoint levels or kinds are not admitted"):
-            validate_model_relations(Node, {"LINKS": [Item]}, self.declarations, types, endpoint_registry=registry)
+            self.admit(Node, {"LINKS": [Item]}, self.declarations, types, endpoint_registry=registry)
         with self.assertRaisesRegex(ValueError, "missing or invalid Relation Declaration"):
-            validate_model_relations(Node, {"LINKS": [Item()]}, self.declarations, types, endpoint_registry={})
+            self.admit(Node, {"LINKS": [Item()]}, self.declarations, types, endpoint_registry={})
         with self.assertRaisesRegex(ValueError, "inconsistent Relation Declaration binding"):
-            validate_model_relations(Node, {"LINKS": [Item()]}, self.declarations, types,
+            self.admit(Node, {"LINKS": [Item()]}, self.declarations, types,
                                      endpoint_registry={"LINKS": (claim, True)})
 
     def test_endpoint_kinds_must_match_the_same_declared_pair(self):
@@ -107,14 +123,14 @@ class RelationValidationTests(unittest.TestCase):
         registry = {"LINKS": (claim, False), "LINKED_BY": (claim, True)}
         types = {"Node": Node, "Item": Item, "Container": Container}
         rules = {Node: {"LINKS": {}, "LINKED_BY": {}}}
-        validate_model_relations(Node, {"LINKS": [SpecialItem()]}, rules, types, endpoint_registry=registry)
+        self.admit(Node, {"LINKS": [SpecialItem()]}, rules, types, endpoint_registry=registry)
         with self.assertRaisesRegex(ValueError, "endpoint levels or kinds are not admitted"):
-            validate_model_relations(Node, {"LINKS": [Container()]}, rules, types, endpoint_registry=registry)
+            self.admit(Node, {"LINKS": [Container()]}, rules, types, endpoint_registry=registry)
         with self.assertRaisesRegex(ValueError, "endpoint levels or kinds are not admitted"):
-            validate_model_relations(Node, {"LINKED_BY": [Item()]}, rules, types, endpoint_registry=registry)
+            self.admit(Node, {"LINKED_BY": [Item()]}, rules, types, endpoint_registry=registry)
         types.pop("Container")
         with self.assertRaisesRegex(ValueError, "unresolved endpoint kind"):
-            validate_model_relations(Node, {"LINKS": [Item()]}, rules, types, endpoint_registry=registry)
+            self.admit(Node, {"LINKS": [Item()]}, rules, types, endpoint_registry=registry)
 
     def test_relation_declaration_admits_direct_links_without_an_entity_rule(self):
         claim = {
@@ -126,14 +142,14 @@ class RelationValidationTests(unittest.TestCase):
         registry = {"SPECIALIZES": (claim, False), "IS_SPECIALIZED_BY": (claim, True)}
         types = {"Item": Item}
         rules = {Node: {}, Item: {}, SpecialItem: {}}
-        validate_model_relations(SpecialItem, {"SPECIALIZES": [Item()]}, rules, types, endpoint_registry=registry)
+        self.admit(SpecialItem, {"SPECIALIZES": [Item()]}, rules, types, endpoint_registry=registry)
         with self.assertRaisesRegex(ValueError, "endpoint levels or kinds are not admitted"):
-            validate_model_relations(Node, {"SPECIALIZES": [Item()]}, rules, types, endpoint_registry=registry)
+            self.admit(Node, {"SPECIALIZES": [Item()]}, rules, types, endpoint_registry=registry)
         with self.assertRaisesRegex(ValueError, "inverse Relation requires explicit permission"):
-            validate_model_relations(Item, {"IS_SPECIALIZED_BY": [Item()]}, rules, types, endpoint_registry=registry)
+            self.admit(Item, {"IS_SPECIALIZED_BY": [Item()]}, rules, types, endpoint_registry=registry)
         rules[Item]["SPECIALIZES"] = {"targets_per_source": 1}
         with self.assertRaisesRegex(ValueError, "target count"):
-            validate_model_relations(SpecialItem, {}, rules, types, endpoint_registry=registry)
+            self.admit(SpecialItem, {}, rules, types, endpoint_registry=registry)
 
 
 if __name__ == "__main__":

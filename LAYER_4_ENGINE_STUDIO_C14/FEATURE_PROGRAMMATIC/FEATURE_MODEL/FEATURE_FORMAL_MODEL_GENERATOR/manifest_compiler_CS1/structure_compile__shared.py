@@ -10,13 +10,15 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.atom_reference__pub import 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import native_header_view
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import select_manifest_carriers, manifest_inputs, manifest_state_fields
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_read__pub import parse_carrier
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import CEILINGS, ReadContext, open_regular
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    CEILINGS, CarrierError, LimitReached, ReadContext, open_regular,
+)
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.component_seed_manifest__pub import read_component_seed_manifest
 
 _COMPONENT_DIR = re.compile(r'(?!__).+_(C[0-9]+)$')
-_MANIFEST_FILE = re.compile(r'[A-Z]+-S-[0-9]+-SPEC-COMPONENT_MANIFEST--.+\.md$')
-_COMPONENT_SEED_FILE = re.compile(r'[A-Z]+-S-[0-9]+-SPEC-COMPONENT_SEED_MANIFEST--.+\.md$')
+_MANIFEST_FILE = re.compile(r'[A-Z]+-S-[0-9]+-SPEC-(COMPONENT(?:_SEED)?_MANIFEST)--.+\.md$')
+_MANIFEST_TEMPLATES = {"component_manifest", "component_seed_manifest"}
 
 
 def _directories(reader, root):
@@ -57,13 +59,28 @@ def _validation_fields(fields, carrier, model):
     return fields | manifest_state_fields(carrier, include_header=model.requires_atom_header)
 
 
+def _structure_carrier(path, reader, directory_fd):
+    match = _MANIFEST_FILE.fullmatch(path.name)
+    try:
+        carrier = parse_carrier(reader.read(path, directory_fd=directory_fd), path)
+    except (CarrierError, LimitReached, OSError) as error:
+        if match or isinstance(error, LimitReached) and error.limit != "max_file_bytes":
+            raise
+        return None, None
+    if "atom_family" not in carrier.metadata:
+        return carrier, match[1].lower() if match else None
+    context = carrier.metadata.get("context")
+    template = context.get("template") if isinstance(context, dict) else None
+    if match or isinstance(template, str) and template in _MANIFEST_TEMPLATES:
+        return carrier, native_header_view(carrier.metadata)["context"].get("template")
+    return None, None
+
+
 def _record_carrier(path, reader, directory_fd, parent, project_fields, model, control, atoms, packages, components, pending, child_dirs):
     if not re.match(r'[A-Z]+-S-', path.name):
         return
-    carrier = parse_carrier(reader.read(path, directory_fd=directory_fd), path)
-    canonical = 'atom_family' in carrier.metadata
-    context = native_header_view(carrier.metadata).get('context', {}) if canonical else {}
-    if (canonical and context.get('template') == 'component_seed_manifest') or (not canonical and _COMPONENT_SEED_FILE.fullmatch(path.name)):
+    carrier, template = _structure_carrier(path, reader, directory_fd)
+    if template == 'component_seed_manifest':
         fields = read_component_seed_manifest(path, carrier, parent, project_fields["prefix"])
         if fields is not None:
             atom, package_id = fields["atom_id"], fields["component_seed_id"]
@@ -76,8 +93,7 @@ def _record_carrier(path, reader, directory_fd, parent, project_fields, model, c
                 "sha256": reader.fingerprints[str(path)], "source_path": path.relative_to(control).as_posix(),
             }
         return
-    if not ((canonical and context.get('template') == 'component_manifest')
-            or (not canonical and _MANIFEST_FILE.fullmatch(path.name))):
+    if template != 'component_manifest':
         return
     fields = _component_inputs(path, carrier, parent, project_fields["prefix"])
     if fields is None:

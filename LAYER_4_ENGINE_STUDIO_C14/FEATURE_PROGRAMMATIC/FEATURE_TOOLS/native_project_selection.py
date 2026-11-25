@@ -4,11 +4,14 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from copy import deepcopy
-from dataclasses import dataclass, field, replace
+from dataclasses import field, replace
 import os
 from pathlib import Path
 import re
 from typing import Protocol
+
+from pydantic import ConfigDict
+from pydantic.dataclasses import dataclass
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import native_header_view
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import spec_folder_layout
@@ -30,7 +33,7 @@ class ManifestIdentity(Protocol):
     prefix: str
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, config=ConfigDict(strict=True, extra="forbid"))
 class NativeProjectSelection:
     root: Path
     control_root: Path

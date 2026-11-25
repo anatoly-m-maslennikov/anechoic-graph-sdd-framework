@@ -6,7 +6,8 @@ Claim statements; unrecognized expressions never introduce names or edges.
 from __future__ import annotations
 
 from collections import defaultdict
-from dataclasses import dataclass
+from pydantic import ConfigDict
+from pydantic.dataclasses import dataclass
 import re
 from typing import Generic, Iterable, Iterator, TypeVar
 
@@ -19,7 +20,7 @@ _BINDING = re.compile(rf'^\s*({_NAME})\.Header\.(?:Context\.)?(Role|Form)\s*::\s
 _PROPERTY = re.compile(r'\.(?:Content|Header)(?=\.|\s|\[|\{|::|$)')
 
 
-@dataclass(frozen=True)
+@dataclass(config=ConfigDict(strict=True, extra="forbid", hide_input_in_errors=True), frozen=True)
 class ProjectedStatement(Generic[S]):
     statement: str
     source: S

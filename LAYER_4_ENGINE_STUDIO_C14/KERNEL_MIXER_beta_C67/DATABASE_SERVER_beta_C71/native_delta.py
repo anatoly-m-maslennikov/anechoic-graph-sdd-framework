@@ -10,8 +10,8 @@ from starlette.responses import JSONResponse
 
 from .analysis_projection import apply_spec_delta, snapshot_sizes
 from .carrier_checkpoint import update_checkpoint
-from .generation import GenerationBaseChanged, _digest, replace_native_generation
-from .ingestion_issues import clear_issues
+from .generation import FULL_GENERATION_BODY_LIMIT, GenerationBaseChanged, _digest, replace_native_generation
+from .ingestion_issues import clear_archive_failure, duplicate_dependencies, replace_carrier_issues
 from .native_atoms import stage_atom_rows, validate_native_snapshot, write_staged_atoms
 from .realization_projection import has_table
 
@@ -42,8 +42,8 @@ def _paths(value):
     return result
 
 
-def _inverse(model, relation_types):
-    endpoints = json.loads(model)["bindings"].get("endpoints")
+def _inverse(bindings, relation_types):
+    endpoints = bindings.get("endpoints")
     if not isinstance(endpoints, dict) or set(endpoints) != set(relation_types):
         raise ValueError("Snapshot relation types differ from the admitted Model")
     inverse = {}
@@ -97,20 +97,22 @@ def _validate_delta(connection, data, model, manifest_sha256, *, archive=False):
         digest_data["carrier_hashes"] = data["carrier_hashes"]
     if _digest(digest_data) != data["snapshot_sha256"]:
         raise ValueError("Native delta digest mismatch")
-    validate_native_snapshot(snapshot, manifest_sha256)
+    bindings = json.loads(model)["bindings"]
+    atoms, relations = validate_native_snapshot(snapshot, manifest_sha256, bindings)
+    _validate_delta_issues(connection, snapshot, paths)
     if archive and (any("09_archived" not in PurePosixPath(parent).parts for parent, _ in paths)
-                    or any(atom["status_group"] != "Archived" for atom in snapshot["atoms"])
+                    or any(atom.status_group != "Archived" for atom in atoms)
                     or snapshot.get("spec_sizes") or snapshot.get("lifecycle_lenses")):
         raise ValueError("Archive delta requires canonical Archived carriers")
-    inverse = _inverse(model, snapshot["relation_types"])
-    for atom in snapshot["atoms"]:
-        path = (atom["relative_path"], atom["filename"])
-        match = _CARRIER.fullmatch(atom["filename"])
-        if (path not in paths or not match or match.group(1) != atom["reference"].split("@")[0]
-                or match.group(2) and match.group(1) + match.group(2) != atom["exact_ref"]):
+    inverse = _inverse(bindings, snapshot["relation_types"])
+    for atom in atoms:
+        path = (atom.relative_path, atom.filename)
+        match = _CARRIER.fullmatch(atom.filename)
+        if (path not in paths or not match or match.group(1) != atom.reference.split("@")[0]
+                or match.group(2) and match.group(1) + match.group(2) != atom.exact_ref):
             raise ValueError("Atom does not belong to an addressed native path")
     old = _old_rows(connection, paths, archive=archive)
-    stage_atom_rows(connection, snapshot["atoms"])
+    stage_atom_rows(connection, atoms)
     conflict = connection.execute("""SELECT 1 FROM (
         SELECT relative_path, filename FROM main.mrt_atom_references WHERE reference IN (SELECT reference FROM int_admission_atoms)
         UNION ALL
@@ -119,9 +121,20 @@ def _validate_delta(connection, data, model, manifest_sha256, *, archive=False):
             WHERE p.relative_path = n.relative_path AND p.filename = n.filename) LIMIT 1""").fetchone()
     if conflict:
         raise DeltaReconciliationRequired("Ticket identity was admitted at another path; reconcile both paths")
-    new_edges = [tuple(edge[key] for key in _EDGE) for edge in snapshot["relations"]]
+    new_edges = [tuple(getattr(edge, key) for key in _EDGE) for edge in relations]
     _validate_edges(new_edges, inverse)
     return snapshot, old, new_edges, inverse
+
+
+def _validate_delta_issues(connection, snapshot, paths):
+    addressed = {str(PurePosixPath(parent) / name) for parent, name in paths}
+    issues = snapshot.get("ingestion_issues", [])
+    if any(issue["relative_path"] not in addressed or not addressed.issuperset(issue["related_paths"])
+           for issue in issues):
+        raise ValueError("Ingestion issue is outside the addressed native paths")
+    if (any(issue["code"] in {"duplicate_revision", "duplicate_current"} for issue in issues)
+            or duplicate_dependencies(connection, snapshot, addressed)):
+        raise DeltaReconciliationRequired("Duplicate Atom group requires full reconciliation")
 
 
 def _stage_owned_edges(connection, old, inverse):
@@ -204,13 +217,17 @@ def apply_native_delta(connection, data, manifest_sha256, *, archive=False):
             raise GenerationBaseChanged("Generation base changed or is not native")
         base, model, structure = rows[0]
         snapshot, old, new_edges, inverse = _validate_delta(connection, data, model, manifest_sha256, archive=archive)
+        generation = _delta_generation(base, data["snapshot_sha256"])
         update_checkpoint(connection, data, delta=True)
-        _finish_delta(connection, data, archive)
         if not old and not snapshot["atoms"]:
+            changed = _finish_delta(connection, data, archive, check_changes=True)
+            if changed:
+                connection.execute("UPDATE ops_generation SET id = ?", [generation])
             connection.execute("DROP TABLE int_delta_paths")
             connection.execute("DROP TABLE int_admission_atoms")
             connection.execute("COMMIT")
-            return base
+            return generation if changed else base
+        _finish_delta(connection, data, archive)
         _stage_owned_edges(connection, old, inverse)
         components = {"C00", *json.loads(structure)["components"]}
         if not archive:
@@ -220,8 +237,6 @@ def apply_native_delta(connection, data, manifest_sha256, *, archive=False):
         if not archive and has_table(connection, "main", "biz_architecture_spec_metrics"):
             apply_spec_delta(connection, [exact for _, exact in old if "-S-" in exact], snapshot_sizes(snapshot))
         _write_graph(connection, components)
-        generation = _digest({"kind": "native_ticket_delta", "base_generation": base,
-                              "delta_sha256": data["snapshot_sha256"]})
         connection.execute("UPDATE ops_generation SET id = ?", [generation])
         for table in ("int_delta_paths", "int_delta_old", "int_admission_atoms", "int_delta_owned_edges",
                       "int_delta_new_edges", "int_delta_affected", "int_delta_vertices", "int_delta_components"):
@@ -233,16 +248,26 @@ def apply_native_delta(connection, data, manifest_sha256, *, archive=False):
     return generation
 
 
-def _finish_delta(connection, data, archive):
+def _delta_generation(base, digest):
+    return _digest({"kind": "native_ticket_delta", "base_generation": base, "delta_sha256": digest})
+
+
+def _finish_delta(connection, data, archive, *, check_changes=False):
     from .archive_generation import set_archive_pending
 
+    snapshot = data["snapshot"]
+    paths = [str(PurePosixPath(parent) / name) for parent, name in data["paths"]]
+    changed = bool(snapshot.get("ingestion_issues"))
+    if check_changes and not changed:
+        changed = connection.execute("""SELECT EXISTS (SELECT 1 FROM main.ops_ingestion_issues
+            WHERE source IN ('atom', 'archive') AND relative_path IN (SELECT unnest(?)))""", [paths]).fetchone()[0]
+    replace_carrier_issues(connection, snapshot, paths=paths)
     if archive:
         set_archive_pending(connection, False)
-        clear_issues(connection, "archive")
-    else:
-        if data.get("archive_pending"):
-            set_archive_pending(connection, True)
-        clear_issues(connection, "atom", [str(PurePosixPath(parent) / name) for parent, name in data["paths"]])
+        clear_archive_failure(connection)
+    elif data.get("archive_pending"):
+        set_archive_pending(connection, True)
+    return changed
 
 
 def native_generation_route(connection, instance_id, manifest_sha256, lock, read_object, error_response):
@@ -256,7 +281,8 @@ def native_generation_route(connection, instance_id, manifest_sha256, lock, read
             alternatives += tuple(fields | {"carrier_hashes"} for fields in alternatives)
             if delta:
                 alternatives += (allowed | {"carrier_hashes", "archive_pending"},)
-            data = await read_object(request, 64 * 1024 * 1024, *alternatives)
+            limit = 64 * 1024 * 1024 if delta else FULL_GENERATION_BODY_LIMIT
+            data = await read_object(request, limit, *alternatives)
             if data["instance_id"] != instance_id:
                 return error_response("foreign_instance", "Instance does not match", 403)
             with lock:

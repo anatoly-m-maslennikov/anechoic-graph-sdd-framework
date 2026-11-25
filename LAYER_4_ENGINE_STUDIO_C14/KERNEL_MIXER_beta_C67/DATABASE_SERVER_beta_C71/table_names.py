@@ -36,6 +36,10 @@ DOMAIN_COMPATIBILITY = {
     "ops_carrier_hashes": "ops_generation_carrier_hashes",
 }
 PUBLIC_NAMES = {
+    "project_structure": "mrt_project_structure",
+    "model_entities": "mrt_model_entities",
+    "model_properties": "mrt_model_properties",
+    "diag_model_manifests": "mrt_diag_model_manifests",
     **{name: f"mrt_{name}" for name in ("atoms", "flow_overlap_candidates", "flow_similar_actions")},
     **_DOMAIN_NAMES,
     **{name: f"biz_{name}" for name in (

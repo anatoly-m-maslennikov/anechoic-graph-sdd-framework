@@ -2,12 +2,13 @@
 
 
 from collections.abc import Callable
-from dataclasses import dataclass, field
+from dataclasses import field
 from pathlib import Path
 import re
 import subprocess
 
 from pydantic import BaseModel, ConfigDict
+from pydantic.dataclasses import dataclass
 
 Runner = Callable[[tuple[str, ...], Path], subprocess.CompletedProcess[str]]
 IMAGE = re.compile(r"sha256:[0-9a-f]{64}")
@@ -16,7 +17,7 @@ FINGERPRINT = "org.anechoic.runtime.fingerprint"
 SCHEMA = "org.anechoic.runtime.schema"
 
 
-@dataclass
+@dataclass(config=ConfigDict(strict=True, extra="forbid"))
 class Cleanup:
     images: set[str] = field(default_factory=set)
     attempted: set[str] = field(default_factory=set)

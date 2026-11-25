@@ -1,15 +1,47 @@
 """Exercise View query behavior through the real Database Server socket."""
 
+import json
 from pathlib import Path
+import subprocess
 from tempfile import TemporaryDirectory
 from time import sleep
 import unittest
 
-from .DATABASE_SERVER_beta_C71__tests__shared import BINDING, _generation, _query, _server
+from ..DATABASE_SERVER_beta_C71__shared import result_ttl
+from .DATABASE_SERVER_beta_C71__tests__shared import BINDING, _generation, _launch_arguments, _query, _server
 
 
 def call(client, operation, arguments):
     return client.post("/workspace", json=BINDING | {"operation": operation, "arguments": arguments})
+
+
+class ResultTTLSettingsTest(unittest.TestCase):
+    def setUp(self):
+        self.root = Path(self.enterContext(TemporaryDirectory(dir="/tmp"))).resolve()
+        self.settings = self.root / ".anechoic_runtime/anechoic_runtime_settings.toml"
+        self.settings.parent.mkdir()
+
+    def test_missing_file_or_setting_uses_default_ttl(self):
+        self.assertEqual(3600, result_ttl(self.root, None))
+        self.settings.write_text("[workbench]\n", encoding="utf-8")
+        self.assertEqual(3600, result_ttl(self.root, None))
+
+    def test_startup_refuses_invalid_settings_before_listening(self):
+        socket = self.root / "db.sock"
+        command, environment = _launch_arguments(socket)
+        for content, error in (
+            ("[workbench]\nresult_ttl_seconds = 0\n", "positive integer"),
+            ("[workbench\n", "TOMLDecodeError"),
+        ):
+            with self.subTest(content=content):
+                self.settings.write_text(content, encoding="utf-8")
+                result = subprocess.run(
+                    [*command, "--project-root", str(self.root)], env=environment,
+                    capture_output=True, text=True, timeout=10,
+                )
+                self.assertNotEqual(0, result.returncode)
+                self.assertIn(error, result.stderr)
+                self.assertFalse(socket.exists())
 
 
 class ViewResultsTest(unittest.TestCase):
@@ -141,3 +173,31 @@ class ResultBudgetTest(unittest.TestCase):
             self.assertEqual(400, response.status_code, response.text)
             self.assertIn("cache is full", response.text)
             self.assertEqual([["x" * 500]], self.page(client, ids[0]).json()["result"]["rows"])
+
+
+class WorkspaceDocumentTest(unittest.TestCase):
+    def test_persisted_shape_and_malformed_documents(self):
+        root = Path(self.enterContext(TemporaryDirectory(dir="/tmp"))).resolve()
+        with _server(None, "--project-root", str(root)) as client:
+            self.assertEqual(200, client.put("/generation", json=_generation()).status_code)
+            response = call(client, "workspace_open", {"session_id": "test"})
+            self.assertEqual(200, response.status_code, response.text)
+            opened = response.json()["result"]
+            view_id = opened["active_view_id"]
+            args = {"workspace_id": "test", "view_id": view_id}
+            self.assertEqual(200, call(client, "view_rename", args | {"name": "named"}).status_code)
+            path = next((root / ".anechoic_runtime/workbench/beta/workspaces").glob("*.json"))
+            document = json.loads(path.read_text())
+            self.assertEqual("named", document["views"][0]["name"])
+            self.assertEqual(document, call(client, "workspace_get", {"workspace_id": "test"}).json()["result"])
+            self.assertEqual(200, call(client, "view_rename", args | {"name": " "}).status_code)
+            self.assertNotIn("name", json.loads(path.read_text())["views"][0])
+            for key, value in (("name", None), ("revision", True), ("sql", "\ud800")):
+                broken = json.loads(path.read_text())
+                broken["views"][0][key] = value
+                path.write_text(json.dumps(broken))
+                with self.subTest(key=key):
+                    response = call(client, "workspace_get", {"workspace_id": "test"})
+                    self.assertEqual(400, response.status_code, response.text)
+                    self.assertEqual("workspace is unavailable", response.json()["error"]["message"])
+                path.write_text(json.dumps(document))

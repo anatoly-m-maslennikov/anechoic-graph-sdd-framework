@@ -1,4 +1,5 @@
 """Generated native lifecycle paths; each case uses a fresh project."""
+from dataclasses import replace
 from hashlib import sha256
 from pathlib import Path
 import sys
@@ -74,7 +75,8 @@ class LifecycleRouteMatrix(LifecycleRouteSupport, unittest.TestCase):
         fixtures.NativeRevisionCarrierTests.setUp(self)
         project = self.selection
         project.manifest_path.write_text(project.manifest_path.read_text().replace('component: C0}', 'component: C00}'))
-        project.manifest_sha256 = sha256(project.manifest_path.read_bytes()).hexdigest()
+        self.selection = project = replace(
+            project, manifest_sha256=sha256(project.manifest_path.read_bytes()).hexdigest())
         rows = lambda: capture_native(project).atoms
         calls = []
         def validate(kind, header, component):

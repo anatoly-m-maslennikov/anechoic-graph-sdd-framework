@@ -7,7 +7,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import compose_contract_graph
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import render_contract_graph
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import extract_claim_constraints
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.subject_projection_relations import _relation_declarations, _relation_records
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import build_subject_projection_data
 
 def carrier(name, subject, code, label='CFEL', form='Declaration'):
     return {'source':{'atom_id':name,'version':1,'path':name+'.md'},'subjects':{'active':subject,'passive':[]},'read_view':{'content_role':'Requirement','type':form},'body':f'## Claim\n\n### Formal Claim\n\n```{label}\n{code}\n```\n\n## Semantics\n\nA relation.\n'}
@@ -58,7 +58,9 @@ declare_entity(
         self.assertEqual(step['source'], check['source'])
         node, = compose_contract_graph([step])['entities']
         self.assertIn(check, node['own'][0]['instance_clauses'])
-        rules = _relation_records(node['target'], node['own'], {}, {})
+        projection = build_subject_projection_data([step])
+        entity = next(row for row in projection['entities'] if row['identity'] == node['target'])
+        rules = entity['relation_rule_origins']['declared_here']
         self.assertEqual({'RUNS': ('Action', 'Workflow'), 'CONTAINS': ('Step',)}, {
             rule['relation']: rule['contract']['target_entity_paths'] for rule in rules
         })
@@ -106,7 +108,9 @@ declare_relation(relation_name="AFTER", source_endpoint={"level": "model_entitie
         alias=graph['relations'][0]['derived_aliases'][0];self.assertEqual((alias['name'],alias['classification'],alias['direct_relation']),('BEFORE','Derived','AFTER'))
         endpoint=alias['endpoints'][0];self.assertEqual(endpoint['host']['entity_paths'],('Target',));self.assertEqual(endpoint['target']['entity_paths'],('Host',));self.assertEqual(endpoint['targets_per_source'],{'minimum':0,'maximum':2});self.assertEqual(endpoint['sources_per_target'],{'minimum':0,'maximum':1})
         rendered=render_contract_graph(graph); self.assertIn('Derived Relation `((BEFORE))`',rendered); self.assertIn('IS_INVERSE_ALIAS_FOR bindings',rendered); self.assertNotIn('HAS_INVERSE bindings',rendered)
-        aliases=_relation_declarations(graph['relations']);self.assertTrue(any(r['name']=='BEFORE' and r['derivation']=='Derived' and r['direct_relations']==['AFTER'] for r in aliases))
+        aliases = build_subject_projection_data([c])['relation_declarations']
+        self.assertTrue(any(r['name'] == 'BEFORE' and r['derivation'] == 'Derived' and
+                            r['direct_relations'] == ['AFTER'] for r in aliases))
 
     def test_native_relation_keeps_endpoint_pairs_and_reverses_each_pair(self):
         declaration = carrier('CA-R-2245', 'CFEL <+ Relation//IS_EXECUTION_OF', '''from anechoic.formal_claims import declare_relation

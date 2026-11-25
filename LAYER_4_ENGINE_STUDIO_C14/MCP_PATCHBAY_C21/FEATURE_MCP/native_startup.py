@@ -1,7 +1,7 @@
 """Call the Backend's Project admission service over a private pipe."""
 
 from contextlib import contextmanager
-from dataclasses import dataclass, field
+from dataclasses import field
 import json
 import os
 from pathlib import Path
@@ -10,13 +10,16 @@ import subprocess
 import sys
 import threading
 
+from pydantic import ConfigDict, ValidatorFunctionWrapHandler, field_validator
+from pydantic.dataclasses import dataclass
+
 from MCP_PATCHBAY_C21.FEATURE_MCP.runtime_stack import runtime_stack
 
 class ProjectAdmissionError(ValueError):
     """The Backend refused a Project binding."""
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, config=ConfigDict(strict=True, extra="forbid"))
 class ProjectBinding:
     root: Path
     control_root: Path
@@ -31,6 +34,12 @@ class ProjectBinding:
     host_root: Path | None = None
     tool_blacklist: tuple[str, ...] = ()
     release_workflows_enabled: bool = False
+
+    @field_validator("parameters", "tool_blacklist", mode="wrap")
+    @classmethod
+    def _retain_collection(cls, value, validate: ValidatorFunctionWrapHandler):
+        validated = validate(value)
+        return value if isinstance(value, type(validated)) and value == validated else validated
 
     @property
     def launcher_state(self) -> Path:
@@ -101,7 +110,7 @@ def _start(connection):
     engine = Path(__file__).resolve().parents[2]
     root = engine.parent
     environment = {**{k: v for k, v in os.environ.items() if k != "PYTHONHOME"}, "PYTHONPATH": str(engine)}
-    module = _BETA_MODULE if runtime_stack() == "beta" else _MODULE
+    module = _MODULE if runtime_stack() == "current" else _BETA_MODULE
     return subprocess.Popen([sys.executable, "-B", "-P", "-m", module], cwd=root, env=environment,
                             stdin=connection, stdout=connection)
 

@@ -3,13 +3,16 @@
 
 from __future__ import annotations
 
+from pydantic import ConfigDict, WrapValidator
+from pydantic.dataclasses import dataclass
+
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass, field
+from dataclasses import field
 import datetime as dt
 import json
 from pathlib import Path
 import re
-from typing import Any
+from typing import Annotated, Any
 
 from .declared_header_rules import HeaderRule, compile_header_rules
 from .header_column_rules import (
@@ -26,7 +29,12 @@ _NAME = re.compile(r"[^a-z0-9_]")
 _SEPARATORS = re.compile(r"[\s-]+")
 
 
-@dataclass(frozen=True)
+def _retain_mapping(value, handler):
+    handler(value)
+    return value
+
+
+@dataclass(config=ConfigDict(strict=True, extra="forbid"), frozen=True)
 class HeaderColumn:
     """One source-faithful Header value."""
 
@@ -41,7 +49,7 @@ class HeaderColumn:
         return not self.rules or any(_rule_applies(rule, row) for rule in self.rules)
 
 
-@dataclass(frozen=True)
+@dataclass(config=ConfigDict(strict=True, extra="forbid"), frozen=True)
 class HeaderSchema:
     """The derived, reproducible Header part of the public atoms schema."""
 
@@ -121,19 +129,19 @@ class HeaderSchema:
             path.write_text(json.dumps(self.asset(), ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
-@dataclass(frozen=True)
+@dataclass(config=ConfigDict(strict=True, extra="forbid"), frozen=True)
 class _Contribution:
     values: tuple[tuple[tuple[str, ...], str | None, bool], ...]
     direct: frozenset[tuple[str, ...]]
 
 
-@dataclass(frozen=True)
+@dataclass(config=ConfigDict(strict=True, extra="forbid"), frozen=True)
 class HeaderSchemaState:
     """Owner-local Header aggregates, updated from exact materialized deltas."""
 
-    direct_counts: Mapping[tuple[str, ...], int] = field(default_factory=dict)
-    format_counts: Mapping[tuple[str, ...], Mapping[str, int]] = field(default_factory=dict)
-    populated_counts: Mapping[tuple[str, ...], int] = field(default_factory=dict)
+    direct_counts: Annotated[Mapping[tuple[str, ...], int], WrapValidator(_retain_mapping)] = field(default_factory=dict)
+    format_counts: Annotated[Mapping[tuple[str, ...], Mapping[str, int]], WrapValidator(_retain_mapping)] = field(default_factory=dict)
+    populated_counts: Annotated[Mapping[tuple[str, ...], int], WrapValidator(_retain_mapping)] = field(default_factory=dict)
 
     @classmethod
     def from_atoms(cls, atom_rows: Sequence[Mapping[str, Any]]) -> HeaderSchemaState:

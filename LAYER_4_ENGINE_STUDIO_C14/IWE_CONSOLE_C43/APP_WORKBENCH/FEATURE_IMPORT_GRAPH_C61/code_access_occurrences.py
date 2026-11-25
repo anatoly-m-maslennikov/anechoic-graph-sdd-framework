@@ -2,17 +2,20 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, replace
+from dataclasses import replace
 from importlib import metadata
 from pathlib import Path, PurePosixPath
 import sys
+
+from pydantic import ConfigDict
+from pydantic.dataclasses import dataclass
 
 from .resolution import _environment_root, _external, _lookup, _packages, _roots
 from .source import Source
 from .web_imports import _WEB, lookup_web
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True, slots=True, config=ConfigDict(strict=True, extra="forbid"))
 class CodeAccessOccurrence:
     source_path: str
     target_path: str | None
@@ -46,11 +49,9 @@ def code_access_occurrences(
         source_roots = [base for base in roots if file.is_relative_to(base)] if python_roots is None else roots
         source_external = external_by_root[source_roots[0]] if source_roots and python_roots is None else external
         for site in source.imports:
-            written, target, status = (lookup_web(root, site, file, sources, nodes)
+            written, target, status = (lookup_web(root, site, file, sources, nodes, include_asset_target=True)
                                        if source.language in _WEB else
                                        _lookup(site, file, source_roots, sources, packages, source_external, nodes, image_modules))
-            if status == "asset":
-                continue
             if source.language == "python" and site.name is not None:
                 written = f"from {written} import {site.name}"
             unit = site.name if source.language == "python" else None
@@ -62,7 +63,7 @@ def code_access_occurrences(
                     unit = None
             kind, _, key = target.partition(":") if target else (None, None, None)
             target_path = None
-            if status == "internal":
+            if status in {"internal", "asset"}:
                 target_path = key.removeprefix("local:") if kind == "package" else key
             facts.append(CodeAccessOccurrence(
                 path, target_path, kind,

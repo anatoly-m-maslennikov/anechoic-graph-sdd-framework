@@ -11,6 +11,13 @@ from .full_suite_docker import APP
 WORKBENCH = Path("LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH")
 WORKBENCH_TESTS = WORKBENCH / (WORKBENCH.name + "__tests")
 MCP_TESTS = APP / (APP.name + "__tests")
+_CANARY_TEST_DIRECTORY = (
+    "LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests"
+)
+_CANARY_TEST_MODULES = (
+    f"{_CANARY_TEST_DIRECTORY}/test_release_canary.py",
+    f"{_CANARY_TEST_DIRECTORY}/test_release_canary_retry.py",
+)
 
 
 def _test_phase(root: Path, module: Path) -> str:
@@ -28,7 +35,7 @@ def _test_phase(root: Path, module: Path) -> str:
 
 
 def valid_test_request(phase, candidate_image, test_modules, required):
-    return (phase in ("full", "static", "unit", "functional", "e2e", "image")
+    return (phase in ("full", "preflight", "static", "unit", "functional", "e2e", "image", "canary")
             and (phase in ("e2e", "image")) == (candidate_image is not None)
             and (candidate_image is None or isinstance(candidate_image, str)
                  and re.fullmatch(r"sha256:[0-9a-f]{64}", candidate_image) is not None)
@@ -70,6 +77,8 @@ def _required_unit_modules(root, discovered):
 
 
 def select_phase_modules(root, discovered, phase, focused, required):
+    if phase == "canary":
+        return _select_test_modules(root, discovered, _CANARY_TEST_MODULES)
     if required or phase == "functional":
         return _required_unit_modules(root, discovered)
     if phase != "full":

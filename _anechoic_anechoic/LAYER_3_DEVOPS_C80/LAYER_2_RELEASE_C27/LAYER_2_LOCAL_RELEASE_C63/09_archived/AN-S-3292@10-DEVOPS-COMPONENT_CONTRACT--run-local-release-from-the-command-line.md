@@ -1,0 +1,70 @@
+---
+atom_family: SPEC
+atom_id: AN-S-3292
+container:
+  component: C63
+tier: 0
+context:
+  template: component_contract
+  lens: DevOps
+state:
+  status: archived
+  version: 10
+  updated_at: '2026-11-24T12:56:09.285745+00:00'
+relations:
+  ANSWERS:
+  - AN-S-3290
+  IS_REFERENCE:
+  - AN-S-4733
+  - AN-S-4734
+  - AN-S-3346
+  - AN-S-3287
+---
+
+## Summary
+
+Run Local Release from the command line
+
+## Guarantee
+
+Use `local --run-id <id>` with the host command in AN-S-3288. A fresh release
+checkpoints Git, bumps the candidate version, and selects Active source Atoms.
+Run Static first and then the required host functional checks before building
+the candidate image. `--test-module` leaves both required gates in force.
+
+To resume, use `local --resume --run-id <id>` with the recorded Run ID
+and the same Project binding. Keep the candidate version allocated to
+the run. Record phase progress and evidence atomically. Protect retained
+artifacts while the run is open.
+
+Verify the retained inputs and phase evidence. Continue at the earliest
+incomplete or invalidated phase. Repeat affected checks before installation.
+Report an explicit error if the run or its Project binding cannot be verified.
+
+Verify installed files and the runtime identity before reusing installation
+or startup. Report an explicit error if the observed state cannot be
+reconciled with the run. If verified promotion is complete and only cleanup
+remains, resume cleanup alone.
+
+Use `prepare-local` with an exact base commit, literal changed paths, and
+an isolated loopback port to prepare a private checkout for Local Release.
+Report its exact revision. Installation belongs to the subsequent Local Release.
+
+Run end-to-end and canary checks on the exact candidate image before installing
+the verified package and its `ane` Skill. Preserve authoring sources and
+protected configuration. Start the candidate on the Project Manifest port
+and tag it as production after MCP is ready.
+
+After promotion, apply the retention standard in AN-S-4733. Report
+incomplete cleanup separately from promotion failure.
+
+Report the failed step and observed effects on failure. Write release receipts
+under `.anechoic_runtime/simple_local_release/` and test logs under
+`.anechoic_tmp/simple_local_release/`.
+
+If Project selection fails before execution, report
+`validate_project_selection` and an empty list of effects.
+
+## References
+
+AN-S-3290 and AN-S-4734.

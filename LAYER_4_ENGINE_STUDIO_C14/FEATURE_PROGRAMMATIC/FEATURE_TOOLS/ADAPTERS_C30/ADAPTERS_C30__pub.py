@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass, field
+from dataclasses import field
 import hashlib
 from itertools import groupby
 import os
@@ -12,6 +12,9 @@ import sys
 from threading import Lock
 import time
 from typing import Any
+
+from pydantic import ConfigDict, InstanceOf, ValidatorFunctionWrapHandler, field_validator
+from pydantic.dataclasses import dataclass
 
 
 __all__ = ["CEILINGS", "LimitReached", "ReadContext", "ReadFailure", "open_regular", "protected", "TemporaryBoundaryError", "validate_directory_components"]
@@ -28,8 +31,7 @@ CEILINGS = dict(
 
 if __package__:
     from .temporary_boundary import TemporaryBoundaryError, validate_directory_components
-else:
-    from temporary_boundary import TemporaryBoundaryError, validate_directory_components
+
 
 class ReadFailure(OSError):
     pass
@@ -65,7 +67,7 @@ def open_regular(path: Path, *, directory: bool = False) -> int:
         os.close(descriptor)
 
 
-@dataclass
+@dataclass(config=ConfigDict(strict=True, extra="forbid"))
 class ReadContext:
     roots: list[str]
     limits: dict[str, int]
@@ -79,7 +81,13 @@ class ReadContext:
     inventory_prunes: dict[str, Callable[[Path], bool]] = field(default_factory=dict, init=False)
     shallow_inventories: dict[str, tuple[str, ...]] = field(default_factory=dict)
     candidates: set[str] = field(default_factory=set)
-    _read_budget: Lock = field(default_factory=Lock, init=False, repr=False, compare=False)
+    _read_budget: InstanceOf[Lock] = field(default_factory=Lock, init=False, repr=False, compare=False)
+
+    @field_validator("roots", "limits", "started", "fingerprints", "sizes", "versions", "metadata_inputs",
+                     "inventories", "shallow_inventories", "candidates", mode="wrap")
+    def _preserve_state(cls, value: Any, validate: ValidatorFunctionWrapHandler) -> Any:
+        validate(value)
+        return value
 
     def checkpoint(self) -> None:
         if (time.monotonic() - self.started >= self.limits["timeout_seconds"]

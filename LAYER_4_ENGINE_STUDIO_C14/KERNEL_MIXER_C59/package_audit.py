@@ -28,7 +28,9 @@ def _contract_candidates(selection, capture):
                 context.get('template') != 'component_seed_manifest' or context.get('lens') != 'SPEC'):
             continue
         path = Path(row['source_path'])
-        carrier = SimpleNamespace(metadata=header, body=row['_content_bytes'].decode('utf-8'))
+        carrier = SimpleNamespace(  # pragma: anechoic-model-adapter - carrier parser
+            metadata=header, body=row['_content_bytes'].decode('utf-8'),
+        )
         if context.get('template') == 'component_contract':
             try:
                 fields = read_component_contract(path, carrier, edge['target_ref'], selection.project_prefix)

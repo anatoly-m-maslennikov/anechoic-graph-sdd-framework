@@ -1,9 +1,9 @@
 """Compute source diagnostics away from the query and lifecycle response path."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from contextlib import contextmanager
 from copy import deepcopy
-from dataclasses import dataclass
 from pathlib import Path
 import sys
 import threading
@@ -11,27 +11,30 @@ import time
 from types import MappingProxyType
 from typing import Any
 
+from pydantic import ConfigDict, InstanceOf
+from pydantic.dataclasses import dataclass
+
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import TABLES, collect_issues
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import carrier_read_view
 from .source_placement_audit import expected_carrier
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, config=ConfigDict(strict=True, extra="forbid"))
 class AuditSnapshot:
     root: Path
     control_root: Path
-    source_paths: frozenset[Path]
-    cached: dict[Path, tuple[Any, dict[str, Any]]]
-    diagnostics: dict[Path, str]
-    accepted: frozenset[Path]
-    references: dict[str, tuple[Path, ...]]
-    units: tuple[dict[str, Any], ...]
+    source_paths: InstanceOf[frozenset[Path]]
+    cached: InstanceOf[Mapping[Path, tuple[Any, dict[str, Any]]]]
+    diagnostics: InstanceOf[Mapping[Path, str]]
+    accepted: InstanceOf[frozenset[Path]]
+    references: InstanceOf[Mapping[str, tuple[Path, ...]]]
+    units: InstanceOf[tuple[dict[str, Any], ...]]
     root_unit_name: str
     project_scope_id: str
     schema: Any
     role_folders: Any
     audit_model: Any
-    invalid: frozenset[Path]
+    invalid: InstanceOf[frozenset[Path]]
 
     @classmethod
     def capture(cls, reader: Any, paths: set[str] | None = None) -> AuditSnapshot:

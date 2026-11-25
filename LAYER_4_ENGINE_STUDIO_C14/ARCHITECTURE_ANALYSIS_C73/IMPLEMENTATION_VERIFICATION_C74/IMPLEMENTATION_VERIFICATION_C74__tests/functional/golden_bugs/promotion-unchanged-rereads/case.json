@@ -1,0 +1,36 @@
+{
+  "title": "Promotion does not reread unchanged carriers",
+  "invariant": "Given a clean prior capture and unchanged metadata, promotion prewrite does not reread unchanged non-manifest carrier bodies.",
+  "scope": "AST projection covers the revised promotion call and revalidation changed-path selection only. Lean uses three eligible non-manifest carriers and an empty change set. It does not prove metadata integrity, concurrent-write safety, full Python equivalence, elapsed time, or end-to-end performance.",
+  "evidence": "@thread:thr_8zxi7bmrvv#msg=151799",
+  "before": {
+    "revision": "2db79c6a12370eaf77d6c32754aaa0fdecfa9767",
+    "source": "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ATOM_LIFECYCLE/native_draft.py",
+    "fixture": "before.py.txt",
+    "sha256": "0beda9d396e82471dcdbe6b54c5b086abc658a618611f8e53c086c6fad4dd8f0",
+    "git_blob": "7b7e5d460229d5b1ee56d485c9441f9d387a5c3f",
+    "source_rows": {
+      "source": "LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/native_source_rows.py",
+      "fixture": "before-source-rows.py.txt",
+      "sha256": "1f634ef50604029f717bc12aaec38201e5f1474576f8e8c561bb343c8cbba0d1"
+    }
+  },
+  "fixed": {
+    "revision": "16e4ad4114dfac260594e9769512f17e5fbd445c",
+    "source": "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ATOM_LIFECYCLE/native_draft.py",
+    "fixture": "fixed.py.txt",
+    "sha256": "f3a88aaa819c7ea473cedacdcacc3ba45c04c2786a0f23a615012ea1aaae72a3",
+    "git_blob": "fd762b91a67dcad06c886df155a39609d1763320",
+    "source_rows": {
+      "source": "LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/native_source_rows.py",
+      "fixture": "fixed-source-rows.py.txt",
+      "sha256": "e38cbd5ae158d69cdd4b3c36f47bde2d0979223aff8b6421efe8f3c9ad32516b"
+    }
+  },
+  "checks": [
+    {
+      "file": "regression.lean"
+    }
+  ],
+  "analyzer": "analyze.py"
+}

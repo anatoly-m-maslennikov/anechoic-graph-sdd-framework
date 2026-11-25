@@ -8,9 +8,9 @@ context:
   template: component_manifest
   lens: SPEC
 state:
-  status: active
-  version: 12
-  updated_at: '2026-11-23T14:50:07.521599+00:00'
+  status: "active"
+  version: 14
+  updated_at: "2026-11-24T21:14:47.650011+00:00"
 ---
 
 ## Summary
@@ -42,6 +42,15 @@ declare_entity(
                     ],
                 },
                 'exports': {
+                    'LAYER_2_LOCAL_RELEASE_C63__shared.LocalReleaseRun': {'private': ['LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/LAYER_2_LOCAL_RELEASE_C63/LAYER_2_LOCAL_RELEASE_C63__tests']},
+                    'LAYER_2_LOCAL_RELEASE_C63__shared.SnapshotReleaseRun': {'private': ['LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/LAYER_2_LOCAL_RELEASE_C63/LAYER_2_LOCAL_RELEASE_C63__tests']},
+                    'LAYER_2_LOCAL_RELEASE_C63__shared.build_package': {'private': ['LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/LAYER_2_LOCAL_RELEASE_C63/LAYER_2_LOCAL_RELEASE_C63__tests']},
+                    'LAYER_2_LOCAL_RELEASE_C63__shared.phase_inputs': {'private': ['LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/LAYER_2_LOCAL_RELEASE_C63/LAYER_2_LOCAL_RELEASE_C63__tests']},
+                    'LAYER_2_LOCAL_RELEASE_C63__shared.test_environment': {'private': ['LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/LAYER_2_LOCAL_RELEASE_C63/LAYER_2_LOCAL_RELEASE_C63__tests']},
+                    'LAYER_2_LOCAL_RELEASE_C63__shared.write_receipt': {'private': ['LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/LAYER_2_LOCAL_RELEASE_C63/LAYER_2_LOCAL_RELEASE_C63__tests']},
+                    'LAYER_2_LOCAL_RELEASE_C63__shared.prepare_local': {'private': ['parent']},
+                    'LAYER_2_LOCAL_RELEASE_C63__shared.run_snapshot_release': {'private': ['parent', 'LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/LAYER_2_LOCAL_RELEASE_C63/LAYER_2_LOCAL_RELEASE_C63__tests']},
+                    'LAYER_2_LOCAL_RELEASE_C63__shared.verify_image': {'private': ['parent', 'LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/LAYER_2_LOCAL_RELEASE_C63/LAYER_2_LOCAL_RELEASE_C63__tests']},
                     'local_release_package_phases': {'private': ['LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/LAYER_2_LOCAL_RELEASE_C63/LAYER_2_LOCAL_RELEASE_C63__tests']},
                     'local_release_runner': {'private': ['LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/LAYER_2_LOCAL_RELEASE_C63/LAYER_2_LOCAL_RELEASE_C63__tests']},
                     'local_release_runner._launcher_image': {'private': ['LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/LAYER_2_LOCAL_RELEASE_C63/LAYER_2_LOCAL_RELEASE_C63__tests']},

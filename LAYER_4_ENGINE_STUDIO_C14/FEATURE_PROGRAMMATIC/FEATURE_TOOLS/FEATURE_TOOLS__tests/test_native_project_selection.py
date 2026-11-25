@@ -16,8 +16,9 @@ TOOLS = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(TOOLS), str(TOOLS.parent)]
 
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import validate_manifest  # noqa: E402
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.legacy_settings_to_manifest import legacy_settings_to_manifest  # noqa: E402
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import discover_native_project, resolve_native_project  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import (  # noqa: E402
+    discover_native_project, legacy_settings_to_manifest, resolve_native_project,
+)
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import resolve_project
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import ProjectSelectionError
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import write_scope_unit_declarations  # noqa: E402

@@ -16,9 +16,9 @@ import yaml
 MCP = Path(__file__).resolve().parents[1]
 PROGRAMMATIC = MCP.parents[1] / "FEATURE_PROGRAMMATIC"
 
-from MCP_PATCHBAY_C21.FEATURE_MCP.direct_gateway import startup_selection  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import select_runtime_project as startup_selection  # noqa: E402
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import MCP_PATH, ProjectBinding  # noqa: E402
-from MCP_PATCHBAY_C21.FEATURE_MCP.http_server import create_app  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import create_http_app as create_app  # noqa: E402
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import extension_directory  # noqa: E402
 from . import test_native_startup as fixture  # noqa: E402
 
@@ -114,10 +114,10 @@ class NativeProductionStartupTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(before, self.legacy_digests())
 
     def test_http_entrypoint_uses_production_selection(self):
-        from MCP_PATCHBAY_C21.FEATURE_MCP.http_server import main
+        from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import http_main
 
         with patch('uvicorn.run') as run:
-            self.assertIsNone(main(['--project-root', str(self.root)]))
+            self.assertIsNone(http_main(['--project-root', str(self.root)]))
         self.assertIsInstance(run.call_args.args[0].gateway.selection, ProjectBinding)
 
 

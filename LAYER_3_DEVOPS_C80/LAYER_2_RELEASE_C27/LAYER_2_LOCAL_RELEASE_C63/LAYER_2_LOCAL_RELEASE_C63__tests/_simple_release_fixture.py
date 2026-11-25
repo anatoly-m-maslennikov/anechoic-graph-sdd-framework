@@ -114,9 +114,11 @@ class SimpleReleaseFixture:
         image_factory = patch("LAYER_2_LOCAL_RELEASE_C63.local_release_package_phases._image_manager", return_value=self.image)
         self.image_factory = image_factory.start()
         self.addCleanup(image_factory.stop)
-        self.start_container = self.enterContext(patch(
+        self._start_container_patch = patch(
             "LAYER_2_LOCAL_RELEASE_C63.local_release_runner.start_container", return_value="http://localhost:12345/mcp"
-        ))
+        )
+        self.start_container = self._start_container_patch.start()
+        self.addCleanup(self._start_container_patch.stop)
         provenance = patch("LAYER_2_LOCAL_RELEASE_C63.local_release_package_phases.release_image_provenance", return_value={
             "project_id": "c" * 64, "project_root": str(self.root),
             "control_root": ".anechoic_anechoic", "project_name": "Fixture",
@@ -144,7 +146,7 @@ class SimpleReleaseFixture:
                 return subprocess.CompletedProcess(argv, 0, "d" * 40 + "\n", "")
             if argv == ("git", "diff", "--cached", "--quiet"):
                 return subprocess.CompletedProcess(argv, int(staged), "", "")
-            if "--phase" in argv and argv[argv.index("--phase") + 1] == "image":
+            if "--phase" in argv and argv[argv.index("--phase") + 1] in {"image", "canary"}:
                 return subprocess.CompletedProcess(argv, 0, "ANECHOIC_CANARY_ENDPOINT http://127.0.0.1:49152/anechoic/mcp\n", "")
             return subprocess.CompletedProcess(argv, 0, "", "")
 

@@ -11,15 +11,11 @@ from unittest.mock import patch
 
 
 
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.generate_relation_registry import (
-    _source_pin,
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__shared import (
+    load_registry_asset,
     registry_asset,
-    write_registry,
 )  # noqa: E402
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import compile_registry  # noqa: E402
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.relation_registry_asset import (  # noqa: E402
-    load_registry_asset,
-)
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import compile_relation_registry  # noqa: E402
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import relation_registry_module as compiler  # noqa: E402
 
@@ -120,11 +116,6 @@ subject_path(address="Relation//DETAIL")
         self.assertEqual(["CA-R-1", "CA-R-2"], [source["atom_id"] for source in payload["sources"]])
         self.assertEqual(64, len(payload["input_digest"]))
 
-        with tempfile.TemporaryDirectory() as directory:
-            output = Path(directory) / "canonical_relation_registry.json"
-            write_registry(output, first)
-            self.assertEqual(first, output.read_bytes())
-
     def test_invalid_declaration_identity_is_omitted_before_asset_pinning(self) -> None:
         valid = declaration("CA-R-1", "DIRECT")
         invalid = declaration("CA-R-2", "INVERSE")
@@ -141,8 +132,10 @@ subject_path(address="Relation//DETAIL")
                 for source in payload["sources"]
             )
         )
+        staged = compile_registry([valid])
+        staged.declaration_rows[0]["version"] = True
         with self.assertRaisesRegex(ValueError, "positive integer Version"):
-            _source_pin(dict(valid, version=True))
+            registry_asset([valid], staged)
 
     def test_delivered_asset_loads_without_source_comparison(self) -> None:
         direct = declaration("CA-R-1", "DIRECT")

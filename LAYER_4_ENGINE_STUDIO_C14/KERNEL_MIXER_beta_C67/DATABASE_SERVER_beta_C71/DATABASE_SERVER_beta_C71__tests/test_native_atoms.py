@@ -36,6 +36,41 @@ def _native_generation():
 
 
 class NativeAtomTest(unittest.TestCase):
+    def test_strict_records_preserve_payload_and_error_order(self):
+        original = _native_generation()
+        with _server() as client:
+            self.assertEqual(200, client.put("/generation", json=original).status_code)
+            for collection, field, value, message in (
+                ("atoms", "version", True, "Invalid native Atom fields"),
+                ("atoms", "extra", 1, "Invalid native Atom fields"),
+                ("relations", "derived", 0, "Invalid native relation"),
+                ("relations", "extra", 1, "Invalid native relation"),
+            ):
+                invalid = deepcopy(original)
+                invalid["snapshot"][collection][0][field] = value
+                invalid["receipt"]["snapshot_sha256"] = _digest(invalid["snapshot"])
+                response = client.put("/generation", json=invalid)
+                self.assertEqual(400, response.status_code, response.text)
+                self.assertIn(message, response.text)
+            for field, value, message in (
+                ("schema_version", 2.0, "Invalid native snapshot envelope"),
+                ("extra", None, "Invalid native snapshot envelope"),
+                ("atoms", {}, "Native snapshot collections must be lists"),
+            ):
+                invalid = deepcopy(original)
+                invalid["snapshot"][field] = value
+                invalid["receipt"]["snapshot_sha256"] = _digest(invalid["snapshot"])
+                response = client.put("/generation", json=invalid)
+                self.assertEqual(400, response.status_code, response.text)
+                self.assertIn(message, response.text)
+            invalid = deepcopy(original)
+            invalid["snapshot"]["atoms"][0]["exact_ref"] = "invalid"
+            invalid["snapshot"]["atoms"][1]["version"] = True
+            invalid["receipt"]["snapshot_sha256"] = _digest(invalid["snapshot"])
+            response = client.put("/generation", json=invalid)
+            self.assertIn("Invalid native Atom identity", response.text)
+            self.assert_native_rows(client)
+
     def test_upgrade_restart_and_refusal_preserve_generation(self):
         with TemporaryDirectory(dir="/tmp") as directory:
             path = Path(directory).resolve() / "projection.duckdb"
@@ -151,21 +186,27 @@ class NativeSchemaTest(unittest.TestCase):
         self.assertEqual(expected, status["values"])
 
 class StagedNativeAtomsTest(unittest.TestCase):
-    def test_stage_mixed_order_empty_and_revisions(self):
-        from ..native_atoms import replace_native_atoms, stage_atom_rows, write_staged_atoms
-
-        current, archived = _native_generation()["snapshot"]["atoms"]
+    def test_mixed_order_empty_revisions_and_atomic_refusal(self):
+        data = _native_generation()
+        current, archived = data["snapshot"]["atoms"]
         draft = archived | {"reference": "AN-T-2@1-draft", "exact_ref": "AN-T-2@1-draft",
                             "status_group": "Draft", "status": "draft", "filename": "draft.md"}
-        draft = dict(reversed(list(draft.items())))
-        with duckdb.connect() as connection:
-            replace_native_atoms(connection, {"atoms": [], "relations": []})
-            stage_atom_rows(connection, [current, draft, archived])
-            write_staged_atoms(connection)
-            self.assertEqual(3, connection.execute("SELECT count(*) FROM int_admission_atoms").fetchone()[0])
-            self.assertEqual(
-                [("AN-T-1", "AN-T-1@2"), (None, "AN-T-1@1"), (None, "AN-T-2@1-draft")],
-                connection.execute("SELECT stable_ref, exact_ref FROM mrt_atom_references ORDER BY reference").fetchall(),
-            )
-            stage_atom_rows(connection, [])
-            self.assertEqual(0, connection.execute("SELECT count(*) FROM int_admission_atoms").fetchone()[0])
+        data["snapshot"]["atoms"] = [current, dict(reversed(list(draft.items()))), archived]
+        data["snapshot"]["relations"] = []
+        data["receipt"]["snapshot_sha256"] = _digest(data["snapshot"])
+        sql = "SELECT stable_ref, exact_ref FROM mrt_atom_references ORDER BY reference"
+        expected = [["AN-T-1", "AN-T-1@2"], [None, "AN-T-1@1"], [None, "AN-T-2@1-draft"]]
+        with _server() as client:
+            admitted = client.put('/generation', json=data)
+            self.assertEqual(200, admitted.status_code, admitted.text)
+            self.assertEqual(expected, _query(client, sql).json()['result']['rows'])
+            invalid = deepcopy(data)
+            invalid["snapshot"]["atoms"].append(current)
+            invalid["receipt"]["snapshot_sha256"] = _digest(invalid["snapshot"])
+            self.assertEqual(400, client.put('/generation', json=invalid).status_code)
+            self.assertEqual(expected, _query(client, sql).json()['result']['rows'])
+            data["snapshot"]["atoms"] = []
+            data["receipt"]["snapshot_sha256"] = _digest(data["snapshot"])
+            empty = client.put('/generation', json=data)
+            self.assertEqual(200, empty.status_code, empty.text)
+            self.assertEqual([], _query(client, sql).json()['result']['rows'])

@@ -173,7 +173,8 @@ def _archive_spec_selected(selection, target, draft, path, digest, owner, previo
                 if version not in used and not destination.exists() and not destination.is_symlink():
                     break
                 version += 1
-            archived = _state_bytes(raw, bounds, path, version, body, 'archived')
+            archived = _state_bytes(raw, bounds, path, version, body, 'archived',
+                                    update_timestamp=version != target['version'])
         except (OSError, RuntimeError, ValueError, KeyError, TypeError) as error:
             raise SourceChanged('SPEC Draft source is unavailable or changed.') from error
         return _write_archived_spec(selection, target, draft, path, digest, destination, archived, version)

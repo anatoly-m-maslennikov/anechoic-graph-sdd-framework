@@ -12,7 +12,8 @@ import unittest
 from unittest.mock import patch
 
 
-from LAYER_2_LOCAL_RELEASE_C63.LAYER_2_LOCAL_RELEASE_C63__shared import run_local_release  # noqa: E402
+from LAYER_1_RUNTIME_IMAGES_C81.LAYER_1_RUNTIME_IMAGES_C81__shared import LocalReleaseError
+from LAYER_2_LOCAL_RELEASE_C63.LAYER_2_LOCAL_RELEASE_C63__shared import run_local_release, write_receipt  # noqa: E402
 
 
 from LAYER_2_LOCAL_RELEASE_C63.LAYER_2_LOCAL_RELEASE_C63__tests.LAYER_2_LOCAL_RELEASE_C63__tests__shared import SimpleReleaseFixture  # noqa: E402
@@ -111,14 +112,15 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
             if argv == ("git", "diff", "--cached", "--quiet"):
                 return subprocess.CompletedProcess(argv, int(staged), "", "")
             if any(item.endswith("test_suite__pub.py") for item in argv):
-                self.assertIn("--all-groups", argv)
-                self.assertIn("--managed-python", argv)
-                self.assertEqual("LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine", Path(argv[argv.index("--project") + 1]).relative_to(Path(__file__).resolve().parents[4]).as_posix())
-                self.assertIn("3.14", argv)
+                if argv[argv.index("--phase") + 1] != "preflight":
+                    self.assertIn("--all-groups", argv)
+                    self.assertIn("--managed-python", argv)
+                    self.assertEqual("LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine", Path(argv[argv.index("--project") + 1]).relative_to(Path(__file__).resolve().parents[4]).as_posix())
+                    self.assertIn("3.14", argv)
                 self.assertEqual(str(self.root), argv[argv.index("--project-root") + 1])
                 for target in (self.product, self.installed):
                     self.assertEqual("obsolete", (target / "old.txt").read_text())
-            failed = any(item.endswith("test_suite__pub.py") for item in argv)
+            failed = "--phase" in argv and argv[argv.index("--phase") + 1] == "static"
             return subprocess.CompletedProcess(argv, 2 if failed else 0, stdout if failed else "", stderr if failed else "")
 
         return runner
@@ -144,8 +146,9 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
         image_cleanup.assert_not_called()
         for target in (self.product, self.installed):
             self.assertEqual("obsolete", (target / "old.txt").read_text())
-        self.assertEqual(1, sum(any(item.endswith("test_suite__pub.py") for item in argv) for argv in calls))
-        gate = next(argv for argv in calls if any(item.endswith("test_suite__pub.py") for item in argv))
+        gates = [argv for argv in calls if "--phase" in argv]
+        self.assertEqual(["preflight", "static"], [argv[argv.index("--phase") + 1] for argv in gates])
+        gate = gates[-1]
         self.assertEqual("static", gate[gate.index("--phase") + 1])
         self.assertNotIn("--candidate-image", gate)
         self.assertEqual(2, sum(argv[:2] == ("git", "commit") for argv in calls))
@@ -165,15 +168,18 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
     def test_default_tests_log_is_retained_on_interrupt_with_actual_failed_step(self):
         runner, calls = self._runner()
 
-        def interrupted(argv, cwd, log, *, env=None):
+        def interrupted(argv, cwd, log, *, env=None, lock_fd=None):
             self.assertIn("-u", argv)
             self.assertEqual(self.root, cwd)
+            if argv[argv.index("--phase") + 1] == "preflight":
+                return subprocess.CompletedProcess(argv, 0, "", "")
             log.write(b"partial test evidence\n")
             log.flush()
             raise KeyboardInterrupt
 
         output = io.StringIO()
         with patch("LAYER_2_LOCAL_RELEASE_C63.local_release_runner.subprocess.run", side_effect=lambda argv, **kwargs: runner(argv, kwargs["cwd"])), \
+                patch("LAYER_2_LOCAL_RELEASE_C63.local_release_progress.COMMAND_ROOT", self.root), \
                 patch("LAYER_2_LOCAL_RELEASE_C63.local_release_runner.run_logged_test_process", side_effect=interrupted), \
                 patch("LAYER_2_LOCAL_RELEASE_C63.local_release_runner.sys.stderr", output):
             result = run_local_release(self.root, run_id="interrupted")
@@ -195,11 +201,12 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
     def test_default_test_log_survives_later_failure_without_whole_output_capture(self):
         runner, _ = self._runner()
 
-        def passed(argv, cwd, log, *, env=None):
+        def passed(argv, cwd, log, *, env=None, lock_fd=None):
             log.write(b"complete test evidence\n")
             return subprocess.CompletedProcess(argv, 0, "bounded tail", "")
 
         with patch("LAYER_2_LOCAL_RELEASE_C63.local_release_runner.subprocess.run", side_effect=lambda argv, **kwargs: runner(argv, kwargs["cwd"])), \
+                patch("LAYER_2_LOCAL_RELEASE_C63.local_release_progress.COMMAND_ROOT", self.root), \
                 patch("LAYER_2_LOCAL_RELEASE_C63.local_release_runner.run_logged_test_process", side_effect=passed), \
                 patch("LAYER_2_LOCAL_RELEASE_C63.local_release_package_phases._prepare_package", side_effect=RuntimeError("package failed")):
             result = run_local_release(self.root, run_id="later-failed")
@@ -209,22 +216,100 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
         self.assertIn(result["test_log_path"], (self.root / result["report_path"]).read_text())
 
 
+    def test_rejected_repeat_preserves_completed_receipt(self):
+        runner, _ = self._runner()
+        run_id = "retained-receipt"
+        completed = run_local_release(self.root, run_id=run_id, runner=runner)
+        self.assertEqual("completed", completed["outcome"], completed)
+        receipt = self.root / completed["receipt_path"]
+        original = receipt.read_bytes()
+
+        rejected = run_local_release(self.root, run_id=run_id, runner=runner)
+        self.assertEqual("failed", rejected["outcome"], rejected)
+        report = self.root / rejected["report_path"]
+        self.assertNotEqual(receipt, report)
+        self.assertIn("Simple local release failed", report.read_text(encoding="utf-8"))
+        self.assertEqual(original, receipt.read_bytes())
+        self.assertEqual(completed, run_local_release(self.root, run_id=run_id, runner=runner, resume=True))
+
+
+    def test_receipt_records_verified_deployment_without_extra_evidence(self):
+        run_id = "deployment-receipt"
+        receipt = self.root / ".anechoic_runtime/simple_local_release/reports" / f"{run_id}.md"
+        receipt.parent.mkdir(parents=True, exist_ok=True)
+        endpoint = "http://127.0.0.1:18092/anechoic/mcp"
+        evidence = {
+            "version": "0.4.1.1", "source_sha": "1" * 40, "source_root": "/source",
+            "accepted_source_sha": "a" * 40, "image_build_sha": "1" * 40,
+            "verified_phases": {
+                "verify candidate image": {"source_sha": "1" * 40, "inputs": {"image": "b" * 64}},
+                "verify candidate canary": {"source_sha": "a" * 40, "inputs": {"canary": "c" * 64}},
+            },
+            "failed_attempts": [{
+                "phase": "verify_candidate_canary", "source_sha": "1" * 40,
+                "logs": {"canary": "failed-canary.log"}, "error": "omit retained log text",
+            }],
+            "project_root": str(self.root), "target_manifest_sha256": "0" * 64,
+            "target_runtime_settings_sha256": "d" * 64,
+            "project_instance": "2" * 64, "control_root": self.control.name, "port": 18092,
+            "package_sha256": "3" * 64, "image_id": "sha256:" + "4" * 64, "fingerprint": "5" * 64,
+            "container_id": "6" * 64, "readiness": "healthy", "observed_at": "2026-11-24T12:00:00Z",
+            "endpoint": endpoint, "extra": "ignored",
+        }
+        result = write_receipt(
+            self.root, receipt, run_id, "refresh", "static and functional", "required", None, endpoint,
+            {"image": "image.log"}, "retained", "", evidence=evidence,
+        )
+
+        self.assertEqual(receipt, self.root / result)
+        content = receipt.read_text(encoding="utf-8")
+        self.assertNotIn("ignored", content)
+        for name, value in evidence.items():
+            if name not in {"extra", "verified_phases", "failed_attempts"}:
+                self.assertIn(f"`{value}`", content)
+        self.assertIn(f"Accepted source SHA: `{evidence['accepted_source_sha']}`", content)
+        self.assertIn(f"Image build source SHA: `{evidence['image_build_sha']}`", content)
+        for phase, proof in evidence["verified_phases"].items():
+            self.assertIn(f"Verification source SHA for `{phase}`: `{proof['source_sha']}`", content)
+        failed = evidence["failed_attempts"][0]
+        self.assertIn(f"Stopped at `{failed['phase']}` on source `{failed['source_sha']}`.", content)
+        self.assertIn("Complete canary test output: `failed-canary.log`", content)
+        self.assertNotIn(failed["error"], content)
+
+
+    def test_start_failure_report_retains_diagnostic_notes(self):
+        error = LocalReleaseError("local-release-container-exited")
+        note = 'Local Release startup diagnostics: {"loopback_port":18092,"state":{"exit_code":137}}'
+        error.add_note(note)
+        self.start_container.side_effect = error
+        runner, _ = self._runner()
+        result = run_local_release(self.root, run_id="failed-start", runner=runner)
+
+        self.assertEqual(("failed", "start_mcp"), (result["outcome"], result["failed_step"]))
+        report = self.root / result["report_path"]
+        self.assertIn(note, report.read_text(encoding="utf-8"))
+
+
     def test_default_runner_streams_one_log_for_each_gate(self):
         runner, _ = self._runner()
         phases = []
 
-        def passed(argv, cwd, log, *, env=None):
-            project = Path(argv[argv.index("--project") + 1])
-            engine = project.parents[2] / "LAYER_4_ENGINE_STUDIO_C14"
+        def passed(argv, cwd, log, *, env=None, lock_fd=None):
+            phase = argv[argv.index("--phase") + 1]
+            if phase == "preflight":
+                engine = Path(argv[0]).parents[2]
+            else:
+                project = Path(argv[argv.index("--project") + 1])
+                engine = project.parents[2] / "LAYER_4_ENGINE_STUDIO_C14"
             self.assertEqual(str(engine / ".venv-dev"), env["UV_PROJECT_ENVIRONMENT"])
             self.assertEqual(str(engine), env["PYTHONPATH"])
             self.assertNotIn("PYTHONHOME", env)
             self.assertNotIn("VIRTUAL_ENV", env)
             self.assertIn("-P", argv)
-            phase = argv[argv.index("--phase") + 1]
+            self.assertIn("-B", argv)
             phases.append(phase)
             log.write(f"{phase} evidence\n".encode())
-            output = "ANECHOIC_CANARY_ENDPOINT http://127.0.0.1:49152/anechoic/mcp\n" if phase == "image" else ""
+            output = "ANECHOIC_CANARY_ENDPOINT http://127.0.0.1:49152/anechoic/mcp\n" if phase == "canary" else ""
             return subprocess.CompletedProcess(argv, 0, output, "")
 
         original_run = subprocess.run
@@ -234,17 +319,20 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
             return original_run(argv, **kwargs)
 
         with patch.dict(os.environ, {"PYTHONHOME": "/bad", "VIRTUAL_ENV": "/bad", "PYTHONPATH": "/bad"}), \
+                patch("LAYER_2_LOCAL_RELEASE_C63.local_release_progress.COMMAND_ROOT", self.root), \
                 patch("LAYER_2_LOCAL_RELEASE_C63.local_release_runner.subprocess.run", side_effect=run), \
                 patch("LAYER_2_LOCAL_RELEASE_C63.local_release_runner.run_logged_test_process", side_effect=passed):
             result = run_local_release(self.root, run_id="gate-logs")
         self.assertEqual("completed", result["outcome"], result)
-        self.assertEqual(["static", "functional", "image"], phases)
-        for phase in phases:
-            path = self.root / result["test_log_paths"][phase]
-            self.assertEqual(f"{phase} evidence\n", path.read_text())
+        self.assertEqual(["preflight", "static", "functional", "image-tests", "canary"], phases)
+        self.assertEqual({"preflight", "static", "functional", "image", "canary"}, set(result["test_log_paths"]))
         receipt = (self.root / result["receipt_path"]).read_text()
-        self.assertIn(f"Complete functional test output: `{result['test_log_paths']['functional']}`", receipt)
-        self.assertEqual(result["test_log_paths"]["image"], result["test_log_path"])
+        for phase in phases:
+            name = "image" if phase == "image-tests" else phase
+            path = result["test_log_paths"][name]
+            self.assertEqual(f"{phase} evidence\n", (self.root / path).read_text())
+            self.assertIn(f"Complete {name} test output: `{path}`", receipt)
+        self.assertEqual(result["test_log_paths"]["canary"], result["test_log_path"])
 
 
 

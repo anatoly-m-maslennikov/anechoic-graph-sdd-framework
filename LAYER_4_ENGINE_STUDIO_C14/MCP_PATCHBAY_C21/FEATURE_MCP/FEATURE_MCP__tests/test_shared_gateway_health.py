@@ -12,13 +12,11 @@ from unittest.mock import patch
 MCP = Path(__file__).resolve().parents[1]
 TOOLS = MCP.parents[1] / "FEATURE_PROGRAMMATIC" / "FEATURE_TOOLS"
 
-from MCP_PATCHBAY_C21.FEATURE_MCP.health_page import render_health_page  # noqa: E402
-from MCP_PATCHBAY_C21.FEATURE_MCP.health_observations import MAX_OBSERVATIONS  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import render_health_page  # noqa: E402
 from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__shared import load_host_runtime_config  # noqa: E402
 from mcp import types  # noqa: E402
 from .test_native_startup import RuntimeSelectionTests  # noqa: E402
 from .shared_backend_fixture import backend_gateway  # noqa: E402
-from MCP_PATCHBAY_C21.FEATURE_MCP.shared_gateway_support import refusal  # noqa: E402
 
 
 def _tool():
@@ -97,7 +95,7 @@ class SharedGatewayHealthTests(unittest.IsolatedAsyncioTestCase):
         self.assertNotIn("workflows", status)
         self.assertEqual("ALPHA", status["calls"][0]["project_prefix"])
         self.assertEqual(1, len(status["known_project_contexts"]))
-        html = render_health_page(status, ready=True, gateway=gateway)
+        html = render_health_page(status, state="ready", gateway=gateway)
         self.assertIn("Known Project contexts", html)
         self.assertIn(status["calls"][0]["project_instance_id"], html)
         projects = html.split('<section aria-labelledby="projects">')[1].split("</section>")[0]
@@ -127,15 +125,17 @@ class SharedGatewayHealthTests(unittest.IsolatedAsyncioTestCase):
         pending.cancel()
         with self.assertRaises(asyncio.CancelledError):
             await pending
+        missing_root = types.CallToolRequestParams(name="echo", arguments={})
         with patch("MCP_PATCHBAY_C21.FEATURE_MCP.shared_gateway_support.warning", return_value="technical diagnostic emission failed"):
-            refusal_result = refusal("missing_project_root")
+            refusal_result = await gateway.call(None, missing_root)
+        self.assertTrue(refusal_result.is_error)
         self.assertEqual(
             ["missing_project_root", "technical_diagnostics_unavailable"],
             refusal_result.structured_content["diagnostics"],
         )
         with patch("MCP_PATCHBAY_C21.FEATURE_MCP.shared_gateway_support.warning", side_effect=FutureCancelledError()):
             with self.assertRaises(FutureCancelledError):
-                refusal("missing_project_root")
+                await gateway.call(None, missing_root)
 
     async def test_observer_future_cancellation_propagates(self):
         class CancelledObserver:
@@ -166,14 +166,14 @@ class SharedGatewayHealthTests(unittest.IsolatedAsyncioTestCase):
     async def test_known_project_contexts_are_bounded(self):
         roots = [
             self.root,
-            *[self._project(f"project{index}") for index in range(MAX_OBSERVATIONS)],
+            *[self._project(f"project{index}") for index in range(32)],
         ]
         self._config()
         gateway = await self._gateway()
         for root in roots:
             await gateway.call(None, self._params(root))
         contexts = (await gateway.status())["known_project_contexts"]
-        self.assertEqual(MAX_OBSERVATIONS, len(contexts))
+        self.assertEqual(32, len(contexts))
         self.assertNotIn("ALPHA", [context["prefix"] for context in contexts])
 
 

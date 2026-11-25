@@ -1,0 +1,16 @@
+"""Atom carrier fields from the retained Model snapshot."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from datetime import datetime
+
+
+@dataclass
+class AtomDestination:
+    file: AtomDestinationFile = field(metadata={'property_occurrence_cardinality': 1, 'value_cardinality': 0, 'dependent_property_cardinality': 2})
+
+@dataclass
+class AtomDestinationFile:
+    name: str = field(metadata={'value_cardinality': 1})
+    path: str = field(metadata={'value_cardinality': 1})

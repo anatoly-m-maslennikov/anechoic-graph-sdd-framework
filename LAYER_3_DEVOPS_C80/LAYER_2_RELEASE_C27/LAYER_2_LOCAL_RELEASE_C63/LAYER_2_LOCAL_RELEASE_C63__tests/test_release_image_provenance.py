@@ -4,7 +4,7 @@ from pathlib import Path
 import subprocess
 from types import SimpleNamespace
 import unittest
-from unittest.mock import Mock
+from unittest.mock import Mock, call
 
 from LAYER_2_LOCAL_RELEASE_C63.LAYER_2_LOCAL_RELEASE_C63__tests import test_simple_local_release as fixtures
 from LAYER_2_LOCAL_RELEASE_C63.LAYER_2_LOCAL_RELEASE_C63__shared import run_local_release
@@ -68,7 +68,7 @@ class ReleaseImageProvenanceTests(unittest.TestCase):
             release_image_provenance(Path("/owner"), selection, runner)
         runner.assert_not_called()
 
-    def test_native_runner_passes_owning_provenance_only_to_candidate_build(self) -> None:
+    def test_native_runner_preserves_candidate_provenance_through_recheck(self) -> None:
         fixture = fixtures.SimpleLocalReleaseTests("runTest")
         fixture.setUp()
         self.addCleanup(fixture.doCleanups)
@@ -76,18 +76,19 @@ class ReleaseImageProvenanceTests(unittest.TestCase):
         def runner(argv: tuple[str, ...], root: Path) -> subprocess.CompletedProcess[str]:
             output = ("d" * 40 if argv[:2] == ("git", "rev-parse") else
                       "ANECHOIC_CANARY_ENDPOINT http://127.0.0.1:49152/anechoic/mcp\n"
-                      if "--phase" in argv and argv[argv.index("--phase") + 1] == "image" else "")
+                      if "--phase" in argv and argv[argv.index("--phase") + 1] == "canary" else "")
             return subprocess.CompletedProcess(argv, 0, output, "")
 
         result = run_local_release(fixture.root, run_id="provenance", runner=runner)
-        self.assertEqual(result["outcome"], "completed")
+        self.assertEqual("completed", result["outcome"], result)
         fixture.provenance.assert_called_once()
         self.assertEqual(fixture.provenance.call_args.args[0], fixture.root)
-        self.assertEqual(
-            fixture.image_factory.call_args_list[0].kwargs["build_provenance"],
-            fixture.provenance.return_value,
-        )
-        self.assertNotIn("build_provenance", fixture.image_factory.call_args_list[1].kwargs)
+        prepared, rechecked, installed = fixture.image_factory.call_args_list
+        self.assertEqual(fixture.provenance.return_value, prepared.kwargs["build_provenance"])
+        self.assertEqual(prepared, rechecked)
+        self.assertEqual({"project_root": fixture.root}, installed.kwargs)
+        exact = call(explicit_id=fixture.image_id, build_if_missing=False)
+        self.assertEqual([call(use_packaged_assets=True), exact, exact], fixture.image.resolve.call_args_list)
 
     def test_unavailable_head_stops_before_candidate_build(self) -> None:
         fixture = fixtures.SimpleLocalReleaseTests("runTest")
@@ -121,7 +122,7 @@ class ReleaseImageProvenanceTests(unittest.TestCase):
                 return subprocess.CompletedProcess(argv, int(dirty), "", "")
             if argv[:2] == ("git", "commit"):
                 dirty, head = False, "e" * 40
-            if "--phase" in argv and argv[argv.index("--phase") + 1] == "image":
+            if "--phase" in argv and argv[argv.index("--phase") + 1] == "canary":
                 return subprocess.CompletedProcess(
                     argv, 0, "ANECHOIC_CANARY_ENDPOINT http://127.0.0.1:49152/anechoic/mcp\n", ""
                 )

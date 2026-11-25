@@ -12,7 +12,6 @@ from uuid import uuid4
 
 from mcp.client.session import ClientSession
 
-from . import test_native_startup as fixture
 from .FEATURE_MCP__tests__shared import project as make_project
 from .workbench_docker_support import (
     IMAGE_DEADLINES, defer_container_cleanup, docker_deadline_env, image_deadline_mode, image_mcp_transport,
@@ -31,6 +30,8 @@ _STARTUP_REUSE_RUNS = """
     GROUP BY t.run_id
     HAVING bool_or(e.kind = 'output' AND e.name = 'generation_result')
 """
+
+
 
 
 @contextmanager
@@ -59,7 +60,7 @@ def archive_project(case, prepare=make_project):
         deadline = monotonic() + 90
         while observing(container, deadline):
             try:
-                if request(project.url + HEALTH_PATH) == (200, {"ready": True}):
+                if request(project.url + HEALTH_PATH) == (200, {"state": "ready"}):
                     break
             except OSError:
                 pass
@@ -78,7 +79,7 @@ class WarmProjectionRestartCase:
         environment = subprocess.check_output([
             "docker", "image", "inspect", "--format", "{{json .Config.Env}}", os.environ["ANECHOIC_IMAGE"],
         ], text=True, timeout=image_timeout(10))
-        if "ANECHOIC_RUNTIME_STACK=beta" in json.loads(environment):
+        if bool({"ANECHOIC_RUNTIME_STACK=beta", "ANECHOIC_RUNTIME_STACK=beta_next"} & set(json.loads(environment))):
             return self._startup_reuse_runs().keys()
         return None
 
@@ -121,8 +122,8 @@ class WarmProjectionRestartCase:
 
 class DockerBrowserAndMcpCases:
     def test_workbench_browser_flows(self):
-        repository = fixture.MCP.parents[2]
-        frontend = fixture.MCP.parents[1] / "IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND"
+        repository = Path(__file__).resolve().parents[4]
+        frontend = Path(__file__).resolve().parents[3] / "IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND"
         environment = os.environ | {
             IMAGE_DEADLINES: image_deadline_mode(os.environ),
             "WORKBENCH_E2E_URL": f"{self.url}{WORKBENCH_PATH}/Anechoic",
@@ -130,10 +131,7 @@ class DockerBrowserAndMcpCases:
         }
         launch = run_browser(
             self.container,
-            ["node", "--input-type=module", "-e", 'import { chromium } from "playwright"; '
-             f'const timeout = process.env.{IMAGE_DEADLINES} === "0" ? 0 : undefined; '
-             'const browser = await chromium.launch({channel: "chromium", timeout}); '
-             'console.log(browser.version()); await browser.close();'],
+            ["node", str(frontend / "FEATURE_WORKBENCH_FRONTEND__tests/pinned_chromium_probe.ts")],
             cwd=frontend, env=environment, bounded_timeout=None,
         )
         self.assertEqual(0, launch.returncode,
@@ -143,8 +141,9 @@ class DockerBrowserAndMcpCases:
         reports = repository / ".anechoic_tmp/test_reports"
         reports.mkdir(parents=True, exist_ok=True)
         output = tempfile.mkdtemp(prefix="workbench-browser-", dir=reports)
-        command = ["node", "node_modules/@playwright/test/cli.js", "test", "--output", output,
-                   "--retries", "1", "--trace", "retain-on-failure"]
+        command = ["node", "node_modules/@playwright/test/cli.js", "test", "--config",
+                   "FEATURE_WORKBENCH_FRONTEND__tests/playwright.config.ts", "--output", output,
+                   "--trace", "retain-on-failure"]
         if environment[IMAGE_DEADLINES] == "1":
             command.extend(("--global-timeout", "115000"))
         try:
@@ -226,7 +225,7 @@ class DockerBrowserAndMcpCases:
         environment = subprocess.check_output([
             "docker", "image", "inspect", "--format", "{{json .Config.Env}}", os.environ["ANECHOIC_IMAGE"],
         ], text=True, timeout=image_timeout(10))
-        beta = "ANECHOIC_RUNTIME_STACK=beta" in json.loads(environment)
+        beta = bool({"ANECHOIC_RUNTIME_STACK=beta", "ANECHOIC_RUNTIME_STACK=beta_next"} & set(json.loads(environment)))
         witness = """SELECT count(*) FROM flow_events t JOIN flow_events e USING (run_id)
             WHERE t.component = 'C68' AND t.kind = 'trigger' AND t.name = 'lifecycle_refresh'
               AND e.kind = 'output' AND e.name = 'generation_result' AND e.outcome = 'succeeded'

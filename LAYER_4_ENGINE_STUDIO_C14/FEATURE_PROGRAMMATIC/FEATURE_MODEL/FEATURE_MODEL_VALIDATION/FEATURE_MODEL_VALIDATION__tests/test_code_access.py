@@ -1,45 +1,59 @@
 """Check resolved Code Access decisions."""
 
-from pathlib import Path
 import unittest
 
-PROGRAMMATIC = Path(__file__).resolve().parents[3]
-
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import CodeAccessOwnership
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.code_access_rules__pub import parse_code_access
-from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.code_access import allows_import
+
+from ..FEATURE_MODEL_VALIDATION__shared import check_code_access
+from .FEATURE_MODEL_VALIDATION__tests__shared import CodeAccessOccurrence
 
 
 class CodeAccessTests(unittest.TestCase):
-    def setUp(self):
-        self.provider = {'id': 'billing', 'parent': 'root'}
-        self.parent = {'id': 'root', 'parent': None}
-        self.sibling = {'id': 'sales', 'parent': 'root'}
-        self.outsider = {'id': 'C43', 'parent': 'elsewhere'}
-        self.entry = 'billing.api.run'
-
-    def allows(self, caller, exports=None, **kwargs):
-        return allows_import(self.entry, caller, self.provider, exports, **kwargs)
+    def allows(self, caller, exports=None, *, imports=None, inherited=None, layers=None):
+        entries = {
+            owner: {'id': owner, 'parent': parent, 'path': path, 'kind': 'component', 'fields': {}}
+            for owner, parent, path in (
+                ('root', None, '.'),
+                ('billing', 'root', 'billing'),
+                ('sales', 'root', 'sales'),
+                ('elsewhere', 'root', 'elsewhere'),
+                ('C43', 'elsewhere', 'elsewhere/consumer'),
+            )
+        }
+        if exports is not None:
+            entries['billing']['fields']['boundaries'] = {'code': {'exports': exports}}
+        if imports is not None:
+            entries[caller]['fields']['boundaries'] = {'code': {'imports': imports}}
+        if inherited is not None:
+            entries['root']['fields']['boundaries'] = {'code': {'imports': inherited}}
+        if layers is not None:
+            entries[caller]['fields']['layer'], entries['billing']['fields']['layer'] = layers
+        ownership = CodeAccessOwnership(entries, {value['path']: key for key, value in entries.items()})
+        source = f"{entries[caller]['path']}/use.py".removeprefix("./")
+        occurrence = CodeAccessOccurrence(source, 'billing/api.py', 'module', 'run', 'billing.api.run', 1, 0, 'internal')
+        return not check_code_access(ownership, {}, [occurrence])
 
     def test_visibility_and_import_rules(self):
-        shared = {self.entry: ('shared', None)}
-        public = {self.entry: ('public', None)}
-        private = {self.entry: ('private', {'C43'})}
-        self.assertFalse(self.allows(self.sibling))
-        self.assertFalse(self.allows(self.sibling, {}))
-        self.assertTrue(self.allows(self.parent, shared))
-        self.assertTrue(self.allows(self.sibling, shared))
-        self.assertFalse(self.allows(self.outsider, shared))
-        self.assertTrue(self.allows(self.outsider, public))
-        self.assertFalse(self.allows(self.outsider, private))
-        self.assertTrue(self.allows(self.outsider, private, inherited_imports=[(False, {'billing'})]))
-        self.assertTrue(self.allows(self.outsider, private, inherited_imports=[(True, {'billing'})]))
-        self.assertFalse(self.allows(self.sibling, private, inherited_imports=[(False, {'billing'})]))
-        self.assertFalse(self.allows(self.sibling, public, inherited_imports=[(True, set())]))
-        self.assertTrue(self.allows(self.sibling, public, inherited_imports=[(True, {'billing'})]))
-        self.assertFalse(self.allows(self.sibling, shared, inherited_imports=[(False, set()), (True, set())]))
-        self.assertFalse(self.allows(self.sibling, public, ordered_layers=(1, 1)))
-        self.assertTrue(self.allows(self.sibling, public, ordered_layers=(2, 1)))
-        self.assertTrue(allows_import(self.entry, self.provider, self.provider, {}, ordered_layers=(1, 1)))
+        shared = {'billing.api.run': 'shared'}
+        public = {'billing.api.run': 'public'}
+        private = {'billing.api.run': {'private': ['C43']}}
+        self.assertFalse(self.allows('sales'))
+        self.assertFalse(self.allows('sales', {}))
+        self.assertTrue(self.allows('root', shared))
+        self.assertTrue(self.allows('sales', shared))
+        self.assertFalse(self.allows('C43', shared))
+        self.assertTrue(self.allows('C43', public))
+        self.assertFalse(self.allows('C43', private))
+        self.assertTrue(self.allows('C43', private, imports=['billing']))
+        self.assertTrue(self.allows('C43', private, imports={'only': ['billing']}))
+        self.assertFalse(self.allows('sales', private, imports=['billing']))
+        self.assertFalse(self.allows('sales', public, imports={'only': []}))
+        self.assertTrue(self.allows('sales', public, imports={'only': ['billing']}))
+        self.assertFalse(self.allows('sales', shared, imports=[], inherited={'only': []}))
+        self.assertFalse(self.allows('sales', public, layers=(1, 1)))
+        self.assertTrue(self.allows('sales', public, layers=(2, 1)))
+        self.assertTrue(self.allows('billing', {}, layers=(1, 1)))
 
     def test_markers(self):
         from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.code_access_rules__pub import module_visibility

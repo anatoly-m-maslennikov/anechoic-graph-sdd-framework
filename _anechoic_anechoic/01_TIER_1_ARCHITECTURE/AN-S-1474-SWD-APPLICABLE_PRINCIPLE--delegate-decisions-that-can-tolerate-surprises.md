@@ -27,3 +27,9 @@ Delegate decisions that can tolerate surprises
 ### Prose Claim
 
 Let AI Agents make decisions where an unexpected result is acceptable.
+
+## Details
+
+### Examples
+
+An Operator lets an AI Agent choose the order of independent documentation edits. Either order is acceptable, so the Agent can proceed without waiting for a decision.

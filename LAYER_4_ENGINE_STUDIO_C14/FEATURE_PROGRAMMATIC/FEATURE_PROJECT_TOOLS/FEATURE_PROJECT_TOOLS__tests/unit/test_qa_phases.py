@@ -1,6 +1,7 @@
 """Verify phase classification and image gate ordering."""
 
 import io
+import json
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
@@ -68,6 +69,97 @@ class PhaseTests(unittest.TestCase):
                   patch.object(runner, 'run_full_suite') as suite):
                 self.assertEqual(1, runner.main())
                 suite.assert_not_called()
+
+    def test_image_tests_run_only_the_candidate_suite(self):
+        root = Path(self.enterContext(TemporaryDirectory())).resolve()
+        image = "sha256:" + "a" * 64
+        argv = ["suite", "--project-root", str(root), "--phase", "image-tests", "--candidate-image", image]
+        with (patch.object(runner.sys, "argv", argv),
+              patch("sys.stdout", new_callable=io.StringIO) as stdout,
+              patch("sys.stderr", new_callable=io.StringIO),
+              patch.object(runner, "run_full_suite", return_value=0) as suite,
+              patch.object(_release_canary, "verify_candidate_image") as canary):
+            self.assertEqual(0, runner.main())
+        self.assertEqual((root,), suite.call_args.args)
+        self.assertEqual("image", suite.call_args.kwargs["phase"])
+        self.assertEqual(image, suite.call_args.kwargs["candidate_image"])
+        canary.assert_not_called()
+        self.assertEqual("", stdout.getvalue())
+        report_path, = (root / ".anechoic_tmp/test_reports").glob("*.json")
+        self.assertEqual("image-tests", json.loads(report_path.read_text())["phase"])
+
+    def test_image_tests_reject_mutable_ids_and_canary_arguments(self):
+        root = self.enterContext(TemporaryDirectory())
+        image = ["--candidate-image", "sha256:" + "a" * 64]
+        for extra in ([], ["--candidate-image", "latest"], image + ["--canary-package", root],
+                      image + ["--required"], image + ["--test-module", "test_a.py"]):
+            argv = ["suite", "--project-root", root, "--phase", "image-tests", *extra]
+            with (self.subTest(extra=extra),
+                  patch.object(runner.sys, "argv", argv),
+                  patch("sys.stderr", new_callable=io.StringIO),
+                  patch.object(runner, "run_full_suite") as suite):
+                self.assertEqual(1, runner.main())
+                suite.assert_not_called()
+
+    def test_standalone_canary_runs_required_host_tests_before_the_probe(self):
+        source = Path(self.enterContext(TemporaryDirectory())).resolve()
+        target = Path(self.enterContext(TemporaryDirectory())).resolve()
+        package = target / "package"
+        image = "sha256:" + "a" * 64
+        selection = {"runtime_settings_sha256": "b" * 64}
+        argv = ["suite", "--project-root", str(source), "--phase", "canary", "--candidate-image", image,
+                "--canary-package", str(package), "--canary-selection", json.dumps(selection), "--run-id", "run",
+                "--canary-project-root", str(target)]
+        location = Path(__file__).resolve()
+        tests = source / location.parents[1].relative_to(location.parents[5])
+        canary_modules = [tests / name for name in ("test_release_canary.py", "test_release_canary_retry.py")]
+        for status in (1, 0):
+            with (self.subTest(status=status),
+                  patch.object(runner.sys, "argv", argv),
+                  patch("sys.stdout", new_callable=io.StringIO) as stdout,
+                  patch("sys.stderr", new_callable=io.StringIO),
+                  patch.object(runner, "discover_test_modules", return_value=[tests / "test_other.py", *canary_modules]),
+                  patch.object(runner, "_run_selected_modules", return_value=status) as selected,
+                  patch.object(_release_canary, "verify_candidate_image", return_value="endpoint") as canary):
+                self.assertEqual(status, runner.main())
+            self.assertEqual((source, canary_modules, None, "existing"), selected.call_args.args)
+            self.assertTrue(selected.call_args.kwargs["required"])
+            if status:
+                canary.assert_not_called()
+                self.assertNotIn("ANECHOIC_CANARY_ENDPOINT", stdout.getvalue())
+            else:
+                canary.assert_called_once_with(target, package, image, run_id="run", selection=selection)
+                self.assertIn("ANECHOIC_CANARY_ENDPOINT endpoint\n", stdout.getvalue())
+
+    def test_canary_root_changes_only_canary_execution(self):
+        source = Path(self.enterContext(TemporaryDirectory())).resolve()
+        target = Path(self.enterContext(TemporaryDirectory())).resolve()
+        package = target / "package"
+        image = "sha256:" + "a" * 64
+        argv = ["suite", "--project-root", str(source), "--phase", "image", "--candidate-image", image,
+                "--canary-package", str(package), "--canary-selection", "{}", "--run-id", "run",
+                "--canary-project-root", str(target)]
+        with (patch.object(runner.sys, "argv", argv),
+              patch("sys.stdout", new_callable=io.StringIO),
+              patch("sys.stderr", new_callable=io.StringIO),
+              patch.object(runner, "run_full_suite", return_value=0) as suite,
+              patch.object(_release_canary, "verify_candidate_image", return_value="endpoint") as canary):
+            self.assertEqual(0, runner.main())
+        self.assertEqual((source,), suite.call_args.args)
+        canary.assert_called_once_with(target, package, image, run_id="run", selection={})
+        report_path, = (source / ".anechoic_tmp/test_reports").glob("*.json")
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+        self.assertEqual(str(target), report["canary_project_root"])
+
+    def test_nonimage_phases_reject_separate_canary_root(self):
+        root = self.enterContext(TemporaryDirectory())
+        argv = ["suite", "--project-root", root, "--phase", "preflight", "--canary-project-root", root]
+        with (patch.object(runner.sys, "argv", argv),
+              patch("sys.stderr", new_callable=io.StringIO) as stderr,
+              patch.object(runner, "run_full_suite") as suite):
+            self.assertEqual(1, runner.main())
+        suite.assert_not_called()
+        self.assertIn("Image arguments require the image phase", stderr.getvalue())
 
 
 if __name__ == '__main__':

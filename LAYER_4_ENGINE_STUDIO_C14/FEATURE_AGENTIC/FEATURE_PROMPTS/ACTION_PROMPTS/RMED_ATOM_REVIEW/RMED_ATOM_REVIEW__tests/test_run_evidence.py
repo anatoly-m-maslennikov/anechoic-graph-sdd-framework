@@ -6,9 +6,9 @@ import unittest
 from unittest.mock import patch
 
 HERE = Path(__file__).resolve().parents[1]
-from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.workflow_evidence import RunEvidence, render_report  # noqa: E402
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared import RunEvidence  # noqa: E402
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.work_journal__pub import append_sealed_events  # noqa: E402
-from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.workflow_progress import CHECKS  # noqa: E402
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__tests.test_workflow_progress import CHECKS  # noqa: E402
 
 
 def checked(source, criteria):
@@ -103,9 +103,10 @@ class RunEvidenceTests(unittest.TestCase):
         self.assertNotIn('writing', state['reports'][0]['checks'])
 
     def test_empty_run_and_pending_atoms_are_not_hidden(self):
-        state = self.start(False)
-        self.assertTrue(self.store.finish('mock-run', 'completed')['progress']['complete'])
-        self.assertIn('No Atoms selected', render_report(state))
+        self.start(False)
+        state = self.store.finish('mock-run', 'completed')
+        self.assertTrue(state['progress']['complete'])
+        self.assertIn('No Atoms selected', (self.root / state['report_path']).read_text())
 
     def test_blocked_report_keeps_full_text_and_does_not_complete(self):
         state = self.start()
@@ -113,7 +114,7 @@ class RunEvidenceTests(unittest.TestCase):
         row['checks']['claim'] = {'status': 'blocked', 'evidence': 'readable ' * 2000}
         row.update(result='blocked', blockers=['ambiguous Claim'])
         state = self.store.record('mock-run', 0, row, stage='check')
-        self.assertIn('readable ' * 2000, render_report(state))
+        self.assertIn('readable ' * 2000, (self.root / state['report_path']).read_text())
         with self.assertRaises(ValueError):
             self.store.finish('mock-run', 'completed')
         state = self.store.finish('mock-run', 'interrupted', reason='Operator decision')
@@ -185,7 +186,7 @@ class RunEvidenceTests(unittest.TestCase):
         self.start()
         state = self.store.handoff('mock-run', 'check ordinal 0 in a fresh context')
         self.assertEqual(state['outcome'], 'running')
-        self.assertIn('pending', render_report(state))
+        self.assertIn('pending', (self.root / state['report_path']).read_text())
         again = self.store.handoff('mock-run', 'check ordinal 0 in a fresh context')
         self.assertEqual(len(state['events']), len(again['events']))
         self.assertEqual({item['event']['workflow_run_id'] for item in state['events']}, {'mock-run'})

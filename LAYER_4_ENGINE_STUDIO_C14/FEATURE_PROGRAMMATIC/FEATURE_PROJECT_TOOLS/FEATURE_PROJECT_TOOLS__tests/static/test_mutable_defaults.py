@@ -31,6 +31,7 @@ class MutableDefaultTests(unittest.TestCase):
 
         with (patch.object(static_checks.python_bytecode, "check", return_value=0),
               patch.object(static_checks.source_sizes, "check", return_value=0),
+              patch.object(static_checks.source_languages, "check", return_value=0),
               patch.object(static_checks.python_boundaries, "check", return_value=0),
               patch.object(static_checks.subprocess, "run", side_effect=execute)):
             source.write_text("def collect(items=[]):\n    return items\n", encoding="utf-8")

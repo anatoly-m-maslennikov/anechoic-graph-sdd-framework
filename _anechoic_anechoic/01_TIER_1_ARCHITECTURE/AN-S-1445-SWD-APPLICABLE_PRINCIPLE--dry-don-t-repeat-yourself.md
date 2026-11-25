@@ -25,3 +25,9 @@ DRY — Don’t Repeat Yourself
 ### Prose Claim
 
 Avoid repeating the same information or logic unnecessarily.
+
+## Details
+
+### Examples
+
+A team puts shared validation logic in one place and uses it from two checks. A correction to that logic then applies to both checks.

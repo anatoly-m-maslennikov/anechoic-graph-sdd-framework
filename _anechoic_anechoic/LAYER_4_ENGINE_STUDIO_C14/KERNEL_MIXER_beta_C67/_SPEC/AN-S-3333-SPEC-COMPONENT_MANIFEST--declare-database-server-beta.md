@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 26
-  updated_at: "2026-11-23T11:51:38.834854+00:00"
+  version: 29
+  updated_at: "2026-11-25T10:31:29.590036+00:00"
 ---
 ## Summary
 
@@ -19,6 +19,10 @@ Declare Database Server Beta
 ## Purpose
 
 Own the accepted Project generation, Workspaces, and query results.
+
+Publish the admitted Model diagnostics and Project Structure for SQL.
+Cap full-generation request bodies at 128 MiB. Bound DuckDB spill
+when using disk-backed storage.
 
 ## Formal manifest
 
@@ -32,8 +36,14 @@ declare_entity(
         component_id='C71',
         name='Database Server Beta',
         lens_whitelist=['DES', 'SPEC', 'SWD/DBT'],
-        boundaries={'code': {'imports': {'only': ['CS5', 'CS6', 'ADAPTERS_C30__shared.attach_framework', 'ADAPTERS_C30__shared.migrate_project_database', 'ADAPTERS_C30__shared.append_sealed_events', 'DATABASE_SERVER_beta_C71__shared.create_app']},
-                             'exports': {'DATABASE_SERVER_beta_C71__shared.create_app': {'private': ['LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_beta_C67/DATABASE_SERVER_beta_C71/DATABASE_SERVER_beta_C71__tests']}}},
+        boundaries={'code': {'imports': {'only': ['CS5', 'CS6', 'ADAPTERS_C30__shared.attach_framework', 'ADAPTERS_C30__shared.migrate_project_database', 'ADAPTERS_C30__shared.append_sealed_events',
+                                                   'ADAPTERS_C30__shared.canonical_model_address',
+                                                   'ADAPTERS_C30__shared.model_class_target',
+                                                   'DATABASE_SERVER_beta_C71__shared.create_app',
+                                                   'DATABASE_SERVER_beta_C71__shared.result_ttl', 'DATABASE_SERVER_beta_C71__shared.open_database']},
+                             'exports': {'DATABASE_SERVER_beta_C71__shared.open_database': {'private': ['LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_beta_C67/DATABASE_SERVER_beta_C71/DATABASE_SERVER_beta_C71__tests']},
+                                         'DATABASE_SERVER_beta_C71__shared.create_app': {'private': ['LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_beta_C67/DATABASE_SERVER_beta_C71/DATABASE_SERVER_beta_C71__tests']},
+                                         'DATABASE_SERVER_beta_C71__shared.result_ttl': {'private': ['LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_beta_C67/DATABASE_SERVER_beta_C71/DATABASE_SERVER_beta_C71__tests']}}},
          'io': {'server': {'database_api': {'transport': 'http',
                                             'socket': 'private Unix socket',
                                             'arguments': ['--socket',

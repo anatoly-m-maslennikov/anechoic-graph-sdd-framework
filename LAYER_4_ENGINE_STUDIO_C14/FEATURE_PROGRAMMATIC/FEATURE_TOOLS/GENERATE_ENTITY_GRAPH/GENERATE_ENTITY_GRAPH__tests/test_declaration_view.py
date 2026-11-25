@@ -12,7 +12,7 @@ import yaml
 SCRIPT_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SCRIPT_DIR))
 
-import FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.declaration_view as declaration_view  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import render_declarations  # noqa: E402
 
 
 FENCE = chr(96) * 3
@@ -67,7 +67,7 @@ def render(
     owners: list[dict[str, object]] | None = None,
     projection_identity: dict[str, object] | None = None,
 ) -> str:
-    return declaration_view.render_declarations(
+    return render_declarations(
         catalog,
         {"owners": owners if owners is not None else [{"source": source("CA-R-100", 2)}]},
         updated_at="2026-10-20 02:30:00 +0400",

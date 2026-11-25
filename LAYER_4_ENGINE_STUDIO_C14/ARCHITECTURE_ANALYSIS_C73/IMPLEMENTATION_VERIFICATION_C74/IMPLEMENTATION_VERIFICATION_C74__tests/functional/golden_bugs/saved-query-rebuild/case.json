@@ -1,0 +1,28 @@
+{
+  "title": "Match uppercase SQL dependencies during saved-query rebuild",
+  "invariant": "A changed table and a saved SQL dependency match regardless of SQL identifier case.",
+  "scope": "First-level dependency match for unquoted identifiers; a changed table named atoms and a saved query dependency spelled ATOMS. This is distinct from rebuilding dependencies against old tables.",
+  "before": {
+    "revision": "1cf5500fb4b0bccbaf14918f16307839d2ad153b",
+    "source": "LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/query_store.py",
+    "fixture": "before.py.txt",
+    "sha256": "52bcafcdf5d777bc001b9718d039caaf2ac817740847a5c1f56c210e9ebdb9a2"
+  },
+  "fixed": {
+    "revision": "a03e18b5e341a0e9e581143bbf1b528089d7e051",
+    "source": "LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/query_store.py",
+    "fixture": "fixed.py.txt",
+    "sha256": "3467748313fd45866248b2233b220b1109c45d3a167ecfaf4cc8868bf6d9d492"
+  },
+  "checks": [
+    {
+      "file": "before.lean",
+      "stdout_suffix": "false\n"
+    },
+    {
+      "file": "fixed.lean",
+      "stdout_suffix": "true\n"
+    }
+  ],
+  "analyzer": "analyze.py"
+}

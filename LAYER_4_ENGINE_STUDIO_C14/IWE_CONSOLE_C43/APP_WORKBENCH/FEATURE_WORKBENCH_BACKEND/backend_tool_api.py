@@ -66,7 +66,9 @@ def _context(value, selection):
     }:
         raise ValueError("project_root does not match the bound Project")
     request = SimpleNamespace(base_url=base) if base is not None else None
-    return SimpleNamespace(request=request, params={"arguments": {"project_root": root}})
+    return SimpleNamespace(  # pragma: anechoic-model-adapter - tool context
+        request=request, params={"arguments": {"project_root": root}},
+    )
 
 
 class BackendToolAPI:
@@ -78,8 +80,12 @@ class BackendToolAPI:
 
     def _load(self):
         selection = pinned_project(self._owner.selection)
-        workbench = SimpleNamespace(call=self._workbench, release_command=self._release)
-        provider_context = SimpleNamespace(selection=selection, workbench=workbench, _native_query=self._owner)
+        workbench = SimpleNamespace(  # pragma: anechoic-model-adapter - workbench interface
+            call=self._workbench, release_command=self._release,
+        )
+        provider_context = SimpleNamespace(  # pragma: anechoic-model-adapter - registry interface
+            selection=selection, workbench=workbench, _native_query=self._owner,
+        )
         registry = load_active_registry(Path(__file__).parent, selection.root, provider_context)
         exclusions, release_enabled = project_tool_policy(selection.parameters)
         blacklist = registry.global_blacklist | frozenset(exclusions)

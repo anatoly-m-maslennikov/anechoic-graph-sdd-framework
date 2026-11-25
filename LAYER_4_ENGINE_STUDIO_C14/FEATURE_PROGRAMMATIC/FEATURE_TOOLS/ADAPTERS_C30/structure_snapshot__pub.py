@@ -1,10 +1,21 @@
 """Read one host-published Structure snapshot without caching it."""
 
-from dataclasses import dataclass
 import json
 from pathlib import Path, PurePosixPath
 from types import MappingProxyType
 from typing import Mapping
+
+from pydantic import ConfigDict, ValidatorFunctionWrapHandler, field_validator
+from pydantic.dataclasses import dataclass
+
+
+_STRICT = ConfigDict(strict=True, extra="forbid")
+
+
+def _preserve_mapping(value: Mapping, validate: ValidatorFunctionWrapHandler) -> Mapping:
+    """Validate the mapping while preserving its identity and mutability."""
+    validate(value)
+    return value
 
 
 def _freeze(value):
@@ -36,13 +47,15 @@ def _unique_object(pairs):
     return result
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, config=_STRICT)
 class Component:
     parent: str | None
     ref: str
     sha256: str
     fields: Mapping
     source_path: str
+
+    _validate_fields = field_validator("fields", mode="wrap")(_preserve_mapping)
 
     @property
     def name(self):
@@ -57,7 +70,7 @@ class Component:
         return self.fields.get("lens_whitelist")
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, config=_STRICT)
 class ComponentSeed:
     component: str
     ref: str
@@ -65,13 +78,17 @@ class ComponentSeed:
     fields: Mapping
     source_path: str
 
+    _validate_fields = field_validator("fields", mode="wrap")(_preserve_mapping)
 
-@dataclass(frozen=True)
+
+@dataclass(frozen=True, config=_STRICT)
 class StructureSnapshot:
     model_sha256: str
     project: Mapping
     components: Mapping[str, Component]
     packages: Mapping[str, ComponentSeed]
+
+    _validate_mappings = field_validator("project", "components", "packages", mode="wrap")(_preserve_mapping)
 
     def component(self, cid: str) -> Component:
         return self.components[cid]

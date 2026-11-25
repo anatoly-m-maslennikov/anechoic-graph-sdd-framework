@@ -1,0 +1,28 @@
+{
+  "title": "Preserved methodology archive passes package verification",
+  "invariant": "The preserved uppercase methodology directory is excluded from package verification.",
+  "scope": "Historical copy_product passes the preserved uppercase root directory to _verify_package. The finite model covers that ASCII name and the root directory exclusion; it does not prove general Unicode casefold behavior. Source revision 0382528 is a later checkpoint carrying the predicate fix; the separately named 5ab0768d77 object was unavailable.",
+  "before": {
+    "revision": "2a6cfde60cccfaee85d3972b4abee5f04e0dbfd9",
+    "source": "LAYER_5_FRAMEWORK_DELIVERY/RELEASE_VERSION/release_package_files.py",
+    "fixture": "before.py.txt",
+    "sha256": "609ea290bf399a9a928c0cc8ef8261109f91bb4ae653250384591846cd5f9ab2"
+  },
+  "fixed": {
+    "revision": "0382528dcd4f350a110b2cb0ac63b5559e781957",
+    "source": "LAYER_5_FRAMEWORK_DELIVERY/RELEASE_VERSION/release_package_files.py",
+    "fixture": "fixed.py.txt",
+    "sha256": "33edfeb75ccfba4ce1804583110e5f0b6fc0915d82245714c747e514139bcbd2"
+  },
+  "checks": [
+    {
+      "file": "before.lean",
+      "stdout_suffix": "false\n"
+    },
+    {
+      "file": "fixed.lean",
+      "stdout_suffix": "true\n"
+    }
+  ],
+  "analyzer": "analyze.py"
+}

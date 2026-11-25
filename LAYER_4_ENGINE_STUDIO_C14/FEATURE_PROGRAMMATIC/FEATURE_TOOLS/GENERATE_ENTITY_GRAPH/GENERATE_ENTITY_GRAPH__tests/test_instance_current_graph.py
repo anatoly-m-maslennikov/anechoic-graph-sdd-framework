@@ -10,7 +10,6 @@ import unittest
 TOOL = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(TOOL.parent), str(TOOL)]
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.current_subject_common import path_steps
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import compose_current_graph  # noqa: E402
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
     GrammarPin as _subject_GrammarPin,
@@ -38,6 +37,14 @@ def graph_for(subject: str) -> tuple[dict, dict]:
 
 
 class CurrentInstanceGraphTests(unittest.TestCase):
+    def assert_graph_path(self, graph, expected):
+        names = {row["id"]: row["identity"] for row in graph["nodes"]}
+        self.assertEqual([name for name, _, _ in expected], list(names.values()))
+        self.assertEqual(
+            {(name, parent, kind) for name, parent, kind in expected if parent is not None},
+            {(names[row["relation_source"]], names[row["relation_target"]], row["kind"]) for row in graph["edges"]},
+        )
+
     def test_approved_grammar_uses_current_evaluation_and_legacy_stays_pinned(self) -> None:
         approved = _subject_get_profile("approved").grammar_pins
         self.assertEqual("CA-E-833", approved[-1].atom_id)
@@ -52,7 +59,9 @@ class CurrentInstanceGraphTests(unittest.TestCase):
 
     def test_instance_path_preserves_full_prefix_and_direction(self) -> None:
         subject = "Entity/Workflow//Daily.Status:Active"
-        self.assertEqual(
+        graph, provenance = graph_for(subject)
+        self.assert_graph_path(
+            graph,
             [
                 ("Entity", None, None),
                 ("Entity/Workflow", "Entity", "NARROWER_THAN"),
@@ -64,39 +73,26 @@ class CurrentInstanceGraphTests(unittest.TestCase):
                     "IS_ALLOWED_VALUE_OF",
                 ),
             ],
-            path_steps(subject),
-        )
-
-        graph, provenance = graph_for(subject)
-        names = {row["id"]: row["identity"] for row in graph["nodes"]}
-        edges = {
-            (row["kind"], names[row["relation_source"]], names[row["relation_target"]])
-            for row in graph["edges"]
-        }
-        self.assertIn(
-            ("INSTANCE_OF", "Entity/Workflow//Daily", "Entity/Workflow"),
-            edges,
-        )
-        self.assertIn(
-            ("IS_PROPERTY_OF", "Entity/Workflow//Daily.Status", "Entity/Workflow//Daily"),
-            edges,
         )
         self.assertEqual("not_performed", graph["native_admission"])
         self.assertEqual("Entity/Workflow//Daily.Status:Active", provenance["occurrences"][0]["subject"])
 
     def test_value_and_instance_steps_remain_distinct(self) -> None:
-        self.assertEqual(
+        graph, _ = graph_for("Entity/Type:Workflow//Daily")
+        self.assert_graph_path(
+            graph,
             [
                 ("Entity", None, None),
                 ("Entity/Type", "Entity", "NARROWER_THAN"),
                 ("Entity/Type:Workflow", "Entity/Type", "IS_ALLOWED_VALUE_OF"),
                 ("Entity/Type:Workflow//Daily", "Entity/Type:Workflow", "INSTANCE_OF"),
             ],
-            path_steps("Entity/Type:Workflow//Daily"),
         )
 
     def test_old_operators_keep_their_existing_kinds(self) -> None:
-        self.assertEqual(
+        graph, _ = graph_for("Entity/Property.Status:Active")
+        self.assert_graph_path(
+            graph,
             [
                 ("Entity", None, None),
                 ("Entity/Property", "Entity", "NARROWER_THAN"),
@@ -107,7 +103,6 @@ class CurrentInstanceGraphTests(unittest.TestCase):
                     "IS_ALLOWED_VALUE_OF",
                 ),
             ],
-            path_steps("Entity/Property.Status:Active"),
         )
 
     def test_containment_directions_and_counts_normalize_to_one_fact(self) -> None:

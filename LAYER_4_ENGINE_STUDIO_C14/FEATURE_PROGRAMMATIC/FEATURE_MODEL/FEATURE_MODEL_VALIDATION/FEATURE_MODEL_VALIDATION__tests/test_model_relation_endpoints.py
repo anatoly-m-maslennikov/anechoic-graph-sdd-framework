@@ -3,7 +3,7 @@
 import unittest
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_native_model_claim
-from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_relation_endpoints import validate_relation_endpoint_levels
+from ..FEATURE_MODEL_VALIDATION__shared import validate_relation_endpoint_levels
 
 
 def relation(arguments):

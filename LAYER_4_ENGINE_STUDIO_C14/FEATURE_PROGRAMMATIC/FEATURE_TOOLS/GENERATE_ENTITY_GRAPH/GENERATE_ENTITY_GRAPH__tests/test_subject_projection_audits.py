@@ -8,9 +8,9 @@ import unittest
 TOOL = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(TOOL.parent), str(TOOL)]
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.subject_audit_occurrences import select_model_subjects  # noqa: E402
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.subject_projection_audits import build_subject_audits, render_subject_audit  # noqa: E402
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import build_subject_projection_data  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import (  # noqa: E402
+    build_subject_audits, build_subject_projection_data, render_subject_audit, select_model_subjects,
+)
 
 
 def carrier(atom_id, active, passive=(), *, role="Requirement", form="Declaration"):

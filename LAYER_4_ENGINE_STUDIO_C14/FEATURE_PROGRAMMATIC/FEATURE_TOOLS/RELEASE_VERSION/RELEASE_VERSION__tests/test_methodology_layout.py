@@ -6,7 +6,7 @@ import unittest
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import write_scope_unit_declarations  # noqa: E402
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-import FEATURE_PROGRAMMATIC.FEATURE_TOOLS.RELEASE_VERSION.methodology_layout as methodology_layout  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.RELEASE_VERSION.RELEASE_VERSION__shared import resolve_methodology_layout  # noqa: E402
 
 
 class LayoutTests(unittest.TestCase):
@@ -26,7 +26,7 @@ class LayoutTests(unittest.TestCase):
 
     def test_current_declarations_supply_all_release_places(self):
         root, rows = self._project()
-        layout = methodology_layout.resolve_methodology_layout(root)
+        layout = resolve_methodology_layout(root)
         self.assertEqual(rows["METHODOLOGY_SOURCES"]["authority_path"].relative_to(root).as_posix(), layout.source_root)
         self.assertEqual("FRAMEWORK_METHODOLOGY", layout.product_root)
         self.assertEqual("FRAMEWORK_METHODOLOGY/METHODOLOGY_SOURCES", layout.source_copy_root)
@@ -43,7 +43,7 @@ class LayoutTests(unittest.TestCase):
         source.parent.mkdir(parents=True, exist_ok=True)
         source.symlink_to(target, target_is_directory=True)
         with self.assertRaisesRegex(ValueError, "unsafe"):
-            methodology_layout.resolve_methodology_layout(root)
+            resolve_methodology_layout(root)
 
 
 if __name__ == "__main__":

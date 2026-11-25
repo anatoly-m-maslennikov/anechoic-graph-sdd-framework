@@ -1,7 +1,7 @@
 import asyncio
 import unittest
 
-from MCP_PATCHBAY_C21.FEATURE_MCP.runtime_request_context import (  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import (  # noqa: E402
     RuntimeRequestContext,
     bind_request_context,
     current_request_context,

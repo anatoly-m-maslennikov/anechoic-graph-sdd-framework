@@ -26,9 +26,18 @@ generation, derive relations using the attested Model. On cold startup,
 capture Current and Draft first. Skip archive directories during
 foreground traversal. A separate Worker captures their Archived Atoms
 after live admission. Seal the snapshot and Graph in the receipt.
-Verify source membership and versions before admission. With verified
-watcher coverage, use the watcher's completed observation in place
-of a second Worker scan.
+
+Use the watcher's completed observation to guard admission of the
+startup base for covered inputs. Orchestrator replays observed changes
+against that base.
+
+Verify source membership and versions for external or unwatched inputs.
+If coverage is lost, verify the affected inputs before admission.
+Use a broader capture if their scope is unknown.
+
+For other captures, verify source membership and versions before
+admission. With verified watcher coverage, use its completed
+observation in place of a second Worker scan.
 
 Derive named Python, JavaScript, and TypeScript Code Units from captured
 Modules. Resolve calls to known Functions and Methods using captured

@@ -8,9 +8,9 @@ context:
   template: component_seed_manifest
   lens: SPEC
 state:
-  status: active
-  version: 4
-  updated_at: '2026-11-22T09:00:09.153120+00:00'
+  status: "active"
+  version: 8
+  updated_at: "2026-11-24T22:52:55.160380+00:00"
 ---
 
 # Manifest Compiler
@@ -22,7 +22,23 @@ from anechoic.formal_claims import declare_entity
 from anechoic.model import ComponentSeedManifest
 
 declare_entity(
-    entity_name="Component Seed Manifest", instance=ComponentSeedManifest(component_seed_id="CS1")
+    entity_name="Component Seed Manifest", instance=ComponentSeedManifest(
+        component_seed_id="CS1",
+        boundaries={"code": {"imports": [
+            "ADAPTERS_C30__shared.mark_startup_timing",
+            "FEATURE_FORMAL_MODEL_GENERATOR__shared._add_unambiguous_addresses",
+            "FEATURE_FORMAL_MODEL_GENERATOR__shared._class_property_aliases",
+        ], "exports": {
+            "manifest_compiler_CS1__shared.bounded_run": {"private": ["LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_FORMAL_MODEL_GENERATOR/manifest_compiler_CS1/manifest_compiler_CS1__tests"]},
+            "manifest_compiler_CS1__shared.previous_claims": {"private": ["LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_FORMAL_MODEL_GENERATOR/manifest_compiler_CS1/manifest_compiler_CS1__tests"]},
+            "manifest_compiler_CS1__shared.stage_model": {"private": ["LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_FORMAL_MODEL_GENERATOR/manifest_compiler_CS1/manifest_compiler_CS1__tests"]},
+            "manifest_compiler_CS1__shared.compile_structure": {"private": ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_FORMAL_MODEL_GENERATOR/manifest_compiler_CS1/manifest_compiler_CS1__tests']},
+            "manifest_compiler_CS1__shared.read_active_model_sources": {"private": ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_FORMAL_MODEL_GENERATOR/manifest_compiler_CS1/manifest_compiler_CS1__tests', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_FORMAL_MODEL_GENERATOR/manifest_compiler_CS1/manifest_compiler_CS1__tests/functional']},
+            "manifest_compiler_CS1__shared.render_atom_header_lean": {"private": ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_FORMAL_MODEL_GENERATOR/manifest_compiler_CS1/manifest_compiler_CS1__tests/functional']},
+            "manifest_compiler_CS1__shared.verify_model_lean": {"private": ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_FORMAL_MODEL_GENERATOR/manifest_compiler_CS1/manifest_compiler_CS1__tests/functional']},
+            "manifest_compiler_CS1__shared.write_model": {"private": ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_FORMAL_MODEL_GENERATOR/manifest_compiler_CS1/manifest_compiler_CS1__tests/functional']},
+        }}},
+    )
 )
 ```
 

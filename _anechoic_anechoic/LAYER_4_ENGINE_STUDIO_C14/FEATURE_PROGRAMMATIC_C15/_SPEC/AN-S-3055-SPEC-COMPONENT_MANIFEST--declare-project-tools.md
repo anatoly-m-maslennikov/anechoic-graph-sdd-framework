@@ -8,8 +8,8 @@ context:
   template: component_manifest
   lens: SPEC
 state:
-  status: active
-  version: 23
+  status: "active"
+  version: 25
   updated_at: "2026-11-23T00:34:06.483158+00:00"
 ---
 
@@ -32,6 +32,10 @@ declare_entity(
         boundaries={
             'code': {
                 'imports': [
+                    'test_suite__shared.source_comments',
+                    'test_suite__shared._test_phase',
+                    'test_suite__shared.suite_preflight',
+                    'FEATURE_MCP__tests__shared.packaged_identity_reader',
                     'ADAPTERS_C30__shared.owned_temporary_root',
                     'ADAPTERS_C30__shared.read_scope_unit_declarations',
                     'ADAPTERS_C30__shared.capture_native',
@@ -69,6 +73,9 @@ declare_entity(
                     'ADAPTERS_C30__shared.spec_lens_directories',
                 ],
                 'exports': {
+                    'test_suite__shared.source_comments': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/static']},
+                    'test_suite__shared._test_phase': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests']},
+                    'test_suite__shared.suite_preflight': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/unit']},
                     'FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared.ANALYSIS': {'shared': [
                         'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_FORMAL_MODEL_ENGINE/FEATURE_FORMAL_MODEL_ENGINE__tests',
                         'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FEATURE_TOOLS__tests',

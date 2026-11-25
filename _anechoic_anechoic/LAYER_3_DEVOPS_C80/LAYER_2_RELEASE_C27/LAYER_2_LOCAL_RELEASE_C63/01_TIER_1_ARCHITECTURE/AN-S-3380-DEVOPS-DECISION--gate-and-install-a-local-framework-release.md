@@ -12,11 +12,11 @@ relations:
   - AN-S-3361@2
   - AN-S-3387@2
   IS_SOLUTION_FOR:
-  - AN-S-3292@9
+  - AN-S-3292@13
 state:
   status: active
-  version: 5
-  updated_at: '2026-11-23T14:45:10.920666+00:00'
+  version: 9
+  updated_at: '2026-11-24T18:19:55.278865+00:00'
 ---
 
 ## Summary
@@ -27,11 +27,20 @@ Gate and install a local Framework release.
 
 ### Prose Claim
 
-Local Release validates inputs and runs Static and required host functional
-checks before building the candidate. It verifies the exact image before
-installation and reports completion or failure with evidence.
+Local Release checks prerequisites, runs the host gates, builds the candidate,
+and verifies the image suite and MCP canary as separate phases. Standalone
+image verification ends with verification evidence.
+
+Each continuation keeps the Run ID, target, and candidate version. Before
+delivery, it accepts the corrected exact source revision and reuses each
+passing phase whose inputs and evidence still match. The delivery claim
+pins the accepted revision and exact artifact. Reconcile the artifact before
+repeating an effect. After verified promotion, resume only pending cleanup.
 
 ### Formal Claim
+
+This claim covers a fresh same-Project attempt. The run journal provides
+evidence for continuations.
 
 ```python
 component_workflow(
@@ -58,15 +67,21 @@ component_workflow(
                     {'kind': 'output', 'outcome': 'failed'}}},
             }},
             'building': {'on': {
-                'candidate_image_prepared': {'target': 'verifying', 'guard': {'type': 'matchesTrace', 'params':
+                'candidate_image_prepared': {'target': 'checking_image_suite', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'effect', 'target': 'C63'}}},
                 'build_failed': {'target': 'failed', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'output', 'outcome': 'failed'}}},
             }},
-            'verifying': {'on': {
-                'candidate_image_verified': {'target': 'installing', 'guard': {'type': 'matchesTrace', 'params':
+            'checking_image_suite': {'on': {
+                'image_suite_passed': {'target': 'checking_mcp_canary', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'effect', 'target': 'C19', 'outcome': 'passed'}}},
-                'verification_failed': {'target': 'failed', 'guard': {'type': 'matchesTrace', 'params':
+                'image_suite_failed': {'target': 'failed', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'output', 'outcome': 'failed'}}},
+            }},
+            'checking_mcp_canary': {'on': {
+                'mcp_canary_passed': {'target': 'installing', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'C19', 'outcome': 'passed'}}},
+                'mcp_canary_failed': {'target': 'failed', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'output', 'outcome': 'failed'}}},
             }},
             'installing': {'on': {

@@ -1,11 +1,55 @@
 """Checks for conservative CFEL migration and Markdown boundaries."""
 
-import unittest
+import hashlib
+import json
+import re
+import subprocess
+import sys
 from pathlib import Path
+from tempfile import TemporaryDirectory
+import unittest
 
-from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.claim_migration_statements import _LEXEMES, convert_statement
-from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.migrate_python_model_claim import convert_carrier, convert_claim, convert_markdown_claim
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_python_model_claim
+
+
+_TOOL = Path(__file__).resolve().parents[1] / "migrate_python_model_claim.py"
+_LEXEMES = re.compile(
+    r"\"(?:\\.|[^\"\\])*\"|'(?:\\.|[^'\\])*'|[A-Za-z_$][A-Za-z_0-9$]*|"
+    r"\d+|::|\.\.|;>|:=|==|\(\(|\)\)|[^\s]"
+)
+
+
+def convert_carrier(raw, path):
+    with TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        source = root / "atom.md"
+        source.write_bytes(raw)
+        frontier = {"records": [{"reference": "AN-S-1", "status_group": "Current",
+                    "source_path_check": {"candidate": "atom.md"},
+                    "candidates": [{"path": "atom.md", "contains_cfel": True,
+                                    "sha256": hashlib.sha256(raw).hexdigest()}]}]}
+        (root / "frontier.json").write_text(json.dumps(frontier))
+        result = subprocess.run([sys.executable, "-B", str(_TOOL), "--audit", "frontier.json",
+                                 "--stage", "stage"], cwd=root, capture_output=True, text=True, check=False)
+        if result.returncode:
+            raise AssertionError(result.stderr)
+        output = root / "stage/atom.md"
+        return output.read_bytes() if output.exists() else None
+
+
+def convert_markdown_claim(body):
+    header = b"---\natom_id: AN-S-1\n---\n"
+    converted = convert_carrier(header + body.encode(), Path("atom.md"))
+    return None if converted is None else converted[len(header):].decode()
+
+
+def convert_claim(text):
+    converted = convert_markdown_claim("## Claim\n### Formal Claim\n```CFEL\n" + text + "\n```\n")
+    return None if converted is None else converted.split("```python\n", 1)[1].split("\n```", 1)[0]
+
+
+def convert_statement(text):
+    return convert_claim(text + ";")
 
 
 class MigrationTests(unittest.TestCase):

@@ -7,6 +7,7 @@ from dataclasses import replace
 from pathlib import Path
 import os
 import unittest
+from pydantic import ValidationError
 from unittest.mock import patch
 
 
@@ -77,6 +78,11 @@ class GraphDeltaTest(unittest.TestCase):
             raise
         self.store._projection = current
         return current, change
+
+    def test_delta_requires_structured_rows_without_exposing_values(self) -> None:
+        with self.assertRaises(ValidationError) as error:
+            MaterializationDelta({"row": "private-value"}, {}, {}, {})
+        self.assertNotIn("private-value", str(error.exception))
 
     def test_archived_snapshot_is_lean_but_changed_rows_are_reinserted(self) -> None:
         archived = self.atom("CA-R-123@1", path="archive/CA-R-123@1.md")

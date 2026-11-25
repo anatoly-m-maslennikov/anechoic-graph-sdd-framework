@@ -12,6 +12,8 @@ state:
   version: 4
   updated_at: '2026-11-22T11:34:35.965837+00:00'
 relations:
+  APPLIES:
+  - AN-S-1484
   SERVES:
   - AN-S-1233
 ---
@@ -24,4 +26,12 @@ Work with the specification as a collection of Operators’ decisions
 
 ### Prose Claim
 
-Create, read, and change the specification as a collection of decisions made by Operators or by AI Agents acting under their authority.
+Treat the Spec as a collection of decisions made by Operators or by AI Agents acting under their authority. Record every decision that matters to the Project, why it was made, and the facts and assumptions that mattered.
+
+When a similar choice comes up, the AI Agent reads the Spec to recover the context. If the relevant conditions still hold, it can reuse the Operator’s decision.
+
+## Details
+
+### Examples
+
+An Operator records a choice to use polling because a deployment cannot reliably deliver file change events. For the next watcher, an AI Agent checks that the same conditions hold and reuses the choice.

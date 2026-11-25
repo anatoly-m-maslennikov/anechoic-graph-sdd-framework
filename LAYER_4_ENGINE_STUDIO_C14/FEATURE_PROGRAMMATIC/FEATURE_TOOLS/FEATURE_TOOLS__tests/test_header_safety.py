@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import carrier_read_view
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.header_yaml import header_scalar, parse_header
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import header_scalar, parse_header
 
 
 class HeaderSafetyTests(unittest.TestCase):

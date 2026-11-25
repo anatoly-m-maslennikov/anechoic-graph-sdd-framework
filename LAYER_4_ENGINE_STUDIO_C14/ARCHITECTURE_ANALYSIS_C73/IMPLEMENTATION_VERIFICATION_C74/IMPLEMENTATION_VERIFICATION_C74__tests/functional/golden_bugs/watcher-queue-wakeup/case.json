@@ -1,0 +1,20 @@
+{
+  "title": "Service an idle queued lifecycle job",
+  "invariant": "The queue service branch is entered for a pending lifecycle job even when the watcher batch is empty and no retry is due.",
+  "scope": "Archived source replay of the exact QueuedJobs._watch_queue AST, differing only in the service guard. Lean checks the Boolean guard for an empty batch and no retry; it does not prove scheduling, locking, Python semantics, or completion of the job. Other function shapes are unresolved.",
+  "before": {
+    "revision": "archived snapshot image-rerun-source.PxGw0Wus (base HEAD b5f7ed526648296a768f701f6af1027ec80a349a plus uncommitted overlays)",
+    "source": "LAYER_4_ENGINE_STUDIO_C14/ORCHESTRATOR_beta_C68/jobs.py",
+    "fixture": "before.py.txt",
+    "sha256": "e2d1325fc8e81cde64a70a3c5a78cdbdf5cf30d07b78f9e9748591a095db6e6a"
+  },
+  "fixed": {
+    "revision": "archived snapshot idle-wake-image-source.q1Wi7xfW (base HEAD b5f7ed526648296a768f701f6af1027ec80a349a plus uncommitted overlays)",
+    "source": "LAYER_4_ENGINE_STUDIO_C14/ORCHESTRATOR_beta_C68/jobs.py",
+    "fixture": "fixed.py.txt",
+    "sha256": "620bc2b26f58e073f2f817a9bd35bb4d7ae6bda5daf99b38f9cf5179bae99887"
+  },
+  "provenance": "The source-snapshot-receipt.json in thread storage thr_5je2jn33zw/startup-replay-idle-wake-image records both source file hashes and both snapshot roots. These are archived snapshots, not Git revisions.",
+  "checks": [{"file": "regression.lean"}],
+  "analyzer": "analyze.py"
+}

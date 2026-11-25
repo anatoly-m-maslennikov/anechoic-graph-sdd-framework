@@ -7,7 +7,7 @@ import unittest
 
 
 APP = Path(__file__).resolve().parents[1]
-from MCP_PATCHBAY_C21.FEATURE_MCP.health_observations import HealthObservations  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import HealthObservations  # noqa: E402
 
 
 SAFE_ERROR_CATEGORIES = {"timeout", "connection", "returned-error", "uncertain"}

@@ -1,19 +1,21 @@
 """Bind actual parsed Declarations to generated Model classes."""
 
-from pathlib import Path
 import unittest
 
-PROGRAMMATIC = Path(__file__).resolve().parents[3]
+from pydantic import ConfigDict
+from pydantic.dataclasses import dataclass
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_native_model_claim
-from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_declaration_bindings import bind_model_declarations
-from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_relation_validation import validate_model_relations
+
+from ..FEATURE_MODEL_VALIDATION__shared import bind_model_declarations, validate_model_instance
 
 
+@dataclass(config=ConfigDict(strict=True, extra="forbid"))
 class Node:
     pass
 
 
+@dataclass(config=ConfigDict(strict=True, extra="forbid"))
 class Container(Node):
     pass
 
@@ -43,9 +45,11 @@ class ModelDeclarationBindingsTests(unittest.TestCase):
         self.assertIs(types["Node"], Node)
         self.assertIs(types["Node/Container"], Container)
         self.assertEqual(populations[Node], ({"keys": ("ID",)},))
-        validate_model_relations(Container, {}, relations, types)
+        admission = {"properties": {}, "relation_declarations": relations, "model_types": types,
+                     "checks": {}, "population_declarations": {Node: (), Container: ()}, "population_peers": {}}
+        self.assertIsInstance(validate_model_instance(Container, outgoing_relations={}, **admission), Container)
         with self.assertRaisesRegex(ValueError, "target count"):
-            validate_model_relations(Container, {"LINKS": [Node()]}, relations, types)
+            validate_model_instance(Container, outgoing_relations={"LINKS": [Node()]}, **admission)
 
     def test_rejects_mismatch_duplicates_and_unknown_targets(self):
         node = claim("Node")

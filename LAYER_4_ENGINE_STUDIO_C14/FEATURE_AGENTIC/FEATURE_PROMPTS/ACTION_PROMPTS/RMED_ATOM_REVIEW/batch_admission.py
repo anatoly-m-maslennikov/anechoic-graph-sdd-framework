@@ -11,7 +11,7 @@ from copy import deepcopy
 import hashlib
 from typing import Any, Mapping, Sequence
 
-from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.evaluation_contract import groups_for, ReviewContext, merge_evaluations, summarize_evaluations
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.evaluation_contract import EvaluationSummary, groups_for, ReviewContext, merge_evaluations, summarize_evaluations
 
 
 def _rejected(reason: str) -> dict[str, Any]:
@@ -110,25 +110,20 @@ def _combine_summaries(summaries: Sequence[dict[str, Any]]) -> dict[str, Any]:
     if any(summary.get("review_profile") != profile
            or set(summary["check_counts"]) != set(checks) for summary in summaries):
         raise ValueError("batch summaries must use the same review profile and checks")
-    combined: dict[str, Any] = {
-        "atoms": 0,
-        "fully_passed_atoms": 0,
-        "atoms_with_confirmed_findings": 0,
-        "atoms_with_coverage_gaps": 0,
-        "check_counts": {check: {"passed": 0, "failed": 0, "blocked": 0,
-                                  "atoms_with_findings": 0, "findings": 0}
-                         for check in checks},
-    }
-    if profile is not None:
-        combined["review_profile"] = profile
+    combined = EvaluationSummary(
+        check_counts={check: {"passed": 0, "failed": 0, "blocked": 0,
+                              "atoms_with_findings": 0, "findings": 0}
+                      for check in checks},
+        review_profile=profile,
+    )
     for summary in summaries:
         for key in ("atoms", "fully_passed_atoms", "atoms_with_confirmed_findings",
                     "atoms_with_coverage_gaps"):
-            combined[key] += summary[key]
+            setattr(combined, key, getattr(combined, key) + summary[key])
         for check in checks:
-            for key in combined["check_counts"][check]:
-                combined["check_counts"][check][key] += summary["check_counts"][check][key]
-    return combined
+            for key in combined.check_counts[check]:
+                combined.check_counts[check][key] += summary["check_counts"][check][key]
+    return combined.model_dump(exclude_none=True)
 
 
 def _merge_batch_candidates(candidates, raw_parts_by_candidate, contexts):

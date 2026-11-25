@@ -1,12 +1,30 @@
 import unittest
-from collections import namedtuple
+from dataclasses import replace
 
 from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.FEATURE_MODEL_VALIDATION__shared import check_code_access
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.realization_ownership__pub import CodeAccessOwnership
-CodeAccessOccurrence = namedtuple('CodeAccessOccurrence', 'source_path target_path target_kind unit written line column status')
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import CodeAccessOwnership
+
+from .FEATURE_MODEL_VALIDATION__tests__shared import CodeAccessOccurrence
 
 
 class CheckTests(unittest.TestCase):
+    def test_test_package_imports_require_a_test_source(self):
+        entries = {'root': {'id': 'root', 'parent': None, 'path': '.', 'kind': 'component', 'fields': {}}}
+        ownership = CodeAccessOwnership(entries, {'.': 'root'})
+        target = 'pkg/pkg__tests/nested/helper.py'
+        site = CodeAccessOccurrence('pkg/main.py', target, 'module', '*', 'helper', 1, 0, 'internal')
+        package = replace(site, target_path='pkg/pkg__tests', target_kind='package', unit=None)
+        asset = replace(site, target_path='pkg/pkg__tests/data.json', target_kind='asset', status='asset')
+        for occurrence in (site, package, asset):
+            self.assertEqual([(finding.status, finding.reason) for finding in
+                              check_code_access(ownership, {}, [occurrence])],
+                             [('denied', 'non-test import from Test Package')])
+        for occurrence in (replace(site, source_path='peer/peer__tests/test_main.py'),
+                           replace(site, target_path='pkg/pkg__tests_support/helper.py'),
+                           replace(asset, source_path='peer/peer__tests/test_main.ts'),
+                           replace(asset, target_path='pkg/runtime.json')):
+            self.assertEqual((), check_code_access(ownership, {}, [occurrence]))
+
     def test_entry_bypass_requires_both_exact_declarations(self):
         target = 'app/src/lib/parse.ts'
         selector = 'src.lib.parse.run'
@@ -28,7 +46,7 @@ class CheckTests(unittest.TestCase):
             )]
 
         self.assertEqual(['declared_bypass'], status())
-        self.assertEqual(['uncertain'], status(site._replace(unit='*')))
+        self.assertEqual(['uncertain'], status(replace(site, unit='*')))
         code['imports'] = ['siblings']
         self.assertEqual(['undeclared_bypass'], status())
         code['imports'] = {'only': []}

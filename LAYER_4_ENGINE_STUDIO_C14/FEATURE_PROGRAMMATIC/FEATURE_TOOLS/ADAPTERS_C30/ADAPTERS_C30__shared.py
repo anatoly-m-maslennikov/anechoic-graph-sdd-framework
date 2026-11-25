@@ -40,7 +40,7 @@ from .ADAPTERS_C30__pub import (
 from .carrier_read__pub import CarrierError, ParsedCarrier, parse_carrier
 from .markdown_content__pub import (
     content_key, content_lines, direct_markdown, formal_claim_fences,
-    parse_content, section_markdown, source_markdown,
+    parse_content, section_markdown, source_markdown, unfenced_atx_headings,
 )
 from .content_records__pub import records_by_path
 from .framework_database__pub import attach_framework
@@ -48,7 +48,7 @@ from .model_catalog__pub import bindings_from_workbench_rows, class_bindings
 from .model_class_subject__pub import (
     canonical_model_address, model_class_target, model_declaration_subject, simple_model_address,
 )
-from .native_snapshot_cli import UnrepresentableCarrierDelta, capture_carrier_delta, capture_ticket_delta, native_carrier_hashes, prepare_generation_snapshot
+from .native_snapshot_cli import NativeSnapshotChanged, UnrepresentableCarrierDelta, capture_carrier_delta, capture_ticket_delta, native_carrier_hashes, prepare_generation_snapshot
 from .project_database__pub import migrate_project_database
 from .indexed_lifecycle_capture import capture_indexed_lifecycle
 from .project_manifest__pub import (
@@ -57,6 +57,7 @@ from .project_manifest__pub import (
 )
 from .project_temporary__pub import TEMPORARY_DIRECTORY, atomic_tempfile, owned_temporary_root
 from .settings_carrier__pub import parse_settings_carrier, read_settings_carrier, write_settings_carrier
+from .startup_timing import mark_startup_timing
 from .settings_context__pub import (
     ProjectSettingsValueError, bind_settings_selection, bound_selection, control_root,
     project_identity, project_identity_prefix,
@@ -109,7 +110,7 @@ from .atom_reference__pub import atom_identifier
 from .carrier_syntax__pub import UniqueSafeLoader, check_yaml_resources
 from .code_access_rules__pub import module_visibility
 from .component_contract__pub import read_component_contract
-from .component_manifest__pub import parse_component_manifest
+from .component_manifest__pub import parse_component_manifest, parse_component_manifest_fields
 from .component_seed_manifest__pub import read_component_seed_manifest
 from .content_records__pub import content_record_span, value_excluding_declared_children
 from .current_carriers__pub import read_current_carriers, read_current_model_carriers
@@ -124,7 +125,7 @@ from .python_claim__pub import (
     PythonModelClaimError, parse_grouped_python_model_claim, parse_python_model_claim,
     parse_structured_python_model_claim,
 )
-from .realization_ownership__pub import build_code_access_ownership
+from .realization_ownership__pub import CodeAccessOwnership, build_code_access_ownership
 from .scope_carrier__pub import (
     DELEGATION_ROLE_FOLDERS, ScopeDeclarationError, has_projection_marker,
     has_scope_declaration_form, read_scope_carrier,
@@ -133,7 +134,7 @@ from .scope_declaration_parse__pub import ScopeUnitDeclaration, parse_scope_unit
 from .scope_unit_declarations__pub import ScopeUnitDeclarations, read_scope_unit_declarations
 from .source_row__pub import json_value
 from .source_watcher__pub import SourceWatcher
-from .work_journal__pub import MAX_DATABASE_EVENT_BYTES, append_sealed_events, canonical_json_bytes, journal_inbox, pending_database_journal
+from .work_journal__pub import MAX_DATABASE_EVENT_BYTES, append_record, append_sealed_events, canonical_json_bytes, journal_inbox, pending_database_journal
 
 __all__ = [
     "CURRENT_STATUSES",
@@ -146,9 +147,9 @@ __all__ = [
     "SourceWatcher",
     "UniqueSafeLoader",
     "active_manifest_carriers",
-    "append_sealed_events",
+    "append_record", "append_sealed_events",
     "atom_identifier",
-    "build_code_access_ownership",
+    "CodeAccessOwnership", "build_code_access_ownership",
     "canonical_json_bytes",
     "canonical_native_header",
     "check_native_manifest",
@@ -169,7 +170,7 @@ __all__ = [
     "module_visibility",
     "native_header_model_fields",
     "native_header_view",
-    "parse_component_manifest",
+    "parse_component_manifest", "parse_component_manifest_fields",
     "parse_grouped_python_model_claim",
     "parse_python_model_claim",
     "parse_structured_python_model_claim",
@@ -191,7 +192,7 @@ __all__ = [
     "content_lines",
     "direct_markdown",
     "formal_claim_fences",
-    "parse_content",
+    "parse_content", "unfenced_atx_headings",
     "section_markdown",
     "source_markdown",
     "Span",
@@ -248,9 +249,8 @@ __all__ = [
     "canonical_model_address",
     "capture_native",
     "attach_framework",
-    "UnrepresentableCarrierDelta", "capture_carrier_delta", "capture_ticket_delta",
-    "native_carrier_hashes",
-    "prepare_generation_snapshot",
+    "NativeSnapshotChanged", "UnrepresentableCarrierDelta", "capture_carrier_delta", "capture_ticket_delta",
+    "mark_startup_timing", "native_carrier_hashes", "prepare_generation_snapshot",
     "migrate_project_database",
     "canonical_role_name",
     "canonical_status",

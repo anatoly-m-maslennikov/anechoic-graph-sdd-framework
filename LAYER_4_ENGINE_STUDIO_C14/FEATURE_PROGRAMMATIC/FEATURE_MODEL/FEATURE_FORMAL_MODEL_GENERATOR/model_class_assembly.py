@@ -132,16 +132,26 @@ def _check_generated_module(source: str) -> None:
         del sys.modules[name]
 
 
+def _decorate_model(node: ast.ClassDef) -> None:
+    decorator = node.decorator_list[0] if node.decorator_list else ast.Name(id="dataclass", ctx=ast.Load())
+    if isinstance(decorator, ast.Name):
+        decorator = ast.Call(func=decorator, args=[], keywords=[])
+    decorator.keywords.append(ast.keyword(
+        arg="config", value=ast.Dict(keys=[ast.Constant("strict"), ast.Constant("extra")],
+                                     values=[ast.Constant(True), ast.Constant("forbid")]),
+    ))
+    node.decorator_list = [decorator]
+
+
 def assemble_model_classes(claims: Iterable[str]) -> str:
     """Return compiled Python source for the selected Claims' Model classes."""
     classes, imports = _classes(claims)
     graph, used_imports = _dependencies(classes, imports)
     if "dataclass" in classes:
         raise ValueError("Conflicting class dependency: dataclass")
-    used_imports["dataclass"] = "dataclasses"
+    used_imports["dataclass"] = "pydantic.dataclasses"
     for node in classes.values():
-        if not node.decorator_list:
-            node.decorator_list.append(ast.Name(id="dataclass", ctx=ast.Load()))
+        _decorate_model(node)
     order = tuple(TopologicalSorter({name: graph[name] for name in sorted(graph)}).static_order())
     statements = [ast.ImportFrom(module="__future__", names=[ast.alias(name="annotations")], level=0)]
     for symbol, module in sorted(used_imports.items(), key=lambda item: (item[1], item[0])):
@@ -183,11 +193,10 @@ def assemble_model_modules(claims: Iterable[str], *, dependency_order: bool = Fa
     for name in order if dependency_order else names:
         node = classes[name]
         used = {item.id for item in ast.walk(node) if isinstance(item, ast.Name) and isinstance(item.ctx, ast.Load)}
-        if not node.decorator_list:
-            node.decorator_list.append(ast.Name(id="dataclass", ctx=ast.Load()))
+        _decorate_model(node)
         standard = {symbol: module for symbol, module in imports[name].items()
                     if symbol in used and module not in {"anechoic.model", "__future__"}}
-        standard["dataclass"] = "dataclasses"
+        standard["dataclass"] = "pydantic.dataclasses"
         statements = [ast.ImportFrom(module="__future__", names=[ast.alias(name="annotations")], level=0)]
         statements.extend(ast.ImportFrom(module=module, names=[ast.alias(name=symbol)], level=0)
                           for symbol, module in sorted(standard.items(), key=lambda item: (item[1], item[0])))

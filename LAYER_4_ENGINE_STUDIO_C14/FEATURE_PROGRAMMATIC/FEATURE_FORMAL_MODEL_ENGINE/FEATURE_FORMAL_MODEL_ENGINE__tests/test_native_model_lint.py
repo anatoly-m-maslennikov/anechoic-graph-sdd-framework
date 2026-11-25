@@ -1,16 +1,19 @@
 """Native Formal Claim linting uses the supplied Model catalog."""
 
-from pathlib import Path
 import json
 import os
 import subprocess
 import sys
 import tempfile
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
+from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.FEATURE_FORMAL_MODEL_ENGINE__shared import (
+    lint_python_model_claim,
+)
+
 PROGRAMMATIC = Path(__file__).resolve().parents[2]
-from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.lint_python_model_claim__pub import lint_python_model_claim
 
 
 class NativeModelLintTests(unittest.TestCase):
@@ -37,7 +40,9 @@ class NativeModelLintTests(unittest.TestCase):
                     self.assertIn(message, self.lint(modified)[0])
 
     def test_current_workspace_and_view_field_contracts(self):
-        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import iter_formal_claims as _native_block
+        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+            iter_formal_claims as _native_block,
+        )
         root = Path(__file__).parent / 'assets'
         for number in (2792, 2793):
             path = next(root.glob(f'CA-R-{number}-*.md'))

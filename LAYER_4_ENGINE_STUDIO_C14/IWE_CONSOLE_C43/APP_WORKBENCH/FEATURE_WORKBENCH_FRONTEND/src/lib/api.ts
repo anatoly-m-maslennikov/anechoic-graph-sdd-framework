@@ -1,12 +1,14 @@
 
 import type { CheckResult, GridState, QueryResult, QueryLogItem, SavedIdentity, SavedItem, Schema, SourceSyncStatus, ViewRunResponse, WorkspaceState, WorkspaceView } from './types';
 import type { OperationCaller } from './transport';
+import type { QueryRun } from './query_run.generated';
 
 export class WorkbenchApi {
   constructor(private readonly caller: OperationCaller) {}
 
   run(sql: string, cursorPosition: number, options: { save?: boolean; name?: string } = {}): Promise<QueryResult> {
-    return this.caller.call('query_run', { result_delivery: 'inline', sql, cursor_position: cursorPosition, page_size: 100, ...options });
+    const request = { result_delivery: 'inline', sql, cursor_position: cursorPosition, page_size: 100, ...options } satisfies QueryRun;
+    return this.caller.call('query_run', request);
   }
 
   check(sql: string, cursorPosition: number): Promise<CheckResult> {

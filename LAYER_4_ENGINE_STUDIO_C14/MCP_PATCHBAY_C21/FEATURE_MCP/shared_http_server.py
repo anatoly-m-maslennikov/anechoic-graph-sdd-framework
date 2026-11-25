@@ -44,22 +44,22 @@ async def _snapshot(gateway: Any) -> Mapping[str, Any]:
     return value
 
 
-def _ready(snapshot: Mapping[str, Any]) -> bool:
+def _state(snapshot: Mapping[str, Any]) -> str:
     initialized = snapshot.get("initialized")
-    return type(initialized) is bool and initialized and isinstance(
-        snapshot.get("advertised_tools"), list,
-    )
+    if type(initialized) is not bool or not isinstance(snapshot.get("advertised_tools"), list):
+        return "unavailable"
+    return "ready" if initialized else "pending"
 
 
 async def health(request: Request, gateway: Any):
     """Serve one read-only host health snapshot."""
     snapshot = await _snapshot(gateway)
-    ready = _ready(snapshot)
-    status_code = 200 if ready else 503
+    state = _state(snapshot)
+    status_code = 200 if state in {"ready", "pending"} else 503
     if not _accepts_html(request.headers.get("accept")):
-        return JSONResponse({"ready": ready}, status_code=status_code)
+        return JSONResponse({"state": state}, status_code=status_code)
     return HTMLResponse(
-        render_health_page(snapshot, ready=ready, gateway=gateway),
+        render_health_page(snapshot, state=state, gateway=gateway),
         status_code=status_code,
         headers={"Cache-Control": "no-store"},
     )

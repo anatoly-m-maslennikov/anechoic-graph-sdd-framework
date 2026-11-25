@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import ast
 from contextlib import suppress
-from dataclasses import dataclass
 from hashlib import sha256
 import io
 import os
@@ -16,12 +15,17 @@ from typing import Iterable, Mapping
 from dulwich.errors import NotGitRepository
 from dulwich.ignore import IgnoreFilter, IgnoreFilterManager, default_user_ignore_filter_path
 from dulwich.repo import Repo
+from pydantic import ConfigDict, ValidatorFunctionWrapHandler, field_validator
+from pydantic.dataclasses import dataclass
 
 from .source_language import _file_language, _suffix_language
 from .python_forwarding import python_forwarded
 
 
-@dataclass(frozen=True, slots=True)
+_STRICT = ConfigDict(strict=True, extra="forbid")
+
+
+@dataclass(frozen=True, slots=True, config=_STRICT)
 class ImportSite:
     module: str
     name: str | None
@@ -31,15 +35,21 @@ class ImportSite:
     type_only: bool = False
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True, slots=True, config=_STRICT)
 class Source:
     language: str
     status: str
     signature: str
     imports: tuple[ImportSite, ...] = ()
     error_message: str | None = None
-    forwarded: tuple = ()
-    named_uses: tuple = ()
+    forwarded: tuple[tuple[str, str, int, int], ...] = ()
+    named_uses: tuple[tuple[str, int, int], ...] = ()
+
+    @field_validator("imports", "forwarded", "named_uses", mode="wrap")
+    @classmethod
+    def _retain_sites(cls, value, validate: ValidatorFunctionWrapHandler):
+        validated = validate(value)
+        return value if isinstance(value, tuple) and value == validated else validated
 
 
 _RESOLUTION_INPUTS = frozenset({".gitignore", "pyproject.toml", "uv.lock", "package.json", "tsconfig.json"})

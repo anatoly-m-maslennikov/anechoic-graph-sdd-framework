@@ -1,0 +1,20 @@
+{
+  "title": "Recognize a witnessed ordinary directory creation",
+  "invariant": "A known ordinary directory creation with a valid carrier witness is recognized as handled without an archive epoch.",
+  "scope": "Exact archived module ASTs. One existing non-root, non-archive directory and one existing child Markdown carrier have known creation effects, valid matching identities and file evidence, no receipt eviction, no concurrent changes, and a matching created watcher event. The archive epoch is absent. Lean models only whether the implementation records and accepts this witness; it does not prove filesystem behavior, Python semantics, or other receipt cases. Any other module shape is unresolved.",
+  "before": {
+    "revision": "archived snapshot idle-wake-image-source.q1Wi7xfW (base HEAD b5f7ed526648296a768f701f6af1027ec80a349a plus overlays)",
+    "source": "LAYER_4_ENGINE_STUDIO_C14/ORCHESTRATOR_beta_C68/watcher_receipts.py",
+    "fixture": "before.py.txt",
+    "sha256": "94d8d3ad6d5bd06a85b4c23fc825480e528adc0c0642d7bf9d3d6550fda4e3ad"
+  },
+  "fixed": {
+    "revision": "archived snapshot receipt-lock-image-source.IzaMThtG (base HEAD b5f7ed526648296a768f701f6af1027ec80a349a plus overlays)",
+    "source": "LAYER_4_ENGINE_STUDIO_C14/ORCHESTRATOR_beta_C68/watcher_receipts.py",
+    "fixture": "fixed.py.txt",
+    "sha256": "75d8a014dd05cea92ce380c0d0b4d43844374c75f09188237accf3a6816ebb2c"
+  },
+  "provenance": "The source-snapshot-receipt.json in thread storage thr_5je2jn33zw/startup-replay-receipt-lock-image records both source hashes and both snapshot roots. These are archived snapshots, not Git revisions.",
+  "checks": [{"file": "regression.lean"}],
+  "analyzer": "analyze.py"
+}

@@ -6,16 +6,14 @@ import json
 import os
 from pathlib import Path
 import re
-import subprocess
-import sys
-from types import SimpleNamespace
 from typing import Any, Callable, Mapping
 
 from MCP_PATCHBAY_C21.FEATURE_MCP.docker.mcp_paths import HEALTH_PATH
-from MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_log_level import LOG_LEVELS
+
+from .host_runtime_settings import load_host_runtime_settings
 
 
-ROOT = Path(__file__).resolve().parents[3]
+ROOT = Path(__file__).resolve().parents[4]
 
 COMPOSE = Path(__file__).with_name("shared-mcp.compose.yaml")
 DOCKER_ENV = (
@@ -27,34 +25,6 @@ DOCKER_ENV = (
 
 class SharedLaunchError(ValueError):
     """A safe input or observed Docker boundary failure."""
-
-
-def _config(path):
-    engine = ROOT
-    root = engine.parent
-    command = [sys.executable, "-B", "-P", "-m",
-               "IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.host_runtime_config"]
-    if path is not None:
-        command += ["--host-settings", str(path)]
-    try:
-        result = subprocess.run(
-            command, cwd=root, env={**{k: v for k, v in os.environ.items() if k != "PYTHONHOME"}, "PYTHONPATH": str(engine)},
-            capture_output=True, text=True, timeout=10, check=True,
-        )
-        value = json.loads(result.stdout)
-        expected = {"source_path", "projects_root", "http_port", "max_loaded_projects",
-                    "shared_runtime_id", "single_project", "workbench_storage", "journal_storage", "log_level"}
-        if (not isinstance(value, dict) or set(value) != expected
-                or any(not isinstance(value[key], str) for key in (
-                    "source_path", "projects_root", "shared_runtime_id", "workbench_storage", "journal_storage"))
-                or any(type(value[key]) is not int for key in ("http_port", "max_loaded_projects"))
-                or type(value["single_project"]) is not bool or value["log_level"] not in LOG_LEVELS):
-            raise ValueError("Invalid backend settings response")
-        value["source_path"] = Path(value["source_path"])
-        value["projects_root"] = Path(value["projects_root"])
-        return SimpleNamespace(**value)
-    except (OSError, subprocess.SubprocessError, ValueError, TypeError) as error:
-        raise SharedLaunchError("invalid_host_settings") from error
 
 
 def _image(value):
@@ -77,9 +47,11 @@ def _environment(config, image):
         "ANECHOIC_HOST_SETTINGS": str(config.source_path),
         "ANECHOIC_PROJECTS_ROOT": str(config.projects_root),
         "ANECHOIC_MCP_HTTP_PORT": str(config.http_port),
-        "ANECHOIC_MAX_LOADED_PROJECTS": str(getattr(config, "max_loaded_projects", 2)),
+        "ANECHOIC_MAX_LOADED_PROJECTS": str(config.max_loaded_projects),
         "ANECHOIC_SHARED_RUNTIME_ID": config.shared_runtime_id,
         "ANECHOIC_LOG_LEVEL": config.log_level,
+        "ANECHOIC_WORKBENCH_STORAGE": os.environ.get("ANECHOIC_WORKBENCH_STORAGE", config.workbench_storage),
+        "ANECHOIC_JOURNAL_STORAGE": os.environ.get("ANECHOIC_JOURNAL_STORAGE", config.journal_storage),
     }
 
 
@@ -100,7 +72,10 @@ def _prefix(compose, project):
 
 
 def prepare_config(settings_path=None, image=None, *, compose_file=None, timeout=420):
-    config = _config(settings_path)
+    try:
+        config = load_host_runtime_settings(settings_path, base=ROOT)
+    except (OSError, RuntimeError, ValueError, TypeError) as error:
+        raise SharedLaunchError("invalid_host_settings") from error
     image = _image(image)
     compose = _path(compose_file or COMPOSE)
     timeout = bounded(timeout, "startup_timeout")
@@ -114,7 +89,7 @@ def prepare_config(settings_path=None, image=None, *, compose_file=None, timeout
         "settings_path": str(config.source_path),
         "projects_root": str(config.projects_root),
         "http_port": config.http_port,
-        "max_loaded_projects": getattr(config, "max_loaded_projects", 2),
+        "max_loaded_projects": config.max_loaded_projects,
         "shared_runtime_id": config.shared_runtime_id,
         "compose_file": str(compose),
         "command": prefix + ["up", "-d", "--wait", "--wait-timeout", str(timeout), "shared-mcp"],
@@ -219,7 +194,7 @@ def health_ready(opener, port, deadline, clock: Callable[[], float]):
     try:
         response = opener(f"http://127.0.0.1:{port}{HEALTH_PATH}", timeout=min(2, remaining))
         try:
-            return json.load(response).get("ready") is True
+            return json.load(response).get("state") == "ready"
         finally:
             close = getattr(response, "close", None)
             if close:

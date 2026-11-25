@@ -9,18 +9,27 @@ import unittest
 
 import duckdb
 
-from ..realization_projection import prepare
 from .DATABASE_SERVER_beta_C71__tests__shared import _generation, _query, _server
 
 
 class DependencyReviewTest(unittest.TestCase):
     def test_stale_coupling_view_is_replaced(self):
-        with duckdb.connect() as connection:
-            connection.execute('CREATE TABLE old_graph (value INTEGER)')
-            connection.execute('CREATE VIEW biz_package_coupling AS SELECT * FROM old_graph')
-            connection.execute('DROP TABLE old_graph')
-            prepare(connection)
-            self.assertEqual(connection.execute('SELECT count(*) FROM mrt_diag_antipatterns').fetchone()[0], 0)
+        with TemporaryDirectory(dir='/tmp') as directory:
+            path = Path(directory).resolve() / 'db.duckdb'
+            data = _generation()
+            data['graph'] = {'nodes': [], 'occurrences': [], 'edges': [], 'test_edges': [], 'read_issues': []}
+            data['receipt']['graph_sha256'] = sha256(json.dumps(data['graph'], sort_keys=True, separators=(',', ':')).encode()).hexdigest()
+            with _server(path) as client:
+                response = client.put('/generation', json=data)
+                self.assertEqual(200, response.status_code, response.text)
+            with duckdb.connect(str(path)) as connection:
+                connection.execute('CREATE TABLE old_graph (value INTEGER)')
+                connection.execute('CREATE OR REPLACE VIEW biz_package_coupling AS SELECT * FROM old_graph')
+                connection.execute('DROP TABLE old_graph')
+            with _server(path) as client:
+                response = _query(client, 'SELECT count(*) FROM mrt_diag_antipatterns')
+                self.assertEqual(200, response.status_code, response.text)
+                self.assertEqual([[0]], response.json()['result']['rows'])
 
     def test_cycles_coupling_and_restart(self):
         nodes = [[p, 'package', 'python', p, 'ok', None, 'Test Package' if p == 'test' else None]

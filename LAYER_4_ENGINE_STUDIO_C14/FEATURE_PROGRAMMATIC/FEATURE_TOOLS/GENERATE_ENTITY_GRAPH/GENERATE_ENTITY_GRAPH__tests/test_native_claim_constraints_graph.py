@@ -27,7 +27,7 @@ from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEA
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import extract_claim_constraints, _native_constraints
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import compose_contract_graph
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import _clause
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.subject_projection_relations import _relation_declarations
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import build_subject_projection_data
 
 RELATION_CLAIMS = [
     (
@@ -155,7 +155,7 @@ class ModelClaimGraphTests(unittest.TestCase):
                 )
                 (relation,) = compose_contract_graph([carrier])["relations"]
                 self.assertEqual([base], [row["name"] for row in relation["derivation_links"]])
-                (projected,) = _relation_declarations([relation])
+                (projected,) = build_subject_projection_data([carrier])["relation_declarations"]
                 self.assertEqual((name, "Derived"), (projected["name"], projected["derivation"]))
 
     def test_population_dependency_order_and_provenance(self):

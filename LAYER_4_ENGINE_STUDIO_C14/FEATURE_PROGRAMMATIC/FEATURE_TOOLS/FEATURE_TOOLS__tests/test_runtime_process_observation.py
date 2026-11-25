@@ -17,9 +17,8 @@ for path in (TESTS, TOOLS):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-import FEATURE_PROGRAMMATIC.FEATURE_TOOLS.runtime_failure_diagnostics as facade  # noqa: E402
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import runtime_process_boundary_module as boundary  # noqa: E402
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import FailureRecord  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import FailureRecord, report_failure  # noqa: E402
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import TechnicalDiagnosticLogger  # noqa: E402
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__tests.test_runtime_process_boundary import _record_report  # noqa: E402
 
@@ -55,11 +54,8 @@ class RuntimeProcessObservationTests(unittest.TestCase):
         stream = io.StringIO()
         logger = TechnicalDiagnosticLogger(None, None, "test", stream, "host")
 
-        def report(root, error, **kwargs):
-            return facade.report_failure(root, error, **kwargs)
-
         def callback() -> int:
-            facade.report_failure(
+            report_failure(
                 None,
                 FailureRecord("WARNING", "inner_failure", "safe failure"),
                 component="APPEND_CHANGE_RECORDS",
@@ -69,9 +65,8 @@ class RuntimeProcessObservationTests(unittest.TestCase):
             return 2
 
         with (
-            patch.object(boundary, "report_failure", side_effect=report),
             patch.object(boundary, "bound_selection", return_value=None),
-            patch.object(facade, "make_unbound_technical_logger", return_value=(logger, None)),
+            patch(f"{report_failure.__module__}.make_unbound_technical_logger", return_value=(logger, None)),
             redirect_stdout(io.StringIO()) as stdout,
             redirect_stderr(io.StringIO()) as stderr,
         ):
@@ -87,11 +82,8 @@ class RuntimeProcessObservationTests(unittest.TestCase):
         stream = io.StringIO()
         logger = TechnicalDiagnosticLogger(None, None, "test", stream, "host")
 
-        def report(root, error, **kwargs):
-            return facade.report_failure(root, error, **kwargs)
-
         def prior() -> int:
-            facade.report_failure(
+            report_failure(
                 None,
                 FailureRecord("WARNING", "prior_warning", "safe warning"),
                 component="TOOL",
@@ -103,9 +95,8 @@ class RuntimeProcessObservationTests(unittest.TestCase):
             raise RuntimeError("new secret")
 
         with (
-            patch.object(boundary, "report_failure", side_effect=report),
             patch.object(boundary, "bound_selection", return_value=None),
-            patch.object(facade, "make_unbound_technical_logger", return_value=(logger, None)),
+            patch(f"{report_failure.__module__}.make_unbound_technical_logger", return_value=(logger, None)),
             redirect_stderr(io.StringIO()),
         ):
             self.assertEqual(0, boundary.run_process(prior, operation="prior"))

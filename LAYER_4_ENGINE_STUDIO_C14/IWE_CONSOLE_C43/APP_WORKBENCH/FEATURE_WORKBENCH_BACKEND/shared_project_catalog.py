@@ -3,12 +3,15 @@
 
 from __future__ import annotations
 
+from pydantic import ConfigDict, InstanceOf
+from pydantic.dataclasses import dataclass
+
 import asyncio
 from concurrent.futures import CancelledError as FutureCancelledError
-from dataclasses import dataclass, field
+from dataclasses import field
 from pathlib import Path
 import os
-from typing import Any, Callable
+from typing import Annotated, Any, Callable
 
 from .host_runtime_config import HostRuntimeConfig, resolve_host_project
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import FailureRecord
@@ -20,12 +23,12 @@ from .shared_tool_contract import ToolContract, contract_digest, public_tool
 MAX_PROJECT_CANDIDATES = 256
 
 
-@dataclass
+@dataclass(config=ConfigDict(strict=True, extra="forbid"))
 class SharedToolFrontier:
-    tools: dict[str, ToolContract] = field(default_factory=dict)
-    project_contracts: dict[str, dict[str, str]] = field(default_factory=dict)
-    quarantined: set[str] = field(default_factory=set)
-    warnings: list[dict[str, str]] = field(default_factory=list)
+    tools: Annotated[dict[str, ToolContract], InstanceOf()] = field(default_factory=dict)
+    project_contracts: Annotated[dict[str, dict[str, str]], InstanceOf()] = field(default_factory=dict)
+    quarantined: Annotated[set[str], InstanceOf()] = field(default_factory=set)
+    warnings: Annotated[list[dict[str, str]], InstanceOf()] = field(default_factory=list)
 
     def warning(self, code: str, root: Path | None = None, tool: str | None = None) -> None:
         row = {"code": code}

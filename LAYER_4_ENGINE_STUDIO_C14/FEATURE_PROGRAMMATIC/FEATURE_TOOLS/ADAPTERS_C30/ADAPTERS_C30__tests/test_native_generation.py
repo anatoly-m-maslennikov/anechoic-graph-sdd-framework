@@ -1,4 +1,8 @@
+from contextlib import redirect_stderr
 from hashlib import sha256
+from io import StringIO
+import json
+import os
 from pathlib import Path
 from time import monotonic
 import unittest
@@ -76,10 +80,31 @@ class NativeGenerationTests(NativeCaptureFixture, unittest.TestCase):
         relative = path.relative_to(self.root).as_posix()
         with self.assertRaisesRegex(ValueError, "outside the selected native archive trees"):
             prepare_generation_snapshot(binding, archive_stage="archive", archive_roots=["09_archived"])
-        with self.assertRaisesRegex(ValueError, "non-Archived Atom") as error:
-            prepare_generation_snapshot(binding, archive_stage="archive",
-                                        archive_roots=[path.parent.relative_to(self.root).as_posix()])
-        self.assertEqual(relative, error.exception.ingestion_issues[0]["relative_path"])
+        _, finish = prepare_generation_snapshot(binding, archive_stage="archive", include_hashes=True,
+                                                archive_roots=[path.parent.relative_to(self.root).as_posix()])
+        snapshot, hashes = finish({"CONTAINED_BY": [{"inverse_alias": "CONTAINS"}, False], "CONTAINS": [{}, True]})
+        self.assertEqual([], snapshot["atoms"])
+        issue, = snapshot["ingestion_issues"]
+        self.assertEqual((relative, "AN-S-2@1"), (issue["relative_path"], issue["atom_ref"]))
+        self.assertIn("non-Archived Atom", issue["message"])
+        self.assertEqual({relative: sha256(path.read_bytes()).hexdigest()}, hashes)
+
+    def test_delta_quarantines_one_invalid_relation_and_keeps_a_valid_ticket(self):
+        binding = {"root": str(self.root), "control_root": self.control.name,
+                   "manifest_path": self.manifest.relative_to(self.root).as_posix(),
+                   "manifest_sha256": self.selection.manifest_sha256, "project_prefix": "AN"}
+        invalid = self.write("AN-T-8--invalid.md", "AN-T-8", "active", 1)
+        invalid.write_text(invalid.read_text().replace("state:", "relations: {UNDECLARED: [AN-T-9]}\nstate:"))
+        valid = self.write("AN-T-9--valid.md", "AN-T-9", "active", 1)
+        paths = [path.relative_to(self.root).as_posix() for path in (invalid, valid)]
+        endpoints = {"CONTAINED_BY": [{"inverse_alias": "CONTAINS"}, False], "CONTAINS": [{}, True]}
+        result = capture_ticket_delta(binding, paths, endpoints, include_hashes=True)
+        snapshot = result["snapshot"]
+        self.assertEqual(["AN-T-9"], [row["reference"] for row in snapshot["atoms"]])
+        self.assertEqual(set(paths), result["carrier_hashes"].keys())
+        issue, = snapshot["ingestion_issues"]
+        self.assertEqual((paths[0], "AN-T-8@1"), (issue["relative_path"], issue["atom_ref"]))
+        self.assertIn("Undeclared native relation", issue["message"])
 
     def test_scoped_hashes_exclude_deferred_archives_and_keep_off_path_revisions(self):
         binding = {"root": str(self.root), "control_root": self.control.name,
@@ -95,6 +120,41 @@ class NativeGenerationTests(NativeCaptureFixture, unittest.TestCase):
         currentness.assert_not_called()
         self.assertEqual({self.manifest, live, off_path}, {self.root / path for path in foreground})
         self.assertEqual({archived}, {self.root / path for path in background})
+
+    def test_foreground_timing_reports_scans_only_when_enabled(self):
+        binding = {"root": str(self.root), "control_root": self.control.name,
+                   "manifest_path": self.manifest.relative_to(self.root).as_posix(),
+                   "manifest_sha256": self.selection.manifest_sha256, "project_prefix": "AN"}
+        current = self.write("AN-S-2--current.md", "AN-S-2", "active", 1)
+        archived = self.write("09_archived/AN-S-3@1--archived.md", "AN-S-3", "archived", 1)
+        archive_roots = [archived.parent.relative_to(self.root).as_posix()]
+        disabled, enabled = StringIO(), StringIO()
+        with patch.dict(os.environ, {"ANECHOIC_STARTUP_TIMING": "0"}), redirect_stderr(disabled):
+            expected = native_carrier_hashes(binding, foreground=True)
+        self.assertEqual("", disabled.getvalue())
+        with (patch.dict(os.environ, {"ANECHOIC_STARTUP_TIMING": "1"}), redirect_stderr(enabled),
+              patch("FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_snapshot_cli._graph_config", return_value={})):
+            self.assertEqual(expected, native_carrier_hashes(binding, foreground=True))
+            native_carrier_hashes(binding, archive_roots=archive_roots)
+            prepare_generation_snapshot(binding, archive_stage="foreground")
+        prefix = "ANECHOIC_STARTUP_TIMING "
+        lines = enabled.getvalue().splitlines()
+        self.assertTrue(all(line.startswith(prefix) for line in lines), lines)
+        records = [json.loads(line.removeprefix(prefix)) for line in lines]
+        self.assertEqual([("scan_started", "foreground_hashes"), ("scan_metrics", "foreground_hashes"),
+                          ("scan_started", "foreground_capture"), ("non_archived_load_started", "foreground_capture"),
+                          ("scan_metrics", "foreground_capture")], [(row["phase"], row["mode"]) for row in records])
+        for row in records:
+            self.assertIs(type(row["timestamp_ns"]), int)
+            self.assertGreater(row["timestamp_ns"], 0)
+            if row["phase"] == "scan_metrics":
+                self.assertEqual(2, row["carrier_count"])
+                self.assertEqual(self.manifest.stat().st_size + current.stat().st_size, row["bytes_read"])
+                for field in ("census_ns", "guarded_read_ns", "stream_ns", "sha256_ns"):
+                    self.assertIs(type(row[field]), int)
+                    self.assertGreaterEqual(row[field], 0)
+                self.assertLessEqual(row["stream_ns"], row["guarded_read_ns"])
+        self.assertNotIn(str(self.root), enabled.getvalue())
 
     def test_managed_snapshot_can_delegate_final_currentness_to_watcher(self):
         binding = {"root": str(self.root), "control_root": self.control.name,
@@ -161,9 +221,9 @@ class NativeGenerationTests(NativeCaptureFixture, unittest.TestCase):
                    "manifest_sha256": self.selection.manifest_sha256, "project_prefix": "AN"}
         original_summary = "\n# Summary\n\nLegacy wording\n"
         archive = self.write("AN-S-2@1--source.md", "AN-S-2", "archived", 1)
-        archive.write_text(archive.read_text().replace("\n---\n\n## Summary", "\n---\n## Summary") + original_summary)
+        archive.write_text(archive.read_text().replace("\n---\n\n## Summary", "\n---\n## Summary").replace("Example\n", "Example\n\nMore detail\n") + original_summary)
         current = self.write("AN-S-2--source.md", "AN-S-2", "active", 2)
-        current.write_text(current.read_text() + original_summary)
+        current.write_text(current.read_text().replace("Example\n", "Example\n\nMore detail\n") + original_summary)
         endpoints = {"CONTAINED_BY": [{"inverse_alias": "CONTAINS"}, False],
                      "CONTAINS": [{}, True]}
         with patch("FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_snapshot_cli._graph_config",
@@ -172,6 +232,23 @@ class NativeGenerationTests(NativeCaptureFixture, unittest.TestCase):
             summaries = {atom["exact_ref"]: atom["summary"] for atom in finish(endpoints)["atoms"]}
         self.assertEqual("Example", summaries["AN-S-2@1"])
         self.assertEqual("Example", summaries["AN-S-2@2"])
+        self.assertIn("More detail", current.read_text())
+        self.assertIn("More detail", archive.read_text())
+
+    def test_model_capture_retains_full_body_and_exact_ref(self):
+        binding = {"root": str(self.root), "control_root": self.control.name,
+                   "manifest_path": self.manifest.relative_to(self.root).as_posix(),
+                   "manifest_sha256": self.selection.manifest_sha256, "project_prefix": "AN"}
+        path = self.write("LAYER_1_META_ONTOLOGY_C9/_SPEC/AN-S-2--model.md", "AN-S-2", "active", 2)
+        path.write_text(path.read_text().replace("Example\n", "Example\n\nFull detail\n"))
+        with patch("FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_snapshot_cli._graph_config", return_value={}):
+            _, finish, inputs = prepare_generation_snapshot(binding, include_model_inputs=True)
+            result = finish({"CONTAINED_BY": [{"inverse_alias": "CONTAINS"}, False], "CONTAINS": [{}, True]})
+        row, = inputs["rows"]
+        self.assertEqual("AN-S-2@2", row["exact_ref"])
+        self.assertIn("Full detail", row["body"])
+        self.assertEqual("Example", next(atom["summary"] for atom in result["atoms"] if atom["reference"] == "AN-S-2"))
+        self.assertTrue(inputs["has_c9"])
 
     def test_generation_validates_with_a_separate_read_budget(self):
         binding = {"root": str(self.root), "control_root": self.control.name,

@@ -3,7 +3,7 @@ import hashlib
 from pathlib import Path
 import tempfile
 import unittest
-from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.closure_freshness import audit_bindings, close_batch
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared import audit_bindings, close_batch
 
 
 class ClosureFreshnessTests(unittest.TestCase):

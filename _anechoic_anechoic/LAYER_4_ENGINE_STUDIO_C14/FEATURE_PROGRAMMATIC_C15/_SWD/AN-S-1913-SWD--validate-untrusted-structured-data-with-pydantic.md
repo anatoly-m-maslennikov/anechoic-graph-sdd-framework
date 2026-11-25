@@ -8,8 +8,8 @@ context:
   lens: SWD
 state:
   status: active
-  version: 14
-  updated_at: 2026-11-10 20:47:54 +0400
+  version: 15
+  updated_at: '2026-11-24T18:58:19.252479+00:00'
 ---
 
 ## Summary
@@ -18,43 +18,27 @@ Validate untrusted structured data with Pydantic
 
 ## Claim
 
-
-
 ### Prose Claim
-use Pydantic **when** untrusted structured data crosses an admitted Python
-boundary. validate once at the boundary **and** pass accepted typed values into
-the deterministic core **without** making Pydantic the universal internal model.
+
+Use Pydantic for all structured Python models, including domain and state
+records, configuration, IPC and persistence records, requests, results,
+and test models. Keep validated Pydantic models throughout Python code.
 
 ## Details
 
-
-### Applicable when
-
-apply **to** an admitted CLI payload, Hook event, configuration carrier, Journal
-record, protocol message, **or** external adapter whose invalid structure could
-hide a contract defect.
-
 ### Procedure
 
-1. define the bounded input model with field types **and** constraints **before**
-   custom validators.
-2. use strict validation **when** coercion could hide a defect; admit lax conversion
-   **only** for a declared interoperability need **and** make it observable.
-3. reject undeclared extra fields for closed machine contracts.
-4. return structured validation diagnostics **and** pass the accepted typed value
-   **to** the deterministic core.
-5. add Pydantic as a runtime dependency **only** **where** validation **and** schema value
-   justify its dependency cost.
-
-### Outcome
-
-untrusted structured inputs become explicit typed values at one boundary while
-the internal model remains independent of the validation library.
+1. Declare field types and constraints before custom validators.
+2. Validate raw data strictly at admission. Permit coercion only for a
+   declared interoperability need. Make the conversion observable.
+3. Reject undeclared fields in closed contracts.
+4. Report structured diagnostics when validation fails. Pass the validated
+   model internally without repeating validation solely to pass it.
 
 ### Failure or stop
 
-stop admission **when** the boundary is **not** declared, coercion is silent, extra
-fields escape a closed contract, **or** the dependency has no bounded benefit.
+Refuse admission when the boundary is undeclared, coercion is silent, or
+a closed contract accepts extra fields.
 
 ### Sources
 

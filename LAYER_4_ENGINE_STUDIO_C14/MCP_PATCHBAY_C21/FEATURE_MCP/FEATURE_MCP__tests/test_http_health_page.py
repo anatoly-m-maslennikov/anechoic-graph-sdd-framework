@@ -2,7 +2,7 @@
 from types import SimpleNamespace
 
 from .health_fixture import HealthHTTPFixture
-from MCP_PATCHBAY_C21.FEATURE_MCP.health_page import render_health_page
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import render_health_page
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import HEALTH_PATH
 
 
@@ -16,7 +16,7 @@ class HTTPHealthPageTests(HealthHTTPFixture):
                 "started_at": "<script>bad</script>",
                 "calls": [{"observed_at": "<b>", "name": "<script>", "outcome": "returned"}],
             },
-            ready=True,
+            state="ready",
             gateway=gateway,
         )
         self.assertIn("&lt;script&gt;", html)
@@ -28,8 +28,8 @@ class HTTPHealthPageTests(HealthHTTPFixture):
                 for accept in ("application/json", "text/html"):
                     response = await client.get(HEALTH_PATH, headers=self.headers(accept=accept))
                     self.assertEqual(200, response.status_code)
-                    self.assertEqual({"ready": True}, response.json())
+                    self.assertEqual({"state": "ready"}, response.json())
                 self.app.gateway.ready = False
                 response = await client.get(HEALTH_PATH, headers=self.headers())
                 self.assertEqual(503, response.status_code)
-                self.assertEqual({"ready": False}, response.json())
+                self.assertEqual({"state": "unavailable"}, response.json())

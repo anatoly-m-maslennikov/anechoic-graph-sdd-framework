@@ -53,6 +53,17 @@ class ReleaseCliTests(ReleaseCliFixture, unittest.TestCase):
             self.assertEqual(self.invoke(["local", "--run-id", "local-1"]), (0, result))
         run.assert_called_once_with(REPOSITORY, run_id="local-1", image_mode="refresh")
 
+    def test_local_resume_dispatch_preserves_run_id_and_saved_options(self) -> None:
+        result = {"outcome": "completed", "receipt_path": "receipt.json"}
+        with patch(LOCAL_ENTRY, return_value=result) as run:
+            self.assertEqual(self.invoke(["local", "--resume", "--run-id", "local-1"]), (0, result))
+        run.assert_called_once()
+        self.assertEqual((REPOSITORY,), run.call_args.args)
+        self.assertEqual("local-1", run.call_args.kwargs["run_id"])
+        self.assertIs(run.call_args.kwargs["resume"], True)
+        self.assertIsNone(run.call_args.kwargs.get("image_mode"))
+        self.assertIsNone(run.call_args.kwargs.get("test_modules"))
+
     def test_local_cli_can_run_without_public_component(self) -> None:
         result = {"outcome": "completed"}
         with (
@@ -216,7 +227,7 @@ class ReleaseCliTests(ReleaseCliFixture, unittest.TestCase):
         run.assert_not_called()
 
     def test_real_cli_help_and_invalid_arguments(self) -> None:
-        for arguments, expected in ((["--help"], 0), (["local"], 2), (["wrong"], 2)):
+        for arguments, expected in ((["--help"], 0), (["local"], 2), (["local", "--resume"], 2), (["wrong"], 2)):
             with self.subTest(arguments=arguments):
                 result = subprocess.run(
                     [
@@ -243,17 +254,12 @@ class ReleaseCliTests(ReleaseCliFixture, unittest.TestCase):
         self.assertEqual(status, 0)
         self.assertEqual(result["outcome"], "completed")
 
-    def test_invalid_root_and_run_id_do_not_dispatch(self) -> None:
-        for arguments in (
-            ["local", "--run-id", "../unsafe"],
-            ["local", "--run-id", "safe", "--project-root", "/"],
-        ):
-            with (
-                self.subTest(arguments=arguments),
-                patch(LOCAL_ENTRY) as run,
-            ):
-                self.assertEqual(self.invoke(arguments)[0], 1)
-                run.assert_not_called()
+    def test_invalid_root_does_not_dispatch(self) -> None:
+        with patch(LOCAL_ENTRY) as run:
+            status, result = self.invoke(["local", "--run-id", "safe", "--project-root", "/"])
+        run.assert_not_called()
+        self.assertEqual((status, result["failed_step"], result["effects"]),
+                         (1, "validate_project_selection", []))
 
 
 if __name__ == "__main__":

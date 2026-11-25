@@ -8,14 +8,14 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from contextlib import nullcontext
 import json
 import os
-import re
 from pathlib import Path
 import subprocess
 import sys
 import time
 
-from . import (_release_canary as _release_canary, full_suite_docker as full_suite_docker,
+from . import (full_suite_docker as full_suite_docker,
                prune_private_tmp as prune_private_tmp, source_line_length as source_line_length, static_checks as static_checks)
+from . import source_comments as source_comments, suite_preflight as suite_preflight
 from .python_bytecode import (python_findings as python_findings, shell_findings as shell_findings,
                               unsafe as unsafe, yaml_findings as yaml_findings)
 from .source_sizes import (check_functions as check_functions, check_module as check_module,
@@ -26,6 +26,8 @@ from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.functional_suite import (
 from .full_suite_docker import (APP as APP, IMAGE_DEADLINES, candidate_test_image,
                                 current_code_test_image, image_deadline_mode)
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.static_checks import CODE_ROOTS, check as _run_static_checks
+from .suite_cli import run_phase
+from .suite_preflight import run_preflight
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.suite_report import record_module, suite_report
 
 MODULE_TIMEOUT_SECONDS = 3600
@@ -46,6 +48,14 @@ if not count:
     print("No test cases loaded", file=sys.stderr)
 sys.exit(0 if count and result.wasSuccessful() and not required_skips else 1)
 """
+
+
+def __getattr__(name: str):
+    if name == "_release_canary":
+        from . import _release_canary
+
+        return _release_canary
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
 def discover_test_modules(root: Path) -> list[Path]:
@@ -163,12 +173,14 @@ def run_full_suite(root: Path, test_modules: tuple[str, ...] | None = None, *,
     if not valid_test_request(phase, candidate_image, test_modules, required):
         print("Invalid test phase or candidate image selection", file=sys.stderr)
         return 1
+    if phase == "preflight":
+        return run_preflight(root, report)
     if phase in ("full", "static") and test_modules is None:
         report["step"] = "static_checks"
         status = _run_static_checks(root)
         if status:
             return status
-    host_gate = required or phase == "functional"
+    host_gate = required or phase in ("functional", "canary")
     report["step"] = "discovery"
     try:
         modules = select_phase_modules(root, discover_test_modules(root), phase, test_modules, host_gate)
@@ -276,55 +288,19 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--project-root", type=Path, default=Path.cwd())
     parser.add_argument("--test-module", action="append", dest="test_modules", metavar="PATH")
-    parser.add_argument("--phase", choices=("static", "functional", "unit", "image"), default="unit")
+    parser.add_argument("--phase", default="unit",
+                        choices=("preflight", "static", "functional", "unit", "image", "image-tests", "canary"))
     parser.add_argument("--required", action="store_true", help="run the configured required host selection with the unit phase")
     parser.add_argument("--candidate-image")
     parser.add_argument("--canary-package", type=Path)
+    parser.add_argument("--canary-project-root", type=Path)
     parser.add_argument("--canary-selection")
     parser.add_argument("--run-id")
     arguments = parser.parse_args()
     root = arguments.project_root.resolve(strict=True)
     with suite_report(root, arguments) as report:
-        report["exit_code"] = _run_cli(root, arguments, report)
+        report["exit_code"] = run_phase(root, arguments, report, run_full_suite)
         return report["exit_code"]
-
-
-def _run_cli(root, arguments, report):
-    canary_args = (arguments.candidate_image, arguments.canary_package,
-                   arguments.canary_selection, arguments.run_id)
-    if arguments.phase == "image":
-        if (not all(canary_args) or arguments.test_modules is not None or arguments.required or
-                not re.fullmatch(r"sha256:[0-9a-f]{64}", arguments.candidate_image)):
-            print("Image phase requires an exact candidate image and all canary arguments", file=sys.stderr)
-            return 1
-        try:
-            selection = json.loads(arguments.canary_selection)
-        except (TypeError, ValueError) as error:
-            report["error"] = str(error)
-            print(f"Invalid canary selection: {error}", file=sys.stderr)
-            return 1
-        status = run_full_suite(root, phase="image", candidate_image=arguments.candidate_image, report=report)
-        if status:
-            return status
-        report["step"] = "canary"
-        try:
-            from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS._release_canary import verify_candidate_image
-            endpoint = verify_candidate_image(root, arguments.canary_package, arguments.candidate_image,
-                                              run_id=arguments.run_id, selection=selection)
-        except Exception as error:
-            report["error"] = str(error)
-            print(f"Canary failed: {error}", file=sys.stderr)
-            return 1
-        report["canary_endpoint"] = endpoint
-        print(f"ANECHOIC_CANARY_ENDPOINT {endpoint}")
-        return 0
-    if any(value is not None for value in canary_args):
-        print("Image arguments require the image phase", file=sys.stderr)
-        return 1
-    return run_full_suite(
-        root, test_modules=tuple(arguments.test_modules) if arguments.test_modules is not None else None,
-        phase=arguments.phase, required=arguments.required, report=report,
-    )
 
 
 if __name__ == "__main__":

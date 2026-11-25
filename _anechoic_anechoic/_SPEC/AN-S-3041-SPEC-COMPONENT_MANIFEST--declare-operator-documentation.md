@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 2
-  updated_at: '2026-11-22T11:23:40.206159+00:00'
+  version: 3
+  updated_at: '2026-11-24T14:38:16.546723+00:00'
 ---
 
 ## Summary
@@ -28,7 +28,7 @@ declare_entity(
     instance=ComponentManifest(
         component_id='C25',
         name='Operator Documentation',
-        layer=3,
+        layer=6,
         lens_whitelist=['DevOps'],
     ),
 )

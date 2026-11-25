@@ -7,7 +7,7 @@ import httpx2
 from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.shared_backend_process import (
     create_app,
 )
-from MCP_PATCHBAY_C21.FEATURE_MCP.shared_backend import SharedBackendGateway
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import SharedBackendGateway
 
 
 @asynccontextmanager

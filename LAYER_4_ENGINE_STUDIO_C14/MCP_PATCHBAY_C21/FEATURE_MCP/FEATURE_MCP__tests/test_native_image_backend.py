@@ -7,7 +7,8 @@ from unittest.mock import patch
 from . import test_native_host_launcher as host_fixture
 from . import test_native_startup as startup_fixture
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import select_runtime_project
-from MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_backend import BackendError, ProjectMcpBackend
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import BackendError
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import ProjectMcpBackend
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__tests.FEATURE_TOOLS__tests__shared import select_legacy_project
 from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import ImageError, ImageManager, TOOL_REGISTRY
 from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import LICENSE_INPUTS
@@ -42,7 +43,7 @@ class NativeImageBackendTests(unittest.TestCase):
         selection = select_runtime_project(self.root)
         manager = ImageManager(self.package, project_root=self.root)
         backend = ProjectMcpBackend()
-        with patch('MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_backend.ImageManager', return_value=manager), \
+        with patch('MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared.ImageManager', return_value=manager), \
              patch.object(manager, 'resolve', return_value=IMAGE) as resolve, \
              patch.object(manager, '_inspect'), \
              patch.object(manager, '_refresh_model', side_effect=AssertionError('unexpected refresh')):
@@ -60,7 +61,7 @@ class NativeImageBackendTests(unittest.TestCase):
 
     def test_native_rejects_other_source_or_broken_installed_package(self):
         backend = ProjectMcpBackend()
-        with patch('MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_backend.ImageManager') as factory:
+        with patch('MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared.ImageManager') as factory:
             with self.assertRaises(ImageError):
                 backend.resolve_image(host_fixture.PROGRAMMATIC, None, project_root=self.root)
             (self.package / 'LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/runtime.py').unlink()
@@ -82,7 +83,7 @@ class NativeImageBackendTests(unittest.TestCase):
     def test_explicit_legacy_selection_is_refused_before_image_resolution(self):
         startup_fixture.RuntimeSelectionTests.legacy(self, name=".anechoic_legacy")
         legacy = select_legacy_project(self.root, ".anechoic_legacy")
-        with patch("MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_backend.ImageManager") as factory:
+        with patch("MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared.ImageManager") as factory:
             with self.assertRaises(ImageError):
                 ProjectMcpBackend().resolve_image(self.package, None, project_root=self.root, selection=legacy)
             factory.assert_not_called()

@@ -47,9 +47,9 @@ def _native_inputs():
 
 
 def _launch_server():
-    from MCP_PATCHBAY_C21.FEATURE_MCP.server import main
+    from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import server_main
     with polling_source_watcher():
-        return main(sys.argv[1:], gateway_factory=lambda root, control: create_native_gateway(root, control, _native_inputs()))
+        return server_main(sys.argv[1:], gateway_factory=lambda root, control: create_native_gateway(root, control, _native_inputs()))
 
 
 class NativeJournalOwnershipTests(unittest.TestCase):
@@ -240,7 +240,7 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
 
     async def test_http_queries_native_projection_without_legacy_routes(self):
         from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import HEALTH_PATH, MCP_PATH, WORKBENCH_PATH
-        from MCP_PATCHBAY_C21.FEATURE_MCP.http_server import create_app
+        from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import create_http_app as create_app
 
         before = self._carrier_digests()
         app = create_app(self.root, gateway_factory=lambda root, control: create_native_gateway(root, control, _native_inputs()), control_root=CONTROL)
@@ -249,7 +249,7 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
                 transport=httpx2.ASGITransport(app=app), base_url="http://127.0.0.1:18093",
             ) as http:
                 health = await http.get(HEALTH_PATH, headers={"Accept": "text/html"})
-                self.assertEqual({"ready": True}, health.json())
+                self.assertEqual({"state": "ready"}, health.json())
                 for path in (f"{HEALTH_PATH}/workbench-restart", f"{HEALTH_PATH}/workbench-reread"):
                     self.assertEqual(404, (await http.post(path)).status_code)
                 self.assertEqual(404, (await http.get(f"{WORKBENCH_PATH}/fixture")).status_code)
@@ -282,19 +282,18 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
         self.assertEqual(before, self._carrier_digests())
 
     def test_http_entrypoint_uses_native_selection(self):
-        import MCP_PATCHBAY_C21.FEATURE_MCP.server as server
-        from MCP_PATCHBAY_C21.FEATURE_MCP.http_server import main as http_main
+        from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import http_main, server_main
 
         inputs = _native_inputs()
         factory = lambda root, control: create_native_gateway(root, control, inputs)
         args = ["--project-root", str(self.root), "--control-root", CONTROL]
         with patch("MCP_PATCHBAY_C21.FEATURE_MCP.http_server.startup_selection", side_effect=AssertionError("legacy selection")), \
                 patch("uvicorn.run") as run:
-            self.assertIsNone(server.main(args + ["--transport", "streamable-http"], gateway_factory=factory))
+            self.assertIsNone(server_main(args + ["--transport", "streamable-http"], gateway_factory=factory))
             app = run.call_args.args[0]
             self.assertEqual(self.root, app.gateway.selection.root)
             self.assertIsNotNone(app.gateway._native_query)
-        for main, extra in ((server.main, ["--transport", "streamable-http"]), (http_main, [])):
+        for main, extra in ((server_main, ["--transport", "streamable-http"]), (http_main, [])):
             for selector in (["--instance-id", "legacy"], ["--host-project-root", str(self.root)]):
                 with self.subTest(main=main, selector=selector), self.assertRaises(SystemExit):
                     main(args + extra + selector, gateway_factory=factory)

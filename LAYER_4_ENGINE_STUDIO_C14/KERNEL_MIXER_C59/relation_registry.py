@@ -3,11 +3,13 @@
 
 from __future__ import annotations
 
+from pydantic import ConfigDict, WrapValidator
+from pydantic.dataclasses import dataclass
+
 from collections import defaultdict
 from collections.abc import Mapping
-from dataclasses import dataclass
 import sys
-from typing import Any
+from typing import Annotated, Any
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import source_markdown
 from .relation_declarations import RegistryContribution, relation_declaration
@@ -18,19 +20,24 @@ from .source_selection import first_reference_rows
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import matches_named_value  # noqa: E402
 
 
-@dataclass(frozen=True)
+def _retain_mapping(value, handler):
+    handler(value)
+    return value
+
+
+@dataclass(config=ConfigDict(strict=True, extra="forbid"), frozen=True)
 class RelationRegistry:
     names: frozenset[str]
-    inverse: dict[str, str]
-    aliases: dict[str, str]
+    inverse: Annotated[dict[str, str], WrapValidator(_retain_mapping)]
+    aliases: Annotated[dict[str, str], WrapValidator(_retain_mapping)]
     collisions: frozenset[str]
 
 
-@dataclass(frozen=True)
+@dataclass(config=ConfigDict(strict=True, extra="forbid"), frozen=True)
 class RegistryCompilation:
     registry: RelationRegistry
-    contributions: dict[str, RegistryContribution]
-    declaration_rows: tuple[dict[str, Any], ...]
+    contributions: Annotated[dict[str, RegistryContribution], WrapValidator(_retain_mapping)]
+    declaration_rows: tuple[Annotated[dict[str, Any], WrapValidator(_retain_mapping)], ...]
 
 
 def _declaration_identity(row: Mapping[str, Any]) -> tuple[str, str, int] | None:
@@ -154,7 +161,7 @@ def _unambiguous_aliases(
         for alias, direct in contribution.aliases:
             targets[alias].add(direct)
             sources[alias].add(source)
-    aliases: dict[str, str] = {}
+    aliases: Annotated[dict[str, str], WrapValidator(_retain_mapping)] = {}
     for alias, direct in sorted(
         (name, next(iter(values))) for name, values in targets.items() if len(values) == 1
     ):

@@ -104,7 +104,7 @@ def _context_rows(contexts: Sequence[Mapping[str, object]]) -> str:
 
 
 def render_health_page(
-    snapshot: Mapping[str, object], *, ready: bool, gateway: object,
+    snapshot: Mapping[str, object], *, state: str, gateway: object,
 ) -> str:
     """Render only admitted snapshot fields; this function performs no I/O."""
     if not isinstance(snapshot, Mapping):
@@ -113,7 +113,6 @@ def render_health_page(
     registry_status, tool_count = _registry_availability(gateway)
     calls = _recent(snapshot.get("calls"))
     contexts = _recent(snapshot.get("known_project_contexts"))
-    readiness = "ready" if ready else "not ready"
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -127,7 +126,7 @@ th{{background:#8882}}code{{overflow-wrap:anywhere}}.note{{color:#666}}
 </style></head><body>
 <h1>MCP health and history</h1>
 <section aria-labelledby="availability"><h2 id="availability">Availability</h2>
-<dl><dt>Gateway readiness</dt><dd>{_cell(readiness)}</dd>
+<dl><dt>Gateway readiness</dt><dd>{_cell(state)}</dd>
 <dt>Gateway availability</dt><dd>{_cell(_availability(gateway_status))}</dd>
 <dt>Advertised registry availability</dt><dd>{_cell(_availability(registry_status))}
 ({_cell(tool_count)} tools advertised)</dd></dl></section>

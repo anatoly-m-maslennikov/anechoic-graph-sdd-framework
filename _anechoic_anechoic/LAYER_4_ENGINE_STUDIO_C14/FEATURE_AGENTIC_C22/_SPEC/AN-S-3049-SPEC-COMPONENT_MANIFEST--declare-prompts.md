@@ -8,9 +8,9 @@ context:
   template: component_manifest
   lens: SPEC
 state:
-  status: active
-  version: 10
-  updated_at: "2026-11-23T00:34:06.464605+00:00"
+  status: "active"
+  version: 13
+  updated_at: "2026-11-24T21:30:33.062582+00:00"
 ---
 
 ## Summary
@@ -51,10 +51,22 @@ declare_entity(
                     'RMED_ATOM_REVIEW__shared.rebuild_baseline',
                     'RMED_ATOM_REVIEW__shared.summarize_evaluations',
                     'RMED_ATOM_REVIEW__shared.text',
+                    'RMED_ATOM_REVIEW__shared.unavailable_sections',
+                    'RMED_ATOM_REVIEW__shared.validate_allowed_value_evidence',
+                    'RMED_ATOM_REVIEW__shared.validate_declared_subject_evidence',
                     'RMED_ATOM_REVIEW__shared.validate_part',
                     'RMED_ATOM_REVIEW__shared.validate_quotes',
                     'RMED_ATOM_REVIEW__shared.validate_report_quality',
                     'RMED_ATOM_REVIEW__shared.validate_subject_inventory',
+                    'RMED_ATOM_REVIEW__shared.RunEvidence',
+                    'RMED_ATOM_REVIEW__shared.admit_batch',
+                    'RMED_ATOM_REVIEW__shared.audit_bindings',
+                    'RMED_ATOM_REVIEW__shared.checkpoint_sha256',
+                    'RMED_ATOM_REVIEW__shared.close_batch',
+                    'RMED_ATOM_REVIEW__shared.next_action',
+                    'RMED_ATOM_REVIEW__shared.progress_sha256',
+                    'RMED_ATOM_REVIEW__shared.report_progress',
+                    'RMED_ATOM_REVIEW__shared.summarize_progress',
                     'ADAPTERS_C30__shared.CarrierError',
                     'ADAPTERS_C30__shared.parse_carrier',
                 'FEATURE_TOOLS__tests__shared.load_candidate_schema',
@@ -71,9 +83,16 @@ declare_entity(
                 'RMED_ATOM_REVIEW__tests__shared.source',
                 'repair_gate__shared.admit_proposal',
                 'repair_gate__shared.admit_layout_recoding',
+                'repair_gate__shared.admit_layout_preview',
+                'repair_gate__shared.admit_layout_subject_recoding',
+                'repair_gate__shared.admit_scope_extraction_preview',
+                'repair_gate__shared.admit_scope_extraction_subject_recoding',
+                'repair_gate__shared.admit_subject_recoding',
+                'repair_gate__shared.authority_digest',
             ], 'exports': {
                 'ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared.GROUPS': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_PROMPTS/ACTION_PROMPTS/RMED_ATOM_REVIEW/RMED_ATOM_REVIEW__tests', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_PROMPTS/ACTION_PROMPTS/RMED_ATOM_REVIEW/repair/repair__tests']},
                 'ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared.LOCAL_GROUPS': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_PROMPTS/ACTION_PROMPTS/RMED_ATOM_REVIEW/RMED_ATOM_REVIEW__tests', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_PROMPTS/ACTION_PROMPTS/RMED_ATOM_REVIEW/repair/repair__tests']},
+                'ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared.unavailable_sections': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_PROMPTS/ACTION_PROMPTS/RMED_ATOM_REVIEW/repair', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_PROMPTS/ACTION_PROMPTS/RMED_ATOM_REVIEW/repair/repair__tests', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_PROMPTS/ACTION_PROMPTS/RMED_ATOM_REVIEW/RMED_ATOM_REVIEW__tests']},
                 'ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared.ReviewContext': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_PROMPTS/ACTION_PROMPTS/RMED_ATOM_REVIEW/RMED_ATOM_REVIEW__tests', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_PROMPTS/ACTION_PROMPTS/RMED_ATOM_REVIEW/repair', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_PROMPTS/ACTION_PROMPTS/RMED_ATOM_REVIEW/repair/repair__tests']},
                 'ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared._validate_resolved_mention': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_PROMPTS/ACTION_PROMPTS/RMED_ATOM_REVIEW/RMED_ATOM_REVIEW__tests']},
                 'ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared._validate_subject_findings': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_PROMPTS/ACTION_PROMPTS/RMED_ATOM_REVIEW/RMED_ATOM_REVIEW__tests']},
@@ -92,10 +111,21 @@ declare_entity(
                 'ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared.rebuild_baseline': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_PROMPTS/ACTION_PROMPTS/RMED_ATOM_REVIEW/RMED_ATOM_REVIEW__tests']},
                 'ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared.summarize_evaluations': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_PROMPTS/ACTION_PROMPTS/RMED_ATOM_REVIEW/RMED_ATOM_REVIEW__tests', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_PROMPTS/ACTION_PROMPTS/RMED_ATOM_REVIEW/repair']},
                 'ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared.text': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_PROMPTS/ACTION_PROMPTS/RMED_ATOM_REVIEW/repair']},
+                'ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared.validate_allowed_value_evidence': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_PROMPTS/ACTION_PROMPTS/RMED_ATOM_REVIEW/RMED_ATOM_REVIEW__tests']},
+                'ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared.validate_declared_subject_evidence': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_PROMPTS/ACTION_PROMPTS/RMED_ATOM_REVIEW/RMED_ATOM_REVIEW__tests']},
                 'ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared.validate_part': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_PROMPTS/ACTION_PROMPTS/RMED_ATOM_REVIEW/RMED_ATOM_REVIEW__tests']},
                 'ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared.validate_quotes': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_PROMPTS/ACTION_PROMPTS/RMED_ATOM_REVIEW/RMED_ATOM_REVIEW__tests', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_PROMPTS/ACTION_PROMPTS/RMED_ATOM_REVIEW/repair']},
                 'ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared.validate_report_quality': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_PROMPTS/ACTION_PROMPTS/RMED_ATOM_REVIEW/RMED_ATOM_REVIEW__tests']},
                 'ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared.validate_subject_inventory': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_PROMPTS/ACTION_PROMPTS/RMED_ATOM_REVIEW/RMED_ATOM_REVIEW__tests']},
+                'ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared.RunEvidence': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_PROMPTS/ACTION_PROMPTS/RMED_ATOM_REVIEW/RMED_ATOM_REVIEW__tests']},
+                'ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared.admit_batch': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_PROMPTS/ACTION_PROMPTS/RMED_ATOM_REVIEW/RMED_ATOM_REVIEW__tests']},
+                'ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared.audit_bindings': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_PROMPTS/ACTION_PROMPTS/RMED_ATOM_REVIEW/RMED_ATOM_REVIEW__tests']},
+                'ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared.checkpoint_sha256': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_PROMPTS/ACTION_PROMPTS/RMED_ATOM_REVIEW/RMED_ATOM_REVIEW__tests']},
+                'ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared.close_batch': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_PROMPTS/ACTION_PROMPTS/RMED_ATOM_REVIEW/RMED_ATOM_REVIEW__tests']},
+                'ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared.next_action': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_PROMPTS/ACTION_PROMPTS/RMED_ATOM_REVIEW/RMED_ATOM_REVIEW__tests']},
+                'ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared.progress_sha256': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_PROMPTS/ACTION_PROMPTS/RMED_ATOM_REVIEW/RMED_ATOM_REVIEW__tests']},
+                'ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared.report_progress': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_PROMPTS/ACTION_PROMPTS/RMED_ATOM_REVIEW/RMED_ATOM_REVIEW__tests']},
+                'ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared.summarize_progress': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_PROMPTS/ACTION_PROMPTS/RMED_ATOM_REVIEW/RMED_ATOM_REVIEW__tests']},
                 'ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__tests.RMED_ATOM_REVIEW__tests__shared.RULE_TEXT': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_PROMPTS/ACTION_PROMPTS/RMED_ATOM_REVIEW/repair/repair__tests']},
                 'ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__tests.RMED_ATOM_REVIEW__tests__shared.SOURCE_TEXT': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_PROMPTS/ACTION_PROMPTS/RMED_ATOM_REVIEW/repair/repair__tests']},
                 'ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__tests.RMED_ATOM_REVIEW__tests__shared.contract': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_PROMPTS/ACTION_PROMPTS/RMED_ATOM_REVIEW/repair/repair__tests']},
@@ -122,6 +152,12 @@ declare_entity(
                 'ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.repair_gate__shared.admit_proposal': {'shared': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_PROMPTS/ACTION_PROMPTS/RMED_ATOM_REVIEW/repair/repair__tests']},
                 'ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.repair_gate__shared._local_repair_boundary': None,
                 'ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.repair_gate__shared.admit_layout_recoding': {'shared': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_PROMPTS/ACTION_PROMPTS/RMED_ATOM_REVIEW/repair/repair__tests']},
+                'ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.repair_gate__shared.admit_layout_preview': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_PROMPTS/ACTION_PROMPTS/RMED_ATOM_REVIEW/repair/repair__tests']},
+                'ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.repair_gate__shared.admit_layout_subject_recoding': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_PROMPTS/ACTION_PROMPTS/RMED_ATOM_REVIEW/repair/repair__tests']},
+                'ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.repair_gate__shared.admit_scope_extraction_preview': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_PROMPTS/ACTION_PROMPTS/RMED_ATOM_REVIEW/repair/repair__tests']},
+                'ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.repair_gate__shared.admit_scope_extraction_subject_recoding': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_PROMPTS/ACTION_PROMPTS/RMED_ATOM_REVIEW/repair/repair__tests']},
+                'ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.repair_gate__shared.admit_subject_recoding': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_PROMPTS/ACTION_PROMPTS/RMED_ATOM_REVIEW/repair/repair__tests']},
+                'ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.repair_gate__shared.authority_digest': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_PROMPTS/ACTION_PROMPTS/RMED_ATOM_REVIEW/repair/repair__tests']},
                 'ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.repair_gate__shared': None,
             }},
             'io': {

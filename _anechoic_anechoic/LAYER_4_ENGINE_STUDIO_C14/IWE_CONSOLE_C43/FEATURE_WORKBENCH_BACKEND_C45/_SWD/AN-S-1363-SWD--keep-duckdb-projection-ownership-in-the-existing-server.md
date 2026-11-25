@@ -11,8 +11,8 @@ relations:
   - AN-S-3116@1
 state:
   status: active
-  version: 13
-  updated_at: "2026-11-22T07:35:21.711074+00:00"
+  version: 14
+  updated_at: "2026-11-24T14:50:25.261863+00:00"
 ---
 ## Summary
 
@@ -55,3 +55,30 @@ The derived DuckDB Projection and query results for one Project.
 - Preserve unsynced View SQL when its snapshot changes.
 - Return the old-to-new ID map to the caller.
 - Repeat neither save nor export during a rebuild.
+
+### Formal Claim
+
+The model checks one dependency edge in a successful full rebuild. Every materialization of the dependent requires a fresh upstream binding.
+
+```lean
+namespace SavedQueryRebuild
+
+inductive Effect where
+  | materialize (query : Nat)
+  | drop (query : Nat)
+  | bind (query : Nat)
+
+def scan (upstream dependent : Nat) : List Effect → Bool → Bool
+  | [], _ => true
+  | .materialize query :: rest, fresh =>
+      (query != dependent || fresh) && scan upstream dependent rest fresh
+  | .drop query :: rest, fresh =>
+      scan upstream dependent rest (if query == upstream then false else fresh)
+  | .bind query :: rest, fresh =>
+      scan upstream dependent rest (if query == upstream then true else fresh)
+
+def readsFresh (effects : List Effect) (upstream dependent : Nat) : Bool :=
+  scan upstream dependent effects false
+
+end SavedQueryRebuild
+```

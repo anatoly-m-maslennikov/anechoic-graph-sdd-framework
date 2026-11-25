@@ -1,0 +1,23 @@
+{
+  "title": "Bound Docker watcher schedule count",
+  "invariant": "For a single filtered root in Docker polling mode, choose the polling observer and schedule one recursive root watch regardless of the number of eligible top-level children.",
+  "scope": "Historical constructor, start and polling entry snippets; one existing root, exclusion filter enabled, eligible top-level children. Lean is generated from checked AST branches and abstracts observer scheduling only. It does not prove Python-to-Lean equivalence, OS thread counts, Docker behavior, performance, or event delivery. replay.py exercises the historical Python slices against recording observers.",
+  "before": {
+    "revision": "92cd7dadf99f512d46954f2a1391f673ec654d4f",
+    "source": "LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/source_watcher.py",
+    "fixture": "before.py.txt",
+    "sha256": "5669a1d051cb9179c8ed09814ead7e03b5f11a3c4fc45fcb04fd9a09e755fd54"
+  },
+  "fixed": {
+    "revision": "15a1f8e142b4333bce392b8adfd2d3c788719d60",
+    "source": "LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/source_watcher.py",
+    "fixture": "fixed.py.txt",
+    "sha256": "58322e19de47b9592cf9b772044bb4929bdf828af993e7c721089ea8c6e16acd"
+  },
+  "checks": [
+    {
+      "file": "regression.lean"
+    }
+  ],
+  "analyzer": "analyze.py"
+}

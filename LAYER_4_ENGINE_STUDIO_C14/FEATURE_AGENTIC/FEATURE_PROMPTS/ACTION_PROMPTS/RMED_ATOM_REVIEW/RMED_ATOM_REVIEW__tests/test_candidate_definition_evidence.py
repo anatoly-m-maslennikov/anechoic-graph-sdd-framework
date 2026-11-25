@@ -1,7 +1,6 @@
 """Adversarial tests for the sole candidate-owned definition route."""
 import hashlib
 import unittest
-from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.allowed_value_evidence import validate_allowed_value_evidence  # noqa: E402
 from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared import _validate_resolved_mention  # noqa: E402
 
 
@@ -69,12 +68,13 @@ class CandidateDefinitionEvidenceTests(unittest.TestCase):
     def test_candidate_allowed_value_cannot_bypass_owner_route(self):
         quote = "On **and** Off **must** be registered as internal values of `Widget/State`."
         raw = source("Widget/State", quote)
-        item = {"entity": "Widget/State: On", "definitions": [{"authority": "SELF@1", "excerpt": quote}],
+        item = {"entity": "Widget/State: On", "resolution_basis": "meaning",
+                "definitions": [{"authority": "SELF@1", "excerpt": quote}],
                 "allowed_value_evidence": {"property": "Widget/State", "value": "On",
                                            "authority": "SELF@1", "excerpt": quote}}
         with self.assertRaisesRegex(ValueError, "cannot self-admit"):
-            validate_allowed_value_evidence(item, {"SELF@1": raw}, {"SELF@1": "Widget/State"},
-                                            candidate_source=raw)
+            validate_candidate(raw, item, authorities={"SELF@1": raw},
+                               targets={"SELF@1": "Widget/State"})
 
     def test_other_entity_cannot_use_candidate_definition_proof(self):
         quote = "a Child **means** an independently defined target."

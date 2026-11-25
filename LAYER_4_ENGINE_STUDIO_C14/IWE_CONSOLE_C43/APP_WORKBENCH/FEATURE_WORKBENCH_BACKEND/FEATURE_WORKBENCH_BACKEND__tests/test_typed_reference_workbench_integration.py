@@ -5,8 +5,7 @@ class TypedReferenceWorkbenchIntegration(unittest.TestCase):
         from pathlib import Path
         from tempfile import TemporaryDirectory
         from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import write_scope_unit_declarations
-        from ..FEATURE_WORKBENCH_BACKEND__shared import SourceReader
-        from ..generate_workbench_schema import compile_project_schema
+        from ..FEATURE_WORKBENCH_BACKEND__shared import SourceReader, compile_project_schema
         base=Path('.anechoic_tmp/CA-P-3018/CA-P-3022');tmp=base/'wave16-typed-format';rootpath=Path.cwd()
         with TemporaryDirectory() as td:
          root=Path(td)/'project';root.mkdir();control=root/'.anechoic_anechoic';control.mkdir();(control/'anechoic_project_settings.toml').write_text('[project]\nname = "fixture"\n[artifacts.identity]\nproject_prefix = "CA"\n[paths]\ncontrol_root = ".anechoic_anechoic"\n')
@@ -31,8 +30,7 @@ class TypedReferenceWorkbenchIntegration(unittest.TestCase):
          self._assert_binding_changes(owner, reader, dep, root, write, binding_body)
 
     def _assert_binding_changes(self, owner, reader, dep, root, write, binding_body):
-        from ..FEATURE_WORKBENCH_BACKEND__shared import SourceReader
-        from ..generate_workbench_schema import compile_project_schema
+        from ..FEATURE_WORKBENCH_BACKEND__shared import SourceReader, compile_project_schema
         original_owner=owner.read_text()
         from unittest.mock import patch
         owner.write_text(original_owner.replace('Named Selection','Different Selection'))

@@ -1,15 +1,12 @@
 import subprocess
 import importlib
 import json
-import sys
 import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from ORCHESTRATOR_beta_C68.generation import parse_worker_result, worker_request
-module = importlib.import_module("ORCHESTRATOR_beta_C68.ORCHESTRATOR_beta_C68__shared")
+from ORCHESTRATOR_beta_C68 import ORCHESTRATOR_beta_C68__shared as module
+from .ORCHESTRATOR_beta_C68__tests__shared import lifecycle_job, restore_reuse
 
 
 def graph_worker(result, requests):
@@ -23,14 +20,23 @@ def graph_worker(result, requests):
 
 
 class RestartCheckpointTests(unittest.TestCase):
-    def test_warm_dispatch_only_marks_unknown_after_possible_write(self):
+    def setUp(self):
+        model = patch("ORCHESTRATOR_beta_C68.generation_worker.read_accepted_model", return_value=None)
+        model.start()
+        self.addCleanup(model.stop)
+
+    def _jobs(self, instance_id="test", **options):
         root = Path(self.enterContext(tempfile.TemporaryDirectory())).resolve()
+        (root / "control").mkdir()
         binding = {"root": str(root), "control_root": "control", "manifest_path": "manifest.md",
                    "manifest_sha256": "a" * 64, "project_prefix": "AN"}
-        jobs = module.GenerationJobs("test", binding, "socket", worker_socket="worker", worker_load_seconds=1)
-        jobs.generation_reuse = {"base_generation": "base", "endpoints": {}}
-        job = {"name": "atom_lifecycle_create_draft", "arguments": {
-            "newAtom": {"template": "epic", "container": {"component": "C00"}}}}
+        return module.GenerationJobs(instance_id, binding, str(root / "kernel.sock"), **options)
+
+    def test_warm_dispatch_only_marks_unknown_after_possible_write(self):
+        jobs = self._jobs(worker_socket="worker", worker_load_seconds=1)
+        restore_reuse(jobs, "base")
+        job = lifecycle_job(jobs, "atom_lifecycle_create_draft", {
+            "newAtom": {"template": "epic", "container": {"component": "C00"}}})
         structure = {"components": {}, "project": {"ref": "AN-S-1@1"}}
         lifecycle = importlib.import_module("ORCHESTRATOR_beta_C68.lifecycle")
         for error, expected in ((lifecycle.WarmLifecycleUnavailable("Worker refused"), "known"),
@@ -45,21 +51,18 @@ class RestartCheckpointTests(unittest.TestCase):
                 cold.assert_not_called()
 
     def test_unadmitted_write_blocks_second_indexed_allocation(self):
-        root = Path(self.enterContext(tempfile.TemporaryDirectory())).resolve()
-        binding = {"root": str(root), "control_root": "control", "manifest_path": "manifest.md",
-                   "manifest_sha256": "a" * 64, "project_prefix": "AN"}
-        jobs = module.GenerationJobs("test", binding, "socket")
-        jobs.generation_reuse = {"base_generation": "base", "endpoints": {}}
-        job = {"name": "atom_lifecycle_create_draft", "arguments": {
-            "newAtom": {"template": "task", "container": {"component": "C00"}}}}
+        jobs = self._jobs()
+        restore_reuse(jobs, "base")
+        job = lifecycle_job(jobs, "atom_lifecycle_create_draft", {
+            "newAtom": {"template": "task", "container": {"component": "C00"}}})
         structure = {"components": {}, "project": {"ref": "AN-S-1@1"}}
         reply = {"lifecycle": {"outcome": "failed", "effects": [], "errors": [{"code": "effect_uncertain"}]},
                  "projection_error": "Kernel refused delta", "delta": None}
         with patch("ORCHESTRATOR_beta_C68.lifecycle.read_structure", return_value=structure), \
                 patch("ORCHESTRATOR_beta_C68.lifecycle.ticket_allocation", return_value=("1", [])) as lookup, \
-                patch.object(jobs, "_run_lifecycle", return_value=reply) as worker:
+                patch.object(jobs, "_run_cold_lifecycle", return_value=reply) as worker:
             self.assertEqual("failed", jobs._execute_lifecycle(job)["projection"]["state"])
-            jobs.generation_reuse["base_generation"] = "unrelated-admission"
+            jobs.generation_reuse.base_generation = "unrelated-admission"
             refusal = jobs._execute_lifecycle(job)
         self.assertEqual("known", refusal["write_state"])
         self.assertIn("preceding write", refusal["projection"]["error"]["message"])
@@ -89,11 +92,7 @@ class RestartCheckpointTests(unittest.TestCase):
             effect.assert_called_once_with("generation_reuse_check", outcome="succeeded")
 
     def test_startup_reconciles_persisted_pending_after_archive_tree_removed(self):
-        root = Path(self.enterContext(tempfile.TemporaryDirectory())).resolve()
-        (root / "control").mkdir()
-        binding = {"root": str(root), "control_root": "control", "manifest_path": "manifest.md",
-                   "manifest_sha256": "a" * 64, "project_prefix": "AN"}
-        jobs = module.GenerationJobs("test id", binding, "socket")
+        jobs = self._jobs("test id")
         witness = {"base_generation": "old", "inputs": {}, "graph_config": None, "endpoints": {},
                    "carrier_hashes": {"control/a.md": "a" * 64}}
         reuse = witness | {"archive_pending": True}
@@ -109,11 +108,14 @@ class RestartCheckpointTests(unittest.TestCase):
             def close(self): pass
         def generate(*args, **kwargs):
             self.assertTrue(jobs.watcher.started)
-            self.assertEqual(reuse, jobs.generation_reuse)
+            self.assertEqual(reuse, jobs.generation_reuse.model_dump(exclude_unset=True))
             self.assertEqual({"startup": True}, kwargs)
             self.assertFalse(jobs.watcher.has_archive_roots())
             self.assertTrue(jobs._capture_options(reuse, None)[0]["foreground"])
-            self.assertEqual(witness, worker_request(binding, "socket", "test id", reuse, None)["reuse"])
+            reply = {"base_generation": "old", "unchanged": True}
+            with patch.object(jobs, "_communicate_worker", return_value=json.dumps(reply)) as worker:
+                self.assertEqual(reply, jobs._run_worker(jobs.binding["root"], reuse, None))
+            self.assertEqual(witness, worker.call_args.args[1]["reuse"])
             jobs.stopping.set()
             return {"state": "succeeded"}
         with patch("ORCHESTRATOR_beta_C68.generation.UnixConnection", Connection), \
@@ -125,11 +127,7 @@ class RestartCheckpointTests(unittest.TestCase):
         self.assertEqual([("GET", "/generation/reuse?instance_id=test+id")], calls)
 
     def test_full_admission_persists_worker_witness(self):
-        root = Path(self.enterContext(tempfile.TemporaryDirectory())).resolve()
-        (root / "control").mkdir()
-        binding = {"root": str(root), "control_root": "control", "manifest_path": "manifest.md",
-                   "manifest_sha256": "a" * 64, "project_prefix": "AN"}
-        jobs = module.GenerationJobs("test", binding, "socket")
+        jobs = self._jobs()
         witness = {"inputs": {}, "graph_config": None, "endpoints": {}}
         payloads = []
         class Connection:
@@ -144,20 +142,17 @@ class RestartCheckpointTests(unittest.TestCase):
         def worker(directory, reuse, paths):
             for name in ("model", "structure"):
                 (Path(directory) / (name + ".json")).write_text("{}")
-            return {"snapshot": {}, "receipt": {}, "graph": None, "reuse": witness, "carrier_hashes": {"control/a.md": "a" * 64}}
+            return {"snapshot": {}, "receipt": {}, "graph": None, "reuse": witness, "model_diagnostics": [], "carrier_hashes": {"control/a.md": "a" * 64}}
         with patch("ORCHESTRATOR_beta_C68.generation.UnixConnection", Connection), \
                 patch.object(jobs, "_run_worker", side_effect=worker):
             self.assertEqual("full", jobs._attempt_generation(None, None)["kind"])
         self.assertEqual("/generation", payloads[0][0])
         self.assertEqual(witness, payloads[0][1]["reuse"])
+        self.assertEqual([], payloads[0][1]["model_diagnostics"])
         self.assertEqual({"control/a.md": "a" * 64}, payloads[0][1]["carrier_hashes"])
 
     def test_startup_revalidates_and_retries_stale_base(self):
-        root = Path(self.enterContext(tempfile.TemporaryDirectory())).resolve()
-        (root / "control").mkdir()
-        binding = {"root": str(root), "control_root": "control", "manifest_path": "manifest.md",
-                   "manifest_sha256": "a" * 64, "project_prefix": "AN"}
-        jobs = module.GenerationJobs("test", binding, "socket")
+        jobs = self._jobs()
         reuse = {"base_generation": "old", "inputs": {}, "graph_config": None, "endpoints": {}}
         jobs.generation_reuse = reuse
         with patch.object(jobs, "_attempt_generation", side_effect=[module.GenerationBaseChanged(),
@@ -170,11 +165,7 @@ class RestartCheckpointTests(unittest.TestCase):
         self.assertIsNone(attempt.call_args.args[1])
 
     def test_graph_refresh_request_validation_and_admission(self):
-        root = Path(self.enterContext(tempfile.TemporaryDirectory())).resolve()
-        (root / "control").mkdir()
-        binding = {"root": str(root), "control_root": "control", "manifest_path": "manifest.md",
-                   "manifest_sha256": "a" * 64, "project_prefix": "AN"}
-        jobs = module.GenerationJobs("test id", binding, str(root / "kernel.sock"))
+        jobs = self._jobs("test id")
         witness = {"inputs": {}, "graph_config": {}, "endpoints": {}}
         reuse = {**witness, "base_generation": "old"}
         graph_result = {"base_generation": "old", "snapshot": {}, "snapshot_sha256": "s",
@@ -196,40 +187,43 @@ class RestartCheckpointTests(unittest.TestCase):
         with patch("ORCHESTRATOR_beta_C68.generation.UnixConnection", Connection), \
                 patch.object(subprocess, "Popen", graph_worker(graph_result, requests)):
             outcome = jobs._attempt_generation(None, reuse)
-        self.assertEqual({"binding": binding, "reuse": reuse, "structure": {"nodes": []}}, requests[0])
+        self.assertEqual({"binding": jobs.binding, "reuse": reuse, "structure": {"nodes": []},
+                          "model_source": {"accepted_model": None}, "batch_full": True}, requests[0])
         self.assertEqual(("GET", "/structure?instance_id=test+id"), calls[0][:2])
         self.assertEqual("/generation/native", calls[1][1])
         self.assertEqual({"instance_id", "base_generation", "snapshot", "snapshot_sha256", "graph", "graph_sha256", "reuse"},
                          set(calls[1][2]))
         self.assertEqual("graph_refresh", outcome["kind"])
-        self.assertEqual({**witness, "base_generation": "new"}, jobs.generation_reuse)
+        self.assertEqual({**witness, "base_generation": "new"}, jobs.generation_reuse.model_dump(exclude_unset=True))
         self.assertEqual(witness, calls[1][2]["reuse"])
 
     def test_checkpoint_worker_shapes_and_derived_paths(self):
+        jobs = self._jobs()
+        root = jobs.binding["root"]
         reuse = {"base_generation": "old", "carrier_hashes": {}}
         hashes = {"control/a.md": "a" * 64}
         delta = {"base_generation": "old", "snapshot": {}, "snapshot_sha256": "s",
                  "paths": [["control/__TKT", "AN-T-1--a.md"]], "carrier_hashes": hashes}
-        self.assertEqual(delta, parse_worker_result(json.dumps(delta), reuse, None))
         unchanged = {"base_generation": "old", "unchanged": True}
-        self.assertEqual(unchanged, parse_worker_result(json.dumps(unchanged), reuse, None))
-        for paths in ([], [["../outside", "a"]], [["control", "../a"]], [["/root", "a"]],
-                      [["control", "a"], ["control", "a"]]):
+        bad_paths = ([], [["../outside", "a"]], [["control", "../a"]], [["/root", "a"]],
+                     [["control", "a"], ["control", "a"]])
+        invalid = [delta | {"paths": paths} for paths in bad_paths]
+        invalid.extend((unchanged | {"unchanged": False}, unchanged | {"carrier_hashes": {}},
+                        unchanged | {"base_generation": "stale"}))
+        with patch.object(jobs, "_communicate_worker") as worker:
+            for result in (delta, unchanged):
+                worker.return_value = json.dumps(result)
+                self.assertEqual(result, jobs._run_worker(root, reuse, None))
+            for result in invalid:
+                worker.return_value = json.dumps(result)
+                with self.subTest(result=result), self.assertRaises(ValueError):
+                    jobs._run_worker(root, reuse, None)
+            worker.return_value = json.dumps(unchanged)
             with self.assertRaises(ValueError):
-                parse_worker_result(json.dumps(delta | {"paths": paths}), reuse, None)
-        for invalid in (unchanged | {"unchanged": False}, unchanged | {"carrier_hashes": {}},
-                        unchanged | {"base_generation": "stale"}):
-            with self.assertRaises(ValueError):
-                parse_worker_result(json.dumps(invalid), reuse, None)
-        with self.assertRaises(ValueError):
-            parse_worker_result(json.dumps(unchanged), {"base_generation": "old"}, None)
+                jobs._run_worker(root, {"base_generation": "old"}, None)
 
     def test_unchanged_confirms_base_and_drops_checkpoint(self):
-        root = Path(self.enterContext(tempfile.TemporaryDirectory())).resolve()
-        (root / "control").mkdir()
-        binding = {"root": str(root), "control_root": "control", "manifest_path": "manifest.md",
-                   "manifest_sha256": "a" * 64, "project_prefix": "AN"}
-        jobs = module.GenerationJobs("test", binding, "socket")
+        jobs = self._jobs()
         reuse = {"base_generation": "old", "inputs": {}, "graph_config": None, "endpoints": {},
                  "carrier_hashes": {"control/a.md": "a" * 64}}
         calls = []
@@ -257,23 +251,25 @@ class RestartCheckpointTests(unittest.TestCase):
                 jobs._attempt_generation(None, reuse)
 
     def test_graph_refresh_result_validation(self):
+        jobs = self._jobs()
+        root = jobs.binding["root"]
         witness = {"inputs": {}, "graph_config": {}, "endpoints": {}}
-        reuse = {**witness, "base_generation": "old"}
+        reuse = {"base_generation": "old"}
         graph_result = {"base_generation": "old", "snapshot": {}, "snapshot_sha256": "s",
                         "graph": {}, "graph_sha256": "g", "reuse": witness}
-        for invalid in (graph_result | {"reuse": None}, graph_result | {"reuse": witness | {"extra": 1}},
-                        graph_result | {"base_generation": "other"}):
+        with patch.object(jobs, "_communicate_worker") as worker:
+            for invalid in (graph_result | {"reuse": None}, graph_result | {"reuse": witness | {"extra": 1}},
+                            graph_result | {"base_generation": "other"}):
+                worker.return_value = json.dumps(invalid)
+                with self.subTest(result=invalid), self.assertRaises(ValueError):
+                    jobs._run_worker(root, reuse, None, structure={})
+            worker.return_value = json.dumps(graph_result)
             with self.assertRaises(ValueError):
-                parse_worker_result(json.dumps(invalid), reuse, None, {})
-        with self.assertRaises(ValueError):
-            parse_worker_result(json.dumps(graph_result), reuse, None)
+                jobs._run_worker(root, reuse, None)
 
     def test_structure_fallback_for_unavailable_or_invalid_artifact(self):
-        root = Path(self.enterContext(tempfile.TemporaryDirectory())).resolve()
-        (root / "control").mkdir()
-        binding = {"root": str(root), "control_root": "control", "manifest_path": "manifest.md",
-                   "manifest_sha256": "a" * 64, "project_prefix": "AN"}
-        jobs = module.GenerationJobs("id", binding, "socket")
+        jobs = self._jobs("id")
+        root = jobs.binding["root"]
         reuse = {"base_generation": "old", "graph_config": {}}
         requests = []
         class Response:

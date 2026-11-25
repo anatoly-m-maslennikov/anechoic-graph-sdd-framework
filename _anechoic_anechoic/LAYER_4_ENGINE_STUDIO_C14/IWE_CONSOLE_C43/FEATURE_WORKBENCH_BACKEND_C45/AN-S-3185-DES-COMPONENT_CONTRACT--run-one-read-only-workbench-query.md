@@ -12,8 +12,8 @@ relations:
   - AN-S-3059
 state:
   status: active
-  version: 11
-  updated_at: '2026-11-22T22:21:57.567683+00:00'
+  version: 12
+  updated_at: '2026-11-24T18:01:09.600000+00:00'
 ---
 
 ## Summary
@@ -36,6 +36,50 @@ Publish the enabled Tool names, descriptions, and schemas for an admitted
 Project. Use the same registry to validate and dispatch named calls.
 Return the Tool result or a failure for a stale registry, disabled Tool,
 or invalid request.
+
+For `POST /tools`, return HTTP 200 with the result when the operation succeeds.
+Return HTTP 400 with a typed error for invalid request input. Return HTTP 500
+with a typed, sanitized error for an internal fault that prevents handling the
+request. An accepted input can still fail during operation. Do not classify
+other failures as HTTP 400.
+
+### Formal Claim
+
+This small claim checks only the three Tool API transport cases and the result
+or typed-error response kind. It does not model message sanitization or the
+complete response schema.
+
+```lean
+namespace WorkbenchToolApi
+
+inductive Classification where
+  | acceptedOperation
+  | invalidRequestInput
+  | internalFault
+  deriving DecidableEq
+
+inductive ResponseKind where
+  | result
+  | typedError
+  deriving DecidableEq
+
+def accepts (code : Nat) (classification : Classification)
+    (kind : ResponseKind) : Bool :=
+  match code, classification, kind with
+  | 200, .acceptedOperation, .result => true
+  | 400, .invalidRequestInput, .typedError => true
+  | 500, .internalFault, .typedError => true
+  | _, _, _ => false
+
+example : accepts 200 .acceptedOperation .result = true := by decide
+example : accepts 400 .invalidRequestInput .typedError = true := by decide
+example : accepts 500 .internalFault .typedError = true := by decide
+example : accepts 200 .acceptedOperation .typedError = false := by decide
+example : accepts 400 .invalidRequestInput .result = false := by decide
+example : accepts 400 .internalFault .typedError = false := by decide
+
+end WorkbenchToolApi
+```
 
 ## Process boundary
 

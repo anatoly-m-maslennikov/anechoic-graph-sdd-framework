@@ -1,0 +1,28 @@
+{
+  "title": "Acquire installation lock before local release mutations",
+  "invariant": "The installation lock is acquired before the release phase loop issues Git commands or changes version and product state.",
+  "scope": "Historical direct run_local_release phase-loop shape. Models the recognized Git and version effects, exclusive non-blocking lock and lock ordering; excludes failure-report writes and helper internals. Fixed checkpoint contains regression test test_installation_lock_refuses_contention_before_replacement.",
+  "before": {
+    "revision": "024209ba79a726ee87f7c844884ddc175c3f7d3d",
+    "source": "LAYER_5_FRAMEWORK_DELIVERY/RELEASE_VERSION/local_release.py",
+    "fixture": "before.py.txt",
+    "sha256": "8051ed2d4b7d280ea276e2d077db46820eaeafd2a89d8bd87e4b2762bc09bcd8"
+  },
+  "fixed": {
+    "revision": "fc2956d4f84b1fcf2d2c4ba56a6e7349204157c9",
+    "source": "LAYER_5_FRAMEWORK_DELIVERY/RELEASE_VERSION/local_release.py",
+    "fixture": "fixed.py.txt",
+    "sha256": "35895d0ca4cf2ca15eef88eb24382af72f70e4407aa30f8b30bf1a13a7d316da"
+  },
+  "checks": [
+    {
+      "file": "before.lean",
+      "stdout_suffix": "false\n"
+    },
+    {
+      "file": "fixed.lean",
+      "stdout_suffix": "true\n"
+    }
+  ],
+  "analyzer": "analyze.py"
+}

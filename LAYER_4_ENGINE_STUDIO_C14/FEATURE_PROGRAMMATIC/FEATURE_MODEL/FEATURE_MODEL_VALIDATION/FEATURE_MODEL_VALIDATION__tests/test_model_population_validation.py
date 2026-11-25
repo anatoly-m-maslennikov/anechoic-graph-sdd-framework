@@ -1,29 +1,30 @@
 """Check project-wide uniqueness for nested Model Properties."""
 
-from dataclasses import dataclass
+from pydantic import ConfigDict
+from pydantic.dataclasses import dataclass
 import unittest
 
-from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_population_validation import validate_population_uniqueness
+from ..FEATURE_MODEL_VALIDATION__shared import validate_population_uniqueness
 
 
-@dataclass
+@dataclass(config=ConfigDict(strict=True, extra="forbid"))
 class Identity:
-    id: str
+    id: str | None
 
 
-@dataclass
+@dataclass(config=ConfigDict(strict=True, extra="forbid"))
 class State:
-    version: int
+    version: int | None
     status: str
 
 
-@dataclass
+@dataclass(config=ConfigDict(strict=True, extra="forbid"))
 class Header:
     identity: Identity
     state: State
 
 
-@dataclass
+@dataclass(config=ConfigDict(strict=True, extra="forbid"))
 class Atom:
     header: Header
 
@@ -66,7 +67,7 @@ class ModelPopulationValidationTests(unittest.TestCase):
             validate_population_uniqueness(Atom, proposed, [atom("CA-R-1", 2, "Active")], rules)
 
     def test_derived_ref_id_is_unique_across_peers(self):
-        @dataclass
+        @dataclass(config=ConfigDict(strict=True, extra="forbid"))
         class StrictAtom:
             atom_id: str
             version: int

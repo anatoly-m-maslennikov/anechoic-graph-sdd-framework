@@ -3,10 +3,12 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from pydantic import ConfigDict, InstanceOf
+from pydantic.dataclasses import dataclass
+
 import inspect
 from pathlib import Path
-from typing import Any
+from typing import Annotated, Any
 
 from jsonschema import Draft202012Validator, SchemaError, ValidationError
 from mcp import types
@@ -65,7 +67,7 @@ async def _close(value: Any) -> None:
             return
 
 
-@dataclass
+@dataclass(config=ConfigDict(strict=True, extra="forbid", arbitrary_types_allowed=True))
 class ProviderBinding:
     factory: Any
     root: Path
@@ -91,17 +93,17 @@ class ProviderBinding:
             await _close(provider)
 
 
-@dataclass(frozen=True)
+@dataclass(config=ConfigDict(strict=True, extra="forbid", arbitrary_types_allowed=True), frozen=True)
 class RegisteredTool:
     binding: ProviderBinding
     input_validator: Draft202012Validator
     output_validator: Draft202012Validator | None
 
 
-@dataclass
+@dataclass(config=ConfigDict(strict=True, extra="forbid", arbitrary_types_allowed=True))
 class ActiveToolRegistry:
     tools: tuple[types.Tool, ...]
-    routes: dict[str, RegisteredTool]
+    routes: Annotated[dict[str, RegisteredTool], InstanceOf()]
     bindings: tuple[ProviderBinding, ...]
     global_blacklist: frozenset[str]
     asset_root: Path

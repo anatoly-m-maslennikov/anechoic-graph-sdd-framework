@@ -7,7 +7,6 @@ caller; this module accepts explicit, project-contained paths and bytes only.
 """
 from __future__ import annotations
 
-from .timing import trace
 
 import fcntl
 import hashlib
@@ -15,8 +14,11 @@ import os
 import re
 import stat
 from contextlib import contextmanager, nullcontext
-from dataclasses import dataclass, field
+from dataclasses import field
 from pathlib import Path
+
+from pydantic import ConfigDict, field_validator
+from pydantic.dataclasses import dataclass
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import atomic_tempfile, owned_temporary_root
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import runtime_project_root as repository_root
@@ -42,10 +44,16 @@ def _project_write_lock(root):
 
 
 
-@dataclass
+@dataclass(config=ConfigDict(strict=True, extra="forbid"))
 class Result:
-    effects: list[dict] = field(default_factory=list)
-    errors: list[dict] = field(default_factory=list)
+    effects: list[dict[str, object]] = field(default_factory=list)
+    errors: list[dict[str, object]] = field(default_factory=list)
+
+    @field_validator("effects", "errors", mode="wrap")
+    @classmethod
+    def _preserve_receipts(cls, value, validate):
+        validate(value)
+        return value
 
 
 def _error(result: Result, code: str, message: str) -> None:
@@ -209,8 +217,8 @@ def _write_error(result, operation, target, committed, exc):
         _error(result, "stale_state" if isinstance(exc, (ValueError, FileExistsError)) else "backend_failure", _message(exc))
 
 def _write(root: Path, path: Path, data: bytes, expected: str | None, result: Result) -> None:
-    temp = None
-    parent = None
+    temp = parent = None
+    readback = None
     committed = False
     operation = "create" if expected is None else "modify"
     target = None
@@ -232,15 +240,18 @@ def _write(root: Path, path: Path, data: bytes, expected: str | None, result: Re
             with lock() if callable(lock) else nullcontext():
                 os.link(temp, name, dst_dir_fd=parent, follow_symlinks=False)
                 committed = True
+                if reader is None:
+                    readback = _read(parent, name)
                 staging, temp = temp, None
-                os.unlink(staging)
+                Path(staging).unlink(missing_ok=True)
         else:
             _read_pinned(reader, root, destination, parent, name, expected)
             os.replace(temp, name, dst_dir_fd=parent)
             temp = None
             committed = True
         _changed(reader, destination if expected is not None else None, destination)
-        readback = _query_read(reader, root, destination, parent, name) if reader is not None else _read(parent, name)
+        if readback is None:
+            readback = _query_read(reader, root, destination, parent, name) if reader is not None else _read(parent, name)
         if readback != data:
             raise OSError("readback differs")
         _effect(result, operation, target, "known", hashlib.sha256(data).hexdigest())
@@ -252,21 +263,18 @@ def _write(root: Path, path: Path, data: bytes, expected: str | None, result: Re
         _cleanup_temp(root, temp, result)
 
 
-@trace('filesystem.create')
 def create(root: Path, path: Path, content: bytes) -> Result:
     result = Result()
     _write(Path(root), Path(path), content, None, result)
     return result
 
 
-@trace('filesystem.replace')
 def replace(root: Path, path: Path, expected_sha256: str, content: bytes) -> Result:
     result = Result()
     _write(Path(root), Path(path), content, expected_sha256, result)
     return result
 
 
-@trace('filesystem.remove')
 def remove(root: Path, path: Path, expected_sha256: str) -> Result:
     result = Result()
     parent = None

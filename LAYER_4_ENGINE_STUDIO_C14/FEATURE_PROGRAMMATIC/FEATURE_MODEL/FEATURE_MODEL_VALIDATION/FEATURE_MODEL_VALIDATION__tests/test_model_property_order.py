@@ -2,8 +2,9 @@
 
 import unittest
 
-from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_property_order import validate_property_order
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import order_properties
+
+from ..FEATURE_MODEL_VALIDATION__shared import validate_declared_sibling_order
 
 
 class PropertyOrderTests(unittest.TestCase):
@@ -38,8 +39,13 @@ class PropertyOrderTests(unittest.TestCase):
 
     def test_validates_observed_order_with_optional_property_absent(self):
         pairs = (("Form", "Label"), ("Label", "Topics"))
-        validate_property_order(["Form", "Topics", "Other"], pairs)
+        bearer = "Atom.Header.Context"
+        bindings = {(bearer, ()): pairs}
+        validate_declared_sibling_order(bindings, bearer=bearer, role="Method",
+                                        present_properties=["Form", "Topics", "Other"])
         with self.assertRaisesRegex(ValueError, "out of their declared order"):
-            validate_property_order(["Topics", "Form", "Other"], pairs)
+            validate_declared_sibling_order(bindings, bearer=bearer, role="Method",
+                                            present_properties=["Topics", "Form", "Other"])
         with self.assertRaisesRegex(ValueError, "out of their declared order"):
-            validate_property_order(["Other", "Form", "Topics"], pairs)
+            validate_declared_sibling_order(bindings, bearer=bearer, role="Method",
+                                            present_properties=["Other", "Form", "Topics"])

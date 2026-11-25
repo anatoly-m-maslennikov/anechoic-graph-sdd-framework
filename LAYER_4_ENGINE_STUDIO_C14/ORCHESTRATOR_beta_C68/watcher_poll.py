@@ -1,13 +1,14 @@
 """Complete polling cycles in the same event queue as their changes."""
 
-from dataclasses import dataclass, field
+from dataclasses import field
 from functools import partial
 import os
 from pathlib import Path
 import stat
-from threading import Condition
+from threading import Condition, Lock
 from time import monotonic, monotonic_ns
 
+from pydantic import ConfigDict, dataclasses
 from watchdog.events import DirModifiedEvent, FileModifiedEvent, FileSystemEvent
 from watchdog.observers.api import BaseObserver
 from watchdog.observers.polling import PollingEmitter
@@ -16,7 +17,7 @@ from watchdog.utils.dirsnapshot import DirectorySnapshot
 from .watcher_diagnostics import FenceDiagnostics, report_fence_failure
 
 
-@dataclass(unsafe_hash=True)
+@dataclasses.dataclass(unsafe_hash=True, config=ConfigDict(strict=True, extra="forbid"))
 class PollComplete(FileSystemEvent):
     event_type: str = field(default="poll_complete", init=False)
     started: int = 0
@@ -107,16 +108,31 @@ class _ProofEmitter(PollingEmitter):
             raise
 
     def on_thread_start(self):
-        super().on_thread_start()
-        self.baseline_clean = self._snapshot.clean
-        self._coverage.proof.complete(self._completed())
+        proof = self._coverage.proof
+        while not proof.closed:
+            if proof.sampling_lock.acquire(timeout=0.1):
+                try:
+                    if not proof.closed:
+                        super().on_thread_start()
+                        self.baseline_clean = self._snapshot.clean
+                        proof.complete(self._completed())
+                        return
+                finally:
+                    proof.sampling_lock.release()
+        raise OSError("Watcher stopped before polling baseline")
 
     def queue_events(self, timeout):
-        previous = self._snapshot
-        super().queue_events(timeout)
-        if self._snapshot is not previous:
-            self._queue_version_changes(previous, self._snapshot)
-            self.queue_event(self._completed())
+        lock = self._coverage.proof.sampling_lock
+        if self.stopped_event.wait(timeout) or not lock.acquire(blocking=False):
+            return
+        try:
+            previous = self._snapshot
+            super().queue_events(0)
+            if self._snapshot is not previous:
+                self._queue_version_changes(previous, self._snapshot)
+                self.queue_event(self._completed())
+        finally:
+            lock.release()
 
     def _completed(self):
         clean = self._snapshot.clean
@@ -146,6 +162,7 @@ def polling_observer(entries, coverage, *, archive=False):
 class PollingProof:
     def __init__(self, root=None):
         self.condition = Condition()
+        self.sampling_lock = Lock()
         self.closed = False
         self._revisions = [0, 0]
         self._losses = [0, 0]
@@ -166,30 +183,33 @@ class PollingProof:
                 and all(emitter.is_alive() and self._polls[archive].get(emitter.watch.path, emitter.baseline_clean)
                         for emitter in observer.emitters))
 
-    def epoch(self, observer, *, archive, trace=False):
+    def epoch(self, observer, *, archive, trace=False, dispatched=False):
         with self.condition:
             if self.ready(observer, archive=archive):
+                if dispatched and any(self._polls[archive].get(emitter.watch.path) != emitter._snapshot_started
+                                      for emitter in observer.emitters):
+                    return None
                 if trace:
                     self._diagnostics.start(archive)
                 return observer, self._revisions[archive], self._losses[archive]
         return None
 
-    def fence(self, observer, epoch, *, archive, timeout, run_id=None):
+    def fence(self, observer, epoch, *, archive, timeout, run_id=None, replay=False):
         started = monotonic_ns()
         deadline = None if timeout is None else monotonic() + timeout
         with self.condition:
-            stable, reason = self._wait_fence(observer, epoch, archive, started, deadline)
+            stable, reason = self._wait_fence(observer, epoch, archive, started, deadline, replay)
             record = None if stable is True else self._diagnostics.failure(
                 archive, run_id, reason, started, epoch, self._revisions[archive], self._losses[archive])
         report_fence_failure(record)
         return stable
 
-    def _wait_fence(self, observer, epoch, archive, started, deadline):
+    def _wait_fence(self, observer, epoch, archive, started, deadline, replay):
         if epoch is None or observer is not epoch[0]:
             return None, "baseline_unavailable" if epoch is None else "observer_replaced"
         _, revision, losses = epoch
         while self.ready(observer, archive=archive) and losses == self._losses[archive]:
-            if self._revisions[archive] != revision:
+            if not replay and self._revisions[archive] != revision:
                 return False, "source_changed"
             if all(self._polls[archive].get(emitter.watch.path, 0) >= started for emitter in observer.emitters):
                 return True, None
@@ -203,8 +223,9 @@ class PollingProof:
             return None, "observer_stopped"
         return None, "emitter_unavailable"
 
-    def complete(self, event):
+    def complete(self, event, on_recovery=None):
         with self.condition:
+            previous = self._polls[event.archive].get(event.src_path)
             self._polls[event.archive][event.src_path] = event.started if event.clean else 0
             if not event.clean:
                 self._losses[event.archive] += 1
@@ -215,6 +236,8 @@ class PollingProof:
                 self._archive_roots[event.archive] = event.roots
                 self._revisions[event.archive] += 1
                 self._diagnostics.observe(event.archive, "change", "archive_roots_changed", event.src_path)
+            if previous == 0 and event.clean and on_recovery is not None:
+                on_recovery()
             self.condition.notify_all()
 
     def observer_issue(self, archive, path, errno):
@@ -322,3 +345,4 @@ class ArchiveCoverage:
                 foreground = archive = True
         if foreground or archive:
             self.proof.change(foreground, archive, event, paths)
+        return foreground

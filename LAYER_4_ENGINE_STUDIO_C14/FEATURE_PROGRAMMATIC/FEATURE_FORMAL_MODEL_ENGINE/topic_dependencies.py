@@ -1,13 +1,15 @@
 """Packaged Atom Dependencies check for the reviewed R2708 Python Claim."""
 
-from dataclasses import dataclass
 from hashlib import sha256
 from inspect import getsource
+
+from pydantic import ConfigDict
+from pydantic.dataclasses import dataclass
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.topic_dependencies__pub import DEPENDENCIES_CHECK_SOURCE_SHA256
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, config=ConfigDict(strict=True, extra="forbid"))
 class Atom:
     dependencies: tuple[str, ...]
 

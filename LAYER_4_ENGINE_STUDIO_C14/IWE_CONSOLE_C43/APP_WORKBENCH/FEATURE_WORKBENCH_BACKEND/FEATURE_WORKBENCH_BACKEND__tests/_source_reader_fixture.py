@@ -1,15 +1,17 @@
 from __future__ import annotations
 
-from contextlib import redirect_stderr
+from contextlib import contextmanager, redirect_stderr
 from io import StringIO
 from pathlib import Path
 import tempfile
+from unittest.mock import patch
 
 
 APP_ROOT = Path(__file__).resolve().parents[3]
 TOOLS_ROOT = APP_ROOT.parent / "FEATURE_PROGRAMMATIC" / "FEATURE_TOOLS"
 
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import write_scope_unit_declarations  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import ReadContext  # noqa: E402
 from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__shared import SourceReader  # noqa: E402
 
 
@@ -90,6 +92,23 @@ class SourceReaderFixture:
         with redirect_stderr(stderr):
             atoms, scopes = self.reader.capture()
         return atoms, scopes, stderr.getvalue()
+
+
+    @contextmanager
+    def source_reads(self):
+        paths = []
+        original_read = ReadContext.read
+
+        def record(context, path, **kwargs):
+            paths.append(Path(path).resolve())
+            return original_read(context, path, **kwargs)
+
+        with patch.object(ReadContext, "read", new=record):
+            yield paths
+
+
+    def declaration_paths(self) -> set[Path]:
+        return {Path(row["declaration_path"]).resolve() for row in self.declarations.values()}
 
 
     def _snapshot_files(self) -> dict[Path, bytes]:

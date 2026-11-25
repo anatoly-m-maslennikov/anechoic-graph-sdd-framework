@@ -2,7 +2,9 @@
 from copy import deepcopy
 from pathlib import Path
 import unittest
-from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.workflow_progress import CHECKS, report_progress, summarize_progress
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared import report_progress, summarize_progress
+
+CHECKS = ('properties', 'writing', 'scope', 'claim', 'details', 'summary')
 
 
 def report():

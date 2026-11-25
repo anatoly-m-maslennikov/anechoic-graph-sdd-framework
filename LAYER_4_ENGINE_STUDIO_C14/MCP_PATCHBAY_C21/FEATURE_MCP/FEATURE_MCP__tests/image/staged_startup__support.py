@@ -1,12 +1,16 @@
 """Test-owned archive pause and read-only peer probes for packaged startup."""
+from datetime import datetime, timezone
 from hashlib import sha256
 import json
+from pathlib import Path
+import re
 import subprocess
 from time import monotonic, sleep
 from uuid import uuid4
 
-from ..FEATURE_MCP__tests__shared import CONTROL, project
-from ..workbench_docker_support import defer_container_cleanup, docker_deadline_env, image_timeout, observing
+from ..FEATURE_MCP__tests__shared import (
+    CONTROL, project, defer_container_cleanup, docker_deadline_env, image_timeout, observing,
+)
 
 _BARRIER = r'''
 import os,signal,time
@@ -51,7 +55,122 @@ p=Path(found[0]); s=p.stat(); print(json.dumps([str(p),s.st_dev,s.st_ino]))
 '''
 
 
-def prepare(root):
+_TIMING_PREFIX = 'ANECHOIC_STARTUP_TIMING '
+_TIMING_PHASES = frozenset({'worker_started', 'scan_started', 'scan_metrics', 'non_archived_load_started', 'model_ready',
+                            'structure_ready', 'realization_graph_ready', 'non_archived_load_ended',
+                            'archive_load_ended'})
+_TIMING_NUMBERS = frozenset({'census_ns', 'guarded_read_ns', 'stream_ns', 'sha256_ns', 'carrier_count', 'bytes_read',
+                             'changed_paths', 'comparison_ns', 'checkpoint_validation_ns'})
+_TIMING_MODES = frozenset({'foreground_capture', 'foreground_hashes', 'built', 'reused', 'disabled',
+                           'full', 'native_delta', 'cold'})
+
+
+def started_at_ns(value):
+    match = re.fullmatch(r'(\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d)(?:\.(\d{1,9}))?Z', value)
+    if not match:
+        raise ValueError('Invalid Docker State.StartedAt: ' + value)
+    seconds = int(datetime.strptime(match[1], '%Y-%m-%dT%H:%M:%S').replace(tzinfo=timezone.utc).timestamp())
+    return seconds * 1_000_000_000 + int((match[2] or '').ljust(9, '0'))
+
+
+def startup_events(logs, started):
+    events = []
+    for line in logs.splitlines():
+        if len(line) > 8192 or not line.startswith(_TIMING_PREFIX):
+            continue
+        try:
+            event = json.loads(line[len(_TIMING_PREFIX):])
+        except (ValueError, TypeError):
+            continue
+        if (not isinstance(event, dict) or not isinstance(event.get('phase'), str)
+                or event['phase'] not in _TIMING_PHASES
+                or type(event.get('timestamp_ns')) is not int
+                or event['timestamp_ns'] < started):
+            continue
+        try:
+            elapsed = (event['timestamp_ns'] - started) / 1_000_000_000
+        except OverflowError:
+            continue
+        clean = {'phase': event['phase'], 'timestamp_ns': event['timestamp_ns'],
+                 'launch_to_phase_seconds': elapsed}
+        for name in _TIMING_NUMBERS:
+            value = event.get(name)
+            if type(value) is int and 0 <= value <= 2**63 - 1:
+                clean[name] = value
+        if isinstance(event.get('mode'), str) and event['mode'] in _TIMING_MODES:
+            clean['mode'] = event['mode']
+        if event.get('archive') in ('disabled', 'none', 'deferred'):
+            clean['archive'] = event['archive']
+        events.append(clean)
+    return scan_durations(sorted(events, key=lambda event: event['timestamp_ns']))
+
+
+def scan_durations(events):
+    scans = {}
+    for event in events:
+        mode = event.get('mode')
+        if mode and event['phase'] == 'scan_started':
+            scans[mode] = event['timestamp_ns']
+        elif mode and event['phase'] == 'scan_metrics' and mode in scans:
+            beginning = scans.pop(mode)
+            if event['timestamp_ns'] >= beginning:
+                event['scan_seconds'] = (event['timestamp_ns'] - beginning) / 1_000_000_000
+    return events
+
+
+def timing_summary(logs, started):
+    events = startup_events(logs, started_at_ns(started))
+    observed = {event['phase'] for event in events}
+    core = ('scan_started', 'non_archived_load_started', 'model_ready', 'structure_ready',
+            'realization_graph_ready', 'non_archived_load_ended', 'archive_load_ended')
+    admission = next((event for event in events if event['phase'] == 'non_archived_load_ended'), {})
+    archive = admission.get('archive')
+    not_applicable = {'archive_load_ended': archive} if archive in ('disabled', 'none') else {}
+    return {'started_at': started, 'events': events,
+            'unobserved': [name for name in core if name not in observed and name not in not_applicable],
+            'not_applicable': not_applicable, 'optional_phases': ['worker_started', 'scan_metrics']}
+
+
+def cold_throughput(timing, live_atoms):
+    events = timing['events']
+    begin = [row['timestamp_ns'] for row in events if row['phase'] == 'non_archived_load_started']
+    end = [row['timestamp_ns'] for row in events
+           if row['phase'] == 'non_archived_load_ended' and row.get('mode') == 'full']
+    result = {'live_atoms': live_atoms, 'load_seconds': None, 'live_atoms_per_load_second': None}
+    if len(begin) == len(end) == 1 and end[0] > begin[0]:
+        result['load_seconds'] = (end[0] - begin[0]) / 1_000_000_000
+        result['live_atoms_per_load_second'] = live_atoms / result['load_seconds']
+    else:
+        result['unavailable'] = 'one positive-duration full foreground load interval was not observed'
+    return result
+
+
+def startup_outcome(rows):
+    triggers = [run for run, kind, name, *_ in rows if (kind, name) == ('trigger', 'startup')]
+    if not triggers:
+        return None
+    if len(triggers) != 1:
+        raise RuntimeError('Multiple foreground startup flows in one container start')
+    run = triggers[0]
+    current = [row[1:] for row in rows if row[0] == run]
+    results = [(state, detail) for kind, name, state, detail in current
+               if (kind, name) == ('output', 'generation_result')]
+    if not results:
+        return None
+    if len(results) != 1:
+        raise RuntimeError('Multiple foreground results in one startup flow')
+    state, raw = results[0]
+    detail = json.loads(raw)
+    effects = {'worker_started', 'generation_admission', 'generation_reuse_check'}
+    return {'run_id': run, 'outcome': state, 'kind': detail.get('kind'), 'generation': detail.get('generation'),
+            'delta_path_count': detail.get('delta_path_count'),
+            'reason': {'trigger': 'startup', 'source': 'C68 flow_events', 'code': detail.get('code'),
+                       'effects': [[name, outcome, json.loads(payload)] for kind, name, outcome, payload in current
+                                   if kind == 'effect' and name in effects]}}
+
+
+def prepare(root, *, write_carrier=None):
+    write_carrier = carrier if write_carrier is None else write_carrier
     project(root)
     manifest, = root.glob('*PROJECT_MANIFEST--*.md')
     manifest.write_text(manifest.read_text().replace("'storage': 'memory'", "'storage': 'disk'"))
@@ -60,15 +179,21 @@ def prepare(root):
     archive = directory / '09_archived'
     archive.mkdir(parents=True)
     for i in range(4):
-        (directory / f'AN-T-{i + 1}-TASK--staged.md').write_text(carrier(i + 1, 'active', f'Current {i + 1}'))
+        (directory / f'AN-T-{i + 1}-TASK--staged.md').write_text(write_carrier(i + 1, 'active', f'Current {i + 1}'))
     for i in range(1500):
-        (archive / f'AN-T-{10000 + i}@1-TASK--history.md').write_text(carrier(10000 + i, 'archived', 'History'))
+        (archive / f'AN-T-{10000 + i}@1-TASK--history.md').write_text(write_carrier(10000 + i, 'archived', 'History'))
     return directory
 
 
 def carrier(number, status, summary):
     return (f'---\nidentity: {{atom_id: AN-T-{number}}}\ncontext: {{container: {{component: C00}}}}\n'
             f'state: {{status: {status}, version: 1}}\n---\n\n## Summary\n\n{summary}\n')
+
+
+def canonical_carrier(number, status, summary):
+    return (f'---\natom_family: TKT\natom_id: AN-T-{number}\ncontainer: {{component: C00}}\npriority: 2\n'
+            f'context: {{template: task}}\nstate: {{status: {status}, version: 1, '
+            "updated_at: '2026-11-23T00:00:00Z'}\n---\n\n## Summary\n\n" + summary + '\n')
 
 
 class PackagedProbe:
@@ -84,9 +209,57 @@ class PackagedProbe:
             '--publish', '127.0.0.1::8092', '--mount', f'type=bind,src={root},dst=/project',
             '--env', 'ANECHOIC_RUNTIME_NAMESPACE=docker', '--env', f'ANECHOIC_CONTROL_ROOT={CONTROL}',
             '--env', f'ANECHOIC_PROJECT_INSTANCE_ID={self.instance}', '--env', f'ANECHOIC_HOST_PROJECT_ROOT={root}',
-            '--env', docker_deadline_env(),
+            '--env', docker_deadline_env(), '--env', 'ANECHOIC_STARTUP_TIMING=1',
             '--entrypoint', '/opt/venv/bin/python', image, '-B', '-c', _WRAPPER, timeout=45)
+        self.start_time('cold')
         self.refresh_binding('cold')
+
+    def start_time(self, phase):
+        value = self.docker('inspect', '--format', '{{.State.StartedAt}}', self.container)
+        if not hasattr(self, 'starts'):
+            self.starts = {}
+        self.starts[phase] = value
+
+    def timing(self, phase):
+        start = self.starts[phase]
+        logs = self.docker('logs', self.container, timeout=30)
+        return timing_summary(logs, start)
+
+    def resources(self):
+        source = Path(__file__).with_name('startup_resources__support.py').read_text()
+        return json.loads(self.exec(source))
+
+    def startup(self, phase):
+        since = started_at_ns(self.starts[phase]) / 1_000_000_000
+        return startup_outcome(self.rows('SELECT run_id, kind, name, outcome, CAST(detail AS VARCHAR) '
+                                        'FROM flow_events WHERE component = \'C68\' '
+                                        f'AND "at" >= {since:.9f} ORDER BY "at", sequence LIMIT 512'))
+
+    def restart(self, phase):
+        started = monotonic()
+        self.docker('start', self.container, timeout=60)
+        self.start_time(phase)
+        self.refresh_binding(phase)
+        return started
+
+    def stop(self):
+        grace = '-1' if image_timeout(30) is None else '30'
+        self.docker('stop', '--time', grace, self.container, timeout=60)
+        status = self.docker('inspect', '--format', '{{.State.ExitCode}}', self.container)
+        self.case.assertEqual('0', status, 'Expected a clean candidate shutdown before restarting')
+
+    def supports_timing(self):
+        return self.exec("from pathlib import Path; print(int(Path('/workspace/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ADAPTERS_C30/startup_timing.py').is_file()))") == '1'
+
+    def assert_timing(self, phase):
+        result = self.timing(phase)
+        self.case.assertFalse(result['unobserved'], f'{phase} startup timing: {result}')
+        self.case.assertFalse(result['not_applicable'], f'{phase} startup timing: {result}')
+        scan_modes = {'foreground_capture'} if phase == 'cold' else {'foreground_capture', 'foreground_hashes'}
+        self.case.assertTrue(any(event.get('phase') == 'scan_metrics' and event.get('mode') in scan_modes
+                                 and 'scan_seconds' in event for event in result['events']),
+                             f'{phase} foreground scan timing: {result}')
+        return result
 
     def refresh_binding(self, phase):
         binding = self.docker('port', self.container, '8092/tcp')
@@ -133,21 +306,28 @@ class PackagedProbe:
     def rows(self, sql):
         return self.peer('db.sock', 'POST', '/database', {'instance_id': self.instance, 'sql': sql})['rows']
 
+    def archive_marker(self):
+        return self.exec("from pathlib import Path; p=Path('/tmp/staged-archive-pid'); print(p.read_text() if p.exists() else '')")
+
     def stopped(self):
-        marker = self.exec("from pathlib import Path; p=Path('/tmp/staged-archive-pid'); print(p.read_text() if p.exists() else '')")
-        health, jobs = self.health(), self.jobs()
+        marker = self.archive_marker()
+        jobs = self.jobs()
         latest, archive = jobs.get('latest') or {}, jobs.get('archive') or {}
         if latest.get('state') in ('failed', 'aborted') and not latest.get('retrying'):
             raise RuntimeError('Startup failed before archive barrier: ' + json.dumps(latest))
-        if archive.get('state') in ('failed', 'aborted'):
-            raise RuntimeError('Archive failed before barrier: ' + json.dumps(archive))
-        if archive.get('state') == 'succeeded' or (latest.get('state') == 'succeeded'
-                and health.get('ready') and not health.get('archive_pending')):
-            raise RuntimeError('Archive completed before barrier: ' + json.dumps(archive))
+        if archive.get('state') in ('failed', 'aborted', 'succeeded'):
+            raise RuntimeError('Archive terminated before barrier: ' + json.dumps(archive))
+        if not marker and not archive and latest.get('state') == 'succeeded' and not self.health()['archive_pending']:
+            raise RuntimeError('Startup completed without scheduling the expected archive Worker')
         return marker
 
     def release(self):
         self.exec("import os,signal; from pathlib import Path; p=Path('/tmp/staged-archive-pid'); os.kill(int(p.read_text()),signal.SIGCONT); p.unlink()")
+
+    def complete_unchanged(self):
+        if self.archive_marker():
+            self.release()
+        return self.complete()
 
     def disk(self):
         return json.loads(self.exec(_DB))

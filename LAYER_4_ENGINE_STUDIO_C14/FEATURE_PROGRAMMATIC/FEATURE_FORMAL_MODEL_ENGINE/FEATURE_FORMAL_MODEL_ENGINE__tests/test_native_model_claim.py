@@ -7,7 +7,7 @@ import unittest
 
 FEATURE = Path(__file__).resolve().parents[1]
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import NativeModelClaimError, parse_native_model_claim, validate_aspect_instance  # noqa: E402
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.component_manifest__pub import (  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (  # noqa: E402
     parse_component_manifest, parse_component_manifest_fields,
 )
 

@@ -11,12 +11,15 @@ import time
 from uuid import uuid4
 
 from .abort import WorkerAborted
-from .generation import WorkerIngestionFailure, admit_generation, parse_worker_result
+from .jobs import _Run
+from .generation import DeltaRequiresReconciliation, WorkerIngestionFailure, admit_generation
+from .worker_reply import parse_archive_result, parse_worker_data
 from .startup_checkpoint import archive_checkpoint, compatible_checkpoint
 from .watcher_diagnostics import emit_record
 
 _ARCHIVE_ERRORS = (OSError, ValueError, TypeError, KeyError, RuntimeError, http.client.HTTPException)
 _ARCHIVE_FENCE_MESSAGE = "Archive watcher coverage was lost during capture"
+ARCHIVE_RECONCILIATION = "archive_reconciliation"
 
 
 class ArchiveInputsChanged(RuntimeError):
@@ -39,11 +42,19 @@ class ArchiveJobs:
         self.live_generation = None
 
     def _capture_options(self, reuse, paths, *, explicit=False):
+        if self.skip_archives:
+            epoch = self.watcher.capture_epoch(trace=True) if self.thread is not None and not explicit else None
+            return {"foreground": True, "watcher_guarded": epoch is not None}, epoch
         if explicit:
             return {}, None
+        managed = self.thread is not None
         if paths is not None:
-            return ({"foreground": True} if self.deferred_archive else {}), None
-        if not (self.startup_capture or self.deferred_archive):
+            epoch = self.watcher.capture_epoch(trace=True) if managed else None
+            return ({"foreground": True} if self.deferred_archive else {}), epoch
+        if not (self.startup_capture or self.deferred_archive or managed):
+            return {}, None
+        has_archive = self.watcher.has_archive_roots()
+        if has_archive and not (self.startup_capture or self.deferred_archive):
             return {}, None
         epoch = self.watcher.capture_epoch(trace=True)
         if self.startup_capture:
@@ -51,8 +62,7 @@ class ArchiveJobs:
             if epoch is not None and compatible_checkpoint(reuse):
                 options["incremental"] = True
             return options, epoch
-        foreground = (self.deferred_archive is not None or reuse is None or reuse.get("archive_pending") is True
-                      or self.watcher.has_archive_roots())
+        foreground = self.deferred_archive is not None or reuse is None or reuse.get("archive_pending") is True
         return {"watcher_guarded": epoch is not None, "foreground": foreground}, epoch
 
     def _restart_archive(self, reuse, result):
@@ -80,6 +90,8 @@ class ArchiveJobs:
         return location.is_relative_to(control) and "09_archived" in location.relative_to(control).parts
 
     def _partition_archive_changes(self, changes):
+        if self.skip_archives:
+            return [live for change in changes if (live := self._foreground_change(change)) is not None]
         if self.deferred_archive is None:
             return changes
         live = []
@@ -92,10 +104,22 @@ class ArchiveJobs:
                 live.append(change)
         return live
 
+    def _foreground_change(self, change):
+        paths = [change.get("old_path"), change.get("new_path")]
+        archived = [self._is_archive_path(path) for path in paths]
+        if not any(archived):
+            return change
+        if all(archived[index] or not path for index, path in enumerate(paths)):
+            return None
+        index = 1 if archived[0] else 0
+        return {**change, "old_path": paths[index], "new_path": None,
+                "event_type": "created" if index else "deleted"}
+
     def _accept_live_generation(self, generation, result, deferred):
         self.live_generation = generation
         self.startup_capture = False
-        if deferred is not None or ("snapshot" in result and "paths" not in result):
+        full = "batch_artifact" in result or ("snapshot" in result and "paths" not in result)
+        if deferred is not None or full:
             self._accept_deferred_archive(deferred if "archive_pending" in result else None)
             self.unconfirmed_lifecycle_write = False
 
@@ -104,12 +128,12 @@ class ArchiveJobs:
         self.deferred_archive = deferred
         if previous is not None and deferred is not None:
             keys = ["roots", "endpoints", "checkpoint"]
-            if self.archive_run is not None and self.archive_run["state"] == "failed":
+            if self.archive_run is not None and self.archive_run.state == "failed":
                 keys.append("carrier_hashes")
             self.archive_dirty |= any(previous.get(key) != deferred.get(key) for key in keys)
 
     def _run_archive(self):
-        if self.startup_capture or self.stopping.is_set():
+        if self.skip_archives or self.startup_capture or self.startup_replay or self.stopping.is_set():
             return
         if self.archive_thread is not None:
             if self.archive_thread.is_alive():
@@ -123,7 +147,7 @@ class ArchiveJobs:
         with self.lock:
             self.archive_dirty = False
             if self.deferred_archive is not None:
-                self.archive_run = {"state": "running", "started_at": time.time(), "run_id": uuid4().hex}
+                self.archive_run = _Run(state="running", started_at=time.time(), run_id=uuid4().hex)
             self.archive_thread = threading.Thread(
                 target=self._capture_archive, args=(self.deferred_archive,), daemon=True)
             self.archive_thread.start()
@@ -150,7 +174,7 @@ class ArchiveJobs:
             request = {"binding": self.binding, "reuse": checkpoint, "watcher_guarded": True,
                        "archive": {"roots": roots, "endpoints": endpoints}}
             result = self._run_archive_worker(directory, request)
-        stable = self.watcher.capture_fence(epoch, archive=True, timeout=None, run_id=(self.archive_run or {}).get("run_id"))
+        stable = self.watcher.capture_fence(epoch, archive=True, timeout=None, run_id=(self.archive_run.run_id if self.archive_run else None))
         if stable is None:
             raise ArchiveCoverageLost(_ARCHIVE_FENCE_MESSAGE)
         if not stable or roots != self.watcher.archive_roots():
@@ -161,12 +185,13 @@ class ArchiveJobs:
         checkpoint = request["reuse"]
         if checkpoint is not None:
             stdout = self._communicate_worker(directory, request | {"incremental": True}, archive=True)
-            if json.loads(stdout) != {"incompatible": True}:
-                result = parse_worker_result(stdout, checkpoint, None)
+            decoded = json.loads(stdout)
+            if decoded != {"incompatible": True}:
+                result = parse_worker_data(decoded, checkpoint, None)
                 if "paths" not in result and result.get("unchanged") is not True:
                     raise ValueError("Worker returned invalid incremental Archive result")
                 return result
-        result = json.loads(self._communicate_worker(directory, request | {"reuse": None}, archive=True))
+        result = parse_archive_result(self._communicate_worker(directory, request | {"reuse": None}, archive=True))
         return result | {"replace": True} if checkpoint is not None else result
 
     def _finish_archive(self):
@@ -187,25 +212,30 @@ class ArchiveJobs:
                 if isinstance(result, Exception):
                     raise result
                 self._admit_archive(result[1])
+            except DeltaRequiresReconciliation:
+                state, message = "superseded", "Archive requires full native reconciliation"
+                self.watcher.queue.put({"event_type": ARCHIVE_RECONCILIATION, "old_path": None,
+                                        "new_path": None, "is_directory": True})
             except _ARCHIVE_ERRORS as error:
                 state, message = "failed", str(error)[-2048:]
                 self._record_archive_failure(error)
         with self.lock:
-            self.archive_run.update(state=state, finished_at=time.time())
+            self.archive_run.state = state
+            self.archive_run.finished_at = time.time()
             if message is not None:
-                self.archive_run["message"] = message
+                self.archive_run.message = message
 
     def _record_archive_failure(self, error):
         if isinstance(error, WorkerIngestionFailure):
             issues = error.diagnostic["issues"]
             emit_record("WARNING", "archive_ingestion_invalid", "archive", "failed",
-                        (self.archive_run or {}).get("run_id"))
+                        (self.archive_run.run_id if self.archive_run else None))
         else:
             message = str(error)[-8192:] or type(error).__name__
             if message != _ARCHIVE_FENCE_MESSAGE:
                 severity = "WARNING" if isinstance(error, ValueError) else "ERROR"
                 emit_record(severity, "archive_generation_failed", "archive", "failed",
-                            (self.archive_run or {}).get("run_id"))
+                            (self.archive_run.run_id if self.archive_run else None))
             issues = [{"relative_path": None, "code": "archive_generation_failed", "message": message,
                        "atom_ref": None, "related_paths": []}]
         self._record_ingestion_issues("archive", issues)
@@ -226,9 +256,13 @@ class ArchiveJobs:
         else:
             payload = self._archive_snapshot_payload(result)
         outcome = admit_generation(self.database_socket, self.instance_id, None, payload, None, archive=True)
+        if os.environ.get("ANECHOIC_STARTUP_TIMING") == "1":
+            from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import mark_startup_timing
+            mode = "reused" if result.get("unchanged") is True else "native_delta" if "paths" in result else "full"
+            mark_startup_timing("archive_load_ended", mode=mode)
         self.live_generation = outcome["generation"]
         if self.generation_reuse is not None:
-            self.generation_reuse["base_generation"] = self.live_generation
+            self.generation_reuse.base_generation = self.live_generation
         self.deferred_archive = None
 
     def _archive_snapshot_payload(self, result):
@@ -236,6 +270,8 @@ class ArchiveJobs:
         snapshot = result["snapshot"]
         for key in ("atoms", "relations"):
             snapshot[key].extend(deferred["snapshot"][key])
+        if issues := deferred["snapshot"].get("ingestion_issues"):
+            snapshot.setdefault("ingestion_issues", []).extend(issues)
         hashes = deferred["carrier_hashes"] | result["carrier_hashes"]
         digest = sha256(json.dumps(
             snapshot, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode()).hexdigest()

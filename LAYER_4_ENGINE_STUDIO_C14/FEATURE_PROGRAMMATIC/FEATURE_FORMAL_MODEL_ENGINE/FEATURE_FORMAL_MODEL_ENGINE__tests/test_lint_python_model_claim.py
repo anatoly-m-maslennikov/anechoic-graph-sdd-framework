@@ -1,13 +1,16 @@
 """Tests for the static Python Claim lint entry point."""
 import json
-from pathlib import Path
 import subprocess
 import sys
 import tempfile
 import unittest
+from pathlib import Path
+
+from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.FEATURE_FORMAL_MODEL_ENGINE__shared import (
+    lint_python_model_claim,
+)
 
 TOOLS = Path(__file__).resolve().parents[1]
-from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.lint_python_model_claim__pub import _names, lint_python_model_claim
 
 
 class LintPythonModelClaimTests(unittest.TestCase):
@@ -115,7 +118,9 @@ class LintPythonModelClaimTests(unittest.TestCase):
         self.assertTrue(lint_python_model_claim(claim, address_bindings={'Workflow': ['bad']}, **options))
 
     def test_set_value_validates_relation_alias_without_changing_expression(self):
-        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_grouped_python_model_claim
+        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+            parse_grouped_python_model_claim,
+        )
         options = dict(declared_addresses=['Relation'], relation_names=['NARROWER_THAN', 'HAS_NARROWER'])
         source = "# model\nset_value(address='alias(Relation//NARROWER_THAN)', value='\"/\"')"
         self.assertEqual((), lint_python_model_claim(source, **options))
@@ -165,14 +170,19 @@ class LintPythonModelClaimTests(unittest.TestCase):
 
     def test_registry_inverse_alias_must_reference_registered_relation(self):
         with tempfile.TemporaryDirectory() as tmp:
-            registry = Path(tmp) / "registry.json"
+            root = Path(tmp)
+            registry, addresses, claim = (root / name for name in ("registry.json", "addresses.json", "claim.py"))
+            addresses.write_text(json.dumps(["Atom"]))
+            claim.write_text('relation(source="Atom", name="IS_IN", target="Atom")')
+            command = [sys.executable, "-B", str(TOOLS / "lint_python_model_claim__pub.py"), str(claim),
+                       "--addresses", str(addresses), "--relations", str(registry)]
             registry.write_text(json.dumps({"registered_names": ["CONTAINS"], "inverse_aliases":
                                             [{"alias": "IS_IN", "canonical": "CONTAINS"}]}))
-            self.assertEqual(_names(registry, registry=True), ["CONTAINS", "IS_IN"])
+            result = subprocess.run(command, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
             registry.write_text(json.dumps({"registered_names": [], "inverse_aliases":
                                             [{"alias": "IS_IN", "canonical": "MISSING"}]}))
-            with self.assertRaises(ValueError):
-                _names(registry, registry=True)
+            self.assertEqual(subprocess.run(command, capture_output=True, text=True).returncode, 2)
 
     def test_rejects_unsafe_placement_folder(self):
         source = "placement_rules = ({'kind': 'status', 'role': 'Plan', 'status': 'Backlog', " \

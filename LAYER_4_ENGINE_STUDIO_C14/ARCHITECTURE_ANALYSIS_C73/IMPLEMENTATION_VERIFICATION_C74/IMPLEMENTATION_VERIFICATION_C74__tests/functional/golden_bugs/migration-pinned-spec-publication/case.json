@@ -1,0 +1,28 @@
+{
+  "title": "Publish a migration-pinned first SPEC Draft",
+  "invariant": "A valid migration-pinned SPEC Draft with one exact match and no Current predecessor selects pinned first-SPEC publication.",
+  "scope": "Selection only: valid exact SPEC target and status, valid migration references, and no Current predecessor. Retention, version, preflight and writes are outside this proof.",
+  "before": {
+    "revision": "2d497ef3b9062c096c24cce73b52e2d60e310025",
+    "source": "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ATOM_LIFECYCLE/native_draft.py",
+    "source_sha256": "94820a2a4b2ca0dc9bea97895f80b80ec800250ff82c6594f0a02fe7467e95e3",
+    "fixture": "before.py.txt",
+    "sha256": "3075cfd417d9fb6f051c14290ce8140b0a6c47246374d794f682c3983c9c575e"
+  },
+  "fixed": {
+    "revision": "99afcb8d7db4b259d6aec8bcef5368455bfdab08",
+    "source": "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ATOM_LIFECYCLE/native_draft.py",
+    "source_sha256": "11e1eacde96c9f873fc50921dbad7059aaf7a09bbf6ba6d23b4aa755bbdd144b",
+    "fixture": "fixed.py.txt",
+    "sha256": "b15f193b798d5f4ab1f897652402e9103ceee386b3975f4ec1a954d31ed4f274"
+  },
+  "checks": [
+    {
+      "file": "before.lean"
+    },
+    {
+      "file": "fixed.lean"
+    }
+  ],
+  "analyzer": "analyze.py"
+}

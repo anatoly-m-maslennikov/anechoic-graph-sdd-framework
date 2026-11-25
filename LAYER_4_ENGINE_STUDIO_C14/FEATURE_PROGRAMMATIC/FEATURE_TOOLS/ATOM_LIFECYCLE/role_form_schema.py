@@ -1,7 +1,9 @@
 """Finite literal Role and Form declarations for lifecycle candidate checks."""
 from __future__ import annotations
 
-from dataclasses import dataclass
+
+from pydantic import ConfigDict
+from pydantic.dataclasses import dataclass
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import canonical_role_name, matches_named_value, named_value_token
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import iter_formal_claims
@@ -69,7 +71,7 @@ def _role_owner(declaration, roles, bases, source):
     return roles[current]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, config=ConfigDict(strict=True, extra="forbid"))
 class RoleFormSchema:
     roles: frozenset[str]
     forms: frozenset[str]

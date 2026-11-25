@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
-from dataclasses import dataclass, field
 from typing import Any
 
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import FormalStatement
@@ -13,12 +12,12 @@ from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import HeaderSchema, declared_hea
 from .source_content_schema import declaration_contributions, updated_declarations
 
 
-@dataclass
 class SourceHeaderSchema:
     """Cache per-source model Header declarations; source files remain authoritative."""
 
-    schema: HeaderSchema | None = None
-    _contributions: dict[str, tuple[FormalStatement, ...]] = field(default_factory=dict)
+    def __init__(self, schema: HeaderSchema | None = None) -> None:
+        self.schema = schema
+        self._contributions: dict[str, tuple[FormalStatement, ...]] = {}
 
     def reset(self) -> None:
         self.schema = None

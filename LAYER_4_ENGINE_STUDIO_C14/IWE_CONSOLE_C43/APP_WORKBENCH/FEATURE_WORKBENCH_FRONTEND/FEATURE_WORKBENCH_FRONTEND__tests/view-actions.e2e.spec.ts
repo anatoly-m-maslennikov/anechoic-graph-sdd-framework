@@ -1,5 +1,5 @@
 
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Page, type Request } from '@playwright/test';
 
 const url = process.env.WORKBENCH_E2E_URL!;
 const projectRoot = new URL(url).searchParams.get('project_root');
@@ -40,11 +40,12 @@ async function replaceSql(page: Page, sql: string) {
   await expect(input).toContainText(sql);
 }
 
-async function flushDraft(page: Page, sql: string) {
+async function replaceAndFlushSql(page: Page, sql: string) {
   const update = page.waitForRequest((request) => request.method() === 'POST'
     && new URL(request.url()).pathname.endsWith('/interface')
     && request.postDataJSON()?.operation === 'view_update'
     && request.postDataJSON()?.arguments?.sql === sql);
+  await replaceSql(page, sql);
   await page.evaluate(() => window.dispatchEvent(new Event('focus')));
   await update;
 }
@@ -166,7 +167,7 @@ test('reuses exact saved View identity without navigation or equal-SQL merging',
   const seeded = await state(fixture.workspaceUrl, fixture.workspace);
   const retainedQueryId = seeded.views.find((view) => view.id === sourceId)!.result?.query_id;
   const draft = 'SELECT 12 AS unsaved_edit';
-  await replaceSql(page, draft); await flushDraft(page, draft);
+  await replaceAndFlushSql(page, draft);
   await expect(page.getByRole('grid')).toContainText('retained_value');
 
   await verifySavedReuse(page, fixture, sourceId, first.id, second.href, secondId, draft, operations, retainedQueryId);
@@ -242,7 +243,7 @@ test('renames and duplicates Views from context and palette without copying resu
   await renameViews(page);
 
   const editedSql = 'SELECT 22 AS copied_value';
-  await replaceSql(page, editedSql); await flushDraft(page, editedSql);
+  await replaceAndFlushSql(page, editedSql);
   const source = (await state(fixture.workspaceUrl, fixture.workspace)).views.find((view) => view.id === sourceId)!;
   expect(source.result?.query_id).toBeTruthy();
   expect(source.cursor_position).toBeGreaterThan(0);
@@ -268,4 +269,45 @@ test('renames and duplicates Views from context and palette without copying resu
   await expect(page.locator('.saved-reference a')).toHaveCount(0);
 
   await verifyPaletteDuplicate(page, fixture, sourceId, sourceQueryId, firstCopy, currentSource, operations, editedSql);
+});
+
+
+test('keeps local View selection after a stale background refresh', async ({ page }) => {
+  const fixture = await disposableWorkspace('stale-refresh');
+  await page.goto(fixture.workspaceUrl.toString());
+  await page.getByRole('button', { name: 'New View', exact: true }).click();
+  await expect(tab(page, 'View 2')).toHaveAttribute('aria-selected', 'true');
+  const expected = 'SELECT 22 AS selected_value';
+  await replaceSql(page, 'SELECT 11 AS previous_value');
+  let release!: () => void;
+  const held = new Promise<void>((resolve) => { release = resolve; });
+  let captured!: (viewId: string) => void;
+  const stale = new Promise<string>((resolve) => { captured = resolve; });
+  const initial = await state(fixture.workspaceUrl, fixture.workspace);
+  let intercepted = false;
+  let interceptedRequest: Request;
+  await page.route('**/interface', async (route) => {
+    if (intercepted || route.request().postDataJSON()?.operation !== 'workspace_get') return route.continue();
+    intercepted = true;
+    interceptedRequest = route.request();
+    const response = await route.fetch();
+    captured((await response.json()).active_view_id);
+    await held;
+    await route.fulfill({ response });
+  });
+  try {
+    const oldId = await stale;
+    expect(oldId).toBe(initial.active_view_id);
+    const focus = page.waitForResponse((item) => item.request().postDataJSON()?.operation === 'view_focus'
+      && item.request().postDataJSON()?.arguments?.view_id === fixture.opened.views[0].id);
+    await tab(page, 'View 1').click();
+    expect((await focus).ok()).toBe(true);
+    await replaceSql(page, expected);
+    const response = page.waitForResponse((item) => item.request() === interceptedRequest);
+    release();
+    await response;
+    await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    expect(await tab(page, /^View 1(?: \*)?$/).getAttribute('aria-selected')).toBe('true');
+    expect(await editor(page).innerText()).toContain(expected);
+  } finally { release(); }
 });

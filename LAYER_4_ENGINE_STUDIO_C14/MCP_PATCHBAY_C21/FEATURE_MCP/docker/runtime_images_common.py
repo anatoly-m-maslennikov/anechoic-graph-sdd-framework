@@ -1,12 +1,14 @@
 """Shared image admission data and source selection rules."""
 
-from dataclasses import dataclass
 import json
 import os
 from pathlib import Path
 import re
 import subprocess
 import sys
+
+from pydantic import ConfigDict, ValidatorFunctionWrapHandler, field_validator
+from pydantic.dataclasses import dataclass
 
 try:
     from .image_reference import IMMUTABLE_IMAGE
@@ -51,6 +53,7 @@ _CREDENTIAL_DIRECTORIES = frozenset({
     "vault", ".vault", "secrets", ".secrets", "credentials", ".credentials",
 })
 _PLATFORM = re.compile(r"linux/(?:amd64|arm64|arm|386|ppc64le|s390x|riscv64)(?:/v[0-9]+)?")
+_STRICT = ConfigDict(strict=True, extra="forbid")
 
 
 class ImageError(RuntimeError):
@@ -66,14 +69,14 @@ class ImageError(RuntimeError):
         super().__init__(message or defaults.get(code, "Runtime image operation failed"))
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, config=_STRICT)
 class BuildInput:
     path: str
     sha256: str
     mode: int
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, config=_STRICT)
 class ImageIdentity:
     fingerprint: str
     tag: str
@@ -84,6 +87,12 @@ class ImageIdentity:
     gid: int
     tool_registry: bytes
     model_sha256: str | None
+
+    @field_validator("manifest", mode="wrap")
+    @classmethod
+    def _retain_manifest(cls, value, validate: ValidatorFunctionWrapHandler):
+        validated = validate(value)
+        return value if isinstance(value, tuple) and value == validated else validated
 
 
 def _canonical(value: object) -> bytes:

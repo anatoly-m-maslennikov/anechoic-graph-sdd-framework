@@ -8,13 +8,47 @@ import subprocess
 import sys
 import threading
 import time
-from contextlib import contextmanager
+from contextlib import closing, contextmanager
 from hashlib import sha256
 from http.server import BaseHTTPRequestHandler
 from pathlib import Path
+from unittest.mock import patch
+
+from pydantic import BaseModel
+
+from ..ORCHESTRATOR_beta_C68__shared import GenerationJobs
 
 ENGINE = Path(__file__).resolve().parents[2]
 
+
+def restore_reuse(jobs, generation):
+    witness = {"base_generation": generation, "inputs": {}, "graph_config": None, "endpoints": {}}
+    with patch("ORCHESTRATOR_beta_C68.generation.UnixConnection") as connection, patch.object(jobs, "_watch_queue"):
+        response = connection.return_value.getresponse.return_value
+        response.status = 200
+        response.read.return_value = json.dumps({"result": witness}).encode()
+        jobs._watch()
+
+
+class RunFixture(BaseModel):
+    state: str = "running"
+    started_at: float = 0.0
+    run_id: str | None = None
+    finished_at: float | None = None
+    message: str | None = None
+
+
+def project_jobs(root, *, watch_code=False, database_socket="socket"):
+    binding = {"root": str(root), "control_root": "control", "manifest_path": "manifest.md",
+               "manifest_sha256": "a" * 64, "project_prefix": "AN"}
+    return GenerationJobs("test", binding, database_socket, watch_code=watch_code)
+
+
+def lifecycle_job(jobs, name, arguments):
+    request = jobs.binding | {"instance_id": jobs.instance_id, "name": name, "arguments": arguments}
+    with (patch.object(jobs, "_await_lifecycle", side_effect=lambda job: job),
+          patch.object(jobs.watcher.queue, "put")):
+        return jobs.lifecycle(request)
 
 
 def project(root):
@@ -33,6 +67,9 @@ def project(root):
 
 
 class Kernel(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.reply(409 if self.path.startswith("/model?") else 404, {})
+
     def do_PUT(self):
         payload = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
         if self.path == '/ingestion/issues':
@@ -53,9 +90,14 @@ class Kernel(BaseHTTPRequestHandler):
         if self.path == '/generation/native-delta' and self.server.delta_error is not None:
             status, code = self.server.delta_error
             response = {'error': {'code': code}}
+        self.reply(status, response)
+
+    def reply(self, status, response, headers=()):
         body = json.dumps(response).encode()
         self.send_response(status)
         self.send_header('Content-Length', str(len(body)))
+        for name, value in headers:
+            self.send_header(name, value)
         self.end_headers()
         self.wfile.write(body)
 
@@ -74,8 +116,8 @@ class Server(socketserver.UnixStreamServer):
 
 
 @contextmanager
-def kernel_server(root):
-    with Server(str(root / 'kernel.sock'), Kernel) as kernel:
+def kernel_server(root, handler=Kernel):
+    with Server(str(root / 'kernel.sock'), handler) as kernel:
         kernel.generations = []
         kernel.payloads = []
         kernel.paths = []
@@ -89,14 +131,21 @@ def kernel_server(root):
 
 
 class Connection(http.client.HTTPConnection):
-    def __init__(self, path):
-        super().__init__('localhost', timeout=2)
+    def __init__(self, path, timeout=2):
+        super().__init__('localhost', timeout=timeout)
         self.path = str(path)
 
     def connect(self):
         self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         self.sock.settimeout(self.timeout)
         self.sock.connect(self.path)
+
+
+def request_json(path, method, endpoint, payload=None, *, timeout=2):
+    with closing(Connection(path, timeout=timeout)) as connection:
+        connection.request(method, endpoint, None if payload is None else json.dumps(payload))
+        response = connection.getresponse()
+        return response.status, json.load(response)
 
 
 def wait_for(predicate, process, timeout=30):
@@ -121,7 +170,7 @@ def latest(path):
         conn.close()
 
 @contextmanager
-def watch_project(root, *, watch_code=False):
+def watch_project(root, *, watch_code=False, skip_archives=False):
     control, manifest = project(root)
     (control / '__TKT').mkdir()
     binding = {'root': str(root), 'control_root': control.name, 'manifest_path': manifest.name,
@@ -136,6 +185,8 @@ def watch_project(root, *, watch_code=False):
                    '--database-socket', str(root / 'kernel.sock')]
         if watch_code:
             command.append('--watch-code')
+        if skip_archives:
+            command.append('--skip-archives')
         with subprocess.Popen(command, cwd=ENGINE, env=env) as process:
             try:
                 wait_for(lambda: (latest(socket_path) or {}).get('generation') == '1', process)

@@ -1,10 +1,13 @@
 """Open a private database bound to one Project manifest."""
 
+import json
 import os
 from pathlib import Path
 import stat
 
 from .query_engine import connect
+from .project_structure import ensure_structure_table, replace_structure
+from .model_projection import ensure_model_tables, replace_model_projection
 from .table_names import main_objects, migrate_legacy_names, sync_query_views
 
 
@@ -52,6 +55,18 @@ def open_bound_database(value, manifest_sha256, instance_id):
         migrated = migrate_legacy_names(connection, objects, legacy=legacy)
         connection.execute('CREATE TABLE IF NOT EXISTS mrt_atoms (reference VARCHAR PRIMARY KEY, "content.summary" VARCHAR)')
         connection.execute("CREATE TABLE IF NOT EXISTS ops_generation (id VARCHAR, model VARCHAR, structure VARCHAR)")
+        missing = "mrt_project_structure" not in main_objects(connection)
+        model_missing = "mrt_model_entities" not in main_objects(connection)
+        ensure_structure_table(connection)
+        ensure_model_tables(connection)
+        if missing or model_missing:
+            row = connection.execute("SELECT model, structure FROM ops_generation").fetchone()
+            if row:
+                if missing:
+                    replace_structure(connection, row[1])
+                if model_missing and isinstance(json.loads(row[0]).get("bindings"), dict):
+                    replace_model_projection(connection, json.loads(row[0]))
+            migrated = True
         if migrated:
             sync_query_views(connection)
         connection.execute("COMMIT")

@@ -6,7 +6,7 @@ import shutil
 import subprocess
 import unittest
 
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.workflow_spec import compile_workflow
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.import_graph__shared import compile_workflow
 
 LEAN = os.environ.get('LEAN_BIN') or shutil.which('lean')
 SCRIPT = Path(__file__).resolve().parents[1] / 'WorkflowTrace.lean'

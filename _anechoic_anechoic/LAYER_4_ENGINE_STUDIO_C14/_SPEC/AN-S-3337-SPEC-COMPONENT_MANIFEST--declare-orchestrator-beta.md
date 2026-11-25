@@ -8,9 +8,9 @@ context:
   template: component_manifest
   lens: SPEC
 state:
-  status: active
-  version: 23
-  updated_at: "2026-11-23T10:32:23.335449+00:00"
+  status: "active"
+  version: 26
+  updated_at: "2026-11-24T22:48:50.554424+00:00"
 ---
 ## Summary
 
@@ -29,17 +29,39 @@ declare_entity(
         name='Orchestrator Beta',
         lens_whitelist=['DES', 'SPEC'],
         boundaries={'code': {'imports': {'only': ['metrics__shared.is_measurement_input',
+                                                    'ADAPTERS_C30__shared.mark_startup_timing',
                                                     'ORCHESTRATOR_beta_C68__shared',
                                                     'ORCHESTRATOR_beta_C68__shared.Flow',
                                                     'ORCHESTRATOR_beta_C68__shared.GenerationJobs',
-                                                    'lifecycle_queries.lifecycle_context', 'lifecycle_queries.lifecycle_sql']},
+                                                    'lifecycle_queries.lifecycle_context', 'lifecycle_queries.lifecycle_sql',
+                                                    'ORCHESTRATOR_beta_C68__shared.ArchiveCoverageLost',
+                                                    'ORCHESTRATOR_beta_C68__shared.ArchiveInputsChanged',
+                                                    'ORCHESTRATOR_beta_C68__shared.DeltaRequiresReconciliation',
+                                                    'ORCHESTRATOR_beta_C68__shared.PollComplete',
+                                                    'ORCHESTRATOR_beta_C68__shared.WorkerIngestionFailure']},
                               'exports': {
+                                  'ORCHESTRATOR_beta_C68__shared.ArchiveCoverageLost': {'private': ['LAYER_4_ENGINE_STUDIO_C14/ORCHESTRATOR_beta_C68/ORCHESTRATOR_beta_C68__tests']},
+                                  'ORCHESTRATOR_beta_C68__shared.ArchiveInputsChanged': {'private': ['LAYER_4_ENGINE_STUDIO_C14/ORCHESTRATOR_beta_C68/ORCHESTRATOR_beta_C68__tests']},
+                                  'ORCHESTRATOR_beta_C68__shared.DeltaRequiresReconciliation': {'private': ['LAYER_4_ENGINE_STUDIO_C14/ORCHESTRATOR_beta_C68/ORCHESTRATOR_beta_C68__tests']},
+                                  'ORCHESTRATOR_beta_C68__shared.PollComplete': {'private': ['LAYER_4_ENGINE_STUDIO_C14/ORCHESTRATOR_beta_C68/ORCHESTRATOR_beta_C68__tests']},
+                                  'ORCHESTRATOR_beta_C68__shared.WorkerIngestionFailure': {'private': ['LAYER_4_ENGINE_STUDIO_C14/ORCHESTRATOR_beta_C68/ORCHESTRATOR_beta_C68__tests']},
                                   'lifecycle_queries.lifecycle_context': {'private': ['LAYER_4_ENGINE_STUDIO_C14/ORCHESTRATOR_beta_C68/ORCHESTRATOR_beta_C68__tests']},
                                   'lifecycle_queries.lifecycle_sql': {'private': ['LAYER_4_ENGINE_STUDIO_C14/ORCHESTRATOR_beta_C68/ORCHESTRATOR_beta_C68__tests']},
                                   'ORCHESTRATOR_beta_C68__shared': {'private': ['LAYER_4_ENGINE_STUDIO_C14/ORCHESTRATOR_beta_C68/ORCHESTRATOR_beta_C68__tests']},
                                           'ORCHESTRATOR_beta_C68__shared.Flow': {'private': ['LAYER_4_ENGINE_STUDIO_C14/ORCHESTRATOR_beta_C68/ORCHESTRATOR_beta_C68__tests']},
                                           'ORCHESTRATOR_beta_C68__shared.GenerationJobs': {'private': ['LAYER_4_ENGINE_STUDIO_C14/ORCHESTRATOR_beta_C68/ORCHESTRATOR_beta_C68__tests']}}},
-         'io': {'server': {'jobs': {'transport': 'http',
+         'io': {'server': {'project_peer_owner': {'transport': 'cli', 'runner': 'managed_python',
+                                                     'module': 'ORCHESTRATOR_beta_C68.project_peer_owner',
+                                                     'stack': 'beta_next', 'supervisor': 'C21',
+                                                     'arguments': 'selected Project binding and peer settings',
+                                                     'readiness': 'peers.ready after bound peers start'},
+                           'shared_peer_owner': {'transport': 'newline-delimited JSON over private Unix socket',
+                                                    'runner': 'managed_python',
+                                                    'module': 'ORCHESTRATOR_beta_C68.shared_peer_owner',
+                                                    'stack': 'beta_next', 'supervisor': 'C21',
+                                                    'arguments': ['--socket', '<owner-socket>', '--host-settings', '<settings>'],
+                                                    'operations': ['select', 'status', 'lease']},
+                           'jobs': {'transport': 'http',
                                     'socket': 'private Unix socket',
                                     'runner': 'managed_python',
                                     'module': 'ORCHESTRATOR_beta_C68.ORCHESTRATOR_beta_C68__shared',
@@ -82,7 +104,8 @@ declare_entity(
          'state': {'reads': ['pinned Project binding',
                              'Project source change events',
                              'code and dependency file events when the Graph is enabled'],
-                   'writes': ['active build, lifecycle request, latest Worker outcome and admitted input proof in memory']}},
+                   'writes': ['active build, lifecycle request, latest Worker outcome and admitted input proof in memory',
+                              'candidate peer, warm Worker, and shared lease state']}},
     ),
 )
 ```

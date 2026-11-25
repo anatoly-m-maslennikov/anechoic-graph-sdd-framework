@@ -77,6 +77,28 @@ class StartupCheckpointTests(unittest.TestCase):
             rows = _query(client, 'SELECT relative_path, "content.summary" FROM atoms').json()["result"]["rows"]
             self.assertEqual([[moved["relative_path"], "edited"]], rows)
 
+    def test_reuse_witness_legacy_shape_and_invalid_inputs(self):
+        data = _baseline()
+        witness = data["reuse"]
+        del witness["inputs"]["carrier_schema"]
+        witness["inputs"]["graph"] = "disabled"
+        witness["graph_config"] = None
+        with _server() as client:
+            self._accepted(client, "/generation", data)
+            proof = self._reuse(client)
+            for key, value in witness.items():
+                self.assertEqual(value, proof[key])
+            self.assertNotIn("folder_hashes", proof)
+            invalid = [None, witness | {"endpoints": {}}, witness | {"extra": 1},
+                       witness | {"inputs": witness["inputs"] | {"carrier_schema": None}},
+                       witness | {"inputs": witness["inputs"] | {"graph": "invalid"}}]
+            for item in invalid:
+                with self.subTest(witness=item):
+                    response = client.put("/generation", json=data | {"reuse": item})
+                    self.assertEqual(400, response.status_code, response.text)
+                    self.assertIn("Invalid reuse witness", response.text)
+                    self.assertEqual(proof, self._reuse(client))
+
     def test_conditional_archive_reuse_and_replacement_preserve_off_path_archives(self):
         data = _baseline()
         snapshot = data["snapshot"]

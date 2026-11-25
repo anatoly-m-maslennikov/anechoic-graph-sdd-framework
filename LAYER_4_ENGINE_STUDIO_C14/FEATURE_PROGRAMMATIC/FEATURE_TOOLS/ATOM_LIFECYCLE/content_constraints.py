@@ -2,7 +2,9 @@
 """Compile finite Content constraints from Current formal declarations."""
 from __future__ import annotations
 
-from dataclasses import dataclass
+from pydantic import ConfigDict
+from pydantic.dataclasses import dataclass
+
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
     Name as _subject_Name,
     Path as _subject_Path,
@@ -159,9 +161,12 @@ def compile_content_constraints(rows):
     return [record for _, record in sorted({repr(record): record for record in records}.items())]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, config=ConfigDict(strict=True, extra="forbid"))
 class ContentConstraints:
-    records: tuple
+    records: tuple[
+        tuple[str, tuple[str, ...], tuple[str, ...] | None, tuple[str, ...] | None, int, int, tuple[str, ...], str],
+        ...,
+    ]
 
     def validate(self, row):  # noqa: C901
         body = source_markdown(row)

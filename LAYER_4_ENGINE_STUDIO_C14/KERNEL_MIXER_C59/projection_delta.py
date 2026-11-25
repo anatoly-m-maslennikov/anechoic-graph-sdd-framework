@@ -3,8 +3,10 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Any
+from pydantic import ConfigDict, InstanceOf
+from pydantic.dataclasses import dataclass
+
+from typing import Annotated, Any
 
 from .graph_store import GraphState, apply_graph_delta, graph_state, update_graph
 from .content_schema import ContentSchema
@@ -13,17 +15,17 @@ from .index_delta import MaterializationDelta
 from .public_rows import SCOPE_FIELDS, _snapshot_atom, atom_fields, atom_key, insert_public_rows, projected_rows
 
 
-@dataclass(frozen=True)
+@dataclass(config=ConfigDict(strict=True, extra="forbid"), frozen=True)
 class ProjectionSnapshot:
-    atoms: dict[tuple[str, str], dict[str, Any]]
-    scopes: dict[str, dict[str, Any]]
+    atoms: Annotated[dict[tuple[str, str], dict[str, Any]], InstanceOf()]
+    scopes: Annotated[dict[str, dict[str, Any]], InstanceOf()]
     graph: GraphState
     header_schema: HeaderSchema
     content_schema: ContentSchema
-    atom_sources: dict[tuple[str, str], dict[str, Any]]
+    atom_sources: Annotated[dict[tuple[str, str], dict[str, Any]], InstanceOf()]
 
 
-@dataclass(frozen=True)
+@dataclass(config=ConfigDict(strict=True, extra="forbid"), frozen=True)
 class ProjectionChange:
     deleted_atoms: int
     deleted_scopes: int

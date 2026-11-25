@@ -22,6 +22,17 @@ UV_PROJECT_ENVIRONMENT="$PWD/LAYER_4_ENGINE_STUDIO_C14/.venv-dev" PYTHONPATH="$P
 
 `mcp-http-start` reports ready only after the loopback HTTP health check passes.
 
+Beta images build with `ANECHOIC_RUNTIME_PROFILE=dev-preprod`. An explicit
+Docker build can select another profile with
+`--build-arg ANECHOIC_RUNTIME_PROFILE=prod`. To select a profile for a
+container at startup, pass `-e ANECHOIC_RUNTIME_PROFILE=test` to `docker run`.
+See [runtime profiles](../README.md#runtime-profiles) for the storage and
+archive switches.
+
+Shared Setup passes its configured Workbench and Journal storage values as
+environment overrides. The same variables in the launch environment take
+precedence over those settings.
+
 `DuckPGQ.LICENSE` was copied from `cwida/duckpgq-extension` at commit
 `9c11bc192a071c9e44cef16cced90a22d7d7db2c`.
 

@@ -23,8 +23,8 @@ from .workbench_docker_support import defer_container_cleanup, docker_deadline_e
 
 _ROLES = {
     "mcp": ("MCP_PATCHBAY_C21.FEATURE_MCP.server", "--transport", "streamable-http"),
-    "api": ("WORKBENCH_BACKEND_beta_C70.runtime", "--role", "api"),
-    "peer-owner": ("WORKBENCH_BACKEND_beta_C70.runtime", "--role", "peer-owner"),
+    "api": ("API_MIXER_beta_C82.API_MIXER_beta_C82__shared", "--role", "api"),
+    "peer-owner": ("ORCHESTRATOR_beta_C68.project_peer_owner",),
     "kernel": ("KERNEL_MIXER_beta_C67.DATABASE_SERVER_beta_C71.DATABASE_SERVER_beta_C71__shared",),
     "orchestrator": ("ORCHESTRATOR_beta_C68.ORCHESTRATOR_beta_C68__shared",),
 }
@@ -60,7 +60,9 @@ class PackagedProjectSupervisionTests(unittest.IsolatedAsyncioTestCase):
         image = os.environ.get("ANECHOIC_IMAGE", "")
         self.assertRegex(image, r"\Asha256:[0-9a-f]{64}\Z", "Require the immutable candidate image ID")
         environment = self._docker("image", "inspect", "--format", "{{json .Config.Env}}", image)
-        beta = "ANECHOIC_RUNTIME_STACK=beta" in json.loads(environment)
+        env = set(json.loads(environment))
+        beta = "ANECHOIC_RUNTIME_STACK=beta_next" in env
+        self._roles = dict(_ROLES)
         root = Path(self.enterContext(tempfile.TemporaryDirectory(prefix="anechoic-supervision-"))).resolve()
         subprocess.run(["git", "init", "--quiet", str(root)], check=True, timeout=image_timeout(10))
         project(root)
@@ -109,14 +111,14 @@ class PackagedProjectSupervisionTests(unittest.IsolatedAsyncioTestCase):
 
     def _processes(self, *signal_target):
         return json.loads(self._docker("exec", self.container, "python", "-B", "-c", _PROCESS_PROBE,
-                                       json.dumps(_ROLES), *signal_target))
+                                       json.dumps(self._roles), *signal_target))
 
     async def _ready(self, http, url, *, deadline_seconds=90):
         deadline = monotonic() + deadline_seconds
         while await asyncio.to_thread(observing, self.container, deadline):
             try:
                 response = await http.get(url + HEALTH_PATH, timeout=image_timeout(2))
-                if response.status_code == 200 and response.json()["ready"] is True:
+                if response.status_code == 200 and response.json()["state"] == "ready":
                     return
             except (httpx2.TransportError, ValueError, KeyError):
                 pass
@@ -148,7 +150,7 @@ class PackagedProjectSupervisionTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual((query_id, [[200]]), (page["query_id"], page["rows"]))
 
     def _assert_beta_processes(self, processes):
-        self.assertEqual({role: 1 for role in _ROLES}, {role: len(pids) for role, pids in processes.items()}, processes)
+        self.assertEqual({role: 1 for role in self._roles}, {role: len(pids) for role, pids in processes.items()}, processes)
 
     async def _replacement(self, role, original_pid):
         await asyncio.to_thread(self._processes, role, str(original_pid))

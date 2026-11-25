@@ -3,8 +3,10 @@
 
 Compile explicit property, direct-value and child cardinality and literal value domains.
 """
-from dataclasses import dataclass
 import re
+
+from pydantic import ConfigDict
+from pydantic.dataclasses import dataclass
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import iter_formal_claims
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_native_model_claim
@@ -123,12 +125,12 @@ def compile_header_constraints(rows):
     return [dict(zip(keys, item)) for item in sorted(records, key=repr)]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, config=ConfigDict(strict=True, extra="forbid"))
 class HeaderConstraints:
-    properties: tuple
-    domains: tuple
-    children: tuple = ()
-    values: tuple = ()
+    properties: tuple[tuple[str, str, str, str, str], ...]
+    domains: tuple[tuple[str, str, str, frozenset[str], str], ...]
+    children: tuple[tuple[str, str, str, tuple[int | str, ...], str], ...] = ()
+    values: tuple[tuple[str, str, str, tuple[int, int | None], str], ...] = ()
 
     def validate(self, view, *, metadata=None):
         metadata = _logical_groups(view if metadata is None else metadata, view.get('role'))

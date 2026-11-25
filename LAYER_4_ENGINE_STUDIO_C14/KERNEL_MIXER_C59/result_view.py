@@ -3,32 +3,34 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from pydantic import ConfigDict
+from pydantic.dataclasses import dataclass
+
 from typing import Any
 
 from .graph_store import quote_identifier
 
 
-@dataclass(frozen=True)
+@dataclass(config=ConfigDict(strict=True, extra="forbid"), frozen=True)
 class Sort:
     column: int
     direction: str
 
 
-@dataclass(frozen=True)
+@dataclass(config=ConfigDict(strict=True, extra="forbid"), frozen=True)
 class Contains:
     column: int
     value: str
 
 
-@dataclass(frozen=True)
+@dataclass(config=ConfigDict(strict=True, extra="forbid"), frozen=True)
 class Grid:
     sort: tuple[Sort, ...]
     filters: tuple[Contains, ...]
     group_by: Sort | None
 
 
-@dataclass(frozen=True)
+@dataclass(config=ConfigDict(strict=True, extra="forbid"), frozen=True)
 class PageQuery:
     count_sql: str
     count_parameters: tuple[str, ...]

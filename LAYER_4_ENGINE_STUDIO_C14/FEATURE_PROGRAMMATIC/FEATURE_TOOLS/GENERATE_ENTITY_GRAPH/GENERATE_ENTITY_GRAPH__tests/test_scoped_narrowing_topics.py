@@ -3,9 +3,9 @@ import sys
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.current_subject_common import subject_facts
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import compose_current_graph, compose_narrowing_graph
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import compose_contract_graph
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__tests.enhanced_graph_test_support import carrier
 
 
 def declaration(number, subject, name, cls, base=None):
@@ -20,14 +20,21 @@ def declaration(number, subject, name, cls, base=None):
 
 class ScopedNarrowingTopicsTests(unittest.TestCase):
     def test_structure_containment_is_scoped_to_namespace(self):
-        _, facts, _ = subject_facts('ANECHOIC_STRUCTURE/ENGINE/PROGRAMMATIC')
-        self.assertEqual([(f['source'], f['kind'], f['target']) for f in facts], [
-            ('ANECHOIC_STRUCTURE/ENGINE', 'IS_CONTAINED_BY', 'ANECHOIC_STRUCTURE'),
-            ('ANECHOIC_STRUCTURE/ENGINE/PROGRAMMATIC', 'IS_CONTAINED_BY', 'ANECHOIC_STRUCTURE/ENGINE')])
-        _, legacy, _ = subject_facts('Node/Continuant')
-        self.assertEqual(legacy[0]['kind'], 'NARROWER_THAN')
-        _, relation, _ = subject_facts('Relation//RUNS')
-        self.assertEqual(relation[0]['kind'], 'INSTANCE_OF')
+        graph, _ = compose_current_graph([
+            carrier("CA-R-1", {"active": "ANECHOIC_STRUCTURE/ENGINE/PROGRAMMATIC"}),
+            carrier("CA-R-2", {"active": "Node/Continuant"}),
+            carrier("CA-R-3", {"active": "Relation//RUNS"}),
+        ])
+        names = {row["id"]: row["identity"] for row in graph["nodes"]}
+        self.assertEqual({
+            ("ANECHOIC_STRUCTURE/ENGINE", "IS_CONTAINED_BY", "ANECHOIC_STRUCTURE"),
+            ("ANECHOIC_STRUCTURE/ENGINE/PROGRAMMATIC", "IS_CONTAINED_BY", "ANECHOIC_STRUCTURE/ENGINE"),
+            ("Node/Continuant", "NARROWER_THAN", "Node"),
+            ("Relation//RUNS", "INSTANCE_OF", "Relation"),
+        }, {
+            (names[row["relation_source"]], row["kind"], names[row["relation_target"]])
+            for row in graph["edges"]
+        })
 
     def test_native_class_declarations_admit_double_slash_narrowing(self):
         actor = declaration(1, 'ANECHOIC_MODEL <+ Node/Continuant/Actor', 'Actor', 'Actor')

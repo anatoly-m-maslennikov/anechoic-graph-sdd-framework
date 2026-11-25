@@ -16,6 +16,7 @@ from .work_journal import (
     MAX_DATABASE_EVENT_BYTES,
     TABLE,
     _FILE_NAME,
+    _JournalRecord,
     _canonical_json_bytes,
     _commit_record,
     _fingerprint,
@@ -113,10 +114,10 @@ class SavedQueryJournal:
             raise ValueError("saved query kind must be query or view")
         now = datetime.now(UTC)
         record = _journal_record({"saved_query_id": str(uuid7()), "kind": kind, "sql": sql,
-                                  "saved_at": now.isoformat(), "name": name})
+                                  "saved_at": now.isoformat(), "name": name}).as_event()
         local_date = now.date().isoformat()
-        row = {"author": SAVED_QUERY_AUTHOR, "local_date": local_date, "event": record}
-        if len(_canonical_json_bytes(row if self._native else record)) > MAX_DATABASE_EVENT_BYTES:
+        row = _JournalRecord(author=SAVED_QUERY_AUTHOR, local_date=local_date, event=record)
+        if len(_canonical_json_bytes(row.model_dump() if self._native else record)) > MAX_DATABASE_EVENT_BYTES:
             raise ValueError("saved query event exceeds the Journal record size limit")
         try:
             if self._native:

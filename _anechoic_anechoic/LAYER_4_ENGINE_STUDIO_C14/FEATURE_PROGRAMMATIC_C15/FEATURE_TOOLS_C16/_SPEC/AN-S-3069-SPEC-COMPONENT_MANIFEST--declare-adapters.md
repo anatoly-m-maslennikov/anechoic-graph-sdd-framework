@@ -8,9 +8,9 @@ context:
   template: component_manifest
   lens: SPEC
 state:
-  status: active
-  version: 55
-  updated_at: "2026-11-23T10:26:33.104737+00:00"
+  status: "active"
+  version: 62
+  updated_at: "2026-11-25T10:31:29.590036+00:00"
 ---
 ## Summary
 
@@ -42,29 +42,45 @@ declare_entity(
                                      'ADAPTERS_C30__shared.capture_carrier_delta', 'ADAPTERS_C30__shared.capture_ticket_delta',
                                      'ADAPTERS_C30__shared.ReadContext', 'ADAPTERS_C30__shared.revalidate_native',
                                      'ADAPTERS_C30__shared.atomic_tempfile', 'ADAPTERS_C30__shared.TEMPORARY_DIRECTORY',
-                                     'ADAPTERS_C30__shared.frontmatter_bounds', 'ADAPTERS_C30__shared.source_body']},
+                                     'ADAPTERS_C30__shared.frontmatter_bounds', 'ADAPTERS_C30__shared.source_body',
+                                     'ADAPTERS_C30__shared.CarrierError', 'ADAPTERS_C30__shared.LimitReached',
+                                     'ADAPTERS_C30__shared.ReadFailure', 'ADAPTERS_C30__shared.SourceWatcher',
+                                     'ADAPTERS_C30__shared.TemporaryBoundaryError', 'ADAPTERS_C30__shared.append_record',
+                                     'ADAPTERS_C30__shared.append_sealed_events', 'ADAPTERS_C30__shared.attach_framework',
+                                     'ADAPTERS_C30__shared.configured_journal_root', 'ADAPTERS_C30__shared.journal_inbox',
+                                     'ADAPTERS_C30__shared.journal_storage', 'ADAPTERS_C30__shared.migrate_project_database',
+                                     'ADAPTERS_C30__shared.parse_carrier']},
                 'exports': {
                     'ADAPTERS_C30__shared.TEMPORARY_DIRECTORY': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ADAPTERS_C30/ADAPTERS_C30__tests']},
                     'ADAPTERS_C30__shared.MAX_DATABASE_EVENT_BYTES': {'private': ['C59']},
                     'ADAPTERS_C30__shared.NativeCapture': 'public',
                     'ADAPTERS_C30__shared.NativeManifestChanged': 'public',
-                    'ADAPTERS_C30__shared.SourceWatcher': {'private': ['C59']},
-                    'ADAPTERS_C30__shared.UniqueSafeLoader': {'private': ['C59', 'C61']},
-                    'ADAPTERS_C30__shared.append_sealed_events': {'private': ['C59', 'C71']},
+                    'ADAPTERS_C30__shared.SourceWatcher': {'private': ['C59', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ADAPTERS_C30/ADAPTERS_C30__tests']},
+                    'ADAPTERS_C30__shared.UniqueSafeLoader': {'private': [
+                        'C59', 'C61', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/VALIDATE_ATOMS/validate_atoms_workers']},
+                    'ADAPTERS_C30__shared.append_record': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ADAPTERS_C30/ADAPTERS_C30__tests']},
+                    'ADAPTERS_C30__shared.append_sealed_events': {'private': ['C59', 'C71', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ADAPTERS_C30/ADAPTERS_C30__tests']},
                     'ADAPTERS_C30__shared.atom_identifier': {'private': ['C59']},
-                    'ADAPTERS_C30__shared.build_code_access_ownership': {'private': ['C59']},
+                    'ADAPTERS_C30__shared.CodeAccessOwnership': {'private': [
+                        'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_MODEL_VALIDATION/FEATURE_MODEL_VALIDATION__tests']},
+                    'ADAPTERS_C30__shared.build_code_access_ownership': {'private': [
+                        'C59', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_MODEL_VALIDATION/FEATURE_MODEL_VALIDATION__tests']},
                     'ADAPTERS_C30__shared.canonical_json_bytes': {'private': ['C59']},
                     'ADAPTERS_C30__shared.check_native_manifest': 'public',
-                    'ADAPTERS_C30__shared.check_yaml_resources': {'private': ['C59', 'C61']},
-                    'ADAPTERS_C30__shared.configured_journal_root': {'private': ['C59']},
+                    'ADAPTERS_C30__shared.check_yaml_resources': {'private': [
+                        'C59', 'C61', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/VALIDATE_ATOMS/validate_atoms_workers']},
+                    'ADAPTERS_C30__shared.configured_journal_root': {'private': ['C59', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ADAPTERS_C30/ADAPTERS_C30__tests']},
                     'ADAPTERS_C30__shared.content_record_span': {'private': ['C59']},
                     'ADAPTERS_C30__shared.emits_instance_inverse': {'private': ['C59']},
-                    'ADAPTERS_C30__shared.journal_inbox': {'private': ['C59']},
-                    'ADAPTERS_C30__shared.journal_storage': {'private': ['C59']},
+                    'ADAPTERS_C30__shared.journal_inbox': {'private': ['C59', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ADAPTERS_C30/ADAPTERS_C30__tests']},
+                    'ADAPTERS_C30__shared.journal_storage': {'private': ['C59', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ADAPTERS_C30/ADAPTERS_C30__tests']},
                     'ADAPTERS_C30__shared.json_value': {'private': ['C59']},
                     'ADAPTERS_C30__shared.module_visibility': {'private': ['C59']},
                     'ADAPTERS_C30__shared.native_header_view': 'public',
-                    'ADAPTERS_C30__shared.parse_component_manifest': {'private': ['C59', 'C74']},
+                    'ADAPTERS_C30__shared.parse_component_manifest_fields': {'private': [
+                        'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_FORMAL_MODEL_ENGINE/FEATURE_FORMAL_MODEL_ENGINE__tests']},
+                    'ADAPTERS_C30__shared.parse_component_manifest': {'private': [
+                        'C59', 'C74', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_FORMAL_MODEL_ENGINE/FEATURE_FORMAL_MODEL_ENGINE__tests']},
                     'ADAPTERS_C30__shared.pending_database_journal': {'private': ['C59']},
                     'ADAPTERS_C30__shared.read_component_contract': {'private': ['C59']},
                     'ADAPTERS_C30__shared.read_component_seed_manifest': {'private': ['C59']},
@@ -78,17 +94,23 @@ declare_entity(
                     'ADAPTERS_C30__shared.direct_markdown': 'public',
                     'ADAPTERS_C30__shared.formal_claim_fences': 'public',
                     'ADAPTERS_C30__shared.parse_content': 'public',
+                    'ADAPTERS_C30__shared.unfenced_atx_headings': {'private': [
+                        'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/GENERATE_ENTITY_GRAPH',
+                        'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/VALIDATE_ATOMS/validate_atoms_workers']},
                     'ADAPTERS_C30__shared.section_markdown': 'public',
                     'ADAPTERS_C30__shared.source_markdown': 'public',
                     'ADAPTERS_C30__shared.capture_native': 'public',
                     'ADAPTERS_C30__shared.capture_indexed_lifecycle': {'private': [
                         'C16', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ADAPTERS_C30/ADAPTERS_C30__tests']},
-                    'ADAPTERS_C30__shared.attach_framework': {'shared': ['C59', 'C71']},
-                    'ADAPTERS_C30__shared.migrate_project_database': {'shared': ['C59', 'C71']},
+                    'ADAPTERS_C30__shared.attach_framework': {'shared': ['C59', 'C71', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ADAPTERS_C30/ADAPTERS_C30__tests']},
+                    'ADAPTERS_C30__shared.migrate_project_database': {'shared': ['C59', 'C71', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ADAPTERS_C30/ADAPTERS_C30__tests']},
+                    'ADAPTERS_C30__shared.mark_startup_timing': {'private': ['C68', 'C69', 'CS1']},
                     'ADAPTERS_C30__shared.native_carrier_hashes': {'shared': ['C69', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ADAPTERS_C30/ADAPTERS_C30__tests']},
                     'ADAPTERS_C30__shared.prepare_generation_snapshot': {'shared': ['C69', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ADAPTERS_C30/ADAPTERS_C30__tests']},
                     'ADAPTERS_C30__shared.capture_ticket_delta': {'shared': ['C69', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ADAPTERS_C30/ADAPTERS_C30__tests']},
                     'ADAPTERS_C30__shared.capture_carrier_delta': {'shared': ['C69', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ADAPTERS_C30/ADAPTERS_C30__tests']},
+                    'ADAPTERS_C30__shared.NativeSnapshotChanged': {'private': ['C69']},
+                    'ADAPTERS_C30__shared.UnrepresentableCarrierDelta': {'private': ['C69', 'LAYER_4_ENGINE_STUDIO_C14/WORKERS_beta_C69/WORKERS_beta_C69__tests']},
                     'ADAPTERS_C30__shared.read_structure': 'public',
                     'ADAPTERS_C30__shared.StructureSnapshot': 'public',
                     'topic_dependencies__pub.validate_dependencies_claim': 'public',

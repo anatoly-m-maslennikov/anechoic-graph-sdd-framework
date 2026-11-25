@@ -25,11 +25,15 @@ class GenerationProfilerTests(unittest.TestCase):
             self.assertEqual(0, result.returncode, result.stderr)
             self.assertEqual('ok', report['status'])
             self.assertTrue((directory / 'worker.pstats').is_file())
-            self.assertIn('capture_prepare', [entry['stage'] for entry in report['stages']])
+            stages = {entry['stage']: entry for entry in report['stages']}
+            for name in ('capture_prepare', 'capture_finish', 'manifest_build_CS4__shared', 'realization_graph'):
+                self.assertGreaterEqual(stages[name]['wall_seconds'], 0)
+                self.assertGreaterEqual(stages[name]['worker_cpu_seconds'], 0)
             self.assertIn('atoms', report['snapshot_counts'])
             self.assertTrue((directory / 'generation' / 'model.json').is_file())
-            if result.returncode == 0:
-                self.assertTrue((directory / 'manifest_build_CS4__shared.pstats').is_file())
+            for child in ('manifest_build_CS4__shared', 'realization_graph'):
+                self.assertTrue((directory / (child + '.pstats')).is_file())
+                self.assertTrue((directory / (child + '-children.json')).is_file())
 
     def test_failure_writes_diagnostics(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -43,7 +47,7 @@ class GenerationProfilerTests(unittest.TestCase):
             self.assertNotEqual(0, result.returncode)
             directory = Path(result.stdout.strip().splitlines()[0])
             self.assertEqual('failed', json.loads((directory / 'report.json').read_text())['status'])
-            self.assertTrue((directory / 'failure.txt').is_file())
+            self.assertIn('Manifest', (directory / 'failure.txt').read_text())
             self.assertTrue((directory / 'worker.pstats').is_file())
 
 

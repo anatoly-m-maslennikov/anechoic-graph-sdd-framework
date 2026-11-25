@@ -12,6 +12,7 @@ from ORCHESTRATOR_beta_C68.lifecycle_queries import lifecycle_sql, lifecycle_con
 
 def database():
     db = duckdb.connect()
+    db.execute('CREATE TABLE ops_ingestion_issues(source VARCHAR, atom_ref VARCHAR, relative_path VARCHAR)')
     db.execute('CREATE TABLE generation(id VARCHAR, model VARCHAR, structure VARCHAR)')
     db.execute('INSERT INTO generation VALUES (?, ?, ?)', ['g', json.dumps({'ticket_labels': ['TASK']}), '{}'])
     db.execute('CREATE TABLE atoms(reference VARCHAR, relative_path VARCHAR, filename VARCHAR, status_group VARCHAR, "header.state.version" BIGINT, "header.state.status" VARCHAR)')
@@ -81,6 +82,14 @@ class LifecycleQueryTests(unittest.TestCase):
 
     def test_generation(self):
         test_context_checks_generation()
+
+    def test_model_omits_declarations_and_duplicate_labels(self):
+        db = database()
+        db.execute("UPDATE generation SET model=?", [json.dumps({"declarations": [1], "ticket_labels": ["TASK"], "other": 2})])
+        sql = lifecycle_sql("AN", "atom_lifecycle_create_draft", {"newAtom": {"template": "axiom"}})
+        row = db.execute(sql).fetchone()
+        self.assertEqual(json.loads(row[2]), {"other": 2})
+        self.assertEqual(json.loads(row[3]), ["TASK"])
 
     def test_malformed_template_and_revision_allocation(self):
         db = database()

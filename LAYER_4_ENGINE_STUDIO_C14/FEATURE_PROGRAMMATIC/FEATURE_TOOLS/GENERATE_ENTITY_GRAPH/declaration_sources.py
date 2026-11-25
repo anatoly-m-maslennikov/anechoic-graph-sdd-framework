@@ -5,11 +5,9 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import matches_named_value
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.VALIDATE_ATOMS.validate_atoms_workers.authority import AuthorityContext, Obligation
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.VALIDATE_ATOMS.validate_atoms_workers.check_support import Check
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.VALIDATE_ATOMS.validate_atoms_workers.check_sections import GRAPH_RULE_SOURCES
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.VALIDATE_ATOMS.validate_atoms_workers.graph_rule_body import validated_graph_rule_payload
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.VALIDATE_ATOMS.validate_atoms_workers.support_authority import require_sources
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.VALIDATE_ATOMS.validate_atoms_workers.validate_atoms_workers__shared import (
+    inspect_graph_rule,
+)
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.declaration_evidence import (
     Record,
@@ -38,17 +36,6 @@ def _authority_rows(carriers: list[dict]) -> list[Record]:
                 continue
             rows.append({"binding": dict(binding), "metadata": dict(metadata), "text": text})
     return rows
-
-
-def _body_check(carriers: list[dict]) -> Check:
-    context = AuthorityContext([], 0, 0, 0, [], (), {}, True)
-    obligation = Obligation(
-        "declaration.graph_rule.body",
-        [],
-        True,
-        "Validate the body under currently verified Graph Rule authority.",
-    )
-    return Check(obligation, context, {"sources": _authority_rows(carriers)})
 
 
 def _graph_rule_gaps(
@@ -80,23 +67,20 @@ def _graph_rule_candidate(
 
     body = carrier.get("raw_body")
     subject = _single_valid_governed_subject(carrier)
-    check = _body_check(carriers)
-    authority_ok = require_sources(check, GRAPH_RULE_SOURCES)
-    payload = validated_graph_rule_payload(body if isinstance(body, str) else "", check)
-    diagnostics = [finding["reason"] for finding in check.findings]
-    diagnostics.extend(gap["reason"] for gap in check.gaps)
+    inspection = inspect_graph_rule(body if isinstance(body, str) else "", _authority_rows(carriers))
+    payload, authority, diagnostics = inspection.payload, inspection.authority, inspection.diagnostics
     source_ok = _active_source_matches_metadata(source, metadata)
-    authority_gap = not authority_ok
+    authority_gap = authority is None
 
     if (source_ok and isinstance(body, str) and subject is not None
-            and authority_ok and payload is not None and not diagnostics):
+            and authority is not None and payload is not None and not diagnostics):
         rule = {
             "source": source,
             "subject": subject,
             "summary": payload.summary.strip(),
             "yaml_block": payload.operative_block,
             "evidence": body,
-            "authority": list(check.obligation.authority),
+            "authority": authority,
         }
         return rule, None, authority_gap
 

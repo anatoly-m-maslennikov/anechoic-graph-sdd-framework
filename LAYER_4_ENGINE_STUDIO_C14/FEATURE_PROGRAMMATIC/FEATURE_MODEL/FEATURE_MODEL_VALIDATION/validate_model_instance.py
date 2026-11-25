@@ -10,10 +10,10 @@ def validate_model_instance(
     population_declarations, population_peers, endpoint_registry=None,
 ):
     """Validate fields, outgoing Relations, named checks and declared uniqueness."""
-    validate_model_fields(model_class, properties)
+    admitted = validate_model_fields(model_class, properties, construct_groups=True)
     validate_model_relations(model_class, outgoing_relations, relation_declarations, model_types,
                              endpoint_registry=endpoint_registry)
-    instance = model_class(**properties)
+    instance = model_class(**admitted)
     for name, check in checks.items():
         if check(instance) is not True:
             raise ValueError(f"{name}: instance check failed")

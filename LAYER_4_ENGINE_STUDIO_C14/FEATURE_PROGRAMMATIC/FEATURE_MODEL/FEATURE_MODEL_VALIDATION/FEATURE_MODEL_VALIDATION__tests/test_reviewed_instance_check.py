@@ -1,14 +1,15 @@
 """Evaluation is separate from parsing and uses exact reviewed code."""
 
-from dataclasses import dataclass
+from pydantic import ConfigDict
+from pydantic.dataclasses import dataclass
 from hashlib import sha256
 import unittest
 
 
-from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.reviewed_instance_check import bind_reviewed_instance_check
+from ..FEATURE_MODEL_VALIDATION__shared import bind_reviewed_instance_check
 
 
-@dataclass(frozen=True)
+@dataclass(config=ConfigDict(strict=True, extra="forbid"), frozen=True)
 class ScopeUnit:
     structural_level: int
     container: "ScopeUnit | None" = None

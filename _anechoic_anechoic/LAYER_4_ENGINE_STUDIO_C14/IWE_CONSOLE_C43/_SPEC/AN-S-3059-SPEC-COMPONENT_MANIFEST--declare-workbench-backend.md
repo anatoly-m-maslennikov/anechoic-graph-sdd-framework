@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 53
-  updated_at: '2026-11-23T04:47:55.654512+00:00'
+  version: 56
+  updated_at: '2026-11-24T22:35:58.478737+00:00'
 ---
 
 ## Summary
@@ -39,6 +39,16 @@ declare_entity(
                     'FEATURE_WORKBENCH_BACKEND__shared.compile_status_groups',
                     'FEATURE_WORKBENCH_BACKEND__shared.load_image_schema',
                     'FEATURE_WORKBENCH_BACKEND__shared.schema_asset',
+                    'FEATURE_WORKBENCH_BACKEND__shared.compile_project_schema',
+                    'FEATURE_WORKBENCH_BACKEND__shared.load_registry_asset',
+                    'FEATURE_WORKBENCH_BACKEND__shared.registry_asset',
+                    'FEATURE_WORKBENCH_BACKEND__shared.create_shared_app',
+                    'FEATURE_WORKBENCH_BACKEND__shared.load_host_runtime_config',
+                    'FEATURE_WORKBENCH_BACKEND__shared.AuditSnapshot',
+                    'FEATURE_WORKBENCH_BACKEND__shared.AuditWorker',
+                    'FEATURE_WORKBENCH_BACKEND__shared.expected_carrier',
+                    'FEATURE_WORKBENCH_BACKEND__shared.materialize_delta',
+                    'FEATURE_WORKBENCH_BACKEND__shared.schema_mode',
                     'ADAPTERS_C30__shared.CarrierError',
                     'ADAPTERS_C30__shared.content_key',
                     'ADAPTERS_C30__shared.content_lines',
@@ -283,6 +293,11 @@ declare_entity(
                     'work_journal__pub.pending_database_journal',
                 ],
                 'exports': {
+                    'FEATURE_WORKBENCH_BACKEND__shared.AuditSnapshot': {'private': ['LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/FEATURE_WORKBENCH_BACKEND__tests']},
+                    'FEATURE_WORKBENCH_BACKEND__shared.AuditWorker': {'private': ['LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/FEATURE_WORKBENCH_BACKEND__tests']},
+                    'FEATURE_WORKBENCH_BACKEND__shared.expected_carrier': {'private': ['LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/FEATURE_WORKBENCH_BACKEND__tests']},
+                    'FEATURE_WORKBENCH_BACKEND__shared.materialize_delta': {'private': ['LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/FEATURE_WORKBENCH_BACKEND__tests']},
+                    'FEATURE_WORKBENCH_BACKEND__shared.schema_mode': {'private': ['LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/FEATURE_WORKBENCH_BACKEND__tests']},
                     'FEATURE_WORKBENCH_BACKEND__shared.CHECK': {'private': ['LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/FEATURE_MCP__tests']},
                     'FEATURE_WORKBENCH_BACKEND__shared.LOAD': {'private': ['LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/FEATURE_MCP__tests']},
                     'FEATURE_WORKBENCH_BACKEND__shared.NATIVE_TOOLS': {'private': ['LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/FEATURE_MCP__tests']},
@@ -312,7 +327,8 @@ declare_entity(
                     'FEATURE_WORKBENCH_BACKEND__shared.compile_role_folders': {'private': ['LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/FEATURE_WORKBENCH_BACKEND__tests']},
                     'FEATURE_WORKBENCH_BACKEND__shared.compile_schema': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FEATURE_TOOLS__tests', 'LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/FEATURE_WORKBENCH_BACKEND__tests']},
                     'FEATURE_WORKBENCH_BACKEND__shared.compile_status_groups': {'private': ['LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/FEATURE_WORKBENCH_BACKEND__tests']},
-                    'FEATURE_WORKBENCH_BACKEND__shared.load_host_runtime_config': {'private': ['LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/FEATURE_MCP__tests']},
+                    'FEATURE_WORKBENCH_BACKEND__shared.create_shared_app': {'private': ['LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/FEATURE_WORKBENCH_BACKEND__tests']},
+                    'FEATURE_WORKBENCH_BACKEND__shared.load_host_runtime_config': {'private': ['LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/FEATURE_MCP__tests', 'LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/FEATURE_WORKBENCH_BACKEND__tests']},
                     'FEATURE_WORKBENCH_BACKEND__shared.load_image_schema': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FEATURE_TOOLS__tests', 'LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/FEATURE_WORKBENCH_BACKEND__tests']},
                     'FEATURE_WORKBENCH_BACKEND__shared.resolve_host_project': {'private': ['LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/FEATURE_MCP__tests']},
                     'FEATURE_WORKBENCH_BACKEND__shared.schema_asset': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FEATURE_TOOLS__tests', 'LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/FEATURE_WORKBENCH_BACKEND__tests']},
@@ -335,6 +351,9 @@ declare_entity(
                     'shared_backend_process': {'private': ['LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/FEATURE_MCP__tests']},
                     'shared_backend_process.create_app': {'private': ['LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/FEATURE_MCP__tests']},
                     'workbench_operations.WorkbenchOperations': {'private': ['LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/FEATURE_MCP__tests']},
+                    'FEATURE_WORKBENCH_BACKEND__shared.compile_project_schema': {'private': ['LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/FEATURE_WORKBENCH_BACKEND__tests']},
+                    'FEATURE_WORKBENCH_BACKEND__shared.load_registry_asset': {'private': ['LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/FEATURE_WORKBENCH_BACKEND__tests']},
+                    'FEATURE_WORKBENCH_BACKEND__shared.registry_asset': {'private': ['LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/FEATURE_WORKBENCH_BACKEND__tests']},
                     'FEATURE_WORKBENCH_BACKEND__shared': None,
                 },
             },

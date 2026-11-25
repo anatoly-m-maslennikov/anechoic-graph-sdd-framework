@@ -12,30 +12,43 @@ import stat
 import sys
 import threading
 import uuid
+from typing import Annotated, Literal
+
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from .work_journal import _open_directory
 
 
-_KEYS = {"log_id", "at", "sql", "outcome", "error", "row_count", "column_count"}
 _HOUR = re.compile(r"query-log-\d{4}-\d{2}-\d{2}-\d{2}\.ndjson\Z")
 _TTL = dt.timedelta(hours=48)
 
 
+class _QueryRecord(BaseModel):
+    model_config = ConfigDict(strict=True, extra="forbid", frozen=True)
+
+    log_id: str
+    at: str
+    sql: str
+    outcome: Literal["success", "failed"]
+    error: str | None
+    row_count: Annotated[int, Field(ge=0)] | None
+    column_count: Annotated[int, Field(ge=0)] | None
+
+
 def _record(value):
-    if (not isinstance(value, dict) or set(value) != _KEYS
-            or not all(isinstance(value[key], str) for key in ("log_id", "at", "sql", "outcome"))
-            or value["outcome"] not in {"success", "failed"}
-            or value["error"] is not None and not isinstance(value["error"], str)
-            or any(value[key] is not None and (type(value[key]) is not int or value[key] < 0)
-                   for key in ("row_count", "column_count"))):
+    if not isinstance(value, dict):
         raise ValueError("query log is unavailable")
-    _at(value)
-    return dict(value)
+    try:
+        record = _QueryRecord.model_validate(value)
+        _at(record)
+        return record
+    except ValidationError as error:
+        raise ValueError("query log is unavailable") from error
 
 
 def _at(record):
     try:
-        result = dt.datetime.fromisoformat(record["at"])
+        result = dt.datetime.fromisoformat(record.at)
         if result.tzinfo is None:
             raise ValueError("missing timezone")
         return result.astimezone(dt.UTC)
@@ -78,7 +91,7 @@ class QueryLog:
             if self._closed:
                 raise ValueError("query log is closed")
             self._writer.submit(self._write, record)
-        return record
+        return record.model_dump()
 
     def _write(self, record):
         try:
@@ -89,13 +102,13 @@ class QueryLog:
                     name = _at(record).strftime("query-log-%Y-%m-%d-%H.ndjson")
                     descriptor = _open_file(directory, name, os.O_WRONLY | os.O_APPEND | os.O_CREAT)
                     with os.fdopen(descriptor, "a", encoding="utf-8") as stream:
-                        stream.write(json.dumps(record, ensure_ascii=False, separators=(",", ":")) + "\n")
+                        stream.write(json.dumps(record.model_dump(), ensure_ascii=False, separators=(",", ":")) + "\n")
                         stream.flush()
                         os.fsync(stream.fileno())
                 finally:
                     os.close(directory)
             with self._pending_lock:
-                self._pending.append(dict(record))
+                self._pending.append(record)
         except Exception as error:
             print(f"query log failed: {error}", file=sys.stderr)
 
@@ -141,28 +154,28 @@ class QueryLog:
 
     def load(self):
         with self._files:
-            return self._read(self._now(), cleanup=False)
+            return [record.model_dump() for record in self._read(self._now(), cleanup=False)]
 
     def list(self, limit=20):
         if type(limit) is not int or not 1 <= limit <= 1000:
             raise ValueError("limit must be an integer from 1 to 1000")
         with self._files:
             records = sorted(self._read(self._now(), cleanup=True), key=_at, reverse=True)
-        return {"items": records[:limit]}
+        return {"items": [record.model_dump() for record in records[:limit]]}
 
     def get(self, log_id):
         if not isinstance(log_id, str) or not log_id:
             raise ValueError("log_id must be a non-empty string")
         with self._files:
             for record in self._read(self._now(), cleanup=True):
-                if record["log_id"] == log_id:
-                    return record
+                if record.log_id == log_id:
+                    return record.model_dump()
         raise ValueError("unknown log_id")
 
     def take_pending(self):
         with self._pending_lock:
             records, self._pending = self._pending, []
-        return records
+        return [record.model_dump() for record in records]
 
     def close(self):
         with self._submit:

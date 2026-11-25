@@ -1,0 +1,11 @@
+if arguments.operation == "local":
+        from LAYER_5_FRAMEWORK_DELIVERY.RELEASE_VERSION.RELEASE_VERSION__family_pub import run_local_release
+
+        options = {}
+        if arguments.test_modules is not None:
+            options["test_modules"] = tuple(arguments.test_modules)
+        result = run_local_release(
+            root, run_id=arguments.run_id, image_mode=arguments.image_mode, **options
+        )
+        result.update(run_id=arguments.run_id, project_root=str(root))
+        return result

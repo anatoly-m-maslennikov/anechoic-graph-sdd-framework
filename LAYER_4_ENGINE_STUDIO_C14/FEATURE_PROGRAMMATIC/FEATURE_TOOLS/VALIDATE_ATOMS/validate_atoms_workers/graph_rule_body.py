@@ -3,16 +3,17 @@
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
+from pydantic.dataclasses import dataclass
 from typing import Any, cast
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from .check_support import Check
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_syntax__pub import CarrierError, UniqueSafeLoader, check_yaml_resources
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import CEILINGS
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import SubjectNotationError, parse_subject_expression
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    CEILINGS, CarrierError, SubjectNotationError, UniqueSafeLoader, check_yaml_resources, parse_subject_expression,
+    unfenced_atx_headings,
+)
 
 
 _RULE_TYPES = {
@@ -63,7 +64,7 @@ class _CardinalityCondition(BaseModel):
     maximum: int | None = Field(ge=0)
 
 
-@dataclass(frozen=True)
+@dataclass(config=ConfigDict(strict=True, extra="forbid", hide_input_in_errors=True), frozen=True)
 class ValidatedGraphRulePayload:
     summary: str
     operative_block: str
@@ -76,13 +77,11 @@ def _line_content(line: str) -> str:
 
 
 def _support_sections_valid(body: str, closing: int, check: Check) -> bool:
-    from .check_sections import _headings
-
     lines = body.splitlines()
     sections: list[tuple[str, int]] = []
     seen: set[str] = set()
     active = False
-    for level, title, index in _headings(body):
+    for level, title, index in unfenced_atx_headings(body):
         if index <= closing:
             continue
         if level <= 2:

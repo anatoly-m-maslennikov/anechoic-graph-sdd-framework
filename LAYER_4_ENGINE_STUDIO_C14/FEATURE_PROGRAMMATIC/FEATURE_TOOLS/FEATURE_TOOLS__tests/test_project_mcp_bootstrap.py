@@ -12,7 +12,7 @@ import unittest
 TOOLS = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(TOOLS))
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.project_mcp_bootstrap import (  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import (  # noqa: E402
     ProjectMcpBootstrapError,
     deploy_project_mcp_bootstrap,
 )
@@ -74,10 +74,9 @@ class ProjectMcpBootstrapTests(unittest.TestCase):
 
     def test_stages_below_project_temporary_root(self) -> None:
         from unittest.mock import patch
-        import FEATURE_PROGRAMMATIC.FEATURE_TOOLS.project_mcp_bootstrap as project_mcp_bootstrap
 
         replace = os.replace
-        with patch.object(project_mcp_bootstrap.os, "replace", wraps=replace) as operation:
+        with patch.object(os, "replace", wraps=replace) as operation:
             deploy_project_mcp_bootstrap(self.target_root, self.package)
         self.assertTrue(Path(operation.call_args.args[0]).is_relative_to(self.target_root / ".anechoic_tmp"))
 

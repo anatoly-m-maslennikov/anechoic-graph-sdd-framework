@@ -182,7 +182,7 @@ class InputSignatureTests(unittest.TestCase):
         root_manifest.write_text('Changed binding')
         self.assertIsNone(self.signature())
 
-    def test_replacing_a_candidate_with_identical_bytes_affects_the_signature(self):
+    def test_replacing_a_candidate_with_identical_bytes_preserves_the_signature(self):
         candidate = self.control / 'AN-S-1-canonical-component.md'
         candidate.write_text('Component')
         before = self.signature()
@@ -190,7 +190,7 @@ class InputSignatureTests(unittest.TestCase):
         replacement = candidate.with_suffix('.tmp')
         replacement.write_bytes(candidate.read_bytes())
         replacement.replace(candidate)
-        self.assertNotEqual(before, self.signature())
+        self.assertEqual(before, self.signature())
 
     def test_compiler_sources_affect_the_signature_and_tests_do_not(self):
         engine = self.root / 'engine'

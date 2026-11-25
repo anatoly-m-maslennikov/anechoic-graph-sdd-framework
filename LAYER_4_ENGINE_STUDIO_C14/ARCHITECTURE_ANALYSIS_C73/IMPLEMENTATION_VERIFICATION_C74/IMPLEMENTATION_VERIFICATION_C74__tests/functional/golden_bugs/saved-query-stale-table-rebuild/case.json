@@ -1,0 +1,28 @@
+{
+  "title": "Rebind earlier saved results before rebuilding dependents",
+  "invariant": "A rebuilt result is bound to its stable table before a dependent result is materialized.",
+  "scope": "Full rebuild of two results in dependency order, with successful materialization and SQL effects. The second result reads the stable table of the first.",
+  "analyzer": "analyze.py",
+  "before": {
+    "revision": "ff909185b8b6176e27a19f8c7aa6d744b635dfd7",
+    "source": "LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/query_store.py",
+    "fixture": "before.py.txt",
+    "sha256": "f0d8e0dfd53e794842e5bda2e581b7b31630171047392c5c03d6feb56ddbd62f"
+  },
+  "fixed": {
+    "revision": "1f4d7ad37517b7ce1bd41e223d238b6f0f2ce993",
+    "source": "LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/query_store.py",
+    "fixture": "fixed.py.txt",
+    "sha256": "17e675cce171f8b3d70afaa89714b1c2e7de5ee2e1df0a09e61921f969afc285"
+  },
+  "checks": [
+    {
+      "file": "before.lean",
+      "stdout_suffix": "false\n"
+    },
+    {
+      "file": "fixed.lean",
+      "stdout_suffix": "true\n"
+    }
+  ]
+}

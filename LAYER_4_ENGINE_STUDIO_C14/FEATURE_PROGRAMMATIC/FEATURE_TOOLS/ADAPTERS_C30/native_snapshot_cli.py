@@ -7,12 +7,16 @@ import sys
 from hashlib import sha256
 from pathlib import Path, PurePosixPath
 from time import monotonic
-from types import SimpleNamespace
 
-from .ADAPTERS_C30__pub import CEILINGS, ReadContext
+from pydantic import ConfigDict
+from pydantic.dataclasses import dataclass
+
+from .ADAPTERS_C30__pub import CEILINGS, LimitReached, ReadContext
 from .carrier_read__pub import parse_carrier
+from .native_carrier_inventory import startup_reader
 from .native_carrier_placement__pub import ARCHIVE_DIRECTORY, TICKET_DIRECTORY, project_goal_filename
 from .native_generation_snapshot import row_summary, snapshot
+from .model_capture import model_inputs
 from .native_source_rows__pub import (
     NativeCapture,
     _native_carrier_hashes,
@@ -24,6 +28,15 @@ from .project_manifest__pub import manifest_inputs
 _FIELDS = {"root", "control_root", "manifest_path", "manifest_sha256", "project_prefix"}
 _TICKET_TREES = {TICKET_DIRECTORY, "001_TICKETS", "__TKT"}
 _MAX_TICKET_DELTA_PATHS = 1024
+
+
+@dataclass(frozen=True, config=ConfigDict(strict=True, extra="forbid"))
+class _SnapshotSelection:
+    root: Path
+    control_root: Path
+    manifest_path: Path
+    manifest_sha256: str
+    project_prefix: str
 
 
 def _relative(value, *, direct=False):
@@ -60,36 +73,21 @@ def _selection(binding, *, manifest_admitted=False):
     if (not isinstance(digest, str) or not re.fullmatch(r"[0-9a-f]{64}", digest)
             or not isinstance(prefix, str) or not re.fullmatch(r"[A-Z][A-Z0-9]*", prefix)):
         raise ValueError("Invalid binding identity")
-    return SimpleNamespace(root=root, control_root=control, manifest_path=manifest,
-                           manifest_sha256=digest, project_prefix=prefix)
+    return _SnapshotSelection(root, control, manifest, digest, prefix)
 
 
 class UnrepresentableCarrierDelta(ValueError):
     pass
 
 
-class NativeCaptureError(ValueError):
-    def __init__(self, capture):
-        super().__init__("Native capture failed: " + json.dumps(capture.errors, sort_keys=True))
-        self.ingestion_issues = list(capture.ingestion_issues)
-        covered = {issue["relative_path"] for issue in self.ingestion_issues}
-        self.ingestion_issues.extend(
-            {"relative_path": path, "code": "invalid_value", "message": message,
-             "atom_ref": None, "related_paths": []}
-            for path, message in sorted(capture.errors.items()) if path not in covered
-        )
-
-
-def _check_capture(capture):
-    if capture.errors:
-        raise NativeCaptureError(capture)
+class NativeSnapshotChanged(ValueError):
+    """Captured native sources changed before generation completed."""
 
 
 def _capture(binding):
     selection = _selection(binding)
     capture = capture_native(selection)
-    _check_capture(capture)
-    return capture, _graph_config(selection)
+    return selection, capture, _graph_config(selection)
 
 
 def native_carrier_hashes(binding, *, foreground=False, archive_roots=None, watcher_guarded=False):
@@ -98,12 +96,13 @@ def native_carrier_hashes(binding, *, foreground=False, archive_roots=None, watc
         raise ValueError("Conflicting native inventory scopes")
     selection = _selection(binding)
     roots = _archive_directories(selection, archive_roots) if archive_roots is not None else None
-    return _native_carrier_hashes(selection, foreground=foreground, archive_roots=roots,
-                                  watcher_guarded=watcher_guarded)
-
-
-def _carrier_hashes(capture):
-    return {row["source_path"]: row["_source_sha256"] for row in capture.atoms}
+    try:
+        return _native_carrier_hashes(selection, foreground=foreground, archive_roots=roots,
+                                      watcher_guarded=watcher_guarded)
+    except LimitReached as error:
+        if error.limit != "max_file_bytes":
+            raise
+        raise UnrepresentableCarrierDelta("Carrier exceeds the per-file read limit") from error
 
 
 def _archive_directories(selection, directories):
@@ -119,16 +118,22 @@ def _archive_directories(selection, directories):
 
 
 def _partition_archived(capture):
-    foreground, archived = NativeCapture([], [], {}), NativeCapture([], [], {})
+    foreground = NativeCapture([], [], capture.errors, ingestion_issues=capture.ingestion_issues,
+                               carrier_hashes=dict(capture.carrier_hashes))
+    archived = NativeCapture([], [], {})
     for row, edge in zip(capture.atoms, capture.containment, strict=True):
         target = archived if row["status_group"] == "Archived" else foreground
         target.atoms.append(row)
         target.containment.append(edge)
+        if target is archived:
+            path = row["source_path"]
+            archived.carrier_hashes[path] = foreground.carrier_hashes.pop(path)
     return foreground, archived
 
 
 def prepare_generation_snapshot(
     binding, *, include_hashes=False, watcher_guarded=False, archive_stage=None, archive_roots=(),
+    include_model_inputs=False,
 ):
     """Capture carriers once and recheck their versions and membership before use.
 
@@ -138,28 +143,29 @@ def prepare_generation_snapshot(
     if archive_stage not in (None, "foreground", "archive") or (archive_roots and archive_stage != "archive"):
         raise ValueError("Invalid generation archive stage")
     selection = _selection(binding)
-    reader = ReadContext(roots=[str(selection.root)], limits=dict(CEILINGS))
+    reader = startup_reader(selection.root, "foreground_capture" if archive_stage == "foreground" else None)
     deferred = set() if archive_stage == "foreground" else None
     directories = _archive_directories(selection, archive_roots) if archive_stage == "archive" else None
     capture = capture_native(selection, reader=reader, defer_currentness=True,
                              include_content_properties="archive-summary",
                              defer_archives=deferred, archive_roots=directories)
-    _check_capture(capture)
     foreground, archived = _partition_archived(capture) if deferred is not None else (capture, None)
+    manifest_path = selection.manifest_path.relative_to(selection.root).as_posix()
 
     def finish(endpoints):
-        result = snapshot(binding, foreground, endpoints)
+        result = snapshot(binding, foreground, endpoints, manifest_path=manifest_path)
         if not watcher_guarded:
             reader.started = monotonic()
             if reader.currentness()["state"] != "unchanged":
-                raise ValueError("Native Project carriers changed during generation")
+                raise NativeSnapshotChanged("Native Project carriers changed during generation")
         if deferred is not None:
-            return (result, _carrier_hashes(foreground),
+            return (result, foreground.carrier_hashes,
                     sorted(path.relative_to(selection.root).as_posix() for path in deferred),
-                    snapshot(binding, archived, endpoints), _carrier_hashes(archived))
-        return (result, _carrier_hashes(foreground)) if include_hashes else result
+                    snapshot(binding, archived, endpoints, manifest_path=manifest_path), archived.carrier_hashes)
+        return (result, foreground.carrier_hashes) if include_hashes else result
 
-    return (None if archive_stage == "archive" else _graph_config(selection)), finish
+    result = (None if archive_stage == "archive" else _graph_config(selection)), finish
+    return (*result, model_inputs(selection, foreground)) if include_model_inputs else result
 
 
 def _ticket_paths(selection, paths):
@@ -205,13 +211,15 @@ def _ticket_versions(root, relatives):
 
 
 def _capture_delta(binding, selection, relatives, endpoints, *, include_hashes, ticket_only, manifest_admitted=False):
-    versions = _ticket_versions(selection.root, relatives)
+    paths_before = _ticket_versions(selection.root, relatives).keys()
     capture = capture_native(selection, previous=NativeCapture([], [], {}), paths=relatives,
                              manifest_admitted=manifest_admitted)
-    _check_capture(capture)
+    versions = _ticket_versions(selection.root, relatives)
     observed = {path: version for path, version in capture.versions.items()
                 if path != str(selection.manifest_path)}
-    if observed != versions or _ticket_versions(selection.root, relatives) != versions:
+    failed = {str(selection.root / path) for path in capture.errors}
+    expected = {path: version for path, version in versions.items() if path in observed or path not in failed}
+    if observed != expected or versions.keys() != paths_before:
         raise ValueError("Ticket delta paths changed during capture")
     ticket = re.compile(rf"{re.escape(selection.project_prefix)}-T-[0-9]+")
     captured_paths = set()
@@ -223,12 +231,13 @@ def _capture_delta(binding, selection, relatives, endpoints, *, include_hashes, 
                                 or header.get("context", {}).get("template") == "project_manifest"):
             raise UnrepresentableCarrierDelta("Carrier delta contains a non-canonical carrier or Project Manifest")
         captured_paths.add(str(selection.root / row["source_path"]))
-    if captured_paths != versions.keys():
+    if captured_paths | (failed & versions.keys()) != versions.keys():
         raise ValueError("Ticket delta rows do not match the changed paths")
+    manifest_path = selection.manifest_path.relative_to(selection.root).as_posix()
     result = {"paths": [[path.parent.as_posix(), path.name] for path in sorted(relatives)],
-              "snapshot": snapshot(binding, capture, endpoints)}
+              "snapshot": snapshot(binding, capture, endpoints, manifest_path=manifest_path)}
     if include_hashes:
-        result["carrier_hashes"] = _carrier_hashes(capture)
+        result["carrier_hashes"] = capture.carrier_hashes
     return result
 
 
@@ -287,10 +296,13 @@ def main():
         request = json.load(sys.stdin)
         expanded = isinstance(request, dict) and set(request) == {"binding", "endpoints"}
         binding = request["binding"] if expanded else request
-        capture, graph_config = _capture(binding)
+        selection, capture, graph_config = _capture(binding)
         if expanded:
-            result = snapshot(binding, capture, request["endpoints"])
+            manifest_path = selection.manifest_path.relative_to(selection.root).as_posix()
+            result = snapshot(binding, capture, request["endpoints"], manifest_path=manifest_path)
         else:
+            if capture.errors:
+                raise ValueError("Native capture failed: " + json.dumps(capture.errors, sort_keys=True))
             result = _snapshot(binding, capture)
         raw = json.dumps([capture.versions, capture.atoms, capture.containment], sort_keys=True,
                          separators=(",", ":"), default=_encode).encode()

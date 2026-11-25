@@ -235,10 +235,15 @@ class ContractGraphTests(unittest.TestCase):
         self.assertEqual("incomplete", graph["outcome"])
 
     def test_relation_metadata_reads_structured_python_helper(self):
-        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.contract_graph_relations import _metadata
-        source = {"atom_id": "CA-R-1"}
-        entry = {"clauses": [], "cfel_blocks": [], "python_blocks": [{"source": source, "block": (
-            "# model\nclassify(address='Relation//RUNS', axis='Derivation', value='Direct', notation='relation')\n"
-            "# instances\nclassify(address='Relation//RUNS', axis='Derivation', value='Derived', notation='relation')\n"
-        )}]}
-        self.assertEqual(_metadata([entry], "RUNS"), [{"kind": "derivation", "value": "Direct", "source": source}])
+        declaration = carrier("CA-R-1", "CFEL <+ Relation//RUNS", body(
+            "### Formal Claim", "```python", "# model",
+            "classify(address='Relation//RUNS', axis='Derivation', value='Direct', notation='relation')",
+            "# instances",
+            "classify(address='Relation//RUNS', axis='Derivation', value='Derived', notation='relation')",
+            "```",
+        ))
+        relation, = compose_contract_graph([declaration])["relations"]
+        self.assertEqual(
+            [{"kind": "derivation", "value": "Direct", "source": declaration["source"]}],
+            relation["metadata"],
+        )

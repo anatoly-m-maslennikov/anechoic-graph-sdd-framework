@@ -1,0 +1,20 @@
+{
+  "title": "Retry an initially invalid Project Manifest",
+  "invariant": "When initial Manifest selection raises ValueError, the supervisor keeps a diagnostic service available and retries admission after the retry delay.",
+  "scope": "Exact archived module ASTs, initial direct-project startup, select raising ValueError, healthy gate and diagnostic operations, no stop request, and no running MCP. Lean models the startup, retry and diagnostic branch facts; it does not prove Python semantics, timing, process execution, HTTP health, or successful later repair. Other module shapes are unresolved.",
+  "before": {
+    "revision": "b5f7ed526648296a768f701f6af1027ec80a349a",
+    "source": "LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/shared_supervisor.py",
+    "fixture": "before.py.txt",
+    "sha256": "5d28cccce9f9283b472e8c43eaff80a7ee4c883f238dee586558bb47b8598cb2"
+  },
+  "fixed": {
+    "revision": "archived canary runtime overlay, not a Git revision",
+    "source": "LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/shared_supervisor.py",
+    "fixture": "fixed.py.txt",
+    "sha256": "33cf11ffe9565f78ee6685412f4095633e9bde1eb9b6121eaac25542f5aab6e1"
+  },
+  "provenance": "The archived thr_5je2jn33zw/startup-replay-image/canary.json records the mounted runtime file hash and a separate Manifest recovery canary outcome. The overlay is not represented as a Git revision.",
+  "checks": [{"file": "regression.lean"}],
+  "analyzer": "analyze.py"
+}

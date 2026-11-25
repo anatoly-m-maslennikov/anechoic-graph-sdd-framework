@@ -11,7 +11,6 @@ import subprocess
 import sys
 
 from .image_docker_client import bounded_run as _bounded_run
-from .docker__shared import ImageManager
 
 ATTEMPT_LABEL = "org.anechoic.full-test-suite.attempt"
 _IMAGE_DEADLINES = "ANECHOIC_TEST_IMAGE_DEADLINES"
@@ -34,6 +33,8 @@ def _executor(attempt: str):
 
 
 def _build_image(root: Path, scratch: Path, attempt: str, *, use_packaged_assets: bool) -> str:
+    from .docker__shared import ImageManager
+
     manager = ImageManager(root, executor=_executor(attempt), build_temp_root=scratch, project_root=root,
                            enforce_deadlines=_deadlines_enabled())
     identity = manager.identity(use_packaged_assets=use_packaged_assets)

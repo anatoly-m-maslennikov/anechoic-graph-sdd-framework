@@ -3,12 +3,15 @@
 
 from __future__ import annotations
 
+from pydantic import ConfigDict, WrapValidator
+from pydantic.dataclasses import dataclass
+
 from collections.abc import Iterable, Mapping, Sequence
-from dataclasses import dataclass, field
+from dataclasses import field
 import json
 from pathlib import Path
 import re
-from typing import Any
+from typing import Annotated, Any
 
 from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.FEATURE_FORMAL_MODEL_ENGINE__shared import formal_claim_blocks
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import content_record_span
@@ -25,7 +28,12 @@ from .declaration_cfel import (
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import content_lines, parse_content, source_markdown
 
 
-@dataclass(frozen=True)
+def _retain_mapping(value, handler):
+    handler(value)
+    return value
+
+
+@dataclass(config=ConfigDict(strict=True, extra="forbid"), frozen=True)
 class DeclarationSource:
     """One Current Declaration which contributed to the compiled schema."""
 
@@ -44,7 +52,7 @@ class DeclarationSource:
 FormalStatement = tuple[str, DeclarationSource]
 
 
-@dataclass(frozen=True)
+@dataclass(config=ConfigDict(strict=True, extra="forbid"), frozen=True)
 class ContentRule:
     """A literal declared Content path and its narrow applicability."""
 
@@ -63,7 +71,7 @@ class ContentRule:
         )
 
 
-@dataclass(frozen=True)
+@dataclass(config=ConfigDict(strict=True, extra="forbid"), frozen=True)
 class ContentColumn:
     """One declared scalar Markdown property exposed as a VARCHAR column."""
 
@@ -75,14 +83,14 @@ class ContentColumn:
         return any(rule.applies(row) for rule in self.rules)
 
 
-@dataclass(frozen=True)
+@dataclass(config=ConfigDict(strict=True, extra="forbid"), frozen=True)
 class ContentSchema:
     """The reproducible Content portion of the public atoms schema."""
 
     columns: tuple[ContentColumn, ...]
     rules: tuple[ContentRule, ...]
     sources: tuple[DeclarationSource, ...]
-    _layouts: dict[tuple[str | None, str | None], tuple[Any, frozenset[tuple[str, ...]]]] = field(
+    _layouts: Annotated[dict[tuple[str | None, str | None], tuple[Any, frozenset[tuple[str, ...]]]], WrapValidator(_retain_mapping)] = field(
         default_factory=dict, compare=False, repr=False,
     )
 

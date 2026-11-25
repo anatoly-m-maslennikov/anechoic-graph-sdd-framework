@@ -21,6 +21,10 @@
   const editable = new Compartment();
   const completion = new Compartment();
   const externalUpdate = Annotation.define<boolean>();
+  const editability = (disabled: boolean) => [
+    EditorView.editable.of(!disabled),
+    EditorView.contentAttributes.of({ 'aria-label': 'Query editor', 'aria-readonly': String(disabled) }),
+  ];
 
   const quoted = (name: string) => `"${name.replaceAll('"', '""')}"`;
   function options(currentSchema: Schema, qualifier?: string): Completion[] {
@@ -62,9 +66,8 @@
         doc: value, selection: { anchor: Math.min(cursor, value.length) },
         extensions: [
           sql(), syntaxHighlighting(classHighlighter), history(), keymap.of([...defaultKeymap, ...historyKeymap]),
-          editable.of(EditorView.editable.of(!disabled)),
+          editable.of(editability(disabled)),
           completion.of(autocompletion({ override: [source] })),
-          EditorView.contentAttributes.of({ 'aria-label': 'Query editor' }),
           Prec.highest(EditorView.domEventHandlers({ keydown: shortcut })),
           EditorView.updateListener.of((update) => {
             if ((update.docChanged || update.selectionSet) && !update.transactions.some((transaction) => transaction.annotation(externalUpdate))) onchange?.(update.state.doc.toString(), update.state.selection.main.head);
@@ -86,7 +89,7 @@
     const currentSchema = schema;
     if (!view) return;
     view.dispatch({ effects: [
-      editable.reconfigure(EditorView.editable.of(!disabled)),
+      editable.reconfigure(editability(disabled)),
       completion.reconfigure(autocompletion({ override: [(context) => source(context, currentSchema)] })),
     ] });
   });

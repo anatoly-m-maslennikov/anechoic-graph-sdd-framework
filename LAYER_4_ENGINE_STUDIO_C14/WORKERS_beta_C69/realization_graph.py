@@ -1,5 +1,6 @@
 """Add the beta Code Unit projection to an existing Realization Graph capture."""
 
+import argparse
 from collections import defaultdict
 import json
 import os
@@ -30,7 +31,7 @@ def _imports(sources, occurrences):
 
 
 def _web_code_units(sources, imports):
-    script = Path(__file__).with_name('web_code_units.mjs')
+    script = Path(__file__).with_name('web_code_units.ts')
     links = {path: [[line, written, target] for (line, written), target in sites.items()]
              for path, sites in imports.items() if path in sources}
     env = {key: value for key, value in os.environ.items() if key not in {'NODE_OPTIONS', 'NODE_PATH'}}
@@ -79,4 +80,6 @@ def _derive_rows(root, sources, occurrences, read_source, ownership):
 
 
 if __name__ == '__main__':
-    raise SystemExit(run_graph_build(_derive_rows, code_rows))
+    parser = argparse.ArgumentParser(description=__doc__, allow_abbrev=False)
+    parser.add_argument('--watcher-replay', action='store_true', help=argparse.SUPPRESS)
+    raise SystemExit(run_graph_build(_derive_rows, code_rows, watcher_replay=parser.parse_args().watcher_replay))

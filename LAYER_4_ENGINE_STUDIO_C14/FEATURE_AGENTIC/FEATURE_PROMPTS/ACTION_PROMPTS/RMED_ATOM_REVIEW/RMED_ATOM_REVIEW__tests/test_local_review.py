@@ -3,7 +3,6 @@ from copy import deepcopy
 import unittest
 
 from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__tests.test_split_evaluation import contract, part as legacy_part, source, SOURCE_TEXT, RULE_TEXT
-from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.operator_precheck import word_inventory
 
 REGISTRY = '''1. statement form: **to**, **means**
 2. modality: **must**, **must not**, **may**
@@ -15,20 +14,26 @@ REGISTRY = '''1. statement form: **to**, **means**
 8. predicate: **in**, **not in**, **is empty**, **is not empty**, **contains**, **starts with**, **ends with**
 9. comparison: **`=`**, **`!=`**, **`<`**, **`<=`**, **`>`**, **`>=`**
 '''
+OPERATORS = (
+    'to', 'means', 'must', 'must not', 'may', 'if', 'then', 'when', 'otherwise',
+    'before', 'after', 'until', 'unless', 'all', 'every', 'any', 'none',
+    'and', 'or', 'not', 'without', 'where', 'only',
+    'in', 'not in', 'is empty', 'is not empty', 'contains', 'starts with', 'ends with',
+)
 
 
-def prechecked_packet():
-    packet = packet6()
-    registry = source('registry.md', 'MOCK-M-003', REGISTRY)
+def prechecked_packet(*, candidate_text=SOURCE_TEXT, registry_text=REGISTRY):
+    packet = packet6(candidate_text=candidate_text)
+    registry = source('registry.md', 'MOCK-M-003', registry_text)
     packet['sources'].append(registry)
     packet['authority_bindings'].append(registry['binding'])
-    packet['review_constraints'].update(operator_precheck=word_inventory(REGISTRY),
+    packet['review_constraints'].update(operator_precheck=list(OPERATORS),
                                         operator_registry='MOCK-M-003@1')
     return packet
 
 
-def packet6():
-    candidate = source('mock.md', 'MOCK-R-001', SOURCE_TEXT)
+def packet6(*, candidate_text=SOURCE_TEXT):
+    candidate = source('mock.md', 'MOCK-R-001', candidate_text)
     rule = source('rule.md', 'MOCK-R-002', RULE_TEXT)
     return {
         'confidence_threshold': .99,
@@ -91,7 +96,7 @@ class LocalReview(unittest.TestCase):
             contract.validate_part(report, context=ctx)
 
     def test_precheck_cannot_narrow_or_enlarge_bound_inventory(self):
-        for inventory in (['must'], word_inventory(REGISTRY) + ['together with']):
+        for inventory in (['must'], [*OPERATORS, 'together with']):
             packet = prechecked_packet()
             packet['review_constraints']['operator_precheck'] = inventory
             with self.subTest(inventory=inventory), self.assertRaisesRegex(ValueError, 'differs'):

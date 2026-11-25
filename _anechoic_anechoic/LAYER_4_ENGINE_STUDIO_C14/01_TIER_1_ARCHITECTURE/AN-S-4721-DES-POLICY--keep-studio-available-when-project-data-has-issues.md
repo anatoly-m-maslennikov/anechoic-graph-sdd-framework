@@ -23,4 +23,13 @@ Keep Studio available when Project data has issues
 
 Keep Studio running and serve health and diagnostics when the Project’s Anechoic control directory is missing, unreadable, or contains invalid data. Keep operations on admitted data available. Return explicit errors for operations that require unavailable inputs.
 
-Index usable Atom data. Report Atom findings in the Workbench Issues tables with the source path and exact Atom reference when available. Report missing or unusable Project inputs as Project-level issues.
+During reads and indexing, treat a Project file that cannot be read,
+parsed, or validated as a warning. Admit usable Atom data.
+
+Report each warning with its cause and source path. Show Atom findings
+in the Workbench Issues tables with the exact Atom reference when
+available. Report missing or unusable Project inputs as Project-level
+issues.
+
+Apply write and lifecycle validation. Return an explicit error if a
+requested operation fails validation.

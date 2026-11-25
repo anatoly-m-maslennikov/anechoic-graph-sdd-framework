@@ -31,3 +31,7 @@ with minimal exceptions.
 
 This is a Project Applicable Principle. Its parent Axiom is AN-S-1432,
 “Clear structure and ownership make information easier to maintain.”
+
+### Examples
+
+A Component and its nested Component each declare their own contract using the same structure.

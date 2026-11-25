@@ -27,3 +27,9 @@ Do not require human participants to master or personally perform specialist wor
 ### Prose Claim
 
 Let the Operator create, deliver, run, and maintain a feasible Project without having to master or personally perform its specialist work.
+
+## Details
+
+### Examples
+
+An Operator describes the outcome for a small service. An AI Agent designs and implements it, so the Operator can direct the Project without mastering the programming work.

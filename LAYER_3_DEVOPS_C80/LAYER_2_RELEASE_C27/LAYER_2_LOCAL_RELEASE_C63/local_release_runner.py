@@ -1,4 +1,3 @@
-
 """Ordered phases for the direct local Release."""
 
 from __future__ import annotations
@@ -7,6 +6,7 @@ import subprocess
 import sys
 import tempfile
 from contextlib import ExitStack
+from functools import partial
 from pathlib import Path
 from typing import Any
 
@@ -14,24 +14,35 @@ from .release_cleanup import cleanup_obsolete_images, cleanup_stopped_containers
 from LAYER_1_RUNTIME_IMAGES_C81.LAYER_1_RUNTIME_IMAGES_C81__shared import image_labels  # noqa: E402
 from .release_cleanup_images import record_ready_images  # noqa: E402
 from .release_cleanup_tmp import prune_temporary_files  # noqa: E402
-from LAYER_1_RUNTIME_IMAGES_C81.LAYER_1_RUNTIME_IMAGES_C81__shared import start_container  # noqa: E402
+from LAYER_1_RUNTIME_IMAGES_C81.LAYER_1_RUNTIME_IMAGES_C81__shared import (
+    find_release_container, reconcile_release_container, start_container, verify_release_container,
+)  # noqa: E402
 from LAYER_1_RUNTIME_IMAGES_C81.LAYER_1_RUNTIME_IMAGES_C81__shared import read_release_selection  # noqa: E402
 from .local_release_gates import run_gate  # noqa: E402
+from .local_release_recovery import ResumableRelease
+from .local_release_state import failure_evidence, release_evidence
 from .local_release_previous import previous_container  # noqa: E402
 from . import local_release_package_phases as package_phases  # noqa: E402
 from . import local_release_reports as reports  # noqa: E402
-from LAYER_1_RUNTIME_IMAGES_C81.LAYER_1_RUNTIME_IMAGES_C81__shared import _git_checkpoint, _installation_lock, _new_staging_directory  # noqa: E402
+from LAYER_1_RUNTIME_IMAGES_C81.LAYER_1_RUNTIME_IMAGES_C81__shared import _new_staging_directory  # noqa: E402
 from .local_release_test_process import run_logged_test_process  # noqa: E402
 from LAYER_1_RUNTIME_IMAGES_C81.LAYER_1_RUNTIME_IMAGES_C81__shared import (  # noqa: E402
     LocalReleaseError, _RUN_ID, _cleanup_staging, _project_path, _root, _target, _verify_package,
 )
 from .release_support import (  # noqa: E402
     _DEFAULT_PRODUCT,
-    _build_predecessor,
     _launcher_image,
     _read_version,
     _failed_test_output as _support_failed_test_output,
 )
+
+_TEST_GATES = {
+    "preflight tests": "preflight",
+    "static tests": "static",
+    "functional tests": "functional",
+    "verify candidate image": "image-tests",
+    "verify candidate canary": "canary",
+}
 
 
 def _failed_test_output(root: Path, run_id: str, result: Any, *, log_path: str | None = None) -> str:
@@ -40,14 +51,15 @@ def _failed_test_output(root: Path, run_id: str, result: Any, *, log_path: str |
     )
 
 
-class LocalReleaseRun:
-
-    def __init__(self, project_root, run_id, runner, test_modules, image_mode):
+class LocalReleaseRun(ResumableRelease):
+    def __init__(self, project_root, run_id, runner, test_modules, image_mode, *, resume=False):
         self.project_root = project_root
         self.run_id = run_id
         self.runner = runner
         self.test_modules = test_modules
-        self.image_mode = image_mode
+        self.requested_image_mode, self.image_mode = image_mode, image_mode if image_mode is not None else "refresh"
+        self.resume = resume
+        self.journal = None
         self._setup_options()
         self._setup_state()
 
@@ -72,142 +84,173 @@ class LocalReleaseRun:
         self.default_runner = self.runner is None
         if self.runner is None:
             self.runner = lambda argv, cwd: subprocess.run(argv, cwd=cwd, text=True, capture_output=True, check=False)
-        self.product = _target(self.root, Path(_DEFAULT_PRODUCT), label='product-root')
+        self.product = self._product_path()
         self.installed = _target(self.root, self.selection.control_relative / '000_ANECHOIC_framework', label='installed-root')
 
+    def _product_path(self):
+        return _target(self.root, Path(_DEFAULT_PRODUCT), label="product-root")
+
     def _setup_state(self):
-        self.package: Path | None = None
-        self.prepared_product: Path | None = None
-        self.staging: Path | None = None
-        self.package_identity: dict[str, tuple[str, int]] = {}
-        self.product_identity: dict[str, tuple[str, int]] = {}
-        self.candidate_image: str | None = None
-        self.candidate_fingerprint: str | None = None
-        self.production_port: int | None = None
+        self.package = self.prepared_product = self.staging = None
+        self.package_identity, self.product_identity, self.readiness = {}, {}, {}
+        self.candidate_image = self.candidate_fingerprint = self.production_port = None
         self.runtime = _target(self.root, Path('.anechoic_runtime/simple_local_release/package'), label='simple-runtime')
         if self.product == self.installed:
             raise LocalReleaseError('local-release-target-invalid')
         self.failed_step = 'validate_inputs'
-        self.endpoint: str | None = None
-        self.canary_endpoint: str | None = None
-        self.receipt_path: str | None = None
-        self.test_log_path: str | None = None
+        self.endpoint = self.canary_endpoint = self.receipt_path = self.test_log_path = None
         self.test_log_paths: dict[str, str] = {}
         self.cleanup_note = 'No proven superseded Project-owned image identity was available; none was removed.'
-        self.cleanup_pending = False
-        self.cleanup = None
-        self.test_scope = 'static and functional'
+        self.cleanup_pending, self.cleanup = False, None
+        self.test_scope, self.test_selection = 'static and functional', 'configured required tests'
         self.selected_test_modules = None
-        self.test_selection = 'configured required tests'
-        self.phases = ('validate inputs',
-                        'bump candidate version', 'static tests', 'functional tests', 'copy active sources', 'build package',
-                        'prepare candidate image', 'verify candidate image',
-                        'copy product to installed framework', 'install project runtime', 'start mcp', 'final')
-        self.checkpoint_paths = {'validate inputs': ('.',), 'static tests': ('version.toml',), 'build package': ('LAYER_1_META_ONTOLOGY_C9', 'LAYER_2_META_METHODOLOGY_C58'), 'install project runtime': (self.installed.relative_to(self.root).as_posix(),), 'start mcp': ('.agents/skills/ane',)}
-
-    def _execute(self):
-        self.failed_step = 'installation_lock'
-        self.installation_lock.enter_context(_installation_lock(self.root, self.selection))
-        self.failed_step = 'validate_inputs'
-        try:
-            self.previous_image = _build_predecessor(self.selection)
-        except LocalReleaseError:
-            if self.image_mode != 'existing':
-                raise
-            self.previous_image = None
-        self.prior_image = self.previous_image or _launcher_image(self.selection)
-        self.prior_project = self.selection.instance_id if self.prior_image is not None else None
-        self.head = None
-        for phase in self.phases:
-            print(f'Local release phase START: {phase}', file=sys.stderr, flush=True)
-            self.failed_step = 'validate_project_selection'
-            if read_release_selection(self.root) != self.selection:
-                raise LocalReleaseError('local-release-project-selection-changed')
-            self.failed_step = f"git_before_{phase.replace(' ', '_')}"
-            self.head = _git_checkpoint(self.root, self.runner, phase, self.checkpoint_paths.get(phase, ()), self.head)
-            if phase == 'final':
-                self._after_start()
-            else:
-                self._phase(phase)
 
     def _phase(self, phase):
         if phase == 'validate inputs':
             self._validate_inputs(phase)
         elif phase == 'bump candidate version':
-            self._bump_version(phase)
-        elif phase in {'static tests', 'functional tests', 'verify candidate image'}:
+            self._bump_version()
+        elif phase in _TEST_GATES:
             self._run_tests(phase)
         elif phase == 'copy active sources':
-            self._copy_sources(phase)
+            self._copy_sources()
         elif phase == 'copy product to installed framework':
-            self._copy_product(phase)
+            self._copy_product()
         elif phase == 'build package':
-            self._build_package(phase)
+            self._build_package()
         elif phase == 'prepare candidate image':
-            self._prepare_image(phase)
+            self._prepare_image()
         elif phase == 'install project runtime':
-            self._install_runtime(phase)
+            self._install_runtime()
         else:
             self._start_mcp()
 
     def _validate_inputs(self, phase):
         self.failed_step = 'validate_inputs'
         self.production_port = package_phases.validate_inputs(self.root, self.selection, self.product, self.installed, self.runtime)
-
-    def _bump_version(self, phase):
-        self.failed_step = 'bump_candidate_version'
-        version_path, next_version_text = _read_version(self.root)
-        version_path.write_text(next_version_text, encoding='utf-8')
+        if self._source_binding() is None:
+            self.failed_step = "bump_candidate_version"
+            _read_version(self.root)
 
     def _run_tests(self, phase):
         self.failed_step = phase.replace(' ', '_')
-        suite_phase = 'image' if phase == 'verify candidate image' else phase.split()[0]
-        self.test_log_path = None
+        suite_phase = _TEST_GATES[phase]
+        log_phase = "image" if suite_phase == "image-tests" else suite_phase
+        if suite_phase == "canary" and self.canary_endpoint is not None:
+            _verify_package(self.package, self.package_identity)
+            if "image" in self.test_log_paths:
+                self.test_log_paths.setdefault("canary", self.test_log_paths["image"])
+            self.test_log_path = self.test_log_paths.get("canary")
+            return
         try:
-            observed_endpoint = run_gate(self.root, phase, self.candidate_image, self.package, self.package_identity, self.selection, self.run_id, None if self.default_runner else self.runner, self.test_log_paths, verify=_verify_package, target=_target, named_file=tempfile.NamedTemporaryFile, logged_process=run_logged_test_process, failed_output=_failed_test_output)
+            observed_endpoint = run_gate(
+                self.root, suite_phase, self.candidate_image, self.package, self.package_identity,
+                self.selection, self.run_id, None if self.default_runner else self.runner,
+                self.test_log_paths, verify=_verify_package, target=_target, named_file=tempfile.NamedTemporaryFile,
+                logged_process=partial(run_logged_test_process, lock_fd=self.lock_fd),
+                failed_output=_failed_test_output, **self._test_gate_options(),
+            )
         finally:
-            self.test_log_path = self.test_log_paths.get(suite_phase)
-        if suite_phase == 'image':
+            self.test_log_path = self.test_log_paths.get(log_phase)
+        if observed_endpoint is not None and self.canary_endpoint is None:
             self.canary_endpoint = observed_endpoint
+        return observed_endpoint
 
-    def _copy_sources(self, phase):
+    def _test_gate_options(self):
+        return {}
+
+    def _copy_sources(self):
         self.failed_step = 'copy_active_sources'
         package_phases.copy_sources(self.root, self.selection, self.run_id, self.product)
 
-    def _copy_product(self, phase):
+    def _copy_product(self):
         self.failed_step = 'copy_product_to_installed_framework'
         package_phases.copy_product(self.root, self.selection, self.installation_lock, self.package, self.package_identity, self.prepared_product, self.product_identity, self.installed)
 
-    def _build_package(self, phase):
+    def _build_package(self):
         self.failed_step = 'build_package'
         self.staging = _new_staging_directory(self.root, f'{self.run_id}-')
+        self.journal.data["staging"] = self.staging.relative_to(self.root).as_posix()
+        self.journal.save()
         self.prepared_product, self.product_identity, self.package, self.package_identity = package_phases.build_package(self.root, self.selection, self.product, self.staging)
 
-    def _prepare_image(self, phase):
+    def _prepare_image(self):
         self.failed_step = 'prepare_candidate_image'
-        self.manager, self.candidate_image, self.candidate_fingerprint = package_phases.prepare_image(self.root, self.selection, self.staging, self.package, self.package_identity, self.prepared_product, self.product_identity, self.cleanup_runner)
+        self.manager, self.candidate_image, self.candidate_fingerprint = package_phases.prepare_image(
+            self.root, self.selection, self.staging, self.package, self.package_identity,
+            self.prepared_product, self.product_identity, self.cleanup_runner, provenance=self._image_provenance(),
+        )
 
-    def _install_runtime(self, phase):
+    def _install_runtime(self):
         self.failed_step = 'install_project_runtime'
         package_phases.install_runtime(self.root, self.package, self.package_identity, self.runtime, self.candidate_image, self.candidate_fingerprint)
 
+    def _observe_launcher_image(self):
+        return _launcher_image(self.selection)
+
     def _start_mcp(self):
         self.failed_step = 'start_mcp'
-        existing_container = None
-        self.cleanup = cleanup_stopped_containers(self.root, self.selection.instance_id, self.selection.control_relative.as_posix(), self.candidate_image, self.candidate_fingerprint, self.cleanup_runner)
+        existing = self._find_running() if self.resume else None
+        if existing is not None:
+            existing = reconcile_release_container(
+                self.root, self.selection, self.candidate_image, self.candidate_fingerprint,
+                self.production_port, existing, self.cleanup_runner, run_id=self.run_id,
+            )
+        self._prepare_cleanup()
+        run_id = self.run_id
+        if existing is None:
+            existing, self.cleanup_note, self.cleanup_pending = previous_container(
+                self.root, self.selection, self.prior_project, self.candidate_image, self.cleanup,
+                self.runner, self.cleanup_runner, image_labels, self.cleanup_note,
+            )
+            if existing is not None:
+                run_id = None
+                self.journal.data["adopted_container"] = existing
+                self.journal.save()
+        self.endpoint = start_container(
+            self.root, self.selection, self.candidate_image, self.candidate_fingerprint,
+            self.production_port, self.cleanup_runner, existing_container=existing, run_id=run_id, evidence=self.readiness,
+        )
+
+    def _prepare_cleanup(self):
+        self.cleanup = cleanup_stopped_containers(
+            self.root, self.selection.instance_id, self.selection.control_relative.as_posix(),
+            self.candidate_image, self.candidate_fingerprint, self.cleanup_runner,
+        )
         if self.prior_image is not None:
             self.cleanup.images.add(self.prior_image)
-        existing_container, self.cleanup_note, self.cleanup_pending = previous_container(self.root, self.selection, self.prior_project, self.candidate_image, self.cleanup, self.runner, self.cleanup_runner, image_labels, self.cleanup_note)
-        self.endpoint = start_container(self.root, self.selection, self.candidate_image, self.candidate_fingerprint, self.production_port, self.cleanup_runner, existing_container=existing_container)
+
+    def _find_running(self):
+        return find_release_container(self.root, self.selection, self.run_id, self.runner)
+
+    def _adopt_running(self):
+        adopted = self.journal.data.get("adopted_container")
+        existing = adopted or self._find_running()
+        if existing is None:
+            raise LocalReleaseError("local-release-resume-container-missing")
+        endpoint = verify_release_container(
+            self.root, self.selection, self.candidate_image, self.candidate_fingerprint,
+            self.production_port, existing, self.cleanup_runner, run_id=None if adopted else self.run_id,
+            evidence=self.readiness,
+        )
+        if endpoint != self.endpoint:
+            raise LocalReleaseError("local-release-resume-endpoint-changed")
+
+    def _receipt_evidence(self):
+        return release_evidence(self)
 
     def _after_start(self):
-        promoted = False
-        try:
-            self.manager.mark_production_image(self.candidate_image)
-            promoted = True
-        except RuntimeError:
-            self.cleanup.pending = True
-            self.cleanup.notes.append('Production image display tag failed: Runtime image operation failed')
+        if not self.journal.data.get("production_tagged"):
+            self.failed_step = 'promote_candidate_image'
+            try:
+                self.manager.mark_production_image(self.candidate_image)
+            except (RuntimeError, OSError) as error:
+                raise LocalReleaseError('local-release-production-image-tag-failed') from error
+            self.journal.data["production_tagged"] = True
+            self.journal.save()
+        self.failed_step = 'final'
+        if self.cleanup is None:
+            self._prepare_cleanup()
         cleanup_stopped_containers(self.root, self.selection.instance_id, self.selection.control_relative.as_posix(), self.candidate_image, self.candidate_fingerprint, self.cleanup_runner, cleanup=self.cleanup)
         try:
             history = _project_path(self.root, Path('.anechoic_runtime/simple_local_release/ready-images.json'), label='simple-image-history')
@@ -216,63 +259,60 @@ class LocalReleaseRun:
             self.cleanup.pending = True
             self.cleanup.notes.append('Image history unavailable. Retained existing images.')
         else:
-            if promoted:
-                cleanup_obsolete_images(self.root, self.candidate_image, self.candidate_fingerprint, self.cleanup, self.cleanup_runner, previous_images=previous_images)
-        if promoted:
-            try:
-                self.manager.prune_build_cache()
-            except (OSError, RuntimeError):
-                self.cleanup.pending = True
-                self.cleanup.notes.append('Docker build cache cleanup failed.')
+            cleanup_obsolete_images(self.root, self.candidate_image, self.candidate_fingerprint, self.cleanup, self.cleanup_runner, previous_images=previous_images)
+        try:
+            self.manager.prune_build_cache()
+        except (OSError, RuntimeError):
+            self.cleanup.pending = True
+            self.cleanup.notes.append('Docker build cache cleanup failed.')
         if self.prior_image is not None and self.previous_image is None and (self.prior_image != self.candidate_image):
             self.cleanup.pending = True
             self.cleanup.notes.append('Prior image retained: readiness evidence unavailable.')
         receipt = reports.receipt_path(self.root, self.run_id)
-        staging_note = _cleanup_staging(self.root, self.staging)
-        self.staging = None
-        if promoted:
-            try:
-                removed, blocked = prune_temporary_files(self.root)
-                self.cleanup.notes.append(f'Removed {removed} temporary paths older than 48 hours.')
-                if blocked:
-                    self.cleanup.pending = True
-                    self.cleanup.notes.append(f'Temporary file cleanup blocked on {len(blocked)} paths. First error: {blocked[0]}')
-            except (OSError, LocalReleaseError):
+        try:
+            removed, blocked = prune_temporary_files(self.root)
+            self.cleanup.notes.append(f'Removed {removed} temporary paths older than 48 hours.')
+            if blocked:
                 self.cleanup.pending = True
-                self.cleanup.notes.append('Temporary file cleanup failed.')
+                self.cleanup.notes.append(f'Temporary file cleanup blocked on {len(blocked)} paths. First error: {blocked[0]}')
+        except (OSError, LocalReleaseError):
+            self.cleanup.pending = True
+            self.cleanup.notes.append('Temporary file cleanup failed.')
         self.cleanup_pending |= self.cleanup.pending
         self.cleanup_note = '\n'.join([self.cleanup_note, *self.cleanup.notes])
-        self.receipt_path = reports.write_receipt(self.root, receipt, self.run_id, self.image_mode, self.test_scope, self.test_selection, self.canary_endpoint, self.endpoint, self.test_log_paths, self.cleanup_note, staging_note)
+        self.receipt_path = reports.write_receipt(self.root, receipt, self.run_id, self.image_mode, self.test_scope, self.test_selection, self.canary_endpoint, self.endpoint, self.test_log_paths, self.cleanup_note, "",
+                                                  evidence=self.journal.data["evidence"])
 
     def run(self):
         try:
-            self._execute()
+            recorded = self._execute()
+            if recorded is not None:
+                return recorded
+            result = self._completed_result()
+            self.journal.data["result"] = result
+            self.journal.save()
+            if not self.cleanup_pending:
+                _cleanup_staging(self.root, self.staging)
+            return result
         except (Exception, KeyboardInterrupt) as error:
             if self.failed_step == 'installation_lock':
                 print(f'Local release installation lock failed: {error}', file=sys.stderr, flush=True)
-            staging_note = _cleanup_staging(self.root, self.staging)
+            if self.journal is not None:
+                self.journal.record_failure(self.failed_step, error, self.test_log_paths)
+            staging_note = (f"Retained temporary staging: `{self.staging.relative_to(self.root).as_posix()}`.\n"
+                            if self.staging is not None else "")
             report_path = reports.write_failure(self.root, self.run_id, self.failed_step, self.image_mode, self.test_scope, self.test_selection, error, self.test_log_paths, self.endpoint, self.cleanup_note, self.cleanup, staging_note)
             return {'outcome': 'failed',
                     'failed_step': self.failed_step,
                     'report_path': report_path,
                     'error_type': type(error).__name__,
+                    'error': str(error)[:8500],
                     'test_log_path': self.test_log_path,
                     'test_log_paths': self.test_log_paths,
                     'endpoint': self.endpoint,
                     'canary_endpoint': self.canary_endpoint,
                     'test_scope': self.test_scope,
                     'test_modules': self.selected_test_modules,
-                    'image_mode': self.image_mode}
+                    'image_mode': self.image_mode, **failure_evidence(self.journal, error, self.production_port)}
         finally:
             self.installation_lock.close()
-        return {'outcome': 'completed_with_cleanup_pending' if self.cleanup_pending else 'completed',
-                    'failed_step': None,
-                    'report_path': None,
-                    'receipt_path': self.receipt_path,
-                    'test_log_path': self.test_log_path,
-                    'test_log_paths': self.test_log_paths,
-                    'endpoint': self.endpoint,
-                    'canary_endpoint': self.canary_endpoint,
-                    'test_scope': self.test_scope,
-                    'test_modules': self.selected_test_modules,
-                    'image_mode': self.image_mode}

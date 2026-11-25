@@ -11,11 +11,14 @@ import stat
 import tempfile
 import tomllib
 
+from pydantic import ConfigDict, ValidationError
+from pydantic.dataclasses import dataclass
+
 
 _MAX_SETTINGS_BYTES = 4096
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, config=ConfigDict(strict=True))
 class Settings:
     path: Path
     folder: Path
@@ -24,6 +27,13 @@ class Settings:
     workbench_storage: str
     journal_storage: str
     log_level: str = "INFO"
+
+
+def _settings(*values: object) -> Settings:
+    try:
+        return Settings(*values)
+    except ValidationError as error:
+        raise ValueError("Invalid runtime settings values") from error
 
 
 def _path(supplied: Path | None) -> Path:
@@ -89,7 +99,7 @@ def _existing(path: Path, document: dict) -> Settings:
     value = shared[key]
     if not isinstance(value, str) or not Path(value).is_absolute():
         raise ValueError("The configured repository directory must be an absolute path")
-    return _validate(Settings(
+    return _validate(_settings(
         path, _folder(value), key == "project_root", shared.get("http_port"),
         defaults.get("workbench_storage", "disk"), defaults.get("journal_storage", "files"),
         logging.get("level", "INFO"),
@@ -104,7 +114,7 @@ def select_settings(arguments: argparse.Namespace) -> tuple[Settings, bool]:
     if document is None:
         if selected is None:
             raise ValueError("Choose --project or --projects-root for the first installation")
-        return _validate(Settings(
+        return _validate(_settings(
             path, selected, arguments.project is not None,
             arguments.port if arguments.port is not None else 8092,
             arguments.workbench_storage or "disk", arguments.journal_storage or "files",

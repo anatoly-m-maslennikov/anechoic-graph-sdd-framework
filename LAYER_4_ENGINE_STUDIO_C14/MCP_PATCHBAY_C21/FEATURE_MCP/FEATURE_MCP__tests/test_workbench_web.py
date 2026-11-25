@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from functools import partial
 import re
 import tempfile
 import unittest
@@ -15,9 +16,8 @@ MCP_ROOT = Path(__file__).resolve().parents[1]
 FRONTEND_ROOT = MCP_ROOT.parents[1] / "IWE_CONSOLE_C43" / "APP_WORKBENCH" / "FEATURE_WORKBENCH_FRONTEND"
 
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import WORKBENCH_PATH  # noqa: E402
-from MCP_PATCHBAY_C21.FEATURE_MCP.backend_client import ToolProtocolError  # noqa: E402
-import MCP_PATCHBAY_C21.FEATURE_MCP.workbench_web as workbench_web  # noqa: E402
-from MCP_PATCHBAY_C21.FEATURE_MCP.workbench_web import routes  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import ToolProtocolError  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import workbench_routes as routes  # noqa: E402
 
 
 PROJECT_NAME = "anechoic"
@@ -39,22 +39,20 @@ class WorkbenchWebTests(unittest.TestCase):
         (frontend / "index.html").write_text(
             f'<div id="app"></div><script src="{WORKBENCH_PATH}/assets/app.js"></script>'
         )
-        self._frontend = patch.object(workbench_web, "_FRONTEND", frontend)
-        self._frontend.start()
-        self.addCleanup(self._frontend.stop)
+        self.routes = partial(routes, frontend=frontend)
         self.addCleanup(self._temporary.cleanup)
 
     def test_project_named_assets_is_not_shadowed_by_static_files(self):
         gateway = FakeGateway()
         gateway.selection.project_name = "assets"
-        with TestClient(Starlette(routes=routes(gateway))) as client:
+        with TestClient(Starlette(routes=self.routes(gateway))) as client:
             self.assertEqual(200, client.get(f"{WORKBENCH_PATH}/assets").status_code)
             self.assertEqual(200, client.post(f"{WORKBENCH_PATH}/assets/check", json={"sql": "SELECT 1"}).status_code)
             self.assertEqual(200, client.get(f"{WORKBENCH_PATH}/assets/app.js").status_code)
 
     def test_project_api_and_legacy_routes_share_handlers_and_binding(self):
         gateway = FakeGateway()
-        app = Starlette(routes=routes(gateway, shared=True))
+        app = Starlette(routes=self.routes(gateway, shared=True))
         examples = {
             "run": {"sql": "SELECT 1"}, "check": {"sql": "SELECT 1"},
             "page": {"query_id": "query-1", "offset": 0}, "schema": {}, "status": {},
@@ -74,19 +72,19 @@ class WorkbenchWebTests(unittest.TestCase):
 
     def test_http_run_defaults_to_file_and_preserves_explicit_inline(self):
         gateway = FakeGateway()
-        with TestClient(Starlette(routes=routes(gateway))) as client:
+        with TestClient(Starlette(routes=self.routes(gateway))) as client:
             self.assertEqual(200, client.post(f"{API_PATH}/run", json={"sql": "SELECT 1"}).status_code)
             self.assertEqual(200, client.post(f"{PROJECT_PATH}/run", json={
                 "sql": "SELECT 1", "result_delivery": "inline"}).status_code)
         self.assertEqual("file", gateway.workbench.calls[-2][1]["result_delivery"])
         self.assertEqual("inline", gateway.workbench.calls[-1][1]["result_delivery"])
-        with TestClient(Starlette(routes=routes(gateway, shared=True))) as client:
+        with TestClient(Starlette(routes=self.routes(gateway, shared=True))) as client:
             self.assertEqual(200, client.post(f"{API_PATH}/run", json={"project_root": "/project", "sql": "SELECT 1"}).status_code)
         self.assertEqual("file", gateway.workbench.calls[-1][1]["result_delivery"])
 
     def test_backend_receives_public_url_and_original_root(self):
         gateway = FakeGateway()
-        with TestClient(Starlette(routes=routes(gateway)), base_url="http://workbench.test") as client:
+        with TestClient(Starlette(routes=self.routes(gateway)), base_url="http://workbench.test") as client:
             response = client.post(f"{API_PATH}/check", json={
                 "sql": "SELECT 1", "project_root": str(gateway.root),
             })
@@ -96,7 +94,7 @@ class WorkbenchWebTests(unittest.TestCase):
     def test_diagnostic_failure_preserves_original_error(self):
         gateway = FakeGateway()
         with patch("MCP_PATCHBAY_C21.FEATURE_MCP.mcp_startup_boundary.logger.warning", side_effect=RuntimeError("secret sink detail")):
-            with TestClient(Starlette(routes=routes(gateway))) as client:
+            with TestClient(Starlette(routes=self.routes(gateway))) as client:
                 response = client.post(f"{API_PATH}/run", json={"sql": "bad"})
         self.assertEqual(400, response.status_code)
         self.assertEqual({"error": "bad query", "diagnostic_error": "technical diagnostic emission failed"}, response.json())
@@ -108,7 +106,7 @@ class WorkbenchWebTests(unittest.TestCase):
             "outcome": "rejected", "diagnostics": ["invalid SQL"],
         }}
         with patch.object(gateway, "call_tool", side_effect=ToolProtocolError.from_fault(fault)):
-            with TestClient(Starlette(routes=routes(gateway))) as client:
+            with TestClient(Starlette(routes=self.routes(gateway))) as client:
                 for base in (API_PATH, PROJECT_PATH):
                     response = client.post(f"{base}/run", json={"sql": "bad"})
                     self.assertEqual(400, response.status_code)
@@ -140,7 +138,7 @@ class WorkbenchWebTests(unittest.TestCase):
 
     def test_page_and_project_bound_run_check_routes(self):
         gateway = FakeGateway()
-        app = Starlette(routes=routes(gateway))
+        app = Starlette(routes=self.routes(gateway))
         with TestClient(app) as client:
             self.assertEqual(404, client.get(WORKBENCH_PATH).status_code)
             page = client.get(PROJECT_PATH)
@@ -175,25 +173,24 @@ class WorkbenchWebTests(unittest.TestCase):
 
     def test_missing_frontend_does_not_block_query_routes(self):
         missing = Path(self._temporary.name) / "missing"
-        with patch.object(workbench_web, "_FRONTEND", missing):
-            app = Starlette(routes=routes(FakeGateway()))
-            with TestClient(app) as client:
-                response = client.get(PROJECT_PATH)
-                self.assertEqual(503, response.status_code)
-                self.assertEqual(
-                    {"error": "Workbench frontend is unavailable; build required"}, response.json()
-                )
-                self.assertEqual(
-                    1,
-                    client.post(f"{PROJECT_PATH}/check", json={"sql": "SELECT 1"}).json()["row_count"],
-                )
+        app = Starlette(routes=routes(FakeGateway(), frontend=missing))
+        with TestClient(app) as client:
+            response = client.get(PROJECT_PATH)
+            self.assertEqual(503, response.status_code)
+            self.assertEqual(
+                {"error": "Workbench frontend is unavailable; build required"}, response.json()
+            )
+            self.assertEqual(
+                1,
+                client.post(f"{PROJECT_PATH}/check", json={"sql": "SELECT 1"}).json()["row_count"],
+            )
 
     def test_standalone_codex_chat_route_is_disabled(self):
-        with TestClient(Starlette(routes=routes(FakeGateway()))) as client:
+        with TestClient(Starlette(routes=self.routes(FakeGateway()))) as client:
             self.assertEqual(404, client.get(f"{PROJECT_PATH}/codex").status_code)
 
     def test_workspace_interface_uses_the_shared_native_operation_and_public_url(self):
-        with TestClient(Starlette(routes=routes(FakeGateway())), base_url="http://workbench.test") as client:
+        with TestClient(Starlette(routes=self.routes(FakeGateway())), base_url="http://workbench.test") as client:
             opened = client.post(f"{PROJECT_PATH}/interface", json={
                 "operation": "workspace_open", "arguments": {"session_id": "session-1"},
             })
@@ -215,7 +212,7 @@ class WorkbenchWebTests(unittest.TestCase):
     def test_interface_rejects_blacklisted_bound_view_save_and_validates_single_root(self):
         gateway = FakeGateway()
         gateway.tool_blacklist = frozenset({"view_save"})
-        with TestClient(Starlette(routes=routes(gateway))) as client:
+        with TestClient(Starlette(routes=self.routes(gateway))) as client:
             blocked = client.post(f"{PROJECT_PATH}/interface", json={
                 "operation": "view_save", "arguments": {"workspace_id": "session-1", "view_id": "view-1"},
             })
@@ -223,7 +220,7 @@ class WorkbenchWebTests(unittest.TestCase):
             self.assertEqual([], gateway.workbench.calls)
 
         gateway = FakeGateway()
-        with TestClient(Starlette(routes=routes(gateway))) as client:
+        with TestClient(Starlette(routes=self.routes(gateway))) as client:
             wrong = client.post(f"{PROJECT_PATH}/interface", json={
                 "operation": "workspace_open", "project_root": "/other",
                 "arguments": {"session_id": "session-1"},
@@ -238,7 +235,7 @@ class WorkbenchWebTests(unittest.TestCase):
             self.assertEqual([("workspace_open", {"session_id": "session-1"})], gateway.workbench.calls)
 
     def test_run_and_save_values_have_request_derived_urls_and_query_errors_do_not(self):
-        with TestClient(Starlette(routes=routes(FakeGateway())), base_url="http://workbench.test") as client:
+        with TestClient(Starlette(routes=self.routes(FakeGateway())), base_url="http://workbench.test") as client:
             self.assertEqual(404, client.post(f"{PROJECT_PATH}/save", json={"sql": "SELECT 1"}).status_code)
             self.assertEqual(404, client.post(f"{PROJECT_PATH}/worksheet-save", json={"sql": "SELECT 1"}).status_code)
             view = client.post(f"{PROJECT_PATH}/view-save", json={"sql": "SELECT 1", "name": "view"}).json()
@@ -261,20 +258,19 @@ class WorkbenchWebTests(unittest.TestCase):
         index = frontend / "index.html"
         if not index.is_file():
             self.skipTest("frontend build is not present")
-        with patch.object(workbench_web, "_FRONTEND", frontend):
-            app = Starlette(routes=routes(FakeGateway()))
-            with TestClient(app) as client:
-                self.assertEqual(200, client.get(PROJECT_PATH).status_code)
-                assets = re.findall(r'(?:src|href)="([^"?#]+)', index.read_text())
-                self.assertTrue(assets)
-                for asset in assets:
-                    self.assertTrue(asset.startswith(f"{WORKBENCH_PATH}/assets/"))
-                    self.assertNotIn("/assets/assets/", asset)
-                    self.assertEqual(200, client.get(asset).status_code, asset)
+        app = Starlette(routes=routes(FakeGateway()))
+        with TestClient(app) as client:
+            self.assertEqual(200, client.get(PROJECT_PATH).status_code)
+            assets = re.findall(r'(?:src|href)="([^"?#]+)', index.read_text())
+            self.assertTrue(assets)
+            for asset in assets:
+                self.assertTrue(asset.startswith(f"{WORKBENCH_PATH}/assets/"))
+                self.assertNotIn("/assets/assets/", asset)
+                self.assertEqual(200, client.get(asset).status_code, asset)
 
     def test_shared_routes_require_and_forward_the_explicit_project_root(self):
         gateway = FakeGateway()
-        app = Starlette(routes=routes(gateway, shared=True))
+        app = Starlette(routes=self.routes(gateway, shared=True))
         with TestClient(app) as client:
             self.assertEqual(404, client.get(WORKBENCH_PATH).status_code)
             self.assertEqual(400, client.get(PROJECT_PATH).status_code)

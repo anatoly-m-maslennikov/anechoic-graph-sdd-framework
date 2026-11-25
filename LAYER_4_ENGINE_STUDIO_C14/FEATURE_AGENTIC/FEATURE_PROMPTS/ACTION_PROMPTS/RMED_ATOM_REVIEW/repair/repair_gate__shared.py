@@ -21,7 +21,12 @@ from .repair_gate import (
     admit_proposal,
     _local_repair_boundary,
 )
-from .layout_repair_gate import admit_layout_recoding
+from .layout_preview import admit_layout_preview
+from .layout_repair_gate import admit_layout_recoding, authority_digest
+from .layout_subject_repair_gate import admit_layout_subject_recoding
+from .scope_extraction_preview import admit_scope_extraction_preview
+from .scope_extraction_repair_gate import admit_scope_extraction_subject_recoding
+from .subject_repair_gate import admit_subject_recoding
 
 __all__ = [
     "_path",
@@ -43,5 +48,11 @@ __all__ = [
     "_preflight",
     "admit_proposal",
     "_local_repair_boundary",
+    "admit_layout_preview",
     "admit_layout_recoding",
+    "admit_layout_subject_recoding",
+    "admit_scope_extraction_preview",
+    "admit_scope_extraction_subject_recoding",
+    "admit_subject_recoding",
+    "authority_digest",
 ]

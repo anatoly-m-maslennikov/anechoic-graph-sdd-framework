@@ -1,4 +1,5 @@
 """Formal Delivery claims alone determine the compiled placement policy."""
+from dataclasses import replace
 from pathlib import Path
 import json
 import sys
@@ -84,6 +85,11 @@ class FormalPlacementTests(unittest.TestCase):
         self.assertEqual(('role', 'archived'), rules.placement('Plan', 'Archived'))
         self.assertEqual({'CA-D-747', 'CA-D-9123', 'CA-D-98236', 'CA-R-77', 'CA-R-78'},
                          {row['atom_id'] for row in rules.sources})
+        updated = replace(rules)
+        self.assertIs(updated.role_folders, rules.role_folders)
+        self.assertIs(updated.sources[0], rules.sources[0])
+        with self.assertRaises(TypeError):
+            updated.role_folders['new'] = '42_new'
 
     def test_duplicate_formal_binding_fails(self):
         role_source(self.root, 'Concern', 77, 'CA-R-77')

@@ -7,9 +7,6 @@ import sys
 from tempfile import TemporaryDirectory
 import unittest
 
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.workflow_reuse import check_reuse
-
-
 LEAN = shutil.which('lean')
 SOURCE = '''\
 def update(store, value):
@@ -71,8 +68,15 @@ class WorkflowReuseTests(unittest.TestCase):
         (self.root / 'flows.py').write_text(SOURCE, encoding='utf-8')
 
     def check(self, caller, first=None, last=None, *, state='local'):
-        return check_reuse(self.root, self.graph, self.structure(state), self.keys[caller],
-                           self.keys['update'], first, last, control_root='_anechoic_demo')
+        request = {"root": str(self.root), "graph": self.graph, "structure": self.structure(state),
+                   "caller": self.keys[caller], "callee": self.keys["update"], "first": first, "last": last,
+                   "control_root": "_anechoic_demo"}
+        result = subprocess.run(
+            [sys.executable, "-B", "-P", "-m", "IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.workflow_reuse"],
+            input=json.dumps(request), text=True, capture_output=True, timeout=60,
+        )
+        self.assertEqual(0, result.returncode, result.stderr)
+        return json.loads(result.stdout)
 
     def test_matches_renamed_and_literal_arguments_without_execution(self):
         for caller, first, last, arguments in [

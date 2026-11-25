@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
 from datetime import datetime, timezone
 import json
 import logging
@@ -13,7 +12,10 @@ from pathlib import Path
 import re
 import sys
 import tomllib
-from typing import TextIO
+from typing import Protocol, TextIO, runtime_checkable
+
+from pydantic import ConfigDict
+from pydantic.dataclasses import dataclass
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.project_settings_schema import _string
 
@@ -72,14 +74,24 @@ def _render(record: dict[str, str | float]) -> str:
     return line
 
 
-@dataclass(frozen=True)
+@runtime_checkable
+class _DiagnosticStream(Protocol):
+    def write(self, value: str, /) -> int: ...
+
+    def flush(self) -> None: ...
+
+
+@dataclass(
+    frozen=True,
+    config=ConfigDict(strict=True, extra="forbid", arbitrary_types_allowed=True),
+)
 class TechnicalDiagnosticLogger:
     """Emit one bounded diagnostic record without touching Project state."""
 
     project_prefix: str | None
     root: Path | None
     version: str
-    stream: TextIO
+    stream: _DiagnosticStream
     environment: str
     component: str = "RUNTIME"
 

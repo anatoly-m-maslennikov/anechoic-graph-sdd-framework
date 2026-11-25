@@ -4,8 +4,10 @@ import sys
 import tempfile
 from pathlib import Path
 import unittest
-from dataclasses import dataclass
 from unittest.mock import patch
+
+from pydantic import ConfigDict
+from pydantic.dataclasses import dataclass, is_pydantic_dataclass
 
 from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.FEATURE_FORMAL_MODEL_GENERATOR__shared import (
     assemble_model_classes, assemble_model_modules, load_native_model, native_manifest_model,
@@ -18,6 +20,9 @@ class NativeManifestModelTests(unittest.TestCase):
         cls.model = load_native_model()
         cls.fields = {"atom_id": "AN-S-123", "ref_id": "AN-S-123@1", "version": 1,
                       "tier": -1, "name": "Anechoic", "prefix": "AN"}
+
+    def test_reviewed_classes_are_pydantic_dataclasses(self):
+        self.assertTrue(all(is_pydantic_dataclass(cls) for cls in self.model._types.values()))
 
     def test_reviewed_manifest_validation(self):
         fields = self.fields | {"parameters": {f"option{i}": i for i in range(18)}}
@@ -89,7 +94,7 @@ class NativeManifestModelTests(unittest.TestCase):
                     self.model.validate_manifest(self.fields | {"parameters": parameters}, "C00")
 
     def test_derived_ref_id_input_is_checked_and_not_passed_to_constructor(self):
-        @dataclass
+        @dataclass(config=ConfigDict(strict=True, extra="forbid"))
         class StrictAtom:
             atom_id: str
             version: int

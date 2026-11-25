@@ -2,23 +2,17 @@
 from hashlib import sha256
 import json
 from pathlib import Path
-from types import SimpleNamespace
-import sys
 import tempfile
 import time
 import unittest
 
 import yaml
 
-TOOLS = Path(__file__).resolve().parents[1]
-ENGINE = TOOLS.parents[1]
-sys.path[:0] = [str(TOOLS), str(ENGINE / 'IWE_CONSOLE_C43')]
-
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import capture_native
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import InputError, SourceChanged
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import capture_native, parse_structure
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import canonical_native_header
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import native_carrier_path
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.native_lifecycle import LIFECYCLE_TOOLS, _dispatch_lifecycle
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import NativeProjectSelection
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import LIFECYCLE_TOOLS, execute_native_lifecycle
 
 
 LIFECYCLE_TEMPLATES = {
@@ -133,25 +127,27 @@ from anechoic.model import ProjectManifest
 declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Test', prefix='AN', lens_whitelist=['DES', 'SPEC']))
 ```
 """)
-        project = SimpleNamespace(root=root, control_root=control, manifest_path=manifest,
-            manifest_sha256=sha256(manifest.read_bytes()).hexdigest(), project_prefix='AN')
-        component = control / 'UNIT_C9'
-        component.mkdir()
+        project = NativeProjectSelection(
+            root=root, control_root=control, control_relative=control.relative_to(root),
+            instance_id='a' * 64, project_name='Test', project_prefix='AN',
+            manifest_path=manifest, manifest_ref='AN-S-1@1',
+            manifest_sha256=sha256(manifest.read_bytes()).hexdigest(),
+        )
+        component = control / 'UNIT_C9'; component.mkdir()
         declaration = control / 'AN-S-2-SPEC--component.md'
         declaration.write_text('---\n' + yaml.safe_dump({'identity': {'atom_id': 'AN-S-2'},
             'context': {'container': {'component': 'C00'}, 'lens': 'SPEC'},
             'state': {'status': 'active', 'version': 1, 'updated_at': '2026-01-01'}}) + '---\n' + body)
-        record = SimpleNamespace(source_path=declaration.relative_to(control).as_posix(),
-            sha256=sha256(declaration.read_bytes()).hexdigest(), parent='C00', lens_whitelist=None)
-        snapshot = SimpleNamespace(components={'C9': record}, component=lambda key: {'C9': record}[key])
+        snapshot = parse_structure(json.dumps({'model_sha256': 'model', 'project': {'ref': 'AN-S-1@1', 'sha256': sha256(manifest.read_bytes()).hexdigest()},
+            'components': {'C9': {'parent': 'C00', 'ref': 'AN-S-2@1', 'sha256': sha256(declaration.read_bytes()).hexdigest(),
+                'fields': {'name': 'Unit', 'lens_whitelist': None}, 'source_path': declaration.relative_to(control).as_posix()}}, 'packages': {}}).encode())
         owner_header = canonical_native_header({'identity': {'atom_id': 'AN-T-1'},
             'context': {'container': {'component': 'C00'}, 'template': 'task'},
             'state': {'status': 'in_queue', 'version': 1, 'updated_at': '2026-01-01'}})
         owner_path = native_carrier_path(owner_header, 'Owner', project_root=control, owner_directory=control)
-        owner_path.parent.mkdir(parents=True, exist_ok=True)
-        owner_path.write_text('---\n' + yaml.safe_dump(owner_header, sort_keys=False) + '---\n\n## Summary\n\nOwner\n')
-        owner_dir = owner_path.with_suffix('')
-        return project, component, snapshot, owner_dir
+        owner_path.parent.mkdir(parents=True, exist_ok=True); owner_path.write_text(
+            '---\n' + yaml.safe_dump(owner_header, sort_keys=False) + '---\n\n## Summary\n\nOwner\n')
+        owner_dir = owner_path.with_suffix(''); return project, component, snapshot, owner_dir
 
     def _grid_carrier(self, case, project, component, owner_dir, container, body):
         family, template, situation, contained, route = (case[k] for k in ('family', 'template', 'situation', 'contained', 'route'))
@@ -178,15 +174,15 @@ declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Te
                     previous = canonical_native_header({'identity': {'atom_id': atom_id}, 'context': context,
                         'state': {'status': 'active', 'version': 1, 'updated_at': '2026-01-01'}})
                     previous_path = native_carrier_path(previous, 'Example', project_root=control, owner_directory=control)
-                    previous_path.parent.mkdir(parents=True, exist_ok=True)
-                    previous_path.write_text('---\n' + yaml.safe_dump(previous, sort_keys=False) + '---\n' + body)
+                    previous_path.parent.mkdir(parents=True, exist_ok=True); previous_path.write_text(
+                        '---\n' + yaml.safe_dump(previous, sort_keys=False) + '---\n' + body)
                 header = canonical_native_header({'identity': {'atom_id': atom_id}, 'context': context,
                     'state': {'status': status, 'version': version, 'updated_at': '2026-01-01'}})
                 path = native_carrier_path(header, 'Example', project_root=control,
                     owner_directory=owner_dir if contained else component if family == 'SPEC' and container == {'component': 'C9'} else control,
                     owner_template='task' if contained else None)
-                path.parent.mkdir(parents=True, exist_ok=True)
-                path.write_text('---\n' + yaml.safe_dump(header, sort_keys=False) + '---\n' + body)
+                path.parent.mkdir(parents=True, exist_ok=True); path.write_text(
+                    '---\n' + yaml.safe_dump(header, sort_keys=False) + '---\n' + body)
         return atom_id
 
     def _grid_arguments(self, case, atom_id, container, body, changed):
@@ -254,10 +250,8 @@ declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Te
                 and (target == 'done' or not case['contained'] and source == 'in_queue' and target == 'complete'))
 
     def _run_grid_case(self, case, directory, body, changed, assets, project_specs):
-        family, template, situation, contained, route = (case[k] for k in
-            ('family', 'template', 'situation', 'contained', 'route'))
+        family, template, contained, route = (case[k] for k in ('family', 'template', 'contained', 'route'))
         project, component, snapshot, owner_dir = self._grid_project(directory, body)
-        root, control = project.root, project.control_root
         container = {'atom': 'AN-T-1'} if contained else {'component': 'C00' if template in project_specs or template == 'project_manifest' or family != 'SPEC' else 'C9'}
         atom_id = self._grid_carrier(case, project, component, owner_dir, container, body)
         capture = capture_native(project)
@@ -265,13 +259,19 @@ declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Te
         before = self.files(project)
         args, status = self._grid_arguments(case, atom_id, container, body, changed)
         expected = self._grid_expected(case, assets, project_specs)
-        try:
-            result = _dispatch_lifecycle(
-                project, 'atom_lifecycle_' + route, args, capture.atoms, snapshot,
-                previous_capture=None, ticket_labels=(), validate_project_spec=lambda *args: None,
-            )
-        except (InputError, SourceChanged) as error:
-            self.assertFalse(expected, str(error))
+        result = execute_native_lifecycle(
+            project, 'atom_lifecycle_' + route, args, capture, None,
+            previous_capture=None, ticket_labels=(), validate_project_spec=lambda *args: None,
+            admitted_structure=snapshot,
+        )
+        if result['outcome'] != 'completed':
+            self.assertFalse(expected, result)
+            self.assertFalse(result['effects'], result)
+            if result['outcome'] == 'needs_input':
+                self.assertTrue(result['requested_input'], result)
+            else:
+                self.assertEqual('failed', result['outcome'], result)
+                self.assertEqual(['source_changed'], [item['code'] for item in result['errors']])
             self.assertEqual(before, self.files(project))
             return 'rejected'
         self._check_grid_result(case, result, project, component, owner_dir, container, body, changed,
@@ -283,25 +283,22 @@ declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Te
         family, template, situation, contained, route = (case[k] for k in
             ('family', 'template', 'situation', 'contained', 'route'))
         root, control = project.root, project.control_root
-        self.assertTrue(expected, result)
-        self.assertEqual('completed', result['outcome'], result)
-        self.assertTrue(result['effects'], result)
-        saved = result.get('savedDraft') or result['artifact']
+        self.assertTrue(expected, result); self.assertEqual('completed', result['outcome'], result)
+        self.assertTrue(result['effects'], result); saved = result.get('savedDraft') or result['artifact']
         saved_path = root / saved['path']
         self.assertTrue(saved_path.is_file())
         expected_version = 2 if (situation == 'current' and route in {'create_draft', 'update'} or family == 'PROJECT_CONFIG' and situation == 'draft' and template is not None and not contained) else 1
-        self.assertEqual(atom_id, saved['atom_id'])
-        self.assertEqual(expected_version, saved['version'])
+        self.assertEqual(atom_id, saved['atom_id']); self.assertEqual(expected_version, saved['version'])
         expected_status = ('draft' if route in {'create_draft', 'update'} else
             'in_queue' if route == 'create_asset' else
             {'TKT': 'backlog', 'SPEC': 'ready', 'PROJECT_CONFIG': 'active'}[family] if route == 'promote_draft' else
             status if route == 'change_status' else 'archived' if route == 'archive' else
             'draft' if situation == 'draft' else 'in_queue')
-        self.assertEqual(expected_status, saved['status'].lower())
-        expected_ref = (f"{saved['atom_id']}@{expected_version}-draft" if expected_status == 'draft' else
+        self.assertEqual(expected_status, saved['status'].lower()); expected_ref = (
+            f"{saved['atom_id']}@{expected_version}-draft" if expected_status == 'draft' else
                         f"{saved['atom_id']}@{expected_version}" if expected_status == 'archived' else saved['atom_id'])
-        self.assertEqual(expected_ref, saved['ref_id'])
-        operations = [effect['operation'] for effect in result['effects'] if effect.get('evidence') != 'directory']
+        self.assertEqual(expected_ref, saved['ref_id']); operations = [
+            effect['operation'] for effect in result['effects'] if effect.get('evidence') != 'directory']
         expected_operations = (['create'] if route in {'create_draft', 'update', 'create_asset'} else
             ['modify'] if route == 'direct_update' else
             ['create', 'modify', 'remove'] if family == 'PROJECT_CONFIG' and route == 'promote_draft' else

@@ -18,6 +18,20 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import formal_claim
 
 
+def _validate_check_dependencies(check):
+    tree = ast.parse(check["source"])
+    function = tree.body[0]
+    if any(isinstance(node, ast.Name) and node.id == "ScopeUnit"
+           for statement in function.body for node in ast.walk(statement)):
+        raise ValueError("ScopeUnit may appear only in annotations")
+    locals_ = {check["parameter"], check["name"]}
+    locals_.update(node.id for node in ast.walk(tree) if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Store))
+    allowed = locals_ | {"ScopeUnit", "bool", "None", "True", "False", "abs", "min", "max", "len"}
+    unknown = {node.id for node in ast.walk(tree) if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load)} - allowed
+    if unknown:
+        raise ValueError("Unsupported Scope check dependencies: " + ", ".join(sorted(unknown)))
+
+
 def generated_assets(raw, *, pin, release_sources):
     """Build only a source revision selected by the trusted release frontier."""
     if pin is None:
@@ -42,21 +56,15 @@ def generated_assets(raw, *, pin, release_sources):
     if check is None or check["parameter_type"] != "ScopeUnit":
         raise ValueError("Expected the Scope Unit instance check")
     statements, check = compile_scope_level_with_check(declaration)
-    tree = ast.parse(check["source"])
-    locals_ = {check["parameter"], check["name"]}
-    locals_.update(node.id for node in ast.walk(tree) if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Store))
-    allowed = locals_ | {"ScopeUnit", "bool", "None", "True", "False", "abs", "min", "max", "len"}
-    unknown = {node.id for node in ast.walk(tree) if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load)} - allowed
-    if unknown:
-        raise ValueError("Unsupported Scope check dependencies: " + ", ".join(sorted(unknown)))
+    _validate_check_dependencies(check)
 
     reference = f'{pin["atom_id"]}@{pin["version"]}'
     prefix = (
-        "# Generated from the selected reviewed Formal Claim.\n"
+        "from __future__ import annotations\n"
         f"SOURCE_REFERENCE = {reference!r}\n"
         f"SOURCE_SHA256 = {pin['carrier_sha256']!r}\n"
         f"CLAIM_SHA256 = {pin['claim_sha256']!r}\n"
-        "from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.scope_levels import ScopeUnit\n\n"
+        "\n"
     )
     source = (prefix + check["source"] + "\n").encode()
     snapshot = (json.dumps({reference: base64.b64encode(raw).decode("ascii")},

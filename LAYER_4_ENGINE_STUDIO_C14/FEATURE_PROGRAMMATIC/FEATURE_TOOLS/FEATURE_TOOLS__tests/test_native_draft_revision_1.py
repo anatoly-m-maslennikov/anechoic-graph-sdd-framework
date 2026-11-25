@@ -1,3 +1,4 @@
+from dataclasses import replace
 from hashlib import sha256
 from pathlib import Path
 import sys
@@ -26,8 +27,8 @@ class NativeRevisionCarrierTests(fixtures.NativeRevisionCarrierTests, unittest.T
     def test_project_goal_revision_returns_active_to_repository_root(self):
         manifest = self.selection.manifest_path.rename(self.root / self.selection.manifest_path.name)
         manifest.write_text(manifest.read_text().replace("component: C0", "component: C00"))
-        self.selection.manifest_path = manifest
-        self.selection.manifest_sha256 = sha256(manifest.read_bytes()).hexdigest()
+        self.selection = replace(self.selection, manifest_path=manifest,
+                                 manifest_sha256=sha256(manifest.read_bytes()).hexdigest())
         goal = self.root / "AN-S-1233-SPEC-PROJECT_GOAL--goal.md"
         goal.write_text(
             "---\natom_family: SPEC\natom_id: AN-S-1233\ncontainer: {component: C00}\ntier: -1\n"
@@ -183,7 +184,7 @@ class NativeRevisionCarrierTests(fixtures.NativeRevisionCarrierTests, unittest.T
     def test_existing_component_lens_can_override_project_whitelist(self):
         manifest = self.selection.manifest_path
         manifest.write_text(manifest.read_text().replace("['DES', 'SPEC']", "['SPEC']"))
-        self.selection.manifest_sha256 = sha256(manifest.read_bytes()).hexdigest()
+        self.selection = replace(self.selection, manifest_sha256=sha256(manifest.read_bytes()).hexdigest())
         component = self.spec('AN-S-7-SPEC-COMPONENT_MANIFEST--unit.md', 'AN-S-7', 'SPEC', 'C0')
         header, body = component.read_text().split('---\n', 2)[1:]
         component_header = yaml.safe_load(header)

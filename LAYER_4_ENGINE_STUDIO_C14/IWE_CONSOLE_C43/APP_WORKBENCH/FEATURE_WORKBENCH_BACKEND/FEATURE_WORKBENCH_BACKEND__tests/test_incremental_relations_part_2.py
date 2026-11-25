@@ -4,7 +4,7 @@ import random
 import unittest
 
 
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.incremental_relations import materialize_delta  # noqa: E402
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__shared import materialize_delta
 from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__tests.test_relations import atom, declarations  # noqa: E402
 
 
@@ -18,10 +18,13 @@ class _GuardedBucket(frozenset):
         return super().__iter__()
 
 
+class _DeltaOnlyRows(list):
+    def __iter__(self):
+        raise AssertionError("Ordinary relation delta scanned all source rows")
+
+
 class IncrementalRelationTests(unittest.TestCase):
     def test_ordinary_delta_refreshes_only_the_changed_fact_support(self):
-        import IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.incremental_relation_state as incremental
-
         leaves = [
             atom(
                 f"CA-P-{number}",
@@ -38,30 +41,18 @@ class IncrementalRelationTests(unittest.TestCase):
         state.facts_by_endpoint[endpoint] = guarded
         guarded_support = _GuardedBucket(state.support[endpoint])
         state.support[endpoint] = guarded_support
-        original = incremental._support_for_fact
-        calls = []
+        _GuardedBucket.reads = 0
 
-        def counted(fact, *args):
-            calls.append(fact)
-            return original(fact, *args)
-
-        incremental._support_for_fact = counted
-        try:
-            changed = dict(leaves[0], version=2)
-            original_compiler = incremental.compile_registry
-            incremental.compile_registry = lambda _atoms: self.fail("ordinary delta compiled all sources")
-            try:
-                _rows, _scopes, _registered, _inverse, next_state, _delta = materialize_delta(
-                    declarations() + [changed, *leaves[1:]], [], state,
-                    {changed["source_path"]: changed},
-                )
-            finally:
-                incremental.compile_registry = original_compiler
-        finally:
-            incremental._support_for_fact = original
-        self.assertEqual(
-            [("Atom", "CA-P-0", "IS_CONTAINED_BY", "Atom", "CA-P-MISSING-0")], calls
+        changed = dict(leaves[0], version=2)
+        _, _, _, _, next_state, delta = materialize_delta(
+            _DeltaOnlyRows(declarations() + [changed, *leaves[1:]]), [], state,
+            {changed["source_path"]: changed},
         )
+
+        self.assertEqual({changed["source_path"]}, set(delta.new_atoms))
+        self.assertEqual(2, delta.new_atoms[changed["source_path"]]["version"])
+        self.assertEqual({("Atom", "CA-P-MISSING-0", "CONTAINS", "Atom", "CA-P-0", True)},
+                         next_state.support[("Atom", "CA-P-0")])
         self.assertEqual(0, _GuardedBucket.reads)
         self.assertIs(guarded, next_state.facts_by_endpoint[endpoint])
         self.assertIs(guarded_support, next_state.support[endpoint])

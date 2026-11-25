@@ -1,0 +1,60 @@
+class SourceWatcher:
+    """Watch selected Project roots; the service owns batch handling and refresh."""
+
+    def __init__(
+        self, root: Path, control_root: Path,
+        *, implementation_root: Path | None = None, observer_factory: Callable[[], Any] | None = None,
+        exclude_directory: Callable[[str], bool] | None = None,
+        poll_bind_mount: bool = False,
+    ) -> None:
+        self._root = Path(root).absolute()
+        self._control_root = Path(control_root).absolute()
+        roots = (self._control_root,) if implementation_root is None else (self._control_root, implementation_root)
+        candidates = tuple(Path(path).absolute() for path in roots)
+        self._resolved_root = self._root.resolve()
+        if any(not path.is_relative_to(self._root) or not path.resolve().is_relative_to(self._resolved_root)
+               for path in candidates):
+            raise ValueError("Workbench sources must be inside the selected repository")
+        self._roots = tuple(path for path in dict.fromkeys(candidates)
+                            if not any(path != other and path.is_relative_to(other) for other in candidates))
+        self._resolved_roots = tuple(path.resolve() for path in self._roots)
+        self._observer_factory = observer_factory
+        self._exclude_directory = exclude_directory if self._root in self._roots else None
+        self._poll_bind_mount = poll_bind_mount
+        self._observer: Any = None
+        self._changes: Queue[Change] = Queue()
+        self._watched_directories: dict[Path, Any] = {}
+
+    def start(self) -> None:
+        if self._observer is not None:
+            return
+        factory = self._observer_factory or NativeObserver
+        if factory is None:
+            raise RuntimeError("watchdog runtime is unavailable")
+        # Docker bind mounts can misclassify directories and exhaust watcher threads.
+        observer = PollingObserverVFS(os.lstat, self._source_entries) if self._poll_bind_mount else factory()
+        try:
+            for path in self._roots:
+                filtered = not self._poll_bind_mount and self._exclude_directory is not None and path == self._root
+                self._watched_directories[path] = observer.schedule(_Handler(self), str(path), recursive=not filtered)
+                if filtered:
+                    for child in path.iterdir():
+                        if child.is_dir() and not child.is_symlink() and not self._exclude_directory(child.relative_to(self._root).as_posix()):
+                            self._watched_directories[child] = observer.schedule(_Handler(self), str(child), recursive=True)
+            observer.start()
+        except BaseException:
+            observer.stop()
+            if observer.is_alive():
+                observer.join()
+            self._watched_directories = {}
+            raise
+        self._observer = observer
+
+    def _source_entries(self, directory: str):
+        exclude = self._exclude_directory
+        relative = Path(directory).relative_to(self._root)
+        with os.scandir(directory) as entries:
+            for entry in entries:
+                if exclude is None or not exclude((relative / entry.name).as_posix()):
+                    yield entry
+

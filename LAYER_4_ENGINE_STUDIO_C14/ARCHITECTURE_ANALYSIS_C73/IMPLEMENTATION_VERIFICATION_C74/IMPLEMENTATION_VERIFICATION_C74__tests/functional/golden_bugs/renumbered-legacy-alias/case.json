@@ -1,0 +1,28 @@
+{
+  "title": "Preserve legacy aliases for renumbered revisions",
+  "invariant": "A valid, unique path-bound legacy alias may target a revision with a different version.",
+  "scope": "The legacy reference rejection condition after path and target checks. Regex and version extraction are abstracted.",
+  "before": {
+    "revision": "8551e0bde55de9370ea5322ad9dea8ce57e1c0fc",
+    "source": "LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/native_projection.py",
+    "source_sha256": "12eadd4454e8cbb29b03947c915c6b7ec1c54162df11355edef661a57279dfdd",
+    "fixture": "before.py.txt",
+    "sha256": "6e12b2fde86fba299aa7b7a9fd2439d9540a8fd6ef44e2bf8071cb4d292709cb"
+  },
+  "fixed": {
+    "revision": "e68781ebc27b08fdb39c71a747039de9d9413a4c",
+    "source": "LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/native_projection.py",
+    "source_sha256": "e7c2635b1aaf6879a719eb8234db83c2e0984cba82f5321c6db6d92a238df486",
+    "fixture": "fixed.py.txt",
+    "sha256": "bdc6022e4dd220711364a5c6146d3ddf8c125c23e09ae4bf7b235567c0d091ec"
+  },
+  "checks": [
+    {
+      "file": "before.lean"
+    },
+    {
+      "file": "fixed.lean"
+    }
+  ],
+  "analyzer": "analyze.py"
+}

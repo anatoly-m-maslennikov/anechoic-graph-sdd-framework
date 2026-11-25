@@ -41,8 +41,13 @@ class MCPHTTPNetworkTests(unittest.TestCase):
         self.assertEqual(["ALL"], service["cap_drop"])
         self.assertIn("no-new-privileges:true", service["security_opt"])
         self.assertNotIn("network_mode", service)
-        self.assertEqual({"/project", "/project/.git"},
-                         {mount["target"] for mount in service["volumes"]})
+        mounts = service["volumes"]
+        self.assertCountEqual(
+            [("bind", "/project"), ("bind", "/project/.git"), ("volume", "/var/lib/anechoic")],
+            [(mount["type"], mount["target"]) for mount in mounts],
+        )
+        self.assertIn({"type": "volume", "source": "framework-db", "target": "/var/lib/anechoic"}, mounts)
+        self.assertEqual("anechoic-framework-db", self.http["volumes"]["framework-db"]["name"])
 
 
 if __name__ == "__main__":

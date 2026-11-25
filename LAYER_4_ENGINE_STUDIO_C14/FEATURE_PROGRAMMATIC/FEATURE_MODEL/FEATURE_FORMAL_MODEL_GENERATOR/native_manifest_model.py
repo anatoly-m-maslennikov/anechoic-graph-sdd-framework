@@ -11,9 +11,8 @@ from uuid import uuid4
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_native_model_claim
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.relation_declaration_catalog__pub import build_relation_declaration_catalog
-from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.FEATURE_MODEL_VALIDATION__pub import BoundNativeModel, validate_model_instance
 from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.FEATURE_MODEL_VALIDATION__shared import (
-    normalize_reviewed_claim, reviewed_claim_sha256,
+    BoundNativeModel, normalize_reviewed_claim, reviewed_claim_sha256, validate_model_instance,
 )
 from .model_class_assembly import assemble_model_classes, model_module_name
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import model_class_target

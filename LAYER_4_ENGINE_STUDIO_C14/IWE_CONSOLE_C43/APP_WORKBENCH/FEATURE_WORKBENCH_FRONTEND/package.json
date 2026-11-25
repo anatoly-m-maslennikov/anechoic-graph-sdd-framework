@@ -3,17 +3,19 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "vite build && node scripts/build-mcp-app.mjs",
+    "build": "vite build && node scripts/build-mcp-app.ts",
     "build:standalone": "vite build",
-    "build:mcp-app": "node scripts/build-mcp-app.mjs",
+    "build:mcp-app": "node scripts/build-mcp-app.ts",
     "check:types": "tsc --noEmit && svelte-check --tsconfig ./tsconfig.json",
-    "test:workspace": "npm run check:types && node --test FEATURE_WORKBENCH_FRONTEND__tests/*.test.mjs",
-    "test:mcp-app": "npm run build:mcp-app && node --test ../FEATURE_CODEX_EXTENSION/FEATURE_CODEX_EXTENSION__tests/mcp-app.e2e.mjs",
-    "test:e2e": "playwright test"
+    "test:workspace": "npm run check:types && node --test FEATURE_WORKBENCH_FRONTEND__tests/*.test.ts",
+    "test:mcp-app": "tsc --noEmit --strict --target ES2022 --module ESNext --moduleResolution bundler --skipLibCheck ../FEATURE_CODEX_EXTENSION/FEATURE_CODEX_EXTENSION__tests/mcp-app.e2e.ts ../FEATURE_CODEX_EXTENSION/FEATURE_CODEX_EXTENSION__tests/mcp_app_probe.ts && npm run build:mcp-app && node --test ../FEATURE_CODEX_EXTENSION/FEATURE_CODEX_EXTENSION__tests/mcp-app.e2e.ts",
+    "test:e2e": "playwright test --config FEATURE_WORKBENCH_FRONTEND__tests/playwright.config.ts"
   },
   "devDependencies": {
     "@playwright/test": "^1.64.1",
     "@sveltejs/vite-plugin-svelte": "^6.2.1",
+    "@types/node": "22.20.5",
+    "acorn": "8.19.0",
     "postcss": "8.5.32",
     "svelte": "^5.43.8",
     "svelte-check": "4.7.8",

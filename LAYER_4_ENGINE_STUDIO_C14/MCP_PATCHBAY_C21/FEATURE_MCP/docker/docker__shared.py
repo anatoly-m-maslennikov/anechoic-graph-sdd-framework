@@ -1,4 +1,4 @@
-"""Source-bound image admission for the explicit Project MCP launcher.
+"""Docker image admission and named MCP launcher entry points.
 
 The Framework source closure is independent of the selected Project.  Only an
 inspected immutable Docker image ID leaves this boundary; no runtime resources
@@ -16,7 +16,18 @@ from pathlib import Path
 import platform as host_platform
 import subprocess
 
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker import candidate_image_cli as _candidate_image_cli
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker import runtime as _runtime
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker import shared_mcp_launcher as _shared_mcp_launcher
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_backend import ProjectMcpBackend as ProjectMcpBackend
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_launcher import Launcher as Launcher
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime import Runtime as Runtime
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.shared_mcp_launcher import SharedMcpLauncher as SharedMcpLauncher
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.shared_supervisor import supervise_project as supervise_project
+
 try:
+    from .project_mcp_docker_command import BackendError as BackendError
+    from .project_mcp_launcher_common import LaunchError as LaunchError
     from .image_reference import IMMUTABLE_IMAGE
     from .image_reference import IMAGE as IMAGE
     from .image_metadata import (
@@ -32,6 +43,8 @@ try:
     from .image_docker_client import bounded_run as _bounded_run
     from .image_docker_client import docker_client_environment as _docker_client_environment
 except ImportError:
+    from MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_docker_command import BackendError as BackendError
+    from MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_launcher_common import LaunchError as LaunchError
     from MCP_PATCHBAY_C21.FEATURE_MCP.docker.image_reference import IMMUTABLE_IMAGE
     from MCP_PATCHBAY_C21.FEATURE_MCP.docker.image_reference import IMAGE as IMAGE
     from MCP_PATCHBAY_C21.FEATURE_MCP.docker.image_metadata import OCI_VERSION_LABEL, display_image_tag, docker_created_utc, read_framework_version
@@ -66,6 +79,10 @@ except ImportError:
     )
     from MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_images_source import ImageSource
     from MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_images_build import ImageBuild
+
+candidate_image_main = _candidate_image_cli.main
+runtime_main = _runtime.main
+shared_mcp_main = _shared_mcp_launcher.main
 
 _DEFAULT_EXECUTOR = subprocess.run
 
@@ -220,7 +237,7 @@ class ImageManager(ImageSource, ImageBuild):
         expected = next((row.sha256 for row in identity.manifest if row.path == "LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/project.toml"), None)
         if digest != expected:
             raise self._input_error()
-        return "beta" if stack == "beta" else "test"
+        return "beta-next" if stack == "beta_next" else "test"
 
     def _current(self, identity: ImageIdentity, *, use_packaged_assets: bool = False):
         if self.identity(use_packaged_assets=use_packaged_assets) != identity:

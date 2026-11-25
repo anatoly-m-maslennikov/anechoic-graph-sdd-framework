@@ -1,7 +1,6 @@
-"""Atom-ID ordering is presentation, never graph semantics."""
+"""Bind the caller's Atom-ID presentation policy to review context."""
 import unittest
 
-from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.relation_ordering import atom_id_key, ordered_atom_ids, validate_ordering_policy
 from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared import ReviewContext
 from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__tests.test_split_evaluation import source, RULE_TEXT
 
@@ -11,50 +10,20 @@ class RelationOrderingTests(unittest.TestCase):
         return {'key': 'atom_id', 'direction': 'ascending', 'source': 'operator_input',
                 'instruction': 'just atom ID', 'provenance': 'Operator reply, 2026-09-27'}
 
-    def test_numeric_serial_within_id_prefix(self):
-        self.assertEqual(ordered_atom_ids(['CA-R-10', 'CA-R-2', 'CA-R-1']),
-                         ['CA-R-1', 'CA-R-2', 'CA-R-10'])
-
-    def test_role_prefix_is_part_of_atom_id(self):
-        self.assertEqual(ordered_atom_ids(['CA-R-1441', 'CA-M-279', 'CA-D-408', 'CA-D-407']),
-                         ['CA-D-407', 'CA-D-408', 'CA-M-279', 'CA-R-1441'])
-
-    def test_legacy_namespace_remains_an_id(self):
-        self.assertEqual(atom_id_key('ANECHOIC-GOV-EVAL-003'),
-                         ('ANECHOIC-GOV-EVAL', 3, 'ANECHOIC-GOV-EVAL-003'))
-
-    def test_preserves_exact_strings_and_does_not_mutate_input(self):
-        original = ['CA-O-015', 'CA-O-012']
-        self.assertEqual(ordered_atom_ids(original), ['CA-O-012', 'CA-O-015'])
-        self.assertEqual(original, ['CA-O-015', 'CA-O-012'])
-
-    def test_same_numeric_serial_uses_only_exact_atom_id(self):
-        self.assertEqual(ordered_atom_ids(['CA-R-2', 'CA-R-02']), ['CA-R-02', 'CA-R-2'])
-
-    def test_no_path_revision_or_summary_fallback(self):
-        for invalid in ['CA-R-2@9', 'CA-R-2.md', '/tmp/CA-R-2', 'CA-R-2--summary',
-                        'ca-r-2', '', 'CA-R-x', None, 2]:
-            with self.subTest(value=invalid), self.assertRaises(ValueError):
-                atom_id_key(invalid)
-
-    def test_no_silent_deduplication_or_invalid_container(self):
-        for invalid in [['CA-R-2', 'CA-R-2'], 'CA-R-2', None]:
-            with self.subTest(value=invalid), self.assertRaises(ValueError):
-                ordered_atom_ids(invalid)
-
-    def test_empty_and_singleton_order(self):
-        self.assertEqual(ordered_atom_ids([]), [])
-        self.assertEqual(ordered_atom_ids(['CA-R-2']), ['CA-R-2'])
-
     def test_missing_policy_is_not_an_implicit_default(self):
-        self.assertIsNone(validate_ordering_policy(None))
-        self.assertEqual(validate_ordering_policy(self.policy()), self.policy())
+        packet = {'confidence_threshold': .99, 'relation_ordering': None,
+                  'sources': [source('rule.md', 'MOCK-R-002', RULE_TEXT)]}
+        self.assertIsNone(ReviewContext(packet).relation_ordering)
+        packet['relation_ordering'] = self.policy()
+        self.assertEqual(ReviewContext(packet).relation_ordering, self.policy())
 
     def test_only_explicit_caller_atom_id_policy(self):
         for delta in [{'key': 'filename'}, {'direction': 'descending'}, {'source': 'reviewer'},
                       {'instruction': ''}, {'provenance': ''}, {'tie_breaker': 'version'}]:
+            packet = {'confidence_threshold': .99, 'relation_ordering': self.policy() | delta,
+                      'sources': [source('rule.md', 'MOCK-R-002', RULE_TEXT)]}
             with self.subTest(delta=delta), self.assertRaises(ValueError):
-                validate_ordering_policy(self.policy() | delta)
+                ReviewContext(packet)
 
     def test_review_context_binds_explicit_policy_in_hash(self):
         packet = {'confidence_threshold': .99,

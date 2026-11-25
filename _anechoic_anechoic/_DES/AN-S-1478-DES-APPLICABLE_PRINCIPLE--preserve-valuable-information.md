@@ -24,3 +24,13 @@ Preserve valuable information
 ### Prose Claim
 
 Keep valuable Project information in durable, reliable storage so it remains recoverable across sessions, handoffs, context loss, and implementation changes.
+
+## Details
+
+The Spec, Tickets, and Project Config form the Project’s durable memory. For people, it acts as a second brain. For AI Agents, it is persisted memory.
+
+The Spec records decisions and their reasons. Tickets record work and outcomes. Project Config records how the Project is set up.
+
+### Examples
+
+After a handoff, an AI Agent reads the Spec to recover a storage decision, the Ticket to see what remains open, and Project Config to check the active settings.

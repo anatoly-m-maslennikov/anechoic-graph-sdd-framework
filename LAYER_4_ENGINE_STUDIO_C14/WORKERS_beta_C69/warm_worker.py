@@ -9,23 +9,37 @@ import socket
 import stat
 import time
 from pathlib import Path
+from typing import Annotated, Any, Literal
+
+from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
     capture_ticket_delta,
 )
 
-from .native_refresh import _ticket_delta, valid_reuse
+from .native_refresh import _ReuseHint, _ticket_delta
 from .lifecycle_worker import _validate_indexed, run as lifecycle_run
+from .lifecycle_request import _Binding
 
 
-def _admit_lifecycle(request):
-    if set(request) != {"kind", "start_by", "request"}:
-        return False
-    try:
-        _validate_indexed(request["request"])
-        return True
-    except (TypeError, ValueError, KeyError):
-        return False
+class _Envelope(BaseModel):
+    model_config = ConfigDict(strict=True, extra="forbid")
+    start_by: Any
+
+
+class _TicketDelta(_Envelope):
+    kind: Literal["ticket_delta"]
+    binding: _Binding
+    reuse: _ReuseHint
+    paths: list[Annotated[str, Field(min_length=1)]] = Field(min_length=1, max_length=32)
+
+
+class _IndexedLifecycle(_Envelope):
+    kind: Literal["indexed_lifecycle"]
+    request: Any
+
+
+_REQUEST = TypeAdapter(Annotated[_TicketDelta | _IndexedLifecycle, Field(discriminator="kind")])
 
 
 def _within_start_window(start_by):
@@ -38,21 +52,14 @@ def _within_start_window(start_by):
 def _admit(request):
     if (not isinstance(request, dict)
             or not _within_start_window(request.get("start_by"))):
-        return False
-    if request.get("kind") == "indexed_lifecycle":
-        return (_admit_lifecycle(request)
-                and _within_start_window(request["start_by"]))
-    if (set(request) != {"kind", "start_by", "binding", "reuse", "paths"}
-            or request["kind"] != "ticket_delta" or not valid_reuse(request["reuse"])):
-        return False
-    binding, paths = request["binding"], request["paths"]
-    if (not isinstance(binding, dict)
-            or set(binding) != {"root", "control_root", "manifest_path", "manifest_sha256", "project_prefix"}
-            or any(not isinstance(value, str) or not value for value in binding.values())
-            or not isinstance(paths, list) or not 0 < len(paths) <= 32
-            or any(not isinstance(path, str) or not path for path in paths)):
-        return False
-    return _within_start_window(request["start_by"])
+        return None
+    try:
+        admitted = _REQUEST.validate_python(request)
+        if isinstance(admitted, _IndexedLifecycle):
+            admitted.request = _validate_indexed(admitted.request)
+    except (ValidationError, TypeError, ValueError, KeyError):
+        return None
+    return admitted if _within_start_window(admitted.start_by) else None
 
 
 def _capture(connection, request, read_fd, write_fd, indexed_draft):
@@ -63,10 +70,10 @@ def _capture(connection, request, read_fd, write_fd, indexed_draft):
         signal.signal(signal.SIGINT, signal.SIG_DFL)
         connection.close()
         os.close(read_fd)
-        if request["kind"] == "indexed_lifecycle":
-            result = lifecycle_run(request["request"], indexed_draft=indexed_draft)
+        if isinstance(request, _IndexedLifecycle):
+            result = lifecycle_run(request.request, indexed_draft=indexed_draft)
         else:
-            result = _ticket_delta(request["binding"], request["reuse"], request["paths"], capture_ticket_delta)
+            result = _ticket_delta(request.binding.model_dump(), request.reuse, request.paths, capture_ticket_delta)
         with os.fdopen(write_fd, "w") as out:
             json.dump(result, out, ensure_ascii=False, separators=(",", ":"))
     finally:
@@ -128,9 +135,9 @@ def _serve(connection, stop, indexed_draft):
         request = json.loads(line)
         if request == {"kind": "health"}:
             _send(connection, {"ready": True, "pid": os.getpid()})
-        elif _admit(request):
+        elif (admitted := _admit(request)) is not None:
             try:
-                result = _job(connection, request, stop, indexed_draft)
+                result = _job(connection, admitted, stop, indexed_draft)
             except (OSError, RuntimeError, TypeError, ValueError):
                 result = None
             _send(connection, {"result": result})

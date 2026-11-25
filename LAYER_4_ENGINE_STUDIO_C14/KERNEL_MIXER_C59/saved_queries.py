@@ -9,10 +9,11 @@ import os
 from pathlib import Path
 import re
 import sys
-from typing import Any, Callable, Iterable
+from typing import Any, Callable, Iterable, Literal
 from urllib.parse import parse_qs, urlparse
 import uuid
 
+from pydantic import BaseModel, ConfigDict
 
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import configured_journal_root, validated_journal_root  # noqa: E402
@@ -23,6 +24,16 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import
 _LEGACY_ID = re.compile(r"^(?P<kind>[qw])_(?P<token>[0-9a-f]{32})$")
 _LEGACY_FILE = re.compile(r"^(?P<id>[qw]_[0-9a-f]{32})\.(?P<extension>sql|json)$")
 _JOURNAL_AUTHOR = "workbench-saved-items"
+
+
+class _SavedQueryRow(BaseModel):
+    model_config = ConfigDict(strict=True, extra="forbid", hide_input_in_errors=True)
+
+    saved_query_id: str
+    kind: Literal["query", "view", "worksheet"]
+    sql: str
+    saved_at: str
+    name: str | None = None
 
 
 class SavedQueryStore:
@@ -91,16 +102,11 @@ class SavedQueryStore:
     def _now() -> str:
         return dt.datetime.now(dt.UTC).isoformat()
 
-    def _record(self, sql: object, kind: str, name: object) -> dict[str, Any]:
+    def _record(self, sql: object, kind: Literal["query", "view"], name: object) -> dict[str, Any]:
         value, saved_name, saved_at = self._sql(sql), self._name(name), self._now()
-        record: dict[str, Any] = {
-            "saved_query_id": str(uuid.uuid7()),
-            "kind": kind,
-            "sql": value,
-            "saved_at": saved_at,
-        }
-        if saved_name is not None:
-            record["name"] = saved_name
+        record = _SavedQueryRow(
+            saved_query_id=str(uuid.uuid7()), kind=kind, sql=value, saved_at=saved_at, name=saved_name,
+        ).model_dump(exclude_none=True)
         try:
             append_sealed_events(
                 self._root,
@@ -152,16 +158,12 @@ class SavedQueryStore:
             raise ValueError("saved query record is invalid")
         if not isinstance(value["saved_at"], str):
             raise ValueError("saved query record is invalid")
-        record = {
-            "saved_query_id": saved_query_id,
-            "kind": "view" if value["kind"] == "worksheet" else value["kind"],
-            "sql": SavedQueryStore._sql(value["sql"]),
-            "saved_at": value["saved_at"],
-        }
-        name = SavedQueryStore._name(value.get("name"))
-        if name is not None:
-            record["name"] = name
-        return record
+        return _SavedQueryRow(
+            saved_query_id=saved_query_id,
+            kind="view" if value["kind"] == "worksheet" else value["kind"],
+            sql=SavedQueryStore._sql(value["sql"]), saved_at=value["saved_at"],
+            name=SavedQueryStore._name(value.get("name")),
+        ).model_dump(exclude_none=True)
 
     def _journal_items(self) -> list[dict[str, Any]]:
         items: list[dict[str, Any]] = []

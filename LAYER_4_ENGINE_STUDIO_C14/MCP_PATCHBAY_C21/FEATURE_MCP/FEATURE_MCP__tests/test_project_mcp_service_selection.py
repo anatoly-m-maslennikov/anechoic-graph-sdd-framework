@@ -9,8 +9,9 @@ from unittest.mock import patch
 
 APP = Path(__file__).resolve().parents[1]
 
-from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import MCP_PATH  # noqa: E402
-from MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_backend import BackendError, ProjectMcpBackend  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import HEALTH_PATH, MCP_PATH  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import BackendError  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import ProjectMcpBackend  # noqa: E402
 
 
 _WORKER_ID = "1" * 64
@@ -121,6 +122,19 @@ class ProjectMcpServiceSelectionTests(unittest.TestCase):
             self.assertTrue(backend.health(f"http://127.0.0.1:8092{MCP_PATH}", 1))
         self.assertEqual([(f"http://127.0.0.1:8092{MCP_PATH}", 1.0)], observed)
         self.assertFalse(backend.health("http://127.0.0.1:8092/mcp", 1))
+
+    def test_launch_probe_refuses_pending_health_before_mcp_handshake(self) -> None:
+        import httpx2
+
+        def respond(request):
+            self.assertEqual(HEALTH_PATH, request.url.path)
+            return httpx2.Response(200, json={"state": "pending"})
+
+        client = httpx2.AsyncClient(transport=httpx2.MockTransport(respond))
+        with (patch.object(httpx2, "AsyncClient", return_value=client),
+              patch("mcp.client.streamable_http.streamable_http_client") as handshake):
+            self.assertFalse(ProjectMcpBackend().health(f"http://127.0.0.1:8092{MCP_PATH}", 1))
+            handshake.assert_not_called()
 
 
 if __name__ == "__main__":

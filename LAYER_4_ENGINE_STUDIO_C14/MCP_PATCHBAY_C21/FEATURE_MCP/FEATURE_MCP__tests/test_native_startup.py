@@ -1,29 +1,31 @@
 """Normal startup selects one validated Project across the migration rename."""
 from .native_query_test_support import local_gateway
+from .FEATURE_MCP__tests__shared import write_manifest
+from .test_launcher_runtime_profiles import DirectSupervisorProbe, runtime_flags
 
 
 import asyncio
-from contextlib import redirect_stderr
 from fcntl import LOCK_EX, LOCK_NB, flock
-from io import StringIO
+from hashlib import sha256
 import json
+import os
 from pathlib import Path
+import sys
 import tempfile
-from threading import Event
 import unittest
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import httpx2
-import yaml
+from starlette.responses import StreamingResponse
+from starlette.routing import Route
 
-from MCP_PATCHBAY_C21.FEATURE_MCP.docker import shared_supervisor as supervisor
-from MCP_PATCHBAY_C21.FEATURE_MCP.http_server import _guard_direct_transport
 MCP = Path(__file__).resolve().parents[1]
 PROGRAMMATIC = MCP.parents[1] / "FEATURE_PROGRAMMATIC"
 TOOLS = PROGRAMMATIC / "FEATURE_TOOLS"
 
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import (
-    ProjectAdmissionError, ProjectBinding, project_admission, select_runtime_project,
+    MCP_PATH, ProjectAdmissionError, ProjectBinding, http_main, project_admission, runtime_stack,
+    select_runtime_project,
 )
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import write_scope_unit_declarations
 
@@ -31,7 +33,7 @@ from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEA
 def native_fixture_gateway(root, cache, *, selection=None):
     from dataclasses import asdict, replace
     from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import NativeProjectSelection
-    from MCP_PATCHBAY_C21.FEATURE_MCP.direct_gateway import startup_selection
+    from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import select_runtime_project as startup_selection
     from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import NativeQueryOwner
     from .native_query_test_support import load_native_inputs
 
@@ -62,85 +64,10 @@ class RuntimeSelectionTests(unittest.TestCase):
         write_scope_unit_declarations(self.root, control_root=control)
         return control
 
-    def manifest(self, control, *, name="Anechoic", prefix="AN", component="C00", parameters=None):
-        path = control / f"{prefix}-S-001-PROJECT_MANIFEST--declare.md"
-        path.parent.mkdir(parents=True, exist_ok=True)
-        header = {"identity": {"atom_id": f"{prefix}-S-001"},
-                  "context": {"container": {"component": component}, "tier": -1,
-                              "template": "project_manifest"},
-                  "state": {"status": "active", "version": 1}}
-        runtime = f", parameters={parameters!r}" if parameters is not None else ""
-        path.write_text(f"---\n{yaml.safe_dump(header)}---\n\n## Claim\n\n### Formal Claim\n\n```python\n"
-                        "from anechoic.formal_claims import declare_entity\n"
-                        "from anechoic.model import ProjectManifest\n"
-                        f"declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name={name!r}, "
-                        f"prefix={prefix!r}{runtime}))\n```\n", encoding="utf-8")
-        return path
+    manifest = write_manifest
 
     def select(self, control=None):
         return self.admit(self.root, control)
-
-    def test_direct_manifest_repair_rotates_once_after_transport_and_lifecycle_drain(self):
-        control = self.root / ".anechoic_anechoic"
-        manifest = self.manifest(control)
-        directory = self.root / "sockets"
-        directory.mkdir()
-        arguments = lambda selection, _socket: ([selection.manifest_sha256], [selection.project_name])
-        reload = supervisor.ManifestReload(self.select, arguments, directory)
-        owner, backend = reload.children({})
-        calls = Mock()
-        owner.stop, owner.ensure, backend.stop = calls.owner_stop, calls.owner_start, calls.backend_stop
-        mcp = Mock(stop=calls.mcp_stop)
-        initial = reload.selection
-        original = manifest.read_text()
-        stopping = Event()
-        self.assertTrue(reload.refresh(owner, backend, mcp, stopping))
-        manifest.write_text("Invalid Manifest")
-        failure = StringIO()
-        with redirect_stderr(failure):
-            self.assertFalse(reload.refresh(owner, backend, mcp, stopping))
-            self.assertFalse(reload.refresh(owner, backend, mcp, stopping))
-        self.assertEqual(1, failure.getvalue().count("Manifest reload refused"))
-        self.assertEqual("project_manifest_invalid", reload.gate.read_text())
-        self.assertEqual([], calls.mock_calls)
-        manifest.write_text(original + "\n")
-        calls.idle.side_effect = [False, False, True]
-        with patch.object(supervisor, "_lifecycle_idle", calls.idle), patch.object(supervisor, "sleep"):
-            self.assertTrue(reload.refresh(owner, backend, mcp, stopping))
-            self.assertTrue(reload.refresh(owner, backend, mcp, stopping))
-        self.assertEqual(["backend_stop", "mcp_stop", "idle", "idle", "idle", "owner_stop", "owner_start"],
-                         [call[0] for call in calls.mock_calls])
-        calls.backend_stop.assert_called_once_with(graceful=True)
-        calls.mcp_stop.assert_called_once_with(graceful=True)
-        calls.owner_stop.assert_called_once_with(graceful=True)
-        self.assertEqual(initial.instance_id, reload.selection.instance_id)
-        self.assertNotEqual(initial.manifest_sha256, reload.selection.manifest_sha256)
-        self.assertEqual([reload.selection.manifest_sha256], owner.command)
-        self.assertEqual(list(reload.version),
-                         json.loads(backend.environment["ANECHOIC_BETA_DIRECT_MANIFEST"])["version"])
-        self.assertFalse(reload.gate.exists())
-
-    def test_direct_manifest_reloads_validated_semantic_settings(self):
-        control = self.root / ".anechoic_anechoic"
-        self.manifest(control)
-        directory = self.root / "sockets"
-        directory.mkdir()
-        reload = supervisor.ManifestReload(self.select, supervisor._direct_arguments, directory)
-        owner, backend = reload.children({})
-        mcp = Mock()
-        old = reload.selection
-        for child in (owner, backend):
-            self.assertEqual("disk", child.command[child.command.index("--workbench-storage") + 1])
-        parameters = {"runtime": {"workbench": {"storage": "memory", "import_graph": False}}}
-        self.manifest(control, parameters=parameters)
-        with patch.object(owner, "ensure") as restart:
-            self.assertTrue(reload.refresh(owner, backend, mcp, Event()))
-            restart.assert_called_once()
-        self.assertEqual(old.instance_id, reload.selection.instance_id)
-        self.assertNotEqual(old.manifest_sha256, reload.selection.manifest_sha256)
-        for child in (owner, backend):
-            self.assertEqual("memory", child.command[child.command.index("--workbench-storage") + 1])
-            self.assertNotIn("--watch-code", child.command)
 
     def test_staging_then_final_rename(self):
         old = self.legacy()
@@ -222,7 +149,7 @@ class RuntimeSelectionTests(unittest.TestCase):
         from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import (
             select_runtime_project as family_select,
         )
-        from MCP_PATCHBAY_C21.FEATURE_MCP.direct_gateway import native_project_gateway
+        from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import native_project_gateway
 
         self.manifest(self.root / ".anechoic_anechoic")
         selected = family_select(self.root)
@@ -277,28 +204,98 @@ class RuntimeSelectionTests(unittest.TestCase):
         self.assertEqual(self.root / ".anechoic_anechoic", self.select().control_root)
 
 
+class DirectSupervisorTests(unittest.TestCase):
+    def setUp(self):
+        self.root = Path(self.enterContext(tempfile.TemporaryDirectory())).resolve()
+        self.control = self.root / "_anechoic_anechoic"
+        self.manifest = write_manifest(self, self.control)
+
+    def test_direct_manifest_repair_rotates_once_after_transport_and_lifecycle_drain(self):
+        previous = self.manifest.read_text()
+        probe = DirectSupervisorProbe(self.manifest, repair=lambda: self.manifest.write_text(previous + "\n"),
+                                      invalid=True, lifecycle=(0, True, False))
+        status, stderr = probe.run(self.root, "beta_next")
+        self.assertEqual(0, status)
+        self.assertEqual(1, stderr.count("Manifest reload refused"))
+        original = (("start", "owner"), ("start", "api"), ("start", "mcp"))
+        self.assertEqual([original, original], probe.refusals)
+        self.assertEqual(2, len(probe.launched["owner"]))
+        self.assertEqual([("stop", "api", None), ("stop", "mcp", None), ("lifecycle",), ("lifecycle",),
+                          ("lifecycle",), ("stop", "owner", None), ("start", "owner")], probe.events[3:10])
+        [first, repaired] = [runtime_flags(command) for command, _ in probe.launched["owner"]]
+        self.assertEqual(first["--instance-id"], repaired["--instance-id"])
+        self.assertNotEqual(first["--manifest-sha256"], repaired["--manifest-sha256"])
+        self.assertEqual(sha256(self.manifest.read_bytes()).hexdigest(), repaired["--manifest-sha256"])
+        binding = json.loads(probe.launched["api"][-1][1]["ANECHOIC_BETA_DIRECT_MANIFEST"])
+        info = self.manifest.stat()
+        self.assertEqual([info.st_dev, info.st_ino, info.st_mode, info.st_size, info.st_mtime_ns, info.st_ctime_ns],
+                         binding["version"])
+        self.assertEqual([False, False], probe.ready_gates)
+
+    def test_direct_manifest_reloads_validated_semantic_settings(self):
+        parameters = {"runtime": {"workbench": {"storage": "memory", "import_graph": False}}}
+        probe = DirectSupervisorProbe(self.manifest, repair=lambda: write_manifest(self, self.control, parameters=parameters))
+        self.assertEqual(0, probe.run(self.root, "beta_next")[0])
+        for role in ("owner", "api"):
+            [(old, _), (new, _)] = probe.launched[role]
+            before, after = runtime_flags(old), runtime_flags(new)
+            self.assertEqual(before["--instance-id"], after["--instance-id"])
+            self.assertNotEqual(before["--manifest-sha256"], after["--manifest-sha256"])
+            self.assertEqual(("disk", "memory"), (before["--workbench-storage"], after["--workbench-storage"]))
+            self.assertIn("--watch-code", old)
+            self.assertNotIn("--watch-code", new)
+
+    def test_beta_next_supervisor_selects_owner_and_api_modules(self):
+        probe = DirectSupervisorProbe(self.manifest)
+        self.assertEqual(0, probe.run(self.root, "beta_next")[0])
+        (owner, _), = probe.launched["owner"]
+        (api, env), = probe.launched["api"]
+        selected = select_runtime_project(self.root)
+        socket = runtime_flags(api)["--socket"]
+        args = ["--socket", socket, "--project-root", str(self.root), "--control-root", self.control.name,
+                "--instance-id", selected.instance_id, "--manifest-sha256", selected.manifest_sha256,
+                "--manifest-path", self.manifest.relative_to(self.root).as_posix(), "--project-prefix", "AN",
+                "--project-name", "Anechoic", "--workbench-storage", "disk", "--journal-storage", "files",
+                "--watch-code"]
+        prefix = [sys.executable, "-B", "-P", "-m"]
+        self.assertEqual([*prefix, "ORCHESTRATOR_beta_C68.project_peer_owner", *args], owner)
+        self.assertEqual([*prefix, "API_MIXER_beta_C82.API_MIXER_beta_C82__shared", *args, "--role", "api"], api)
+        self.assertEqual("beta_next", env["ANECHOIC_RUNTIME_STACK"])
+
+
 class DirectManifestTransportTests(unittest.IsolatedAsyncioTestCase):
     async def test_transport_releases_drain_lock_after_accepted_response_completes(self):
         root = Path(self.enterContext(tempfile.TemporaryDirectory())).resolve()
+        write_manifest(self, root / "_anechoic_anechoic")
         gate = root / "api.draining"
         lock = gate.with_suffix(".transport")
         lock.touch()
         admitted, finish = asyncio.Event(), asyncio.Event()
 
-        async def app(_scope, _receive, send):
-            await send({"type": "http.response.start", "status": 200, "headers": []})
+        async def body():
             admitted.set()
             await finish.wait()
-            await send({"type": "http.response.body", "body": b"lifecycle result"})
+            yield b"lifecycle result"
 
-        transport = httpx2.ASGITransport(app=_guard_direct_transport(app, gate))
+        async def accepted(_request):
+            return StreamingResponse(body())
+
+        env = {"ANECHOIC_RUNTIME_STACK": "beta_next", "ANECHOIC_BETA_BACKEND_SOCKET": str(root / "api.sock"),
+               "ANECHOIC_BETA_DIRECT_TRANSPORT_GATE": str(gate), "ANECHOIC_BETA_DIRECT_DIAGNOSTICS": "0"}
+        runtime_stack.cache_clear()
+        self.addCleanup(runtime_stack.cache_clear)
+        with patch.dict(os.environ, env), patch("uvicorn.run") as run:
+            self.assertIsNone(await asyncio.to_thread(http_main, ["--project-root", str(root)]))
+        app = run.call_args.args[0]
+        app.starlette_app.router.routes.insert(0, Route(MCP_PATH, accepted, methods=["POST"]))
+        transport = httpx2.ASGITransport(app=app)
         client = await self.enterAsyncContext(httpx2.AsyncClient(transport=transport, base_url="http://localhost"))
-        request = asyncio.create_task(client.post("/mcp"))
+        request = asyncio.create_task(client.post(MCP_PATH))
         try:
             await asyncio.wait_for(admitted.wait(), 5)
             gate.write_text("project_manifest_invalid")
-            blocked = await client.post("/mcp")
-            self.assertEqual((503, "project_manifest_invalid"), (blocked.status_code, blocked.json()["error"]))
+            blocked = await client.post(MCP_PATH)
+            self.assertEqual((409, "project_manifest_invalid"), (blocked.status_code, blocked.json()["error"]))
             with lock.open("rb") as waiter, self.assertRaises(BlockingIOError):
                 flock(waiter, LOCK_EX | LOCK_NB)
         finally:

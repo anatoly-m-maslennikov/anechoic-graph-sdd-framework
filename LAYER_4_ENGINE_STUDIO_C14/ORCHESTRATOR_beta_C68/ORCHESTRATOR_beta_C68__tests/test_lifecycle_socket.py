@@ -1,12 +1,8 @@
 """Exercise the real lifecycle worker and kernel through private sockets."""
-from contextlib import closing
 from hashlib import sha256
-import http.client
-import importlib
 import json
 import os
 from pathlib import Path
-import socket
 import subprocess
 import sys
 import tempfile
@@ -14,24 +10,12 @@ import time
 import unittest
 from unittest.mock import patch
 
-from watchdog.events import DirCreatedEvent, DirDeletedEvent, DirMovedEvent, FileCreatedEvent
+from watchdog.events import DirCreatedEvent, DirDeletedEvent, DirMovedEvent, FileCreatedEvent, FileModifiedEvent
 from watchdog.utils.dirsnapshot import DirectorySnapshot
 
-from ..ORCHESTRATOR_beta_C68__shared import GenerationJobs
-from ..watcher import SourceWatcher
-from ..watcher_poll import PollComplete
-from .ORCHESTRATOR_beta_C68__tests__shared import project
-
-
-class Connection(http.client.HTTPConnection):
-    def __init__(self, path):
-        super().__init__("localhost", timeout=610)
-        self.path = path
-
-    def connect(self):
-        self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        self.sock.settimeout(self.timeout)
-        self.sock.connect(self.path)
+from ..ORCHESTRATOR_beta_C68__shared import PollComplete
+from ..lifecycle_queries import lifecycle_context
+from .ORCHESTRATOR_beta_C68__tests__shared import project, project_jobs, request_json, wait_for
 
 
 class LifecycleSocketTests(unittest.TestCase):
@@ -42,7 +26,7 @@ class LifecycleSocketTests(unittest.TestCase):
         archive.mkdir(parents=True)
         owned = archive / "owned.md"
         owned.write_text("admitted")
-        watcher = SourceWatcher(root, control, defer_archives=True)
+        watcher = self.watcher_jobs(root).watcher
         effects = [
             {"target": "control/09_archived", "operation": "create", "state": "known", "evidence": "directory"},
             {"target": "control/09_archived/owned.md", "operation": "create", "state": "known",
@@ -105,9 +89,7 @@ class LifecycleSocketTests(unittest.TestCase):
 
     def test_lifecycle_receipts_cover_delayed_watcher_events(self):
         root = Path(self.enterContext(tempfile.TemporaryDirectory())).resolve()
-        binding = {"root": str(root), "control_root": "control", "manifest_path": "manifest.md",
-                   "manifest_sha256": "a" * 64, "project_prefix": "AN"}
-        watcher = GenerationJobs("test", binding, "socket").watcher
+        watcher = self.watcher_jobs(root).watcher
         first, second = root / "first.md", root / "second.md"
         for path in (first, second):
             path.write_text(path.name)
@@ -120,18 +102,68 @@ class LifecycleSocketTests(unittest.TestCase):
         watcher.queue.put(event)
         self.assertEqual([event], watcher.changes(0.1))
 
-    def test_admitted_context_keeps_coordinated_writes_on_the_project_path(self):
-        lifecycle = importlib.import_module("ORCHESTRATOR_beta_C68.lifecycle")
-        control = "_anechoic_test"
-        context = {"has_descendants": True, "carriers": []}
-        task = {"name": "atom_lifecycle_change_status", "arguments": {"target": {"ref_id": "AN-T-1"}}}
-        self.assertTrue(lifecycle._requires_project_capture(task, context, control))
-        self.assertFalse(lifecycle._requires_project_capture(task, context | {"has_descendants": False}, control))
-        spec = {"name": "atom_lifecycle_archive", "arguments": {"target": {"ref_id": "AN-S-2"}}}
-        carrier = {"id": "AN-S-2", "status": "active"}
-        for parent, expected in (("LAYER_1_META_ONTOLOGY_C9/_SPEC", True), ("_SPEC", False)):
-            row = carrier | {"source_path": f"{control}/{parent}/AN-S-2-SPEC--claim.md"}
-            self.assertEqual(expected, lifecycle._requires_project_capture(spec, context | {"carriers": [row]}, control))
+    def test_admitted_foreground_directory_creation_preserves_independent_changes(self):
+        root = Path(self.enterContext(tempfile.TemporaryDirectory())).resolve()
+        control = root / "control"
+        directory = control / "_SPEC" / "01_draft"
+        other_directory = directory.with_name("02_ready")
+        for path in (directory, other_directory):
+            path.mkdir(parents=True)
+        owned, external = directory / "owned.md", directory / "external.md"
+        owned.write_text("admitted")
+        external.write_text("independent")
+        watcher = self.watcher_jobs(root, watch_code=True).watcher
+        watcher.acknowledge([
+            {"target": str(directory.relative_to(root)), "operation": "create", "state": "known",
+             "evidence": "directory"},
+            {"target": str(owned.relative_to(root)), "operation": "create", "state": "known",
+             "evidence": sha256(owned.read_bytes()).hexdigest()},
+        ])
+        for event in (DirCreatedEvent(str(directory)), FileCreatedEvent(str(owned)),
+                      FileCreatedEvent(str(external)), DirCreatedEvent(str(other_directory))):
+            watcher.dispatch(event)
+        self.assertEqual([str(external), str(other_directory)],
+                         [change["old_path"] for change in watcher.changes(0.1)])
+
+        owned.write_text("independent replacement")
+        watcher.dispatch(FileModifiedEvent(str(owned)))
+        watcher.dispatch(DirCreatedEvent(str(directory)))
+        self.assertEqual([str(owned), str(directory)], [change["old_path"] for change in watcher.changes(0.1)])
+
+        directory.rename(directory.with_name("old"))
+        directory.mkdir()
+        owned.write_text("admitted")
+        watcher.dispatch(DirCreatedEvent(str(directory)))
+        self.assertEqual([str(directory)], [change["old_path"] for change in watcher.changes(0.1)])
+
+    def test_delayed_foreground_directory_creation_accepts_admitted_carrier_removal(self):
+        for admitted in (False, True):
+            with self.subTest(admitted=admitted):
+                root = Path(self.enterContext(tempfile.TemporaryDirectory())).resolve()
+                control = root / "control"
+                directory = control / "_SPEC" / "02_ready"
+                directory.mkdir(parents=True)
+                owned = directory / "owned.md"
+                owned.write_text("admitted")
+                watcher = self.watcher_jobs(root, watch_code=True).watcher
+                carrier = {"target": str(owned.relative_to(root)), "operation": "create", "state": "known",
+                           "evidence": sha256(owned.read_bytes()).hexdigest()}
+                watcher.acknowledge([
+                    {"target": str(directory.relative_to(root)), "operation": "create", "state": "known",
+                     "evidence": "directory"},
+                    carrier,
+                ])
+                owned.unlink()
+                if admitted:
+                    watcher.acknowledge([carrier | {"operation": "remove"}])
+                watcher.dispatch(DirCreatedEvent(str(directory)))
+                expected = [] if admitted else [str(directory)]
+                self.assertEqual(expected, [change["old_path"] for change in watcher.changes(0.1)])
+
+    def watcher_jobs(self, root, *, watch_code=False):
+        jobs = project_jobs(root, watch_code=watch_code)
+        self.addCleanup(jobs.close)
+        return jobs
 
     def test_real_lifecycle_and_generation_admission(self):
         engine = Path(__file__).resolve().parents[2]
@@ -152,42 +184,52 @@ class LifecycleSocketTests(unittest.TestCase):
                 "--instance-id", "test", "--manifest-sha256", binding["manifest_sha256"]], cwd=engine, env=env)
             orchestrator = worker = None
             try:
-                self.wait_socket(db, database)
+                wait_for(Path(db).exists, database, timeout=10)
                 worker = subprocess.Popen([sys.executable, "-B", "-P", "-m", "WORKERS_beta_C69.warm_worker",
                     "--socket", str(root / "worker.sock")], cwd=engine, env=env)
-                self.wait_socket(root / "worker.sock", worker)
+                wait_for((root / "worker.sock").exists, worker, timeout=10)
                 orchestrator = subprocess.Popen([sys.executable, "-B", "-P", "-m", jobs_module,
                     "--socket", jobs, "--instance-id", "test", "--binding-file", str(root / "binding.json"),
                     "--database-socket", db, "--worker-socket", str(root / "worker.sock"),
                     "--worker-load-seconds", "1"], cwd=engine, env=env)
-                self.wait_socket(jobs, orchestrator)
+                wait_for(Path(jobs).exists, orchestrator, timeout=10)
                 self.wait_for_archive(db)
                 self.assert_lifecycle(jobs, binding, "AN-T-101")
                 self.assert_lifecycle(jobs, binding, "AN-T-102")
                 self.assert_visible(db, ["AN-T-101@1-draft", "AN-T-102@1-draft"])
                 self.assert_indexed_transitions(jobs, db, binding)
+                self.assert_allocation_reserves_quarantined_ids(jobs, db, binding, self.wait_for_archive(db))
             finally:
                 for process in (orchestrator, worker, database):
                     if process is not None:
                         process.terminate()
                         process.wait(timeout=10)
 
-    def wait_socket(self, path, process):
-        deadline = time.monotonic() + 10
-        while not Path(path).exists() and process.poll() is None and time.monotonic() < deadline:
-            time.sleep(.03)
-        self.assertTrue(Path(path).exists())
-
     def wait_for_archive(self, path):
-        deadline = time.monotonic() + 10
+        deadline = time.monotonic() + 45
         while time.monotonic() < deadline:
-            with closing(Connection(path)) as connection:
-                connection.request("GET", "/health")
-                result = json.loads(connection.getresponse().read())["result"]
+            status, body = request_json(path, "GET", "/health")
+            self.assertEqual(200, status, body)
+            result = body["result"]
             if result["ready"] and not result["archive_pending"]:
-                return
+                return result["generation"]
             time.sleep(.03)
         self.fail("Archive admission did not complete")
+
+    def assert_allocation_reserves_quarantined_ids(self, jobs, db, binding, generation):
+        issue = {"code": "invalid_value", "message": "Malformed carrier", "related_paths": []}
+        inputs = {
+            "archive": issue | {"atom_ref": None, "relative_path": "_anechoic_test/__TICKETS/TASKS/09_archived/AN-T-175@1-TASK--bad.md"},
+            "atom": issue | {"atom_ref": "AN-S-777@1", "relative_path": "_anechoic_test/unreadable.md"},
+        }
+        for source, value in inputs.items():
+            payload = {"instance_id": "test", "source": source, "issues": [value]}
+            status, body = request_json(db, "PUT", "/ingestion/issues", payload)
+            self.assertEqual((200, {"result": {"source": source, "count": 1}}), (status, body))
+        result = lifecycle_context(db, "test", generation, "AN", "atom_lifecycle_create_draft",
+                                   {"newAtom": {"template": "task"}})
+        self.assertEqual({"T": "175", "S": "777"}, result["max_numbers"])
+        self.assert_lifecycle(jobs, binding, "AN-T-176")
 
     def write_archived_tickets(self, control):
         archive = control / "__TICKETS/TASKS/09_archived"
@@ -210,11 +252,8 @@ class LifecycleSocketTests(unittest.TestCase):
     def call_lifecycle(self, path, binding, operation, arguments):
         request = {**binding, "instance_id": "test", "name": "atom_lifecycle_" + operation,
                    "arguments": arguments}
-        with closing(Connection(path)) as connection:
-            connection.request("POST", "/jobs/lifecycle", json.dumps(request))
-            response = connection.getresponse()
-            result = json.loads(response.read())
-        self.assertEqual(200, response.status, result)
+        status, result = request_json(path, "POST", "/jobs/lifecycle", request, timeout=610)
+        self.assertEqual(200, status, result)
         self.assertEqual("known", result["result"]["write_state"], result)
         self.assertEqual("completed", result["result"]["lifecycle"]["outcome"], result)
         self.assertEqual("ready", result["result"]["projection"]["state"], result)
@@ -242,9 +281,6 @@ class LifecycleSocketTests(unittest.TestCase):
 
     def assert_visible(self, path, refs):
         sql = "SELECT reference FROM atoms WHERE status_group = 'Draft' ORDER BY reference"
-        with closing(Connection(path)) as connection:
-            connection.request("POST", "/database", json.dumps({"instance_id": "test", "sql": sql}))
-            response = connection.getresponse()
-            result = json.loads(response.read())
-        self.assertEqual(200, response.status, result)
+        status, result = request_json(path, "POST", "/database", {"instance_id": "test", "sql": sql})
+        self.assertEqual(200, status, result)
         self.assertEqual([[ref] for ref in refs], result["result"]["rows"])

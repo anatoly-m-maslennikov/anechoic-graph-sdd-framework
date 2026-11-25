@@ -3,6 +3,7 @@ from contextlib import closing
 import json
 import re
 
+from .generation import ALLOCATION_REFERENCES
 from .jobs import UnixConnection
 
 
@@ -37,10 +38,11 @@ _SQL = '''WITH RECURSIVE
         OR n.ref IN (SELECT source_ref FROM main.relations WHERE relation_type='IS_REPLACEMENT_FOR'
             AND NOT derived AND target_ref={target_lit}) AND n.status_group='Current'
     ),
+    allocation_refs AS ({allocation_refs}),
     numbers AS (
       SELECT regexp_extract(reference, '^{prefix}-([TS])-([0-9]+)(@|$)', 1) AS family,
         ltrim(regexp_extract(reference, '^{prefix}-([TS])-([0-9]+)(@|$)', 2), '0') AS number
-      FROM main.atoms WHERE {numbers} AND starts_with(reference, '{prefix}-')
+      FROM allocation_refs WHERE {numbers} AND starts_with(reference, '{prefix}-')
     ),
     SELECT g.id, g.structure, {model_sql}, json_extract(g.model, '$.ticket_labels')::VARCHAR,
       coalesce((SELECT arg_max(number, (length(number), number)) FROM numbers WHERE family='T' AND number<>''), '0'),
@@ -81,9 +83,9 @@ def lifecycle_sql(prefix, name, arguments):
     template = new.get('template') if isinstance(new, dict) else None
     needs_model = (is_create and isinstance(template, str) and template in {'project_contract', 'axiom', 'applicable_principle'}
                    or '-S-' in target_id and name in {'atom_lifecycle_promote_draft', 'atom_lifecycle_change_status'})
-    model_sql = 'g.model' if needs_model else 'NULL'
+    model_sql = "json_merge_patch(g.model::JSON, '{\"declarations\":null,\"ticket_labels\":null}')::VARCHAR" if needs_model else 'NULL'
     return _SQL.format(prefix=prefix, target_lit=target_lit, exact_lit=exact_lit, owner_lit=owner_lit,
-                       sources=sources, numbers=numbers, model_sql=model_sql)
+                       sources=sources, numbers=numbers, model_sql=model_sql, allocation_refs=ALLOCATION_REFERENCES)
 
 
 def lifecycle_context(socket_path, instance_id, base, prefix, name, arguments):

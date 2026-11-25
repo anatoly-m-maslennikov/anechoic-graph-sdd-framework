@@ -24,3 +24,9 @@ Require usable inputs for reliance
 
 
 a governed conclusion **may** be treated as reliable for an affected use **only** **when** **every** required input is present, known, consistent, **and** valid.
+
+## Details
+
+### Examples
+
+Before a release, an Operator checks that a test report matches the exact release image and covers all required suites. The Operator can then rely on it for the release review.

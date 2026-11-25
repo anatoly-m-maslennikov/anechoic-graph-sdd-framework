@@ -1,7 +1,6 @@
 """Generated native lifecycle paths; each case uses a fresh project."""
 from hashlib import sha256
 from pathlib import Path
-from types import SimpleNamespace
 import sys
 import tempfile
 
@@ -12,6 +11,7 @@ ENGINE = TOOLS.parents[1]
 sys.path[:0] = [str(TOOLS), str(ENGINE / 'IWE_CONSOLE_C43')]
 
 import FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__tests.test_native_lifecycle_draft as fixtures
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import NativeProjectSelection
 
 
 
@@ -34,8 +34,12 @@ class LifecycleRouteSupport:
                       'context': {'container': {'component': 'C00'}, 'template': template},
                       'state': {'status': 'active', 'version': 1, 'updated_at': '2026-01-01'}}
             path.write_text('---\n' + yaml.safe_dump(header) + '---\n\n## Summary\n\nOwner\n')
-        return SimpleNamespace(root=root, control_root=control, manifest_path=manifest,
-                               manifest_sha256=sha256(manifest.read_bytes()).hexdigest(), project_prefix='AN')
+        return NativeProjectSelection(
+            root=root, control_root=control, control_relative=control.relative_to(root),
+            instance_id='a' * 64, project_name='Test', project_prefix='AN',
+            manifest_path=manifest, manifest_ref='AN-S-1@1',
+            manifest_sha256=sha256(manifest.read_bytes()).hexdigest(),
+        )
 
     def files(self, project):
         return {p.relative_to(project.root): p.read_bytes() for p in project.control_root.rglob('*') if p.is_file()}

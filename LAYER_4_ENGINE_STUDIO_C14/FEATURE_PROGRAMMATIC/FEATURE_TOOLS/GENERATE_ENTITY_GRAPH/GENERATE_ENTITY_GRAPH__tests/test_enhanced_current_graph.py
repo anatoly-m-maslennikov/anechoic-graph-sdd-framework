@@ -9,7 +9,6 @@ TOOL = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(TOOL.parent), str(TOOL)]
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import preview_constraints_from_paths
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.current_subject_common import subject_facts
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import compose_current_graph, compose_enhanced_current_graph
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import render_model
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__tests.enhanced_graph_test_support import carrier
@@ -29,7 +28,7 @@ class EnhancedCurrentGraphTests(unittest.TestCase):
             self.assertEqual([], graph["model"][category])
         for value in values:
             with self.assertRaisesRegex(ValueError, "Complex Subject selection"):
-                subject_facts(value)
+                compose_current_graph([carrier("CA-R-1", {"active": value})])
 
     def test_model_binder_is_opaque_and_population_count_applies_to_selection(self) -> None:
         block = '''# model
@@ -165,20 +164,24 @@ Node: [string]{:1}
         self.assertIn(("MODEL", "ANECHOIC"), containment)
 
     def test_inverse_glyph_projects_distinct_relation_endpoints(self) -> None:
-        nodes, facts, _ = subject_facts("Relation//NARROWER_THAN <--> Relation//BROADER_THAN")
+        graph, _ = compose_current_graph([
+            carrier("CA-R-1", {"active": "Relation//NARROWER_THAN <--> Relation//BROADER_THAN"}),
+        ])
+        names = {row["id"]: row["identity"] for row in graph["nodes"]}
         self.assertTrue({"Relation//NARROWER_THAN", "Relation//BROADER_THAN"} <=
-                        {row["identity"] for row in nodes})
-        inverse = [row for row in facts if row["kind"] == "HAS_INVERSE"]
+                        set(names.values()))
+        inverse = [row for row in graph["edges"] if row["kind"] == "HAS_INVERSE"]
         self.assertEqual(1, len(inverse))
         self.assertEqual(("Relation//NARROWER_THAN", "Relation//BROADER_THAN"),
-                         (inverse[0]["source"], inverse[0]["target"]))
+                         (names[inverse[0]["relation_source"]], names[inverse[0]["relation_target"]]))
 
     def test_bare_legacy_namespace_subjects_remain_literal_without_containment(self) -> None:
         for subject in ("MODEL", "PROJECT STRUCTURE"):
-            nodes, facts, target = subject_facts(subject)
-            self.assertEqual([subject], [row["identity"] for row in nodes])
-            self.assertEqual([], facts)
-            self.assertEqual(subject, target)
+            graph, _ = compose_current_graph([carrier("CA-R-1", {"active": subject})])
+            target, = graph["nodes"]
+            self.assertEqual(subject, target["identity"])
+            self.assertTrue(target["is_full_target"])
+            self.assertEqual([], graph["edges"])
 
     def test_explicit_roots_are_not_model_nodes_and_grouped_selectors_project(self) -> None:
         graph, _ = compose_enhanced_current_graph([

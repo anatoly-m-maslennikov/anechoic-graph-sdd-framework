@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.VALIDATE_ATOMS.validate_atoms_workers.check_sections import GRAPH_RULE_SOURCES
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import get_profile
 
 
 def relation_carrier(atom_id: str, subject: str, graph_scope: str, version: int = 1) -> dict:
@@ -92,11 +92,11 @@ def graph_rule_carrier(atom_id: str = "CA-R-901021", version: int = 3, yaml_type
     }
 
 
-def support_carriers() -> tuple[list[dict], dict[str, dict]]:
+def support_carriers() -> list[dict]:
     rows = []
-    entries = {}
+    approvals = ("CA-R-2001", "CA-D-637", "CA-R-1996", *(pin.atom_id for pin in get_profile("approved").grammar_pins))
     role_by_code = {"C": "Concern", "A": "Analysis", "P": "Plan", "R": "Requirement", "M": "Method", "E": "Evaluation", "D": "Delivery", "O": "Operations"}
-    for identifier in GRAPH_RULE_SOURCES:
+    for identifier in approvals:
         role_code = identifier.rsplit("-", 2)[1]
         version = 1
         text = f"Current support evidence for {identifier} at {version}."
@@ -118,5 +118,4 @@ def support_carriers() -> tuple[list[dict], dict[str, dict]]:
                 "raw": raw,
             }
         )
-        entries[identifier] = {}
-    return rows, entries
+    return rows

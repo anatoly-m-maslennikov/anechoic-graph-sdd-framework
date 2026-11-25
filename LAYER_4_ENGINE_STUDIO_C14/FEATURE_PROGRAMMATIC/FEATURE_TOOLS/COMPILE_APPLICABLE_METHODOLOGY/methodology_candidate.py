@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from pydantic import ConfigDict
+from pydantic.dataclasses import dataclass
 from pathlib import Path
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import SETTINGS_PATH
@@ -12,7 +13,7 @@ DEFAULT_CONTROL_ROOT = SETTINGS_PATH.parent
 FRAMEWORK_APPLICABLE_RELATIVE = Path("000_ANECHOIC_framework/00_APPLICABLE_METHODOLOGY")
 OUTPUT_RELATIVE = DEFAULT_CONTROL_ROOT / FRAMEWORK_APPLICABLE_RELATIVE
 
-@dataclass(frozen=True)
+@dataclass(config=ConfigDict(strict=True, extra="forbid", hide_input_in_errors=True), frozen=True)
 class Candidate:
     layer: str
     layer_order: int

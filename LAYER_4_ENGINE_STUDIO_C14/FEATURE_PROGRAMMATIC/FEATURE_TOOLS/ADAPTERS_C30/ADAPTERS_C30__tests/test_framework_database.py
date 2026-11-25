@@ -8,7 +8,10 @@ from unittest.mock import patch
 
 import duckdb
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.framework_database__pub import LAYERS, attach_framework
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import attach_framework
+
+
+DELIVERED_LAYERS = ("LAYER_1_META_ONTOLOGY_C9", "LAYER_2_META_METHODOLOGY_C58")
 
 
 class FrameworkDatabaseTests(unittest.TestCase):
@@ -18,12 +21,12 @@ class FrameworkDatabaseTests(unittest.TestCase):
         self.volume = self.root / "volume"
         self.volume.mkdir()
         self.enterContext(patch.dict(os.environ, {"ANECHOIC_FRAMEWORK_DB_ROOT": str(self.volume)}))
-        for number, layer in enumerate(LAYERS, 1):
+        for number, layer in enumerate(DELIVERED_LAYERS, 1):
             (self.root / layer).mkdir()
             self.write_atom(number, 1)
 
     def write_atom(self, number, version, status="active"):
-        path = self.root / LAYERS[number - 1] / f"AN-S-{number}-SPEC--atom.md"
+        path = self.root / DELIVERED_LAYERS[number - 1] / f"AN-S-{number}-SPEC--atom.md"
         path.write_text(
             f"---\natom_family: SPEC\natom_id: AN-S-{number}\n"
             "container: {component: C00}\ntier: 2\ncontext: {lens: SPEC}\n"

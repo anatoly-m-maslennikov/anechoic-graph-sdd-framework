@@ -14,15 +14,12 @@ APP_ROOT = Path(__file__).resolve().parents[3]
 
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (ContentRule, DeclarationSource, _schema_from_rules, compile_content_schema, content_schema_from_statements)  # noqa: E402
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import compile_header_rules, header_rules_from_statements  # noqa: E402
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.generate_workbench_schema import (  # noqa: E402
-    compile_project_schema,
-    write_schema,
-)
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (  # noqa: E402
     declared_header_schema,
 )
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import canonical
 from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__shared import (  # noqa: E402
+    compile_project_schema,
     compile_schema,
     load_image_schema,
     schema_asset,
@@ -51,7 +48,7 @@ class WorkbenchSchemaAssetTests(WorkbenchSchemaFixture):
 
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "workbench_schema.json"
-            write_schema(path, first)
+            path.write_bytes(first)
             loaded = load_image_schema(path)
             self.assertEqual(compilation, loaded)
             stale = dict(declaration, _content_bytes=b"## Claim\n\nChanged.\n")

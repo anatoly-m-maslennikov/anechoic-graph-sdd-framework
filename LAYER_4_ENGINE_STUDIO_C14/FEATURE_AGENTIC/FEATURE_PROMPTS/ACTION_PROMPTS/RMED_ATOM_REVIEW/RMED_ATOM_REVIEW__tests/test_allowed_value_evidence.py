@@ -1,7 +1,7 @@
 """Bounded admission for registered allowed-value Subject paths."""
 import json
 import unittest
-from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.allowed_value_evidence import validate_allowed_value_evidence  # noqa: E402
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared import validate_allowed_value_evidence  # noqa: E402
 
 
 PROPERTY = "Atom/Content Role: Evaluation/Type"

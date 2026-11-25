@@ -5,7 +5,8 @@ from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[6]
 PROGRAMMATIC = ROOT / 'LAYER_4_ENGINE_STUDIO_C14' / 'FEATURE_PROGRAMMATIC'
-from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.manifest_compiler_CS1 import active_model_sources as sources  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.manifest_compiler_CS1.manifest_compiler_CS1__shared import read_active_model_sources  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import ReadContext  # noqa: E402
 
 CLAIM = "from anechoic.formal_claims import declare_entity\ndeclare_entity(entity_name='Atom')\n"
 
@@ -35,7 +36,7 @@ class ActiveModelSourcesTests(unittest.TestCase):
         (self.component / filename).write_text(text)
 
     def read(self):
-        return sources.read_active_model_sources(self.root, self.component)
+        return read_active_model_sources(self.root, self.component)
 
     def test_selection_and_out_of_scope(self):
         self.put('AN-S-1-SPEC--atom.md', carrier(version=2))
@@ -135,7 +136,7 @@ class ActiveModelSourcesTests(unittest.TestCase):
 
     def test_changed_input_rejected(self):
         self.put('AN-S-1-SPEC--atom.md', carrier())
-        with patch.object(sources.ReadContext, 'currentness', return_value={'state': 'changed'}):
+        with patch.object(ReadContext, 'currentness', return_value={'state': 'changed'}):
             with self.assertRaisesRegex(ValueError, 'changed'):
                 self.read()
 

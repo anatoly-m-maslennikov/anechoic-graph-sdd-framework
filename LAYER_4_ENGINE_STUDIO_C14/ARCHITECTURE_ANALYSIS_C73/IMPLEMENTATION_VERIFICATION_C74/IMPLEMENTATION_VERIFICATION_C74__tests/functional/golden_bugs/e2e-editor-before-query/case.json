@@ -1,0 +1,23 @@
+{
+  "title": "Check editor input before query dispatch",
+  "invariant": "A browser test checks that the intended SQL is present after input and before dispatching the query.",
+  "scope": "A selected Playwright test with one recognized literal SQL input, exact editor text checks and one recognized dispatch. The historical test checks SQL only after dispatch. Lean compares extracted values and statement positions; this does not prove product behavior. Unsupported or ambiguous shapes are unresolved. Use analyze.py --file and --title to select another test.",
+  "before": {
+    "revision": "bd09f6fd347c2030c4c158992085c92e807713a6",
+    "source": "LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND/FEATURE_WORKBENCH_FRONTEND__tests/standalone-url.e2e.spec.ts",
+    "fixture": "before.ts.txt",
+    "sha256": "6423bf04a357f8b0431af6303e35323212c22ea0f659d05aae10aaced36f03d0"
+  },
+  "fixed": {
+    "revision": "b5f7ed526648296a768f701f6af1027ec80a349a",
+    "source": "LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND/FEATURE_WORKBENCH_FRONTEND__tests/standalone-url.e2e.spec.ts",
+    "fixture": "fixed.ts.txt",
+    "sha256": "0a16b924a62c857fad816b0b4d8cf5ac09b51f66d4ddd90361c402d73f799ac5"
+  },
+  "checks": [
+    {
+      "file": "check.lean"
+    }
+  ],
+  "analyzer": "analyze.py"
+}

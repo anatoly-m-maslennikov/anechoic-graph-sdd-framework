@@ -1,0 +1,21 @@
+    try:
+        refs = tuple(migration_refs)
+        if any(not isinstance(item, (tuple, list)) or len(item) != 3 or not isinstance(item[2], str) for item in refs):
+            raise ValueError('Invalid migration references')
+    except (TypeError, ValueError) as error:
+        raise common.SourceChanged('Migration references are unavailable or invalid.') from error
+    atom_id, version = match[1], target['version']
+    chosen = [row for row in current_rows if row.get('_exact_ref') == target['ref_id'] and row.get('status_group') == 'Draft']
+    predecessors = [row for row in current_rows if row.get('id') == atom_id and row.get('status_group') == 'Current']
+    if any(item[2] == target['ref_id'] for item in refs):
+        if '-S-' in atom_id and len(chosen) == 1 and not predecessors:
+            return _publish_first_spec(selection, chosen[0], structure_snapshot, pinned=True)
+        raise common.InputError('target', 'A migration-pinned Draft cannot be promoted.')
+    if len(chosen) != 1 or len(predecessors) > 1:
+        raise common.SourceChanged('Draft or Current predecessor is missing or ambiguous.')
+    if not predecessors:
+        if '-S-' in atom_id:
+            return _publish_first_spec(selection, chosen[0], structure_snapshot, pinned=False)
+        if version == 1 and '-T-' in atom_id:
+            return _promote_new(selection, target, status, chosen[0], current_rows)
+        raise common.SourceChanged('Current predecessor is missing.')

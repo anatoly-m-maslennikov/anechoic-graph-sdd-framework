@@ -1,7 +1,10 @@
 """Exercise generation observations and their private publication."""
 import json
 import tempfile
+import time
 import unittest
+from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from ORCHESTRATOR_beta_C68.ORCHESTRATOR_beta_C68__shared import Flow, GenerationJobs
@@ -49,6 +52,30 @@ class FlowTests(unittest.TestCase):
         self.assertNotIn("/secret", json.dumps(payload))
         for index, event in enumerate(events):
             self.assertTrue(all(cause < index for cause in event["causes"]))
+
+    def test_watcher_times_survive_queue_and_batch_dispatch(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            binding = {"root": str(root), "control_root": ".", "manifest_path": "m",
+                       "manifest_sha256": "hash", "project_prefix": "AN"}
+            jobs = GenerationJobs("id", binding, "socket")
+            before = time.time()
+            for name in ("one.md", "two.md"):
+                jobs.watcher.on_any_event(SimpleNamespace(src_path=str(root / name), dest_path=None,
+                                                         event_type="modified", is_directory=False))
+            after = time.time()
+            self.assertEqual(2, jobs.status()["watcher_queue_depth"])
+            changes = jobs.watcher.changes(0)
+            self.assertEqual(0, jobs.status()["watcher_queue_depth"])
+            self.assertEqual(2, len(changes))
+            self.assertTrue(all(before <= change["observed_at"] <= after for change in changes))
+            jobs._start_flow(None, changes, False)
+            first, second, trigger = jobs.flow.events
+            self.assertEqual([change["observed_at"] for change in changes], [first["at"], second["at"]])
+            self.assertEqual(["watcher", "watcher"], [first["detail"]["timestamp_source"],
+                                                     second["detail"]["timestamp_source"]])
+            self.assertEqual([0, 1], trigger["causes"])
+            self.assertGreaterEqual(trigger["at"], max(first["at"], second["at"]))
 
     def test_limit_keeps_terminal_output(self):
         flow = Flow("id", "socket")

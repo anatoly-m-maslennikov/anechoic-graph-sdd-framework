@@ -6,7 +6,7 @@ from pathlib import Path
 import subprocess
 import sys
 
-from . import python_boundaries, python_bytecode, source_sizes
+from . import python_boundaries, python_bytecode, source_languages, source_sizes
 
 
 CODE_ROOTS = ("LAYER_4_ENGINE_STUDIO_C14", "LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27", "LAYER_5_USER_SETUP_C65")
@@ -48,7 +48,7 @@ def check(root):
              "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/pyproject.toml", "--select", "F401,B006", "--no-fix", *CODE_ROOTS),
             cwd=root, check=False, timeout=60,
         ).returncode
-        if status or source_sizes.check(root) or python_boundaries.check(root):
+        if status or source_sizes.check(root) or source_languages.check(root) or python_boundaries.check(root):
             return 1
         for package, command in npm_static_commands(root):
             print(f"Static check: npm run {command} in {package.relative_to(root)}", flush=True)

@@ -6,8 +6,12 @@ import duckdb
 
 
 def connect(database):
-    config = {"memory_limit": "256MB", "temp_directory": "",
+    config = {"memory_limit": "256MB",
               "autoinstall_known_extensions": False, "autoload_known_extensions": False}
+    if database == ":memory:":
+        config["temp_directory"] = ""
+    else:
+        config["max_temp_directory_size"] = "512MB"
     extensions = os.environ.get("ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY")
     if extensions:
         config["extension_directory"] = extensions

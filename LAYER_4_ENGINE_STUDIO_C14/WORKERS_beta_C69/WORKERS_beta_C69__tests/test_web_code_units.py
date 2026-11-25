@@ -3,13 +3,14 @@ import os
 import subprocess
 from pathlib import Path
 import shutil
+from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import patch
 
-from WORKERS_beta_C69.realization_graph import _web_code_units
+from .WORKERS_beta_C69__tests__shared import command_with_fixture
 
 
-SCRIPT = Path(__file__).resolve().parents[1] / "web_code_units.mjs"
+SCRIPT = Path(__file__).resolve().parents[1] / "web_code_units.ts"
 
 
 FRONTEND = SCRIPT.parents[1] / "IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND"
@@ -18,18 +19,36 @@ FRONTEND = SCRIPT.parents[1] / "IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_
 class ScannerDeadlineTests(unittest.TestCase):
     def test_image_deadline_switch_controls_subprocess_wait(self):
         switch = "ANECHOIC_TEST_IMAGE_DEADLINES"
+        module = "WORKERS_beta_C69.realization_graph"
+        root = Path(self.enterContext(TemporaryDirectory())).resolve()
+        (root / "source.ts").write_text("export const value = 1;")
+        request = {"root": str(root), "config": {"python_roots": ["."]}}
         result = subprocess.CompletedProcess([], 0, stdout="[[], []]")
-        with patch.dict(os.environ), patch("subprocess.run", return_value=result) as run:
+        original_run = subprocess.run
+        timeouts = []
+
+        def launch(command, *args, **options):
+            if command[:2] == ["node", str(SCRIPT)]:
+                timeouts.append(options["timeout"])
+                return result
+            return original_run(command, *args, **options)
+
+        with patch.dict(os.environ), patch("subprocess.run", side_effect=launch):
             os.environ.pop(switch, None)
             for setting, expected in ((None, 60), ("1", 60), ("0", None)):
                 if setting is not None:
                     os.environ[switch] = setting
                 with self.subTest(setting=setting):
-                    self.assertEqual([[], []], _web_code_units({}, {}))
-                    self.assertEqual(expected, run.call_args.kwargs["timeout"])
-            run.return_value = subprocess.CompletedProcess([], 2, stderr="bad graph")
-            with self.assertRaisesRegex(ValueError, "bad graph"):
-                _web_code_units({}, {})
+                    response = command_with_fixture(module, request)
+                    self.assertEqual(0, response.returncode, response.stderr)
+                    graph = json.loads(response.stdout)
+                    self.assertEqual(([], []), (graph["code_units"], graph["code_unit_calls"]))
+                    self.assertEqual(expected, timeouts[-1])
+            result = subprocess.CompletedProcess([], 2, stderr="bad graph")
+            response = command_with_fixture(module, request)
+            self.assertEqual(1, response.returncode)
+            self.assertIn("Code Unit scanner failed: bad graph", response.stderr)
+        self.assertEqual([60, 60, None, None], timeouts)
 
 
 @unittest.skipUnless(shutil.which("node") and (FRONTEND / "node_modules/typescript").is_dir(),

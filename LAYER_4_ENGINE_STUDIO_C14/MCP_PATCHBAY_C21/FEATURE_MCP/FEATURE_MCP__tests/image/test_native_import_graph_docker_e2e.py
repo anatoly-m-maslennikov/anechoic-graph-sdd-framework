@@ -1,5 +1,6 @@
 """Check the native Import Graph through a disposable Docker Workbench."""
 
+import json
 import os
 from pathlib import Path
 import re
@@ -10,12 +11,13 @@ import unittest
 from uuid import uuid4
 
 
-from .. import test_native_startup as fixture
 from .. import native_import_graph_docker_cases as docker_cases
 from ..native_shared_candidate_cases import SharedCandidateCases
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import HEALTH_PATH, WORKBENCH_PATH
 
-from ..workbench_docker_support import defer_container_cleanup, docker_deadline_env, image_timeout, observing, request
+from ..FEATURE_MCP__tests__shared import (
+    defer_container_cleanup, docker_deadline_env, image_timeout, observing, request, write_manifest,
+)
 
 
 GRAPH_COUNTS = """
@@ -43,7 +45,7 @@ class _CanaryProject:
         cls.root = Path(cls.enterClassContext(tempfile.TemporaryDirectory())).resolve()
         subprocess.run(["git", "init", "--quiet", str(cls.root)], check=True)
         control = "_anechoic_anechoic"
-        fixture.RuntimeSelectionTests.manifest(cls, cls.root / control, component="C00", parameters={
+        write_manifest(cls, cls.root / control, component="C00", parameters={
             "project": {"root": {"prefix": "underscore"}},
             "runtime": {"journal": {"storage": "duckdb"}, "workbench": {"storage": "disk", "import_graph": {}}},
         })
@@ -79,7 +81,7 @@ class _CanaryProject:
         deadline = monotonic() + 60
         while observing(cls.container, deadline):
             try:
-                if request(cls.url + HEALTH_PATH) == (200, {"ready": True}):
+                if request(cls.url + HEALTH_PATH) == (200, {"state": "ready"}):
                     return
             except OSError:
                 pass
@@ -288,16 +290,33 @@ class NativeImportGraphDockerE2E(
         self._wait_rows(sql, [["internal"]])
         target.write_text("import missing_canary_resource\n", encoding="utf-8")
         self._wait_rows(sql, [["unresolved"]])
-        self.assertEqual((200, {"ready": True}), request(self.url + HEALTH_PATH))
+        self.assertEqual((200, {"state": "ready"}), request(self.url + HEALTH_PATH))
 
     def test_ignored_files_and_parse_errors_appear_as_expected(self):
+        def foreground_warnings():
+            logs = subprocess.run(["docker", "logs", self.container],
+                                  capture_output=True, text=True, check=True, timeout=image_timeout(10))
+            self.assertNotIn("import graph: policy.py: parse error:", logs.stderr)
+            records = (json.loads(line) for line in logs.stderr.splitlines()
+                       if line.startswith("{") and '"worker_stderr_present"' in line)
+            return {record.get("correlation_id"): record for record in records
+                    if record.get("code") == "worker_stderr_present"
+                    and record.get("details", {}).get("phase") == "foreground"}
+
+        before = foreground_warnings()
         self._write("generated/ignored.py", "import dep\n")
         self._write("policy.py", "import\n")
         sql = "SELECT relative_path, scan_status FROM import_nodes WHERE relative_path IN ('policy.py', 'generated/ignored.py')"
         self._wait_rows(sql, [["policy.py", "parse_error"]])
-        logs = subprocess.run(["docker", "logs", self.container],
-                              capture_output=True, text=True, check=True, timeout=image_timeout(10))
-        self.assertIn("import graph: policy.py: parse error:", logs.stderr)
+        after = foreground_warnings()
+        new_runs = after.keys() - before.keys()
+        self.assertTrue(new_runs, after)
+        for run_id in new_runs:
+            warning = after[run_id]
+            self.assertRegex(run_id or "", r"^[0-9a-f]{32}$")
+            self.assertRegex(warning["timestamp"], r"Z$")
+            self.assertEqual(("WARNING", "C68", "worker_stderr_present", "capture", "degraded", {"phase": "foreground"}),
+                             tuple(warning[key] for key in ("severity", "component", "event", "operation", "outcome", "details")))
         self._write("policy.py", "import dep\n")
         self._wait_rows(sql, [["policy.py", "parsed"]])
         ignore = self._write(".gitignore", "policy.py\n")

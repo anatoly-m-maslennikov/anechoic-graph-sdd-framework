@@ -2,27 +2,31 @@
 """Private, read-only exact Atom source binding for lifecycle workflows."""
 from __future__ import annotations
 
-from .timing import trace
 
-from dataclasses import dataclass
 import hashlib
 import os
 from pathlib import Path
 import re
-from typing import Any
+from typing import Annotated, Any
+
+from pydantic import ConfigDict, WrapValidator
+from pydantic.dataclasses import dataclass
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import carrier_read_view
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import ProjectSelection
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import read_scope_unit_declarations
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_carrier
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import CEILINGS, ReadContext, open_regular
-from .placement_model import active_placement
+from .placement_model import active_placement, preserve_mapping
 from .source_binding import (
     ArchiveNotLoadedError as ArchiveNotLoadedError,
     SourceSelectionError,
     bind_query_reader as bind_query_reader,
     query_reader,
 )
+
+
+_Metadata = Annotated[dict[str, Any], WrapValidator(preserve_mapping)]
 
 
 def query_candidates(selection, **filters):
@@ -38,7 +42,7 @@ def query_candidates(selection, **filters):
     return {atom_id: tuple(sorted(paths)) for atom_id, paths in found.items()}
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, config=ConfigDict(strict=True, extra="forbid"))
 class SourcePin:
     path: Path
     atom_id: str
@@ -47,17 +51,17 @@ class SourcePin:
     status: str
     sha256: str
     raw: bytes
-    metadata: dict[str, Any]
+    metadata: _Metadata
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, config=ConfigDict(strict=True, extra="forbid"))
 class SourceContext:
     path: Path
     atom_id: str
     ref_id: str
     version: int
     status: str
-    metadata: dict[str, Any]
+    metadata: _Metadata
     summary: str | None
 
 
@@ -82,7 +86,6 @@ def _context_candidate(selection, ref_id, atom_id, row):
     return SourceContext(path, atom_id, ref_id, version, status, metadata, summary)
 
 
-@trace('source.context')
 def select_context(selection: ProjectSelection, ref_id: str, *, expected_version: int | None = None) -> SourceContext:
     """Select Current Atom context from the bound Workbench index without reading its Carrier."""
     atom_id, qualified, _ = _selector(selection, ref_id, expected_version)
@@ -126,7 +129,6 @@ def _matching_paths(reader: ReadContext, selection: ProjectSelection, prefix: re
     return _inventory_paths(reader, selection, lambda name: True if prefix.match(name) else None).get(True, ())
 
 
-@trace('source.inventory')
 def _inventory_paths(reader: ReadContext, selection: ProjectSelection, classify) -> dict[Any, tuple[Path, ...]]:
     recursive = {selection.root / unit["authority_path"] / role
                  for unit in selection.structure["scope_units"] for role in active_placement().role_folders.values()}
@@ -221,7 +223,6 @@ def _read_candidate(reader: ReadContext, path: Path, ref_id: str,
     return SourcePin(path, atom_id, ref_id, actual_version, status, hashlib.sha256(raw).hexdigest(), raw, parsed.metadata)
 
 
-@trace('source.currentness')
 def _check_currentness(reader: ReadContext, selection: ProjectSelection, atom_id: str,
                        candidates: tuple[Path, ...]) -> None:
     if query_reader() is not None:
@@ -234,7 +235,6 @@ def _check_currentness(reader: ReadContext, selection: ProjectSelection, atom_id
     _check_declarations(reader, selection)
 
 
-@trace('source.scope_declarations')
 def _check_declarations(reader, selection):
     source_reader = query_reader()
     declarations = (source_reader.lifecycle_declarations() if source_reader is not None else
@@ -262,7 +262,6 @@ def _unique_candidate(reader, paths, ref_id, atom_id, qualified, draft, *, retai
     return found[0]
 
 
-@trace('source.select')
 def select_source(selection: ProjectSelection, ref_id: str, *, expected_version: int | None = None) -> SourcePin:
     """Bind one logical ID in the retained Project authoring tree, without mutation.
 
@@ -295,7 +294,6 @@ def select_current_sources(selection: ProjectSelection, ref_ids: list[str]) -> d
     return select_sources(selection, ref_ids)
 
 
-@trace('source.select_many')
 def select_sources(selection: ProjectSelection, ref_ids: list[str]) -> dict[str, SourcePin]:
     """Bind several exact revisions with one source inventory and recheck."""
     selectors = [(ref_id, *_selector(selection, ref_id, None)) for ref_id in ref_ids]

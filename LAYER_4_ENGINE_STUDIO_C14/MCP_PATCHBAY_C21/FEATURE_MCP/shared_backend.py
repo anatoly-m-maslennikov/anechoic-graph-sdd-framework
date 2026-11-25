@@ -14,6 +14,7 @@ from mcp import types
 from MCP_PATCHBAY_C21.FEATURE_MCP.backend_client import ToolProtocolError
 from MCP_PATCHBAY_C21.FEATURE_MCP.caller_context import CallerContextError
 from MCP_PATCHBAY_C21.FEATURE_MCP.health_observations import HealthObservations
+from MCP_PATCHBAY_C21.FEATURE_MCP.mcp_startup_boundary import ExplicitStartupFailure
 from MCP_PATCHBAY_C21.FEATURE_MCP.runtime_request_context import current_request_context
 from MCP_PATCHBAY_C21.FEATURE_MCP.runtime_stack import runtime_stack
 from MCP_PATCHBAY_C21.FEATURE_MCP.shared_gateway_support import call_mcp, make_server, record_observation, refusal, tool_failure, valid_tool_response
@@ -58,7 +59,10 @@ class SharedBackendGateway:
             if self.ready:
                 return
             try:
-                socket = os.environ.get("ANECHOIC_BETA_BACKEND_SOCKET") if runtime_stack() == "beta" else None
+                stack = runtime_stack()
+                socket = None if stack == "current" else os.environ.get("ANECHOIC_BETA_BACKEND_SOCKET")
+                if stack == "beta_next" and not socket:
+                    raise ExplicitStartupFailure("beta_next_requires_supervised_shared_http")
                 if socket is None:
                     socket = await self._start_backend()
                 self._http = httpx2.AsyncClient(
@@ -97,10 +101,7 @@ class SharedBackendGateway:
         socket = Path(self._directory.name).resolve() / "api.sock"
         engine = Path(__file__).resolve().parents[2]
         environment = {**{k: v for k, v in os.environ.items() if k != "PYTHONHOME"}, "PYTHONPATH": str(engine)}
-        module = (
-            "WORKBENCH_BACKEND_beta_C70.shared_runtime" if runtime_stack() == "beta" else
-            "IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.shared_backend_process"
-        )
+        module = "IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.shared_backend_process"
         command = [sys.executable, "-B", "-P", "-m", module, "--socket", str(socket)]
         source = getattr(self.config, "source_path", self.config)
         if source is not None:

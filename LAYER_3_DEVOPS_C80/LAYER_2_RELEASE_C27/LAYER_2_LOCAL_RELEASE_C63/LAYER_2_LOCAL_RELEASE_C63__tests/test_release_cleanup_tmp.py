@@ -31,9 +31,10 @@ class TemporaryCleanupTests(unittest.TestCase):
             keep = [temporary / name for name in (
                 "exactly-48h.log", "fresh.log", "local_release_installation/installation.lock",
                 "atom_lifecycle/write.lock", "cache/uv/cached", "workbench/playwright-browsers/chrome",
+                "workbench/extensions/duckpgq.duckdb_extension",
                 "rmed-base-revise/resumable.json",
             )]
-            for path, modified in zip(keep, (11, 12, 10, 10, 10, 10, 10), strict=True):
+            for path, modified in zip(keep, (11, 12, 10, 10, 10, 10, 10, 10), strict=True):
                 path.parent.mkdir(parents=True, exist_ok=True)
                 path.touch()
                 os.utime(path, (modified, modified))

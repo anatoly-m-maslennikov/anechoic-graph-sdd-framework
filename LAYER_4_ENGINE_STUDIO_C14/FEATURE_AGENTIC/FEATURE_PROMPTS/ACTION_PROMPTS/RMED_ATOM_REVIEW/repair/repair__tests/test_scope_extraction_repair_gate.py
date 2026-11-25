@@ -18,9 +18,7 @@ PACKAGE = HERE.parent
 
 from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared import body_sections, markdown
 from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared import GROUPS, ReviewContext, merge_evaluations
-from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.layout_repair_gate import authority_digest
-from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.repair_gate__shared import _summary
-from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.scope_extraction_preview import admit_scope_extraction_preview
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.repair_gate__shared import admit_scope_extraction_preview, authority_digest
 from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.repair__tests.test_repair_gate import refreshed
 from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__tests.RMED_ATOM_REVIEW__tests__shared import RULE_TEXT, part as legacy_part, source
 
@@ -263,7 +261,7 @@ def fixture():
     mapping = map_for(original['text'], final['text'])
     proposal = {'source': original['binding'], 'context_sha256': context.sha256,
                 'disposition': 'scope_extraction_subject_recoding', 'confidence': .99,
-                'before_summary': _summary(final['text']), 'after_summary': _summary(final['text']),
+                'before_summary': 'Atom rule', 'after_summary': 'Atom rule',
                 'outputs': [{'path': final['binding']['path'], 'atom_id': 'MOCK-R-001', 'version': 1,
                              'text': final['text']}],
                 'resolutions': [{'check_id': row['id'], 'finding_index': index,

@@ -1,0 +1,48 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "cursor_position": {
+      "minimum": 0,
+      "type": "integer"
+    },
+    "name": {
+      "type": "string"
+    },
+    "page_size": {
+      "maximum": 1000,
+      "minimum": 1,
+      "type": "integer"
+    },
+    "preview": {
+      "minimum": 0,
+      "type": "integer"
+    },
+    "result_delivery": {
+      "enum": [
+        "file",
+        "inline",
+        "auto"
+      ],
+      "type": "string"
+    },
+    "result_format": {
+      "enum": [
+        "json_matrix",
+        "csv",
+        "toon"
+      ],
+      "type": "string"
+    },
+    "save": {
+      "default": false,
+      "type": "boolean"
+    },
+    "sql": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "sql"
+  ],
+  "type": "object"
+}

@@ -7,7 +7,7 @@ import subprocess
 import tempfile
 import unittest
 
-from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__tests.packaged_image_fixture__pub import packaged_identity_reader
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__tests.FEATURE_MCP__tests__shared import packaged_identity_reader
 
 ROOT = Path(__file__).resolve().parents[4]
 ENGINE = "LAYER_4_ENGINE_STUDIO_C14"

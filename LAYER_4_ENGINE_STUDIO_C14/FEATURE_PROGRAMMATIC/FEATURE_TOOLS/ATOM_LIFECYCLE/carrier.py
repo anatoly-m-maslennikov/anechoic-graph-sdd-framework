@@ -15,7 +15,7 @@ import yaml
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import carrier_read_view
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import GROUP_ORDER, GROUP_FIELDS, ROLE_FIELDS, equal_values, header_field_paths, header_path, header_value, path_value
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.project_root_container import effective_root_container_header
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import effective_root_container_header
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_carrier
 
 

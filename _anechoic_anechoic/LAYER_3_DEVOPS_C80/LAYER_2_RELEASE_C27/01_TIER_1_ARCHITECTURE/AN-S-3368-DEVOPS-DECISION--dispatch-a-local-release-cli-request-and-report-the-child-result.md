@@ -12,11 +12,11 @@ relations:
   - AN-S-3361@2
   - AN-S-3387@2
   IS_SOLUTION_FOR:
-  - AN-S-3288@14
+  - AN-S-3288@18
 state:
   status: active
-  version: 5
-  updated_at: '2026-11-23T14:45:10.920666+00:00'
+  version: 9
+  updated_at: '2026-11-24T18:19:55.278865+00:00'
 ---
 
 ## Summary
@@ -27,10 +27,14 @@ Dispatch a local release CLI request and report the child result.
 
 ### Prose Claim
 
-The release CLI dispatches the local command to C63, then reports its JSON
-result and exit status.
+The Release CLI dispatches Local Release and image verification to C63.
+Each explicit continuation sends the Run ID and the selected Project bindings
+to C63. A split continuation sends its exact source revision. The CLI reports
+the child JSON result and exit status.
 
 ### Formal Claim
+
+This claim covers a Local Release dispatch.
 
 ```python
 component_workflow(

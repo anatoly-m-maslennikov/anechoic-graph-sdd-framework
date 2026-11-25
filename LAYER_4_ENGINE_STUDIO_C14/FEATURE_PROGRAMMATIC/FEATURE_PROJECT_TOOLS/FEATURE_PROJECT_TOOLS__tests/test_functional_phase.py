@@ -9,7 +9,7 @@ import unittest
 from unittest.mock import patch
 
 from .. import test_suite__shared as suite
-from ..functional_suite import _test_phase
+from ..test_suite__shared import _test_phase
 
 
 class FunctionalPhaseTest(unittest.TestCase):

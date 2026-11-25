@@ -8,9 +8,9 @@ context:
   template: component_manifest
   lens: SPEC
 state:
-  status: active
-  version: 19
-  updated_at: "2026-11-23T00:34:06.573335+00:00"
+  status: "active"
+  version: 22
+  updated_at: "2026-11-24T21:44:52.598990+00:00"
 ---
 
 ## Summary
@@ -32,6 +32,8 @@ declare_entity(
         boundaries={
             'code': {
                 'imports': [
+                    'MANIFEST_RUNTIME_C62__shared.run_manifest_runtime',
+                    'structure_host_CS3__shared.publish_structure',
                     'FEATURE_MODEL_VALIDATION__shared.open_admitted_model',
                     'ORCHESTRATOR_C66__shared.Orchestrator',
                     'ADAPTERS_C30__shared.ARCHIVE_DIRECTORY',
@@ -41,8 +43,9 @@ declare_entity(
                     'source_watcher__pub.SourceWatcher',
                 ],
                 'exports': {
+                    'MANIFEST_RUNTIME_C62__shared.compile_reviewed_model': {'private': ['CS2']},
                     'MANIFEST_RUNTIME_C62__shared.run_manifest_runtime': {
-                        'private': ['C59'],
+                        'private': ['C59', 'LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_C59/MANIFEST_RUNTIME_C62/MANIFEST_RUNTIME_C62__tests'],
                     },
                 },
             },

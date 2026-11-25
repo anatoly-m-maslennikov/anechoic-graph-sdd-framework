@@ -18,9 +18,10 @@ from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.FEATURE_MODEL_V
 
 from .analysis_inputs import analysis_inputs
 from .code_access_occurrences import code_access_occurrences
+from .graph_inputs import _git_selection_witness
 from .resolution import resolve_realization
 from .source import _iter_files, _RESOLUTION_INPUTS, _stat_signature, capture
-from .state_effects import _read, analyze_state
+from .state_effects import _SourceVersionChanged, _read, analyze_state
 
 
 _CONSISTENCY_CODE = "realization_graph_inputs_changed"
@@ -56,9 +57,14 @@ def _difference(path, change, changed=()):
     return report
 
 
-def _require_stable(before, manifests, sources, after):
+def _require_stable(before, root, sources, include, *, watcher_replay):
+    if watcher_replay:
+        if _git_selection_witness(root) != before:
+            raise _ChangedInputs({"resolution_inputs": {"change": "changed", "fields": ["stat_signature"]}})
+        return
+    after = capture(root, sources, include)
     details = {}
-    for name, left, right in (("resolution_inputs", before, manifests), ("sources", sources, after)):
+    for name, left, right in (("resolution_inputs", before, _manifests(root)), ("sources", sources, after)):
         if left != right:
             details[name] = _first_difference(left, right)
     if details:
@@ -120,9 +126,15 @@ def _request_root(request):
 
 
 def _state_projection(root, sources, occurrences, ownership, derive_rows):
+    @cache
+    def read_source(path):
+        try:
+            return _read(root, path, sources[path])
+        except _SourceVersionChanged as error:
+            raise _ChangedInputs({"sources": _difference(path, "changed", ["signature"])}) from error
+
     if derive_rows is None:
-        return {}, analyze_state(root, sources, ownership)
-    read_source = cache(lambda path: _read(root, path, sources[path]))
+        return {}, analyze_state(root, sources, ownership, read_source=read_source)
     extra = derive_rows(root, sources, occurrences, read_source, ownership)
     findings = analyze_state(root, sources, ownership, read_source=read_source,
                              code_units=extra.get('code_units'), calls=extra.get('code_unit_calls', ()))
@@ -136,10 +148,10 @@ def _measure(root, graph, sources, snapshot, ownership, components, measure):
             "analysis_bindings": bindings}
 
 
-def _build(request, derive_rows=None, measure=None):
+def _build(request, derive_rows=None, measure=None, *, watcher_replay=False):
     root = _request_root(request)
     roots, include, images = _options(root, request["config"])
-    before = _manifests(root)
+    before = _git_selection_witness(root) if watcher_replay else _manifests(root)
     sources = capture(root, None, include)
     components, snapshot = None, None
     if "structure" in request:
@@ -168,8 +180,7 @@ def _build(request, derive_rows=None, measure=None):
     nodes = [(*node, "Test Package" if node[0] in test_keys else None) for node in nodes]
     if measure is not None:
         extra.update(_measure(root, (nodes, test_edges), sources, snapshot, ownership, components, measure))
-    after = capture(root, sources, include)
-    _require_stable(before, _manifests(root), sources, after)
+    _require_stable(before, root, sources, include, watcher_replay=watcher_replay)
     rows = {
         **extra,
         "nodes": nodes,
@@ -181,9 +192,9 @@ def _build(request, derive_rows=None, measure=None):
     return {name: sorted(items, key=lambda row: json.dumps(row, ensure_ascii=True)) for name, items in rows.items()}
 
 
-def main(derive_rows=None, measure=None):
+def main(derive_rows=None, measure=None, *, watcher_replay=False):
     try:
-        result = _build(json.load(sys.stdin), derive_rows, measure)
+        result = _build(json.load(sys.stdin), derive_rows, measure, watcher_replay=watcher_replay)
     except _ChangedInputs as error:
         record = {"timestamp": datetime.now(timezone.utc).isoformat(timespec="milliseconds"), "severity": "ERROR",
                   "code": _CONSISTENCY_CODE, "event": _CONSISTENCY_CODE, "component": "C61",

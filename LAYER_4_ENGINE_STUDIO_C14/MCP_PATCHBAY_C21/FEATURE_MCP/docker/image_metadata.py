@@ -49,7 +49,7 @@ def display_image_tag(
     if (
         not isinstance(version, str)
         or not isinstance(image_id, str)
-        or role not in ("test", "beta", "prod", None)
+        or role not in ("test", "beta", "beta-next", "prod", None)
         or _SAFE_VERSION.fullmatch(version) is None
         or _IMAGE_ID.fullmatch(image_id) is None
     ):

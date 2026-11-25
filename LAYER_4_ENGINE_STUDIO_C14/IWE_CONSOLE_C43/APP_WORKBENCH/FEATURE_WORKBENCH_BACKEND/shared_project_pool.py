@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+from pydantic import ConfigDict
+from pydantic.dataclasses import dataclass
+
 import asyncio
 from concurrent.futures import CancelledError as FutureCancelledError
-from dataclasses import dataclass
 import sys
 from typing import Any, Callable
 
@@ -15,7 +17,7 @@ class ProjectCapacityError(RuntimeError):
     """A request cannot load another Project without exceeding the host cap."""
 
 
-@dataclass
+@dataclass(config=ConfigDict(strict=True, extra="forbid"))
 class LoadedProject:
     selection: Any
     gateway: Any

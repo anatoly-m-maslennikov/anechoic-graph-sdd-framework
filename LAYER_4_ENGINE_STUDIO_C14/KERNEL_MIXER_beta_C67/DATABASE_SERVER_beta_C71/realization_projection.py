@@ -270,7 +270,7 @@ def restore_property_graph(connection):
         return
     reference = "native_graph.int_reference" if native else "realization_internal.int_component_reference"
     vertices = [f"{reference} LABEL Reference"]
-    edges = native_edges(connection, reference) if native else []
+    edges = native_edges(connection, reference, realization=imports) if native else []
     if imports:
         vertices.append("main.mrt_real_graph_import_nodes LABEL ImportNode")
         edges.extend(_import_edges(reference))

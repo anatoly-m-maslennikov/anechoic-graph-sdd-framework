@@ -1,0 +1,29 @@
+{
+  "title": "Defer duplicate source currentness verification",
+  "invariant": "A successful full generation capture checks currentness once, at finish.",
+  "scope": "Successful full generation path; counts only currentness calls in the capture guard and finish guard. The fixture joins the two historical files in the source list order with a comment separator.",
+  "before": {
+    "revision": "a2ee1bf985714c02dc14793861177b6562997023",
+    "source": [
+      "LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ADAPTERS_C30/native_source_rows__pub.py",
+      "LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ADAPTERS_C30/native_snapshot_cli.py"
+    ],
+    "fixture": "before.py.txt",
+    "sha256": "e5fd6a89894ca1b2ba3c29ac778be0b0025a25a0df2b86fcc56f114ffdb0b5a2"
+  },
+  "fixed": {
+    "revision": "c5508124d5169dc07ab692c6f38212560025bd73",
+    "source": [
+      "LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ADAPTERS_C30/native_source_rows__pub.py",
+      "LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ADAPTERS_C30/native_snapshot_cli.py"
+    ],
+    "fixture": "fixed.py.txt",
+    "sha256": "bc9731957877a923f2167785e9c761ff37d4644797deb006f2ac4085600d3a91"
+  },
+  "checks": [
+    {
+      "file": "check.lean"
+    }
+  ],
+  "analyzer": "analyze.py"
+}

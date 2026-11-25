@@ -15,7 +15,7 @@ from .native_query_test_support import create_native_gateway
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import NativeQueryOwner
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import resolve_native_project
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.work_journal__pub import PROJECT_DATABASE, append_sealed_events, journal_inbox
-from MCP_PATCHBAY_C21.FEATURE_MCP.workbench_web import routes
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import workbench_routes as routes
 
 
 class NativeWorkbenchStateCases:

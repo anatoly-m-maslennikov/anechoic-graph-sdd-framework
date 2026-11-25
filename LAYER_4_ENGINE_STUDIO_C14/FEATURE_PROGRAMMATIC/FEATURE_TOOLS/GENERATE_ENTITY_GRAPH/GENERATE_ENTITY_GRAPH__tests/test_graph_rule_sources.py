@@ -4,31 +4,24 @@ from pathlib import Path
 import hashlib
 import sys
 import unittest
-from unittest.mock import patch
 
 
 TOOL = Path(__file__).resolve().parents[1]
 TOOLS = TOOL.parent
 sys.path[:0] = [str(TOOLS), str(TOOL)]
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.declaration_sources import compose_declaration_catalog  # noqa: E402
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.VALIDATE_ATOMS.validate_atoms_workers.check_sections import GRAPH_RULE_SOURCES  # noqa: E402
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.VALIDATE_ATOMS.validate_atoms_workers.support_authority import support_sources  # noqa: E402
-
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import get_profile  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import compose_declaration_catalog  # noqa: E402
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__tests.declaration_source_fixtures import graph_rule_carrier, refresh_raw, relation_carrier, support_carriers
 
 
 class GraphRuleSourceTests(unittest.TestCase):
     def test_current_support_sources_admit_valid_rule_and_input_order_is_irrelevant(self):
-        supports, entries = support_carriers()
+        supports = support_carriers()
         carriers = [*supports, graph_rule_carrier()]
-        with patch(
-            'FEATURE_PROGRAMMATIC.FEATURE_TOOLS.VALIDATE_ATOMS.validate_atoms_workers.support_authority.support_sources',
-            return_value=entries,
-        ):
-            catalog = compose_declaration_catalog(carriers)
-            reversed_catalog = compose_declaration_catalog(list(reversed(carriers)))
+        catalog = compose_declaration_catalog(carriers)
+        reversed_catalog = compose_declaration_catalog(list(reversed(carriers)))
 
         self.assertEqual(catalog, reversed_catalog)
         self.assertEqual(len(catalog["graph_rules"]), 1)
@@ -39,25 +32,24 @@ class GraphRuleSourceTests(unittest.TestCase):
         self.assertEqual(catalog["unresolved"], [])
 
     def test_actual_support_manifest_admits_current_approved_evaluation(self):
-        entries = support_sources()
-        self.assertIn("CA-E-833", GRAPH_RULE_SOURCES)
-        self.assertTrue(set(GRAPH_RULE_SOURCES).issubset(entries))
-        entry = entries["CA-E-833"]
-        source_path = Path(entry["source_path"])
+        pin, = (pin for pin in get_profile("approved").grammar_pins if pin.atom_id == "CA-E-833")
+        source_path = Path(pin.path)
         self.assertEqual(".anechoic_anechoic", source_path.parts[0])
         raw = (Path(__file__).parent / "assets" / source_path.name).read_bytes()
-        self.assertEqual(entry["sha256"], hashlib.sha256(raw).hexdigest())
-        supports, _ = support_carriers()
-        evaluation = next(row for row in supports if row["source"]["atom_id"] == "CA-E-833")
-        evaluation["source"].update(version=entry["version"], path=entry["source_path"], sha256=entry["sha256"])
-        evaluation["metadata"]["version"] = entry["version"]
+        digest = hashlib.sha256(raw).hexdigest()
+        self.assertEqual("bcd3e7d0cf8c35e220c55ca4f52362547de5851aab8ac97c03d67592eab277f1", digest)
+        supports = support_carriers()
+        evaluation = next(row for row in supports if row["source"]["atom_id"] == pin.atom_id)
+        evaluation["source"].update(version=3, path=pin.path, sha256=digest)
+        evaluation["metadata"]["version"] = 3
         evaluation["raw"] = raw
         catalog = compose_declaration_catalog([*supports, graph_rule_carrier()])
-        self.assertEqual(len(catalog["graph_rules"]), 1)
+        rule, = catalog["graph_rules"]
+        self.assertEqual([row["source"] for row in supports], rule["authority"])
         self.assertEqual(catalog["unresolved"], [])
 
     def test_cardinality_rule_catalog_preserves_selection_yaml_and_source_evidence(self):
-        supports, entries = support_carriers()
+        supports = support_carriers()
         carrier = graph_rule_carrier("CA-R-901061", yaml_type="cardinality")
         carrier["body"] = carrier["body"].replace("\n", "\r\n")
         refresh_raw(carrier)
@@ -66,11 +58,7 @@ class GraphRuleSourceTests(unittest.TestCase):
         block_end = body.index("```", block_start + len("```yaml")) + 3
         expected_block = body[block_start : block_end + len("\r\n")]
 
-        with patch(
-            'FEATURE_PROGRAMMATIC.FEATURE_TOOLS.VALIDATE_ATOMS.validate_atoms_workers.support_authority.support_sources',
-            return_value=entries,
-        ):
-            catalog = compose_declaration_catalog([*supports, carrier])
+        catalog = compose_declaration_catalog([*supports, carrier])
 
         self.assertEqual(len(catalog["graph_rules"]), 1)
         self.assertEqual(catalog["unresolved"], [])
@@ -89,7 +77,7 @@ class GraphRuleSourceTests(unittest.TestCase):
         self.assertIn("maximum: null\r\n", rule["yaml_block"])
 
     def test_rule_admission_preserves_crlf_and_requires_source_bound_raw_body(self):
-        supports, entries = support_carriers()
+        supports = support_carriers()
         crlf = graph_rule_carrier("CA-R-901041")
         crlf["raw_body"] = crlf["raw_body"].replace("\n", "\r\n")
         prefix = crlf["raw"].split(b"# Summary", 1)[0]
@@ -101,11 +89,7 @@ class GraphRuleSourceTests(unittest.TestCase):
         mismatched_body["raw_body"] = mismatched_body["raw_body"].replace("Permit", "Alter")
         carriers = [*supports, crlf, missing_body, mismatched_body]
 
-        with patch(
-            'FEATURE_PROGRAMMATIC.FEATURE_TOOLS.VALIDATE_ATOMS.validate_atoms_workers.support_authority.support_sources',
-            return_value=entries,
-        ):
-            catalog = compose_declaration_catalog(carriers)
+        catalog = compose_declaration_catalog(carriers)
 
         self.assertEqual(len(catalog["graph_rules"]), 1)
         self.assertIn("\r\n", catalog["graph_rules"][0]["yaml_block"])
@@ -117,7 +101,7 @@ class GraphRuleSourceTests(unittest.TestCase):
         self.assertTrue(all("source" in row["reason"].lower() or "raw_body" in row["reason"] for row in catalog["unresolved"]))
 
     def test_optional_rule_docs_do_not_change_catalog_summary_or_operative_yaml(self):
-        supports, entries = support_carriers()
+        supports = support_carriers()
         carrier = graph_rule_carrier("CA-R-901044")
         carrier["body"] = carrier["body"].replace("\n", "\r\n") + (
             "## Details\r\n\r\n"
@@ -135,11 +119,7 @@ class GraphRuleSourceTests(unittest.TestCase):
         block_end = body.index("```", block_start + len("```yaml")) + 3
         expected_block = body[block_start : block_end + len("\r\n")]
 
-        with patch(
-            'FEATURE_PROGRAMMATIC.FEATURE_TOOLS.VALIDATE_ATOMS.validate_atoms_workers.support_authority.support_sources',
-            return_value=entries,
-        ):
-            catalog = compose_declaration_catalog([*supports, carrier])
+        catalog = compose_declaration_catalog([*supports, carrier])
 
         self.assertEqual(len(catalog["graph_rules"]), 1)
         rule = catalog["graph_rules"][0]
@@ -150,7 +130,7 @@ class GraphRuleSourceTests(unittest.TestCase):
         self.assertEqual(catalog["unresolved"], [])
 
     def test_malformed_and_unsupported_rules_remain_unresolved_examples_are_ignored(self):
-        supports, entries = support_carriers()
+        supports = support_carriers()
         malformed = graph_rule_carrier("CA-R-901031")
         malformed["body"] = "# Summary\n\nBroken payload.\n\n```yaml\nnot: [valid\n```\n"
         refresh_raw(malformed)
@@ -162,28 +142,20 @@ class GraphRuleSourceTests(unittest.TestCase):
         refresh_raw(example)
         carriers = [*supports, malformed, unsupported, example]
 
-        with patch(
-            'FEATURE_PROGRAMMATIC.FEATURE_TOOLS.VALIDATE_ATOMS.validate_atoms_workers.support_authority.support_sources',
-            return_value=entries,
-        ):
-            catalog = compose_declaration_catalog(carriers)
+        catalog = compose_declaration_catalog(carriers)
 
         self.assertEqual(catalog["graph_rules"], [])
         self.assertEqual(len(catalog["unresolved"]), 2)
         self.assertTrue(any("structural validation" in row["reason"] for row in catalog["unresolved"]))
 
     def test_rule_does_not_drop_invalid_entries_from_governs_list(self):
-        supports, entries = support_carriers()
+        supports = support_carriers()
         malformed_subjects = graph_rule_carrier("CA-R-901051")
         malformed_subjects["subjects"]["governs"] = [
             "Entity/Node/Continuant/Atom.Relations",
             7,
         ]
-        with patch(
-            'FEATURE_PROGRAMMATIC.FEATURE_TOOLS.VALIDATE_ATOMS.validate_atoms_workers.support_authority.support_sources',
-            return_value=entries,
-        ):
-            catalog = compose_declaration_catalog([*supports, malformed_subjects])
+        catalog = compose_declaration_catalog([*supports, malformed_subjects])
 
         self.assertEqual(catalog["graph_rules"], [])
         self.assertEqual(len(catalog["unresolved"]), 1)

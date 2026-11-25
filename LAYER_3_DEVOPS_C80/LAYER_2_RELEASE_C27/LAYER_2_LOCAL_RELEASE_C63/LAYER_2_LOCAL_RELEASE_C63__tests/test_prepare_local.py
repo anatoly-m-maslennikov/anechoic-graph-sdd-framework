@@ -8,10 +8,8 @@ import subprocess
 import sys
 from tempfile import TemporaryDirectory
 import unittest
-from unittest.mock import patch
 
-from LAYER_1_RUNTIME_IMAGES_C81.LAYER_1_RUNTIME_IMAGES_C81__shared import LocalReleaseError, read_release_selection
-from LAYER_2_LOCAL_RELEASE_C63.LAYER_2_LOCAL_RELEASE_C63__shared import prepare_local
+from LAYER_1_RUNTIME_IMAGES_C81.LAYER_1_RUNTIME_IMAGES_C81__shared import read_release_selection
 
 
 _CLI = Path(__file__).resolve().parents[2] / "release.py"
@@ -76,6 +74,18 @@ class PrepareLocalTests(unittest.TestCase):
         _git(self.root, "commit", "--quiet", "-m", "base")
         self.base = _git(self.root, "rev-parse", "HEAD").decode().strip()
 
+    def prepare(self, run_id, paths, *, port=39002, base=None):
+        argv = [sys.executable, "-B", str(_CLI), "prepare-local", "--project-root", str(self.root),
+                "--run-id", run_id, "--base", base or self.base, "--port", str(port)]
+        for path in paths:
+            argv.extend(("--changed-path", path))
+        result = subprocess.run(argv, env={**os.environ, "TMPDIR": str(self.scratch)},
+                                capture_output=True, timeout=60)
+        self.assertIn(result.returncode, (0, 1), result.stderr)
+        reply = json.loads(result.stdout)
+        self.assertEqual(result.returncode == 0, reply.get("outcome") == "completed", reply)
+        return reply
+
     def test_cli_pins_only_requested_bytes_and_preserves_source_git(self):
         (self.root / "later.txt").write_text("later commit", encoding="utf-8")
         _git(self.root, "add", "--", "later.txt")
@@ -89,13 +99,8 @@ class PrepareLocalTests(unittest.TestCase):
         addition.chmod(0o755)
         (self.root / ".env.local").write_text("ignored fixture value", encoding="utf-8")
         source_head, source_index = _git(self.root, "rev-parse", "HEAD"), (self.root / ".git/index").read_bytes()
-        args = ["prepare-local", "--project-root", str(self.root), "--run-id", "prepare-1",
-                "--base", self.base, "--port", "39002", "--changed-path", "edit.txt",
-                "--changed-path", "delete.txt", "--changed-path", addition.name]
-        result = subprocess.run((sys.executable, "-B", str(_CLI), *args),
-                                env={**os.environ, "TMPDIR": str(self.scratch)}, capture_output=True, timeout=60)
-        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
-        prepared = json.loads(result.stdout)
+        prepared = self.prepare("prepare-1", ("edit.txt", "delete.txt", addition.name))
+        self.assertEqual("completed", prepared["outcome"], prepared)
         checkout = Path(prepared["project_root"])
         self.assertFalse(checkout.is_relative_to(self.root))
         self.assertEqual(0o700, checkout.parent.stat().st_mode & 0o777)
@@ -125,17 +130,18 @@ class PrepareLocalTests(unittest.TestCase):
         (self.root / "link").symlink_to(self.root / "edit.txt")
         (self.root / "link-parent").symlink_to(self.root / "_anechoic_anechoic", target_is_directory=True)
         target = self.scratch / f"anechoic-local-release-{os.getuid()}" / "prepare-2"
-        with patch("tempfile.gettempdir", return_value=str(self.scratch)):
-            for path in ("../edit.txt", ".git/index", "nested/.env.stage", "link", "link-parent/control.txt"):
-                with self.subTest(path=path), self.assertRaisesRegex(LocalReleaseError, str(target / "checkout")):
-                    prepare_local(self.root, run_id="prepare-2", base=self.base, changed_paths=(path,), port=39002)
+        for path in ("../edit.txt", ".git/index", "nested/.env.stage", "link", "link-parent/control.txt"):
+            with self.subTest(path=path):
+                refusal = self.prepare("prepare-2", (path,))
+                self.assertEqual("failed", refusal["outcome"], refusal)
+                self.assertIn(str(target / "checkout"), refusal["error"])
                 self.assertFalse(target.exists())
-            with self.assertRaisesRegex(LocalReleaseError, "prepare-local-port-matches-source"):
-                prepare_local(self.root, run_id="prepare-2", base=self.base, changed_paths=("edit.txt",), port=35001)
-            with self.assertRaisesRegex(LocalReleaseError, "prepare-local-base-invalid"):
-                prepare_local(self.root, run_id="prepare-2", base="HEAD", changed_paths=("edit.txt",), port=39002)
-            target.mkdir()
-            (target / "owned-by-other-run").touch()
-            with self.assertRaisesRegex(LocalReleaseError, "prepare-local-target-exists"):
-                prepare_local(self.root, run_id="prepare-2", base=self.base, changed_paths=("edit.txt",), port=39002)
+        wrong_port = self.prepare("prepare-2", ("edit.txt",), port=35001)
+        self.assertIn("prepare-local-port-matches-source", wrong_port["error"])
+        symbolic_revision = self.prepare("prepare-2", ("edit.txt",), base="HEAD")
+        self.assertIn("prepare-local-base-invalid", symbolic_revision["error"])
+        target.mkdir()
+        (target / "owned-by-other-run").touch()
+        duplicate = self.prepare("prepare-2", ("edit.txt",))
+        self.assertIn("prepare-local-target-exists", duplicate["error"])
         self.assertTrue((target / "owned-by-other-run").is_file())

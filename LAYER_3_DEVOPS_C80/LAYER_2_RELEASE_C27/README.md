@@ -19,10 +19,28 @@ Runtime Images provides the `build-image` and `run-image` commands. User
 Setup uses both commands, and Local Release uses the same image layer for
 its candidate and production container.
 
-Local Release runs the `static` phase and then the `functional` phase with
-the configured host checks. After both pass, it builds the candidate and
-runs the `image` phase against its exact image ID. Installation requires
-passing image tests and the canary.
+Local Release runs Static, then required Functional tests. After both pass,
+it builds the candidate, runs the image tests against its exact image ID,
+and runs the MCP canary. Image tests and the canary have separate
+checkpoints and logs. Installation requires both to pass.
+When an older source offers only the combined image phase, its passing
+result supplies both checkpoints.
+
+After a failure, fix the cause and run `local --resume --run-id <id>`
+with the original run ID and Project root. Repeat after each failure.
+Continue uses the recorded version and any passing phase evidence whose
+inputs still match. See
+[Operator Documentation](../../LAYER_6_OPERATOR_DOCUMENTATION_C25/README.md).
+
+Use `verify-image --run-id <id>` for a candidate build, image tests, and
+canary without installation. Local Release and image verification check
+the pinned browser, DuckPGQ, and frontend dependencies before the gates.
+
+Use `local --source-revision <full-sha> --target-project-root <target>
+--run-id <id>` from the clean source checkout to release its exact revision
+to another Project. On resume, keep both Project roots and the allocated
+version. Before delivery, pass the full SHA of the clean checkout with
+the fix. After delivery starts, keep the accepted SHA.
 
 Use `prepare-local --run-id <id> --base <full-commit> --changed-path <path>`
 with `--port <loopback-port>` to prepare an isolated Local Release checkout.
@@ -48,7 +66,7 @@ resumable Atom Review state. The cleanup does not follow symbolic links.
 
 Each Test Suite run writes a JSON report under `.anechoic_tmp/test_reports/`
 and prints its path. Reports include the phase, outcome, duration, test
-counts, and failed module output. The image phase also records the canary result.
+counts, and failed module output. The canary report records its MCP result.
 
 The image tests launch the pinned Chromium through Playwright before running
 the Workbench browser cases. Run the image phase in a host context that permits

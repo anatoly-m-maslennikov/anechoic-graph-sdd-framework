@@ -117,7 +117,7 @@ async def _interface_arguments(request: Request, shared: bool) -> tuple[str, dic
     return name, arguments
 
 
-def _page(gateway, shared):
+def _page(gateway, shared, frontend):
     async def page(request: Request) -> Response:
         project_name = request.path_params["project_name"]
         try:
@@ -130,11 +130,11 @@ def _page(gateway, shared):
             return JSONResponse({"error": str(error)}, status_code=400)
         if not _project_name_matches(selection, project_name):
             return _unknown_project()
-        if not (_FRONTEND / "index.html").is_file():
+        if not (frontend / "index.html").is_file():
             return JSONResponse(
                 {"error": "Workbench frontend is unavailable; build required"}, status_code=503
             )
-        return FileResponse(_FRONTEND / "index.html")
+        return FileResponse(frontend / "index.html")
 
     return page
 
@@ -163,8 +163,9 @@ def _operation(gateway, shared, fixed_name=None):
     return endpoint
 
 
-def routes(gateway: Any, *, shared: bool = False) -> list[BaseRoute]:  # noqa: C901
-    page = _page(gateway, shared)
+def routes(gateway: Any, *, shared: bool = False, frontend: Path | None = None) -> list[BaseRoute]:  # noqa: C901
+    frontend = _FRONTEND if frontend is None else frontend
+    page = _page(gateway, shared, frontend)
     interface = _operation(gateway, shared)
     operations = [(path, _operation(gateway, shared, name)) for path, name in (
         ("run", "query_run"), ("page", "query_page"), ("check", "query_check"),
@@ -181,7 +182,7 @@ def routes(gateway: Any, *, shared: bool = False) -> list[BaseRoute]:  # noqa: C
           for base in (PROJECT_API_PATH, f"{WORKBENCH_PATH}/{{project_name}}")],
         Mount(
             f"{WORKBENCH_PATH}/assets",
-            app=StaticFiles(directory=_FRONTEND / "assets", check_dir=False),
+            app=StaticFiles(directory=frontend / "assets", check_dir=False),
         ),
     ]
 

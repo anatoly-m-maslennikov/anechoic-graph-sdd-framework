@@ -1,17 +1,18 @@
 """Exercise the shared validation path with inherited Model contracts."""
 
-from dataclasses import dataclass
+from pydantic import ConfigDict
+from pydantic.dataclasses import dataclass
 import unittest
 
-from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.validate_model_instance import validate_model_instance
+from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.FEATURE_MODEL_VALIDATION__shared import validate_model_instance
 
 
-@dataclass
+@dataclass(config=ConfigDict(strict=True, extra="forbid"))
 class Parent:
     identity: int
 
 
-@dataclass
+@dataclass(config=ConfigDict(strict=True, extra="forbid"))
 class Child(Parent):
     pass
 

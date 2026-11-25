@@ -27,3 +27,9 @@ Use familiar concepts with their usual meanings
 ### Prose Claim
 
 Prefer concepts and terms that people and AI Agents already understand. Use familiar terms with their usual meanings.
+
+## Details
+
+### Examples
+
+A specification uses “version” for an identified revision rather than for an execution attempt.

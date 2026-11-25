@@ -9,19 +9,19 @@ from types import SimpleNamespace
 import unittest
 
 import yaml
+from pydantic import ValidationError
 
 TOOLS = Path(__file__).resolve().parents[1]
 PROGRAMMATIC = TOOLS.parent
 STUDIO = PROGRAMMATIC.parent
 sys.path[:0] = [str(TOOLS), str(PROGRAMMATIC)]
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import resolve_native_project  # noqa: E402
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.native_workflow_definition import (  # noqa: E402
-    STATUS_SPECIFICATIONS,
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import (  # noqa: E402
     NativeDefinitionPin,
     NativeWorkflowDefinitionError,
     bind_native_workflow,
     bind_status_specifications,
+    resolve_native_project,
 )
 
 
@@ -67,6 +67,14 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
         }, "## Summary\n\nFixture.\n\n```python\nraise AssertionError('carrier code executed')\n```\n")
         return NativeDefinitionPin(f"{atom_id}@{version}", relative, sha256(path.read_bytes()).hexdigest())
 
+    def test_pin_preserves_positional_frozen_value_and_safe_errors(self):
+        pin = NativeDefinitionPin("AN-P-1@1", "project/fixture.md", "a" * 64)
+        self.assertEqual(pin, replace(pin))
+        self.assertEqual(hash(pin), hash(replace(pin)))
+        with self.assertRaises(ValidationError) as error:
+            NativeDefinitionPin("AN-P-1@1", b"private-input", "a" * 64)
+        self.assertNotIn("private-input", str(error.exception))
+
     def test_project_config_workflow_pin(self):
         pin = self._pin("workflow", "AN-P-4", 1,
                         relative=f"{self.control}/__PROJECT_CONFIG/AN-P-4-WORKFLOW--fixture.md")
@@ -83,15 +91,17 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
         ontology = Path(self.control) / "LAYER_1_META_ONTOLOGY_C9"
         source = STUDIO.parent / "_anechoic_anechoic" / ontology.name
         rows = []
-        for (native, _) in STATUS_SPECIFICATIONS.values():
-            atom_id = native.partition("@")[0]
+        for atom_id in ("AN-S-1928", "AN-S-1834", "AN-S-1831"):
             original, = source.rglob(f"{atom_id}-DOM-*.md")
+            raw = original.read_bytes()
+            header = yaml.safe_load(raw.split(b"---", 2)[1])
+            native = f"{atom_id}@{header['state']['version']}"
             relative = ontology / original.relative_to(source)
             path = self.root / relative
             path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_bytes(original.read_bytes())
+            path.write_bytes(raw)
             rows.append({"_exact_ref": native, "status_group": "Current", "source_path": relative.as_posix(),
-                         "_source_sha256": sha256(path.read_bytes()).hexdigest()})
+                         "_source_sha256": sha256(raw).hexdigest()})
         return rows
 
     def test_native_status_binding_checks_sources_and_manifest(self):

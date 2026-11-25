@@ -8,6 +8,8 @@ import time
 
 from LAYER_1_RUNTIME_IMAGES_C81.LAYER_1_RUNTIME_IMAGES_C81__shared import INSTALLATION_LOCK_PATH, _owned_directory
 
+from .local_release_state import open_artifacts
+
 
 _TMP = Path(".anechoic_tmp")
 _KEEP = {
@@ -16,14 +18,15 @@ _KEEP = {
     Path("cache/uv"),
     Path("rmed-base-revise"),
     Path("workbench/playwright-browsers"),
+    Path("workbench/extensions"),
 }
 
 
-def _prune(directory: int, relative: Path, cutoff: int, device: int, blocked: list[str]) -> int:
+def _prune(directory: int, relative: Path, cutoff: int, device: int, blocked: list[str], keep) -> int:
     removed = 0
     for name in os.listdir(directory):
         child = relative / name
-        if child in _KEEP:
+        if child in keep:
             continue
         try:
             info = os.stat(name, dir_fd=directory, follow_symlinks=False)
@@ -36,7 +39,7 @@ def _prune(directory: int, relative: Path, cutoff: int, device: int, blocked: li
                 try:
                     if not os.path.samestat(info, os.fstat(nested)):
                         continue
-                    removed += _prune(nested, child, cutoff, device, blocked)
+                    removed += _prune(nested, child, cutoff, device, blocked, keep)
                 finally:
                     os.close(nested)
                 if old and os.path.samestat(info, os.stat(name, dir_fd=directory, follow_symlinks=False)):
@@ -59,6 +62,18 @@ def _prune(directory: int, relative: Path, cutoff: int, device: int, blocked: li
 def prune_temporary_files(root: Path) -> tuple[int, list[str]]:
     cutoff = time.time_ns() - 48 * 60 * 60 * 10**9
     blocked: list[str] = []
+    keep = _KEEP | _open_paths(root)
     with _owned_directory(root, _TMP) as directory:
-        removed = _prune(directory, Path(), cutoff, os.fstat(directory).st_dev, blocked)
+        removed = _prune(directory, Path(), cutoff, os.fstat(directory).st_dev, blocked, keep)
     return removed, blocked
+
+
+def _open_paths(root):
+    keep = set()
+    for stage, _, logs in open_artifacts(root):
+        for value in (stage, *logs):
+            if isinstance(value, str):
+                path = Path(value)
+                if path.parent == _TMP / "simple_local_release":
+                    keep.add(path.relative_to(_TMP))
+    return keep

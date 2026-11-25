@@ -5,13 +5,14 @@ This is a narrow Release input contract, not validation against the compiled Mod
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from hashlib import sha256
 import os
 from pathlib import Path
 import re
 import stat
 
+from pydantic import ConfigDict
+from pydantic.dataclasses import dataclass
 import yaml
 
 from ._release_manifest_parser import _claim, read_atom_header
@@ -23,7 +24,7 @@ _PROTECTED = {".ssh", ".aws", ".gnupg"}
 _MAX_FILE = 64 * 1024 * 1024
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, config=ConfigDict(strict=True, extra="forbid"))
 class ReleaseSelection:
     root: Path
     control_root: Path

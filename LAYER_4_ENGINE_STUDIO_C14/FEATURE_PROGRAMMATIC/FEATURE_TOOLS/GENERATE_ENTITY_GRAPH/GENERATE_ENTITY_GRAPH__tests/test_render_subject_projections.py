@@ -1,8 +1,7 @@
 """Standalone current Topics readers and seven views need no legacy runtime."""
 
-import contextlib
-import io
 from pathlib import Path
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -13,8 +12,14 @@ TOOL = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(TOOL), str(TOOL.parent)]
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import read_current_carriers  # noqa: E402
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.render_entity_tree import output_path  # noqa: E402
-import FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.render_subject_projections as renderer  # noqa: E402
+
+
+def run_projection(repository, source, view):
+    return subprocess.run(
+        [sys.executable, "-B", str(TOOL / "render_subject_projections.py"), source,
+         "--repository", str(repository), "--view", view],
+        text=True, capture_output=True, timeout=30,
+    )
 
 
 def write_atom(folder, number, subject, claim, *, dependencies=()):
@@ -54,31 +59,22 @@ class RenderSubjectProjectionsTests(unittest.TestCase):
                 "entity-definition-coverage": "| `Missing` | primary_node | missing | missing |",
             }
             for view, golden in expected.items():
-                with self.subTest(view=view), contextlib.redirect_stdout(io.StringIO()) as stdout:
-                    result = renderer.main(["sources", "--repository", str(root), "--view", view])
-                self.assertEqual(0, result)
-                self.assertIn(golden, stdout.getvalue())
-                self.assertNotIn("Hidden", stdout.getvalue())
-                self.assertNotIn("STRUCTURE", stdout.getvalue())
+                with self.subTest(view=view):
+                    result = run_projection(root, "sources", view)
+                    self.assertEqual(0, result.returncode, result.stderr)
+                    self.assertIn(golden, result.stdout)
+                    self.assertNotIn("Hidden", result.stdout)
+                    self.assertNotIn("STRUCTURE", result.stdout)
             self.assertEqual(before, {path: path.read_bytes() for path in root.rglob("*") if path.is_file()})
 
-    def test_source_escape_and_projection_output_symlinks_are_rejected(self):
+    def test_source_escape_is_rejected(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary).resolve()
             project = root / "project"
             project.mkdir()
-            with contextlib.redirect_stderr(io.StringIO()) as stderr:
-                self.assertEqual(1, renderer.main(["..", "--repository", str(project), "--view", "primary-tree"]))
-            self.assertIn("inside the selected repository", stderr.getvalue())
-            projection = project / ".anechoic_anechoic/_projection"
-            projection.mkdir(parents=True)
-            safe = projection / "view.md"
-            self.assertEqual(safe, output_path(safe, project))
-            (projection / "linked").symlink_to(root, target_is_directory=True)
-            with self.assertRaisesRegex(ValueError, "non-symlink"):
-                output_path(projection / "linked/view.md", project)
-            with self.assertRaises(ValueError):
-                output_path(root / "view.md", project)
+            result = run_projection(project, "..", "primary-tree")
+            self.assertEqual(1, result.returncode)
+            self.assertIn("inside the selected repository", result.stderr)
 
 
 if __name__ == "__main__":

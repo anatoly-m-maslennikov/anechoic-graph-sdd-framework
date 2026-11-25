@@ -40,6 +40,54 @@ class WebImportTests(TestCase):
             _, facts = code_access_occurrences(root, sources)
             self.assertTrue(any(f.source_path == 'pkg/entry.ts' and f.target_path == 'pkg/lib/shared.ts' for f in facts))
 
+    def test_commonjs_typescript_is_captured_and_resolved(self):
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp).resolve()
+            (root / 'entry.cts').write_text("import { value } from './helper';\n")
+            (root / 'helper.cts').write_text('export const value: number = 1;\n')
+            sources = capture(root, None)
+            self.assertEqual((sources['entry.cts'].language, sources['entry.cts'].status), ('typescript', 'parsed'))
+            _, rows, _, _, _ = resolve_realization(root, sources)
+            self.assertEqual((rows[0][2], rows[0][6]), ('module:helper.cts', 'internal'))
+
+    def test_relative_node_modules_requires_exact_declaration_and_safe_path(self):
+        with TemporaryDirectory() as tmp, TemporaryDirectory() as outside:
+            root = Path(tmp).resolve()
+            frontend = root / 'frontend'
+            modules = frontend / 'node_modules'
+            modules.mkdir(parents=True)
+            (frontend / 'package.json').write_text('{"devDependencies":{"typescript":"1","link":"1"}}')
+            (modules / 'link').symlink_to(outside, target_is_directory=True)
+            imports = ('typescript', 'unlisted', 'typescript/../typescript', 'link')
+            (root / 'entry.cts').write_text(''.join(
+                f"import './frontend/node_modules/{name}';\n" for name in imports))
+            sources = capture(root, None)
+            _, rows, _, _, _ = resolve_realization(root, sources)
+            resolved = {row[3]: (row[2], row[6]) for row in rows}
+            self.assertEqual(resolved['./frontend/node_modules/typescript'],
+                             ('package:external:typescript', 'external'))
+            for name in imports[1:]:
+                self.assertEqual(resolved['./frontend/node_modules/' + name], (None, 'unresolved'))
+
+    def test_asset_targets_are_available_to_code_access(self):
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp).resolve()
+            tests = root / 'app__tests' / 'fixtures'
+            tests.mkdir(parents=True)
+            (tests / 'style.css').write_text('')
+            (tests / 'data.json').write_text('{}')
+            imports = "import './app__tests/fixtures/style.css';\nimport './app__tests/fixtures/data.json';\n"
+            (root / 'main.ts').write_text(imports)
+            sources = capture(root, None)
+            _, facts = code_access_occurrences(root, sources)
+            _, rows, edges, _, _ = resolve_realization(root, sources)
+        self.assertEqual([(fact.target_path, fact.target_kind, fact.status) for fact in facts], [
+            ('app__tests/fixtures/' + name, 'asset', 'asset') for name in ('style.css', 'data.json')
+        ])
+        self.assertEqual(len(rows), 2)
+        self.assertTrue(all(row[2] is None and row[6] == 'asset' for row in rows))
+        self.assertEqual(edges, [])
+
     def test_missing_parser_is_explicitly_unsupported(self):
         with TemporaryDirectory() as tmp:
             root = Path(tmp)

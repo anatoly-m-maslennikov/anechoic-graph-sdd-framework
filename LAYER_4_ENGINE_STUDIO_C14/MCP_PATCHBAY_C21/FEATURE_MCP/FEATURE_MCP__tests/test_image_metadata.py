@@ -10,22 +10,24 @@ import unittest
 from contextlib import redirect_stdout
 from unittest.mock import patch
 
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import (
+    FINGERPRINT_LABEL, ImageError, ImageManager,
+    OCI_VERSION_LABEL, Runtime, SCHEMA_LABEL, TOOL_REGISTRY, runtime_main,
+)
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import DOCKERFILE, DOCKERIGNORE, LICENSE_INPUTS
+import MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared as runtime_images
+from .test_runtime_image_assets import BETA_NEXT_REQUIRED_FIXTURE_FILES
+
 APP = Path(__file__).resolve().parents[1]
 
-from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import (  # noqa: E402
-    FINGERPRINT_LABEL, ImageError, ImageManager,
-    OCI_VERSION_LABEL, SCHEMA_LABEL, TOOL_REGISTRY,
-)
-from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import DOCKERFILE, DOCKERIGNORE, LICENSE_INPUTS  # noqa: E402
-import MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared as runtime_images  # noqa: E402
-import MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime as runtime  # noqa: E402
-from .test_runtime_image_assets import BETA_REQUIRED_FIXTURE_FILES
 
 IMAGE, OTHER_IMAGE = "sha256:" + "a" * 64, "sha256:" + "b" * 64
 VERSION, CREATED = "0.4.4.9", "2026-10-21T14:15:16.987654321Z"
 EXPECTED_TAG = "anechoic-runtime:0.4.4.9-test-2026-10-21_14-15-16Z-aaaaaaaaaaaa"
 BETA_TAG = "anechoic-runtime:0.4.4.9-beta-2026-10-21_14-15-16Z-aaaaaaaaaaaa"
 COMPACT_BETA = "anechoic-runtime:0.4.4.9-beta-20261021T141516Z-aaaaaaaaaaaa"
+BETA_NEXT_TAG = "anechoic-runtime:0.4.4.9-beta-next-2026-10-21_14-15-16Z-aaaaaaaaaaaa"
+COMPACT_BETA_NEXT = "anechoic-runtime:0.4.4.9-beta-next-20261021T141516Z-aaaaaaaaaaaa"
 PROD_TAG = "anechoic-runtime:0.4.4.9-prod-2026-10-21_14-15-16Z-aaaaaaaaaaaa"
 LEGACY_TAG = "anechoic-runtime:0.4.4.9-20261021T141516Z-aaaaaaaaaaaa"
 COMPACT_TEST = "anechoic-runtime:0.4.4.9-test-20261021T141516Z-aaaaaaaaaaaa"
@@ -121,54 +123,62 @@ class ImageMetadataTests(unittest.TestCase):
             path = self.root / relative
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(content, encoding="utf-8")
-    def _select_beta(self) -> None:
+    def _select_beta_next(self) -> None:
         (self.root / "LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27").mkdir(parents=True, exist_ok=True)
-        (self.root / "LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/project.toml").write_text('stack = "beta"\n')
+        (self.root / "LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/project.toml").write_text('stack = "beta_next"\n')
         engine = self.root / "LAYER_4_ENGINE_STUDIO_C14"
-        for relative in BETA_REQUIRED_FIXTURE_FILES:
+        for relative in BETA_NEXT_REQUIRED_FIXTURE_FILES:
             path = engine / relative
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text("fixture")
 
-    def test_beta_build_reuse_and_production_promotion(self) -> None:
-        self._select_beta()
+    def test_beta_next_build_reuse_and_production_promotion(self) -> None:
+        self._select_beta_next()
         probe = DockerProbe(listed=())
         manager = self._manager(probe)
         self.assertEqual(IMAGE, manager.resolve())
-        self.assertEqual({BETA_TAG}, probe.tags)
-        self.assertIn("--target", probe.commands("docker", "build")[0])
+        self.assertEqual({BETA_NEXT_TAG}, probe.tags)
+        build, = probe.commands("docker", "build")
+        self.assertEqual("beta_next", build[build.index("--target") + 1])
         probe.calls.clear()
         self.assertEqual(IMAGE, manager.resolve(explicit_id=IMAGE, build_if_missing=False))
         self._assert_no_mutation(probe)
-        probe.tags.update({EXPECTED_TAG, COMPACT_TEST, COMPACT_BETA})
+        probe.tags.update({EXPECTED_TAG, COMPACT_TEST, COMPACT_BETA_NEXT})
         self.assertEqual(PROD_TAG, manager.mark_production_image(IMAGE))
         self.assertEqual({PROD_TAG}, probe.tags)
         probe.calls.clear()
         self.assertEqual(IMAGE, manager.resolve(explicit_id=IMAGE, build_if_missing=False))
         self._assert_no_mutation(probe)
 
-    def test_beta_reuse_adds_missing_beta_tag(self) -> None:
-        self._select_beta()
+    def test_beta_next_reuse_adds_missing_candidate_tag(self) -> None:
+        self._select_beta_next()
         probe = DockerProbe()
         self.assertEqual(IMAGE, self._manager(probe).resolve(build_if_missing=False))
-        self.assertEqual({BETA_TAG}, probe.tags)
+        self.assertEqual({BETA_NEXT_TAG}, probe.tags)
         self.assertEqual([], probe.commands("docker", "build"))
 
-    def test_beta_tag_collision_refuses_mutation(self) -> None:
-        self._select_beta()
-        probe = DockerProbe(tags=(BETA_TAG,))
+    def test_beta_next_tag_collision_refuses_mutation(self) -> None:
+        self._select_beta_next()
+        probe = DockerProbe(tags=(BETA_NEXT_TAG,))
         inspect = probe._inspect
         def collision(image):
-            if image == BETA_TAG:
-                return json.dumps([{"Id": OTHER_IMAGE, "RepoTags": [BETA_TAG]}])
+            if image == BETA_NEXT_TAG:
+                return json.dumps([{"Id": OTHER_IMAGE, "RepoTags": [BETA_NEXT_TAG]}])
             return inspect(image)
         probe._inspect = collision
         with self.assertRaises(ImageError):
             self._manager(probe).resolve(build_if_missing=False)
         self._assert_no_mutation(probe)
 
+    def test_historical_beta_tags_are_recognized_for_an_immutable_image(self) -> None:
+        probe = DockerProbe(tags=(BETA_TAG, COMPACT_BETA))
+        manager = self._manager(probe)
+        self.assertEqual(PROD_TAG, manager.mark_production_image(IMAGE))
+        self.assertEqual({PROD_TAG}, probe.tags)
+        self.assertEqual([], probe.commands("docker", "build"))
+
     def test_identity_role_rejects_changed_selector(self) -> None:
-        self._select_beta()
+        self._select_beta_next()
         manager = self._manager(DockerProbe())
         identity = manager.identity()
         (self.root / "LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/project.toml").write_text('stack = "current"\n')
@@ -308,12 +318,11 @@ class ImageMetadataTests(unittest.TestCase):
 
     def test_runtime_build_uses_the_same_created_version_sha_tag(self) -> None:
         probe = DockerProbe(listed=())
-        with (
-            patch.object(runtime, "SOURCE_ROOT", self.root),
-            patch.object(runtime, "DIRECTORY", (self.root / DOCKERFILE).parent),
-            patch.object(runtime_images, "_bounded_run", side_effect=probe),
-        ):
-            runtime_instance = runtime.Runtime(self.root)
+        def fixture_manager(_framework_root, **kwargs):
+            return ImageManager(self.root, executor=probe, **kwargs)
+
+        with patch.object(runtime_images, "ImageManager", side_effect=fixture_manager):
+            runtime_instance = Runtime(self.root)
             self.assertEqual(IMAGE, runtime_instance.build())
         self.assertEqual(IMAGE, runtime_instance.image)
         self.assertTrue(probe.build_context.is_relative_to(self.project_temp))
@@ -322,7 +331,7 @@ class ImageMetadataTests(unittest.TestCase):
 
     def test_runtime_cli_build_prints_immutable_digest(self) -> None:
         output = io.StringIO()
-        with patch.object(runtime.Runtime, "build", return_value=IMAGE) as build, patch.object(sys, "argv", ["runtime.py", "--build-timeout", "17", "build"]), redirect_stdout(output):
-            runtime.main()
+        with patch.object(Runtime, "build", return_value=IMAGE) as build, patch.object(sys, "argv", ["runtime.py", "--build-timeout", "17", "build"]), redirect_stdout(output):
+            runtime_main()
         self.assertEqual(IMAGE + "\n", output.getvalue())
         build.assert_called_once_with(use_packaged_assets=False, timeout=17)

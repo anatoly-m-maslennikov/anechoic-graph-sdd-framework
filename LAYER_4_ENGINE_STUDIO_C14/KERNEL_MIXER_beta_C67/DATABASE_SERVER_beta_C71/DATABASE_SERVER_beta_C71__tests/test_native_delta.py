@@ -11,6 +11,7 @@ from tempfile import TemporaryDirectory
 
 import duckdb
 import httpx2
+from starlette.testclient import TestClient
 
 from .DATABASE_SERVER_beta_C71__tests__shared import BINDING, PIN, _query, _server
 from .test_native_atoms import _digest, _native_generation
@@ -48,6 +49,90 @@ class NativeDeltaTest(unittest.TestCase):
         response = client.put("/generation/native-delta", json=payload)
         self.assertEqual(200, response.status_code, response.text)
         return response.json()["result"]["generation"]
+
+    def test_model_status_domain_rejects_full_and_delta(self):
+        data = base_generation()
+        model = json.loads(data["model"])
+        prefix = "Node//Artifact//Atom//"
+        model["bindings"]["declarations"] = [
+            [name, {"kind": "entity", "arguments": {"entity_name": "Status", "entity_kind": "Property", "relation_name": "IS_PROPERTY_OF",
+                                  "base_path": "Node//Artifact//Atom.Header.State",
+                                  "applies_to_entity_classes": [prefix + name], "allowed_values": values}}]
+            for name, values in (("Spec Atom", ["draft", "active", "archived"]),
+                                 ("Ticket Atom", ["draft", "done", "archived"]),
+                                 ("Project Config Atom", ["draft", "active", "archived"]))
+        ]
+        data["model"] = json.dumps(model)
+        data["receipt"]["model_descriptor_sha256"] = sha256(data["model"].encode()).hexdigest()
+        with _server() as client:
+            refused = client.put("/generation", json=data)
+            self.assertEqual(400, refused.status_code, refused.text)
+            data["snapshot"]["atoms"][0]["status"] = "done"
+            data["receipt"]["snapshot_sha256"] = _digest(data["snapshot"])
+            admitted = client.put("/generation", json=data)
+            self.assertEqual(200, admitted.status_code, admitted.text)
+            base = admitted.json()["result"]["generation"]
+            atom = data["snapshot"]["atoms"][0] | {"status": "active"}
+            path = [atom["relative_path"], atom["filename"]]
+            refused = client.put("/generation/native-delta", json=delta(base, [path], [atom], edges(atom["reference"])))
+            self.assertEqual(400, refused.status_code, refused.text)
+            rows = _query(client, "SELECT \"header.state.status\" FROM mrt_atoms WHERE reference = 'AN-T-1'")
+            self.assertEqual([["done"]], rows.json()["result"]["rows"])
+
+    def test_partial_and_invalid_family_status_bindings_fail(self):
+        args = {"entity_name": "Status", "entity_kind": "Property", "relation_name": "IS_PROPERTY_OF",
+                "base_path": "Node//Artifact//Atom.Header.State", "allowed_values": ["active"],
+                "applies_to_entity_classes": ["Node//Artifact//Atom//Ticket Atom"]}
+        data = base_generation()
+        model = json.loads(data["model"])
+
+        def submit(client):
+            model["bindings"]["declarations"] = [["subject", {"arguments": args}]]
+            data["model"] = json.dumps(model)
+            data["receipt"]["model_descriptor_sha256"] = sha256(data["model"].encode()).hexdigest()
+            return client.put("/generation", json=data)
+
+        with duckdb.connect() as connection, TestClient(create_app(connection, "instance", PIN)) as client:
+            refused = submit(client)
+            self.assertEqual(400, refused.status_code, refused.text)
+            self.assertIn("Incomplete", refused.json()["error"]["message"])
+            args["allowed_values"] = []
+            refused = submit(client)
+            self.assertEqual(400, refused.status_code, refused.text)
+            self.assertIn("Invalid scoped", refused.json()["error"]["message"])
+            args["applies_to_entity_classes"] = ["Node//Artifact//Atom//Ticket Atom//Task"]
+            data["snapshot"]["atoms"].append(data["snapshot"]["atoms"][0])
+            data["receipt"]["snapshot_sha256"] = _digest(data["snapshot"])
+            refused = submit(client)
+            self.assertEqual(400, refused.status_code, refused.text)
+            self.assertIn("Duplicate native Atom", refused.json()["error"]["message"])
+            data["snapshot"]["atoms"][0]["status"] = "not-a-status"
+            data["receipt"]["snapshot_sha256"] = _digest(data["snapshot"])
+            refused = submit(client)
+            self.assertEqual(400, refused.status_code, refused.text)
+            self.assertIn("Invalid native Atom Status", refused.json()["error"]["message"])
+
+    def test_warning_only_delta_is_atomic_and_does_not_clear_unrelated_issues(self):
+        path = ["tickets", "AN-T-99--new.md"]
+        relative = "/".join(path)
+        warning = {"relative_path": relative, "code": "parse_error", "message": "Malformed Atom",
+                   "atom_ref": None, "related_paths": []}
+        with _server() as client:
+            base = client.put("/generation", json=base_generation()).json()["result"]["generation"]
+            payload = delta(base, [path], [], [])
+            payload["snapshot"]["ingestion_issues"] = [warning]
+            payload["snapshot_sha256"] = _digest({"paths": payload["paths"], "snapshot": payload["snapshot"]})
+            refused = client.put("/generation/native-delta", json=payload | {"snapshot_sha256": "invalid"})
+            self.assertEqual(400, refused.status_code, refused.text)
+            issue_sql = "SELECT relative_path, code FROM ops_ingestion_issues"
+            self.assertEqual([], _query(client, issue_sql).json()["result"]["rows"])
+            admitted = self.send(client, payload)
+            self.assertNotEqual(base, admitted)
+            unrelated = ["tickets", "AN-T-100--unrelated.md"]
+            self.assertEqual(admitted, self.send(client, delta(admitted, [unrelated], [], [])))
+            self.assertEqual([[relative, "parse_error"]], _query(client, issue_sql).json()["result"]["rows"])
+            self.assertNotEqual(admitted, self.send(client, delta(admitted, [path], [], [])))
+            self.assertEqual([], _query(client, issue_sql).json()["result"]["rows"])
 
     def test_create_edit_rename_delete_and_duplicate_collision(self):
         with _server() as client:

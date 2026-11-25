@@ -11,9 +11,8 @@ from time import monotonic, sleep
 
 import httpx2
 
-from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import beta_runtime_arguments
 from MCP_PATCHBAY_C21.FEATURE_MCP.runtime_request_context import current_request_context
-from MCP_PATCHBAY_C21.FEATURE_MCP.runtime_stack import runtime_stack
+from MCP_PATCHBAY_C21.FEATURE_MCP.runtime_stack import beta_runtime_arguments, runtime_stack
 
 
 _MODULE = "IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.backend_process"
@@ -38,6 +37,7 @@ class ToolProtocolError(RuntimeError):
         return cls("tool_runtime_failure", "Invalid Backend response")
 
 
+
 class BackendClient:
     def __init__(self, selection, process, http):
         self.selection = selection
@@ -52,43 +52,63 @@ class BackendClient:
             return False
         if self._process is not None:
             return self._process.poll() is None
-        try:
-            return self._probe_ready()
-        except (httpx2.HTTPError, ValueError, RuntimeError):
-            return False
+        return self.health_state() == "ready"
 
-    def _probe_ready(self):
+    def health_state(self):
+        if self._closed:
+            return "unavailable"
+        try:
+            return self._probe_state()
+        except (httpx2.HTTPError, ValueError, RuntimeError):
+            return "unavailable"
+
+    def _probe_state(self):
         response = self._http.get("/health", timeout=0.5)
         observed = response.json()
         if (not isinstance(observed, dict) or observed.get("instance_id") != self.selection.instance_id
                 or observed.get("manifest_sha256") != self.selection.manifest_sha256):
             raise RuntimeError("Workbench Backend reported a different Project binding")
         pid = observed.get("pid")
+        state = observed.get("state")
         if self._process is None:
             if type(pid) is not int or pid <= 1:
                 raise RuntimeError("Invalid managed Backend identity")
-            if response.status_code == 503 and observed.get("ready") is False:
-                return False
+            if response.status_code == 200 and state in ("pending", "degraded"):
+                self.backend_pid = pid
+                return state
+            if response.status_code == 503:
+                return "unavailable"
             kernel = observed.get("kernel_pid")
             generation = observed.get("generation")
             if type(kernel) is not int or kernel <= 1 or not isinstance(generation, str) or not generation:
                 raise RuntimeError("Invalid managed Kernel readiness")
         elif pid != self.backend_pid:
             raise RuntimeError("Workbench Backend reported a different Project binding")
-        if response.status_code != 200 or observed.get("ready") is not True:
+        elif runtime_stack() == "beta_next" and response.status_code == 200:
+            if state in ("pending", "degraded"):
+                return state
+            if (state == "ready" and (type(observed.get("kernel_pid")) is not int
+                                      or observed["kernel_pid"] <= 1
+                                      or not isinstance(observed.get("generation"), str)
+                                      or not observed["generation"])):
+                raise RuntimeError("Invalid managed Kernel readiness")
+        elif state is None and runtime_stack() == "current" and observed.get("ready") is True:
+            state = "ready"
+        if response.status_code != 200 or state != "ready":
             raise RuntimeError("Workbench Backend reported a different Project binding")
         self.backend_pid = pid
-        return True
+        return "ready"
 
     def start(self):
-        """Finish admission before the frontend advertises readiness."""
+        """Attach to the admitted Project transport."""
         deadline = monotonic() + _STARTUP_SECONDS
         bounded = os.getenv("ANECHOIC_TEST_IMAGE_DEADLINES") != "0"
         while not self._closed and (not bounded or monotonic() < deadline):
             if self._process is not None and self._process.poll() is not None:
                 break
             try:
-                if self._probe_ready():
+                state = self._probe_state()
+                if state == "ready" or (self._process is None and state in {"pending", "degraded"}):
                     return
             except httpx2.TransportError:
                 pass
@@ -163,15 +183,49 @@ def _current_arguments(selection, socket, workbench_storage, journal_storage):
 
 
 def _start(selection, socket, workbench_storage, journal_storage):
+    stack = runtime_stack()
     engine = Path(__file__).resolve().parents[2]
     root = engine.parent
     environment = {**{k: v for k, v in os.environ.items() if k != "PYTHONHOME"}, "PYTHONPATH": str(engine)}
-    if runtime_stack() == "beta":
+    if stack == "beta_next":
         args = beta_runtime_arguments(selection, socket, workbench_storage, journal_storage)
+        args += ["--role", "api"]
     else:
         args = _current_arguments(selection, socket, workbench_storage, journal_storage)
     command = [sys.executable, "-B", "-P", "-m", *args]
     return subprocess.Popen(command, cwd=root, env=environment, stdin=subprocess.PIPE, stdout=2)
+
+
+def _stop_owner(owner):
+    owner.stdin.close()
+    try:
+        owner.wait(timeout=15)
+    except subprocess.TimeoutExpired:
+        owner.terminate()
+        try:
+            owner.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            owner.kill()
+            owner.wait()
+
+
+def _start_owner(selection, socket, workbench_storage, journal_storage, stack):
+    args = beta_runtime_arguments(selection, socket, workbench_storage, journal_storage)
+    args[0] = "ORCHESTRATOR_beta_C68.project_peer_owner"
+    engine = Path(__file__).resolve().parents[2]
+    environment = {**{k: v for k, v in os.environ.items() if k != "PYTHONHOME"}, "PYTHONPATH": str(engine)}
+    owner = subprocess.Popen([sys.executable, "-B", "-P", "-m", *args],
+                             cwd=engine.parent, env=environment, stdin=subprocess.PIPE, stdout=2)
+    stack.callback(_stop_owner, owner)
+    deadline = monotonic() + _STARTUP_SECONDS
+    bounded = os.getenv("ANECHOIC_TEST_IMAGE_DEADLINES") != "0"
+    while not bounded or monotonic() < deadline:
+        if owner.poll() is not None:
+            break
+        if (socket.parent / "peers.ready").is_file():
+            return
+        sleep(0.05)
+    raise RuntimeError("Beta peer owner did not start")
 
 
 @contextmanager
@@ -187,6 +241,8 @@ def backend_client(selection, *, workbench_storage=None, journal_storage=None, b
             transport = httpx2.HTTPTransport(uds=str(socket), limits=limits)
         http = stack.enter_context(httpx2.Client(transport=transport, base_url="http://anechoic-backend",
                                                trust_env=False, timeout=None))
+        if backend_socket is None and runtime_stack() == "beta_next":
+            _start_owner(selection, socket, workbench_storage, journal_storage, stack)
         process = _start(selection, socket, workbench_storage, journal_storage) if backend_socket is None else None
         client = BackendClient(selection, process, http)
         try:

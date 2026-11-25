@@ -1,19 +1,27 @@
 """Native declarations retain the existing compilers' explicit inputs."""
 
-from pathlib import Path
 import unittest
+from pathlib import Path
 
+
+from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.FEATURE_FORMAL_MODEL_ENGINE__shared import (  # noqa: E402
+    compile_atom_dependencies_with_check,
+    compile_python_model_claim,
+    compiler_model_statements,  # noqa: E402
+)
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import (
+    HEADER_RELATIONS,
+    INSTANCE_CHECK,
+    RECURSIVE_CONTENT,
+    ROLE_HEADER,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    parse_native_model_claim,  # noqa: E402
+)
 
 FEATURE = Path(__file__).resolve().parents[1]
 PROGRAMMATIC = FEATURE.parent
 TOOLS = PROGRAMMATIC / "FEATURE_TOOLS"
-
-from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import (
-    RECURSIVE_CONTENT, ROLE_HEADER, INSTANCE_CHECK, HEADER_RELATIONS,
-)
-from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.compiler_claim import compiler_model_statements  # noqa: E402
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_native_model_claim  # noqa: E402
-from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.legacy_claim_compiler__pub import compile_python_model_claim, compile_atom_dependencies_claim_with_check  # noqa: E402
 
 
 def _compile(source):
@@ -52,7 +60,7 @@ declare_entity(entity_name="Dependencies", relation_name="IS_PROPERTY_OF",
     value_format=str, value_cardinality=Cardinality(minimum=0, maximum=None),
     dependent_property_cardinality=0, instance_check=dependencies_are_distinct)
 """
-        statements, check = compile_atom_dependencies_claim_with_check(claim)
+        statements, check = compile_atom_dependencies_with_check(parse_native_model_claim(claim))
         self.assertEqual(statements, (
             "Atom.Header.Context.Topics.Dependencies{::0..1} :: [string]{::0+}",
             "Atom.Header.Context.Topics.Dependencies.*[]{::0}",
@@ -61,9 +69,9 @@ declare_entity(entity_name="Dependencies", relation_name="IS_PROPERTY_OF",
         self.assertEqual(check["parameter_type"], "Atom")
         self.assertEqual(statements, compile_python_model_claim(claim))
         with self.assertRaisesRegex(ValueError, "typed Atom Dependencies validator"):
-            compile_atom_dependencies_claim_with_check(claim.replace('entity_name="Dependencies"', 'entity_name="Other"'))
+            compile_atom_dependencies_with_check(parse_native_model_claim(claim.replace('entity_name="Dependencies"', 'entity_name="Other"')))
         with self.assertRaisesRegex(ValueError, "typed Atom Dependencies validator"):
-            compile_atom_dependencies_claim_with_check(claim.replace("dependencies_are_distinct", "other_check"))
+            compile_atom_dependencies_with_check(parse_native_model_claim(claim.replace("dependencies_are_distinct", "other_check")))
 
     def test_aspect_instance_compiles_exact_structure_facts(self):
         address = "PROJECT STRUCTURE//ANECHOIC <+ Aspects <+ Engineering <+ Query Processing"
@@ -71,7 +79,9 @@ declare_entity(entity_name="Dependencies", relation_name="IS_PROPERTY_OF",
                  "from anechoic.model import Aspect\n"
                  f"declare_entity(entity_name='Query Processing', instance=Aspect(address={address!r}))\n")
         self.assertEqual((address, f"({address}) ((INSTANCE_OF)) Aspect"), _compile(claim))
-        from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.lint_python_model_claim__pub import lint_python_model_claim
+        from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.FEATURE_FORMAL_MODEL_ENGINE__shared import (
+            lint_python_model_claim,
+        )
         self.assertEqual((), lint_python_model_claim(claim, declared_addresses=["Aspect"], relation_names=[], python_class_bindings={"Aspect": ["Aspect"]}))
         invalid_claim = claim.replace("<+ Aspects <+", "<+ Invalid <+")
         self.assertTrue(lint_python_model_claim(invalid_claim, declared_addresses=["Aspect"], relation_names=[], python_class_bindings={"Aspect": ["Aspect"]}))
@@ -95,7 +105,9 @@ declare_entity(entity_name="Node", allowed_classification_values={"Container": (
             _compile(claim.replace('entity_name="Node",', 'entity_name="Node", classifications={"Container": "yes"},'))
 
     def test_same_bearer_fallback_requires_a_declared_property(self):
-        from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.lint_python_model_claim__pub import lint_python_model_claim
+        from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.FEATURE_FORMAL_MODEL_ENGINE__shared import (
+            lint_python_model_claim,
+        )
 
         claim = """from anechoic.formal_claims import declare_entity
 declare_entity(entity_name="Label", relation_name="IS_PROPERTY_OF",

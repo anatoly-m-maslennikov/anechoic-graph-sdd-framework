@@ -2,23 +2,24 @@
 from contextlib import redirect_stderr, redirect_stdout
 import io
 import json
+import os
 from pathlib import Path
 import sys
 import unittest
 from unittest.mock import patch
 
 APP = Path(__file__).resolve().parents[1]
-import MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime as runtime
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import Launcher, Runtime, runtime_main
 class ProjectMcpCommandTests(unittest.TestCase):
     def invoke(self, result, *options):
         output = io.StringIO()
         with patch.object(sys, 'argv', ['runtime.py', '--project-root', '/project',
                                       'project-mcp', *options]), \
-             patch('MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_launcher.Launcher.launch', return_value=result) as launch, \
-             patch.object(runtime, 'Runtime', side_effect=AssertionError('legacy worker must not start')), \
-             patch.dict(runtime.os.environ, {}, clear=True), \
+             patch.object(Launcher, 'launch', return_value=result) as launch, \
+             patch.object(Runtime, '__init__', side_effect=AssertionError('legacy worker must not start')), \
+             patch.dict(os.environ, {}, clear=True), \
              redirect_stdout(output):
-            code = runtime.main()
+            code = runtime_main()
         return code, output.getvalue(), launch
 
     def test_json_ready_and_url_ready_outputs(self):
@@ -67,11 +68,11 @@ class ProjectMcpCommandTests(unittest.TestCase):
             with self.subTest(value=value), \
                  patch.object(sys, 'argv', ['runtime.py', '--project-root', '/project',
                                             'project-mcp', '--port', value]), \
-                 patch('MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_launcher.Launcher.launch') as launch, \
-                 patch.dict(runtime.os.environ, {}, clear=True), \
+                 patch.object(Launcher, 'launch') as launch, \
+                 patch.dict(os.environ, {}, clear=True), \
                  redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()) as errors:
                 with self.assertRaises(SystemExit) as exit_code:
-                    runtime.main()
+                    runtime_main()
             self.assertEqual(2, exit_code.exception.code)
             launch.assert_not_called()
 

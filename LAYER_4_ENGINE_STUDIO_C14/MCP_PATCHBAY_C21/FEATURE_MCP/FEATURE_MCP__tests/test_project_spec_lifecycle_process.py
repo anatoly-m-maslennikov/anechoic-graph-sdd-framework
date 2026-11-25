@@ -8,7 +8,7 @@ from unittest.mock import patch
 from mcp import types
 import yaml
 
-from MCP_PATCHBAY_C21.FEATURE_MCP.direct_gateway import native_runtime_gateway
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import native_runtime_gateway
 from .FEATURE_MCP__tests__shared import CONTROL, ROOT, project
 
 BODY = '\n## Summary\n\nExample\n\n## Guarantee\n\nThe output is available.\n'

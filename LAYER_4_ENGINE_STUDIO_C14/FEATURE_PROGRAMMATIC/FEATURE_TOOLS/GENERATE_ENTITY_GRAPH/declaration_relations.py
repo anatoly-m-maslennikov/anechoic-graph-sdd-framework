@@ -11,12 +11,11 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import
     Path as _subject_Path,
     RelationChain as _subject_RelationChain,
     ValueLiteral as _subject_ValueLiteral,
+    unfenced_atx_headings,
 )
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import carrier_read_view, matches_named_value
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import CarrierError, parse_carrier
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import SubjectNotationError, parse_subject_expression
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.VALIDATE_ATOMS.validate_atoms_workers.check_sections import _headings as body_headings
-
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.declaration_evidence import (
     Record,
     _active_source_matches_metadata,
@@ -134,11 +133,12 @@ def _scope(body: object) -> str | None:
     if not isinstance(body, str):
         return None
     lines = body.splitlines()
-    scopes = [row for row in body_headings(body) if row[:2] == (2, "Scope")]
+    headings = unfenced_atx_headings(body)
+    scopes = [row for row in headings if row[:2] == (2, "Scope")]
     if len(scopes) != 1:
         return None
     start = scopes[0][2]
-    end = next((row[2] for row in body_headings(body) if row[2] > start and row[0] <= 2), len(lines))
+    end = next((row[2] for row in headings if row[2] > start and row[0] <= 2), len(lines))
     return "\n".join(lines[start + 1 : end])
 
 

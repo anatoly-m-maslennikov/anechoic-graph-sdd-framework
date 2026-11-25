@@ -3,8 +3,10 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Mapping
+
+from pydantic import ConfigDict, InstanceOf
+from pydantic.dataclasses import dataclass
 
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (
     ATOM, SCOPE, _atom_facts, _materialized_row, _scope_facts,
@@ -17,27 +19,27 @@ from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (
 )
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, config=ConfigDict(strict=True, extra="forbid", arbitrary_types_allowed=True))
 class RelationState:
-    raw_by_path: dict[str, dict]
-    refs: dict[str, str]
-    direct_facts: dict[str, tuple[tuple, ...]]
-    outgoing: dict[tuple[str, str], frozenset[tuple]]
-    atom_rows: dict[str, dict]
-    atom_order: tuple[str, ...]
-    scope_rows: dict[str, dict]
-    scope_order: tuple[str, ...]
-    scope_signature: tuple[tuple[str, str | None, str | None], ...]
-    registered: frozenset[str]
-    inverse: dict[str, str]
-    aliases: dict[str, str]
-    excluded_paths: frozenset[str]
-    duplicate_refs: frozenset[str]
-    registry_contributions: dict[str, RegistryContribution]
-    collisions: frozenset[str]
-    fact_contributors: dict[tuple, frozenset[tuple[str, str]]]
-    facts_by_endpoint: dict[tuple[str, str], frozenset[tuple]]
-    support: dict[tuple[str, str], frozenset[tuple]]
+    raw_by_path: InstanceOf[dict[str, dict]]
+    refs: InstanceOf[dict[str, str]]
+    direct_facts: InstanceOf[dict[str, tuple[tuple, ...]]]
+    outgoing: InstanceOf[dict[tuple[str, str], frozenset[tuple]]]
+    atom_rows: InstanceOf[dict[str, dict]]
+    atom_order: InstanceOf[tuple[str, ...]]
+    scope_rows: InstanceOf[dict[str, dict]]
+    scope_order: InstanceOf[tuple[str, ...]]
+    scope_signature: InstanceOf[tuple[tuple[str, str | None, str | None], ...]]
+    registered: InstanceOf[frozenset[str]]
+    inverse: InstanceOf[dict[str, str]]
+    aliases: InstanceOf[dict[str, str]]
+    excluded_paths: InstanceOf[frozenset[str]]
+    duplicate_refs: InstanceOf[frozenset[str]]
+    registry_contributions: InstanceOf[dict[str, RegistryContribution]]
+    collisions: InstanceOf[frozenset[str]]
+    fact_contributors: InstanceOf[dict[tuple, frozenset[tuple[str, str]]]]
+    facts_by_endpoint: InstanceOf[dict[tuple[str, str], frozenset[tuple]]]
+    support: InstanceOf[dict[tuple[str, str], frozenset[tuple]]]
     static_registry: bool
 
 

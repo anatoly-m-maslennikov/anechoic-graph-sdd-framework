@@ -1,4 +1,5 @@
 """Exercise the fixed lifecycle CLI with real attested Model and Structure."""
+from hashlib import sha256
 import json
 import os
 import shutil
@@ -7,8 +8,9 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
-from .WORKERS_beta_C69__tests__shared import generation_fixture
+from .WORKERS_beta_C69__tests__shared import command_with_fixture, generation_fixture
 
 ENGINE = Path(__file__).resolve().parents[2]
 
@@ -67,6 +69,62 @@ def ticket_asset_fixture(binding):
 
 
 class LifecycleWorkerTests(unittest.TestCase):
+    def test_request_admission_preserves_refusal_messages(self):
+        binding = {"root": "/project", "control_root": "control", "manifest_path": "manifest",
+                   "manifest_sha256": "digest", "project_prefix": "AN"}
+        base = {"binding": binding, "name": "atom_lifecycle_create_draft", "arguments": {},
+                "base_generation": "generation", "structure_sha256": "structure"}
+        indexed = {"max_number": "1", "manifest_ref": "AN-S-1", "component_ids": [],
+                   "ticket_labels": [], "endpoints": {}}
+        context = {"structure": {}, "ticket_labels": [], "max_numbers": {}, "carriers": [],
+                   "lenses": [], "model": None, "has_descendants": False, "endpoints": {}}
+        cases = ((base | {"base_generation": ""}, "Invalid lifecycle request"),
+                 (base | {"binding": {}}, "manifest_build_CS4__shared failed: Invalid binding fields"),
+                 (base | {"binding": binding | {"root": ""}},
+                  "manifest_build_CS4__shared failed: Invalid binding identity or path"),
+                 (base | {"indexed_task": indexed, "binding": {}}, "Invalid indexed lifecycle request"),
+                 (base | {"indexed_task": indexed | {"component_ids": [1]}}, "Invalid indexed task request"),
+                 (base | {"lifecycle_context": context | {"has_descendants": 0}}, "Invalid lifecycle context"))
+        for request, message in cases:
+            with self.subTest(message=message):
+                result = command_with_fixture("WORKERS_beta_C69.lifecycle_worker", request)
+                self.assertNotEqual(0, result.returncode)
+                self.assertEqual(message, result.stderr.strip())
+
+    def test_warning_bearing_carrier_cannot_satisfy_lifecycle_effect(self):
+        adapter = "FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared"
+        for name, capture in (("atom_lifecycle_create_draft", "capture_carrier_delta"),
+                              ("atom_lifecycle_direct_update", "capture_ticket_delta")):
+            with self.subTest(name=name), tempfile.TemporaryDirectory(prefix="ane-lifecycle-", dir="/tmp") as directory:
+                binding, _, _ = generation_fixture(directory)
+                arguments = self.warning_arguments(name, binding)
+                payload = {"binding": binding, "name": name, "arguments": arguments, "base_generation": "test-generation",
+                           "structure_sha256": structure_digest(binding)}
+                with patch(f"{adapter}.{capture}", side_effect=self.warning_delta) as fixture:
+                    response = command_with_fixture("WORKERS_beta_C69.lifecycle_worker", payload)
+                self.assertEqual(0, response.returncode, response.stderr)
+                body = json.loads(response.stdout)
+                self.assertEqual("completed", body["lifecycle"]["outcome"], body)
+                self.assertTrue(body["lifecycle"]["effects"])
+                fixture.assert_called_once()
+                self.assertIsNone(body["delta"])
+                self.assertEqual("Lifecycle carrier delta contains invalid Project files", body["projection_error"])
+
+    @staticmethod
+    def warning_arguments(name, binding):
+        if name == "atom_lifecycle_direct_update":
+            *_, body = ticket_asset_fixture(binding)
+            return {"target": {"ref_id": "AN-T-101", "version": 2}, "changes": {"body": body}}
+        return {"newAtom": {"template": "task", "container": {"component": "C00"},
+                            "body": "## Summary\n\nCanary.\n"}}
+
+    @staticmethod
+    def warning_delta(binding, paths, _endpoints, **_options):
+        target, = paths
+        digest = sha256((Path(binding["root"]) / target).read_bytes()).hexdigest()
+        return {"carrier_hashes": {target: digest},
+                "snapshot": {"atoms": [], "ingestion_issues": [{"relative_path": target, "code": "parse_error"}]}}
+
     def test_stale_structure_refuses_before_write(self):
         with tempfile.TemporaryDirectory(prefix="ane-lifecycle-", dir="/tmp") as directory:
             binding, _, _ = generation_fixture(directory)

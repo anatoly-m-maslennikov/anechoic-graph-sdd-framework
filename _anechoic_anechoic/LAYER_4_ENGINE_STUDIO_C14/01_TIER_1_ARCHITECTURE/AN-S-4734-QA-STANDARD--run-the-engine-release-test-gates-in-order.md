@@ -9,8 +9,8 @@ context:
   lens: QA
 state:
   status: active
-  version: 1
-  updated_at: '2026-11-23T16:59:56.239769+00:00'
+  version: 2
+  updated_at: '2026-11-24T18:19:55.278865+00:00'
 relations:
   IS_REFERENCE:
   - AN-S-3346
@@ -26,8 +26,9 @@ Run the Engine release test gates in order
 
 ### Prose Claim
 
-The Engine Test Suite exposes independent `static`, `functional`, and `image`
-phases.
+Use the C19 Test Suite phases in AN-S-3287. When the selected suite exposes
+separate phases, Local Release records independent image suite and canary
+results for the exact candidate.
 
 #### Gate order
 
@@ -40,8 +41,7 @@ phases.
    installation.
 6. Install the candidate after all required checks pass.
 
-The image phase contains the End-to-End checks and the Canary for one
-immutable candidate. Apply AN-S-4731 to image liveness and deadlines.
+Apply AN-S-4731 to image liveness and deadlines.
 
 Any failed or incomplete required check stops the release before the next
 step.

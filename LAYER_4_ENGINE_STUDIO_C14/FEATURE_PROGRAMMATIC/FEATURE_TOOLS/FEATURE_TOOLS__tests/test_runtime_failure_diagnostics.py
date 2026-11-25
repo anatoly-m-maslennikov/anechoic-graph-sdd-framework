@@ -18,10 +18,10 @@ TOOLS = Path(__file__).resolve().parents[1]
 if str(TOOLS) not in sys.path:
     sys.path.insert(0, str(TOOLS))
 
-import FEATURE_PROGRAMMATIC.FEATURE_TOOLS.runtime_failure_diagnostics as facade  # noqa: E402
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import (  # noqa: E402
     ExplicitBlockingRuntimeFailure,
     FailureRecord,
+    report_failure,
 )
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import TechnicalDiagnosticLogger  # noqa: E402
 
@@ -46,10 +46,10 @@ class RuntimeFailureDiagnosticsTests(unittest.TestCase):
         stream = io.StringIO()
         logger = self._logger(stream)
         with (
-            patch.object(facade, "active_selection", return_value=self.selection) as selected,
-            patch.object(facade, "make_technical_logger", return_value=(logger, None)) as made,
+            patch(f"{report_failure.__module__}.active_selection", return_value=self.selection) as selected,
+            patch(f"{report_failure.__module__}.make_technical_logger", return_value=(logger, None)) as made,
         ):
-            failure, secondary = facade.report_failure(
+            failure, secondary = report_failure(
                 self.root,
                 RuntimeError("password=secret"),
                 component="ACTUAL_COMPONENT",
@@ -69,9 +69,9 @@ class RuntimeFailureDiagnosticsTests(unittest.TestCase):
     def test_unbound_or_invalid_selection_is_visible_without_guessed_prefix(self) -> None:
         stream = io.StringIO()
         logger = TechnicalDiagnosticLogger(None, None, "test", stream, "host")
-        with patch.object(facade, "make_unbound_technical_logger", return_value=(logger, None)):
+        with patch(f"{report_failure.__module__}.make_unbound_technical_logger", return_value=(logger, None)):
             with redirect_stderr(io.StringIO()):
-                failure, secondary = facade.report_failure(
+                failure, secondary = report_failure(
                     None, RuntimeError("password=secret"), component="COMP", operation="op"
                 )
         self.assertEqual("internal_failure", failure.code)
@@ -83,10 +83,10 @@ class RuntimeFailureDiagnosticsTests(unittest.TestCase):
         stream = io.StringIO()
         logger = TechnicalDiagnosticLogger(None, None, "test", stream, "host")
         with (
-            patch.object(facade, "active_selection", side_effect=ValueError("secret")),
-            patch.object(facade, "make_unbound_technical_logger", return_value=(logger, None)),
+            patch(f"{report_failure.__module__}.active_selection", side_effect=ValueError("secret")),
+            patch(f"{report_failure.__module__}.make_unbound_technical_logger", return_value=(logger, None)),
         ):
-            _failure, secondary = facade.report_failure(
+            _failure, secondary = report_failure(
                 self.root, RuntimeError("password=secret"), component="COMP", operation="op"
             )
         self.assertEqual("project binding unavailable", secondary)
@@ -95,10 +95,10 @@ class RuntimeFailureDiagnosticsTests(unittest.TestCase):
     def test_sink_failure_is_secondary_and_sanitized(self) -> None:
         logger = self._logger(_FailingStream())
         with (
-            patch.object(facade, "active_selection", return_value=self.selection),
-            patch.object(facade, "make_technical_logger", return_value=(logger, None)),
+            patch(f"{report_failure.__module__}.active_selection", return_value=self.selection),
+            patch(f"{report_failure.__module__}.make_technical_logger", return_value=(logger, None)),
         ):
-            _failure, secondary = facade.report_failure(
+            _failure, secondary = report_failure(
                 self.root, RuntimeError("password=secret"), component="COMP", operation="op"
             )
         self.assertEqual("technical diagnostic emission failed", secondary)
@@ -108,10 +108,10 @@ class RuntimeFailureDiagnosticsTests(unittest.TestCase):
         logger = self._logger(stream)
         warning = FailureRecord("WARNING", "project_invalid", "safe warning")
         with (
-            patch.object(facade, "active_selection", return_value=self.selection),
-            patch.object(facade, "make_technical_logger", return_value=(logger, None)),
+            patch(f"{report_failure.__module__}.active_selection", return_value=self.selection),
+            patch(f"{report_failure.__module__}.make_technical_logger", return_value=(logger, None)),
         ):
-            failure, secondary = facade.report_failure(
+            failure, secondary = report_failure(
                 self.root, warning, component="COMP", operation="op"
             )
         self.assertIs(warning, failure)
@@ -127,8 +127,8 @@ class RuntimeFailureDiagnosticsTests(unittest.TestCase):
             ("synthetic_error", "ERROR", "blocked"),
         )
         with (
-            patch.object(facade, "active_selection", return_value=self.selection),
-            patch.object(facade, "make_technical_logger", return_value=(logger, None)),
+            patch(f"{report_failure.__module__}.active_selection", return_value=self.selection),
+            patch(f"{report_failure.__module__}.make_technical_logger", return_value=(logger, None)),
         ):
             for code, severity, outcome in cases:
                 with self.subTest(code=code):
@@ -139,7 +139,7 @@ class RuntimeFailureDiagnosticsTests(unittest.TestCase):
                         code,
                         "safe synthetic",
                     )
-                    failure, secondary = facade.report_failure(
+                    failure, secondary = report_failure(
                         self.root, synthetic, component="COMP", operation="op"
                     )
                     self.assertEqual(severity, failure.severity)
@@ -153,10 +153,10 @@ class RuntimeFailureDiagnosticsTests(unittest.TestCase):
         logger = self._logger(stream)
         error = ExplicitBlockingRuntimeFailure("runtime_blocked", "worker unavailable")
         with (
-            patch.object(facade, "active_selection", return_value=self.selection),
-            patch.object(facade, "make_technical_logger", return_value=(logger, None)),
+            patch(f"{report_failure.__module__}.active_selection", return_value=self.selection),
+            patch(f"{report_failure.__module__}.make_technical_logger", return_value=(logger, None)),
         ):
-            failure, secondary = facade.report_failure(
+            failure, secondary = report_failure(
                 self.root, error, component="COMP", operation="op"
             )
         self.assertEqual(("ERROR", "runtime_blocked"), (failure.severity, failure.code))
@@ -167,14 +167,14 @@ class RuntimeFailureDiagnosticsTests(unittest.TestCase):
         stream = io.StringIO()
         logger = self._logger(stream)
         with (
-            patch.object(facade, "active_selection", return_value=self.selection),
-            patch.object(facade, "make_technical_logger", return_value=(logger, None)),
+            patch(f"{report_failure.__module__}.active_selection", return_value=self.selection),
+            patch(f"{report_failure.__module__}.make_technical_logger", return_value=(logger, None)),
         ):
-            query, query_secondary = facade.report_failure(
+            query, query_secondary = report_failure(
                 self.root, ExplicitBlockingRuntimeFailure("query_error", "invalid SQL"),
                 component="MCP_HTTP", operation="workbench",
             )
-            unavailable, unavailable_secondary = facade.report_failure(
+            unavailable, unavailable_secondary = report_failure(
                 self.root, ExplicitBlockingRuntimeFailure(
                     "workbench_unavailable", "Workbench unavailable; restart required"
                 ), component="MCP_HTTP", operation="workbench",
@@ -197,23 +197,23 @@ class RuntimeFailureDiagnosticsTests(unittest.TestCase):
             before = {path: path.read_bytes() for path in (journal, source)}
             logger = TechnicalDiagnosticLogger(None, None, "test", io.StringIO(), "host")
             with (
-                patch.object(facade, "active_selection", side_effect=ValueError("invalid")),
-                patch.object(facade, "make_unbound_technical_logger", return_value=(logger, None)),
+                patch(f"{report_failure.__module__}.active_selection", side_effect=ValueError("invalid")),
+                patch(f"{report_failure.__module__}.make_unbound_technical_logger", return_value=(logger, None)),
             ):
-                facade.report_failure(
+                report_failure(
                     root, RuntimeError("secret"), component="COMP", operation="op"
                 )
             self.assertEqual(before, {path: path.read_bytes() for path in before})
 
     def test_cancellation_and_base_exceptions_are_not_swallowed(self) -> None:
-        with patch.object(facade, "active_selection", side_effect=FutureCancelledError):
+        with patch(f"{report_failure.__module__}.active_selection", side_effect=FutureCancelledError):
             with self.assertRaises(FutureCancelledError):
-                facade.report_failure(
+                report_failure(
                     self.root, RuntimeError("x"), component="COMP", operation="op"
                 )
-        with patch.object(facade, "active_selection", side_effect=KeyboardInterrupt):
+        with patch(f"{report_failure.__module__}.active_selection", side_effect=KeyboardInterrupt):
             with self.assertRaises(KeyboardInterrupt):
-                facade.report_failure(
+                report_failure(
                     self.root, RuntimeError("x"), component="COMP", operation="op"
                 )
 

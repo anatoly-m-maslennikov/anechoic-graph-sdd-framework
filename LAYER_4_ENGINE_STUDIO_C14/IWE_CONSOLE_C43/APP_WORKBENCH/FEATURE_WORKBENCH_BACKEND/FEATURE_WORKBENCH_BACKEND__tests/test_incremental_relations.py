@@ -4,15 +4,35 @@ import unittest
 from unittest.mock import patch
 
 
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.incremental_relations import materialize_delta  # noqa: E402
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__shared import materialize_delta
 from KERNEL_MIXER_C59.graph_store import graph_delta_state, graph_state  # noqa: E402
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import compile_registry  # noqa: E402
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__tests.test_relations import atom, declarations  # noqa: E402
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__tests.test_relations import atom, declarations, project_root_relation  # noqa: E402
 
 
+class _RelationReadProbe(dict):
+    reads = 0
+
+    def get(self, name, default=None):
+        if name == "relations":
+            self.reads += 1
+        return super().get(name, default)
 
 
 class IncrementalRelationTests(unittest.TestCase):
+    def test_root_contains_delta_follows_carrier_addition_and_removal(self):
+        root, source = project_root_relation()
+        _, _, _, _, state, _ = materialize_delta(declarations(), [root])
+        _, scopes, _, _, state, delta = materialize_delta(
+            declarations() + [source], [root], state, {source["source_path"]: source},
+        )
+        self.assertIsNotNone(delta)
+        self.assertEqual("CA-R-3", scopes[0]["relation_edges_json"][0]["target_ref"])
+        _, scopes, _, _, _, _ = materialize_delta(
+            declarations(), [root], state, {source["source_path"]: None},
+        )
+        self.assertEqual([], scopes[0]["relation_edges_json"])
+
     def test_all_carriers_are_retained_without_polluting_the_current_graph(self):
         first_parent, second_parent = atom("CA-P-1"), atom("CA-P-3")
         current = atom("CA-P-2", relation={"IS_CONTAINED_BY": ["CA-P-1"]})
@@ -210,31 +230,20 @@ class IncrementalRelationTests(unittest.TestCase):
         self.assertIsNotNone(delta)
 
     def test_ordinary_change_parses_only_the_changed_source(self):
-        import IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.incremental_relations as incremental
-        import IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.incremental_relation_state as state_module
+        untouched = _RelationReadProbe(relations={})
+        first, second = atom("CA-P-1"), dict(atom("CA-P-2"), header_json=untouched)
+        metadata = declarations()
+        _, _, _, _, state, _ = materialize_delta(metadata + [first, second], [])
+        self.assertGreater(untouched.reads, 0)
+        untouched.reads = 0
+        changed = _RelationReadProbe(relations={})
+        first_changed = dict(first, header_json=changed, content_markdown="## Claim\nChanged.\n")
 
-        first = atom("CA-P-1")
-        second = atom("CA-P-2")
-        original = incremental._atom_facts
-        calls = 0
+        _, _, _, _, _, delta = materialize_delta(
+            metadata + [first_changed, second], [], state, {"CA-P-1.md": first_changed},
+        )
 
-        def counted(*args):
-            nonlocal calls
-            calls += 1
-            return original(*args)
-
-        incremental._atom_facts = counted
-        state_module._atom_facts = counted
-        try:
-            _rows, _scopes, _registered, _inverse, state, _delta = materialize_delta(
-                declarations() + [first, second], [],
-            )
-            first_changed = dict(first, content_markdown="## Claim\nChanged.\n")
-            materialize_delta(
-                declarations() + [first_changed, second], [], state, {"CA-P-1.md": first_changed},
-            )
-        finally:
-            incremental._atom_facts = original
-            state_module._atom_facts = original
-        self.assertEqual(5, calls)
+        self.assertGreater(changed.reads, 0)
+        self.assertEqual(0, untouched.reads)
+        self.assertEqual({"CA-P-1.md"}, set(delta.new_atoms))
 

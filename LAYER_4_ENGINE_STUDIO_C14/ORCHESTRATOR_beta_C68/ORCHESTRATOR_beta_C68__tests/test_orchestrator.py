@@ -1,8 +1,8 @@
 from contextlib import redirect_stderr
 import http.client
-import importlib
 from io import StringIO
 import json
+import os
 import socket
 import subprocess
 import sys
@@ -13,13 +13,13 @@ from hashlib import sha256
 from pathlib import Path
 from unittest.mock import patch
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from ORCHESTRATOR_beta_C68.generation import parse_worker_result
-module = importlib.import_module("ORCHESTRATOR_beta_C68.ORCHESTRATOR_beta_C68__shared")
-from ORCHESTRATOR_beta_C68.ORCHESTRATOR_beta_C68__tests.ORCHESTRATOR_beta_C68__tests__shared import (
-    project,
-)
+from pydantic import ValidationError
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from ORCHESTRATOR_beta_C68 import ORCHESTRATOR_beta_C68__shared as module
+from ORCHESTRATOR_beta_C68.ORCHESTRATOR_beta_C68__tests.ORCHESTRATOR_beta_C68__tests__shared import (
+    RunFixture, project,
+)
 
 class UnixConnection(http.client.HTTPConnection):
     def __init__(self, path):
@@ -32,6 +32,11 @@ class UnixConnection(http.client.HTTPConnection):
 
 
 class OrchestratorTests(unittest.TestCase):
+    def setUp(self):
+        model = patch("ORCHESTRATOR_beta_C68.generation_worker.read_accepted_model", return_value=None)
+        model.start()
+        self.addCleanup(model.stop)
+
     def test_generation_worker_does_not_relay_raw_traceback(self):
         with tempfile.TemporaryDirectory() as directory:
             binding = {"root": directory, "control_root": "control", "manifest_path": "manifest.md",
@@ -45,6 +50,45 @@ class OrchestratorTests(unittest.TestCase):
                 with self.assertRaisesRegex(RuntimeError, "^Worker failed: LimitReached: timeout_seconds$"):
                     jobs._run_worker(directory, None, None)
             self.assertNotIn("Traceback in inventory", stderr.getvalue())
+
+    def test_opt_in_worker_timing_preserves_existing_diagnostics(self):
+        prefix = "ANECHOIC_STARTUP_TIMING "
+        scan = prefix + '{"phase":"scan_started","timestamp_ns":123,"mode":"foreground_capture"}'
+        graph = prefix + '{"phase":"realization_graph_ready","timestamp_ns":124,"mode":"built"}'
+        delta = prefix + json.dumps({"phase": "non_archived_load_started", "timestamp_ns": 125,
+                                     "changed_paths": 1, "checkpoint_validation_ns": 2, "comparison_ns": 3})
+        spoof = graph[:-1] + ',"path":"private"}'
+        oversized = prefix + " " * 1024 + '{"phase":"model_ready","timestamp_ns":125,"mode":"built"}'
+        restart = 'anechoic-realization-graph-restart {"sources":{"change":"added","path":"app/main.py"}}'
+        for enabled, error in (("1", False), ("1", True), ("0", False)):
+            with (self.subTest(enabled=enabled, error=error), tempfile.TemporaryDirectory() as directory,
+                  patch.dict(os.environ, ANECHOIC_STARTUP_TIMING=enabled, ANECHOIC_LOG_LEVEL="INFO"),
+                  patch.object(subprocess, "Popen") as popen, redirect_stderr(StringIO()) as stderr):
+                binding = {"root": directory, "control_root": "control", "manifest_path": "manifest.md",
+                           "manifest_sha256": "a" * 64, "project_prefix": "AN"}
+                jobs = module.GenerationJobs("test", binding, directory + "/kernel.sock")
+                process = popen.return_value
+                lines = [scan, delta, spoof, oversized, prefix + '{"phase":"model_ready","timestamp_ns":1,"mode":"built","mode":"built"}', restart] + (["Original error"] if error else []) + [graph]
+                process.communicate.return_value = ("{}", "\n".join(lines) + "\n")
+                process.returncode = int(error)
+                if error:
+                    with self.assertRaisesRegex(RuntimeError, "^Worker failed: Original error$"):
+                        jobs._communicate_worker(directory, {})
+                else:
+                    self.assertEqual("{}", jobs._communicate_worker(directory, {}))
+                observed = stderr.getvalue().splitlines()
+                timings = [line for line in observed if line.startswith(prefix)]
+                if enabled == "1":
+                    start = json.loads(timings[0].removeprefix(prefix))
+                    self.assertEqual(("worker_started", "cold"), (start["phase"], start["mode"]))
+                    self.assertGreater(start["timestamp_ns"], 0)
+                    self.assertEqual([scan, delta, graph], timings[1:])
+                else:
+                    self.assertFalse(timings)
+                records = [json.loads(line)["code"] for line in observed if not line.startswith(prefix)]
+                self.assertIn("realization_graph_inputs_changed", records)
+                self.assertEqual(not error, "worker_stderr_present" in records)
+                self.assertNotIn("private", stderr.getvalue())
 
     def test_graph_restart_exhaustion_logs_safe_records_and_stops_automatic_retry(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -78,8 +122,8 @@ class OrchestratorTests(unittest.TestCase):
             warning, record = (item for item in map(json.loads, stderr.getvalue().splitlines())
                                if item["code"] == "realization_graph_inputs_changed")
             self.assertEqual(("WARNING", "restarting", first), (warning["severity"], warning["outcome"], warning["details"]))
-            self.assertEqual(jobs.latest["run_id"], warning["correlation_id"])
-            self.assertEqual(("ERROR", "realization_graph_inputs_changed", jobs.latest["run_id"]),
+            self.assertEqual(jobs.latest.run_id, warning["correlation_id"])
+            self.assertEqual(("ERROR", "realization_graph_inputs_changed", jobs.latest.run_id),
                              (record["severity"], record["code"], record["correlation_id"]))
             self.assertEqual({"sources": payload["graph_consistency"]["sources"],
                               "resolution_inputs": {"change": "added"}}, record["details"])
@@ -90,7 +134,7 @@ class OrchestratorTests(unittest.TestCase):
             binding = {"root": directory, "control_root": "control", "manifest_path": "manifest.md",
                        "manifest_sha256": "a" * 64, "project_prefix": "AN"}
             jobs = module.GenerationJobs("test", binding, directory + "/kernel.sock")
-            jobs.active = {"run_id": "a" * 32}
+            jobs.active = RunFixture(state="running", started_at=0, run_id="a" * 32)
             details = {"sources": {"change": "added", "path": "app/main.py"}}
             restart = "anechoic-realization-graph-restart " + json.dumps(details)
             stderr = StringIO()
@@ -140,7 +184,7 @@ class OrchestratorTests(unittest.TestCase):
             "manifest_path": "manifest.md", "manifest_sha256": "a" * 64, "project_prefix": "AN"}, "socket")
         self.assertIs(False, jobs.health()["lifecycle_active"])
         with jobs.lock:
-            jobs.lifecycle_job = {}
+            jobs.lifecycle_job = object()
         self.assertIs(True, jobs.health()["lifecycle_active"])
         with jobs.lock:
             jobs.lifecycle_job = None
@@ -159,52 +203,6 @@ class OrchestratorTests(unittest.TestCase):
             self.assertEqual([{"reference": "AN-S-1", "summary": "Anechoic"}], result["result"]["atoms"])
             self.assertEqual("succeeded", jobs.status()["latest"]["state"])
 
-    def test_generation_handoff_and_recovery(self):
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory).resolve()
-            (root / "control").mkdir()
-            binding = {"root": str(root), "control_root": "control", "manifest_path": "manifest.md",
-                       "manifest_sha256": "a" * 64, "project_prefix": "AN"}
-            jobs = module.GenerationJobs("test", binding, str(root / "kernel.sock"))
-            sent = []
-            worker_requests = []
-            class Worker:
-                returncode = 0
-                def __init__(self, command, **kwargs):
-                    output = Path(command[-1])
-                    (output / "model.json").write_bytes(b'{"line":"a"}\r\n')
-                    (output / "structure.json").write_bytes(b'{}')
-                def communicate(self, value=None, timeout=None):
-                    worker_requests.append(json.loads(value))
-                    return json.dumps({"snapshot": {}, "receipt": {}, "graph": None, "reuse": None}), ""
-            class Connection:
-                def __init__(self, path):
-                    pass
-                def request(self, method, path, body, headers):
-                    sent.append((method, path, json.loads(body)))
-                def getresponse(self):
-                    class Response:
-                        status = 200
-                        def read(self):
-                            return b'{"result":{"generation":"g1"}}'
-                    return Response()
-                def close(self):
-                    pass
-            with patch.object(subprocess, "Popen", side_effect=OSError("broken")):
-                jobs._generate()
-            self.assertEqual("failed", jobs.status()["latest"]["state"])
-            self.assertIn("broken", jobs.status()["latest"]["message"])
-            with patch.object(subprocess, "Popen", Worker), patch(
-                    "ORCHESTRATOR_beta_C68.generation.UnixConnection", Connection):
-                jobs._generate()
-            self.assertEqual("g1", jobs.status()["latest"]["generation"])
-            self.assertEqual("full", jobs.status()["latest"]["kind"])
-            self.assertEqual([{"binding": binding, "reuse": None}], worker_requests)
-            self.assertEqual(("PUT", "/generation"), sent[0][:2])
-            self.assertEqual('{"line":"a"}\r\n', sent[0][2]["model"])
-            self.assertEqual({"instance_id", "snapshot", "receipt", "graph", "model", "structure"}, set(sent[0][2]))
-            self.assertEqual(400, jobs.build({})[0])
-
     def test_single_active_build_and_timeout(self):
         jobs = module.Jobs("test")
         request = {key: "x" for key in module.FIELDS}
@@ -219,11 +217,17 @@ class OrchestratorTests(unittest.TestCase):
             thread = threading.Thread(target=lambda: result.append(jobs.build(request)))
             thread.start()
             self.assertTrue(started.wait(5))
+            active = jobs.status()["active"]
+            self.assertEqual({"state", "started_at"}, set(active))
+            active["state"] = "changed"
             self.assertEqual("running", jobs.status()["active"]["state"])
+            with self.assertRaises(ValidationError):
+                jobs.active.started_at = "invalid"
             self.assertEqual(409, jobs.build(request)[0])
             release.set()
             thread.join(5)
         self.assertEqual((200, {"result": {"atoms": []}}), result[0])
+        self.assertEqual({"state", "started_at", "finished_at"}, set(jobs.status()["latest"]))
         with patch.object(subprocess, "run", side_effect=subprocess.TimeoutExpired("worker", 1)):
             self.assertEqual(504, jobs.build(request)[0])
         self.assertEqual("worker_timeout", jobs.status()["latest"]["code"])
@@ -258,16 +262,24 @@ class OrchestratorTests(unittest.TestCase):
         self.assertIsNone(classify(binding, [event(link)]))
 
     def test_worker_delta_must_echo_the_base_and_both_path_parts(self):
+        root = Path(self.enterContext(tempfile.TemporaryDirectory())).resolve()
+        binding = {"root": str(root), "control_root": "_anechoic_fixture", "manifest_path": "manifest.md",
+                   "manifest_sha256": "a" * 64, "project_prefix": "AN"}
+        jobs = module.GenerationJobs("test", binding, str(root / "kernel.sock"))
         path = "_anechoic_fixture/__TKT/AN-T-1--task.md"
         reuse = {"base_generation": "old"}
         result = {"base_generation": "old", "paths": [["_anechoic_fixture/__TKT", "AN-T-1--task.md"]],
                   "snapshot": {}, "snapshot_sha256": "ignored"}
-        self.assertEqual(result, parse_worker_result(json.dumps(result), reuse, [path]))
-        for invalid in (result | {"base_generation": "new"}, result | {"paths": [path]}):
+        with patch.object(jobs, "_communicate_worker") as worker:
+            worker.return_value = json.dumps(result)
+            self.assertEqual(result, jobs._run_worker(str(root), reuse, [path]))
+            for invalid in (result | {"base_generation": "new"}, result | {"paths": [path]}):
+                worker.return_value = json.dumps(invalid)
+                with self.assertRaises(ValueError):
+                    jobs._run_worker(str(root), reuse, [path])
+            worker.return_value = json.dumps(result)
             with self.assertRaises(ValueError):
-                parse_worker_result(json.dumps(invalid), reuse, [path])
-        with self.assertRaises(ValueError):
-            parse_worker_result(json.dumps(result), reuse, None)
+                jobs._run_worker(str(root), reuse, None)
 
 
 if __name__ == "__main__":

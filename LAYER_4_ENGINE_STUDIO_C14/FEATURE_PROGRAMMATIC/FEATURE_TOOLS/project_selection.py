@@ -11,10 +11,12 @@ from __future__ import annotations
 
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
-from dataclasses import dataclass, field, replace
+from dataclasses import field, replace
 import os
 from pathlib import Path
 import re
+from pydantic import ConfigDict
+from pydantic.dataclasses import dataclass
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import read_settings_carrier
 from types import MappingProxyType
 from typing import Any
@@ -42,7 +44,7 @@ def _freeze(value: Any) -> Any:
     return value
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, config=ConfigDict(strict=True, extra="forbid"))
 class ProjectSelection:
     root: Path
     control_root: Path

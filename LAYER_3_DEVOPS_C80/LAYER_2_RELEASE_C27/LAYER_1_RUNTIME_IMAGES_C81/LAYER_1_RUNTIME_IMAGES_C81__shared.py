@@ -4,14 +4,15 @@ from . import (local_release_safety, release_assets, release_cleanup_identity,
                release_images, release_inputs, release_package_files, runtime_support)
 from .runtime_build import build_image
 from .runtime_launcher import launch_shared_image
-from .release_container import start_container
+from .release_container import (find_release_container, reconcile_release_container, start_container,
+                                verify_release_container)
 from .release_assets import LocalReleaseError
 from .release_inputs import read_release_selection
 from .release_image_identity import LICENSE_INPUTS, _BETA_REQUIRED
 from .runtime_support import _RUN_ID, _cleanup_staging, _image_manager, _native_release_sources
 
 __all__ = ["build_image", "launch_shared_image", "start_container", "LocalReleaseError",
-           "read_release_selection", "LICENSE_INPUTS", "_BETA_REQUIRED", "_RUN_ID",
+           "read_release_selection", "find_release_container", "reconcile_release_container", "verify_release_container", "LICENSE_INPUTS", "_BETA_REQUIRED", "_RUN_ID",
            "_cleanup_staging", "_image_manager", "_native_release_sources",
            "local_release_safety", "release_assets", "release_cleanup_identity", "release_container",
            "release_image_identity", "release_image_provenance", "release_images", "release_inputs",

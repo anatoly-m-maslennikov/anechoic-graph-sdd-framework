@@ -102,7 +102,7 @@ def _create_revision(selection, params, current_rows, structure_snapshot, previo
             destination = _task_path(selection, selected['header_json'], body, 'draft', version, owner, root)
         else:
             destination = root / DRAFT_DIRECTORY / path.name.replace(target['ref_id'] + '-', f"{target['ref_id']}@{version}-draft-", 1)
-        candidate = _state_bytes(raw, bounds, path, version, body, 'draft')
+        candidate = _state_bytes(raw, bounds, path, version, body, 'draft', update_timestamp=True)
         with bind_query_reader(None):
             outcome = common.write_destination(selection.root, destination, candidate)
         data = {} if outcome.errors else {'savedDraft': common.saved(selection, destination, target['ref_id'],

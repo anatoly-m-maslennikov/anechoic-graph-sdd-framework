@@ -75,3 +75,19 @@ class QueryHistoryTest(unittest.TestCase):
         self.assertEqual(("failed", None, None), (records[0]["outcome"], records[0]["row_count"], records[0]["column_count"]))
         self.assertEqual(("success", 1, 1), (records[1]["outcome"], records[1]["row_count"], records[1]["column_count"]))
         return records
+
+
+    def test_record_validation_and_legacy_values(self):
+        legacy = _legacy_record("non-uuid", 0)
+        with TemporaryDirectory(dir="/tmp") as directory:
+            root = Path(directory).resolve()
+            source = root / ".anechoic_runtime/workbench/query-log.json"
+            source.parent.mkdir(parents=True, mode=0o700)
+            with _server(None, "--project-root", str(root)) as client:
+                source.write_text(json.dumps([legacy]))
+                self.assertEqual([legacy], self.value(self.call(client, "query_log_list", {}))["items"])
+                for changes in ({"row_count": True}, {"extra": 1}, {"at": "2020-01-01T00:00:00"}):
+                    source.write_text(json.dumps([legacy | changes]))
+                    response = self.call(client, "query_log_list", {})
+                    self.assertEqual(400, response.status_code, response.text)
+                    self.assertIn("query log is unavailable", response.text)

@@ -1,19 +1,20 @@
 """Validate generated field contracts at the proposed instance boundary."""
 
-from dataclasses import dataclass, field
-from pathlib import Path
+from dataclasses import field
 import unittest
 
-PROGRAMMATIC = Path(__file__).resolve().parents[3]
-from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_field_validation import validate_model_fields  # noqa: E402
+from pydantic import ConfigDict
+from pydantic.dataclasses import dataclass
+
+from ..FEATURE_MODEL_VALIDATION__shared import validate_model_fields
 
 
-@dataclass
+@dataclass(config=ConfigDict(strict=True, extra="forbid"))
 class Entity:
     identity: int = field(metadata={"property_occurrence_cardinality": 1, "value_cardinality": 1})
 
 
-@dataclass
+@dataclass(config=ConfigDict(strict=True, extra="forbid"))
 class Record(Entity):
     tags: list[str] = field(default_factory=list, metadata={
         "property_occurrence_cardinality": {"minimum": 0, "maximum": 1},
@@ -23,7 +24,7 @@ class Record(Entity):
 
 class ModelFieldValidationTests(unittest.TestCase):
     def test_valid_inherited_and_optional_field(self):
-        validate_model_fields(Record, {"identity": 1})
+        self.assertIsNone(validate_model_fields(Record, {"identity": 1}))
         validate_model_fields(Record, {"identity": 1, "tags": ["one", "two"]})
 
     def test_rejects_unknown_missing_and_wrong_types(self):
@@ -38,7 +39,7 @@ class ModelFieldValidationTests(unittest.TestCase):
                 validate_model_fields(Record, {"identity": 1, "tags": tags})
 
     def test_allowed_values_apply_to_each_direct_value(self):
-        @dataclass
+        @dataclass(config=ConfigDict(strict=True, extra="forbid"))
         class Choice:
             values: list[str] = field(metadata={"value_cardinality": {"minimum": 1, "maximum": 2},
                                                 "allowed_values": ("a", "b")})
@@ -52,7 +53,7 @@ class ModelFieldValidationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "scalar:"):
             validate_model_fields(Choice, {"values": ["a"], "scalar": 1})
 
-        @dataclass
+        @dataclass(config=ConfigDict(strict=True, extra="forbid"))
         class TupleChoice:
             values: tuple[str, ...] = field(metadata={"value_cardinality": 2, "allowed_values": ("a", "b")})
 
@@ -61,14 +62,14 @@ class ModelFieldValidationTests(unittest.TestCase):
             validate_model_fields(TupleChoice, {"values": ("a", "c")})
 
     def test_rejects_numeric_coercion(self):
-        @dataclass
+        @dataclass(config=ConfigDict(strict=True, extra="forbid"))
         class Reading:
             value: float
 
         with self.assertRaisesRegex(ValueError, "type conversion"):
             validate_model_fields(Reading, {"value": 1})
 
-        @dataclass
+        @dataclass(config=ConfigDict(strict=True, extra="forbid"))
         class Readings:
             values: set[float]
 
@@ -76,7 +77,7 @@ class ModelFieldValidationTests(unittest.TestCase):
             validate_model_fields(Readings, {"values": {1}})
 
     def test_value_count_determines_presence_when_occurrence_is_omitted(self):
-        @dataclass
+        @dataclass(config=ConfigDict(strict=True, extra="forbid"))
         class OptionalText:
             text: str = field(metadata={"value_cardinality": {"minimum": 0, "maximum": 1}})
 
@@ -84,7 +85,7 @@ class ModelFieldValidationTests(unittest.TestCase):
         validate_model_fields(OptionalText, {"text": "present"})
 
     def test_invalid_metadata_fails_even_if_optional_property_is_absent(self):
-        @dataclass
+        @dataclass(config=ConfigDict(strict=True, extra="forbid"))
         class Invalid:
             name: str = field(default="", metadata={"value_cardinality": {"minimum": 2, "maximum": 1}})
 
@@ -92,13 +93,13 @@ class ModelFieldValidationTests(unittest.TestCase):
             validate_model_fields(Invalid, {})
 
     def test_nested_model_fields_are_validated(self):
-        @dataclass
+        @dataclass(config=ConfigDict(strict=True, extra="forbid"))
         class Document:
             header: Entity
 
         validate_model_fields(Document, {"header": Entity(1)})
         with self.assertRaises(ValueError):
-            validate_model_fields(Document, {"header": Entity("1")})
+            validate_model_fields(Document, {"header": {"identity": "1"}})
         header = Entity(1)
         header.undeclared = True
         with self.assertRaisesRegex(ValueError, "Undeclared properties"):
@@ -111,14 +112,14 @@ class ModelFieldValidationTests(unittest.TestCase):
 
         validate_model_fields(AtomDestination, {"file": AtomDestinationFile("atom.md", ".")})
         with self.assertRaisesRegex(ValueError, "file.path"):
-            validate_model_fields(AtomDestination, {"file": AtomDestinationFile("atom.md", 1)})
+            validate_model_fields(AtomDestination, {"file": {"name": "atom.md", "path": 1}})
         with self.assertRaisesRegex(ValueError, "file: occurrence count"):
             validate_model_fields(AtomDestination, {})
         with self.assertRaisesRegex(ValueError, "Undeclared properties"):
             validate_model_fields(AtomDestination, {"directory": "."})
 
     def test_cyclic_dependent_properties_are_rejected(self):
-        @dataclass
+        @dataclass(config=ConfigDict(strict=True, extra="forbid"))
         class Document:
             content: dict
 

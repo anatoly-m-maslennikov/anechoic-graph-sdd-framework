@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -52,12 +51,12 @@ def same_row(
     )
 
 
-@dataclass
 class ReferenceIndex:
     """Track one selected carrier per reference and retain later copies for audits."""
 
-    paths: dict[str, set[Path]] = field(default_factory=dict)
-    accepted: set[Path] = field(default_factory=set)
+    def __init__(self) -> None:
+        self.paths: dict[str, set[Path]] = {}
+        self.accepted: set[Path] = set()
 
     def paths_for(self, reference: str) -> set[Path]:
         return self.paths.get(reference, set())

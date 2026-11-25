@@ -5,8 +5,12 @@ from dataclasses import MISSING, fields, is_dataclass
 from typing import get_type_hints
 
 from pydantic import TypeAdapter, ValidationError
+from pydantic.dataclasses import is_pydantic_dataclass
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.cardinality__pub import cardinality_bounds
+
+
+_SCALAR_ADAPTERS = {kind: TypeAdapter(kind) for kind in (bool, int, float, str)}
 
 
 def _check_count(name, label, count, cardinality):
@@ -48,8 +52,9 @@ def _validate_nested(value, ancestors):
             _validate_nested(child, branch)
 
 
-def _validate_fields(model_class, values, ancestors):
+def _validate_fields(model_class, values, ancestors, construct_groups=False, typed_parent=False):
     model_fields = {field.name: field for field in fields(model_class)}
+    admitted = dict(values) if construct_groups else None
     unknown = values.keys() - model_fields.keys()
     if unknown:
         raise ValueError(f"Undeclared properties: {', '.join(sorted(map(str, unknown)))}")
@@ -67,19 +72,34 @@ def _validate_fields(model_class, values, ancestors):
             cardinality_bounds(cardinality)
         if not present:
             continue
-        _validate_present_field(field, types[name], values[name], ancestors)
+        field_type = types[name]
+        if (typed_parent and field.metadata.get("dependent_property_cardinality") is not None
+                and is_pydantic_dataclass(field_type) and not isinstance(values[name], field_type)):
+            raise ValueError(f"{name}: expected a constructed dependent Property group")
+        value = _validate_present_field(field, field_type, values[name], ancestors, construct_groups, typed_parent)
+        if construct_groups:
+            admitted[name] = value
+    return admitted
 
 
-def _validate_present_field(field, field_type, value, ancestors):
+def _validate_present_field(field, field_type, value, ancestors, construct_groups, typed_parent):
     metadata = field.metadata
     dependents = metadata.get("dependent_property_cardinality")
     if dependents is not None and is_dataclass(field_type):
         try:
-            dependent_count, value_count = _validate_group(field_type, value, ancestors, metadata)
+            dependent_count, value_count, children = _validate_group(field_type, value, ancestors, metadata,
+                                                                      construct_groups, typed_parent)
         except ValueError as error:
             raise ValueError(f"{field.name}.{error}") from error
         _check_count(field.name, "dependent Property", dependent_count, dependents)
         _check_count(field.name, "value", value_count, metadata["value_cardinality"])
+        if children is not None:
+            try:
+                value = field_type(**children)
+            except ValidationError as error:
+                item = error.errors(include_input=False, include_url=False)[0]
+                path = ".".join(map(str, item["loc"]))
+                raise ValueError(f"{field.name}.{path}: {item['msg']}" if path else f"{field.name}: {item['msg']}") from error
     elif dependents is not None and isinstance(value, Mapping):
         _check_count(field.name, "dependent Property", len(value), dependents)
         _check_count(field.name, "value", 0, metadata["value_cardinality"])
@@ -90,9 +110,10 @@ def _validate_present_field(field, field_type, value, ancestors):
         _validate_field_value(field.name, field_type, value, metadata)
     else:
         _validate_direct_value(field, field_type, value, ancestors)
+    return value
 
 
-def _validate_group(field_type, value, ancestors, metadata):
+def _validate_group(field_type, value, ancestors, metadata, construct_groups, typed_parent):
     mixed = cardinality_bounds(metadata["value_cardinality"])[1] != 0
     if isinstance(value, field_type):
         values = dict(getattr(value, "__dict__", {}))
@@ -110,9 +131,12 @@ def _validate_group(field_type, value, ancestors, metadata):
         raise ValueError("expected a dependent Property group")
     if id(value) in ancestors:
         raise ValueError("Dependent Properties contain a cycle")
-    _validate_fields(field_type, values, ancestors | {id(value)})
+    construct = (construct_groups and isinstance(value, Mapping) and not isinstance(value, field_type)
+                 and is_pydantic_dataclass(field_type))
+    typed = (construct_groups or typed_parent) and isinstance(value, field_type) and is_pydantic_dataclass(field_type)
+    children = _validate_fields(field_type, values, ancestors | {id(value)}, construct, typed)
     direct = int(mixed and "value" in values)
-    return len(values) - direct, direct
+    return len(values) - direct, direct, children
 
 
 def _validate_direct_value(field, field_type, value, ancestors):
@@ -126,7 +150,8 @@ def _validate_direct_value(field, field_type, value, ancestors):
 
 def _validate_field_value(name, field_type, value, metadata):
     try:
-        validated = TypeAdapter(field_type).validate_python(value, strict=True)
+        adapter = _SCALAR_ADAPTERS.get(field_type) if type(field_type) is type else None
+        validated = (adapter if adapter is not None else TypeAdapter(field_type)).validate_python(value, strict=True)
     except ValidationError as error:
         message = error.errors(include_input=False, include_url=False)[0]["msg"]
         raise ValueError(f"{name}: {message}") from error
@@ -141,10 +166,10 @@ def _validate_field_value(name, field_type, value, metadata):
         raise ValueError(f"{name}: value must be at most {metadata['maximum_value']}")
 
 
-def validate_model_fields(model_class, values):
+def validate_model_fields(model_class, values, *, construct_groups=False):
     """Validate a proposed mapping and its nested Model dataclass fields."""
     if not isinstance(model_class, type) or not is_dataclass(model_class):
         raise TypeError("Model class must be a dataclass")
     if not isinstance(values, Mapping):
         raise TypeError("Model instance must be a mapping")
-    _validate_fields(model_class, values, {id(values)})
+    return _validate_fields(model_class, values, {id(values)}, construct_groups)

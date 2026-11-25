@@ -1,6 +1,13 @@
 """Fixtures for the Beta worker CLI tests."""
+from contextlib import redirect_stderr, redirect_stdout
 from hashlib import sha256
+from io import StringIO
+import json
 from pathlib import Path
+from runpy import run_module
+from subprocess import CompletedProcess
+import sys
+from unittest.mock import patch
 
 
 def generation_fixture(directory):
@@ -21,4 +28,19 @@ def generation_fixture(directory):
     output.mkdir()
     return ({'root': str(root), 'control_root': control.name, 'manifest_path': manifest.name,
              'manifest_sha256': sha256(manifest.read_bytes()).hexdigest(), 'project_prefix': 'AN'}, output, manifest)
+
+
+def command_with_fixture(module, payload, *arguments):
+    """Run the command entry point while its external peers can be replaced by fixtures."""
+    stdout, stderr = StringIO(), StringIO()
+    argv = [module, *arguments]
+    with (patch.object(sys, 'argv', argv), patch.object(sys, 'stdin', StringIO(json.dumps(payload))),
+          patch.object(sys, 'dont_write_bytecode', True), redirect_stdout(stdout), redirect_stderr(stderr)):
+        try:
+            run_module(module, run_name='__main__')
+        except SystemExit as exit_requested:
+            status = exit_requested.code
+        else:
+            status = 0
+    return CompletedProcess(argv, status, stdout.getvalue(), stderr.getvalue())
 

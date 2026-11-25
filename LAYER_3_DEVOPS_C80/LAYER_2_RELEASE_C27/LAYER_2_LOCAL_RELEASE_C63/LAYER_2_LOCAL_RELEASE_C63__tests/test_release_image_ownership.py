@@ -33,7 +33,7 @@ class OwnedDocker(fixtures.DockerFixture):
 class ReleaseImageOwnershipTests(unittest.TestCase):
     def test_purges_unused_test_images_across_projects_and_keeps_production(self) -> None:
         docker = OwnedDocker()
-        own_test, foreign_beta, prior, used = ("sha256:" + digit * 64 for digit in "1234")
+        own_test, foreign_beta, prior, used, own_next = ("sha256:" + digit * 64 for digit in "12345")
         owner = owner_labels(fixtures.ROOT, "c" * 64, ".anechoic_anechoic")
         foreign = owner_labels(Path("/foreign"), "f" * 64, "_anechoic_foreign")
         own_tags = [f"anechoic-runtime:test-{own_test[7:]}"]
@@ -41,8 +41,11 @@ class ReleaseImageOwnershipTests(unittest.TestCase):
                      f"anechoic-runtime:0.4.4.73-beta-2026-11-22_12-14-30Z-{foreign_beta[7:19]}"]
         prior_tags = [f"anechoic-runtime:prod-{prior[7:]}", f"anechoic-runtime:beta-{prior[7:]}"]
         used_tags = [f"anechoic-runtime:test-{used[7:]}"]
+        next_tags = [f"anechoic-runtime:beta-next-{own_next[7:]}",
+                     f"anechoic-runtime:0.4.4.73-beta-next-2026-11-22_12-14-30Z-{own_next[7:19]}"]
         for image, labels, tags in ((own_test, owner, own_tags), (foreign_beta, foreign, beta_tags),
-                                    (prior, owner, prior_tags), (used, foreign, used_tags)):
+                                    (prior, owner, prior_tags), (used, foreign, used_tags),
+                                    (own_next, owner, next_tags)):
             docker.images[image] = fixtures.FINGER
             docker.metadata_overrides[image] = labels
             docker.image_tags[image] = tags
@@ -51,7 +54,7 @@ class ReleaseImageOwnershipTests(unittest.TestCase):
         cleanup_obsolete_images(fixtures.ROOT, fixtures.CURRENT, fixtures.FINGER, cleanup, docker.run,
                                 previous_image=prior)
         removals = {call[3:] for call in docker.calls if call[1:3] == ("image", "rm")}
-        self.assertEqual(removals, {tuple(own_tags), tuple(beta_tags)})
+        self.assertEqual(removals, {tuple(own_tags), tuple(beta_tags), tuple(next_tags)})
         self.assertTrue(cleanup.pending)
 
     def test_retains_unused_candidate_during_another_checkout_release(self) -> None:

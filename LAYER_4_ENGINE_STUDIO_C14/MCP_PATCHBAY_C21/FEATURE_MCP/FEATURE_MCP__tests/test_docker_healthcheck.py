@@ -11,7 +11,7 @@ from types import SimpleNamespace
 import httpx2
 from mcp.client.session import ClientSession
 from starlette.applications import Starlette
-from starlette.responses import Response
+from starlette.responses import JSONResponse, Response
 from starlette.routing import Route
 
 from . import test_shared_http_server as shared
@@ -56,11 +56,27 @@ class DockerHealthcheckTests(unittest.IsolatedAsyncioTestCase):
                     await self.probe(self.app)
         self.assertIsNotNone(failure.exception.subgroup(RuntimeError))
 
+    async def test_rejects_a_pending_health_response_before_initializing(self):
+        async with self.app.starlette_app.router.lifespan_context(self.app.starlette_app):
+            self.app.gateway.snapshot["initialized"] = False
+            async with httpx2.AsyncClient(transport=httpx2.ASGITransport(app=self.app)) as client:
+                response = await client.get("http://127.0.0.1:8092/anechoic/health")
+            self.assertEqual((200, {"state": "pending"}), (response.status_code, response.json()))
+            with (patch.object(ClientSession, "initialize") as initialize,
+                  self.assertRaisesRegex(RuntimeError, "MCP service is not ready")):
+                await self.probe(self.app)
+            initialize.assert_not_called()
+
     async def test_rejects_non_mcp_response(self):
+        async def ready(request):
+            return JSONResponse({"state": "ready"})
+
         async def unavailable(request):
             return Response(status_code=503)
 
-        app = Starlette(routes=[Route("/anechoic/mcp", unavailable, methods=["POST"])])
+        app = Starlette(routes=[
+            Route("/anechoic/health", ready), Route("/anechoic/mcp", unavailable, methods=["POST"]),
+        ])
         with self.assertRaises(Exception):
             await self.probe(app)
 

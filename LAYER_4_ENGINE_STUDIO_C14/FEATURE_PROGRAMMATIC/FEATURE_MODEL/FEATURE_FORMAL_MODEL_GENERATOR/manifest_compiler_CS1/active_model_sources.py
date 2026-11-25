@@ -60,8 +60,9 @@ def _custom_claims(body: str, source: str):
     return result
 
 
-def _collect_active_source(path, is_custom, reader, control, identifiers, subjects, records):
-    carrier = parse_carrier(reader.read(path), path)
+def _collect_active_source(path, is_custom, reader, control, identifiers, subjects, records, *, carrier=None):
+    if carrier is None:
+        carrier = parse_carrier(reader.read(path), path)
     header = native_header_view(carrier.metadata)
     context, state = header.get('context'), header.get('state')
     if not isinstance(context, dict) or not isinstance(state, dict):

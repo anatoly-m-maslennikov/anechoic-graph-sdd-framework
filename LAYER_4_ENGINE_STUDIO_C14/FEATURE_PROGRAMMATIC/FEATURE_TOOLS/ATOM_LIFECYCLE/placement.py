@@ -9,11 +9,12 @@ and Scope Unit Declaration grammars are not implemented here (CA-D-651).
 """
 from __future__ import annotations
 
-from .timing import trace
 
-from dataclasses import dataclass
 from pathlib import Path
 import re
+
+from pydantic import ConfigDict
+from pydantic.dataclasses import dataclass
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import carrier_read_view
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import PlacementError, admitted_parent, derive_filename
@@ -27,7 +28,7 @@ from .placement_model import active_placement
 from .source import query_reader, select_context, select_source
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, config=ConfigDict(strict=True, extra="forbid"))
 class ContainerCarrier:
     path: Path
     status: str
@@ -44,7 +45,6 @@ def _inside(path: Path, root: Path) -> Path:
     return path
 
 
-@trace('placement.resolve_container')
 def resolve_container(selection, view, atom_id, seen=frozenset(), *, model=None):
     if atom_id in seen or len(seen) >= 32:
         raise InputError('container', 'Containing Atom chain is cyclic or too deep.')
@@ -71,7 +71,6 @@ def resolve_container(selection, view, atom_id, seen=frozenset(), *, model=None)
     return scope, ContainerCarrier(directory, parent.status) if role == 'Plan' else directory
 
 
-@trace('placement.scope_authority')
 def _role_root(selection, role, scope_unit):
     reader = query_reader()
     if reader is None:
@@ -177,7 +176,6 @@ def _archive_destination(root, role_root, parent, role, atom_id, version, source
     return _inside(role_root / archive_folder / (stem + ".md"), root)
 
 
-@trace('placement.derive_destination')
 def derive_destination(selection: ProjectSelection, *, atom_id: str, version: int,
                        status: str | None, role: str, summary: str, scope_unit: str,
                        form: str | None = None, label: str | None = None,

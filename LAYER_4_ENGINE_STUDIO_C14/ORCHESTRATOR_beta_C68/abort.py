@@ -27,14 +27,20 @@ class AbortJobs:
             return True
 
     def status(self):
+        """Sample watcher queue depth, including internal wakeups, at this request."""
         with self.lock:
-            active = dict(self.active) if self.active is not None else None
+            active = self.active.model_dump(exclude_unset=True) if self.active is not None else None
             if active is not None:
                 active["worker_alive"] = self._worker_alive()
-            result = {"active": active, "latest": dict(self.latest) if self.latest is not None else None}
+            result = {"active": active, "latest": self.latest.model_dump(exclude_unset=True) if self.latest is not None else None,
+                      "watcher_queue_depth": self.watcher.queue.qsize()}
+            if self.skip_archives:
+                result["archive"] = {"state": "disabled"}
+            if self.startup_replay and result["latest"] is not None and result["latest"]["state"] == "succeeded":
+                result["latest"]["state"] = "running"
             if self.archive_run is not None:
                 process = self.archive_process
-                result["archive"] = {**self.archive_run, "worker_alive": process is not None and process.poll() is None}
+                result["archive"] = {**self.archive_run.model_dump(exclude_unset=True), "worker_alive": process is not None and process.poll() is None}
             return result
 
     def abort(self, request):
@@ -45,13 +51,13 @@ class AbortJobs:
             return 409, {"error": {"code": "instance_mismatch", "message": "Instance does not match"}}
         with self.lock:
             archive = self.archive_run
-            if archive is not None and archive["run_id"] == request["run_id"]:
-                if archive["state"] != "running" or not self._stop_archive():
+            if archive is not None and archive.run_id == request["run_id"]:
+                if archive.state != "running" or not self._stop_archive():
                     return 409, {"error": {"code": "run_not_abortable", "message": "Run has no active Worker"}}
-                archive["state"] = "aborting"
+                archive.state = "aborting"
                 return 202, {"result": {"run_id": request["run_id"], "state": "aborting"}}
             if (self.lifecycle_job is not None or self.active is None
-                    or self.active.get("run_id") != request["run_id"] or self.aborted_run is not None
+                    or self.active.run_id != request["run_id"] or self.aborted_run is not None
                     or not self._worker_alive()):
                 return 409, {"error": {"code": "run_not_abortable", "message": "Run has no active Worker"}}
             try:

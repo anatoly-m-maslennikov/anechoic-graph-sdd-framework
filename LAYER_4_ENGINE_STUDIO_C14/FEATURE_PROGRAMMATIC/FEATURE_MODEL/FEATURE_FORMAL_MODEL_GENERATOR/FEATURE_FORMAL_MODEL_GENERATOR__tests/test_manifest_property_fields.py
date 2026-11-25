@@ -9,6 +9,8 @@ from types import ModuleType
 import unittest
 from unittest.mock import patch
 
+from pydantic import ValidationError
+
 from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.FEATURE_FORMAL_MODEL_GENERATOR__shared import (
     assemble_model_classes, assemble_model_modules,
 )
@@ -84,7 +86,7 @@ class ManifestPropertyFieldsTests(unittest.TestCase):
                     self.assertNotIn("ref_id", vars(instance))
                     with self.assertRaises(AttributeError):
                         instance.ref_id = "incorrect"
-                    with self.assertRaisesRegex(TypeError, "ref_id"):
+                    with self.assertRaisesRegex(ValidationError, "ref_id"):
                         atom(**values, status="active", ref_id="incorrect")
                 finally:
                     for name in list(sys.modules):

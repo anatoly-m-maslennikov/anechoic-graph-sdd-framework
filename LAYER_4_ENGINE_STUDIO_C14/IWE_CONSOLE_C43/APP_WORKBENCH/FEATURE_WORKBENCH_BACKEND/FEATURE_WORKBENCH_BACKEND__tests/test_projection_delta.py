@@ -39,6 +39,28 @@ class ProjectionDeltaTest(unittest.TestCase):
     def project(self, atoms: list[dict], previous=None, schema=None):
         return snapshot(atoms, [], {"CONTAINS"}, schema or self.schema, self.content, previous)
 
+    def test_snapshot_keeps_admitted_maps_and_rejects_wrong_inputs(self):
+        original = self.project([self.atom("A")])
+        kind = type(original)
+        values = (original.atoms, original.scopes, original.graph, original.header_schema,
+                  original.content_schema, original.atom_sources)
+        copied = kind(*values)
+        self.assertTrue(hasattr(kind, "__pydantic_validator__"))
+        for name in ("atoms", "scopes", "atom_sources"):
+            self.assertIs(getattr(copied, name), getattr(original, name))
+        for index in range(len(values)):
+            invalid = list(values)
+            invalid[index] = []
+            with self.subTest(index=index), self.assertRaises(ValueError):
+                kind(*invalid)
+        for index, wrong in ((2, original.header_schema), (3, original.content_schema), (4, original.graph)):
+            invalid = list(values)
+            invalid[index] = wrong
+            with self.subTest(index=index), self.assertRaises(ValueError):
+                kind(*invalid)
+        with self.assertRaises(AttributeError):
+            copied.atoms = {}
+
     def test_reuses_only_unchanged_public_atom_rows(self) -> None:
         old_a, unchanged = self.atom("A"), self.atom("B")
         previous = self.project([old_a, unchanged])

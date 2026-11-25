@@ -25,8 +25,8 @@ Give the delivered framework, each Project, and the host runtime clear storage b
 - Framework database. Keep a shared DuckDB file on a named Docker volume mounted at `/var/lib/anechoic` inside the container. Use the same mount on every supported host. Build or refresh `framework.duckdb` from the delivered Active Meta-Ontology and Meta-Methodology Atoms when their content changes. The Markdown Atoms remain the source of truth.
 - Project database. Keep one host-backed DuckDB file per Project at `.anechoic_runtime/db/project.duckdb`. Store Project projections and the Journal there when the Project Manifest selects DuckDB Journal storage. Preserve existing databases and Journal records during migration and restart.
 - Host runtime settings. Reuse `$XDG_CONFIG_HOME/anechoic/runtime.toml`, with `~/.config/anechoic/runtime.toml` as the fallback and `--host-settings` for an explicit path. Keep host listener, served Projects, and runtime limits there. Project choices stay in that Project's Manifest.
-- Incremental Startup. Reuse a compatible persisted projection checkpoint and apply source changes made while Studio was offline. Finish Current and Draft catch-up before readiness. Reconcile Archive in the background and wait for complete history before enabling lifecycle writes.
-- Project Manifest hot reload. Watch the live Project Manifest and reload the affected Project in the running container after validating the new binding.
+- Incremental Startup. Establish watcher coverage before capture. Reuse a compatible checkpoint and apply offline source changes. Admit the Current and Draft base and replay queued changes through the completed observation before readiness. Reconcile Archive in the background and wait for complete history before enabling lifecycle writes.
+- Project Manifest hot reload. Watch the live Manifest. Validate a replacement binding and reload the affected Project in the running container. Run one Manifest Builder per selected Project at a time. Within the pinned binding, coalesce pending input changes into one follow-up build. Publish the exact Model and Structure together.
 
 ## Done when
 
@@ -40,10 +40,19 @@ or compiler schema input. Verify that a Graph-only change reuses Model and
 Structure. Record time to live readiness and Archive completion separately.
 Verify that pending Archive state keeps lifecycle writes blocked.
 
+Edit watched inputs during capture. Verify that Studio admits the base,
+replays the queued changes, and then reports readiness. Verify that lost
+coverage reconciles the affected inputs before Studio reports them current.
+
 At live Project entry points, verify that a formatting-only Manifest
 edit preserves compatible artifacts and that a semantic edit applies
 the new settings. Verify that an invalid edit reports the error and
 blocks affected writes.
+
+Edit Manifest inputs repeatedly during a build for one pinned binding.
+Verify that one follow-up uses the newest observed inputs and that
+affected writes stay blocked until Kernel admits their Model and
+Structure together.
 
 ## Progress
 

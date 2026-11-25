@@ -5,7 +5,10 @@ import time
 from types import SimpleNamespace
 import unittest
 
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.audit_worker import AuditSnapshot, AuditWorker
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__shared import (
+    AuditSnapshot,
+    AuditWorker,
+)
 
 
 class Store:

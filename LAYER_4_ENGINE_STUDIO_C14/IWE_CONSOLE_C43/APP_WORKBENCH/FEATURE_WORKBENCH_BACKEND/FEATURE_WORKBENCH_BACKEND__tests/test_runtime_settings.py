@@ -5,14 +5,7 @@ import tempfile
 import unittest
 
 
-APP_ROOT = Path(__file__).resolve().parents[3]
-
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.runtime_settings import (  # noqa: E402
-    DEFAULT_RESULT_TTL_SECONDS,
-    DEFAULT_SCHEMA_MODE,
-    result_ttl_seconds,
-    schema_mode,
-)
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__shared import schema_mode
 
 
 class RuntimeSettingsTests(unittest.TestCase):
@@ -23,19 +16,7 @@ class RuntimeSettingsTests(unittest.TestCase):
         self.path = self.root / ".anechoic_runtime" / "anechoic_runtime_settings.toml"
 
     def test_missing_file_uses_the_declared_default(self) -> None:
-        self.assertEqual(DEFAULT_RESULT_TTL_SECONDS, result_ttl_seconds(self.root))
-        self.assertEqual(DEFAULT_SCHEMA_MODE, schema_mode(self.root))
-
-    def test_positive_configured_ttl_is_read_once_at_start(self) -> None:
-        self.path.parent.mkdir(parents=True)
-        self.path.write_text("[workbench]\nresult_ttl_seconds = 1\n", encoding="utf-8")
-        self.assertEqual(1, result_ttl_seconds(self.root))
-
-    def test_existing_invalid_ttl_is_not_silently_defaulted(self) -> None:
-        self.path.parent.mkdir(parents=True)
-        self.path.write_text("[workbench]\nresult_ttl_seconds = 0\n", encoding="utf-8")
-        with self.assertRaisesRegex(ValueError, "positive integer"):
-            result_ttl_seconds(self.root)
+        self.assertEqual(2, schema_mode(self.root))
 
     def test_schema_mode_is_fixed_to_the_two_admitted_cold_start_modes(self) -> None:
         self.path.parent.mkdir(parents=True)

@@ -5,7 +5,7 @@ from pathlib import Path
 import re
 import tempfile
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__pub import TemporaryBoundaryError, validate_directory_components
+from .temporary_boundary import TemporaryBoundaryError, validate_directory_components
 
 TEMPORARY_DIRECTORY = Path(".anechoic_tmp")
 _OWNER = re.compile(r"[a-z0-9][a-z0-9_-]{0,63}\Z")

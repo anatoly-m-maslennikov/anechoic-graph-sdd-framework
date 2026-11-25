@@ -5,9 +5,10 @@ from __future__ import annotations
 
 from collections import Counter, defaultdict
 from collections.abc import Iterable, Mapping
-from dataclasses import dataclass
+from pydantic import ConfigDict, WrapValidator
+from pydantic.dataclasses import dataclass
 import hashlib
-from typing import Any, TypeVar
+from typing import Annotated, Any, TypeVar
 
 from .graph_import_projection import add_import_projection
 from .index_delta import MaterializationDelta
@@ -23,13 +24,18 @@ Reference = tuple[str, str]
 T = TypeVar("T")
 
 
-@dataclass(frozen=True)
+def _preserve(value, handler):
+    handler(value)
+    return value
+
+
+@dataclass(config=ConfigDict(strict=True, extra="forbid", hide_input_in_errors=True), frozen=True)
 class GraphState:
-    references: frozenset[Reference]
-    edges: dict[str, frozenset[Edge]]
-    tables: dict[str, str]
-    reference_counts: dict[Reference, int]
-    edge_counts: dict[Edge, int]
+    references: Annotated[frozenset[Reference], WrapValidator(_preserve)]
+    edges: Annotated[dict[str, frozenset[Edge]], WrapValidator(_preserve)]
+    tables: Annotated[dict[str, str], WrapValidator(_preserve)]
+    reference_counts: Annotated[dict[Reference, int], WrapValidator(_preserve)]
+    edge_counts: Annotated[dict[Edge, int], WrapValidator(_preserve)]
 
 
 def quote_identifier(name: str) -> str:

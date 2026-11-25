@@ -1,4 +1,5 @@
 """Exercise native family lifecycle writes through a disposable Beta MCP process."""
+import json
 import os
 from pathlib import Path
 import shutil
@@ -7,6 +8,8 @@ import sys
 from tempfile import TemporaryDirectory
 from time import monotonic
 import unittest
+
+import yaml
 
 from mcp import ClientSession
 from mcp.client.stdio import StdioServerParameters, stdio_client
@@ -32,7 +35,8 @@ class BetaLifecycleFamilies(unittest.IsolatedAsyncioTestCase):
             shutil.copy2(source, control / "__PROJECT_CONFIG" / source.name)
             parameters = StdioServerParameters(command=sys.executable, args=[
                 "-B", "-P", "-m", "MCP_PATCHBAY_C21.FEATURE_MCP.server", "--project-root", str(project),
-            ], cwd=engine.parent, env={"PYTHONPATH": str(engine), "ANECHOIC_RUNTIME_STACK": "beta",
+            ], cwd=engine.parent, env={"PYTHONPATH": str(engine), "ANECHOIC_RUNTIME_STACK": "beta_next",
+                "ANECHOIC_RUNTIME_PROFILE": "test",
                 "ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY": os.environ.get("ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY",
                     str(ENGINE.parent / ".anechoic_tmp/workbench/extensions"))})
             async with stdio_client(parameters) as streams, ClientSession(*streams) as client:
@@ -41,6 +45,31 @@ class BetaLifecycleFamilies(unittest.IsolatedAsyncioTestCase):
                 await self._spec(client)
                 await self._component_contract(client)
                 await self._config(client, source)
+
+    async def test_task_revision_promotion(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            engine = _stage(root / "framework")
+            project = root / "project"
+            project.mkdir()
+            subprocess.run(["git", "init", "--quiet", str(project)], check=True)
+            make_project(project)
+            control = project / "_anechoic_anechoic"
+            task = control / "__TICKETS/TASKS/AN-T-9999-TASK--promotion-canary.md"
+            task.parent.mkdir(parents=True, exist_ok=True)
+            task.write_text("---\natom_family: TKT\natom_id: AN-T-9999\ncontainer: {component: C00}\n"
+                "priority: 2\nrelations: {CHILD_OF: [AN-S-3037]}\ncontext: {template: task}\n"
+                "state: {status: in_queue, version: 1, updated_at: '2026-11-19T00:00:00Z'}\n---\n"
+                "\n## Summary\n\nPromotion canary\n\n## Work\n\nOld work.\n")
+            parameters = StdioServerParameters(command=sys.executable, args=[
+                "-B", "-P", "-m", "MCP_PATCHBAY_C21.FEATURE_MCP.server", "--project-root", str(project),
+            ], cwd=engine.parent, env={"PYTHONPATH": str(engine), "ANECHOIC_RUNTIME_STACK": "beta_next",
+                "ANECHOIC_RUNTIME_PROFILE": "test",
+                "ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY": os.environ.get("ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY",
+                    str(ENGINE.parent / ".anechoic_tmp/workbench/extensions"))})
+            async with stdio_client(parameters) as streams, ClientSession(*streams) as client:
+                await client.initialize()
+                await self._promotion(client, project, task)
 
     async def _call(self, client, name, arguments, status):
         witness = """SELECT count(DISTINCT run_id) FILTER (WHERE t.name = 'lifecycle_refresh' AND e.kind = 'native_delta'),
@@ -70,6 +99,94 @@ class BetaLifecycleFamilies(unittest.IsolatedAsyncioTestCase):
             'ORDER BY "header.state.version", reference', "result_delivery": "inline"})
         self.assertFalse(reply.is_error, reply.structured_content)
         return reply.structured_content["rows"]
+
+    async def _promotion(self, client, project, source):
+        before = source.read_text()
+        body = before.split("---", 2)[2][1:].replace("Old work.", "New work.")
+        revised = await self._call(client, "atom_lifecycle_update", {
+            "sourceCurrent": {"ref_id": "AN-T-9999", "version": 1},
+            "changes": {"body": body}}, "draft_created")
+        draft = revised["savedDraft"]
+        draft_path = project / draft["path"]
+        draft_text = draft_path.read_text()
+        old_header = self._header(before)
+        draft_header = self._header(draft_text)
+        self.assertEqual({k: v for k, v in old_header.items() if k != "state"},
+                         {k: v for k, v in draft_header.items() if k != "state"})
+        self.assertEqual(body, draft_text.split("---", 2)[2][1:])
+        self.assertNotEqual(old_header["state"]["updated_at"], draft_header["state"]["updated_at"])
+        self.assertEqual([["AN-T-9999", 1, "in_queue"], [draft["ref_id"], 2, "draft"]],
+                         await self._rows(client, "AN-T-9999"))
+        snapshot = await self._snapshot(client)
+        invalid = await client.call_tool("atom_lifecycle_promote_draft", {
+            "target": {"ref_id": draft["ref_id"], "version": 2}, "targetStatus": "in_queue"})
+        self.assertFalse(invalid.is_error, invalid.structured_content)
+        self.assertEqual("failed", invalid.structured_content["status"], invalid.structured_content)
+        self.assertEqual("invalid_input", invalid.structured_content["errors"][0]["code"])
+        self.assertEqual([], invalid.structured_content["effects"])
+        self.assertEqual([["AN-T-9999", 1, "in_queue"], [draft["ref_id"], 2, "draft"]],
+                         await self._rows(client, "AN-T-9999"))
+        self.assertEqual(snapshot, await self._snapshot(client))
+        self.assertEqual(before, source.read_text())
+        self.assertEqual(draft_text, draft_path.read_text())
+        promoted = await self._call(client, "atom_lifecycle_promote_draft", {
+            "target": {"ref_id": draft["ref_id"], "version": 2}, "targetStatus": "backlog"}, "completed")
+        current = project / promoted["artifact"]["path"]
+        archive = source.parent / "09_archived/AN-T-9999@1-TASK--promotion-canary.md"
+        self.assertFalse(source.exists())
+        self.assertFalse(draft_path.exists())
+        self._compare_carrier(before, archive.read_text(), "archived")
+        self._compare_carrier(draft_text, current.read_text(), "backlog")
+        self.assertEqual([["AN-T-9999@1", 1, "archived"], ["AN-T-9999", 2, "backlog"]],
+                         await self._rows(client, "AN-T-9999"))
+        relation = await client.call_tool("query_run", {"sql": "SELECT target_ref FROM relations "
+            "WHERE source_ref = 'AN-T-9999' AND relation_type = 'CHILD_OF' AND NOT derived",
+            "result_delivery": "inline"})
+        self.assertEqual([["AN-S-3037"]], relation.structured_content["rows"])
+        self._lean_headers(project / "_anechoic_anechoic", [before, draft_text,
+                                                           archive.read_text(), current.read_text()])
+
+    async def _snapshot(self, client):
+        results = []
+        for sql in ("SELECT * FROM atoms WHERE reference LIKE 'AN-T-9999%' ORDER BY reference",
+                    "SELECT * FROM relations WHERE source_ref LIKE 'AN-T-9999%' ORDER BY source_ref, target_ref"):
+            result = await client.call_tool("query_run", {"sql": sql, "result_delivery": "inline"})
+            self.assertFalse(result.is_error, result.structured_content)
+            results.append(result.structured_content["rows"])
+        return results
+
+    def _lean_headers(self, control, carriers):
+        observations = []
+        for carrier in carriers:
+            header = self._header(carrier)
+            observations.append({"family": header["atom_family"],
+                "model_class": "Node//Artifact//Atom//Ticket Atom", "status": header["state"]["status"],
+                "tier": header.get("tier"), "priority": header.get("priority")})
+        module = ("FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR."
+                  "manifest_compiler_CS1.manifest_compiler_CS1__tests.functional.model_lean_pilot")
+        env = {**os.environ, "PYTHONPATH": str(ENGINE)}
+        result = subprocess.run([sys.executable, "-B", "-P", "-m", module, str(control)],
+            input=json.dumps(observations), text=True, capture_output=True, env=env, timeout=120)
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+
+    def _header(self, text):
+        header = text.split("---", 2)[1]
+        node = yaml.compose(header)
+        states = [value for key, value in node.value if key.value == "state"]
+        self.assertEqual(1, len(states))
+        self.assertIsInstance(states[0], yaml.MappingNode)
+        statuses = [value for key, value in states[0].value if key.value == "status"]
+        self.assertEqual(1, len(statuses))
+        self.assertIsInstance(statuses[0], yaml.ScalarNode)
+        return yaml.safe_load(header)
+
+    def _compare_carrier(self, before, after, status):
+        _, _, old_body = before.split("---", 2)
+        _, _, new_body = after.split("---", 2)
+        old, new = self._header(before), self._header(after)
+        old["state"]["status"] = status
+        self.assertEqual(old, new)
+        self.assertEqual(old_body, new_body)
 
     async def _spec(self, client):
         created = await self._call(client, "atom_lifecycle_create_draft", {"newAtom": {

@@ -27,3 +27,9 @@ Prefer well-known technologies and interfaces
 ### Prose Claim
 
 Prefer technologies and interfaces that AI Agents already know. Use custom ones when their value justifies the extra learning and maintenance.
+
+## Details
+
+### Examples
+
+A Project uses Markdown for human-readable specifications that people and AI Agents can read.

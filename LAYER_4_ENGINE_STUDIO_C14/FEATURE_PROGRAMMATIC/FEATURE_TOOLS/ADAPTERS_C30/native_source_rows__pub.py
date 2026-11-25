@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import nullcontext
-from dataclasses import dataclass, field
+from dataclasses import field
 from hashlib import sha256
 from itertools import groupby
 import os
@@ -11,30 +11,43 @@ from pathlib import Path, PurePosixPath
 from threading import Lock
 from typing import Any, Literal
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_carrier_header__pub import native_header_view
+from pydantic import ConfigDict, ValidatorFunctionWrapHandler, field_validator
+from pydantic.dataclasses import dataclass
+
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_carrier_placement__pub import (
-    ARCHIVE_DIRECTORY, PROJECT_CONFIG_DIRECTORY, TICKET_DIRECTORY, project_goal_filename,
+    ARCHIVE_DIRECTORY, project_goal_filename,
 )
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_read__pub import CarrierError
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__pub import (
     CEILINGS, LimitReached, ReadContext, open_regular,
 )
 
+from .native_carrier_row import CURRENT_STATUSES as CURRENT_STATUSES, _container as _container, _parse_captured_carrier
+from .native_carrier_inventory import StartupReadContext, full_carriers as _full_carriers, root_carriers as _root_carriers, startup_reader
 
-@dataclass(frozen=True)
+
+def _preserve_capture_data(value: Any, validate: ValidatorFunctionWrapHandler) -> Any:
+    validate(value)
+    return value
+
+
+@dataclass(frozen=True, config=ConfigDict(strict=True, extra="forbid"))
 class NativeCapture:
     atoms: list[dict[str, Any]]
     containment: list[dict[str, Any]]
     errors: dict[str, str]
     versions: dict[str, tuple[int, ...]] = field(default_factory=dict, compare=False)
     ingestion_issues: list[dict[str, Any]] = field(default_factory=list, compare=False, kw_only=True)
+    carrier_hashes: dict[str, str] = field(default_factory=dict, compare=False, kw_only=True)
+
+    _validate_payload = field_validator(
+        "atoms", "containment", "errors", "versions", "ingestion_issues", "carrier_hashes", mode="wrap",
+    )(_preserve_capture_data)
 
 
 class NativeManifestChanged(ValueError):
     """The capture no longer matches its validated Project Manifest."""
 
-
-from .native_carrier_row import CURRENT_STATUSES as CURRENT_STATUSES, _carrier_row, _container as _container
 
 def check_native_manifest(reader: ReadContext, selection: Any, previous: NativeCapture | None) -> bytes | None:
     try:
@@ -77,30 +90,20 @@ def _changed_inputs(reader, selection, previous, paths):
 
 
 def _read_captured_carrier(reader, selection, path, tree, manifest, *, version, directory_fd,
-                           include_content_properties, parse_lock):
-    raw = manifest if path == selection.manifest_path else reader.read(
-        path, metadata_guard=True, skip_version=version, directory_fd=directory_fd,
-    )
+                           include_content_properties, parse_lock, relative, hashes):
+    try:
+        raw = manifest if path == selection.manifest_path else reader.read(
+            path, metadata_guard=True, skip_version=version, directory_fd=directory_fd,
+        )
+    except (OSError, LimitReached):
+        hashes.pop(relative, None)
+        raise
     if raw is None:
         return None
+    digest = hashes[relative] = reader.digest(raw) if isinstance(reader, StartupReadContext) else sha256(raw).hexdigest()
     with parse_lock or nullcontext():
-        return _parse_captured_carrier(selection, path, tree, raw, include_content_properties)
-
-
-def _parse_captured_carrier(selection, path, tree, raw, include_content_properties):
-    family = {"_PMETA": "P", "__TKT": "T", "001_TICKETS": "T", "__TICKETS": "T",
-              "002_PROJECT_CONFIG": "PC", "__PROJECT_CONFIG": "PC",
-              PROJECT_CONFIG_DIRECTORY: "PC", TICKET_DIRECTORY: "T"}.get(tree, "S")
-    row, edge = _carrier_row(path, selection.root, family, selection.project_prefix, raw,
-                             include_content_properties=include_content_properties)
-    if tree is None and path != selection.manifest_path:
-        context = native_header_view(row["header_json"])["context"]
-        if (row["status"] != "active" or context.get("template") != "project_goal"
-                or context.get("container") != {"component": "C00"} or context.get("tier") != -1
-                or context.get("lens") != "SPEC"
-                or not path.name.startswith(row["id"] + "-")):
-            raise ValueError("Invalid repository-root Project Goal")
-    row["_source_sha256"] = sha256(raw).hexdigest()
+        row, edge = _parse_captured_carrier(selection, path, tree, raw, include_content_properties)
+    row["_source_sha256"] = digest
     return row, edge
 
 
@@ -113,28 +116,26 @@ def _incremental_carrier_present(reader: ReadContext, path: Path) -> bool:
     return True
 
 
-def _root_carriers(reader, selection, *, remember=True):
-    return [path for path in reader.inventory_shallow(selection.root, remember=remember)
-            if path == selection.manifest_path or project_goal_filename(path.name)]
-
-
 def _capture_inputs(reader, selection, input_paths, manifest, incremental, previous,
-                    previous_rows, candidates, errors, issues, versions, missing, directory_fd=None, *,
-                    include_content_properties, parse_lock=None, archives_only=False):
+                    previous_rows, candidates, errors, issues, versions, missing, hashes, directory_fd=None, *,
+                    include_content_properties, parse_lock=None):
     root, control = selection.root, selection.control_root
     for path in input_paths:
         tree = path.relative_to(control).parts[0] if path.is_relative_to(control) else None
         if tree == "000_ANECHOIC_framework":
             continue
         relative = path.relative_to(root).as_posix()
+        captured = None
         try:
             if incremental and not _incremental_carrier_present(reader, path):
                 missing.append(path)
                 versions.pop(str(path), None)
+                hashes.pop(relative, None)
                 continue
             captured = _read_captured_carrier(
                 reader, selection, path, tree, manifest, version=versions.get(str(path)), directory_fd=directory_fd,
                 include_content_properties=include_content_properties, parse_lock=parse_lock,
+                relative=relative, hashes=hashes,
             )
             if captured is None:
                 old = previous_rows.get(relative)
@@ -143,55 +144,36 @@ def _capture_inputs(reader, selection, input_paths, manifest, incremental, previ
                 elif relative in previous.errors:
                     errors[relative] = previous.errors[relative]
                 continue
-            if archives_only and captured[0]["status_group"] != "Archived":
-                raise ValueError("Deferred archive directory contains a non-Archived Atom")
+            if ARCHIVE_DIRECTORY in PurePosixPath(relative).parts[:-1] and captured[0]["status_group"] != "Archived":
+                raise ValueError("Archive directory contains a non-Archived Atom")
             candidates[relative] = captured
         except (OSError, RuntimeError, TypeError, ValueError, CarrierError) as error:
+            if path == selection.manifest_path or isinstance(error, LimitReached) and error.limit != "max_file_bytes":
+                raise
             errors[relative] = str(error)
             code = ("read_error" if isinstance(error, OSError) else
                     ("invalid_schema" if error.code in {"YAML_INVALID", "CARRIER_ALIAS_CONFLICT", "NATIVE_HEADER_SCHEMA"}
                      else "parse_error") if isinstance(error, CarrierError) else "invalid_value")
-            issues.append(_issue(relative, code, str(error)))
-
-
-def _full_carriers(reader, selection, defer_archives=None, archive_roots=None):
-    installed = selection.control_root / "000_ANECHOIC_framework"
-    if archive_roots is not None:
-        paths = set()
-        for root in archive_roots:
-            paths.update(path for path in reader.inventory(root) if path.suffix == ".md")
-            if len(paths) > reader.limits["max_candidates"]:
-                raise LimitReached("max_candidates")
-        return sorted(paths)
-
-    def prune(path):
-        if path == installed:
-            return True
-        if path.name == ARCHIVE_DIRECTORY:
-            defer_archives.add(path)
-            return True
-        return False
-
-    paths = [path for path in reader.inventory(selection.control_root,
-                                               prune=prune if defer_archives is not None else None)
-             if path.suffix == ".md" and not path.is_relative_to(installed)]
-    return sorted(set(paths + _root_carriers(reader, selection)))
+            issues.append(_issue(relative, code, str(error), captured[0]["_exact_ref"] if captured else None))
 
 
 def _native_carrier_hashes(selection, *, foreground=False, archive_roots=None, watcher_guarded=False):
-    reader = ReadContext(roots=[str(selection.root)], limits=dict(CEILINGS))
+    reader = startup_reader(selection.root, "foreground_hashes" if foreground else None)
     manifest = check_native_manifest(reader, selection, None)
     hashes = {}
     deferred = set() if foreground else None
     for path in _full_carriers(reader, selection, defer_archives=deferred, archive_roots=archive_roots):
         raw = manifest if path == selection.manifest_path else reader.read(path, metadata_guard=True)
-        hashes[path.relative_to(selection.root).as_posix()] = sha256(raw).hexdigest()
+        digest = reader.digest(raw) if isinstance(reader, StartupReadContext) else sha256(raw).hexdigest()
+        hashes[path.relative_to(selection.root).as_posix()] = digest
+    if isinstance(reader, StartupReadContext):
+        reader.emit_scan_metrics()
     if not watcher_guarded and reader.currentness()["state"] != "unchanged":
         raise ValueError("Native Project carriers changed during capture")
     return hashes
 
 
-def _capture_full_inputs(reader, selection, manifest, candidates, errors, issues, *,
+def _capture_full_inputs(reader, selection, manifest, candidates, errors, issues, hashes, *,
                          include_content_properties, defer_archives, archive_roots):
     paths = _full_carriers(reader, selection, defer_archives, archive_roots)
     parse_lock = Lock()
@@ -204,9 +186,8 @@ def _capture_full_inputs(reader, selection, manifest, candidates, errors, issues
         try:
             def capture(path, directory_fd=descriptor):
                 _capture_inputs(reader, selection, (path,), manifest, False, None,
-                                {}, candidates, errors, issues, {}, [], directory_fd=directory_fd,
-                                include_content_properties=include_content_properties, parse_lock=parse_lock,
-                                archives_only=archive_roots is not None)
+                                {}, candidates, errors, issues, {}, [], hashes, directory_fd=directory_fd,
+                                include_content_properties=include_content_properties, parse_lock=parse_lock)
 
             with ThreadPoolExecutor(max_workers=8) as pool:
                 for _ in pool.map(capture, members, buffersize=16):
@@ -214,6 +195,8 @@ def _capture_full_inputs(reader, selection, manifest, candidates, errors, issues
         finally:
             if descriptor is not None:
                 os.close(descriptor)
+    if isinstance(reader, StartupReadContext):
+        reader.emit_scan_metrics()
 
 
 def _validate_capture_options(selection, paths, incremental, defer_currentness, manifest_admitted):
@@ -230,9 +213,10 @@ def capture_native(
     defer_currentness: bool = False,
     defer_archives: set[Path] | None = None, archive_roots: tuple[Path, ...] | None = None,
 ) -> NativeCapture:
-    """Read one selected native tree. Callers must refuse a capture with errors.
+    """Read one selected native tree and report invalid individual carriers.
 
-    When validation is deferred, check the supplied reader before publishing.
+    Write callers must refuse a capture with errors. When validation is deferred,
+    check the supplied reader before publishing.
     """
     if reader is None:
         if defer_currentness:
@@ -247,7 +231,7 @@ def capture_native(
         return capture_native(selection, reader=reader, include_content_properties=include_content_properties)
     _validate_capture_options(selection, paths, incremental, defer_currentness, manifest_admitted)
     manifest = None if manifest_admitted else check_native_manifest(reader, selection, previous if incremental else None)
-    versions = dict(previous.versions) if incremental else {}
+    versions, hashes = (dict(previous.versions), dict(previous.carrier_hashes)) if incremental else ({}, {})
     previous_rows = {row["source_path"]: (row, edge)
                      for row, edge in zip(previous.atoms, previous.containment)} if incremental else {}
     missing, issues = [], []
@@ -256,19 +240,23 @@ def capture_native(
         issues = [issue for issue in previous.ingestion_issues
                   if issue["relative_path"] in errors]
         _capture_inputs(reader, selection, input_paths, manifest, incremental, previous,
-                        previous_rows, candidates, errors, issues, versions, missing,
+                        previous_rows, candidates, errors, issues, versions, missing, hashes,
                         include_content_properties=include_content_properties)
     else:
         candidates, errors = {}, {}
-        _capture_full_inputs(reader, selection, manifest, candidates, errors, issues,
+        _capture_full_inputs(reader, selection, manifest, candidates, errors, issues, hashes,
                              include_content_properties=include_content_properties,
                              defer_archives=defer_archives, archive_roots=archive_roots)
-    if (not defer_currentness and reader.currentness()["state"] != "unchanged") or any(
-        path.exists() or path.is_symlink() for path in missing
-    ):
+    if _capture_changed(reader, missing, defer_currentness):
         raise ValueError("Native Project carriers changed during capture")
     versions.update(reader.versions)
-    return _unique_revisions(candidates, errors, versions, issues)
+    return _unique_revisions(candidates, errors, versions, issues, hashes,
+                             selection.manifest_path.relative_to(selection.root).as_posix())
+
+
+def _capture_changed(reader, missing, defer_currentness):
+    return ((not defer_currentness and reader.currentness()["state"] != "unchanged")
+            or any(path.exists() or path.is_symlink() for path in missing))
 
 
 def revalidate_native(selection: Any, previous: NativeCapture | None) -> NativeCapture:
@@ -305,7 +293,7 @@ def _issue(relative_path, code, message, atom_ref=None, related_paths=None):
             "atom_ref": atom_ref, "related_paths": related_paths or []}
 
 
-def _unique_revisions(candidates, errors, versions, issues):
+def _unique_revisions(candidates, errors, versions, issues, hashes, manifest_path):
     rows, containment = [], []
     revisions, currents = {}, {}
     ordered = sorted(candidates.items())
@@ -314,21 +302,19 @@ def _unique_revisions(candidates, errors, versions, issues):
         if row["status_group"] == "Current":
             currents.setdefault(row["id"], []).append(relative)
     for groups, code in ((revisions, "duplicate_revision"), (currents, "duplicate_current")):
-        for identity, paths in groups.items():
+        for paths in groups.values():
             if len(paths) < 2:
                 continue
             for path in paths:
-                issues.append(_issue(path, code, "Duplicate native revision or Current identity", identity, paths))
-    exact_paths, current_paths = set(), set()
+                if path == manifest_path:
+                    continue
+                message = "Duplicate native revision or Current identity"
+                issues.append(_issue(path, code, message, candidates[path][0]["_exact_ref"], paths))
+                errors[path] = message
     for relative, (row, edge) in ordered:
-        exact, group, atom_id = row["_exact_ref"], row["status_group"], row["id"]
-        if exact in exact_paths or (group == "Current" and atom_id in current_paths):
-            errors[relative] = "Duplicate native revision or Current identity"
+        if relative in errors:
             continue
         rows.append(row)
         containment.append(edge)
-        exact_paths.add(exact)
-        if group == "Current":
-            current_paths.add(atom_id)
     issues.sort(key=lambda item: (item["relative_path"] or "", item["code"]))
-    return NativeCapture(rows, containment, errors, versions, ingestion_issues=issues)
+    return NativeCapture(rows, containment, errors, versions, ingestion_issues=issues, carrier_hashes=hashes)

@@ -3,13 +3,15 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from pydantic import ConfigDict, InstanceOf
+from pydantic.dataclasses import dataclass
+
 import copy
 import hashlib
 import json
 
 from jsonschema import Draft202012Validator, SchemaError
-from typing import Any
+from typing import Annotated, Any
 
 
 _UNADAPTABLE_ROOT_KEYS = frozenset(
@@ -35,9 +37,9 @@ _UNADAPTABLE_ROOT_KEYS = frozenset(
 )
 
 
-@dataclass(frozen=True)
+@dataclass(config=ConfigDict(strict=True, extra="forbid"), frozen=True)
 class ToolContract:
-    tool: dict[str, Any]
+    tool: Annotated[dict[str, Any], InstanceOf()]
     digest: str
 
 

@@ -15,6 +15,33 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.content_records__pub import
 _MARKDOWN_HEADINGS = MarkdownIt("commonmark").disable("inline")
 
 
+def _unfenced_lines(body: str) -> list[tuple[int, str]]:
+    result = []
+    fence: tuple[str, int] | None = None
+    for index, line in enumerate(body.splitlines()):
+        marker = re.match(r"^ {0,3}(`{3,}|~{3,})(.*)$", line)
+        if marker:
+            token = marker[1]
+            if fence is None:
+                fence = (token[0], len(token))
+            elif token[0] == fence[0] and len(token) >= fence[1] and not marker[2].strip():
+                fence = None
+            continue
+        if fence is None:
+            result.append((index, line))
+    return result
+
+
+def unfenced_atx_headings(body: str) -> list[tuple[int, str, int]]:
+    """Return levels, literal titles, and line indexes for carrier ATX headings."""
+    headings = []
+    for index, line in _unfenced_lines(body):
+        heading = re.match(r"^(#{1,6}) (.+)$", line)
+        if heading:
+            headings.append((len(heading[1]), heading[2], index))
+    return headings
+
+
 def formal_claim_fences(body: str) -> Iterator[tuple[str, str]]:
     """Yield language and source for each fence at Claim/Formal Claim."""
     tokens = MarkdownIt("commonmark").parse(body)

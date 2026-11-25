@@ -4,7 +4,7 @@ from datetime import datetime
 from pathlib import Path
 import re
 
-from .ADAPTERS_C30__pub import ReadContext
+from .ADAPTERS_C30__pub import LimitReached, ReadContext
 from .atom_reference__pub import derive_atom_ref
 from .carrier_read__pub import ParsedCarrier, parse_carrier
 from .formal_claim__pub import formal_claim
@@ -27,15 +27,23 @@ def _manifest_paths(reader: ReadContext, control: Path):
 
 def manifest_sources(reader: ReadContext, control: Path, *, root_candidates=False):
     for path in _manifest_paths(reader, control):
+        named_manifest = bool(re.search(r"[-.]PROJECT_MANIFEST(?:[-.]|$)", path.name))
         if root_candidates and "-PROJECT_MANIFEST--" not in path.name:
             continue
         try:
             carrier = parse_carrier(reader.read(path), path)
-        except ValueError:
-            if root_candidates or re.match(r"[A-Z]+-S-", path.name):
+        except (OSError, ValueError, LimitReached) as error:
+            if named_manifest or isinstance(error, LimitReached) and error.limit != "max_file_bytes":
                 raise
             continue
         if "atom_family" in carrier.metadata or re.match(r"[A-Z]+-S-", path.name):
+            try:
+                native_header_view(carrier.metadata)
+            except ValueError:
+                context = carrier.metadata.get("context")
+                if named_manifest or isinstance(context, dict) and context.get("template") == "project_manifest":
+                    raise
+                continue
             yield path, carrier
 
 

@@ -7,10 +7,13 @@ from pathlib import PurePosixPath
 import signal
 import subprocess
 import sys
-import threading
+from time import monotonic
+from typing import Any
+
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from .generation import admit_generation, read_structure, ticket_allocation
-from .jobs import ENGINE, FIELDS, operation_timeout
+from .jobs import ENGINE, FIELDS, LifecycleCoveragePending, _LifecycleJob, operation_timeout
 from .lifecycle_queries import lifecycle_context
 from .warm_worker import WarmLifecycleUnavailable, run_lifecycle
 
@@ -21,9 +24,25 @@ LIFECYCLE_TOOLS = frozenset({"atom_lifecycle_create_draft", "atom_lifecycle_upda
                              "atom_lifecycle_direct_update", "atom_lifecycle_create_asset"})
 
 
+class _NativeLifecycle(BaseModel):
+    model_config = ConfigDict(strict=True, extra="allow", hide_input_in_errors=True)
+    outcome: str
+    effects: list[Any] = Field(default_factory=list)
+    warnings: list[Any] = Field(default_factory=list)
+    errors: list[Any] = Field(default_factory=list)
+    requested_input: dict[str, dict[str, Any]] = Field(default_factory=dict)
+
+
+class _LifecycleReply(BaseModel):
+    model_config = ConfigDict(strict=True, extra="forbid", hide_input_in_errors=True)
+    lifecycle: _NativeLifecycle
+    delta: dict[str, Any] | None
+    projection_error: str | None
+
+
 def _new_component_task(job):
-    args = job["arguments"]
-    if job["name"] != "atom_lifecycle_create_draft" or set(args) != {"newAtom"}:
+    args = job.arguments
+    if job.name != "atom_lifecycle_create_draft" or set(args) != {"newAtom"}:
         return False
     values = args["newAtom"]
     if not isinstance(values, dict) or values.get("template") not in ("task", "epic"):
@@ -33,9 +52,9 @@ def _new_component_task(job):
 
 
 def _requires_project_capture(job, context, control):
-    target = job["arguments"].get("target")
+    target = job.arguments.get("target")
     ref = target.get("ref_id") if isinstance(target, dict) else None
-    operation = job["name"]
+    operation = job.name
     if not isinstance(ref, str):
         return False
     if "-T-" in ref:
@@ -54,7 +73,7 @@ def _requires_project_capture(job, context, control):
             continue
         parent = PurePosixPath(carrier["source_path"]).parent
         if ((carrier["status"] == "active" and parent in model_inputs)
-                or (job["arguments"].get("targetStatus") == "active"
+                or (job.arguments.get("targetStatus") == "active"
                     and any(parent.is_relative_to(scope) for scope in {ontology, *custom}))):
             return True
     return False
@@ -71,25 +90,45 @@ class LifecycleJobs:
             return 409, {"error": {"code": "instance_mismatch", "message": "Instance does not match"}}
         if {key: request[key] for key in FIELDS - {"instance_id"}} != self.binding:
             return 409, {"error": {"code": "binding_mismatch", "message": "Binding does not match"}}
+        if self.skip_archives:
+            return 409, {"error": {"code": "archive_disabled", "message": "Lifecycle requires archived Atom history"}}
         with self.lock:
             if self.stopping.is_set():
                 return 503, {"error": {"code": "orchestrator_stopping", "message": "Orchestrator is stopping"}}
+            if self.startup_replay:
+                return 409, {"error": {"code": "startup_replay_pending", "message": "Project startup replay is pending"}}
             if self.startup_capture or self.deferred_archive is not None:
                 return 409, {"error": {"code": "archive_pending", "message": "Archived Atom history is incomplete"}}
             if self.lifecycle_job is not None:
                 return 409, {"error": {"code": "lifecycle_active", "message": "Another lifecycle operation is active"}}
-            job = self.lifecycle_job = {"event": threading.Event(), "outcome": None,
-                                        "name": request["name"], "arguments": request["arguments"]}
+            timeout = operation_timeout(LIFECYCLE_WAIT_SECONDS)
+            job = self.lifecycle_job = _LifecycleJob(
+                deadline=None if timeout is None else monotonic() + timeout,
+                name=request["name"], arguments=request["arguments"])
             self.watcher.queue.put({})
-        if not job["event"].wait(operation_timeout(LIFECYCLE_WAIT_SECONDS)):
-            return 504, {"error": {"code": "write_outcome_unknown", "message": "Lifecycle deadline exceeded; outcome is unknown"}}
-        if job["outcome"] is None:
-            return 503, {"error": {"code": "write_outcome_unknown", "message": "Orchestrator stopped; outcome is unknown"}}
-        return 200, {"result": job["outcome"]}
+        return self._await_lifecycle(job)
+
+    def _await_lifecycle(self, job):
+        deadline = job.deadline
+        job.event.wait(None if deadline is None else max(0, deadline - monotonic()))
+        with self.lock:
+            if job.outcome is not None:
+                return 200, {"result": job.outcome}
+            if self.stopping.is_set():
+                status, code, message = 503, "orchestrator_stopping", "Orchestrator stopped"
+            else:
+                status, code, message = 504, "lifecycle_deadline_exceeded", "Lifecycle deadline exceeded"
+            if job.started:
+                return status, {"error": {"code": "write_outcome_unknown", "message": message + "; outcome is unknown"}}
+            if self.lifecycle_job is job:
+                self.lifecycle_job = None
+                if self.pending is not None:
+                    self.watcher.queue.put({})
+        return status, {"error": {"code": code, "message": message + "; no lifecycle write was attempted"}}
 
     def _run_lifecycle(self, job, base_generation, structure_sha256, facts):
-        request = {"binding": self.binding, "name": job["name"], "base_generation": base_generation,
-                   "structure_sha256": structure_sha256, "arguments": job["arguments"], **facts}
+        request = {"binding": self.binding, "name": job.name, "base_generation": base_generation,
+                   "structure_sha256": structure_sha256, "arguments": job.arguments, **facts}
         if facts and self.worker_socket is not None:
             try:
                 outcome = run_lifecycle(self.worker_socket, self.worker_load_seconds, request,
@@ -100,13 +139,16 @@ class LifecycleJobs:
                     self.warm_capture = None
         else:
             outcome = self._run_cold_lifecycle(request)
-        if (not isinstance(outcome, dict) or set(outcome) != {"lifecycle", "delta", "projection_error"}
-                or not isinstance(outcome["lifecycle"], dict)
-                or not isinstance(outcome["lifecycle"].get("outcome"), str)):
-            raise ValueError("Lifecycle worker returned an invalid outcome")
-        return outcome
+        try:
+            if not isinstance(outcome, dict):
+                raise ValueError
+            return _LifecycleReply.model_validate(outcome)
+        except (ValueError, ValidationError):
+            raise ValueError("Lifecycle worker returned an invalid outcome") from None
 
     def _run_cold_lifecycle(self, request):
+        if self.skip_archives:
+            raise RuntimeError("archive_disabled: Lifecycle requires archived Atom history")
         env = {key: value for key, value in os.environ.items() if key != "PYTHONHOME"}
         env["PYTHONPATH"] = str(ENGINE)
         env["ANECHOIC_BETA_WORKER_PARENT_PID"] = str(os.getpid())
@@ -138,6 +180,8 @@ class LifecycleJobs:
         return json.loads(stdout)
 
     def _lifecycle_inputs(self, job):
+        if self.startup_replay:
+            raise ValueError("Project startup replay is pending")
         if self.startup_capture or self.deferred_archive is not None:
             raise ValueError("Archived Atom history is incomplete")
         reuse = self.generation_reuse
@@ -145,6 +189,8 @@ class LifecycleJobs:
             raise ValueError("An admitted generation is required for lifecycle writes")
         if self.unconfirmed_lifecycle_write:
             raise ValueError("Lifecycle requires admission of the preceding write")
+        self._require_lifecycle_coverage()
+        reuse = reuse.model_dump(exclude_unset=True)
         base = reuse["base_generation"]
         if _new_component_task(job):
             structure = read_structure(self.database_socket, self.instance_id, reuse)
@@ -157,11 +203,27 @@ class LifecycleJobs:
                      "endpoints": reuse["endpoints"]}
             return base, structure, {"indexed_task": facts}
         context = lifecycle_context(self.database_socket, self.instance_id, base, self.binding["project_prefix"],
-                                    job["name"], job["arguments"])
+                                    job.name, job.arguments)
         structure = context["structure"]
         if _requires_project_capture(job, context, self.binding["control_root"]):
             return base, structure, {}
         return base, structure, {"lifecycle_context": {**context, "endpoints": reuse["endpoints"]}}
+
+    def _require_lifecycle_coverage(self, *, dispatched=False):
+        """Check the queue after the epoch so newly restored coverage cannot bypass recovery."""
+        managed = self.thread is not None or self.watcher.observer is not None
+        if managed and (self.watcher.capture_epoch(dispatched=dispatched) is None or not self.watcher.queue.empty()):
+            raise LifecycleCoveragePending()
+
+    def _begin_lifecycle_write(self, job):
+        with self.lock:
+            deadline = job.deadline
+            if (self.stopping.is_set() or self.lifecycle_job is not job
+                    or (deadline is not None and monotonic() >= deadline)):
+                return False
+            self._require_lifecycle_coverage(dispatched=True)
+            job.started = True
+            return True
 
     def _execute_lifecycle(self, job):
         try:
@@ -169,6 +231,17 @@ class LifecycleJobs:
         except (OSError, ValueError, TypeError, KeyError, http.client.HTTPException) as error:
             return {"lifecycle": {"outcome": "failed"}, "write_state": "known",
                     "projection": self._projection_failure(error)}
+        lock = self.watcher.managed_write
+        if not lock.acquire(blocking=False):
+            raise LifecycleCoveragePending()
+        try:
+            if not self._begin_lifecycle_write(job):
+                return None
+            return self._write_lifecycle(job, base, structure, facts)
+        finally:
+            lock.release()
+
+    def _write_lifecycle(self, job, base, structure, facts):
         try:
             canonical = json.dumps(structure, sort_keys=True, separators=(",", ":")).encode()
             archive_epoch = self.watcher.capture_epoch(archive=True)
@@ -180,12 +253,12 @@ class LifecycleJobs:
             self.unconfirmed_lifecycle_write = True
             return {"lifecycle": None, "write_state": "unknown",
                     "projection": self._projection_failure(error)}
-        lifecycle = reply["lifecycle"]
+        lifecycle = reply.lifecycle.model_dump(exclude_unset=True)
         projection = {"state": "ready", "generation": base}
-        if reply["projection_error"] is not None:
-            projection = self._projection_failure(reply["projection_error"])
-        elif reply["delta"] is not None:
-            projection = self._admit_lifecycle_delta(reply["delta"], base)
+        if reply.projection_error is not None:
+            projection = self._projection_failure(reply.projection_error)
+        elif reply.delta is not None:
+            projection = self._admit_lifecycle_delta(reply.delta, base)
             if projection["state"] == "ready":
                 self.watcher.acknowledge(lifecycle.get("effects", []), archive_epoch=archive_epoch)
         uncertain = any(error.get("code") == "effect_uncertain" for error in lifecycle.get("errors", []))
@@ -205,7 +278,7 @@ class LifecycleJobs:
             if (not isinstance(delta, dict) or "paths" not in delta or delta.get("base_generation") != base):
                 raise ValueError("Invalid lifecycle delta")
             admitted = admit_generation(self.database_socket, self.instance_id, None, delta, None)
-            self.generation_reuse["base_generation"] = admitted["generation"]
+            self.generation_reuse.base_generation = admitted["generation"]
             self._flow_effect("generation_admission", outcome="succeeded")
             outcome = {"state": "succeeded", **admitted, "delta_path_count": len(delta["paths"])}
             return {"state": "ready", "generation": admitted["generation"]}

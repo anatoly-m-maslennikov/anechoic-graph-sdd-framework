@@ -23,8 +23,7 @@ except ImportError:
 
 _SOURCE_LAYERS = ("LAYER_1_META_ONTOLOGY_C9", "LAYER_2_META_METHODOLOGY_C58")
 
-_BETA_ROOTS = {"KERNEL_MIXER_beta_C67", "ORCHESTRATOR_beta_C68",
-               "WORKERS_beta_C69", "WORKBENCH_BACKEND_beta_C70"}
+_BETA_ROOTS = frozenset({"KERNEL_MIXER_beta_C67", "ORCHESTRATOR_beta_C68", "WORKERS_beta_C69", "API_MIXER_beta_C82"})
 _BETA_REQUIRED = (
     "FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_MODEL_VALIDATION/project_admission__pub.py",
     "FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ADAPTERS_C30/native_snapshot_cli.py",
@@ -34,9 +33,8 @@ _BETA_REQUIRED = (
     "ORCHESTRATOR_beta_C68/warm_worker.py",
     "WORKERS_beta_C69/WORKERS_beta_C69__shared.py",
     "WORKERS_beta_C69/warm_worker.py",
-    *("WORKBENCH_BACKEND_beta_C70/" + name for name in (
-        "WORKBENCH_BACKEND_beta_C70__shared.py", "runtime.py",
-        "project_admission.py", "shared_runtime.py", "shared_peer_owner.py", "warm_worker.py", "query_run.json")),
+    "ORCHESTRATOR_beta_C68/project_peer_owner.py", "ORCHESTRATOR_beta_C68/shared_peer_owner.py",
+    "API_MIXER_beta_C82/API_MIXER_beta_C82__shared.py", "API_MIXER_beta_C82/shared_runtime.py",
 )
 _REPLACED_COMPONENTS = {
     ENGINE_ROOT + "/KERNEL_MIXER_C59",
@@ -161,8 +159,8 @@ class ImageSource:
             settings = tomllib.loads(raw.decode("utf-8"))
         except (OSError, ValueError) as error:
             raise ImageError("IMAGE_INPUT_UNAVAILABLE", "Invalid project.toml build selector") from error
-        if settings not in ({"stack": "current"}, {"stack": "beta"}):
-            raise ImageError("IMAGE_INPUT_UNAVAILABLE", 'project.toml must specify stack = "current" or "beta"')
+        if settings not in ({"stack": "current"}, {"stack": "beta_next"}):
+            raise ImageError("IMAGE_INPUT_UNAVAILABLE", 'project.toml must specify stack = "current" or "beta_next"')
         return settings["stack"], (path,), sha256(raw).hexdigest()
 
     def _source_layer_files(self, root, selected, unavailable):
@@ -190,8 +188,8 @@ class ImageSource:
     def _files(self, root: Path, stack_input=None) -> tuple[Path, ...]:
         stack, selector, _ = self._stack_input(root) if stack_input is None else stack_input
         required = tuple(self._file(root, relative) for relative in _REQUIRED) + selector
-        if stack == "beta":
-            required += tuple(self._file(root, ENGINE_ROOT + "/" + path) for path in _BETA_REQUIRED)
+        beta_roots, stack_required = (_BETA_ROOTS, _BETA_REQUIRED) if stack == "beta_next" else (frozenset(), ())
+        required += tuple(self._file(root, f"{ENGINE_ROOT}/{path}") for path in stack_required)
         engine = root / ENGINE_ROOT
         if engine.is_symlink() or not engine.is_dir():
             raise self._input_error()
@@ -207,9 +205,8 @@ class ImageSource:
                 path = folder / name
                 relative = path.relative_to(root).as_posix()
                 if (_excluded_directory(name) or _excluded_file(name)
-                        or (re.search(r"_beta_C[0-9]+\Z", name) and
-                            (stack != "beta" or (folder == engine and name not in _BETA_ROOTS)))
-                        or (stack == "beta" and relative in _REPLACED_COMPONENTS)):
+                        or (re.search(r"_beta_C[0-9]+\Z", name) and path.relative_to(engine).parts[0] not in beta_roots)
+                        or (beta_roots and relative in _REPLACED_COMPONENTS)):
                     continue
                 if path.is_symlink() or not path.is_dir():
                     raise self._input_error()

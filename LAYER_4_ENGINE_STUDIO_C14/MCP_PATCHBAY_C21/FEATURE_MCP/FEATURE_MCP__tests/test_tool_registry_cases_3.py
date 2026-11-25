@@ -127,7 +127,7 @@ class ToolRegistryTests(ToolRegistryFixture, unittest.IsolatedAsyncioTestCase):
 
     async def test_registry_failure_is_an_error_and_blocks_shared_discovery(self) -> None:
         root = Path(self.temporary.name).resolve()
-        from MCP_PATCHBAY_C21.FEATURE_MCP.backend_client import ToolProtocolError
+        from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import ToolProtocolError
         from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.project_tool_session import ToolProtocolError as SessionProtocolError
 
         failure = SessionProtocolError("tool_runtime_failure", "tool-registry-unavailable: invalid")

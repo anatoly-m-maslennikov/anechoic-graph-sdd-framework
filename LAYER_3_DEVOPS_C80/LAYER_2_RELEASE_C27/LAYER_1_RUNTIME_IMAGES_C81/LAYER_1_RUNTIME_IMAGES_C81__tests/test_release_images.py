@@ -72,10 +72,10 @@ class ReleaseImagesTests(ReleaseImageFixture):
         self.assertIn("LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/project.toml", self.captured)
         self.assertNotIn("--target", self.build_args)
 
-    def test_selector_and_beta_fail_before_docker(self):
+    def test_invalid_and_retired_selectors_fail_before_docker(self):
         manager = self.make_manager()
         selector = self.package / "LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/project.toml"
-        for contents, message in ((b'stack = "beta"\n', "image input unavailable"),
+        for contents, message in ((b'stack = "beta"\n', "invalid project.toml"),
                                   (b'stack = "other"\n', "invalid project.toml"),
                                   (b'stack = "current"\nextra = 1\n', "invalid project.toml"),
                                   (b'stack = ["current"]\n', "invalid project.toml"),
@@ -96,6 +96,7 @@ class ReleaseImagesTests(ReleaseImageFixture):
         with self.assertRaisesRegex(ValueError, "invalid project.toml"):
             manager.resolve()
         self.assertEqual({}, self.labels)
+        self.assertEqual([], self.commands)
 
     def test_selector_change_during_inventory_fails(self):
         manager = self.make_manager()
@@ -203,6 +204,21 @@ class ReleaseImagesTests(ReleaseImageFixture):
                 path.unlink()
                 if path.parent != directory:
                     path.parent.rmdir()
+
+    def test_build_removes_finder_metadata_from_the_context(self):
+        manager = self.make_manager()
+        verify = manager._verify_context
+
+        def add_metadata(context, identity):
+            paths = [context / ".DS_Store", context / images.ENGINE / ".DS_Store"]
+            for path in paths:
+                path.write_bytes(b"Finder metadata")
+            verify(context, identity)
+            self.assertFalse(any(path.exists() for path in paths))
+
+        with patch.object(manager, "_verify_context", side_effect=add_metadata):
+            self.assertEqual(self.image, manager.resolve())
+        self.assertFalse(any(Path(path).name == ".DS_Store" for path in self.captured))
 
     def test_context_changes_and_wrong_image_labels_fail_closed(self):
         manager = self.make_manager()
