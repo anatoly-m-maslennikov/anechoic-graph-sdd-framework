@@ -7,15 +7,17 @@ tier: 3
 context:
   lens: SWD
 state:
-  status: active
-  version: 29
-  updated_at: '2026-11-13T19:22:52.603244+00:00'
+  status: "active"
+  version: 30
+  updated_at: "2026-11-25T20:25:07.180157+00:00"
 ---
 ## Summary
 
 Preview exact Subject patches for valid Atom carriers
 
 ## Claim
+
+This contract describes the legacy sealed-carrier or Subject-batch route. Native Draft and Current carriers use AN-S-3160 and the lifecycle rules in AN-S-1604. Exact historical carrier references apply when interpreting legacy inputs.
 
 ### Prose Claim
 
@@ -80,7 +82,7 @@ Recheck actual definition/grammar and selected Project settings/structure proven
 
 ### Stage and promote the instructed edit drafts
 
-Follow the instructed sequence: commit current state, create full CA-D-446 edit drafts using existing `stage_subject_batch` bounded calls, commit drafts, archive/promote through the existing updater, then rebuild the entity graph after successful completion. Bind exact canonical target/source pins and actual draft path/digest in the selected schema1 or schema2 packet; no mixed staged/unstaged packet is admitted. No further full-validation, content-review or form/confirmation round is required. At each operation reopen pinned bytes, normalize canonical ID/original Status and actual time, and keep normal Subjects-only patch/layout, archive, Version and conditional-write/readback checks. Preserve actual progress/failure evidence, stop first failure and retain completed members without automatic batch rollback/replay. For this batch, local carrier parsing, exact descriptors, explicit old-value patches, selected grammar, safe layout, deterministic byte materialization and conditional-write/readback are the normal checks; do not repeatedly revalidate unchanged body content or build a global reference inventory for every member. The existing final graph operation remains separate. After verified canonical output and any required predecessor readback, conditionally remove only that member's exact packet-pinned draft bytes. If draft cleanup fails or its bytes have drifted, stop and report the actual cleanup failure, preserving the published canonical Revision and archive; do not roll them back or remove another file. A separately instructed map-only batch remains available; existing scratch `stage_subjects` behavior stays separate.
+Follow the instructed sequence: commit current state, create full AN-S-1771@32 edit drafts using existing `stage_subject_batch` bounded calls, commit drafts, archive/promote through the existing updater, then rebuild the entity graph after successful completion. Bind exact canonical target/source pins and actual draft path/digest in the selected schema1 or schema2 packet; no mixed staged/unstaged packet is admitted. No further full-validation, content-review or form/confirmation round is required. At each operation reopen pinned bytes, normalize canonical ID/original Status and actual time, and keep normal Subjects-only patch/layout, archive, Version and conditional-write/readback checks. Preserve actual progress/failure evidence, stop first failure and retain completed members without automatic batch rollback/replay. For this batch, local carrier parsing, exact descriptors, explicit old-value patches, selected grammar, safe layout, deterministic byte materialization and conditional-write/readback are the normal checks; do not repeatedly revalidate unchanged body content or build a global reference inventory for every member. The existing final graph operation remains separate. After verified canonical output and any required predecessor readback, conditionally remove only that member's exact packet-pinned draft bytes. If draft cleanup fails or its bytes have drifted, stop and report the actual cleanup failure, preserving the published canonical Revision and archive; do not roll them back or remove another file. A separately instructed map-only batch remains available; existing scratch `stage_subjects` behavior stays separate.
 
 ### Explicit batch-only source-profile transition
 

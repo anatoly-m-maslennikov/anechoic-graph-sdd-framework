@@ -1,11 +1,8 @@
 """Select complete native Claims from an already-selected Declaration set."""
-
 from collections.abc import Iterable, Mapping
 from functools import cache
 from typing import Any
-
 from markdown_it import MarkdownIt
-
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
     Name as _subject_Name,
     Path as _subject_Path,
@@ -21,15 +18,12 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import
     canonical_model_address, model_class_target, model_declaration_subject, simple_model_address,
 )
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_content
-
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import NativeModelClaimError, parse_native_model_claim
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.dataclass_field_contract__pub import validate_field_contracts
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import order_properties
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.relation_declaration_catalog__pub import build_relation_declaration_catalog
 from .model_property_aliases import class_property_aliases as _class_property_aliases
 from .model_constraint_claims import _merge_constraint_claims
-
-
 def _native_claim(body: object, source: str, subject: str) -> str:
     if not isinstance(body, str):
         raise ValueError(f"{source}: Declaration body is missing")
@@ -41,8 +35,6 @@ def _native_claim(body: object, source: str, subject: str) -> str:
     if len(sections) != 1 or not isinstance(text := sections[0]["direct_markdown"], str):
         raise ValueError(f"{source}: expected one Formal Claim")
     return _native_claim_text(text, source, subject)
-
-
 def _native_claim_text(text: str, source: str, subject: str) -> str:
     tokens = MarkdownIt("commonmark").parse(text)
     if len(tokens) != 1 or tokens[0].type != "fence" or tokens[0].info.strip().casefold() != "python":
@@ -66,8 +58,6 @@ def _native_claim_text(text: str, source: str, subject: str) -> str:
         except ValueError as error:
             raise ValueError(f"{source}: {error}") from error
     return token.content
-
-
 def _class_compatibility(actual: str, expected: str, classes: dict) -> bool | None:
     """Use only known Python inheritance; unresolved bases leave the result unknown."""
     if actual is None or expected is None:
@@ -89,8 +79,6 @@ def _class_compatibility(actual: str, expected: str, classes: dict) -> bool | No
         else:
             pending.extend(base for base in classes[name] if base != "object")
     return None if unknown else False
-
-
 def _endpoint_compatibility(endpoint: dict, level: str, name: str, kinds: dict, classes: dict) -> bool | None:
     if level is not None and endpoint["level"] not in (level, "model_entities_or_instances"):
         return False
@@ -100,8 +88,6 @@ def _endpoint_compatibility(endpoint: dict, level: str, name: str, kinds: dict, 
     actual = kinds.get(canonical_model_address(name))
     results = [_class_compatibility(actual, kinds.get(canonical_model_address(path)), classes) for path in paths]
     return True if True in results else None if None in results else False
-
-
 def _constraint_compatibility(args: dict, reverse: bool, level: str, source: str,
                               targets: tuple, kinds: dict, classes: dict) -> bool:
     pairs = args.get("endpoint_pairs")
@@ -118,8 +104,6 @@ def _constraint_compatibility(args: dict, reverse: bool, level: str, source: str
         if not any(possibilities):
             return False
     return True
-
-
 def _check_constraint_endpoints(parsed: list, relations: dict) -> None:
     classes, class_counts, candidates = {}, {}, {}
     for _, subject, declaration in parsed:
@@ -151,7 +135,6 @@ def _check_constraint_endpoints(parsed: list, relations: dict) -> None:
                                                  constraint.get("target_entity_paths", ()), kinds, classes):
                     raise ValueError(f"{source}: {field} {name} is incompatible with Relation endpoints")
 
-
 def _check_relation_classifications(records: list, relations: dict) -> None:
     allowed = {
         axis: values
@@ -164,6 +147,24 @@ def _check_relation_classifications(records: list, relations: dict) -> None:
         for axis, value in args.get(key, {}).items():
             if value not in allowed.get(axis, ()):
                 raise ValueError(f"{name}: unadmitted Relation classification {axis}={value}")
+
+
+def _check_node_classifications(records: list, typed_sources: set) -> None:
+    allowed = {}
+    for source, subject, declaration in records:
+        args = declaration["arguments"]
+        if declaration["kind"] != "entity" or args.get("entity_name") != "Classification":
+            continue
+        for axis, values in args.get("allowed_classification_values", {}).items():
+            if subject != f"MODEL//ANECHOIC <+ Graph/Classification >| {axis}" or axis in allowed:
+                raise ValueError(f"{source}: ambiguous or invalid classification axis: {axis}")
+            allowed[axis] = values
+    for source, _, declaration in records:
+        args = declaration["arguments"]
+        if source in typed_sources and declaration["kind"] == "entity" and args.get("entity_kind") == "Primary":
+            for axis, value in args.get("classifications", {}).items():
+                if value not in allowed.get(axis, ()):
+                    raise ValueError(f"{source}: unadmitted Node classification {axis}={value}")
 
 
 def _check_manifest_property_bearers(parsed):
@@ -211,11 +212,16 @@ def _check_relation_references(records: list[tuple[str, str, str]]) -> None:
     )
     _check_manifest_property_bearers(parsed)
     relations = build_relation_declaration_catalog(parsed)
+    explicit = {name for name, (args, reverse) in relations.items()
+                if not reverse and 'derived_from' not in args}
+    for source, _, declaration in parsed:
+        names = declaration['arguments'].get('allowed_relation_names')
+        if names is not None and set(names) != explicit:
+            raise ValueError(f'{source}: allowed Relation names must match the explicit Model catalog')
     _check_relation_classifications(parsed, relations)
     addresses = {subject for _, subject, _ in records}
     addresses.update(_class_property_aliases(parsed))
     _add_unambiguous_addresses(addresses, parsed)
-    declarations = [(source, declaration) for source, _, declaration in parsed]
     simple_address = cache(simple_model_address)
     canonical_address = cache(canonical_model_address)
     keys = {
@@ -223,12 +229,14 @@ def _check_relation_references(records: list[tuple[str, str, str]]) -> None:
         "incoming_model_relations", "model_relation_constraints", "instance_relation_constraints",
         "population_unique_constraints", "population_entity_path", "base_path", "entity_name",
     }
-    for source, declaration in sorted(declarations, key=lambda item: item[1]["kind"] != "relation"):
+    for source, subject, declaration in sorted(parsed, key=lambda item: item[2]["kind"] != "relation"):
         try:
             validate_field_contracts(declaration)
         except ValueError as error:
             raise ValueError(f"{source}:{declaration['line']}:1: {error}") from error
         arguments = {key: value for key, value in declaration["arguments"].items() if key in keys}
+        if "population_unique_constraints" in arguments and "entity_class" in declaration["arguments"]:
+            arguments.setdefault("population_entity_path", model_class_target(subject, arguments["entity_name"]))
         if declaration["kind"] == "relation":
             arguments.pop("relation_name", None)
         check = {**declaration, "arguments": arguments, "imports": {}, "classes": ()}

@@ -13,7 +13,7 @@ def runtime_stack():
 
 
 def beta_runtime_arguments(selection, socket, workbench_storage=None, journal_storage=None):
-    args = ["API_MIXER_beta_C82.API_MIXER_beta_C82__shared", "--socket", str(socket),
+    args = ["API_MIXER_beta_C91.API_MIXER_beta_C91__shared", "--socket", str(socket),
             "--project-root", str(selection.root), "--control-root", selection.control_relative.as_posix(),
             "--instance-id", selection.instance_id, "--manifest-sha256", selection.manifest_sha256,
             "--manifest-path", selection.manifest_path.relative_to(selection.root).as_posix(),

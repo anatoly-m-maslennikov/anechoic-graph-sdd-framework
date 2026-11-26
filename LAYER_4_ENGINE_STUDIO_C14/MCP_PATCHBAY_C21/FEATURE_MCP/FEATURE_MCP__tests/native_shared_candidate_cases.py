@@ -25,7 +25,7 @@ from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import HEALTH_PATH, MCP_PA
 
 
 _MCP_MODULE = "MCP_PATCHBAY_C21.FEATURE_MCP.shared_http_server"
-_BETA_BACKEND_MODULE = "API_MIXER_beta_C82.shared_runtime"
+_BETA_BACKEND_MODULE = "API_MIXER_beta_C91.shared_runtime"
 
 
 class SharedCandidateCases:

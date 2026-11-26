@@ -31,12 +31,34 @@ def _tier_one_directory(parameters):
     return name
 
 
+def _component_sources(root, control):
+    found = {}
+    pending = [control]
+    while pending:
+        parent = pending.pop()
+        for child in parent.iterdir():
+            match = re.fullmatch(r"(?!__).+_(C[0-9]+)", child.name)
+            if not match or not (child.is_dir() or child.is_symlink()):
+                continue
+            _project_path(root, child.relative_to(root), label="delivery-source", require_exists=True)
+            component = match.group(1)
+            if component in {"C9", "C58"}:
+                if component in found:
+                    raise ValueError(f"Multiple delivery source Components for {component}")
+                found[component] = child
+            else:
+                pending.append(child)
+    return found
+
+
 def _release_candidates(root, control, tier_one):
     ontology, methodology = _LAYER_NAMES
     environments = "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72"
-    scopes = [(control / ontology, ontology, None, control / ontology)]
-    for name, component in ((methodology, None), (environments, "C72")):
-        directory = control / name
+    components = _component_sources(root, control)
+    ontology_source = components.get("C9", control / ontology)
+    scopes = [(ontology_source, ontology, None, ontology_source)]
+    for directory, name, component in ((components.get("C58", control / methodology), methodology, None),
+                                        (control / environments, environments, "C72")):
         if os.path.lexists(directory):
             scopes.append((directory, methodology if component else name, component, directory))
     project_folders = (tier_one, "__DES", "__DEVOPS", "__QA", "__SWD")

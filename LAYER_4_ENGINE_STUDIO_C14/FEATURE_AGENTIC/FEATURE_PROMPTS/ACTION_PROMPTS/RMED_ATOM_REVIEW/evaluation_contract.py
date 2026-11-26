@@ -169,11 +169,6 @@ def validate_part(part: dict[str, Any], *, context: ReviewContext,
                     raise ValueError('incomplete inventory needs a subjects gap')
     _validate_gaps(part, checks, context)
     validate_report_quality(part, source_text, authorities=authorities)
-    if context.operator_precheck is not None:
-        from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.operator_precheck import validate_operator_coverage
-        for check in part['checks']:
-            if check['id'] == 'cce':
-                validate_operator_coverage(check, source_text, context.operator_precheck)
     validate_boundaries(part, source_text, allow_layout_gaps=allow_layout_gaps)
     if part.get("result") != _result(checks):
         raise ValueError("overall result contradicts checklist")

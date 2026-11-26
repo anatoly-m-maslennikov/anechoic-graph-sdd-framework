@@ -3,6 +3,12 @@
 from pathlib import Path
 import re
 
+_NATIVE_REF = re.compile(r"[A-Z]+-[STPC]-[0-9]+(?:@[1-9][0-9]*(?:-draft)?)?")
+
+
+def is_native_atom_reference(value) -> bool:
+    return isinstance(value, str) and _NATIVE_REF.fullmatch(value) is not None
+
 
 def atom_identifier(filename: str, explicit: str | None = None) -> str:
     """Resolve stable identity without absorbing mutable scope, tier, type, or sequence."""

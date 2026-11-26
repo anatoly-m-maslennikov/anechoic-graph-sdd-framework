@@ -93,6 +93,18 @@ class ManifestPropertyFieldsTests(unittest.TestCase):
                         if name == "model_fixture" or name.startswith("model_fixture."):
                             del sys.modules[name]
 
+    def test_primary_classification_does_not_add_dataclass_field(self):
+        claims = self.claims()
+        classified = [claim.replace("entity_kind='Primary'", "entity_kind='Primary', classifications={'Temporal Kind': 'Continuant'}", 1)
+                      if "class Atom(" in claim else claim for claim in claims]
+        self.assertEqual(assemble_model_classes(claims), assemble_model_classes(classified))
+
+    def test_valueless_dynamic_group_does_not_add_dataclass_field(self):
+        claims = self.claims()
+        before = assemble_model_classes(claims)
+        content = prop("Content", "Node//Artifact//Atom", ", value_cardinality=0, dependent_property_cardinality=0")
+        self.assertEqual(before, assemble_model_classes(claims + [content]))
+
     def test_rejects_non_primary_class_and_invalid_overrides(self):
         claims = self.claims()
         with self.assertRaisesRegex(ValueError, "whitelisted"):
@@ -130,6 +142,16 @@ class ManifestPropertyFieldsTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Unresolved Property group bearer"):
             assemble_model_classes([nested[0], nested[1], nested[3]])
 
+    def test_declared_field_under_an_open_property_group(self):
+        claims = [
+            primary("Entity"),
+            prop("Content", "Entity", ", value_cardinality=0, dependent_property_cardinality={'minimum': 0, 'maximum': None}"),
+            prop("Summary", "Entity.Content", ", value_format=str"),
+        ]
+        self.assertIn("summary: str", assemble_model_classes(claims))
+        with self.assertRaisesRegex(ValueError, "Unresolved Property group bearer"):
+            assemble_model_classes([claims[0], claims[2]])
+
     def test_header_paths_and_inherited_group(self):
         atom = "Node//Artifact//Atom"
         spec = atom + "//SpecAtom"
@@ -147,6 +169,9 @@ class ManifestPropertyFieldsTests(unittest.TestCase):
                   prop("Structure", atom + ".Header", ", value_cardinality=0, allowed_dependent_property_names=('Tier',)"),
                   prop("Tier", spec + ".Header.Structure", ", value_format=int"),
                   prop("Ref ID", atom, ", value_format=str, derived_from_properties=('Header.Atom ID', 'Header.State.Version', 'Header.State.Status')")]
+        qualified = "Graph/Node//Artifact//SSOT//Prescribed/Content/Atom"
+        qualified_claims = [claim.replace(atom, qualified) for claim in claims]
+        self.assertEqual(assemble_model_classes(claims), assemble_model_classes(qualified_claims))
         namespace = {}
         exec(assemble_model_classes(claims), namespace)
         from datetime import datetime

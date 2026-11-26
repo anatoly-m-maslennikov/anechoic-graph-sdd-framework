@@ -1,0 +1,30 @@
+---
+atom_family: SPEC
+atom_id: AN-S-2780
+container:
+  component: C9
+tier: 3
+context:
+  lens: DES
+state:
+  status: "active"
+  version: 27
+  updated_at: "2026-11-25T22:52:51.864249+00:00"
+---
+## Summary
+
+Define Realization Graph
+
+## Claim
+
+### Prose Claim
+
+
+Realization Graphs derived from a declared selection of existing Implementation sources and available evidence.
+
+
+Realization Graph **means** a non-authoritative Projection of Entities **and** typed Relations derived from a declared selection of existing Implementation sources **and** available evidence, used **to** understand that Implementation **and** support reverse engineering into proposed RMED.
+
+- the Projection **must** retain source traceability under CA-R-2535 **and** derivation and configuration under AN-S-2134, using **only** the source kinds selected for the job; legacy Implementation need **not** have pre-existing RMED **or** Journal records.
+- missing evidence **and** uncertain interpretations **must** be reported. observed structure **or** behavior does **not** establish intended Requirements, a passed Evaluation, **or** completeness outside the checked selection.
+- A delivered view remains a Projection under AN-S-2134. Derive it from source-backed facts.

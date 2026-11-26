@@ -7,9 +7,9 @@ tier: 5
 context:
   lens: DevOps
 state:
-  status: active
-  version: 19
-  updated_at: 2026-11-02 19:44:26 +0400
+  status: "active"
+  version: 20
+  updated_at: "2026-11-25T23:19:13.837426+00:00"
 ---
 # Summary
 
@@ -56,7 +56,7 @@ read supplied paths **only** after boundary checks. an unavailable required file
 
 - required `kind`: `sources` **or** `projection`; required `roots`: a nonempty list of Path.
 - optional `frontier`: a nonempty list of Atom Binding. **when** supplied, it pins the complete applicable authority frontier, **not** an arbitrary subset capable of suppressing checks; otherwise resolve **and** record that frontier from the selected methodology.
-- source selection **must** preserve the applicable Core, selected Extensions, **and** Project Configuration contributions **and** their conflict disposition. unresolved composition, missing authority, **or** unverifiable completeness yields `incomplete`; this Tool does **not** compile, repair, **or** approve a methodology.
+- source selection **must** preserve the selected Core and Project Config declarations **and** their conflict disposition. unresolved composition, missing authority, **or** unverifiable completeness yields `incomplete`; this Tool does **not** compile, repair, **or** approve a methodology.
 
 ### Selection
 

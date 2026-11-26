@@ -2,13 +2,33 @@
 
 from __future__ import annotations
 
+import ast
 import re
 
 from .native_model_claim_values import _PROPERTY_CONSTRAINT_KEYS, _RELATION_CONSTRAINT_KEYS, _fail, _validate_cardinalities, _validate_endpoint
 
 
+def _validate_forbidden_status_pairs(declaration):
+    node = next((keyword.value for keyword in declaration.keywords
+                 if keyword.arg == "forbidden_status_pairs"), None)
+    if node is None:
+        return
+    message = "forbidden_status_pairs requires distinct source/target pairs of nonempty trimmed status strings"
+    try:
+        pairs = ast.literal_eval(node)
+    except ValueError:
+        _fail(node, message)
+    if (not isinstance(pairs, (tuple, list)) or not pairs
+            or any(not isinstance(pair, (tuple, list)) or len(pair) != 2
+                   or any(not isinstance(status, str) or not status or status != status.strip() for status in pair)
+                   for pair in pairs)
+            or len({tuple(pair) for pair in pairs}) != len(pairs)):
+        _fail(node, message)
+
+
 def _validate_relation(arguments, declaration, function, classes, functions, imports, property_manifest):
     if function == "declare_relation":
+        _validate_forbidden_status_pairs(declaration)
         for field in ("classifications", "inverse_classifications"):
             if field in arguments:
                 values = arguments[field]

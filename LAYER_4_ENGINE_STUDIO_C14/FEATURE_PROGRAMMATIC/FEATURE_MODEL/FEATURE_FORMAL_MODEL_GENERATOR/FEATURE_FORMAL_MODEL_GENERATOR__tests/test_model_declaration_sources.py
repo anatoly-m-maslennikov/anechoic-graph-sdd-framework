@@ -8,25 +8,42 @@ PROGRAMMATIC = Path(__file__).resolve().parents[3]
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.relation_declaration_catalog__pub import build_relation_declaration_catalog
 from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.FEATURE_FORMAL_MODEL_GENERATOR__shared import (
-    _class_property_aliases, select_model_claims,
-)
+    _class_property_aliases, select_model_claims, )
+from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.model_declaration_sources import (
+    _check_relation_references, )
 
 
 CLAIM = "from anechoic.formal_claims import declare_entity\ndeclare_entity(entity_name='Atom')\n"
 
 
 def carrier(subject="ANECHOIC_MODEL <+ Atom", *, identifier="CA-R-1", status="active", body=None):
-    if body is None:
-        body = f"## Claim\n\n### Formal Claim\n\n```python\n{CLAIM}```\n"
-    return {
-        "source": {"path": f"{identifier}.md", "atom_id": identifier},
-        "read_view": {"status": status, "content_role": "Requirement"},
-        "subjects": {"governs": subject},
-        "body": body,
+    if body is None: body = f"## Claim\n\n### Formal Claim\n\n```python\n{CLAIM}```\n"
+    return { "source": {"path": f"{identifier}.md", "atom_id": identifier},
+        "read_view": {"status": status, "content_role": "Requirement"}, "subjects": {"governs": subject}, "body": body,
     }
 
 
 class ModelDeclarationSourceTests(unittest.TestCase):
+    def test_population_keys_resolve_on_qualified_model_owner(self):
+        owner = "Graph/Node//Artifact//SSOT//Recorded//Event Record"
+        scope = "MODEL//ANECHOIC <+ " + owner
+        declaration = "from anechoic.formal_claims import declare_entity\n"
+        claims = [ ("record.md", scope, declaration + "class EventRecord:\n    pass\n"
+             "declare_entity(entity_class=EventRecord, entity_name='Event Record', entity_kind='Primary')\n"),
+            ("id.md", scope + ".ID", declaration +
+             f"declare_entity(entity_name='ID', entity_kind='Property', base_path={owner!r}, "
+             "relation_name='IS_PROPERTY_OF', value_format=str)\n"),
+            ("constraints.md", scope + ".Constraints", declaration +
+             f"declare_entity(entity_name='Event Record Constraints', constraints_for={owner!r}, "
+             "population_unique_constraints=({'keys': ('ID',)},))\n"),
+            ("relation.md", "MODEL//ANECHOIC <+ Graph/Relation//IS_PROPERTY_OF",
+             "from anechoic.formal_claims import declare_relation\n"
+             "declare_relation(relation_name='IS_PROPERTY_OF', source_endpoint={}, target_endpoint={})\n"),
+        ]
+        _check_relation_references(claims)
+        with self.assertRaisesRegex(ValueError, "unknown population Property address"):
+            _check_relation_references([claims[0], *claims[2:]])
+
     def test_claim_language_descriptors_stay_outside_the_generated_model(self):
         language = carrier("ANECHOIC_MODEL <+ CFEL", identifier="CA-R-2", body="")
         operator = carrier("ANECHOIC_MODEL <+ CFEL <+ Operator//Delivery", identifier="CA-R-3", body="")
@@ -66,8 +83,7 @@ class ModelDeclarationSourceTests(unittest.TestCase):
 
     def test_class_must_match_its_main_subject(self):
         claim = (
-            "from anechoic.formal_claims import declare_entity\n"
-            "class Atom:\n    pass\n"
+            "from anechoic.formal_claims import declare_entity\n" "class Atom:\n    pass\n"
             "declare_entity(entity_name='Atom', entity_class=Atom)\n"
         )
         body = f"## Claim\n### Formal Claim\n```python\n{claim}```\n"
@@ -76,18 +92,15 @@ class ModelDeclarationSourceTests(unittest.TestCase):
 
     def test_rejects_ambiguous_sibling_order_before_generation(self):
         body = (
-            "## Claim\n### Formal Claim\n```python\n"
-            "from anechoic.formal_claims import declare_entity\n"
+            "## Claim\n### Formal Claim\n```python\n" "from anechoic.formal_claims import declare_entity\n"
             "declare_entity(entity_name='Header', relation_name='IS_PROPERTY_OF', base_path='Atom', "
-            "ordered_dependent_property_pairs=(('A', 'B'), ('C', 'D')))\n"
-            "```\n"
+            "ordered_dependent_property_pairs=(('A', 'B'), ('C', 'D')))\n" "```\n"
         )
         with self.assertRaisesRegex(ValueError, "CA-R-1.md:.*disconnected"):
             select_model_claims([carrier("ANECHOIC_MODEL <+ Atom.Header", body=body)])
 
     def test_rejects_partial_dataclass_field_contract_before_generation(self):
-        claim = ("from dataclasses import dataclass, field\n"
-                 "from anechoic.formal_claims import declare_entity\n"
+        claim = ("from dataclasses import dataclass, field\n" "from anechoic.formal_claims import declare_entity\n"
                  "@dataclass\nclass Example:\n"
                  "    id: int = field(metadata={'property_occurrence_cardinality': 1, 'value_cardinality': 1})\n"
                  "declare_entity(entity_name='Example', entity_class=Example)\n")
@@ -102,8 +115,7 @@ class ModelDeclarationSourceTests(unittest.TestCase):
             return carrier(subject, identifier=identifier,
                            body=f"## Claim\n### Formal Claim\n```python\n{claim}\n```\n")
 
-        relation = ("from anechoic.formal_claims import declare_relation\n"
-                    "declare_relation(relation_name='LINKS', "
+        relation = ("from anechoic.formal_claims import declare_relation\n" "declare_relation(relation_name='LINKS', "
                     "source_endpoint={'level': 'instances', 'entity_paths': ('Atom',)}, "
                     "target_endpoint={'level': 'instances', 'entity_paths': ('Node',)})")
         entity = ("from anechoic.formal_claims import declare_entity\n"
@@ -178,15 +190,25 @@ class ModelDeclarationSourceTests(unittest.TestCase):
 
     def test_cfel_wrapped_entity_is_available_by_its_local_name(self):
         relation_entity = carrier("ANECHOIC_MODEL <+ CFEL <+ Relation", body=(
-            "## Claim\n### Formal Claim\n```python\n"
-            "from anechoic.formal_claims import declare_entity\n"
+            "## Claim\n### Formal Claim\n```python\n" "from anechoic.formal_claims import declare_entity\n"
             "declare_entity(entity_name='Relation')\n```\n"))
         link = carrier("ANECHOIC_MODEL <+ CFEL <+ Relation//LINKS", identifier="CA-R-2", body=(
-            "## Claim\n### Formal Claim\n```python\n"
-            "from anechoic.formal_claims import declare_relation\n"
+            "## Claim\n### Formal Claim\n```python\n" "from anechoic.formal_claims import declare_relation\n"
             "declare_relation(relation_name='LINKS', source_endpoint={'entity_paths': ('Relation',)}, "
             "target_endpoint={'entity_paths': ('Relation',)})\n```\n"))
         self.assertEqual(len(select_model_claims([relation_entity, link])), 2)
+
+    def test_relation_catalog_accepts_exact_legacy_and_graph_scopes(self):
+        declaration = {"kind": "relation", "arguments": {"relation_name": "LINKS", "inverse_alias": "LINKED_BY"}}
+        for path in ("Relation//LINKS", "Graph/Relation//LINKS"):
+            with self.subTest(path=path):
+                catalog = build_relation_declaration_catalog([("source", "MODEL//ANECHOIC <+ " + path, declaration)])
+                self.assertEqual(set(catalog), {"LINKS", "LINKED_BY"})
+                self.assertTrue(catalog["LINKED_BY"][1])
+        for subject in ("MODEL//ANECHOIC <+ Graph/Relation//OTHER", "MODEL//ANECHOIC <+ Graph//Relation//LINKS",
+                        "MODEL//ANECHOIC <+ Other/Relation//LINKS", "Graph/Relation//LINKS"):
+            with self.subTest(subject=subject), self.assertRaisesRegex(ValueError, "does not match"):
+                build_relation_declaration_catalog([("source", subject, declaration)])
 
     def test_relation_registry_resolves_derived_names_after_assembly(self):
         def relation(name, **args):
@@ -282,11 +304,9 @@ class ModelDeclarationSourceTests(unittest.TestCase):
         plan_path = "Atom/(.Header.Context.Role:=Plan)"
         step_path = "Atom/(.Header.Context.Role:=Operations)/Step"
         plan = model(plan_path, "CA-R-50", "from anechoic.formal_claims import declare_entity\n"
-                     "class Plan:\n    pass\n"
-                     "declare_entity(entity_name='Plan', entity_class=Plan)")
+                     "class Plan:\n    pass\n" "declare_entity(entity_name='Plan', entity_class=Plan)")
         step = model(step_path, "CA-R-51", "from anechoic.formal_claims import declare_entity\n"
-                     "class Step:\n    pass\n"
-                     "declare_entity(entity_name='Step', entity_class=Step, "
+                     "class Step:\n    pass\n" "declare_entity(entity_name='Step', entity_class=Step, "
                      "instance_relation_constraints={'LINKS': {'target_entity_paths': ('Atom/(.Header.Context.Role := Plan)',)}})")
         rel = model("Relation//LINKS", "CA-R-52", "from anechoic.formal_claims import declare_relation\n"
                     "declare_relation(relation_name='LINKS', "

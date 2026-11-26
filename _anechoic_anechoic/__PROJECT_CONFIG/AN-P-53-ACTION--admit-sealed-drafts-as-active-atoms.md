@@ -7,9 +7,9 @@ structure:
 context:
   template: action
 state:
-  status: active
-  version: 15
-  updated_at: 2026-10-27 19:59:45 +0400
+  status: "active"
+  version: 16
+  updated_at: "2026-11-25T20:25:07.211655+00:00"
 ---
 ## Summary
 
@@ -21,9 +21,11 @@ Admit Sealed Drafts as Active Atoms **means** the reusable Action that accepts o
 
 ## Applicable conditions
 
+This contract describes the legacy sealed-carrier or Subject-batch route. Native Draft and Current carriers use AN-S-3160 and the lifecycle rules in AN-S-1604. Exact historical carrier references apply when interpreting legacy inputs.
+
 - select **`=1`** Draft; handle an explicit ordered list as independent Atom Actions under CA-R-869.
 - actual promotion requires an authorized Project-local MCP delegation with a sealed Initiative action envelope. preview alone grants no apply authority.
-- bind the source to an explicit target. An ID-free or `CA-R-draft` Draft receives an explicitly admitted fresh next-unreused canonical ID under CA-D-378. A `<canonical-ID>@<proposed-version>-draft` Draft binds to that same canonical ID and proposed Version; legacy `<canonical-ID>@draft` remains compatible only with an explicit proposed Version. Do not silently substitute another target or Version.
+- bind the source to an explicit target. An ID-free or `CA-R-draft` Draft receives an explicitly admitted fresh next-unreused canonical ID under AN-S-1761@31. A `<canonical-ID>@<proposed-version>-draft` Draft binds to that same canonical ID and proposed Version; legacy `<canonical-ID>@draft` remains compatible only with an explicit proposed Version. Do not silently substitute another target or Version.
 
 ## Action
 

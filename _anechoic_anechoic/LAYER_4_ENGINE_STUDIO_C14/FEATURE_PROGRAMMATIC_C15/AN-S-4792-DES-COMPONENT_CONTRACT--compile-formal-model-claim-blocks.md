@@ -11,9 +11,9 @@ relations:
   ANSWERS:
   - AN-S-3045
 state:
-  status: active
-  version: 1
-  updated_at: '2026-11-24T00:00:00+00:00'
+  status: "active"
+  version: 3
+  updated_at: "2026-11-25T23:05:44.418530+00:00"
 ---
 
 ## Summary
@@ -22,4 +22,4 @@ Compile formal Model Claim blocks
 
 ## Guarantee
 
-Read formal Claim fences. Compile Python Model Claims into statements and retain CFEL statements without comments. Other fence languages do not produce Model statements. Report compilation errors to the caller.
+Compile Python Model Claim fences into Model statements. Other fence languages produce no Model statements. Report compilation errors to the caller.

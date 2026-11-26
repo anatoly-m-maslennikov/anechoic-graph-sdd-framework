@@ -91,3 +91,14 @@ class ModelDeclarationBindingsTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+class MigratedRoleAliasTests(unittest.TestCase):
+    def test_exact_project_target_binds_runtime_role(self):
+        from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_declaration_bindings import _MIGRATED_RUNTIME_NAMES
+        target = next(path for path, value in _MIGRATED_RUNTIME_NAMES.items() if value == ('Project', 'Project'))
+        Project = type('Project', (), {})
+        declaration = parse_native_model_claim("from anechoic.formal_claims import declare_entity\nclass Project:\n    pass\ndeclare_entity(entity_name='Project Spec', entity_class=Project)\n")
+        _, types, _ = bind_model_declarations([('MODEL//ANECHOIC <+ ' + target, declaration)], {'Project': Project})
+        self.assertIs(types['Project'], Project)
+        _, types, _ = bind_model_declarations([('MODEL//ANECHOIC <+ Graph/Other/Project Spec', declaration)], {'Project': Project})
+        self.assertNotIn('Project', types)

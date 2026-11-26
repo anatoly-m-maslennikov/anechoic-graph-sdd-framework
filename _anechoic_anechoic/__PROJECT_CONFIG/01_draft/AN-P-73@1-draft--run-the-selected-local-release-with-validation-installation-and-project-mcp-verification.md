@@ -6,9 +6,9 @@ structure:
     component: C00
 context: {}
 state:
-  status: draft
+  status: "draft"
   version: 1
-  updated_at: 2026-10-29 20:32:25 +0400
+  updated_at: "2026-11-25T23:20:08.784381+00:00"
 ---
 ## Summary
 
@@ -20,7 +20,7 @@ Local Release **means** the one Operator-invoked local Workflow that runs intend
 
 ## Scope
 
-The Workflow uses the current active Atoms in the Project-owned `METHODOLOGY_SOURCES` Core Meta-Model, installed extensions, and Project Configuration units. `101_FRAMEWORK_METHODOLOGY/` is the derived product; `.anechoic_anechoic/000_ANECHOIC_framework/` is the installed copy. Settings, `project_structure.toml`, and Project state are protected. Neither derived nor installed bytes become authoring authority.
+The Workflow uses the current active Atoms in the Project-owned `METHODOLOGY_SOURCES` Core Meta-Model and Project Config units. `101_FRAMEWORK_METHODOLOGY/` is the derived product; `.anechoic_anechoic/000_ANECHOIC_framework/` is the installed copy. Settings, `project_structure.toml`, and Project state are protected. Neither derived nor installed bytes become authoring authority.
 
 ## Steps
 

@@ -12,6 +12,7 @@ import re
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import formal_claim
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import native_header_view
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import PROJECT_CONFIG_DIRECTORY
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model_ontology_path__pub import component_path
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.native_project_selection import NativeProjectSelection
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_carrier
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import CEILINGS, ReadContext, protected
@@ -51,7 +52,7 @@ def _pinned_bytes(reader: ReadContext, path: Path, ref_id: str, digest: str, *, 
     return raw
 
 
-def _check_header(path: Path, raw: bytes, kind: str, ref_id: str) -> None:
+def _check_header(path: Path, raw: bytes, kind: str, ref_id: str) -> dict:
     try:
         header = native_header_view(parse_carrier(raw, path).metadata)
     except ValueError as error:
@@ -62,6 +63,7 @@ def _check_header(path: Path, raw: bytes, kind: str, ref_id: str) -> None:
             or f'{identity.get("atom_id")}@{state["version"]}' != ref_id
             or state.get("status") != "active" or context.get("template") != kind):
         raise NativeWorkflowDefinitionError(f"Expected active native {kind} definition {ref_id}")
+    return context
 
 
 def bind_native_workflow(
@@ -92,12 +94,12 @@ def bind_native_workflow(
 
 
 STATUS_SPECIFICATIONS = {
-    'workflow': ('AN-S-1928@4',
-        'aa687f42ead0f4f6fe800880b31ad36167a5c40ae9d03db444a1990aea0c057d'),
+    'workflow': ('AN-S-1928@5',
+        '5baee5afaf1cc2577bb7e85fce2b2d78db4229d97033d40a4ef36674426b0fcb'),
     'step': ('AN-S-1834@1',
         'cf13a7f20adf79c318e0ea52dfb4466ef1bcec6f0eae4246935a31880c7ab9e2'),
-    'action': ('AN-S-1831@1',
-        'ff28938b3a725b2aee728e8cad99bb14f202446c0183e5ab9428d5f26c6b7448'),
+    'action': ('AN-S-1831@2',
+        'f2d16c77d8b2d9062c7c8221adbbb6eeb011dc5c2d6ec84da33eb6ae2fd1f81a'),
 }
 
 
@@ -121,12 +123,14 @@ def bind_status_specifications(
             raise NativeWorkflowDefinitionError(f"Invalid native status specification {ref}")
         path = Path(relative)
         if (path.is_absolute() or ".." in path.parts or path.as_posix() != relative
-                or not path.is_relative_to(selection.control_relative / "LAYER_1_META_ONTOLOGY_C9")
+                or not path.is_relative_to(selection.control_relative)
+                or component_path(path.relative_to(selection.control_relative), "C58") is None
                 or path.suffix != ".md" or not path.name.startswith(atom_id + "-")):
             raise NativeWorkflowDefinitionError(f"Invalid native status specification path {ref}")
         full_path = selection.root / path
         raw = _pinned_bytes(reader, full_path, ref, digest, metadata_guard=True)
-        _check_header(full_path, raw, kind, ref)
+        if _check_header(full_path, raw, kind, ref).get("lens") != "DOM/MTD":
+            raise NativeWorkflowDefinitionError(f"Expected DOM/MTD Lens for native status specification {ref}")
         _, delimiter, body = raw.partition(b"\n---\n")
         if not delimiter or sha256(body).hexdigest() != expected_body:
             raise NativeWorkflowDefinitionError(f"Native status specification body differs for {ref}")

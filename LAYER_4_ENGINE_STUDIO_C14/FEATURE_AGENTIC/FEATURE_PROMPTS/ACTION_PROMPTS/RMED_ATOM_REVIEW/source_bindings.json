@@ -9,7 +9,7 @@
       "CA-M-317",
       "CA-E-524",
       "CA-D-509",
-      "CA-D-510",
+      "AN-S-1577",
       "CA-D-511"
     ]
   },
@@ -21,10 +21,10 @@
       "sha256": "37fd9d2a59160dc1aae14e3dfed8c64119b7d8ce93dbaa0397e033dc8c62990f"
     },
     {
-      "atom_id": "CA-D-510",
-      "version": 18,
-      "path": ".anechoic_anechoic/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-22_FEATURE_AGENTIC/CA-SU-24_FEATURE_PROMPTS/07_delivery/CA-D-510-PROMPTS-DECISION--serialize-review-coverage-and-correction-outcomes-separately.md",
-      "sha256": "343fd3fb29848f69bdd48d312a1f5cb67286c15288b489a1d43ab519730bd7b9"
+      "atom_id": "AN-S-1577",
+      "version": 19,
+      "path": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC_C22/FEATURE_PROMPTS_C24/_DEVOPS/AN-S-1577-DEVOPS--serialize-review-coverage-and-correction-outcomes-separately.md",
+      "sha256": "e3694e9ace25f16cd677d56b7a4d2bad909ca7a8fb8e768a0ea397666ecfa703"
     },
     {
       "atom_id": "CA-D-511",
@@ -33,10 +33,10 @@
       "sha256": "3cdc837ac1eb830dc1644ff804d311908bfb538917fde49dd56fb43611821cb3"
     },
     {
-      "atom_id": "CA-E-520",
-      "version": 35,
-      "path": ".anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-520-CORE_META_MODEL-EVAL_POLICY--check-rmed-atom-coherence.md",
-      "sha256": "671e7dabc5b2087673401e2d49b189f125ff106606ec435e2d0f8a1ec3c76502"
+      "atom_id": "AN-S-2505",
+      "version": 36,
+      "path": "_anechoic_anechoic/ONTOLOGY_SCORE_C82/OCCURRENT_METRONOME_C58/_DOM/MTD/AN-S-2505-MTD--check-rmed-atom-coherence.md",
+      "sha256": "cac3da310f66a3ea1c1bed6da77a3dc860d81d1d8afb1933f552fb902f4e17f5"
     },
     {
       "atom_id": "CA-E-524",
@@ -45,10 +45,10 @@
       "sha256": "3ad167bb23958031f77a9d53c3937b59dc0c25c34af274c9b035b19657fcb755"
     },
     {
-      "atom_id": "CA-M-1014",
-      "version": 2,
-      "path": ".anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/CA-M-1014-CORE_META_MODEL-IMPLEMENTATION_METHOD--write-concise-prose-aligned-with-asd-ste100.md",
-      "sha256": "d54e3fe22dac2e5df4d970195bf180ed28589a34dfa12f7e3bb3b6b421496948"
+      "atom_id": "AN-S-2504",
+      "version": 4,
+      "path": "_anechoic_anechoic/ONTOLOGY_SCORE_C82/OCCURRENT_METRONOME_C58/_DOM/MTD/AN-S-2504-MTD--write-concise-prose-aligned-with-asd-ste100.md",
+      "sha256": "b92e0fe02a705430560592395ea4a6c8e49c076770fbb541a8aba5482ce653f7"
     },
     {
       "atom_id": "CA-M-317",
@@ -75,16 +75,16 @@
       "sha256": "325eab390855a38675d4e0dc0a9f856250c67785a6b7c841163ad79764107216"
     },
     {
-      "atom_id": "CA-R-2500",
+      "atom_id": "AN-S-2179",
       "version": 8,
-      "path": ".anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2500-CORE_META_MODEL-DECLARATION--declare-atom-content-claim.md",
-      "sha256": "4692f6320dcc5187edb45363d656aed60b78a9c349665981ed1138578698bc11"
+      "path": "_anechoic_anechoic/ONTOLOGY_SCORE_C82/CONTINUANT_PITCHFORK_C9/_DES/AN-S-2179-DES--declare-atom-content-claim.md",
+      "sha256": "cd11bc9752d30b84b97e2ce74bc43afa99b879cd039f77134334a616350b51b3"
     },
     {
-      "atom_id": "CA-D-479",
+      "atom_id": "AN-S-1780",
       "version": 36,
-      "path": ".anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-479-CORE_META_MODEL-ENG_DECISION--use-stable-headings-for-atom-body-properties.md",
-      "sha256": "90139b8066d8508e2c2885a5ccd62b182cd5fe7c684da36c481c479d2a1dddb6"
+      "path": "_anechoic_anechoic/ONTOLOGY_SCORE_C82/CONTINUANT_PITCHFORK_C9/_DEVOPS/AN-S-1780-DEVOPS--use-stable-headings-for-atom-body-properties.md",
+      "sha256": "c1bcef0b4459546c691dec54955d5b50ea0117ce423f27a7d589b46b974e9ac6"
     },
     {
       "atom_id": "CA-D-496",
@@ -105,18 +105,18 @@
   ],
   "evaluators": {
     "writing": [
-      "CA-M-1014",
-      "CA-E-520"
+      "AN-S-2504",
+      "AN-S-2505"
     ],
     "properties": [
-      "CA-E-520",
-      "CA-R-2500",
-      "CA-D-479"
+      "AN-S-2505",
+      "AN-S-2179",
+      "AN-S-1780"
     ],
     "coherence": [
-      "CA-E-520",
-      "CA-R-2500",
-      "CA-D-479"
+      "AN-S-2505",
+      "AN-S-2179",
+      "AN-S-1780"
     ]
   },
   "review_profile": "atom_local",

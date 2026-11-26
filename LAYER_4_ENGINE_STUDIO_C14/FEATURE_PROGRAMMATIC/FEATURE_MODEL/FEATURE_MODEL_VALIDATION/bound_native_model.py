@@ -14,12 +14,16 @@ _REVIEWED_CHECKS = {
     "check_component_manifest": "ae53cc8bacccac9d36d5a2d5b40f1a83e723f0ca903bc445e0f8d1e219d39c65",
     "check_purpose": "a080c8a08f9b2f066992045de8183f532eb0aa6fb1dc566e746bc3bed2701a3b",
     "check_contract": "087afdc97f4a8add78336871fbf1f3698718b97200fad1518f96ef8c20a72007",
-    "check_component_seed_manifest": "78cb8f9712a733bfefc74ede375a671b9c7a70635ab972759397725e283a5752",
+    "check_component_seed_manifest": "ef56efe0ba469a4043f7d8b87ea4de5752dc5775c29a6b081656b9afcc82c6e5",
 }
+_PRIOR_SEED_CHECK = "78cb8f9712a733bfefc74ede375a671b9c7a70635ab972759397725e283a5752"
 
 
-def reviewed_claim_sha256(name: str) -> str:
-    return _REVIEWED_CHECKS[name]
+def is_reviewed_claim(name: str, claim: str) -> bool:
+    digest = sha256(claim.encode()).hexdigest()
+    return digest == _REVIEWED_CHECKS.get(name) or (
+        name == "check_component_seed_manifest" and digest == _PRIOR_SEED_CHECK
+    )
 
 
 def normalize_reviewed_claim(claim: str) -> str:
@@ -47,7 +51,7 @@ class BoundNativeModel:
         self._checks = {}
         seen = set()
         for parameter_type, name, subject, original in bindings["checks"]:
-            if name in seen or name not in _REVIEWED_CHECKS or sha256(original.encode()).hexdigest() != _REVIEWED_CHECKS[name]:
+            if name in seen or not is_reviewed_claim(name, original):
                 raise ValueError(f"{subject}: Claim differs from reviewed source")
             claim = normalize_reviewed_claim(original)
             check = parse_native_model_claim(claim).get("instance_check")
@@ -65,6 +69,7 @@ class BoundNativeModel:
             raise ValueError("Active Model is missing reviewed instance checks")
         self.relation_types = frozenset(self._endpoints)
         self._parent_relation = "IS_CHILD_OF" if "IS_CHILD_OF" in self.relation_types else "CHILD_OF"
+        self._containment_relation = "IS_CONTAINED_BY" if "IS_CONTAINED_BY" in self.relation_types else "CONTAINED_BY"
         self.relation_classifications = {
             name: args.get("inverse_classifications" if reverse else "classifications", {}).copy()
             for name, (args, reverse) in self._endpoints.items()
@@ -107,13 +112,13 @@ class BoundNativeModel:
         if component_id != "C00":
             raise ValueError("Project Manifest must be contained by Project C00")
         project = self._validate("Project", {}, {})
-        return self._validate("Project Manifest", fields, {"CONTAINED_BY": [project]})
+        return self._validate("Project Manifest", fields, {self._containment_relation: [project]})
 
     def validate_component_manifest(self, fields, parent_id):
         project = self._validate("Project", {}, {})
         parent = project if parent_id == "C00" else self._validate("Component", {}, {self._parent_relation: [project]})
         self._validate("Component", {}, {self._parent_relation: [parent]})
-        return self._validate("Component Manifest", fields, {"CONTAINED_BY": [parent]})
+        return self._validate("Component Manifest", fields, {self._containment_relation: [parent]})
 
     def validate_project_spec(self, template, header, owner_id, body=None):
         from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.atom_reference__pub import derive_atom_ref
@@ -125,7 +130,7 @@ class BoundNativeModel:
         atom_id = view["identity"]["atom_id"]
         fields = {"atom_id": atom_id, "version": state["version"],
                   "ref_id": derive_atom_ref(atom_id, state["version"], state["status"]),
-                  "tier": view["context"].get("tier")}
+                  "tier": view["context"].get("tier"), "lens": view["context"].get("lens")}
         if self.requires_atom_state:
             from types import SimpleNamespace
             fields.update(manifest_state_fields(SimpleNamespace(metadata=header), include_header=self.requires_atom_header))
@@ -159,10 +164,10 @@ class BoundNativeModel:
             end_line = tokens[end].map[0] if end < len(tokens) else len(lines)
             fields['guarantee'] = '\n'.join(lines[tokens[start].map[1]:end_line]).strip()
         project = self._validate("Project", {}, {})
-        return self._validate(name, fields, {"CONTAINED_BY": [project]})
+        return self._validate(name, fields, {self._containment_relation: [project]})
 
     def validate_component_seed_manifest(self, fields, owner_id):
         project = self._validate("Project", {}, {})
         owner = project if owner_id == "C00" else self._validate("Component", {}, {self._parent_relation: [project]})
-        return self._validate("Component Seed Manifest", fields, {"CONTAINED_BY": [owner]})
+        return self._validate("Component Seed Manifest", fields, {self._containment_relation: [owner]})
 

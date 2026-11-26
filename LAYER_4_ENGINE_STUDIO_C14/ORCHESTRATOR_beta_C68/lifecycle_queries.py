@@ -4,6 +4,8 @@ import json
 from pathlib import PurePosixPath
 import re
 
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model_ontology_path__pub import component_path, is_ontology_model_source
+
 from .jobs import UnixConnection
 
 
@@ -185,17 +187,21 @@ def requires_project_capture(job, context, control):
     if operation not in {"atom_lifecycle_promote_draft", "atom_lifecycle_change_status", "atom_lifecycle_archive"}:
         return False
     atom_id = ref.partition("@")[0]
-    ontology = PurePosixPath(control, "LAYER_1_META_ONTOLOGY_C9")
-    custom = {PurePosixPath(control, directory, "CUSTOM_MODEL")
+    control_path = PurePosixPath(control)
+    custom = {PurePosixPath(directory, "CUSTOM_MODEL")
               for directory in ("__PROJECT_CONFIG", "002_PROJECT_CONFIG")}
-    model_inputs = {ontology, ontology / "_SPEC", *custom}
     for carrier in context["carriers"]:
         if carrier["id"] != atom_id:
             continue
-        parent = PurePosixPath(carrier["source_path"]).parent
-        if ((carrier["status"] == "active" and parent in model_inputs)
+        try:
+            path = PurePosixPath(carrier["source_path"]).relative_to(control_path)
+        except ValueError:
+            continue
+        active_model = is_ontology_model_source(path) or path.parent in custom
+        scope = component_path(path, "C9")
+        if ((carrier["status"] == "active" and active_model)
                 or (job.arguments.get("targetStatus") == "active"
-                    and any(parent.is_relative_to(scope) for scope in {ontology, *custom}))):
+                    and (scope is not None or any(path.is_relative_to(root) for root in custom)))):
             return True
     return False
 

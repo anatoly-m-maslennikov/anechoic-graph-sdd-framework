@@ -82,7 +82,7 @@ class DockerLoggingTests(unittest.TestCase):
         supervisor = "MCP_PATCHBAY_C21.FEATURE_MCP.docker.shared_supervisor._supervise"
         settings, directory = "/settings.toml", Path("/private/runtime")
         for stack, module, owner_module in (
-            ("beta_next", "API_MIXER_beta_C82.shared_runtime", "ORCHESTRATOR_beta_C68.shared_peer_owner"),
+            ("beta_next", "API_MIXER_beta_C91.shared_runtime", "ORCHESTRATOR_beta_C68.shared_peer_owner"),
         ):
             environment = {"ANECHOIC_RUNTIME_STACK": stack, "ANECHOIC_HOST_SETTINGS": settings}
             with self.subTest(stack=stack), patch.dict(os.environ, environment, clear=True), patch(supervisor, return_value=None) as start:

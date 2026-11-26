@@ -250,7 +250,7 @@ def change_ticket_status(selection, params, *, current_rows, check_definition, p
             if capture.errors:
                 raise SourceChanged('Native carrier capture is incomplete.')
             return promote_ticket_tree(selection, selected, destination, status, current_rows,
-                                       capture.atoms, check_definition)
+                                       capture, check_definition)
         raw, bounds, tree, capture = _read_ticket(selection, target, selected, digest, path,
                                                    close_tree=move_tree, placement=True, previous_capture=previous_capture)
         planned = _descendants(current_rows, selected['id']) if move_tree else []

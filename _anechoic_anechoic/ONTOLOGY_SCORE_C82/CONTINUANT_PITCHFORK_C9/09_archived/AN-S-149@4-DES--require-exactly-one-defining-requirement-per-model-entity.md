@@ -1,0 +1,28 @@
+---
+atom_family: SPEC
+atom_id: AN-S-149
+container:
+  component: C9
+tier: 1
+context:
+  lens: DES
+state:
+  status: "archived"
+  version: 4
+  updated_at: 2026-11-05 22:47:24 +0400
+---
+## Summary
+
+Require Exactly One Defining Requirement per Model Entity
+
+## Claim
+
+### Prose Claim
+
+Each logical model Entity has exactly one canonical declaring Requirement with an admitted Declaration Form in the selected effective MODEL. Its governed Subject identifies the declared entity. This applies to Objects, Aspects, graph Relation types, CFEL descriptors, Carriers and their dependent Properties; a Scope Unit does not change an Entity's identity or declaring meaning. Additional scoped Requirements may constrain an Entity without becoming additional declaring owners.
+
+A missing declaring Requirement or multiple effective declaring Requirements fails this rule. IS_DECLARED_BY identifies the qualified declaring Atom through its GOVERNS link. Qualification requires Requirement role and an admitted Declaration Form, including a specialized Declaration Form admitted by its governing Form Declaration. Count inherited Current Declarations and explicit local replacements after MODEL override resolution. A replaced Declaration remains available in its base MODEL and is not a second effective owner locally. Drafts and archives are not Current owners.
+
+For / specialization, the narrower Declaration inherits applicable broader constraints and states its differences. For // instantiation, the instance follows its kind Declaration and states instance-specific facts. Reuse applicable base structure, Properties and constraints instead of copying them. Containment adds no inheritance. A Method Atom remains an Atom with Header.Role Method. Do not create new entities for every characteristic merely to multiply Atoms; equivalent Property headings denote one logical Entity.
+
+This exact-one invariant concerns declaring owners of model entities, not a new Requirement for every runtime instance. A minimal inverse Declaration references its canonical counterpart instead of duplicating shared meaning; a qualified non-inverse derived view retains its qualification.

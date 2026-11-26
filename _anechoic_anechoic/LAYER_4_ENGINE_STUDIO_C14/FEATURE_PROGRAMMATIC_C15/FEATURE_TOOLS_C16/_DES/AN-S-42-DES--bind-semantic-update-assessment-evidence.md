@@ -7,9 +7,9 @@ tier: 3
 context:
   lens: DES
 state:
-  status: active
+  status: "active"
   version: 16
-  updated_at: 2026-11-02 15:49:28 +0400
+  updated_at: "2026-11-25T22:24:07.146673+00:00"
 ---
 # Summary
 
@@ -25,7 +25,7 @@ Outside CA-R-866's explicitly instructed Subjects-only batch branch, a Tool **mu
 
 ## Details
 
-When an Analysis Report is supplied, its current source-derived Analysis & Advisory status must be `Done`. A shared review package selects exactly one assessment for the requested target and may cover multiple independent updates. In either form, the evidence binds the exact target, complete proposal, current CA-R-1432 and CA-R-1464 authority, admitted class, preserved primary Claim identity, declared delta and completed lineage review. CA-D-585 defines the request and report representation.
+When an Analysis Report is supplied, its current source-derived Analysis & Advisory status must be `Done`. A shared review package selects exactly one assessment for the requested target and may cover multiple independent updates. In either form, the evidence binds the exact target, complete proposal, current AN-S-1604 authority, admitted class, preserved primary Claim identity, declared delta and completed lineage review. CA-D-585 defines the request and report representation.
 
 O145 and O129 independently reopen the selected evidence and every declared pin. They compare it to the current target, complete proposal and current R1432/R1464 bytes. Source-derived Analysis & Advisory classification and Done status are checked only for an Analysis Report. Missing, stale, malformed, ambiguous, mismatched or unverifiable evidence returns `unresolved` before mutation; an Analysis Report with an unadmitted type or non-Done status also returns `unresolved`. A report with `replacement` produces the existing Replace handoff; no report may make a same-ID Update eligible when its Summary changes.
 

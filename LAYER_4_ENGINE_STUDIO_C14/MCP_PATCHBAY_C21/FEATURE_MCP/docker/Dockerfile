@@ -85,12 +85,12 @@ RUN PYTHONPYCACHEPREFIX=/workspace/.anechoic_tmp/python/bytecode /opt/venv/bin/p
     && chmod -R a+rX "$PYTHONPYCACHEPREFIX" /workspace/LAYER_4_ENGINE_STUDIO_C14
 
 FROM beta_base AS beta_next
-COPY LAYER_4_ENGINE_STUDIO_C14/API_MIXER_beta_C82 ./LAYER_4_ENGINE_STUDIO_C14/API_MIXER_beta_C82
+COPY LAYER_4_ENGINE_STUDIO_C14/API_MIXER_beta_C91 ./LAYER_4_ENGINE_STUDIO_C14/API_MIXER_beta_C91
 ENV ANECHOIC_RUNTIME_STACK=beta_next
 LABEL org.anechoic.runtime.stack=beta_next
 RUN PYTHONPYCACHEPREFIX=/workspace/.anechoic_tmp/python/bytecode /opt/venv/bin/python -B -m compileall -q --invalidation-mode timestamp \
-    /workspace/LAYER_4_ENGINE_STUDIO_C14/API_MIXER_beta_C82 \
-    && chmod -R a+rX "$PYTHONPYCACHEPREFIX" /workspace/LAYER_4_ENGINE_STUDIO_C14/API_MIXER_beta_C82
+    /workspace/LAYER_4_ENGINE_STUDIO_C14/API_MIXER_beta_C91 \
+    && chmod -R a+rX "$PYTHONPYCACHEPREFIX" /workspace/LAYER_4_ENGINE_STUDIO_C14/API_MIXER_beta_C91
 USER anechoic
 
 FROM runtime_base AS current

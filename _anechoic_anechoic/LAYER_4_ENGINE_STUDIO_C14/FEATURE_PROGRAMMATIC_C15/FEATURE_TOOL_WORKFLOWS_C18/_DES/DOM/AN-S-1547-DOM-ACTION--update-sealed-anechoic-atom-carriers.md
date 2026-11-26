@@ -8,15 +8,17 @@ context:
   template: action
   lens: DES/DOM
 state:
-  status: active
-  version: 35
-  updated_at: 2026-10-27 19:59:44 +0400
+  status: "active"
+  version: 38
+  updated_at: "2026-11-25T21:38:53.905679+00:00"
 ---
 # Summary
 
 Update sealed ANECHOIC Atom carriers
 
 ## Operation
+
+This contract describes the legacy sealed-carrier or Subject-batch route. Native Draft and Current carriers use AN-S-3160 and the lifecycle rules in AN-S-1604. Exact historical carrier references apply when interpreting legacy inputs.
 
 Update Sealed Atom Carriers **means** the reusable Action that performs one explicit admitted same-identity edit to one logical Atom under CA-R-866. Each Action preserves ID, Summary, Type and unrelated values; its private Carrier and history effects remain safely validated. A batch does not become one cross-Atom transaction.
 
@@ -100,7 +102,7 @@ Ordinary one-target changed-Subject publication remains blocked under its existi
 
 ### Run recording
 
-Retain each actual standalone **or** nested Action Run's exact admitted definition Revision, actual Run identity/lineage, safe input/result/effect references, start **and** truthful terminal **or** still-pending interruption under the existing shared Run contract. Workflow-contained bindings also follow CA-R-1525; standalone coverage remains the selected Epic obligation. Reuse plain Project Journal append/read under CA-R-1720 **to** record supplied actual observations, **without** prior-history, chain, validation, canonical receipts, deduplication, recording retry **or** recovery machinery. Preserve existing entries **and** truthful I/O failures; never fabricate a baseline **or** replay an effect. The Journal is not a permission, completion or proof gate; actual Run/source-effect evidence **and** all independent admission/postcondition checks remain required.
+Retain each actual standalone **or** nested Action Run's exact admitted definition Revision, actual Run identity/lineage, safe input/result/effect references, start **and** truthful terminal **or** still-pending interruption under the existing shared Run contract. Workflow-contained bindings also follow AN-S-1617; standalone coverage remains the selected Epic obligation. Reuse plain Project Journal append/read under CA-R-1720 **to** record supplied actual observations, **without** prior-history, chain, validation, canonical receipts, deduplication, recording retry **or** recovery machinery. Preserve existing entries **and** truthful I/O failures; never fabricate a baseline **or** replay an effect. The Journal is not a permission, completion or proof gate; actual Run/source-effect evidence **and** all independent admission/postcondition checks remain required.
 
 ### Direct Subject preparation Tool calls
 
@@ -110,4 +112,4 @@ These direct calls preserve the existing no-Journal local preparation policy: no
 
 ### Existing-Atom edit-draft publication
 
-The instructed draft-backed batch uses CA-D-446/CA-D-425's source-pinned full drafts and final schema1 packet. Existing request authorization admits their exact promotion without an additional review/form/confirmation round. A new Draft may be ID-free or carry `CA-R-draft`; an edit Draft carries `<canonical-ID>@<proposed-version>-draft`, with legacy `<canonical-ID>@draft` accepted only when the request supplies the proposed Version. Reopen exact source and draft at the operation, verify the explicit target, expected predecessor Version/digest and marker, restore the canonical ID and original source Status, archive the exact predecessor when one exists, publish the proposed Version with actual time, and independently read back the actual effect. No separate full-candidate preflight, retained Draft-history/lineage requirement, Journal gate or public initial intent metadata is required. Keep existing native failed-write handling and truthful partial/unknown results; proposal existence is not publication. After verified canonical output and any required predecessor readback, conditionally remove only that member's exact packet-pinned draft bytes. If draft cleanup fails or its bytes have drifted, stop and report the actual cleanup failure, preserving the published canonical Revision and archive; do not roll them back or remove another file.
+The instructed draft-backed batch uses AN-S-1771@32/CA-D-425's source-pinned full drafts and final schema1 packet. Existing request authorization admits their exact promotion without an additional review/form/confirmation round. A new Draft may be ID-free or carry `CA-R-draft`; an edit Draft carries `<canonical-ID>@<proposed-version>-draft`, with legacy `<canonical-ID>@draft` accepted only when the request supplies the proposed Version. Reopen exact source and draft at the operation, verify the explicit target, expected predecessor Version/digest and marker, restore the canonical ID and original source Status, archive the exact predecessor when one exists, publish the proposed Version with actual time, and independently read back the actual effect. No separate full-candidate preflight, retained Draft-history/lineage requirement, Journal gate or public initial intent metadata is required. Keep existing native failed-write handling and truthful partial/unknown results; proposal existence is not publication. After verified canonical output and any required predecessor readback, conditionally remove only that member's exact packet-pinned draft bytes. If draft cleanup fails or its bytes have drifted, stop and report the actual cleanup failure, preserving the published canonical Revision and archive; do not roll them back or remove another file.

@@ -262,7 +262,7 @@ def supervise(command, environment, settings):
         owner_module = "ORCHESTRATOR_beta_C68.shared_peer_owner"
         owner = Child(_service(owner_module, owner_socket, settings),
                       environment, parent_pipe=True)
-        module = "API_MIXER_beta_C82.shared_runtime"
+        module = "API_MIXER_beta_C91.shared_runtime"
         backend = Child(_service(module, backend_socket, settings)
                         + ["--peer-owner-socket", str(owner_socket)], environment,
                         parent_pipe=True, socket=backend_socket)

@@ -35,8 +35,8 @@ BETA_NEXT_REQUIRED_FIXTURE_FILES = (
     "WORKERS_beta_C69/warm_worker.py",
     "ORCHESTRATOR_beta_C68/project_peer_owner.py",
     "ORCHESTRATOR_beta_C68/shared_peer_owner.py",
-    "API_MIXER_beta_C82/API_MIXER_beta_C82__shared.py",
-    "API_MIXER_beta_C82/shared_runtime.py",
+    "API_MIXER_beta_C91/API_MIXER_beta_C91__shared.py",
+    "API_MIXER_beta_C91/shared_runtime.py",
 )
 
 _FRONTEND = "IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND/index.html"

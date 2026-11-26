@@ -31,7 +31,7 @@ from anechoic.model import ComponentManifest
 declare_entity(
     entity_name='Component Manifest',
     instance=ComponentManifest(
-        component_id='C82',
+        component_id='C91',
         name='API Mixer Beta',
         lens_whitelist=['DES', 'SPEC'],
         boundaries={
@@ -42,7 +42,7 @@ declare_entity(
                         'transport': 'http',
                         'socket': 'private Unix socket',
                         'runner': 'managed_python',
-                        'module': 'API_MIXER_beta_C82.API_MIXER_beta_C82__shared',
+                        'module': 'API_MIXER_beta_C91.API_MIXER_beta_C91__shared',
                         'process_role': 'api',
                         'supervisor': 'C21',
                         'arguments': 'existing single-Project API role startup arguments',
@@ -52,7 +52,7 @@ declare_entity(
                         'transport': 'http',
                         'socket': 'private Unix socket',
                         'runner': 'managed_python',
-                        'module': 'API_MIXER_beta_C82.shared_runtime',
+                        'module': 'API_MIXER_beta_C91.shared_runtime',
                         'supervisor': 'C21',
                         'arguments': ['--socket', '<api-socket>', '--peer-owner-socket', '<owner-socket>',
                                       'optional --host-settings <settings>'],

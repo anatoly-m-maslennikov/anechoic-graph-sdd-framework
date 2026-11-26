@@ -23,7 +23,7 @@ from .workbench_docker_support import defer_container_cleanup, docker_deadline_e
 
 _ROLES = {
     "mcp": ("MCP_PATCHBAY_C21.FEATURE_MCP.server", "--transport", "streamable-http"),
-    "api": ("API_MIXER_beta_C82.API_MIXER_beta_C82__shared", "--role", "api"),
+    "api": ("API_MIXER_beta_C91.API_MIXER_beta_C91__shared", "--role", "api"),
     "peer-owner": ("ORCHESTRATOR_beta_C68.project_peer_owner",),
     "kernel": ("KERNEL_MIXER_beta_C67.DATABASE_SERVER_beta_C71.DATABASE_SERVER_beta_C71__shared",),
     "orchestrator": ("ORCHESTRATOR_beta_C68.ORCHESTRATOR_beta_C68__shared",),

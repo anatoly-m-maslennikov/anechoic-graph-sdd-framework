@@ -12,7 +12,7 @@ from uuid import uuid4
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_native_model_claim
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.relation_declaration_catalog__pub import build_relation_declaration_catalog
 from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.FEATURE_MODEL_VALIDATION__shared import (
-    BoundNativeModel, normalize_reviewed_claim, reviewed_claim_sha256, validate_model_instance,
+    BoundNativeModel, is_reviewed_claim, normalize_reviewed_claim, validate_model_instance,
 )
 from .model_class_assembly import assemble_model_classes, model_module_name
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import model_class_target
@@ -22,8 +22,30 @@ from .model_declaration_sources import _check_relation_references, _merge_constr
 _ASSETS = Path(__file__).resolve().parent.parent / "FEATURE_GENERATED_MODEL_C52"
 _CLAIM_FILES = {
     "native-graph-claims.json": "69700992be5b44bf0280676e9def93edb1fd2181cb25777d0e7dd7a8816b3ba5",
-    "native-spec-template-claims.json": "285840cd66c360787502c9fc1797b46c8eae447cb224bdf51a8c37534462ad10",
+    "native-spec-template-claims.json": "c07981a1e918c478edbf21032270ead06e0d8c6cb769f42700bd245307747cdd",
 }
+
+_OLD_ATOM = "Node//Artifact//Atom"
+_NEW_ATOM = "Graph/Node//Artifact//SSOT//Prescribed/Content/Atom"
+_OLD_SEED_TARGET = _OLD_ATOM + "//Spec Atom//Component Seed Manifest"
+_SEED_SUBJECT = "MODEL//ANECHOIC <+ " + _OLD_SEED_TARGET
+_CHECK_TARGET_MIGRATION = {
+    _OLD_ATOM: _NEW_ATOM,
+    **{_OLD_ATOM + "//Spec Atom" + suffix: _NEW_ATOM + "//Specification" + suffix
+       for suffix in ("//Manifest//Project Manifest", "//Manifest//Component Manifest",
+                      "//Purpose", "//Contract")},
+    _OLD_SEED_TARGET:
+        _NEW_ATOM + "//Specification//Manifest//Component Seed Manifest",
+}
+
+
+def _previous_seed_claim(claim):
+    return claim.replace(
+        "    purpose: str | None = None\n    contract: str | None = None\n    solution: str | None = None\n",
+        "    purpose: str\n    solution: str\n",
+    ).replace("and spec.component_seed_id[2:].isdigit())",
+              "and spec.component_seed_id[2:].isdigit() and spec.purpose.strip() and spec.solution.strip())")
+
 
 def reviewed_model_records():
     """Return normalized reviewed Claims, their originals, and a source fingerprint."""
@@ -54,12 +76,15 @@ def reviewed_model_records():
 def admit_active_model_records(records):
     """Validate Active declarations and keep executable checks pinned."""
     reviewed, originals, _ = reviewed_model_records()
-    checks = {}
+    checks, targets = {}, {}
     for _, subject, claim in reviewed:
         declaration = parse_native_model_claim(claim)
         if check := declaration.get("instance_check"):
             target = model_class_target(subject, declaration["arguments"]["entity_name"])
-            checks[target] = check["source"]
+            checks[target] = (check["name"], check["parameter_type"], check["source"])
+            targets[target] = target
+            if target in _CHECK_TARGET_MIGRATION:
+                targets[_CHECK_TARGET_MIGRATION[target]] = target
     records = tuple(records)
     subjects = set()
     parsed = []
@@ -71,13 +96,23 @@ def admit_active_model_records(records):
         parsed.append((source, subject, declaration))
     seen = set()
     for source, subject, declaration in _merge_constraint_claims(parsed):
-        check = declaration.get("instance_check", {}).get("source")
+        check = declaration.get("instance_check")
         args = declaration["arguments"]
         target = model_class_target(subject, args.get("entity_name")) if "entity_class" in args else None
-        if check != checks.get(target):
+        original_target = targets.get(target)
+        expected = checks.get(original_target)
+        actual = (check["name"], check["parameter_type"], check["source"]) if check else None
+        if actual != expected and original_target == _OLD_SEED_TARGET:
+            previous = _previous_seed_claim(originals[_SEED_SUBJECT])
+            previous_check = parse_native_model_claim(normalize_reviewed_claim(previous))["instance_check"]
+            expected = (previous_check["name"], previous_check["parameter_type"], previous_check["source"])
+            if actual == expected:
+                originals[_SEED_SUBJECT] = previous
+        if actual != expected or (check and (args.get("entity_class") != check["parameter_type"]
+                                              or original_target in seen)):
             raise ValueError(f"{source}: executable Model instance check differs from the approved review")
         if check:
-            seen.add(target)
+            seen.add(original_target)
     if checks.keys() - seen:
         raise ValueError("Active Model is missing reviewed instance checks")
     _check_relation_references(records)
@@ -94,9 +129,8 @@ def compile_native_bindings(records, originals):
     for _, subject, declaration in parsed:
         if check := declaration.get("instance_check"):
             name = check["name"]
-            digest = reviewed_claim_sha256(name)
             original = next((value for value in originals.values()
-                             if sha256(value.encode()).hexdigest() == digest), None)
+                             if is_reviewed_claim(name, value)), None)
             if original is None:
                 raise ValueError(f"{subject}: Claim differs from reviewed source")
             checks.append([check["parameter_type"], name, subject, original])

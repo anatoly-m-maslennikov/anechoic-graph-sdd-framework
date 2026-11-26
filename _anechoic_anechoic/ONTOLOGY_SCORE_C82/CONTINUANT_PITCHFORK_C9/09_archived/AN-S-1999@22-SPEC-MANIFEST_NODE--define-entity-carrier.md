@@ -1,0 +1,35 @@
+---
+atom_family: SPEC
+atom_id: AN-S-1999
+container:
+  component: C9
+tier: 2
+context:
+  lens: SPEC
+  template: manifest_node
+state:
+  status: "archived"
+  version: 22
+  updated_at: "2026-11-25T19:40:35.469094+00:00"
+---
+
+## Summary
+
+Define Entity/Carrier
+
+## Claim scope
+
+MODEL//ANECHOIC <+ Carrier
+
+## Semantics
+
+A Carrier holds or represents a Graph entity. A Markdown file can carry a Spec Atom. An Event Record represents an occurrence and its Carrier holds the record.
+
+## Formal Manifest
+
+```python anechoic-edsl
+# Anechoic Python eDSL
+
+class Carrier:
+    pass
+```

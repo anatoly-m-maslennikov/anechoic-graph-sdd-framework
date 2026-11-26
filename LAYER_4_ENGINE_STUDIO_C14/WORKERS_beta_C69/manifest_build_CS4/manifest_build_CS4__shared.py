@@ -163,9 +163,10 @@ def _manifest_candidates(root, control, checkpoint):
         for location, carriers in ((directory, names), (directory / "_SPEC", inventory(directory / "_SPEC"))):
             files.update(location / name for name in carriers
                          if name.endswith(".md") and _SPEC_CANDIDATE.match(name))
-    ontology = control / "LAYER_1_META_ONTOLOGY_C9"
-    for directory in (ontology, ontology / "_SPEC", control / "__PROJECT_CONFIG/CUSTOM_MODEL",
-                      control / "002_PROJECT_CONFIG/CUSTOM_MODEL"):
+        if directory != control and directory.name.endswith("_C9"):
+            for location in (directory, directory / "_SPEC", directory / "_DES"):
+                files.update(location / name for name in inventory(location) if name.endswith(".md"))
+    for directory in (control / "__PROJECT_CONFIG/CUSTOM_MODEL", control / "002_PROJECT_CONFIG/CUSTOM_MODEL"):
         files.update(directory / name for name in inventory(directory) if name.endswith(".md"))
     files.update(_compiler_sources(inventory))
     files.update(_REVIEWED_MODEL / name for name in _REVIEWED_CLAIMS)

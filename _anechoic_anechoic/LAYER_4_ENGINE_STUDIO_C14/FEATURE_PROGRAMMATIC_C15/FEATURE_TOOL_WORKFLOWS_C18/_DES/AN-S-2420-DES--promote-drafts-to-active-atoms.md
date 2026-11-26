@@ -7,9 +7,9 @@ tier: 3
 context:
   lens: DES
 state:
-  status: active
-  version: 25
-  updated_at: 2026-10-27 20:00:11 +0400
+  status: "active"
+  version: 26
+  updated_at: "2026-11-25T20:25:07.137603+00:00"
 ---
 ## Summary
 
@@ -21,6 +21,8 @@ Independently admitted promotion of one explicitly selected ANECHOIC Markdown Dr
 
 ## Claim
 
+This contract describes the legacy sealed-carrier or Subject-batch route. Native Draft and Current carriers use AN-S-3160 and the lifecycle rules in AN-S-1604. Exact historical carrier references apply when interpreting legacy inputs.
+
 ### Prose Claim
 
 the `ATOM_PROMOTE` Tool **must** provide canonical promotion of ANECHOIC Markdown Drafts into active Atom authority. promotion is **not** archival **or** upgrade.
@@ -29,7 +31,7 @@ the capability **must**:
 
 - admit **`=1`** explicit Draft per independently admitted Action; a several-Draft Workflow stops at its first failed Action, retains completed promotions and leaves the remainder untouched;
 - accept ID-free Drafts, `CA-R-draft`/`<PREFIX>-<ROLE>-draft` new-Atom markers, version-qualified `<canonical-ID>@<proposed-version>-draft` edit markers, and legacy `<canonical-ID>@draft` compatibility. Require the marker and filename to agree;
-- bind every promotion to an explicit target and expected source state. Existing-marker promotion updates the same canonical Atom at the carried/requested Version and archives the exact current predecessor; ID-free/role-draft promotion uses an explicitly admitted fresh next-unreused ID under CA-D-378;
+- bind every promotion to an explicit target and expected source state. Existing-marker promotion updates the same canonical Atom at the carried/requested Version and archives the exact current predecessor; ID-free/role-draft promotion uses an explicitly admitted fresh next-unreused ID under AN-S-1761@31;
 - preserve Draft body/unrelated metadata, derive the canonical active filename and placement, and materialize the canonical ID, admitted Status and Version;
 - reject non-Drafts, missing/invalid/mismatched markers or targets, Version/digest drift, historical ID reuse, destination collisions, stale preconditions and partial operations. Do not require retained Draft history, lineage or Journal append;
 - default **to** a mutation-free dry run **and** accept `--apply` **only** through an authorized Project-local MCP delegation with a sealed Initiative action envelope;

@@ -259,7 +259,7 @@ class DirectSupervisorTests(unittest.TestCase):
                 "--watch-code"]
         prefix = [sys.executable, "-B", "-P", "-m"]
         self.assertEqual([*prefix, "ORCHESTRATOR_beta_C68.project_peer_owner", *args], owner)
-        self.assertEqual([*prefix, "API_MIXER_beta_C82.API_MIXER_beta_C82__shared", *args, "--role", "api"], api)
+        self.assertEqual([*prefix, "API_MIXER_beta_C91.API_MIXER_beta_C91__shared", *args, "--role", "api"], api)
         self.assertEqual("beta_next", env["ANECHOIC_RUNTIME_STACK"])
 
 

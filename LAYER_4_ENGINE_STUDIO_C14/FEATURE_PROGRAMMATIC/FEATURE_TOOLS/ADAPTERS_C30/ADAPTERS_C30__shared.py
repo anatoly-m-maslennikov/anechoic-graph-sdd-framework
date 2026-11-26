@@ -38,11 +38,12 @@ from .ADAPTERS_C30__pub import (
     validate_directory_components,
 )
 from .carrier_read__pub import CarrierError, ParsedCarrier, parse_carrier
+from .typed_manifest_node import parse_typed_manifest_node
 from .markdown_content__pub import (
     content_key, content_lines, direct_markdown, formal_claim_fences,
     parse_content, section_markdown, source_markdown, unfenced_atx_headings,
 )
-from .content_records__pub import records_by_path
+from .content_records__pub import content_record_span, records_by_path, value_excluding_declared_children
 from .framework_database__pub import attach_framework
 from .model_catalog__pub import bindings_from_workbench_rows, class_bindings
 from .model_class_subject__pub import (
@@ -62,7 +63,7 @@ from .settings_context__pub import (
     ProjectSettingsValueError, bind_settings_selection, bound_selection, control_root,
     project_identity, project_identity_prefix,
 )
-from .source_row__pub import canonical
+from .source_row__pub import canonical, json_value
 from .carrier_body__pub import frontmatter_bounds, source_body
 from .native_model_claim__pub import (
     NativeModelClaimError, parse_native_model_claim, validate_aspect_hierarchy, validate_aspect_instance,
@@ -112,7 +113,6 @@ from .code_access_rules__pub import module_visibility
 from .component_contract__pub import read_component_contract
 from .component_manifest__pub import parse_component_manifest, parse_component_manifest_fields
 from .component_seed_manifest__pub import read_component_seed_manifest
-from .content_records__pub import content_record_span, value_excluding_declared_children
 from .current_carriers__pub import read_current_carriers, read_current_model_carriers
 from .formal_claim__pub import formal_claim, iter_formal_claims
 from .journal_settings__pub import configured_journal_root, journal_storage, validated_journal_root
@@ -132,7 +132,6 @@ from .scope_carrier__pub import (
 )
 from .scope_declaration_parse__pub import ScopeUnitDeclaration, parse_scope_unit_declaration
 from .scope_unit_declarations__pub import ScopeUnitDeclarations, read_scope_unit_declarations
-from .source_row__pub import json_value
 from .source_watcher__pub import SourceWatcher
 from .work_journal__pub import MAX_DATABASE_EVENT_BYTES, append_record, append_sealed_events, canonical_json_bytes, journal_inbox, pending_database_journal
 
@@ -278,6 +277,7 @@ __all__ = [
     "open_regular",
     "parse_structure",
     "parse_native_model_claim",
+    "parse_typed_manifest_node",
     "path_value",
     "project_root_container_view",
     "project_goal_filename",

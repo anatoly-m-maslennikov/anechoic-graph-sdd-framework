@@ -17,6 +17,7 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import
 from . import effects
 from .effects import _project_write_lock
 from .common import InputError, SourceChanged, result, saved
+from .native_replacement_promotion import _check_replacement_activation
 from .source import bind_query_reader
 
 
@@ -87,6 +88,7 @@ def _change_spec_selected(selection, target, selected, path, digest, root, statu
             header = selected['header_json']
             body = raw[bounds[2]:].decode('utf-8')
             if status == 'active':
+                _check_replacement_activation([selected], capture.atoms)
                 _validate_project_template(header, validate_project_spec_model, body)
             parameters = getattr(selection, 'parameters', None)
             expected = native_carrier_path(header, _summary(body), project_root=selection.control_root,

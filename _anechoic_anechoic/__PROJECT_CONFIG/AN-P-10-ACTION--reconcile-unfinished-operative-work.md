@@ -7,9 +7,9 @@ structure:
 context:
   template: action
 state:
-  status: active
-  version: 22
-  updated_at: 2026-10-30 03:11:58 +0400
+  status: "active"
+  version: 25
+  updated_at: "2026-11-25T22:24:06.526881+00:00"
 ---
 # Summary
 
@@ -29,8 +29,8 @@ Reconcile Unfinished Work **means** the Action that reconciles still-valid remai
 
 1. distinguish the still-valid remaining work from completed results, canceled work, obsolete requests, **and** uncertain completion claims. use available evidence; missing evidence is **not** proof of completion **or** permission **to** replay an effect.
 2. find whether the remaining work is already represented by a Plan. check the originating Plan first **when** available, **then** other relevant Plans by Claim **and** applicability rather than Label **or** folder name. reuse an applicable existing Plan; **if** several competing representations remain unresolved, report them rather than create another duplicate.
-3. reconcile necessary progress, remaining-work details, blockers, **and** source references within the authorized change. retain the existing Claim boundary **and** identity; a Summary change requires replacement under CA-R-1464. reference completed Plan Atoms **and** canonical Journal events using existing preservation authority CA-D-461, CA-R-2448, **and** CA-R-1720; do **not** copy those Atoms **or** historical events into another authoritative record.
-4. **if** no applicable Plan represents still-valid work, create a Plan **only** within existing creation authority **and** under CA-M-306, CA-R-1599, **and** CA-D-470. select admitted Status **and** placement under CA-R-1539 **and** CA-D-461. use an explicitly justified `IS_CONTAINED_BY` connection on the child Plan **when** the work belongs under another Plan; derive `CONTAINS`; a standalone Plan remains permitted. do **not** introduce a Version Plan **or** Change Plan authoring model merely from its Label.
+3. reconcile necessary progress, remaining-work details, blockers, **and** source references within the authorized change. retain the existing Claim boundary **and** identity; a Summary change requires replacement under AN-S-1604. reference completed Plan Atoms **and** canonical Journal events using existing preservation authority AN-S-1915@33, CA-R-2448, **and** CA-R-1720; do **not** copy those Atoms **or** historical events into another authoritative record.
+4. **if** no applicable Plan represents still-valid work, create a Plan **only** within existing creation authority **and** under CA-M-306, CA-R-1599, **and** AN-S-1777@33 for legacy Plan carriers. select admitted Status **and** placement under AN-S-2143@26 and AN-S-1915@33 when interpreting historical Plan Carriers. Use AN-S-4914 and AN-S-3160 for native Tickets. use an explicitly justified `IS_CONTAINED_BY` connection on the child Plan **when** the work belongs under another Plan; derive `CONTAINS`; a standalone Plan remains permitted. do **not** introduce a Version Plan **or** Change Plan authoring model merely from its Label.
 5. retain explicit blocking under CA-R-1580 independently of Plan containment **and** navigation order. do **not** silently reopen Done, Canceled, **or** Archived work, change another Plan's Status, **or** infer readiness from moving a Carrier. unresolved authority, applicability, validity, **or** destination selection remains a reported blocker.
 6. **before** applying an authorized change, confirm the selected Plan Revisions remain current. apply **only** the bounded reconciliation, check its resulting references **and** Carrier placement, **and** record actual change events under the existing Journal authority. an already reconciled item is a no-change result, **not** another Plan **or** duplicate historical event.
 

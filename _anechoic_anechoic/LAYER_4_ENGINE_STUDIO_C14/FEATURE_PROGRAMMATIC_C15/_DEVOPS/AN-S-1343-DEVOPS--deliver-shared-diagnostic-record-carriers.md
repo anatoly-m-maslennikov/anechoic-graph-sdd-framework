@@ -7,9 +7,9 @@ tier: 5
 context:
   lens: DevOps
 state:
-  status: active
-  version: 1
-  updated_at: 2026-11-10 20:47:54 +0400
+  status: "active"
+  version: 3
+  updated_at: "2026-11-25T22:43:29.983346+00:00"
 ---
 ## Summary
 Deliver shared diagnostic record carriers
@@ -20,7 +20,7 @@ Deliver shared diagnostic record carriers
 
 PROGRAMMATIC operational diagnostics **must** use **`=1`** shared structured record representation at their declared diagnostic output boundary.
 
-- the delivered record schema represents the context required by CA-M-414 **and** the applicable production fields under CA-D-396. it preserves the severity **and** safety rules of ANECHOIC-GOV-REQU-315 **without** defining another field meaning **or** severity vocabulary.
+- Use the record fields, severity, and sanitization rules in AN-S-4741 and AN-S-1902. Include a concise message. When applicable and available, include deployment environment and version, request, job, Workflow, domain entity and state, attempt, and exception class.
 - canonical action **or** Event references are carried unchanged **when** available; absent references remain absent rather than being invented for an exporter.
 - a concise human rendering **and** **any** exporter-specific encoding are derived representations of that record, **not** separately maintained diagnostic facts **or** schemas with competing meanings.
-- production record placement follows the declared Logging Policy sink. the Project Journal is **not** an alternative diagnostic output Carrier.
+- Write Studio technical records to stderr under AN-S-4741. Keep business Event Records in their declared Journal.

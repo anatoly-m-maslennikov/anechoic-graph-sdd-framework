@@ -7,15 +7,17 @@ tier: 3
 context:
   lens: DES
 state:
-  status: active
-  version: 48
-  updated_at: '2026-11-13T19:23:14.318791+00:00'
+  status: "active"
+  version: 49
+  updated_at: "2026-11-25T20:25:07.100858+00:00"
 ---
 ## Summary
 
 Update ANECHOIC Markdown Atoms
 
 ## Claim
+
+This contract describes the legacy sealed-carrier or Subject-batch route. Native Draft and Current carriers use AN-S-3160 and the lifecycle rules in AN-S-1604. Exact historical carrier references apply when interpreting legacy inputs.
 
 ### Prose Claim
 
@@ -92,7 +94,7 @@ Advance in packet order only after verified applied or truthful no-op results. S
 
 ### Existing-Atom edit-draft staging and promotion
 
-CA-D-446's explicitly source-pinned edit draft is the full proposed next Revision in the owning role's `000_draft/` folder. A Draft may omit `atom_id` and use the ID-free empty-number filename. When a Draft carries a marker, use `CA-R-draft` (or `<PREFIX>-<ROLE>-draft`) for a new Atom, or `<canonical-ID>@<proposed-version>-draft` for an edit; legacy `<canonical-ID>@draft` remains compatibility input and requires an explicit proposed Version in the request. A carried marker is Draft-only proposal metadata, never a canonical identity. The filename identity segment must exactly match the carried marker, and a version-qualified marker must equal its carried proposed Version. Leave the canonical source untouched while staging; preserve body and unrelated metadata outside the marker, Status and proposed Version/time fields. A true no-op keeps source Version/time.
+AN-S-1771@32's explicitly source-pinned edit draft is the full proposed next Revision in the owning role's `000_draft/` folder. A Draft may omit `atom_id` and use the ID-free empty-number filename. When a Draft carries a marker, use `CA-R-draft` (or `<PREFIX>-<ROLE>-draft`) for a new Atom, or `<canonical-ID>@<proposed-version>-draft` for an edit; legacy `<canonical-ID>@draft` remains compatibility input and requires an explicit proposed Version in the request. A carried marker is Draft-only proposal metadata, never a canonical identity. The filename identity segment must exactly match the carried marker, and a version-qualified marker must equal its carried proposed Version. Leave the canonical source untouched while staging; preserve body and unrelated metadata outside the marker, Status and proposed Version/time fields. A true no-op keeps source Version/time.
 
 For promotion, bind the exact Draft bytes to an explicit target and expected state. An existing marker such as `CA-R-123@4-draft` requires target `CA-R-123`, an exact current predecessor at Version 3, and a proposed Version 4; legacy `CA-R-123@draft` supplies the same binding explicitly in the request. Archive the exact current predecessor bytes, materialize the canonical target at the proposed Version with its original admitted Status, and remove the Draft carrier. An ID-free or `CA-R-draft` Draft uses an explicitly admitted fresh next-unreused canonical ID. Any target, Version, digest, marker, placement or destination drift refuses before effects. No retained Draft history, lineage or Journal append is a gate; Journal records observations after the independent effect.
 

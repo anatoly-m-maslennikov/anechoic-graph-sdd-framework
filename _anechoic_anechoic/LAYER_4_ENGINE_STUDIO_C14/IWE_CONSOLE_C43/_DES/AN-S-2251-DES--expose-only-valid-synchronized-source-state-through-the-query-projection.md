@@ -7,9 +7,9 @@ tier: 3
 context:
   lens: DES
 state:
-  status: active
-  version: 7
-  updated_at: '2026-11-13T15:52:46.201826+00:00'
+  status: "active"
+  version: 8
+  updated_at: "2026-11-25T22:33:46.721762+00:00"
 ---
 ## Summary
 
@@ -32,6 +32,8 @@ The query Projection **must**:
 - report source-file errors with path and available location information through stderr and the queryable issue tables. Publish audits asynchronously after source rows commit. Expose audit progress and the elapsed time of the most recent audit so users can identify pending diagnostics.
 - skip an excluded source without automatic retry; a later actual source change may be considered on a later refresh.
 - remain distinct from source deletion: a source-file error is not proof that the source was deleted.
+
+Use the Atom ID, Status, and Container from the Header. A parent’s Status does not set a child’s Status. Keep parseable Atoms with placement discrepancies indexed under their declared Containers. Report the Atom reference and its actual and expected paths. A requested Active Atom requires exactly one match. Report an absent or ambiguous match.
 
 An invalid Current Scope Unit Declaration must not produce valid or partial projected structure.
 

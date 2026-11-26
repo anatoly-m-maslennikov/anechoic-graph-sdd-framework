@@ -54,7 +54,7 @@ component_workflow(
                     {'target': 'displaying', 'guard': {'type': 'matchesTrace', 'params':
                         {'kind': 'effect', 'target': 'C45', 'outcome': 'succeeded'}}},
                     {'target': 'displaying', 'guard': {'type': 'matchesTrace', 'params':
-                        {'kind': 'effect', 'target': 'C82', 'outcome': 'succeeded'}}},
+                        {'kind': 'effect', 'target': 'C91', 'outcome': 'succeeded'}}},
                 ],
                 'project_run_failed': {'target': 'failed', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'output', 'outcome': 'failed'}}},
@@ -74,5 +74,5 @@ component_workflow(
 
 ## Details
 
-The Formal Claim covers View Run. C82 serves `beta_next`. C45 serves
+The Formal Claim covers View Run. C91 serves `beta_next`. C45 serves
 `current`. Trace conformance requires recorded evidence.

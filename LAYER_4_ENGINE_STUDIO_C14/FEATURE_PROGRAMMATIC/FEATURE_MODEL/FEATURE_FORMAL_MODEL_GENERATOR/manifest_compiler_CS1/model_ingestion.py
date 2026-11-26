@@ -1,7 +1,6 @@
 """Compile an ingested Model and retain its last admitted generation on failure."""
 from hashlib import sha256
 import json
-from pathlib import Path, PurePosixPath
 import shutil
 import sys
 from uuid import uuid4
@@ -9,12 +8,11 @@ from uuid import uuid4
 from pydantic import BaseModel, ConfigDict
 
 from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.FEATURE_MODEL_VALIDATION__shared import open_admitted_model, open_serialized_model
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import mark_startup_timing, native_header_view
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import mark_startup_timing
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import resolve_native_project
-from .active_model_sources import _collect_active_source
+from .active_model_sources import compile_active_model_rows
 from .compiler import write_model_records
 from .structure_compile import compile_structure
-from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.FEATURE_FORMAL_MODEL_GENERATOR__shared import _check_relation_references
 
 
 class ModelRow(BaseModel):
@@ -34,35 +32,7 @@ class ModelInputs(BaseModel):
 
 
 def _records(inputs):
-    records, identifiers, subjects, seen = [], set(), set(), set()
-    control = Path('/snapshot')
-    custom_found = False
-    for row in inputs.rows:
-        path = PurePosixPath(row.source_path)
-        parts = path.parts
-        is_c9 = len(parts) in (2, 3) and parts[0] == 'LAYER_1_META_ONTOLOGY_C9' and (len(parts) == 2 or parts[1] in {'_SPEC', '_DES'})
-        custom = len(parts) == 3 and parts[0] in {'__PROJECT_CONFIG', '002_PROJECT_CONFIG', 'PROJECT_CONFIG'} and parts[1] == 'CUSTOM_MODEL'
-        if path.is_absolute() or str(path) != row.source_path or '..' in parts or '\\' in row.source_path or row.source_path in seen or not (is_c9 or custom):
-            raise ValueError(f'{row.source_path}: invalid or duplicate Model source path')
-        seen.add(row.source_path)
-        header = native_header_view(row.metadata)
-        identity, state = header.get('identity'), header.get('state')
-        if not isinstance(identity, dict) or not isinstance(state, dict) or row.exact_ref != f'{identity.get("atom_id")}@{state.get("version")}':
-            raise ValueError(f'{row.source_path}: exact reference disagrees with carrier')
-        custom_found |= custom
-        try:
-            _collect_active_source(control / row.source_path, custom, None, control, identifiers, subjects, records, carrier=row)
-        except (ValueError, TypeError, KeyError, SyntaxError) as error:
-            error.source_path, error.atom_ref = row.source_path, row.exact_ref
-            raise
-    if not inputs.has_c9:
-        if custom_found:
-            raise ValueError('Custom Model sources require an active C9 Model')
-        return None
-    if not records:
-        raise ValueError('No active Model Claims were selected')
-    _check_relation_references(records)
-    return tuple(records)
+    return compile_active_model_rows([row.model_dump() for row in inputs.rows], has_c9=inputs.has_c9)
 
 
 def _restore(directory, accepted):
@@ -89,9 +59,9 @@ def _stage(directory, inputs, diagnostics, fallback=None):
         attempt = uuid4().hex
         for issue in inputs.issues if inputs.issues and fallback is None else [{}]:
             diagnostics.append({'attempt_id': attempt, 'accepted_generation': None, 'severity': 'ERROR',
-                                'code': issue.get('code') or 'invalid_model_source',
+                                'code': issue.get('code') or getattr(error, 'code', 'invalid_model_source'),
                                 'message': issue.get('message') or str(error), 'atom_ref': issue.get('atom_ref') or getattr(error, 'atom_ref', None),
-                                'source_path': issue.get('relative_path') or getattr(error, 'source_path', None), 'subject': None})
+                                'source_path': issue.get('relative_path') or getattr(error, 'source_path', None), 'subject': getattr(error, 'subject', None)})
         for child in directory.iterdir():
             shutil.rmtree(child) if child.is_dir() and not child.is_symlink() else child.unlink()
         _restore(directory, inputs.accepted_model)

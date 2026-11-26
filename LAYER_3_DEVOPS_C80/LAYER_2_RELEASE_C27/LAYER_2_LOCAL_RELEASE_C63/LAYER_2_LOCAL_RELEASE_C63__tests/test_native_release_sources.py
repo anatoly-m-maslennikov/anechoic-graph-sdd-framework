@@ -57,6 +57,33 @@ Native Spec.
         self.assertEqual({p.relative_to(self.control): p for p in (self.source, new)},
                          _native_release_sources(self.selection))
 
+    def test_resolves_nested_components_and_keeps_delivery_names(self):
+        parent = self.control / "ONTOLOGY_SCORE_C82"
+        parent.mkdir()
+        self.ontology.rename(parent / "CONTINUANT_PITCHFORK_C9")
+        self.source = parent / "CONTINUANT_PITCHFORK_C9/__DES/__DOM/AN-S-1-DOM--current.md"
+        c58 = parent / "OCCURRENT_METRONOME_C58"
+        c58.mkdir()
+        selected = _native_release_sources(self.selection)
+        self.assertEqual({Path("LAYER_1_META_ONTOLOGY_C9/__DES/__DOM/AN-S-1-DOM--current.md"): self.source}, selected)
+        method = c58 / "AN-S-2-SPEC--method.md"
+        self.carrier(method, atom_id="AN-S-2", component="C58")
+        self.assertEqual(method, _native_release_sources(self.selection)[Path("LAYER_2_META_METHODOLOGY_C58") / method.name])
+
+    def test_component_resolution_excludes_non_component_parents_and_rejects_links(self):
+        for parent in ("099_archived", "_projection", "arbitrary"):
+            self.carrier(self.control / parent / "OTHER_C9/AN-S-2-SPEC--ignored.md", atom_id="AN-S-2")
+        self.assertEqual({self.source}, set(_native_release_sources(self.selection).values()))
+        link = self.control / "PARENT_C82"
+        link.symlink_to(self.control / "arbitrary", target_is_directory=True)
+        with self.assertRaises(LocalReleaseError):
+            _native_release_sources(self.selection)
+
+    def test_rejects_ambiguous_component_sources(self):
+        self.carrier(self.control / "PARENT_C82/OTHER_C9/AN-S-2-SPEC--other.md", atom_id="AN-S-2")
+        with self.assertRaisesRegex(LocalReleaseError, "Multiple delivery source Components for C9"):
+            _native_release_sources(self.selection)
+
     def test_selects_methodology_and_environment_owned_active_specs(self):
         c58 = self.control / "LAYER_2_META_METHODOLOGY_C58"
         c72 = self.control / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72"

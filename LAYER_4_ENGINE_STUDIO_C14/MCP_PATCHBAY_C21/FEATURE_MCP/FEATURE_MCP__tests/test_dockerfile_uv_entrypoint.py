@@ -53,8 +53,8 @@ class DockerfileUVEntrypointTests(unittest.TestCase):
         backend = "WORKBENCH_BACKEND_beta_C70"
         self.assertNotIn(backend, dockerfile)
         self.assertNotIn("FROM beta_base AS beta\n", dockerfile)
-        self.assertNotIn("API_MIXER_beta_C82", base + common + current)
-        self.assertIn("/workspace/LAYER_4_ENGINE_STUDIO_C14/API_MIXER_beta_C82", candidate[candidate.index("-m compileall"):])
+        self.assertNotIn("API_MIXER_beta_C91", base + common + current)
+        self.assertIn("/workspace/LAYER_4_ENGINE_STUDIO_C14/API_MIXER_beta_C91", candidate[candidate.index("-m compileall"):])
         self.assertIn("ENV ANECHOIC_RUNTIME_STACK=beta_next", candidate)
         self.assertIn("LABEL org.anechoic.runtime.stack=beta_next", candidate)
         self.assertTrue(candidate.strip().endswith("USER anechoic"))

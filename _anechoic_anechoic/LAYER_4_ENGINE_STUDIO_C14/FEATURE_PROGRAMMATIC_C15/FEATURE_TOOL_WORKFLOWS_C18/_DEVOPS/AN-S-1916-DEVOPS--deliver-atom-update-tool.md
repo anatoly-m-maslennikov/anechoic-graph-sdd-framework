@@ -7,9 +7,9 @@ tier: 4
 context:
   lens: DevOps
 state:
-  status: active
-  version: 30
-  updated_at: 2026-11-02 19:46:47 +0400
+  status: "active"
+  version: 31
+  updated_at: "2026-11-25T20:25:07.151533+00:00"
 ---
 # Summary
 
@@ -22,6 +22,8 @@ Workflow admission owns identity, Version/time, lifecycle and complete schema de
 This Delivery carrier records `TOOL_WORKFLOWS` ownership of the rebuilt flat RMEDO contracts and binds the canonical `ATOM_UPDATE` wrapper. Its rebuilt source authority uses the FEATURE's role folders, not an `ATOM_UPDATE` child folder. The existing executable collection remains at `LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ATOM_UPDATE/`, explicitly bound to `LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ATOM_UPDATE/atom_update.py`; it is not an independently registered Scope Unit. The new FEATURE Delivery root is future/unmaterialized and does not relocate that collection. It retains the existing generic update input and sealed apply guard and specifies authoritative-source-read-only Subject-only preview with opt-in local derived-candidate staging. The revised by-value and add/remove/full-set contracts require future implementation verification; historical index-based fixtures and source pins do not prove readiness. It does not define Core semantics, grammar adoption, migration decisions, source repair, or a new MCP route. CA-D-531 binds its separately admitted one-target Subject effect to the existing MCP update action.
 
 ## Claim
+
+This contract describes the legacy sealed-carrier or Subject-batch route. Native Draft and Current carriers use AN-S-3160 and the lifecycle rules in AN-S-1604. Exact historical carrier references apply when interpreting legacy inputs.
 
 the `ATOM_UPDATE` Tool **must** deliver its canonical executable Carrier at `LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ATOM_UPDATE/atom_update.py`; that Carrier realizes `CA-R-866` through the Action `CA-O-030`.
 
@@ -98,7 +100,7 @@ The combined provider advertises read_only=false and idempotent=false because st
 
 ### Existing-Atom edit-draft staging and promotion
 
-CA-D-446's explicitly source-pinned edit draft is the full proposed next Revision in the owning role's `000_draft/` folder. A Draft may omit `atom_id` and use the ID-free empty-number filename. A carried marker is `CA-R-draft` (or `<PREFIX>-<ROLE>-draft`) for a new Atom, `<canonical-ID>@<proposed-version>-draft` for an edit, or legacy `<canonical-ID>@draft` as compatibility input. The marker is Draft-only proposal metadata, never a canonical identity; its filename segment must match the carried marker and a version-qualified marker must equal the carried proposed Version. Preserve body and unrelated metadata while staging; leave the canonical source untouched.
+AN-S-1771@32's explicitly source-pinned edit draft is the full proposed next Revision in the owning role's `000_draft/` folder. A Draft may omit `atom_id` and use the ID-free empty-number filename. A carried marker is `CA-R-draft` (or `<PREFIX>-<ROLE>-draft`) for a new Atom, `<canonical-ID>@<proposed-version>-draft` for an edit, or legacy `<canonical-ID>@draft` as compatibility input. The marker is Draft-only proposal metadata, never a canonical identity; its filename segment must match the carried marker and a version-qualified marker must equal the carried proposed Version. Preserve body and unrelated metadata while staging; leave the canonical source untouched.
 
 Existing-marker promotion binds the exact Draft to an explicit canonical target, expected current Version/digest and proposed Version. `CA-R-123@4-draft` targets `CA-R-123` Version 4 from an exact Version-3 predecessor; legacy `@draft` carries the same proposed Version explicitly in the request. Archive the exact predecessor bytes, write the canonical target with its original admitted Status, and remove the Draft carrier. ID-free/`CA-R-draft` promotion uses an explicitly admitted fresh next-unreused ID. Any stale target, Version, digest, marker, placement or destination refuses before effects. No retained Draft history, lineage or Journal append is a gate; Journal records observations only.
 

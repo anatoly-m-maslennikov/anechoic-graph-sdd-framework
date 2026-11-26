@@ -109,6 +109,16 @@ class FullTestSuiteParallelTests(unittest.TestCase):
         image.assert_called_once_with(self.case.root, use_packaged_assets=True)
         self._assert_success_output(modules)
 
+    def test_uses_host_fanout_without_changing_docker_workers(self):
+        modules = self._ordinary_modules(2)
+        with (
+            patch.object(full, "ThreadPoolExecutor", wraps=ThreadPoolExecutor) as executor,
+            patch.object(full, "run_module", return_value=(True, 1, 0, "", "", 0, None)) as run,
+        ):
+            self.assertEqual(0, full._run_modules(self.case.root, modules, {"ANECHOIC_TEST_FANOUT": "1"}, []))
+        self.assertEqual([1, 2], [call.kwargs["max_workers"] for call in executor.call_args_list])
+        self.assertEqual(2, run.call_count)
+
     def test_critical_failure_still_runs_later_modules_and_counts_failure(self):
         critical = self.case.file(str(APP / "FEATURE_MCP__tests/test_selected_subject_apply.py"))
         later = [

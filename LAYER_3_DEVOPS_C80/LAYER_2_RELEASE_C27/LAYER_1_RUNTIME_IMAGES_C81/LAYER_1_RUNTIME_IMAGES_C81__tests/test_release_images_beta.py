@@ -11,8 +11,8 @@ from ._release_image_fixture import ReleaseImageFixture
 
 _SELECTOR = Path("LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/project.toml")
 _ENGINE = Path("LAYER_4_ENGINE_STUDIO_C14")
-_API = _ENGINE / "API_MIXER_beta_C82"
-_API_ENTRY = _API / "API_MIXER_beta_C82__shared.py"
+_API = _ENGINE / "API_MIXER_beta_C91"
+_API_ENTRY = _API / "API_MIXER_beta_C91__shared.py"
 _C68 = _ENGINE / "ORCHESTRATOR_beta_C68"
 _C70 = _ENGINE / "WORKBENCH_BACKEND_beta_C70"
 _NEXT_INPUTS = (_C68 / "project_peer_owner.py", _C68 / "shared_peer_owner.py", _API_ENTRY, _API / "shared_runtime.py")

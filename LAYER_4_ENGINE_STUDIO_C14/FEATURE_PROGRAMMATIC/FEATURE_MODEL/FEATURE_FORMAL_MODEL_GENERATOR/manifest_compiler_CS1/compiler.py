@@ -10,6 +10,7 @@ from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.FEATURE_F
     load_native_model, model_module_name, reviewed_model_records,
 )
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import resolve_native_project
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model_ontology_path__pub import find_ontology_component
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import mark_startup_timing
 
 from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.FEATURE_MODEL_VALIDATION__shared import open_admitted_model
@@ -19,7 +20,7 @@ from .structure_compile import compile_structure
 
 def write_model(directory: Path, control_root: Path, *, verify_lean: bool = False) -> str:
     """Write a complete generation into an empty staging directory."""
-    ontology = control_root / "LAYER_1_META_ONTOLOGY_C9"
+    ontology = find_ontology_component(control_root) or control_root / "LAYER_1_META_ONTOLOGY_C9"
     declarations = read_active_model_sources(control_root, ontology)
     if not ontology.exists() and not ontology.is_symlink():
         if declarations:

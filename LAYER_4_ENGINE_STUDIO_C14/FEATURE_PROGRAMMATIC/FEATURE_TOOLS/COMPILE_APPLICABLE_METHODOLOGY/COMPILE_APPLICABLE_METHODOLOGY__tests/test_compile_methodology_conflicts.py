@@ -4,7 +4,7 @@ from pathlib import Path
 from unittest import mock
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.COMPILE_APPLICABLE_METHODOLOGY.COMPILE_APPLICABLE_METHODOLOGY__tests.methodology_test_support import (
-    CompilerFixture, module, carrier, definition_carrier, term_definition_carrier,
+    CompilerFixture, module, carrier, term_definition_carrier,
 )
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import SETTINGS_PATH
 
@@ -66,13 +66,13 @@ class CompilerTest(CompilerFixture):
             "001_CORE_META_MODEL",
             "04_requirement",
             "CA-R-010--define-shared-term.md",
-            definition_carrier("CA-R-010", "Shared Term"),
+            term_definition_carrier("CA-R-010", "Term//Shared Term"),
         )
         self.write(
             "003_PROJECT_CONFIGURATION",
             "04_requirement",
             "CA-R-011--redefine-shared-term.md",
-            definition_carrier("CA-R-011", "Shared Term", "Artifact/Type: Shared Term"),
+            term_definition_carrier("CA-R-011", "ANECHOIC_MODEL <+ Term//Shared Term"),
         )
 
         code, report = self.invoke()
@@ -93,8 +93,6 @@ class CompilerTest(CompilerFixture):
                    term_definition_carrier("CA-M-010", current_subject))
         self.write("003_PROJECT_CONFIGURATION", "05_method", "CA-M-011--define.md",
                    term_definition_carrier("CA-M-011", "Term//Shared Term"))
-        self.write("003_PROJECT_CONFIGURATION", "04_requirement", "CA-R-012--define.md",
-                   definition_carrier("CA-R-012", "Shared Term"))
         legacy_subject = "ANECHOIC_MODEL <+ Entity/Object/Continuant/Term//Shared Term"
         self.write("001_CORE_META_MODEL", "04_requirement", "CA-R-013--define.md", (
             "---\natom_id: CA-R-013\nrole: Requirement\nform: Term Definition\n"
@@ -108,7 +106,7 @@ class CompilerTest(CompilerFixture):
         conflict = next(row for row in report["conflicts"] if row["type"] == "duplicate_governed_term_definition")
         self.assertEqual("Shared Term", conflict["details"]["term"])
         self.assertCountEqual(
-            [current_subject, "Term//Shared Term", "Shared Term", legacy_subject],
+            [current_subject, "Term//Shared Term", legacy_subject],
             conflict["details"]["definition_subject_paths"].values(),
         )
         apply_code, applied = self.invoke("--apply")

@@ -48,7 +48,7 @@ component_workflow(
                     {'target': 'responding', 'guard': {'type': 'matchesTrace', 'params':
                         {'kind': 'effect', 'target': 'C45', 'outcome': 'succeeded'}}},
                     {'target': 'responding', 'guard': {'type': 'matchesTrace', 'params':
-                        {'kind': 'effect', 'target': 'C82', 'outcome': 'succeeded'}}},
+                        {'kind': 'effect', 'target': 'C91', 'outcome': 'succeeded'}}},
                 ],
                 'tool_call_refused_or_failed': {'target': 'failed', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'output', 'outcome': 'failed'}}},

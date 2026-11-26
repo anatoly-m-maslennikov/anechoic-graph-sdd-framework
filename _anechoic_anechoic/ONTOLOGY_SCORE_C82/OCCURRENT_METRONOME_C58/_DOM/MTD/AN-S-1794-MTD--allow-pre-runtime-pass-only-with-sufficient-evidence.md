@@ -1,0 +1,32 @@
+---
+atom_family: SPEC
+atom_id: AN-S-1794
+container:
+  component: C58
+tier: 3
+context:
+  lens: DOM/MTD
+state:
+  status: active
+  version: 27
+  updated_at: '2026-11-25T21:49:47.264290+00:00'
+---
+## Summary
+
+Allow pre-runtime pass only with sufficient evidence
+
+## Claim
+
+### Prose Claim
+
+
+Evaluations using a Realization Graph before runtime, for their declared input boundary.
+
+
+an Evaluation using a Realization Graph **may** return `pass` **before** runtime **only** **when** sufficient evidence establishes the checked Claim for the declared input boundary.
+
+- **if** the Claim requires complete coverage of particular Relation mechanisms, the evidence **must** establish that coverage; a completeness declaration alone is insufficient.
+- the evidence **must** establish the actual acceptance condition. complete provenance **or** graph coverage does **not** itself establish that condition.
+- a possible inferred Relation is **not** an observed occurrence. **when** required runtime evidence is unavailable **or** a material condition remains unresolved, the Evaluation **must not** return a pre-runtime `pass`.
+
+this Claim constrains permission **to** report a result; the applicable QA Specs supply the checks. it does **not** require complete graph coverage for a Claim that needs **only** bounded evidence.

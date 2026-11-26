@@ -13,9 +13,14 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import
 
 from . import common, effects
 from .effects import _project_write_lock
-from .native_draft_guards import _check_owner, _native_slug, _summary, _validate_contract
+from .native_draft_guards import (
+    _check_owner, _native_slug, _summary, _validate_contract,
+    _check_first_spec, is_c9_typed_manifest,
+)
 from .native_draft_source import _revision_header, _revision_root, _state_bytes, _task_path
 from .native_draft_revision import _promote_revision
+from .native_replacement_promotion import _plan_replacements, _archive_replacements
+from .native_draft_custom_replacement import _publish_custom_replacement
 from .native_project_spec import PROJECT_SPEC_TIERS
 from .source import bind_query_reader
 
@@ -41,12 +46,16 @@ def _promote_new(selection, target, status, draft, current_rows, previous_captur
             selection, target, status, draft, current_rows, previous_capture, path, root, digest, atom_id)
         if status in ('active', 'in_queue', 'backlog'):
             from .native_update import promote_ticket_tree
-            return promote_ticket_tree(selection, draft, destination, status, current_rows, capture.atoms, lambda: None)
+            return promote_ticket_tree(selection, draft, destination, status, current_rows, capture, lambda: None)
+        plans = _plan_replacements(selection, draft, current_rows, None, capture)
         if path.with_suffix('').exists() or path.with_suffix('').is_symlink():
             raise common.InputError('targetStatus', 'Draft trees can only be published to Backlog or In Queue.')
+        archived = _archive_replacements(selection, plans, draft)
+        if archived['outcome'] != 'completed':
+            return archived
         with bind_query_reader(None):
             written = common.write_destination(selection.root, destination, promoted)
-            recorded = list(written.effects)
+            recorded = archived['effects'] + list(written.effects)
             if written.errors:
                 return common.result(effects=recorded, errors=written.errors)
             removed = effects.remove(selection.root, path, digest)
@@ -94,7 +103,7 @@ def _preflight_new(selection, target, status, draft, current_rows, previous_capt
     return capture, destination, promoted
 
 
-def _publish_first_spec(selection, draft, structure_snapshot, previous_capture, validate_project_spec_model):
+def _publish_first_spec(selection, draft, current_rows, structure_snapshot, previous_capture, validate_project_spec_model):
     from .native_draft import _first_spec_write_lock
 
     atom_id, ref_id = draft['id'], draft['_exact_ref']
@@ -108,12 +117,16 @@ def _publish_first_spec(selection, draft, structure_snapshot, previous_capture, 
             or path.parent.name not in {DRAFT_DIRECTORY, '000_draft'} or not re.fullmatch(re.escape(ref_id) + r'-.+\.md', path.name)):
         raise common.InputError('target', 'Select a Spec in its native Draft directory.')
     with _first_spec_write_lock(selection.root):
-        destination, promoted, version = _preflight_first_spec(
+        destination, promoted, version, capture = _preflight_first_spec(
             selection, draft, structure_snapshot, previous_capture, validate_project_spec_model,
             atom_id, ref_id, path, digest)
+        plans = _plan_replacements(selection, draft, current_rows, structure_snapshot, capture)
+        archived = _archive_replacements(selection, plans, draft)
+        if archived['outcome'] != 'completed':
+            return archived
         with bind_query_reader(None):
             written = common.write_destination(selection.root, destination, promoted)
-            recorded = list(written.effects)
+            recorded = archived['effects'] + list(written.effects)
             errors = list(written.errors)
             if not errors:
                 removed = effects.remove(selection.root, path, digest)
@@ -136,6 +149,7 @@ def _preflight_first_spec(selection, draft, structure_snapshot, previous_capture
         context = native_header_view(header)['context']
         lens = context.get('lens')
         if (context.get('template') not in (None, 'component_contract', *PROJECT_SPEC_TIERS)
+                and not is_c9_typed_manifest(header)
                 or re.search(r'-(?:PROJECT|COMPONENT)_MANIFEST(?:--|\.md$)', path.name, re.I)):
             raise common.InputError('target', 'Select a Spec Draft with a lens and without a structural template.')
         owner = path.parent.parent
@@ -165,26 +179,9 @@ def _preflight_first_spec(selection, draft, structure_snapshot, previous_capture
         raise
     except (OSError, RuntimeError, TypeError, ValueError) as error:
         raise common.SourceChanged('Native Spec source is unavailable or changed.') from error
-    return destination, promoted, version
+    return destination, promoted, version, capture
 
 
-
-def _check_first_spec(selection, header, body, path, structure_snapshot, capture, owner,
-                      validate_project_spec_model):
-    from .native_draft import _validate_project_template
-    summary = _summary(body)
-    _validate_project_template(header, validate_project_spec_model, body)
-    contract_owner = _validate_contract(selection, header, body, path, structure_snapshot, capture)
-    if contract_owner is not None and contract_owner != owner:
-        raise common.InputError('container', 'Component Contract owner disagrees with its path.')
-    if 'atom_family' in header:
-        try:
-            projected = native_carrier_path(header, summary, project_root=selection.control_root,
-                                            owner_directory=owner)
-        except ValueError as error:
-            raise common.InputError('target', 'Spec Draft Header or Summary cannot be projected to a path.') from error
-        if path != projected:
-            raise common.InputError('target', 'Spec Draft path disagrees with its Header and Summary.')
 
 def _cleanup_published_draft(selection, target, status, draft, current, structure_snapshot, current_rows,
                              previous_capture):
@@ -292,8 +289,10 @@ def promote_draft(selection, params, *, current_rows, structure_snapshot=None, p
     if '-T-' in atom_id and status != 'backlog' and 'atom_family' in chosen[0]['header_json']:
         raise common.InputError('targetStatus', 'A native Ticket Draft must be published to Backlog.')
     if not predecessors:
+        if version == 1 and _is_custom_replacement(chosen[0]['header_json']):
+            return _publish_custom_replacement(selection, chosen[0], current_rows, previous_capture)
         if '-S-' in atom_id:
-            return _publish_first_spec(selection, chosen[0], structure_snapshot, previous_capture,
+            return _publish_first_spec(selection, chosen[0], current_rows, structure_snapshot, previous_capture,
                                        validate_project_spec_model)
         if version == 1 and '-T-' in atom_id:
             return _promote_new(selection, target, status, chosen[0], current_rows, previous_capture)
@@ -306,3 +305,11 @@ def promote_draft(selection, params, *, current_rows, structure_snapshot=None, p
         raise common.InputError('target', 'Draft Version must be newer than its Current predecessor.')
     return _promote_revision(selection, target, status, draft, previous, current_rows,
                              structure_snapshot, previous_capture, validate_project_spec_model)
+
+
+def _is_custom_replacement(header):
+    context = native_header_view(header).get('context', {})
+    return (header.get('atom_family') == 'PROJECT_CONFIG'
+            and context.get('container') == {'component': 'C00'}
+            and context.get('template') == 'manifest_node'
+            and header.get('relations', {}).get('IS_REPLACEMENT_FOR'))

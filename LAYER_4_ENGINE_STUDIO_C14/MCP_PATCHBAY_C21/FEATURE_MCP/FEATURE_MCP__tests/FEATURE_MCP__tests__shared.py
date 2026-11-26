@@ -36,7 +36,7 @@ def project(root):
     for name in ('LAYER_1_META_ONTOLOGY_C9', 'LAYER_1_META_ONTOLOGY_C9/_SPEC', '__PROJECT_CONFIG/CUSTOM_MODEL'):
         dest = control / name
         dest.mkdir(parents=True, exist_ok=True)
-        for path in (source / name).glob('*.md'):
+        for path in (source / name.replace('LAYER_1_META_ONTOLOGY_C9', 'ONTOLOGY_SCORE_C82/CONTINUANT_PITCHFORK_C9')).glob('*.md'):
             shutil.copy2(path, dest / path.name)
     (control / 'LAYER_4_ENGINE_STUDIO_C14').mkdir()
     selection = select_runtime_project(root, CONTROL)

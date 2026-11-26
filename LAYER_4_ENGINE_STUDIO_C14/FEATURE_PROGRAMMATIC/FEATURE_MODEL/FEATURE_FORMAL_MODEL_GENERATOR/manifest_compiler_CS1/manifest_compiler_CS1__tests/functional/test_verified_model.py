@@ -17,16 +17,17 @@ from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.manifest_
 )
 from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.FEATURE_MODEL_VALIDATION__shared import open_admitted_model
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import CURRENT_STATUSES
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model_ontology_path__pub import find_ontology_component
 
 
 class VerifiedModelTests(unittest.TestCase):
     def test_active_model_checks_and_loads(self):
         root = Path(__file__).resolve().parents[7]
         control = root / "_anechoic_anechoic"
-        ontology = control / "LAYER_1_META_ONTOLOGY_C9"
+        ontology = find_ontology_component(control)
         self.assertTrue(ontology.is_dir(), "Active C9 Model is missing")
         selected = read_active_model_sources(control, ontology)
-        self.assertTrue(any(source.startswith("LAYER_1_META_ONTOLOGY_C9/") for source, _, _ in selected))
+        self.assertTrue(any(source.startswith(f"{ontology.relative_to(control)}/") for source, _, _ in selected))
         self.assertTrue(any("PROJECT_CONFIG/" in source for source, _, _ in selected))
         with TemporaryDirectory() as directory:
             staged = Path(directory)
@@ -52,7 +53,7 @@ class VerifiedModelTests(unittest.TestCase):
 
     def test_header_predicate_checks_observed_values(self):
         control = Path(__file__).resolve().parents[7] / "_anechoic_anechoic"
-        selected = read_active_model_sources(control, control / "LAYER_1_META_ONTOLOGY_C9")
+        selected = read_active_model_sources(control, find_ontology_component(control))
         records, originals, _ = admit_active_model_records(selected)
         bindings = compile_native_bindings(records, originals)
         program = render_atom_header_lean(records, bindings)
@@ -93,7 +94,7 @@ example : atomHeaderValid {header with family := "OTHER"} = false := by decide
 
     def test_lean_rejects_unknown_relation_endpoint_with_source(self):
         control = Path(__file__).resolve().parents[7] / "_anechoic_anechoic"
-        selected = read_active_model_sources(control, control / "LAYER_1_META_ONTOLOGY_C9")
+        selected = read_active_model_sources(control, find_ontology_component(control))
         records, originals, _ = admit_active_model_records(selected)
         bindings = compile_native_bindings(records, originals)
         subject, declaration = next((subject, declaration) for subject, declaration in bindings["declarations"]

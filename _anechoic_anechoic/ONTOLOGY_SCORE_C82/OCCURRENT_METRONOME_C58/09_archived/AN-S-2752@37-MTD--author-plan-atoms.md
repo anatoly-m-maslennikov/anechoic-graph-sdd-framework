@@ -1,0 +1,31 @@
+---
+atom_family: SPEC
+atom_id: AN-S-2752
+container:
+  component: C58
+tier: 2
+context:
+  lens: DOM/MTD
+state:
+  status: "archived"
+  version: 37
+  updated_at: "2026-11-25T20:40:57.860545+00:00"
+---
+
+## Summary
+
+Author Plan Atoms
+
+## Claim
+
+### Prose Claim
+
+For a native Work Report, use the `work_report` Ticket Asset Template and give the report a Summary of its own contribution. For a report attached to a Task, use the Task as its declared Container. Place an unbound report under Ticket Assets as specified by AN-S-3160. Record actual changes, checks performed, results, and remaining gaps. Update the record as work proceeds.
+
+For a legacy Plan / Work Report, apply AN-S-2598. For other legacy Plan Forms, apply the common Plan rules independently of Label:
+
+1. State the intended work or outcome and provide own work, direct Plan decomposition, or both under CA-R-1575. Apply the executable leaf-work bound under CA-R-1589.
+2. Resolve the active Subject and its target Scope under CA-R-1588. Apply the applicable completion and verification rules, including CA-R-1599, and use Labels only under their governing rules. For a containing Plan whose Status is Done or Canceled, require every directly contained Plan to be Done or Canceled; mixed terminal statuses are allowed, and containment does not force a child Status to match the parent.
+3. Express required start dependencies as direct `IS_BLOCKED_BY` Relations on the dependent Plan and derive `BLOCKS`. For Plan containment, declare `IS_CONTAINED_BY` on the child and derive `CONTAINS`. Do not infer dependencies from numbers or folder placement.
+4. Resolve confidence from its applicable sources and store only an explicitly selected confidence override under its admitted encoding.
+5. Review the finalized intended contribution against its supporting content and completion criteria, then derive Summary under CA-R-1418 and CA-R-2499. Preserve Summary across Revisions; a changed Summary requires the applicable replacement identity under CA-R-1464.

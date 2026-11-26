@@ -36,11 +36,11 @@ def target(ref, version=1):
 
 def prepare_project(root):
     shutil.copytree(Path(__file__).with_name("assets") / "lifecycle_latency", root, dirs_exist_ok=True)
-    ontology = Path("_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9")
-    source = ROOT / ontology
+    ontology = Path("_anechoic_anechoic/LAYER_2_META_METHODOLOGY_C58/_DOM/MTD")
+    source = ROOT / "_anechoic_anechoic/ONTOLOGY_SCORE_C82/OCCURRENT_METRONOME_C58/_DOM/MTD"
     for atom in ("AN-S-1928", "AN-S-1834", "AN-S-1831"):
-        original, = source.rglob(f"{atom}-DOM-*.md")
-        path = root / ontology / original.relative_to(source)
+        original, = source.rglob(f"{atom}-MTD-*.md")
+        path = root / ontology / original.name
         path.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(original, path)
 

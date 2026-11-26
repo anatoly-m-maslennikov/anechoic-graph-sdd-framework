@@ -40,7 +40,7 @@ class ReviewContext:
         if not probability(snapshot.get("confidence_threshold")):
             raise ValueError("invalid caller confidence threshold")
         self.confidence_threshold = snapshot["confidence_threshold"]
-        constraints = self._configure_contract(snapshot)
+        self._configure_contract(snapshot)
         self.relation_ordering = validate_ordering_policy(snapshot.get('relation_ordering'))
         self.preflight = snapshot.get('preflight', {})
         self.authority_bindings = snapshot.get('authority_bindings')
@@ -70,21 +70,6 @@ class ReviewContext:
         self._principles = {row['binding']['path']: row
                             for row in validated_principle_admissions(snapshot)}
         self._candidates = validated_candidate_bindings(snapshot)
-        self._validate_operator_precheck(constraints)
-
-    def _validate_operator_precheck(self, constraints):
-        if self.operator_precheck is not None:
-            from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.operator_precheck import word_inventory
-            registry_ref = constraints.get('operator_registry')
-            registries = [r for r in self._sources.values()
-                          if authority_reference(r['binding']) == registry_ref
-                          and r['binding'] in (self.authority_bindings or [])]
-            if len(registries) != 1:
-                raise ValueError('operator precheck requires one bound registry authority')
-            expected = word_inventory(registries[0]['text'])
-            if sorted(self.operator_precheck) != sorted(expected):
-                raise ValueError('operator precheck inventory differs from bound authority')
-
     def _configure_contract(self, snapshot):
         constraints = snapshot.get('review_constraints', {})
         if not isinstance(constraints, dict):
@@ -92,12 +77,6 @@ class ReviewContext:
         self.report_contract = constraints.get('report_contract', 4)
         if self.report_contract == 7 and ('operator_precheck' in constraints or 'operator_registry' in constraints):
             raise ValueError('contract 7 excludes the retired operator precheck')
-        self.operator_precheck = constraints.get('operator_precheck')
-        if self.operator_precheck is not None:
-            if (self.report_contract != 6 or not isinstance(self.operator_precheck, list)
-                    or not self.operator_precheck
-                    or any(not isinstance(v, str) or not v for v in self.operator_precheck)):
-                raise ValueError('operator precheck needs an explicit contract-6 operator inventory')
         if type(self.report_contract) is not int or self.report_contract not in (4, 5, 6, 7):
             raise ValueError('caller report_contract must be 4, 5, 6 or 7')
         if self.report_contract in (6, 7):
@@ -110,7 +89,6 @@ class ReviewContext:
                 raise ValueError('atom_local context needs an explicit rule allowlist')
             if snapshot['candidate_bindings'][0] in snapshot['authority_bindings']:
                 raise ValueError('a local candidate cannot admit itself as a checking rule')
-        return constraints
 
     def source_text(self, binding: Any) -> str:
         if not isinstance(binding, dict) or not text(binding.get("path")):

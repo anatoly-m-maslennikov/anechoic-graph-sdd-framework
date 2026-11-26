@@ -39,7 +39,7 @@ def copy_lifecycle_definitions(control):
     for relative in ("LAYER_1_META_ONTOLOGY_C9", "LAYER_1_META_ONTOLOGY_C9/_SPEC", "__PROJECT_CONFIG/CUSTOM_MODEL"):
         destination = control / relative
         destination.mkdir(parents=True, exist_ok=True)
-        for path in (source / relative).glob("*.md"):
+        for path in (source / (relative.replace("LAYER_1_META_ONTOLOGY_C9", "ONTOLOGY_SCORE_C82/CONTINUANT_PITCHFORK_C9") if relative.startswith("LAYER_1_META_ONTOLOGY_C9") else relative)).glob("*.md"):
             shutil.copy2(path, destination / path.name)
 
 
@@ -168,11 +168,14 @@ class LifecycleWorkerTests(unittest.TestCase):
     def test_ticket_status_checks_installed_definitions(self):
         with tempfile.TemporaryDirectory(prefix="ane-lifecycle-", dir="/tmp") as directory:
             binding, _, _ = generation_fixture(directory)
-            source_root = ENGINE.parent / "_anechoic_anechoic" / "LAYER_1_META_ONTOLOGY_C9"
             control = Path(binding["root"]) / binding["control_root"]
-            shutil.copytree(source_root, control / "LAYER_1_META_ONTOLOGY_C9")
-            shutil.copytree(ENGINE.parent / "_anechoic_anechoic" / "__PROJECT_CONFIG" / "CUSTOM_MODEL",
-                            control / "__PROJECT_CONFIG" / "CUSTOM_MODEL")
+            copy_lifecycle_definitions(control)
+            source = ENGINE.parent / "_anechoic_anechoic/ONTOLOGY_SCORE_C82/OCCURRENT_METRONOME_C58/_DOM/MTD"
+            installed = control / "LAYER_2_META_METHODOLOGY_C58/_DOM/MTD"
+            installed.mkdir(parents=True)
+            for atom in ("AN-S-1928", "AN-S-1834", "AN-S-1831"):
+                original, = source.rglob(f"{atom}-MTD-*.md")
+                shutil.copy2(original, installed / original.name)
             def run(name, arguments):
                 result = invoke(binding, name, arguments)
                 self.assertEqual(0, result.returncode, result.stderr)
@@ -194,7 +197,7 @@ class LifecycleWorkerTests(unittest.TestCase):
             rejected = run("atom_lifecycle_change_status", {"target": target, "targetStatus": "nonsense"})
             self.assertEqual("needs_input", rejected["outcome"])
             self.assertEqual([], rejected["effects"])
-            installed = next((control / "LAYER_1_META_ONTOLOGY_C9").rglob("AN-S-1831-*.md"))
+            installed = next(installed.glob("AN-S-1831-*.md"))
             installed.write_bytes(installed.read_bytes() + b"changed\n")
             blocked = run("atom_lifecycle_change_status", {"target": target, "targetStatus": "done"})
             self.assertEqual("blocked", blocked["outcome"], blocked)

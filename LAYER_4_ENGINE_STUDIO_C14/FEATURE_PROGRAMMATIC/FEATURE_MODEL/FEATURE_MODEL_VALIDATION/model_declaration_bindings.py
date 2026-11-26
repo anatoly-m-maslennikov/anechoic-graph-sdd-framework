@@ -7,6 +7,13 @@ from collections.abc import Mapping
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import model_class_target
 
 
+_MIGRATED_RUNTIME_NAMES = {
+    "Graph/Node//Artifact//SSOT//Prescribed/Structure/Component//Project Spec": ("Project", "Project"),
+    "Graph/Node//Artifact//SSOT//Prescribed/Content/Atom//Ticket": ("TicketAtom", "Ticket Atom"),
+    "Graph/Node//Artifact//SSOT//Prescribed/Content/Atom//Specification": ("SpecAtom", "Spec Atom"),
+    "Graph/Node//Artifact//SSOT//Prescribed/Content/Atom//project_config": ("ProjectConfigAtom", "Project Config Atom"),
+}
+
 def _validate_bound_constraints(property_populations, model_types, populations, relations):
     for address, rules in property_populations:
         if address not in model_types:
@@ -59,6 +66,9 @@ def bind_model_declarations(declarations, model_classes):
         populations[model_class] = args.get("population_unique_constraints", ())
         for address in (subject, target, args["entity_name"]):
             addresses[address].add(model_class)
+        migrated = _MIGRATED_RUNTIME_NAMES.get(target)
+        if migrated and name == migrated[0]:
+            addresses[migrated[1]].add(model_class)
     model_types = {address: next(iter(kinds)) for address, kinds in addresses.items() if len(kinds) == 1}
     _validate_bound_constraints(property_populations, model_types, populations, relations)
     return relations, model_types, populations

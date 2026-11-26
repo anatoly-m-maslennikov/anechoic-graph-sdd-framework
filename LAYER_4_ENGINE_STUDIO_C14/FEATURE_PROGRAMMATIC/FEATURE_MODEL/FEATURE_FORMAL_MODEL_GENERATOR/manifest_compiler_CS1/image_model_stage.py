@@ -13,6 +13,7 @@ import time
 from tempfile import TemporaryDirectory
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import CEILINGS, ReadContext
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model_ontology_path__pub import find_ontology_component
 
 ROOT = Path(__file__).resolve().parents[5]
 ENGINE = "LAYER_4_ENGINE_STUDIO_C14"
@@ -150,9 +151,9 @@ def _run(command: list[str], deadline: float | None) -> str:
 
 def stage_model(project: Path, control: Path, timeout: float | None, previous: str | None) -> str:
     deadline = None if timeout is None else time.monotonic() + timeout
-    source = control / ONTOLOGY
+    source = find_ontology_component(control)
     compile_command = [sys.executable, "-B", "-P", "-m", COMPILE]
-    if not source.exists() and not source.is_symlink():
+    if source is None:
         if previous is not None:
             inspect_previous_image(previous, timeout=_remaining(deadline))
         return _run(compile_command, deadline)

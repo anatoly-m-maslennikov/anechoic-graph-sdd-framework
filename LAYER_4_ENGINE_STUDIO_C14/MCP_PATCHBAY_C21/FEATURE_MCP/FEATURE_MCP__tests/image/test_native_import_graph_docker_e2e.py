@@ -242,26 +242,26 @@ class NativeImportGraphDockerE2E(
         self._wait_rows(sql, [])
 
     def test_watcher_updates_native_atom_and_relations(self):
-        relative = "_anechoic_anechoic/001_TICKETS/TASKS/AN-T-9901--watcher.md"
-        graph = """
+        [relation], = self._rows("SELECT DISTINCT relation_type FROM relations "
+                                 "WHERE relation_type IN ('CONTAINED_BY', 'IS_CONTAINED_BY') AND NOT derived")
+        graph = f"""
             FROM GRAPH_TABLE (anechoic
-            MATCH (s:Reference)-[e:CONTAINED_BY]->(t:Reference)
+            MATCH (s:Reference)-[e:{relation}]->(t:Reference)
             COLUMNS (s.ref AS source_ref, t.kind AS target_kind, t.ref AS target_ref))
             SELECT target_kind, target_ref WHERE source_ref = 'AN-T-9901'
         """
-        sql = """
+        sql = f"""
             SELECT a.filename, a.reference, n.exact_ref, r.target_kind, r.target_ref
             FROM atoms a JOIN native_references n USING (relative_path, filename, reference)
             JOIN relations r ON r.source_kind = 'Atom' AND r.source_ref = a.reference
-                AND r.relation_type = 'CONTAINED_BY' AND NOT r.derived
+                AND r.relation_type = '{relation}' AND NOT r.derived
             WHERE a.reference = 'AN-T-9901'
         """
 
         def check(label, started, expected):
             limit = 20.0
-            deadline = started + limit
             actual = self._rows(sql)
-            while actual != expected and observing(self.container, deadline):
+            while actual != expected and observing(self.container, started + limit):
                 sleep(.1)
                 actual = self._rows(sql)
             elapsed = monotonic() - started
@@ -272,7 +272,7 @@ class NativeImportGraphDockerE2E(
             self.assertEqual([expected[0][-2:]] if expected else [], self._rows(graph), label)
 
         started = monotonic()
-        path = self._write(relative, _watcher_contents(1, "component: C00"))
+        path = self._write("_anechoic_anechoic/001_TICKETS/TASKS/AN-T-9901--watcher.md", _watcher_contents(1, "component: C00"))
         check("create", started, [[path.name, "AN-T-9901", "AN-T-9901@1", "Component", "C00"]])
         started = monotonic()
         path.write_text(_watcher_contents(2, "atom: AN-S-001"), encoding="utf-8")

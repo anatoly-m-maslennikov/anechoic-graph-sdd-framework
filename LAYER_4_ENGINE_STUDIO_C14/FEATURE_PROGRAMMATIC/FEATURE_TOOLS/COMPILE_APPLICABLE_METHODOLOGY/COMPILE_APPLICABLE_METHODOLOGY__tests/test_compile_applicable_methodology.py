@@ -4,33 +4,18 @@ import os
 from pathlib import Path
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.COMPILE_APPLICABLE_METHODOLOGY.COMPILE_APPLICABLE_METHODOLOGY__tests.methodology_test_support import (
-    CompilerFixture, module, carrier, definition_carrier, term_definition_carrier,
+    CompilerFixture, module, carrier, term_definition_carrier,
 )
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.COMPILE_APPLICABLE_METHODOLOGY.methodology_paths__shared import declaration_source_pins
 
 
 class CompilerTest(CompilerFixture):
-    def test_definition_subject_accepts_scalar_governs_shorthand(self) -> None:
-        frontmatter = (
-            "atom_id: CA-R-001\n"
-            "cce_form: definition\n"
-            "subjects:\n"
-            '  governs: "Evaluation For Relation"\n'
-            "version: 1\n"
-        )
-
-        term, subject_path, namespace = module.definition_subject(frontmatter, "CA-R-001.md")
-
-        self.assertEqual("Evaluation For Relation", term)
-        self.assertEqual("Evaluation For Relation", subject_path)
-        self.assertEqual("", namespace)
-
-        hybrid = definition_carrier("CA-R-001", "Evaluation For Relation").replace(
-            b"cce_form: definition\n", b"cce_form: definition\nrole: Requirement\nform: Term Definition\n"
-        )
-        frontmatter, _ = module.split_frontmatter(hybrid, "CA-R-001.md")
-        self.assertEqual(("Evaluation For Relation", "Evaluation For Relation", ""),
-                         module.definition_subject(frontmatter, "CA-R-001.md"))
+    def test_retired_cce_form_does_not_define_a_term(self) -> None:
+        frontmatter = 'cce_form: definition\nsubjects:\n  governs: "Old Term"\n'
+        self.assertEqual((None, None, ""), module.definition_subject(frontmatter, "test.md"))
+        frontmatter = 'cce_form: definition\nrole: Method\nform: Term Definition\ntopics:\n  main_subject: Term//Current Term\n'
+        self.assertEqual(("Current Term", "Term//Current Term", ""),
+                         module.definition_subject(frontmatter, "test.md"))
 
 
     def test_current_term_definition_requires_a_flat_term_subject(self) -> None:

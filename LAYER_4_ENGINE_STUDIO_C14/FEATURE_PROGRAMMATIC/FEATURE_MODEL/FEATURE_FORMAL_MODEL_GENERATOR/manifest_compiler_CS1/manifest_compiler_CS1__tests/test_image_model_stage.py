@@ -9,7 +9,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.manifest_compiler_CS1.manifest_compiler_CS1__shared import (
+from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.manifest_compiler_CS1.image_model_stage import (
     bounded_run, previous_claims, stage_model,
 )
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import ReadContext
@@ -130,6 +130,21 @@ class ImageModelStageTests(unittest.TestCase):
                 (source / "claim.md").write_bytes(b"other")
                 with self.assertRaisesRegex(ValueError, "Duplicate"):
                     stage_model(project, project, 5, None)
+
+    def test_staging_flattens_relocated_c9(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            project = Path(temporary).resolve()
+            (project / ".anechoic_tmp").mkdir()
+            spec = project / "ONTOLOGY_SCORE_C91/CONTINUANT_PITCHFORK_C9/_SPEC"
+            spec.mkdir(parents=True)
+            (spec / "claim.md").write_bytes(b"claim")
+
+            def compile_model(command, **kwargs):
+                self.assertEqual((Path(command[-1]) / ONTOLOGY / "claim.md").read_bytes(), b"claim")
+                return subprocess.CompletedProcess(command, 0, "fingerprint\n")
+
+            with patch.object(subprocess, "run", side_effect=compile_model):
+                self.assertEqual(stage_model(project, project, 5, None), "fingerprint")
 
     def test_staging_rejects_changed_sources_and_selector_mismatch(self):
         with tempfile.TemporaryDirectory() as temporary:

@@ -7,6 +7,7 @@ from typing import get_type_hints
 from pydantic import TypeAdapter, ValidationError
 from pydantic.dataclasses import is_pydantic_dataclass
 
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.atom_reference__pub import is_native_atom_reference
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.cardinality__pub import cardinality_bounds
 
 
@@ -108,6 +109,14 @@ def _validate_present_field(field, field_type, value, ancestors, construct_group
                 _check_count(f"{field.name}.{key}", "value", len(child) if isinstance(child, list) else 1, count)
         _validate_nested(value, ancestors)
         _validate_field_value(field.name, field_type, value, metadata)
+        if names := metadata.get("allowed_relation_names"):
+            for relation, targets in value.items():
+                if relation not in names:
+                    raise ValueError(f"{field.name}.{relation}: undeclared authored Relation")
+                if any(not is_native_atom_reference(target) for target in targets):
+                    raise ValueError(f"{field.name}.{relation}: expected Atom references")
+                if len(set(targets)) != len(targets):
+                    raise ValueError(f"{field.name}.{relation}: duplicate Atom reference")
     else:
         _validate_direct_value(field, field_type, value, ancestors)
     return value

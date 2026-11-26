@@ -1,20 +1,93 @@
 """Validate native Draft ownership, contracts, and summaries."""
 from hashlib import sha256
+import ast
 from pathlib import Path
 from types import SimpleNamespace
 import re
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import native_header_view
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import native_header_view, native_carrier_path
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.component_contract__pub import read_component_contract
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.lens_scopes__pub import compile_lens_groups, lens_is_allowed
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import DRAFT_DIRECTORY, TICKET_DIRECTORY, spec_lens_directories
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_carrier
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import CEILINGS, ReadContext
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import carrier_slug
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_content, parse_subject_expression, render_subject, parse_native_model_claim
+from markdown_it import MarkdownIt
 
 from . import common
 
 
 _SUMMARY = re.compile(r'(?m)^#{1,2} Summary[ \t]*\r?\n(?:[ \t]*\r?\n)*([^\r\n]+)[ \t]*(?=\r?$)')
+
+
+def is_c9_typed_manifest(header):
+    view = native_header_view(header)
+    context = view.get('context', {})
+    template = context.get('template')
+    return (header.get('atom_family') == 'SPEC' and context.get('container') == {'component': 'C9'}
+            and template in {'manifest_node', 'manifest_property', 'manifest_relation'}
+            and (context.get('lens') == 'SPEC' or (context.get('lens') == 'DES' and template == 'manifest_property')))
+
+
+def _has_formal_declaration(body):
+    sections = parse_content(body)
+    claims = [s for s in sections if s['property_path'] == ['claim', 'formal_claim']]
+    if len(claims) != 1:
+        return False
+    tokens = MarkdownIt('commonmark').parse(claims[0]['direct_markdown'] or '')
+    if len(tokens) != 1 or tokens[0].type != 'fence' or tokens[0].info.strip() != 'python':
+        return False
+    try:
+        return parse_native_model_claim(tokens[0].content) is not None
+    except ValueError:
+        return False
+
+
+def _validate_c9_typed_manifest(header, body):
+    try:
+        sections = parse_content(body)
+        scopes = [s for s in sections if s['property_path'] == ['claim_scope']]
+        manifests = [s for s in sections if s['property_path'] == ['formal_manifest']]
+        template = native_header_view(header)['context']['template']
+        if (len(scopes) > 1 or (not scopes and template != 'manifest_property')
+                or len(manifests) != 1 or manifests[0]['heading_level'] != 2):
+            raise ValueError('Missing typed scope or manifest')
+        if scopes:
+            scope = (scopes[0]['direct_markdown'] or '').strip()
+            expression = parse_subject_expression(scope, subject_profile='approved').expression
+            if not scope.startswith('MODEL//ANECHOIC <+ ') or render_subject(expression) != scope:
+                raise ValueError('Invalid Model scope')
+        if any(len(s['property_path']) > 1 for s in sections if s['property_path'][:1] == ['formal_manifest']):
+            raise ValueError('Nested Formal Manifest')
+        markdown = manifests[0]['direct_markdown'] or ''
+        tokens = MarkdownIt('commonmark').parse(markdown)
+        if (len(tokens) != 1 or tokens[0].type != 'fence' or tokens[0].info.strip() != 'python anechoic-edsl'
+                or tokens[0].map is None or markdown.splitlines()[tokens[0].map[1] - 1].strip() != tokens[0].markup):
+            raise ValueError('Invalid typed Python fence')
+        tree = ast.parse(tokens[0].content)
+        classes = [node for node in tree.body if isinstance(node, ast.ClassDef)]
+        bases = {'manifest_property': {'Property'}, 'manifest_relation': {'Relation'}}
+        if len(classes) != 1 or classes[0].decorator_list or classes[0].keywords or any(
+                not isinstance(base, ast.Name) for base in classes[0].bases):
+            raise ValueError('Invalid typed class')
+        class_bases = {base.id for base in classes[0].bases}
+        if (any(not isinstance(node, (ast.ImportFrom, ast.ClassDef))
+                and not (template == 'manifest_node' and class_bases == {'NodeConstraints'} and isinstance(node, ast.FunctionDef))
+                for node in tree.body)
+                or (template == 'manifest_node' and class_bases & {'Property', 'Relation'})
+                or (template != 'manifest_node' and (class_bases != bases[template] or len(classes[0].bases) != 1))):
+            raise ValueError('Template and typed class differ')
+        if not scopes:
+            from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.manifest_compiler_CS1.typed_property_relation_lowering import (
+                _field_assignments,
+            )
+
+            fields, _ = _field_assignments(classes[0], 'Property')
+            if 'bearer' not in fields or 'classification' in fields:
+                raise ValueError('An unscoped Property requires a bearer and cannot declare a classification')
+    except (ValueError, TypeError, KeyError, SyntaxError, IndexError) as error:
+        raise common.InputError('target', 'Invalid typed Model scope or Formal Manifest.') from error
 
 
 def _summary(body):
@@ -113,12 +186,14 @@ def _contract_owner(selection, component, lens, snapshot, capture):
         if any(part.startswith('_') or not re.search(r'_C[0-9]+$', part)
                for part in owner.relative_to(selection.control_root).parts):
             raise ValueError('Invalid Component directory')
-        if allowed is None or lens not in allowed:
+        groups = compile_lens_groups(fields.get('parameters'))
+        if not lens_is_allowed(lens, allowed, groups):
             raise common.InputError('lens', 'Lens is disabled for this Component.')
         lenses = getattr(capture, 'lenses', None)
-        known = lens in lenses if lenses is not None else any(
-            row.get('status_group') == 'Current' and native_header_view(row['header_json']).get('context', {}).get('lens') == lens
-            for row in capture.atoms)
+        known = lens in (fields.get('lens_whitelist') or ()) or any(lens in paths for paths in groups.values()) or (
+            lens in lenses if lenses is not None else any(
+                row.get('status_group') == 'Current' and native_header_view(row['header_json']).get('context', {}).get('lens') == lens
+                for row in capture.atoms))
         if not known:
             raise common.InputError('lens', 'Supply an existing enabled Lens.')
         if reader.currentness()['state'] != 'unchanged':
@@ -188,4 +263,25 @@ def _validate_contract(selection, header, body, path, snapshot, capture):
         raise common.InputError('target', 'Invalid Component Contract Header or Guarantee.') from error
     return owner
 
+
+
+
+def _check_first_spec(selection, header, body, path, structure_snapshot, capture, owner,
+                      validate_project_spec_model):
+    from .native_draft import _validate_project_template
+    summary = _summary(body)
+    _validate_project_template(header, validate_project_spec_model, body)
+    if is_c9_typed_manifest(header):
+        _validate_c9_typed_manifest(header, body)
+    contract_owner = _validate_contract(selection, header, body, path, structure_snapshot, capture)
+    if contract_owner is not None and contract_owner != owner:
+        raise common.InputError('container', 'Component Contract owner disagrees with its path.')
+    if 'atom_family' in header:
+        try:
+            projected = native_carrier_path(header, summary, project_root=selection.control_root,
+                                            owner_directory=owner)
+        except ValueError as error:
+            raise common.InputError('target', 'Spec Draft Header or Summary cannot be projected to a path.') from error
+        if path != projected:
+            raise common.InputError('target', 'Spec Draft path disagrees with its Header and Summary.')
 

@@ -257,7 +257,8 @@ def _run_modules(root: Path, modules: list[Path], environment: dict, modules_rep
     browser = next((module for module in modules if module.name == "test_native_import_graph_docker_e2e.py"
                     and _docker_module(root, module)), None)
     failed, tests, skipped = [], 0, 0
-    with ThreadPoolExecutor(max_workers=2) as ordinary, ThreadPoolExecutor(max_workers=2) as docker:
+    host_workers = int(environment.get("ANECHOIC_TEST_FANOUT", "2"))
+    with ThreadPoolExecutor(max_workers=host_workers) as ordinary, ThreadPoolExecutor(max_workers=2) as docker:
         try:
             if browser in modules:
                 first = {docker.submit(run_module, root, browser, environment): browser}

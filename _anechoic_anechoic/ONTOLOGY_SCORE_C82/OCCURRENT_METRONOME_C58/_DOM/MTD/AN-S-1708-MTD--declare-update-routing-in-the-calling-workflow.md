@@ -1,0 +1,34 @@
+---
+atom_family: SPEC
+atom_id: AN-S-1708
+container:
+  component: C58
+tier: 3
+context:
+  lens: DOM/MTD
+state:
+  status: "active"
+  version: 27
+  updated_at: "2026-11-25T22:24:06.996758+00:00"
+---
+## Summary
+
+Declare update routing **in** the calling Workflow
+
+## Claim
+
+### Prose Claim
+
+
+Atom update routing for a calling Workflow.
+
+
+**to** author an Atom update Workflow, declare its response **to** identity assessment **in** the Workflow graph rather than **in** the assessment Action **or** executor code.
+
+- reference CA-O-067-CORE_META_MODEL-ACTION--assess-atom-update-identity for the assessment; bind the target Revision, proposed result, applicable authority, **and** evidence **to** that Step. the Action returns its assessment **without** selecting the caller's next Step **or** continuation Workflow.
+- map identity-preserving results **to** the caller's declared update path **and** remaining authorization **and** checks; the assessment alone does **not** perform the update.
+- map replacement-required results **to** a terminal handoff under AN-S-1615. keep the admitted replacement-continuation binding **in** the Workflow definition, **not** as an assessment Action input. the ending Run does **not** call **or** wait for replacement **or** persist an intermediate update merely **to** replace it.
+- map unresolved results **to** the caller's declared evidence-gathering **or** escalation path; an unresolved result **must not** be treated as approval.
+- include reassessment **when** the proposal changes **or** its evidence becomes stale **before** persistence. a changed Summary remains a replacement under AN-S-1604 even **when** the request began as an update.
+
+this Method constrains how an Author expresses the caller's graph. it is **not** another Workflow, executable routing service, **or** requirement **to** build the executor through a particular Workflow.

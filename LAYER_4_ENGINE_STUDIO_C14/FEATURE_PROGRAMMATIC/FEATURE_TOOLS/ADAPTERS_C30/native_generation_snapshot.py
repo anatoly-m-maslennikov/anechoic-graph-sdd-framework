@@ -9,7 +9,10 @@ from .native_carrier_header__pub import native_header_view
 from .native_source_rows__pub import _issue
 
 _HISTORICAL = {"ADVANCES": "SERVES", "IS_ADVANCED_BY": "IS_SERVED_BY",
-               "REFINES": "CONTRIBUTES_TO", "IS_REFINED_BY": "RECEIVES_CONTRIBUTION_FROM"}
+               "REFINES": "CONTRIBUTES_TO", "IS_REFINED_BY": "RECEIVES_CONTRIBUTION_FROM",
+               "CONTAINED_BY": "IS_CONTAINED_BY", "CHILD_OF": "IS_CHILD_OF",
+               "CHILDREN": "IS_PARENT_FOR", "NARROWER_THAN": "IS_NARROWER_THAN",
+               "INSTANCE_OF": "IS_INSTANCE_OF"}
 
 
 def _bindings(endpoints):
@@ -31,7 +34,7 @@ def _bindings(endpoints):
             or set(inverses) & set(inverses.values())):
         raise ValueError("Invalid native relation declarations")
     inverse = inverses | {value: key for key, value in inverses.items()}
-    if "CONTAINED_BY" not in inverse:
+    if not {"IS_CONTAINED_BY", "CONTAINED_BY"} & inverse.keys():
         raise ValueError("Native containment requires a declared inverse")
     return names, inverse
 
@@ -122,7 +125,8 @@ def _authored_edges(row, names, inverse):
 
 def _project_carrier(row, containment, names, inverse):
     edges, references, unknown = [], {row["ref"]}, set()
-    _add_edge(edges, dict(containment), names, inverse, references)
+    name = "IS_CONTAINED_BY" if "IS_CONTAINED_BY" in inverse else "CONTAINED_BY"
+    _add_edge(edges, containment | {"relation_type": name}, names, inverse, references)
     for edge in _authored_edges(row, names, inverse):
         if edge["relation_type"] not in names:
             unknown.add(edge["relation_type"])

@@ -11,7 +11,7 @@ ENGINE = TOOLS.parents[1]
 sys.path[:0] = [str(TOOLS), str(ENGINE / 'IWE_CONSOLE_C43')]
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import capture_native
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import InputError, SourceChanged
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import InputError
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import create_draft, promote_draft
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import change_spec_status
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import canonical_native_header
@@ -21,9 +21,10 @@ from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEA
 
 
 import FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__tests.test_native_lifecycle_draft as fixtures
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__tests.native_draft_revision_cases import FirstSpecRevisionCases
 
 
-class NativeRevisionCarrierTests(fixtures.NativeRevisionCarrierTests, unittest.TestCase):
+class NativeRevisionCarrierTests(FirstSpecRevisionCases, fixtures.NativeRevisionCarrierTests, unittest.TestCase):
     def test_project_goal_revision_returns_active_to_repository_root(self):
         manifest = self.selection.manifest_path.rename(self.root / self.selection.manifest_path.name)
         manifest.write_text(manifest.read_text().replace("component: C0", "component: C00"))
@@ -217,90 +218,3 @@ class NativeRevisionCarrierTests(fixtures.NativeRevisionCarrierTests, unittest.T
                 with self.assertRaises(InputError):
                     create_draft(self.selection, {'sourceCurrent': {'ref_id': atom_id, 'version': 1}},
                                  current_rows=capture_native(self.selection).atoms)
-
-
-    def test_first_unpinned_spec_publishes_its_version_and_cleans_up(self):
-        for atom_id, lens, version in [('AN-S-8', 'SWD', 1), ('AN-S-9', 'SPEC', 3)]:
-            suffix = lens + '--example.md'
-            ref = f'{atom_id}@{version}-draft'
-            draft = self.spec(f'UNIT_C9/01_draft/{ref}-{suffix}', atom_id, lens)
-            header, body = draft.read_text().split('---\n', 2)[1:]
-            data = yaml.safe_load(header)
-            data['state'].update(status='draft', version=version)
-            data['context']['tier'] = 3
-            draft.write_text('---\n' + yaml.safe_dump(canonical_native_header(data), sort_keys=False) + '---\n' + body)
-            params = {'target': {'ref_id': ref, 'version': version}, 'targetStatus': 'ready'}
-            result = promote_draft(self.selection, params, current_rows=capture_native(self.selection).atoms)
-            self.assertEqual('completed', result['outcome'], result)
-            current = self.control / 'UNIT_C9' / '02_ready' / f'{atom_id}-{suffix}'
-            self.assertEqual((current, version), (self.root / result['artifact']['path'], result['artifact']['version']))
-            self.assertFalse(draft.exists())
-            self.assertEqual(['create', 'remove'], [e['operation'] for e in result['effects'] if e.get('evidence') != 'directory'])
-            self.assertFalse(capture_native(self.selection).errors)
-
-
-    def test_first_spec_cleanup_failure_can_retry_without_rewriting(self):
-        from unittest.mock import patch
-        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import effects_module as effects
-        draft = self.spec('UNIT_C9/01_draft/AN-S-8@1-draft-DES--example.md', 'AN-S-8')
-        draft.write_text(draft.read_text().replace('status: active', 'status: draft'))
-        params = {'target': {'ref_id': 'AN-S-8@1-draft', 'version': 1}, 'targetStatus': 'ready'}
-        with patch('FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.native_draft_promotion.effects.remove', return_value=effects.Result(errors=[{'code': 'injected'}])):
-            result = promote_draft(self.selection, params, current_rows=capture_native(self.selection).atoms)
-        self.assertEqual('failed', result['outcome'])
-        self.assertNotIn('artifact', result)
-        self.assertTrue(draft.exists())
-        result = promote_draft(self.selection, params, current_rows=capture_native(self.selection).atoms)
-        self.assertEqual('completed', result['outcome'])
-        self.assertEqual(['remove'], [e['operation'] for e in result['effects']])
-        self.assertFalse(draft.exists())
-
-
-    def test_first_spec_preserves_other_drafts(self):
-        old = self.spec('UNIT_C9/01_draft/AN-S-8@1-draft-DES--example.md', 'AN-S-8')
-        old.write_text(old.read_text().replace('status: active', 'status: draft'))
-        draft = self.spec('UNIT_C9/01_draft/AN-S-8@2-draft-DES--example.md', 'AN-S-8')
-        draft.write_text(draft.read_text().replace('status: active', 'status: draft').replace('version: 1', 'version: 2'))
-        original = old.read_bytes()
-        result = promote_draft(self.selection,
-            {'target': {'ref_id': 'AN-S-8@2-draft', 'version': 2}, 'targetStatus': 'ready'},
-            current_rows=capture_native(self.selection).atoms)
-        self.assertEqual('completed', result['outcome'])
-        self.assertEqual(2, result['artifact']['version'])
-        self.assertEqual(original, old.read_bytes())
-        self.assertFalse(draft.exists())
-
-
-    def test_first_spec_rejects_unsafe_or_stale_inputs(self):
-        for case in ('owner', 'lens', 'template', 'manifest_name', 'filename', 'history', 'stale', 'status'):
-            with self.subTest(case=case):
-                name = ('SPEC-PROJECT_MANIFEST--example.md' if case == 'manifest_name' else
-                        'SWD--example.md' if case == 'filename' else 'DES--example.md')
-                draft = self.spec(f'UNIT_C9/01_draft/AN-S-8@1-draft-{name}', 'AN-S-8',
-                                  'invalid/lens!' if case == 'lens' else 'DES', 'C8' if case == 'owner' else 'C9')
-                header, body = draft.read_text().split('---\n', 2)[1:]
-                data = yaml.safe_load(header)
-                data['state']['status'] = 'draft'
-                if case == 'filename':
-                    data['context']['tier'] = 3
-                if case == 'template':
-                    data['context']['template'] = 'component_manifest'
-                draft.write_text('---\n' + yaml.safe_dump(canonical_native_header(data) if case == 'filename' else data) + '---\n' + body)
-                history = None
-                if case == 'history':
-                    history = self.spec('UNIT_C9/09_archived/AN-S-8@2-DES--example.md', 'AN-S-8')
-                    history.write_text(history.read_text().replace('status: active', 'status: archived').replace('version: 1', 'version: 2'))
-                rows = capture_native(self.selection).atoms
-                if case == 'stale':
-                    draft.write_bytes(draft.read_bytes() + b'changed')
-                before = {p.relative_to(self.control): p.read_bytes() for p in self.control.rglob('*.md')}
-                params = {'target': {'ref_id': 'AN-S-8@1-draft', 'version': 1},
-                          'targetStatus': 'done' if case == 'status' else 'ready'}
-                with self.assertRaises((InputError, SourceChanged)):
-                    promote_draft(self.selection, params, current_rows=rows)
-                self.assertEqual(before, {p.relative_to(self.control): p.read_bytes() for p in self.control.rglob('*.md')})
-                draft.unlink()
-                if history:
-                    history.unlink()
-
-

@@ -7,9 +7,9 @@ structure:
 context:
   template: action
 state:
-  status: active
-  version: 8
-  updated_at: 2026-10-27 19:59:48 +0400
+  status: "active"
+  version: 9
+  updated_at: "2026-11-25T21:12:24.570312+00:00"
 ---
 # Summary
 
@@ -31,4 +31,4 @@ Append Change Records **means** the reusable Action that appends supplied actual
 
 ## Details
 
-CA-R-812 **and** CA-R-1491 govern plain append/read; CA-D-009, CA-D-340 **and** CA-D-435 serialize supplied observations. Existing Journal readers return stored data **without** migration, repair **or** historical replay. The supplied source-authoring action identity is payload data, **not** silently replaced by this Action definition's ID. The appender creates no additional Workflow Run, Session **or** approval record. Source mutation, replacement correctness, permissions **and** Git effects retain their independent governing rules.
+CA-R-812 **and** CA-R-1491 govern plain append/read; AN-S-1821 defines storage and serialization of supplied observations. Existing Journal readers return stored data **without** migration, repair **or** historical replay. The supplied source-authoring action identity is payload data, **not** silently replaced by this Action definition's ID. The appender creates no additional Workflow Run, Session **or** approval record. Source mutation, replacement correctness, permissions **and** Git effects retain their independent governing rules.

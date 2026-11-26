@@ -130,6 +130,16 @@ def _validate_property_prerequisites(arguments, declaration, function, classes, 
         arguments.get("relation_name") != "IS_PROPERTY_OF" or not arguments.get("dependent_property_value_format")
     ):
         _fail(declaration, "dependent Property value cardinality requires a Property Declaration and value format")
+    if "allowed_relation_names" in arguments:
+        names = arguments['allowed_relation_names']
+        base = arguments.get('base_path', '')
+        if (not property_manifest or arguments.get('entity_name') != 'Relations'
+                or not isinstance(base, str) or base.split('//')[-1].split('/')[-1] != 'Atom.Header'
+                or arguments.get('dependent_property_value_format') != 'atom_reference'
+                or not isinstance(names, tuple) or not names
+                or any(not isinstance(name, str) or not name.isidentifier() for name in names)
+                or len(set(names)) != len(names)):
+            _fail(declaration, 'allowed_relation_names requires distinct names on Atom Header Relations')
 
 
 def _validate_property(arguments, declaration, function, classes, functions, imports, property_manifest):

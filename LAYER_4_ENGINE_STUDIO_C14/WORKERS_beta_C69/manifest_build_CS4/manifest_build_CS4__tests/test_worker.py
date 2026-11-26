@@ -137,6 +137,7 @@ class InputSignatureTests(unittest.TestCase):
     def test_candidate_content_and_component_topology_affect_the_signature(self):
         sources = (
             'LAYER_1_META_ONTOLOGY_C9/_SPEC/model.md',
+            'ONTOLOGY_SCORE_C91/CONTINUANT_PITCHFORK_C9/_DES/model.md',
             '__PROJECT_CONFIG/CUSTOM_MODEL/config.md',
             '002_PROJECT_CONFIG/CUSTOM_MODEL/compatibility.md',
             'LAYER_C3/CHILD_C4/_SPEC/AN-S-1-canonical-component.md',
