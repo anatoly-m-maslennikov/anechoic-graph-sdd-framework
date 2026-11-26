@@ -1,6 +1,7 @@
 from dataclasses import replace
 from hashlib import sha256
 import json
+import os
 from pathlib import Path
 import sys
 import tempfile
@@ -19,6 +20,18 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared im
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import canonical_native_header
 
 
+def collide_first_two_links(attempts):
+    link = os.link
+
+    def collide(source, filename, **options):
+        attempts.append(filename)
+        if len(attempts) <= 2:
+            mode = os.O_WRONLY | os.O_CREAT | os.O_EXCL
+            with os.fdopen(os.open(filename, mode, 0o600, dir_fd=options["dst_dir_fd"]), "wb") as occupied:
+                occupied.write(b"occupied")
+        return link(source, filename, **options)
+
+    return collide
 
 class NativeDraftTests(unittest.TestCase):
     def setUp(self):
@@ -67,6 +80,29 @@ class NativeDraftTests(unittest.TestCase):
         self.assertEqual(source_header['context'], row['header_json']['context'])
         self.assertEqual(6, row['header_json']['state']['version'])
         self.assertEqual(self.params['changes']['body'].encode(), row['_content_bytes'])
+
+    def test_indexed_max_and_real_collision_retries(self):
+        from unittest.mock import Mock, patch
+        capture = capture_native(self.selection)
+        indexed = Mock(atoms=capture.atoms, errors=[], max_archived_version=7)
+        attempts = []
+        directory = self.path.parent / '01_draft'
+        directory.mkdir()
+
+        with patch('FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.native_draft.revalidate_native', return_value=indexed), \
+             patch('os.link', side_effect=collide_first_two_links(attempts)):
+            result = create_draft(self.selection, self.params, current_rows=self.rows)
+        self.assertEqual('completed', result['outcome'], result)
+        self.assertEqual('AN-T-1@10-draft', result['savedDraft']['ref_id'])
+        self.assertEqual(3, len(attempts))
+        self.assertEqual([b'occupied', b'occupied'], [(directory / name).read_bytes() for name in attempts[:2]])
+
+    def test_revision_does_not_retry_other_write_errors(self):
+        from unittest.mock import patch
+        with patch('os.link', side_effect=PermissionError('failed')) as write:
+            result = create_draft(self.selection, self.params, current_rows=self.rows)
+        self.assertEqual('failed', result['outcome'])
+        self.assertEqual(1, write.call_count)
 
     def test_canonical_ticket_revision_preserves_archived_body(self):
         _, header, body = self.path.read_text().split('---', 2)

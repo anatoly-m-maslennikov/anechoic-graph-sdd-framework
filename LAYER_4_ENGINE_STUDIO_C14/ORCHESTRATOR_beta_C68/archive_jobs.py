@@ -82,6 +82,14 @@ class ArchiveJobs:
                 or any(str(Path(parent) / name) in self.deferred_archive["carrier_hashes"]
                        for parent, name in result["paths"]))
 
+    @staticmethod
+    def _include_archive_pending(result, deferred):
+        if deferred and (deferred["roots"] or deferred["snapshot"]["atoms"]
+                         or deferred["snapshot"].get("ingestion_issues") or "checkpoint" in deferred):
+            result["archive_pending"] = True
+            if "archive_versions" in deferred:
+                result["archive_versions"] = deferred.pop("archive_versions")
+
     def _is_archive_path(self, path):
         if not path:
             return False

@@ -20,6 +20,7 @@ class _Deferred(BaseModel):
     snapshot: InstanceOf[dict]
     carrier_hashes: InstanceOf[dict]
     endpoints: InstanceOf[dict]
+    archive_versions: dict[str, int] | None = None
 
 
 class _Archive(BaseModel):

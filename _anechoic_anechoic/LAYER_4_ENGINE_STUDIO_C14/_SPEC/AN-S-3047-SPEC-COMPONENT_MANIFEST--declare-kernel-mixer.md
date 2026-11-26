@@ -8,9 +8,9 @@ context:
   template: component_manifest
   lens: SPEC
 state:
-  status: active
-  version: 27
-  updated_at: '2026-11-23T04:32:26.395669+00:00'
+  status: "active"
+  version: 28
+  updated_at: "2026-11-26T00:11:32.037057+00:00"
 ---
 ## Summary
 
@@ -107,11 +107,11 @@ declare_entity(
                     'content_records__pub.value_excluding_declared_children',
                     'FEATURE_FORMAL_MODEL_ENGINE.FEATURE_FORMAL_MODEL_ENGINE__shared.formal_claim_blocks',
                     'import_graph__shared.ImportSite',
-                    'trace_bindings__shared.PACKAGE_SUFFIX',
-                    'trace_bindings__shared.SUFFIX',
-                    'trace_bindings__shared._read_pins',
-                    'trace_bindings__shared.is_trace_path',
-                    'trace_bindings__shared.native_trace_snapshot',
+                    'import_graph__shared.PACKAGE_SUFFIX',
+                    'import_graph__shared.SUFFIX',
+                    'import_graph__shared._read_pins',
+                    'import_graph__shared.is_trace_path',
+                    'import_graph__shared.native_trace_snapshot',
                     'import_graph__shared.Source',
                     'import_graph__shared.capture',
                     'import_graph__shared.analyze_state',

@@ -8,9 +8,9 @@ context:
   template: component_manifest
   lens: SPEC
 state:
-  status: active
-  version: 28
-  updated_at: '2026-11-24T20:27:25.303974+00:00'
+  status: "active"
+  version: 29
+  updated_at: "2026-11-26T00:11:31.955010+00:00"
 ---
 ## Summary
 
@@ -49,12 +49,12 @@ declare_entity(
                     'import_graph__shared': None,
                     'import_graph__shared.compile_workflow': {'private': ['LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_IMPORT_GRAPH_C61/FEATURE_IMPORT_GRAPH_C61__tests']},
                     'import_graph__shared.web_state_cases': {'private': ['LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_IMPORT_GRAPH_C61/FEATURE_IMPORT_GRAPH_C61__tests']},
-                    'trace_bindings__shared.PACKAGE_SUFFIX': {'shared': ['C59']},
-                    'trace_bindings__shared.SUFFIX': {'shared': ['C59']},
-                    'trace_bindings__shared._read_pins': {'shared': ['C59', 'LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/FEATURE_MCP__tests']},
-                    'trace_bindings__shared.is_trace_path': {'shared': ['C59', 'LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/FEATURE_WORKBENCH_BACKEND__tests']},
-                    'trace_bindings__shared.native_trace_rows': {'shared': ['LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/FEATURE_WORKBENCH_BACKEND__tests']},
-                    'trace_bindings__shared.native_trace_snapshot': {'shared': ['C59']},
+                    'import_graph__shared.PACKAGE_SUFFIX': {'shared': ['C59']},
+                    'import_graph__shared.SUFFIX': {'shared': ['C59']},
+                    'import_graph__shared._read_pins': {'shared': ['C59', 'LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/FEATURE_MCP__tests']},
+                    'import_graph__shared.is_trace_path': {'shared': ['C59', 'LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/FEATURE_WORKBENCH_BACKEND__tests']},
+                    'import_graph__shared.native_trace_rows': {'shared': ['LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/FEATURE_WORKBENCH_BACKEND__tests']},
+                    'import_graph__shared.native_trace_snapshot': {'shared': ['C59']},
                     'import_graph__shared.analyze_state': {'shared': ['C59']},
                     'import_graph__shared.run_graph_build': {'shared': ['C69', 'LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_IMPORT_GRAPH_C61/FEATURE_IMPORT_GRAPH_C61__tests']},
                     'import_graph__shared.graph_input_signature': {'shared': ['C69', 'LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_IMPORT_GRAPH_C61/FEATURE_IMPORT_GRAPH_C61__tests']},

@@ -154,9 +154,7 @@ class GenerationJobs(ArchiveJobs, StartupGraphJobs, GenerationWorker, AbortJobs,
                 deferred = None
             if deferred is None and options.get("incremental") and not self.skip_archives:
                 deferred = self._restart_archive(reuse, result)
-            if deferred and (deferred["roots"] or deferred["snapshot"]["atoms"]
-                             or deferred["snapshot"].get("ingestion_issues") or "checkpoint" in deferred):
-                result["archive_pending"] = True
+            self._include_archive_pending(result, deferred)
             if self.skip_archives and "paths" in result and any(
                     atom["status_group"] == "Archived" for atom in result["snapshot"]["atoms"]):
                 raise DeltaRequiresReconciliation("Archived Atom requires foreground capture")

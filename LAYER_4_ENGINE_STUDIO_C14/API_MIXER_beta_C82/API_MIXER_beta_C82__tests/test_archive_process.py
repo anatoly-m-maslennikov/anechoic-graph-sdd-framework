@@ -41,8 +41,9 @@ def write_ticket(directory, name, atom_id, status, version, summary):
     directory.mkdir(parents=True, exist_ok=True)
     path = directory / name
     path.write_text(
-        f"---\nidentity: {{atom_id: {atom_id}}}\ncontext: {{container: {{component: C00}}}}\n"
-        f"state: {{status: {status}, version: {version}}}\n---\n\n## Summary\n\n{summary}\n",
+        f"---\natom_family: TKT\natom_id: {atom_id}\ncontainer: {{component: C00}}\n"
+        f"priority: 2\ncontext: {{template: task}}\nstate: {{status: {status}, version: {version}, "
+        f"updated_at: '2026-11-19T00:00:00Z'}}\n---\n\n## Summary\n\n{summary}\n",
         encoding="utf-8",
     )
     return path
@@ -55,8 +56,8 @@ class ArchiveProcessTests(unittest.TestCase):
         self.root.mkdir()
         manifest = write_manifest(self.root)
         self.control = manifest.parent
-        self.tickets = self.control / "__TKT" / "TASKS"
-        self.current = write_ticket(self.tickets, "AN-T-2-TASK--current.md", "AN-T-2", "active", 2, "active")
+        self.tickets = self.control / "__TICKETS" / "TASKS"
+        self.current = write_ticket(self.tickets, "AN-T-2-TASK--active.md", "AN-T-2", "active", 2, "active")
         write_ticket(self.tickets / "01_draft", "AN-T-2@3-draft-TASK--draft.md", "AN-T-2", "draft", 3, "draft")
         write_ticket(self.tickets / "09_archived", "AN-T-99@4-TASK--archived.md", "AN-T-99", "archived", 4, "archived")
         self.misplaced = write_ticket(self.tickets / "09_archived", "AN-T-97-TASK--misplaced.md",
@@ -229,6 +230,7 @@ class ArchiveProcessTests(unittest.TestCase):
                 os.kill(pid, 0)
 
     def test_live_write_and_archive_publication(self):
+        write_ticket(self.tickets / "09_archived", "AN-T-2@7-TASK--older.md", "AN-T-2", "archived", 7, "old revision")
         owner = self.start(OWNER)
         self.monitor = threading.Thread(target=self.hold_archive, args=(owner,), daemon=True)
         self.monitor.start()
@@ -245,12 +247,15 @@ class ArchiveProcessTests(unittest.TestCase):
         self.assertEqual(("running", True), (status["archive"]["state"], status["archive"]["worker_alive"]))
         live = [["AN-T-2", "Current", "active"], ["AN-T-2@3-draft", "Draft", "draft"]]
         self.assertEqual(live, self.rows(client))
-        refused = self.call(client, "atom_lifecycle_create_draft", {"newAtom": {
-            "template": "task", "container": {"component": "C00"}, "summary": "Create another Task"}})
-        self.assertEqual("archive_pending", refused["error"]["code"], refused)
+        created = self.call(client, "atom_lifecycle_create_draft", {"newAtom": {
+            "template": "task", "container": {"component": "C00"}, "body": "## Summary\n\nCreate another Task\n"}})
+        self.assertEqual("AN-T-100", created["result"]["value"].get("savedDraft", {}).get("atom_id"), created)
+        revision = self.call(client, "atom_lifecycle_create_draft", {"sourceCurrent": {"ref_id": "AN-T-2", "version": 2}})
+        self.assertEqual(8, revision["result"]["value"].get("savedDraft", {}).get("version"), revision)
+        live = [["AN-T-100@1-draft", "Draft", "Create another Task"], *live, ["AN-T-2@8-draft", "Draft", "active"]]
         self.current.write_text(self.current.read_text().replace("\nactive\n", "\nUpdated while loading the archive\n"),
                                 encoding="utf-8")
-        live[0][2] = "Updated while loading the archive"
+        live[1][2] = "Updated while loading the archive"
         self.wait(lambda: self.rows(client) == live, api, "live update was not visible", timeout=60)
         updated = client.get("/health").json()
         self.assertTrue(updated["archive_pending"])
@@ -260,7 +265,8 @@ class ArchiveProcessTests(unittest.TestCase):
         self.wait(lambda: client.get("/health").json().get("archive_pending") is False, api,
                   "Archive Worker did not publish", timeout=60)
         self.assertNotEqual(updated["generation"], client.get("/health").json()["generation"])
-        self.assertEqual(live + [["AN-T-99@4", "Archived", "archived"]], self.rows(client))
+        archived = [["AN-T-2@7", "Archived", "old revision"], ["AN-T-99@4", "Archived", "archived"]]
+        self.assertEqual(sorted(live + archived), self.rows(client))
         self.assert_archive_issues(client, api)
         self.monitor.join(timeout=1)
 
@@ -277,7 +283,7 @@ class ArchiveProcessTests(unittest.TestCase):
         self.assertEqual(("invalid_value", "AN-T-97@1", "Archive directory contains a non-Archived Atom"),
                          (misplaced["code"], misplaced["atom_ref"], misplaced["message"]))
         allowed = self.call(client, "atom_lifecycle_create_draft", {"newAtom": {
-            "template": "task", "container": {"component": "C00"}, "summary": "Create another Task"}})
+            "template": "task", "container": {"component": "C00"}, "body": "## Summary\n\nCreate a Task after Archive\n"}})
         self.assertNotEqual("archive_pending", allowed.get("error", {}).get("code"), allowed)
 
     def test_invalid_required_input_reports_and_recovers_under_same_owner(self):

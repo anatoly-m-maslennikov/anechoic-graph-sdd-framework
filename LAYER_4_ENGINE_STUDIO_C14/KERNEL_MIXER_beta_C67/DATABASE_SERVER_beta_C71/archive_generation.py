@@ -21,6 +21,50 @@ def archive_pending(connection):
     return bool(row and row[0])
 
 
+def refresh_archive_versions(connection):
+    connection.execute("""CREATE TABLE IF NOT EXISTS main.ops_archive_versions
+        (atom_id VARCHAR PRIMARY KEY, max_version BIGINT NOT NULL)""")
+    connection.execute("DELETE FROM main.ops_archive_versions")
+    connection.execute("""INSERT INTO main.ops_archive_versions
+        SELECT split_part(reference, '@', 1), max("header.state.version")
+        FROM main.mrt_atoms WHERE status_group = 'Archived' GROUP BY 1""")
+
+
+def seed_archive_versions(connection, versions):
+    if versions is None or has_table(connection, "main", "ops_archive_versions"):
+        return
+    connection.execute("""CREATE TABLE main.ops_archive_versions
+        (atom_id VARCHAR PRIMARY KEY, max_version BIGINT NOT NULL)""")
+    if versions:
+        connection.execute("""INSERT INTO main.ops_archive_versions
+            SELECT unnest(?::VARCHAR[]), unnest(?::BIGINT[])""", [list(versions), list(versions.values())])
+
+
+def backfill_archive_versions(connection):
+    if (not has_table(connection, "main", "ops_archive_versions")
+            and not archive_pending(connection) and has_table(connection, "main", "mrt_atom_references")):
+        refresh_archive_versions(connection)
+
+
+def update_archive_versions(connection, old, atoms):
+    affected = {ref.partition('@')[0] for ref, _ in old if '@' in ref and not ref.endswith('-draft')}
+    affected.update(row['reference'].partition('@')[0] for row in atoms if row['status_group'] == 'Archived')
+    if not affected or not has_table(connection, "main", "ops_archive_versions"):
+        return
+    if archive_pending(connection):
+        # The full history can be absent during startup. Preserve admitted maxima until Archive reconciliation.
+        connection.execute("""INSERT INTO main.ops_archive_versions
+            SELECT split_part(reference, '@', 1), max("header.state.version")
+            FROM int_admission_atoms WHERE status_group = 'Archived' GROUP BY 1
+            ON CONFLICT (atom_id) DO UPDATE SET max_version = greatest(ops_archive_versions.max_version, excluded.max_version)""")
+        return
+    ids = [sorted(affected)]
+    connection.execute("DELETE FROM main.ops_archive_versions WHERE atom_id IN (SELECT unnest(?))", ids)
+    connection.execute("""INSERT INTO main.ops_archive_versions
+        SELECT split_part(reference, '@', 1), max("header.state.version") FROM main.mrt_atoms
+        WHERE status_group = 'Archived' AND split_part(reference, '@', 1) IN (SELECT unnest(?)) GROUP BY 1""", ids)
+
+
 def set_archive_pending(connection, pending):
     connection.execute("CREATE TABLE IF NOT EXISTS ops_archive_state (pending BOOLEAN NOT NULL)")
     connection.execute("DELETE FROM ops_archive_state")
@@ -36,6 +80,8 @@ def change_archive_pending(connection, base, pending):
             raise GenerationBaseChanged("Generation base changed or archive is complete")
         if read_checkpoint(connection) is None:
             raise ValueError("Archive transition requires a retained carrier checkpoint")
+        if pending:
+            backfill_archive_versions(connection)
         set_archive_pending(connection, pending)
         if not pending:
             clear_archive_failure(connection)
@@ -158,6 +204,7 @@ def admit_archive(connection, data, manifest_sha256):
         generation = _digest({"kind": "archive_complete", "base_generation": row[0],
                               "snapshot_sha256": data["snapshot_sha256"]})
         connection.execute("UPDATE ops_generation SET id = ?", [generation])
+        refresh_archive_versions(connection)
         set_archive_pending(connection, False)
         replace_issues(connection, "archive", data["snapshot"].get("ingestion_issues", []))
         connection.execute("DROP TABLE int_admission_atoms")

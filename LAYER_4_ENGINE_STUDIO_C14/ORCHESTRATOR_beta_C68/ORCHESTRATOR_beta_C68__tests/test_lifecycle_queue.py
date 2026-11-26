@@ -28,7 +28,8 @@ class LifecycleKernel(Kernel):
         if self.path != "/database" or request["instance_id"] != "test":
             self.reply(404, {})
             return
-        row = [self.server.generation, *self.server.query_values]
+        row = ([self.server.archive_versions] if 'duckdb_tables()' in request['sql']
+               else [self.server.generation, *self.server.query_values])
         self.reply(200, {"result": {"rows": [row]}})
 
 
@@ -45,6 +46,7 @@ class LifecycleQueueTests(unittest.TestCase):
         self.kernel.structure = self.structure
         self.kernel.generation = "original"
         self.kernel.query_values = ["1", "[]"]
+        self.kernel.archive_versions = False
         self.worker = self.enterContext(patch.object(self.jobs, "_run_cold_lifecycle", return_value={
             "lifecycle": {"outcome": "completed"}, "delta": None, "projection_error": None}))
         self.addCleanup(self.jobs.close)
@@ -181,7 +183,7 @@ class LifecycleQueueTests(unittest.TestCase):
             with self.subTest(name=name, descendants=descendants, carriers=carriers), \
                     patch.object(self.jobs, "lifecycle_job", None):
                 self.kernel.query_values = [
-                    json.dumps(self.structure), None, "[]", "1", "2", json.dumps(carriers), descendants, "[]",
+                    json.dumps(self.structure), None, "[]", "1", "2", json.dumps(carriers), descendants, "[]", "0",
                 ]
                 request = lifecycle_job(self.jobs, f"atom_lifecycle_{name}", {"target": {"ref_id": ref}})
                 base, structure, facts = self.jobs._lifecycle_inputs(request)
@@ -191,6 +193,18 @@ class LifecycleQueueTests(unittest.TestCase):
                 else:
                     self.assertEqual(carriers, facts["lifecycle_context"]["carriers"])
                     self.assertEqual(descendants, facts["lifecycle_context"]["has_descendants"])
+
+    def test_pending_archive_accepts_allocation_after_first_checkpoint(self):
+        self.jobs.deferred_archive = {}
+        code, payload = self.jobs.lifecycle(self.request)
+        self.assertEqual((409, "archive_pending"), (code, payload["error"]["code"]))
+        self.kernel.archive_versions = True
+        with patch.object(self.jobs, "_await_lifecycle", return_value=(200, {})) as accepted:
+            self.assertEqual((200, {}), self.jobs.lifecycle(self.request))
+        job = accepted.call_args.args[0]
+        self.assertTrue(job.archive_versions)
+        _, _, facts = self.jobs._lifecycle_inputs(job)
+        self.assertEqual("1", facts["indexed_task"]["max_number"])
 
     @staticmethod
     def carrier(parent):

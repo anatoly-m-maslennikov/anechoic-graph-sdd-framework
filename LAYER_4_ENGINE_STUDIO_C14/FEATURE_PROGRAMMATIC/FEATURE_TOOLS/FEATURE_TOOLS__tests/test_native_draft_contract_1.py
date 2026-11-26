@@ -186,6 +186,39 @@ class ComponentContractLifecycleTests(fixtures.ComponentContractLifecycleTests, 
         self.assertFalse(draft.exists())
 
 
+    def test_archive_draft_retries_real_collisions_and_preserves_source(self):
+        from unittest.mock import Mock, patch
+        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import archive_spec_draft
+        created = self.create()['savedDraft']
+        draft = self.root / created['path']
+        (draft.parent.parent / '09_archived').mkdir(exist_ok=True)
+        capture = capture_native(self.selection)
+        indexed = Mock(atoms=capture.atoms, errors=[], max_archived_version=7)
+        attempts = []
+
+        with patch('FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.native_update_spec.revalidate_native', return_value=indexed), \
+             patch('os.link', side_effect=fixtures.collide_first_two_links(attempts)):
+            result = archive_spec_draft(self.selection, {'target': {'ref_id': created['ref_id'], 'version': 1}},
+                                        current_rows=capture.atoms, structure_snapshot=self.snapshot)
+        self.assertEqual('completed', result['outcome'], result)
+        self.assertEqual('AN-S-5@10', result['artifact']['ref_id'])
+        self.assertEqual(3, len(attempts))
+        directory = (self.root / result['artifact']['path']).parent
+        self.assertEqual([b'occupied', b'occupied'], [(directory / name).read_bytes() for name in attempts[:2]])
+        self.assertFalse(draft.exists())
+
+    def test_archive_draft_does_not_retry_other_write_errors(self):
+        from unittest.mock import patch
+        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import archive_spec_draft
+        created = self.create()['savedDraft']
+        draft = self.root / created['path']
+        with patch('os.link', side_effect=PermissionError('failed')) as write:
+            result = archive_spec_draft(self.selection, {'target': {'ref_id': created['ref_id'], 'version': 1}},
+                                        current_rows=capture_native(self.selection).atoms, structure_snapshot=self.snapshot)
+        self.assertEqual('failed', result['outcome'])
+        self.assertEqual(1, write.call_count)
+        self.assertTrue(draft.exists())
+
     def test_ready_spec_starts_and_then_archives(self):
         from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import change_spec_status
         created = self.create()

@@ -100,6 +100,21 @@ class LifecycleQueryTests(unittest.TestCase):
         row = db.execute(lifecycle_sql('AN', 'atom_lifecycle_create_asset', {'newAtom': {'template': 'note'}})).fetchone()
         self.assertEqual(row[4], '3')
 
+    def test_allocation_uses_archive_checkpoint_without_archive_rows(self):
+        db = database()
+        db.execute("CREATE TABLE ops_archive_versions(atom_id VARCHAR, max_version BIGINT)")
+        db.execute("INSERT INTO ops_archive_versions VALUES ('AN-T-1', 8), ('AN-T-42', 2)")
+        name = 'atom_lifecycle_create_draft'
+        revision = {'sourceCurrent': {'ref_id': 'AN-T-1'}}
+        sql = lifecycle_sql('AN', name, revision, archive_versions=True)
+        self.assertIn('ops_archive_versions', db.get_table_names(sql))
+        row = db.execute(sql).fetchone()
+        self.assertEqual('8', row[9])
+        self.assertEqual('0', db.execute(lifecycle_sql('AN', name, revision)).fetchone()[9])
+        creation = {'newAtom': {'template': 'task'}}
+        row = db.execute(lifecycle_sql('AN', name, creation, archive_versions=True)).fetchone()
+        self.assertEqual('42', row[4])
+
     def test_child_stub_and_physical_descendants(self):
         db = database()
         db.execute("INSERT INTO atoms VALUES ('AN-T-4', '.', 'AN-T-4.md', 'Current', 1, 'active')")

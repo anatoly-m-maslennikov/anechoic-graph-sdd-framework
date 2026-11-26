@@ -12,8 +12,8 @@ relations:
   - AN-S-4800
 state:
   status: "active"
-  version: 5
-  updated_at: "2026-11-25T10:31:29.590036+00:00"
+  version: 6
+  updated_at: "2026-11-26T00:22:14.169841+00:00"
 ---
 
 ## Summary
@@ -75,8 +75,14 @@ previous generation. Incremental changes use the existing delta path.
 Finish Current and Draft catch-up before Studio reports readiness.
 Reconcile Archive in a background Worker. Archive from a previous
 checkpoint may remain visible with an explicit pending status. On
-cold startup, expose Archive after its admission. Require complete
-Archive before admitting lifecycle writes.
+cold startup, expose Archive after its admission.
+
+Keep one DuckDB row per Atom ID with its maximum Archive version. Seed
+a new database from Archive filenames. Reuse the saved values on warm
+startup and reconcile them when the background load completes. Wait for
+Archive admission only for operations that require exact history. If a
+version-allocating write finds an occupied filename, try the next version.
+Return all other write errors.
 
 Detect live Project Manifest edits through the source watcher. When
 the digest changes, the supervisor validates the new binding and

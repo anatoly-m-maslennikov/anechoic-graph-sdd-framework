@@ -7,8 +7,8 @@ import unittest
 from unittest.mock import Mock, patch
 
 from .. import ORCHESTRATOR_beta_C68__shared as orchestrator
-from .. import startup_graph
-from ..startup_checkpoint import ReuseRecord
+
+STARTUP_GRAPH = f"{orchestrator.__package__}.startup_graph"
 
 
 class StartupRealizationGraphTests(unittest.TestCase):
@@ -21,8 +21,8 @@ class StartupRealizationGraphTests(unittest.TestCase):
         self.jobs.watcher.foreground_events.return_value = 0
         self.jobs.watcher.replay_fence.return_value = True
         self.jobs.live_generation = "core"
-        self.jobs.generation_reuse = ReuseRecord(base_generation="core", inputs={"graph": "pending"},
-                                                endpoints={}, graph_config={})
+        self.jobs.generation_reuse = orchestrator.ReuseRecord(
+            base_generation="core", inputs={"graph": "pending"}, endpoints={}, graph_config={})
         self.graph = {"base_generation": "core", "graph": {}, "graph_sha256": "b" * 64,
                       "reuse": {"inputs": {"graph": "c" * 64}, "graph_config": {}, "endpoints": {}}}
 
@@ -38,8 +38,8 @@ class StartupRealizationGraphTests(unittest.TestCase):
             return json.dumps(self.graph)
 
         with (patch.object(jobs, "_communicate_worker", side_effect=capture) as worker,
-              patch.object(startup_graph, "worker_request", return_value={"structure": {}}),
-              patch.object(startup_graph, "admit_generation", return_value={"generation": "core"}) as admit):
+              patch(f"{STARTUP_GRAPH}.worker_request", return_value={"structure": {}}),
+              patch(f"{STARTUP_GRAPH}.admit_generation", return_value={"generation": "core"}) as admit):
             jobs._run_startup_graph()
             worker.assert_not_called()
             jobs.startup_replay = False
@@ -57,7 +57,7 @@ class StartupRealizationGraphTests(unittest.TestCase):
 
     def test_graph_from_an_obsolete_generation_is_not_admitted(self):
         self.jobs.graph_result = ("earlier", 0, self.graph)
-        with patch.object(startup_graph, "admit_generation") as admit:
+        with patch(f"{STARTUP_GRAPH}.admit_generation") as admit:
             self.jobs._finish_startup_graph()
         admit.assert_not_called()
         self.assertTrue(self.jobs.graph_queued)

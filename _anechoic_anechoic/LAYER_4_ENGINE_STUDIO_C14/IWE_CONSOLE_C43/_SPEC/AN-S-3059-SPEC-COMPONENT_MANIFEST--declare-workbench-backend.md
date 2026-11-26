@@ -8,9 +8,9 @@ context:
   template: component_manifest
   lens: SPEC
 state:
-  status: active
-  version: 56
-  updated_at: '2026-11-24T22:35:58.478737+00:00'
+  status: "active"
+  version: 57
+  updated_at: "2026-11-26T00:11:32.119429+00:00"
 ---
 
 ## Summary
@@ -177,8 +177,8 @@ declare_entity(
                     'KERNEL_MIXER_C59__shared.first_reference_rows',
                     'KERNEL_MIXER_C59__shared.PILOT',
                     'KERNEL_MIXER_C59__shared.SpecTraceStore',
-                    'trace_bindings__shared.is_trace_path',
-                    'trace_bindings__shared.native_trace_rows',
+                    'import_graph__shared.is_trace_path',
+                    'import_graph__shared.native_trace_rows',
                     'KERNEL_MIXER_C59__shared.remove_native_traces',
                     'KERNEL_MIXER_C59__shared.replace_native_traces',
                     'statements.select_statement',

@@ -23,13 +23,15 @@ class IndexedLifecycleCapture(NativeCapture):
     carriers: tuple[dict[str, Any], ...] = ()
     max_numbers: dict[str, int] = field(default_factory=dict)
     lenses: tuple[str, ...] = ()
+    max_archived_version: int = 0
 
     _validate_index_facts = field_validator("carriers", "max_numbers", "lenses", mode="wrap")(_preserve_capture_data)
 
 
-def capture_indexed_lifecycle(selection: Any, carriers, max_numbers, *, lenses=()) -> IndexedLifecycleCapture:
+def capture_indexed_lifecycle(selection: Any, carriers, max_numbers, *, lenses=(), max_archived_version=0) -> IndexedLifecycleCapture:
     """Capture addressed carriers and retain index facts for lifecycle guards."""
-    if (not isinstance(carriers, (list, tuple)) or not isinstance(max_numbers, dict)
+    if (type(max_archived_version) is not int or not 0 <= max_archived_version <= 2**63 - 1
+            or not isinstance(carriers, (list, tuple)) or not isinstance(max_numbers, dict)
             or not set(max_numbers) <= {"T", "S"}
             or any(not isinstance(value, str) or not re.fullmatch(r"0|[1-9][0-9]*", value)
                    for value in max_numbers.values())
@@ -37,7 +39,7 @@ def capture_indexed_lifecycle(selection: Any, carriers, max_numbers, *, lenses=(
             or any(not isinstance(lens, str) or not lens for lens in lenses)):
         raise ValueError("Invalid indexed lifecycle facts")
     descriptors = _validate_descriptors(selection, carriers)
-    return _capture(selection, descriptors, max_numbers, lenses)
+    return _capture(selection, descriptors, max_numbers, lenses, max_archived_version)
 
 
 def _validate_descriptors(selection, carriers):
@@ -77,7 +79,7 @@ def _validate_descriptors(selection, carriers):
     return descriptors
 
 
-def _capture(selection, descriptors, max_numbers, lenses):
+def _capture(selection, descriptors, max_numbers, lenses, max_archived_version):
     wanted = {PurePosixPath(row['source_path']) for row in descriptors if row['read']}
     captured = capture_native(selection, previous=NativeCapture([], [], {}), paths=wanted,
                               manifest_admitted=True, include_content_properties=False)
@@ -98,7 +100,7 @@ def _capture(selection, descriptors, max_numbers, lenses):
         rows.append(row)
         edges.append({'source_kind': 'Atom', 'source_ref': row['ref'], 'relation_type': 'CONTAINED_BY',
                       'target_kind': kind.title(), 'target_ref': item['owner_ref'], 'derived': False})
-    return IndexedLifecycleCapture(rows, edges, {}, captured.versions, tuple(descriptors), {key: int(value) for key, value in max_numbers.items()}, tuple(lenses))
+    return IndexedLifecycleCapture(rows, edges, {}, captured.versions, tuple(descriptors), {key: int(value) for key, value in max_numbers.items()}, tuple(lenses), max_archived_version)
 
 
 

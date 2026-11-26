@@ -65,6 +65,35 @@ class NativeGenerationTests(NativeCaptureFixture, unittest.TestCase):
                            "target_ref": "AN-S-4@1", "relation_type": "CONTAINS", "derived": True},
                           archive_snapshot["relations"])
 
+    def test_foreground_archive_versions_use_names_without_reading_files(self):
+        binding = {"root": str(self.root), "control_root": self.control.name,
+                   "manifest_path": self.manifest.relative_to(self.root).as_posix(),
+                   "manifest_sha256": self.selection.manifest_sha256, "project_prefix": "AN"}
+        self.write("AN-S-3@4--off-path.md", "AN-S-3", "archived", 4)
+        archive = self.control / "09_archived"
+        (archive / "nested").mkdir(parents=True)
+        for name in ("AN-S-3@2--broken.md", "nested/AN-S-3@7--broken.md",
+                     "nested/AN-T-5@9--broken.md", "AN-S-8@0--bad.md",
+                     "AN-S-8@9223372036854775808--bad.md", "OTHER-S-2@8--bad.md",
+                     "AN-R-2@8--bad.md", "nonsense.md"):
+            (archive / name).write_bytes(b"\xff invalid YAML")
+        (archive / "AN-S-9@99--link.md").symlink_to(archive / "AN-S-3@2--broken.md")
+        (archive / "linked-dir").symlink_to(archive / "nested", target_is_directory=True)
+        versions, reads = {}, []
+        read = ReadContext.read
+
+        def record_read(reader, path, **options):
+            reads.append(path)
+            return read(reader, path, **options)
+
+        with (patch.object(ReadContext, "read", record_read),
+              patch("FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_snapshot_cli._graph_config", return_value={})):
+            _, finish = prepare_generation_snapshot(binding, archive_stage="foreground", archive_versions=versions)
+            self.assertEqual(5, len(finish({"CONTAINED_BY": [{"inverse_alias": "CONTAINS"}, False],
+                                            "CONTAINS": [{}, True]})))
+        self.assertEqual({"AN-S-3": 7, "AN-T-5": 9}, versions)
+        self.assertFalse(any(path.is_relative_to(archive) for path in reads))
+
     def _assert_foreground_reads(self, archived, installed, off_path, roots, reads, stats):
         self.assertEqual([archived.parent.relative_to(self.root).as_posix()], roots)
         self.assertIn(off_path, reads)

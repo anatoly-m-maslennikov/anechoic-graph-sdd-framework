@@ -126,3 +126,15 @@ class WebImportTests(TestCase):
             self.assertEqual(found['module:caller/unknown.mjs', 'example'], 'unresolved')
             _, facts = code_access_occurrences(root, sources)
             self.assertTrue(any(f.source_path == 'caller/known.mjs' and f.written == 'example' and f.unit is None for f in facts))
+
+    def test_vite_load_resolves_in_a_separately_mounted_checkout(self):
+        frontend = Path('LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND')
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp).resolve()
+            app = root / frontend
+            (app / 'src').mkdir(parents=True)
+            (app / 'package.json').write_text('{}')
+            (app / 'src' / 'lib__shared.ts').write_text('export {};')
+            (app / 'test.ts').write_text("server.ssrLoadModule('/src/lib__shared.ts');")
+            row = resolve_realization(root, capture(root, None))[1][0]
+        self.assertEqual((row[2], row[6]), (f'module:{frontend}/src/lib__shared.ts', 'internal'))

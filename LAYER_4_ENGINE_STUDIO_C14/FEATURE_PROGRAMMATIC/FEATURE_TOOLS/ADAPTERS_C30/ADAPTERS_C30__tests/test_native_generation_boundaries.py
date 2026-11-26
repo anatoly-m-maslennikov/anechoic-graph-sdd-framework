@@ -1,9 +1,10 @@
 from hashlib import sha256
+import os
 import unittest
 from unittest.mock import patch
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
-    capture_ticket_delta, native_carrier_hashes, prepare_generation_snapshot,
+    ReadContext, capture_ticket_delta, native_carrier_hashes, prepare_generation_snapshot,
 )
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__tests.ADAPTERS_C30__tests__shared import (
     NativeCaptureFixture,
@@ -12,8 +13,6 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__tests.ADAPTER
 
 class NativeGenerationBoundaryTests(NativeCaptureFixture, unittest.TestCase):
     def test_archive_capture_and_hash_readers_have_no_timeout(self):
-        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30 import native_carrier_inventory as inventory
-
         binding = {"root": str(self.root), "control_root": self.control.name,
                    "manifest_path": self.manifest.relative_to(self.root).as_posix(),
                    "manifest_sha256": self.selection.manifest_sha256, "project_prefix": "AN"}
@@ -21,15 +20,17 @@ class NativeGenerationBoundaryTests(NativeCaptureFixture, unittest.TestCase):
         roots = [archived.parent.relative_to(self.root).as_posix()]
         endpoints = {"CONTAINED_BY": [{"inverse_alias": "CONTAINS"}, False], "CONTAINS": [{}, True]}
         observed = []
+        initialize_reader = ReadContext.__init__
 
-        def reader(*args, **kwargs):
-            result = inventory.startup_reader(*args, **kwargs)
-            observed.append(result.limits.copy())
-            return result
+        def reader(context, **kwargs):
+            initialize_reader(context, **kwargs)
+            observed.append(context.limits.copy())
+            if "timeout_seconds" not in context.limits:
+                context.started -= 10000
 
         prefix = "FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30."
-        with (patch(prefix + "native_snapshot_cli.startup_reader", side_effect=reader),
-              patch(prefix + "native_source_rows__pub.startup_reader", side_effect=reader),
+        with (patch.object(ReadContext, "__init__", reader),
+              patch.dict(os.environ, {"ANECHOIC_STARTUP_TIMING": "1", "ANECHOIC_TEST_IMAGE_DEADLINES": "1"}),
               patch(prefix + "native_snapshot_cli._graph_config", return_value={})):
             for stage in ("archive", "foreground", None):
                 _, finish = prepare_generation_snapshot(binding, archive_stage=stage,
@@ -39,15 +40,9 @@ class NativeGenerationBoundaryTests(NativeCaptureFixture, unittest.TestCase):
             native_carrier_hashes(binding, foreground=True)
             native_carrier_hashes(binding)
         self.assertEqual([None, 300, 300, None, 300, 300], [limits.get("timeout_seconds") for limits in observed])
+        caps = {key: value for key, value in observed[1].items() if key != "timeout_seconds"}
         for limits in observed:
-            self.assertEqual({key: value for key, value in inventory.CEILINGS.items() if key != "timeout_seconds"},
-                             {key: value for key, value in limits.items() if key != "timeout_seconds"})
-        with patch.object(inventory, "startup_timing_enabled", return_value=True):
-            reader = inventory.startup_reader(self.root, "foreground_capture", archive=True)
-            self.assertNotIn("timeout_seconds", reader.limits)
-            reader.started -= 10000
-            reader.checkpoint()
-            self.assertEqual(300, inventory.startup_reader(self.root, "foreground_capture").limits["timeout_seconds"])
+            self.assertEqual(caps, {key: value for key, value in limits.items() if key != "timeout_seconds"})
 
     def test_delta_skips_unknown_relation_and_keeps_both_tickets(self):
         binding = {"root": str(self.root), "control_root": self.control.name,

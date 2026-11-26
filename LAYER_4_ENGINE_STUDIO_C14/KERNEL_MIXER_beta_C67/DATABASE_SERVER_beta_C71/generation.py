@@ -158,9 +158,27 @@ def _native_graph_payload(data, components, identity):
     return graph
 
 
-def _replace_snapshot(connection, native, snapshot, components, records):
+def _archive_seed(data, pending):
+    if "archive_versions" not in data:
+        return None
+    versions = data["archive_versions"]
+    if (not pending or not isinstance(versions, dict) or len(versions) > 1_000_000
+            or any(not isinstance(key, str) or re.fullmatch(r"[A-Z][A-Z0-9]*-[STPC]-[0-9]+", key) is None
+                   or type(value) is not int or not 0 < value <= 2**63 - 1
+                   for key, value in versions.items())):
+        raise ValueError("Invalid archive version seed")
+    return versions
+
+
+def _replace_snapshot(connection, native, snapshot, components, records, *, archive_pending, archive_versions):
     if native:
+        from .archive_generation import backfill_archive_versions, refresh_archive_versions, seed_archive_versions
+        if archive_pending:
+            backfill_archive_versions(connection)
+            seed_archive_versions(connection, archive_versions)
         replace_native_atoms(connection, snapshot, *records)
+        if not archive_pending:
+            refresh_archive_versions(connection)
         replace_native_graph(connection, snapshot["relation_types"], components)
     else:
         connection.execute("DELETE FROM mrt_atoms")
@@ -176,6 +194,7 @@ def replace_generation(connection, data, manifest_sha256, *, stage_refresh=None)
     if type(pending) is not bool or (pending and (not native or "carrier_hashes" not in data
             or any(row.status_group == "Archived" for row in records[0]))):
         raise ValueError("Invalid pending archive generation")
+    versions = _archive_seed(data, pending)
     identity = {"receipt": data["receipt"], "snapshot": snapshot}
     if pending:
         identity["archive_pending"] = True
@@ -187,7 +206,7 @@ def replace_generation(connection, data, manifest_sha256, *, stage_refresh=None)
     connection.execute("BEGIN TRANSACTION")
     try:
         connection.execute("DROP PROPERTY GRAPH IF EXISTS anechoic")
-        _replace_snapshot(connection, native, snapshot, components, records)
+        _replace_snapshot(connection, native, snapshot, components, records, archive_pending=pending, archive_versions=versions)
         replace(connection, graph, components)
         if native and has_table(connection, "main", "biz_architecture_spec_metrics"):
             replace_spec(connection, snapshot_sizes(snapshot))
@@ -218,8 +237,9 @@ class GenerationBaseChanged(ValueError):
 
 
 def _finish_native_checkpoint(connection, data):
-    from .archive_generation import set_archive_pending
+    from .archive_generation import refresh_archive_versions, set_archive_pending
 
+    refresh_archive_versions(connection)
     set_archive_pending(connection, False)
     update_checkpoint(connection, data)
     replace_carrier_issues(connection, data["snapshot"])

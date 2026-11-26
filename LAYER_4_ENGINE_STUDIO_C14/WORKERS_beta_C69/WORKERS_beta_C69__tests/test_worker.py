@@ -99,6 +99,9 @@ class GenerationTests(unittest.TestCase):
 
     def test_managed_foreground_passes_replay_to_analyzer_and_retains_reuse_witness(self):
         binding, output, _ = generation_fixture(self.enterContext(tempfile.TemporaryDirectory()))
+        archive = Path(binding["root"]) / binding["control_root"] / "09_archived"
+        archive.mkdir()
+        (archive / "AN-S-19@12--broken.md").write_bytes(b"\xff")
         request = {"binding": binding, "reuse": None, "replay_graph": True,
                    "watcher_guarded": True, "foreground": True}
         analyzer = "IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.import_graph__shared.graph_input_signature"
@@ -108,6 +111,7 @@ class GenerationTests(unittest.TestCase):
         command, _ = scans[0]
         self.assertEqual("--watcher-replay", command[-1])
         self.assertEqual(2, fingerprint.call_count)
+        self.assertEqual({"AN-S-19": 12}, json.loads(response.stdout)["deferred_archive"]["archive_versions"])
         witness = json.loads(response.stdout)["reuse"]
         self.assertEqual({"manifest", "graph", "carrier_schema"}, set(witness["inputs"]))
         self.assertTrue(all(witness["inputs"].values()))

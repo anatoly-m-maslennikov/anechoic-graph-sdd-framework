@@ -39,7 +39,6 @@ def _paths(value):
         raise ValueError("Duplicate Ticket path")
     return result
 
-
 def _inverse(bindings, relation_types):
     endpoints = bindings.get("endpoints")
     if not isinstance(endpoints, dict) or set(endpoints) != set(relation_types):
@@ -55,7 +54,6 @@ def _inverse(bindings, relation_types):
             inverse[name], inverse[target] = target, name
     return inverse
 
-
 def _validate_edges(rows, inverse):
     direct = Counter(tuple(row) for row in rows if not row[5])
     derived = Counter(tuple(row) for row in rows if row[5])
@@ -66,13 +64,11 @@ def _validate_edges(rows, inverse):
     if derived != expected:
         raise DeltaReconciliationRequired("Ambiguous native relation ownership; full reconciliation required")
 
-
 def _stage(connection, table, rows, width):
     for offset in range(0, len(rows), 256):
         batch = rows[offset:offset + 256]
         placeholders = ", ".join(["(" + ", ".join(["?"] * width) + ")"] * len(batch))
         connection.execute(f"INSERT INTO {table} VALUES {placeholders}", [value for row in batch for value in row])
-
 
 def _old_rows(connection, paths, *, archive=False):
     connection.execute("CREATE TEMP TABLE int_delta_paths (relative_path VARCHAR, filename VARCHAR)")
@@ -85,7 +81,6 @@ def _old_rows(connection, paths, *, archive=False):
     if archive and any(row[4] != "Archived" for row in rows):
         raise ValueError("Archive delta cannot replace live Atoms")
     return [(row[0], row[1]) for row in rows]
-
 
 def _validate_delta(connection, data, model, manifest_sha256, *, archive=False):
     paths = _paths(data["paths"])
@@ -123,7 +118,6 @@ def _validate_delta(connection, data, model, manifest_sha256, *, archive=False):
     _validate_edges(new_edges, inverse)
     return snapshot, old, new_edges, inverse
 
-
 def _validate_delta_issues(connection, snapshot, paths):
     addressed = {str(PurePosixPath(parent) / name) for parent, name in paths}
     issues = snapshot.get("ingestion_issues", [])
@@ -134,7 +128,6 @@ def _validate_delta_issues(connection, snapshot, paths):
             or duplicate_dependencies(connection, snapshot, addressed)):
         raise DeltaReconciliationRequired("Duplicate Atom group requires full reconciliation")
 
-
 def _stage_owned_edges(connection, old, inverse):
     connection.execute("CREATE TEMP TABLE int_delta_old (reference VARCHAR)")
     _stage(connection, "int_delta_old", [(reference,) for reference, _ in old], 1)
@@ -143,7 +136,6 @@ def _stage_owned_edges(connection, old, inverse):
         (NOT r.derived AND r.source_kind = 'Atom' AND r.source_ref IN (SELECT reference FROM int_delta_old)) OR
         (r.derived AND r.target_kind = 'Atom' AND r.target_ref IN (SELECT reference FROM int_delta_old))""")
     _validate_edges(connection.execute("SELECT * FROM int_delta_owned_edges").fetchall(), inverse)
-
 
 def _write_atoms(connection):
     connection.execute("DELETE FROM main.mrt_atoms WHERE (relative_path, filename) IN (SELECT * FROM int_delta_paths)")
@@ -201,7 +193,7 @@ def _write_lenses(connection, snapshot):
 
 
 def apply_native_delta(connection, data, manifest_sha256, *, archive=False):
-    from .archive_generation import archive_pending
+    from .archive_generation import archive_pending, backfill_archive_versions
 
     if "archive_pending" in data and (data["archive_pending"] is not True or "carrier_hashes" not in data):
         raise ValueError("Invalid startup archive transition")
@@ -214,23 +206,25 @@ def apply_native_delta(connection, data, manifest_sha256, *, archive=False):
                 or (archive and not archive_pending(connection))):
             raise GenerationBaseChanged("Generation base changed or is not native")
         base, model, structure = rows[0]
+        if data.get("archive_pending"):
+            backfill_archive_versions(connection)
         snapshot, old, new_edges, inverse = _validate_delta(connection, data, model, manifest_sha256, archive=archive)
         generation = _delta_generation(base, data["snapshot_sha256"])
         update_checkpoint(connection, data, delta=True)
         if not old and not snapshot["atoms"]:
-            changed = _finish_delta(connection, data, archive, check_changes=True)
+            changed = _finish_delta(connection, data, archive, old, check_changes=True)
             if changed:
                 connection.execute("UPDATE ops_generation SET id = ?", [generation])
             connection.execute("DROP TABLE int_delta_paths")
             connection.execute("DROP TABLE int_admission_atoms")
             connection.execute("COMMIT")
             return generation if changed else base
-        _finish_delta(connection, data, archive)
         _stage_owned_edges(connection, old, inverse)
         components = {"C00", *json.loads(structure)["components"]}
         if not archive:
             _write_lenses(connection, snapshot)
         _write_atoms(connection)
+        _finish_delta(connection, data, archive, old)
         _write_relations(connection, new_edges)
         if not archive and has_table(connection, "main", "biz_architecture_spec_metrics"):
             apply_spec_delta(connection, [exact for _, exact in old if "-S-" in exact], snapshot_sizes(snapshot))
@@ -250,8 +244,8 @@ def _delta_generation(base, digest):
     return _digest({"kind": "native_ticket_delta", "base_generation": base, "delta_sha256": digest})
 
 
-def _finish_delta(connection, data, archive, *, check_changes=False):
-    from .archive_generation import set_archive_pending
+def _finish_delta(connection, data, archive, old, *, check_changes=False):
+    from .archive_generation import refresh_archive_versions, set_archive_pending, update_archive_versions
 
     snapshot = data["snapshot"]
     paths = [str(PurePosixPath(parent) / name) for parent, name in data["paths"]]
@@ -265,6 +259,10 @@ def _finish_delta(connection, data, archive, *, check_changes=False):
         clear_archive_failure(connection)
     elif data.get("archive_pending"):
         set_archive_pending(connection, True)
+    if archive and not has_table(connection, "main", "ops_archive_versions"):
+        refresh_archive_versions(connection)
+    else:
+        update_archive_versions(connection, old, snapshot["atoms"])
     return changed
 
 

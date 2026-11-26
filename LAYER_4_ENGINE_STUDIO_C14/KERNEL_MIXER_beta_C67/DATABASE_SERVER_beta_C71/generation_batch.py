@@ -116,6 +116,7 @@ async def read_full_generation(request, read_object, size_limit):
     alternatives = (fields, fields | {"refresh_target"}, fields | {"reuse"}, fields | {"refresh_target", "reuse"})
     alternatives += tuple(option | {"carrier_hashes"} for option in alternatives)
     alternatives += tuple(option | {"archive_pending"} for option in alternatives)
+    alternatives += tuple(option | {"archive_versions"} for option in alternatives if "archive_pending" in option)
     alternatives += tuple(option | {"model_diagnostics"} for option in alternatives)
     alternatives += tuple((option - {"snapshot", "graph", "carrier_hashes"}) | {"batch_artifact"}
                           for option in alternatives if "carrier_hashes" in option)

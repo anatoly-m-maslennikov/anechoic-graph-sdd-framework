@@ -95,19 +95,46 @@ def _create_revision(selection, params, current_rows, structure_snapshot, previo
         body = changes.get('body', old_body)
         if _summary(body) != _summary(old_body):
             raise common.InputError('summary', 'Changing a Summary is not supported.')
-        version = max(row['version'] for row in capture.atoms if row.get('id') == target['ref_id']) + 1
+        return _write_revision(selection, target, selected, path, root, raw, bounds, body, old_body,
+                               capture, previous_capture, digest, owner if '-T-' in target['ref_id'] else None)
+
+
+def _write_revision(selection, target, selected, path, root, raw, bounds, body, old_body,
+                    capture, previous_capture, digest, owner):
+    version = max(getattr(capture, 'max_archived_version', 0),
+                  max(row['version'] for row in capture.atoms if row.get('id') == target['ref_id'])) + 1
+    if '-T-' in target['ref_id'] and 'atom_family' in selected['header_json']:
+        if _task_path(selection, selected['header_json'], old_body, selected['status'], target['version'], owner, root) != path:
+            raise common.InputError('sourceCurrent', 'Task path disagrees with its authored Header and Summary.')
+    while version <= 2**63 - 1:
         if '-T-' in target['ref_id'] and 'atom_family' in selected['header_json']:
-            if _task_path(selection, selected['header_json'], old_body, selected['status'], target['version'], owner, root) != path:
-                raise common.InputError('sourceCurrent', 'Task path disagrees with its authored Header and Summary.')
             destination = _task_path(selection, selected['header_json'], body, 'draft', version, owner, root)
         else:
             destination = root / DRAFT_DIRECTORY / path.name.replace(target['ref_id'] + '-', f"{target['ref_id']}@{version}-draft-", 1)
         candidate = _state_bytes(raw, bounds, path, version, body, 'draft', update_timestamp=True)
         with bind_query_reader(None):
             outcome = common.write_destination(selection.root, destination, candidate)
-        data = {} if outcome.errors else {'savedDraft': common.saved(selection, destination, target['ref_id'],
-                        f"{target['ref_id']}@{version}-draft", version, 'Draft')}
-        return common.result(effects=outcome.effects, errors=outcome.errors, **data)
+        if not common.destination_collision({"effects": outcome.effects, "errors": outcome.errors}):
+            break
+        try:
+            fresh_raw = ReadContext(roots=[str(selection.root)], limits=dict(CEILINGS)).read(path)
+            if sha256(fresh_raw).hexdigest() != digest:
+                raise common.SourceChanged('Current carrier source changed after selection.')
+            refreshed = revalidate_native(selection, previous_capture)
+            if refreshed.errors:
+                raise common.SourceChanged('Native carrier capture is incomplete.')
+            reader = ReadContext(roots=[str(selection.root)], limits=dict(CEILINGS))
+            if sha256(reader.read(selection.manifest_path)).hexdigest() != selection.manifest_sha256 or reader.currentness()['state'] != 'unchanged':
+                raise common.SourceChanged('Project Manifest changed after selection.')
+        except (OSError, RuntimeError, ValueError) as error:
+            raise common.SourceChanged('Current carrier source changed after selection.') from error
+        version += 1
+    else:
+        raise common.SourceChanged('No representable revision Version remains.')
+    data = {} if outcome.errors else {'savedDraft': common.saved(selection, destination, target['ref_id'],
+                    f"{target['ref_id']}@{version}-draft", version, 'Draft')}
+    return common.result(effects=outcome.effects, errors=outcome.errors, **data)
+
 
 
 

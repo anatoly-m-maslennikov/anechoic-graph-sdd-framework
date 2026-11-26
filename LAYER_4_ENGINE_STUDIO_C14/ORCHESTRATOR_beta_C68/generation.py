@@ -15,16 +15,7 @@ from .worker_reply import parse_worker_result as parse_worker_result
 REUSE_FIELDS = {"inputs", "graph_config", "endpoints"}
 TICKET_ROOTS = {"__TICKETS", "001_TICKETS", "__TKT"}
 MAX_WARM_DELTA_PATHS = 32
-ALLOCATION_REFERENCES = """
-    SELECT reference FROM main.atoms
-    UNION ALL
-    SELECT atom_ref FROM main.ops_ingestion_issues WHERE source IN ('atom', 'archive')
-        AND regexp_full_match(atom_ref, '[A-Z][A-Z0-9]*-[TS]-[0-9]{1,255}(?:@[1-9][0-9]*(?:-draft)?)?')
-    UNION ALL
-    SELECT regexp_extract(relative_path,
-        '(?:^|/)([A-Z][A-Z0-9]*-[TS]-[0-9]{1,255})(?:@[1-9][0-9]*(?:-draft)?)?[-.][^/]*[.]md$', 1)
-    FROM main.ops_ingestion_issues WHERE source IN ('atom', 'archive')
-"""
+
 
 
 class GenerationBaseChanged(RuntimeError):
@@ -73,37 +64,6 @@ def replace_ingestion_issues(socket_path, instance_id, source, issues, *, model_
         body = response.read()
         if response.status != 200:
             raise RuntimeError("Kernel rejected ingestion issues: " + body.decode("utf-8", "replace")[:2048])
-
-
-def ticket_allocation(socket_path, instance_id, base_generation, prefix):
-    if re.fullmatch(r"[A-Z][A-Z0-9]*", prefix) is None:
-        raise ValueError("Invalid Project prefix")
-    sql = f"""WITH allocation_refs AS ({ALLOCATION_REFERENCES}), numbers AS (
-        SELECT ltrim(regexp_extract(reference, '^{prefix}-T-([0-9]+)(@|$)', 1), '0') AS number
-        FROM allocation_refs WHERE starts_with(reference, '{prefix}-T-')
-    )
-    SELECT id, coalesce(nullif((SELECT arg_max(number, (length(number), number)) FROM numbers), ''), '0'),
-        json_extract(model, '$.ticket_labels')::VARCHAR
-    FROM main.generation"""
-    request = json.dumps({"instance_id": instance_id, "sql": sql})
-    with closing(UnixConnection(socket_path)) as connection:
-        connection.request("POST", "/database", request, {"Content-Type": "application/json"})
-        response = connection.getresponse()
-        if response.status != 200:
-            raise ValueError("Kernel refused the Ticket allocation query")
-        rows = json.loads(response.read())["result"]["rows"]
-    if (not isinstance(rows, list) or len(rows) != 1 or not isinstance(rows[0], list)
-            or len(rows[0]) != 3 or rows[0][0] != base_generation):
-        raise ValueError("Kernel generation changed before Ticket allocation")
-    number = rows[0][1]
-    if not isinstance(number, str) or re.fullmatch(r"0|[1-9][0-9]*", number) is None:
-        raise ValueError("Kernel returned an invalid Ticket number")
-    if rows[0][2] is None:
-        raise ValueError("The admitted Model lacks Ticket label rules")
-    labels = json.loads(rows[0][2])
-    if not isinstance(labels, list) or not all(isinstance(label, str) for label in labels):
-        raise ValueError("Kernel returned invalid Ticket label rules")
-    return number, labels
 
 
 def ticket_delta_paths(binding, changes):

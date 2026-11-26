@@ -209,12 +209,24 @@ def _cleanup_temp(root: Path, temp: str | None, result: Result) -> None:
 
 
 
+class _DestinationExists(FileExistsError):
+    pass
+
+
+def _publish_new(temp, name, parent):
+    try:
+        os.link(temp, name, dst_dir_fd=parent, follow_symlinks=False)
+    except FileExistsError as exc:
+        raise _DestinationExists() from exc
+
+
 def _write_error(result, operation, target, committed, exc):
     if committed:
         _effect(result, operation, target, "unknown", "publication occurred but synchronization or readback failed")
         _error(result, "effect_uncertain", _message(exc))
     else:
-        _error(result, "stale_state" if isinstance(exc, (ValueError, FileExistsError)) else "backend_failure", _message(exc))
+        _error(result, "stale_state" if isinstance(exc, (ValueError, FileExistsError)) else "backend_failure",
+               "Destination already exists." if isinstance(exc, _DestinationExists) else _message(exc))
 
 def _write(root: Path, path: Path, data: bytes, expected: str | None, result: Result) -> None:
     temp = parent = None
@@ -238,7 +250,7 @@ def _write(root: Path, path: Path, data: bytes, expected: str | None, result: Re
         if expected is None:
             lock = getattr(reader, 'lifecycle_file_effect', None)
             with lock() if callable(lock) else nullcontext():
-                os.link(temp, name, dst_dir_fd=parent, follow_symlinks=False)
+                _publish_new(temp, name, parent)
                 committed = True
                 if reader is None:
                     readback = _read(parent, name)

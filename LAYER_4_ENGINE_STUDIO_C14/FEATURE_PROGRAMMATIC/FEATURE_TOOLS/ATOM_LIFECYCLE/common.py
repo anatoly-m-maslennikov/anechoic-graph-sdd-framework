@@ -120,3 +120,9 @@ def write_destination(root, path, raw):
     outcome = effects.create(root, path, raw)
     outcome.effects[:0] = created
     return outcome
+
+
+def destination_collision(outcome):
+    return (not outcome["effects"] and len(outcome["errors"]) == 1
+            and outcome["errors"][0].get("code") == "stale_state"
+            and outcome["errors"][0].get("message") == "Destination already exists.")

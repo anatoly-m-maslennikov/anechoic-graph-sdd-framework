@@ -2,11 +2,13 @@
 
 from hashlib import sha256
 from pathlib import Path
+import os
+import re
 from threading import Lock
 from time import perf_counter_ns
 from typing import Literal
 
-from .ADAPTERS_C30__pub import CEILINGS, LimitReached, ReadContext
+from .ADAPTERS_C30__pub import CEILINGS, LimitReached, ReadContext, open_regular, protected
 from .native_carrier_placement__pub import ARCHIVE_DIRECTORY, project_goal_filename
 from .startup_timing import mark_startup_timing, startup_timing_enabled
 
@@ -103,3 +105,42 @@ def full_carriers(reader, selection, defer_archives=None, archive_roots=None):
     if reader.mode == "foreground_capture":
         mark_startup_timing("non_archived_load_started", mode=reader.mode)
     return paths
+
+
+def archive_versions(reader, roots, rows, prefix):
+    """Find archive maxima from filenames and already captured off-path rows."""
+    versions = {}
+    pattern = re.compile(rf"({re.escape(prefix)}-[STPC]-[0-9]+)@([1-9][0-9]*)")
+
+    def add(atom_id, digits):
+        if len(digits) <= 19 and (version := int(digits)) <= 2**63 - 1:
+            versions[atom_id] = max(versions.get(atom_id, 0), version)
+
+    pending = list(roots)
+    count = 0
+    while pending:
+        directory = reader._allowed_lexical(pending.pop())
+        descriptor = open_regular(directory, directory=True)
+        try:
+            with os.scandir(descriptor) as entries:
+                for entry in entries:
+                    count += 1
+                    if count > reader.limits["max_candidates"]:
+                        raise LimitReached("max_candidates")
+                    if entry.name == ".DS_Store":
+                        continue
+                    if entry.is_dir(follow_symlinks=False):
+                        child = directory / entry.name
+                        if not protected(child):
+                            pending.append(child)
+                    elif entry.is_file(follow_symlinks=False) and entry.name.endswith(".md"):
+                        match = pattern.match(entry.name)
+                        if match and (entry.name[match.end():] == ".md" or entry.name[match.end():].startswith("-")):
+                            add(*match.groups())
+        finally:
+            os.close(descriptor)
+    for row in rows:
+        ref = row.get("ref")
+        if isinstance(ref, str) and (match := pattern.fullmatch(ref)):
+            add(*match.groups())
+    return versions

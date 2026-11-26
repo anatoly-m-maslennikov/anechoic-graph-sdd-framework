@@ -59,6 +59,7 @@ class _LifecycleJob(BaseModel):
     outcome: Any = None
     deadline: float | None
     started: bool = False
+    archive_versions: bool = False
     name: str
     arguments: InstanceOf[dict]
 

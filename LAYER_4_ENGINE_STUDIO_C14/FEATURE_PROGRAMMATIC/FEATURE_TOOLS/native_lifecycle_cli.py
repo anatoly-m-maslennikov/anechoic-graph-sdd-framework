@@ -86,7 +86,8 @@ def _run_context(request):
             selection = _indexed_selection(binding, {"manifest_ref": structure.project["ref"]})
             selection = replace(selection, parameters=context["structure"]["project"].get("parameters", {}))
             capture = capture_indexed_lifecycle(selection, context["carriers"], context["max_numbers"],
-                                                lenses=context["lenses"])
+                                                lenses=context["lenses"],
+                                                max_archived_version=context.get("max_archived_version", 0))
             descriptor = context["model"]
             validate = None
             if descriptor is not None:

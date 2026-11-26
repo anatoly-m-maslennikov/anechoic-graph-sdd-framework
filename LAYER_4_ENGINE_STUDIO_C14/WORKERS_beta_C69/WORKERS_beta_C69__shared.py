@@ -213,6 +213,12 @@ def _publish_generation(output, identity, stage, result, batch_full):
     os.replace(stage, output)
 
 
+def _deferred_archive(deferred, endpoints, archive_versions):
+    roots, archived, archive_hashes = deferred
+    return {"roots": roots, "snapshot": archived, "carrier_hashes": archive_hashes,
+            "endpoints": endpoints, "archive_versions": archive_versions}
+
+
 def build_generation(binding, output, *, managed=False, watcher_guarded=False, foreground=False,
                      replay_graph=False, model_source=None, batch_full=False, defer_graph=False):
     from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
@@ -223,9 +229,11 @@ def build_generation(binding, output, *, managed=False, watcher_guarded=False, f
     if (not output.is_absolute() or output.is_symlink() or not output.is_dir()
             or output.resolve(strict=True) != output or any(output.iterdir())):
         raise ValueError("Generation directory must be an existing empty canonical directory")
+    archive_versions = {}
     captured = prepare_generation_snapshot(
         binding, include_hashes=True, watcher_guarded=watcher_guarded,
         archive_stage="foreground" if foreground else None,
+        **({"archive_versions": archive_versions} if foreground else {}),
         **({"include_model_inputs": True} if model_source is not None else {}))
     config, finish_snapshot = captured[:2]
     model_inputs = captured[2] if model_source is not None else None
@@ -249,9 +257,7 @@ def build_generation(binding, output, *, managed=False, watcher_guarded=False, f
         if model_source is not None:
             result["model_diagnostics"] = compiled[3]
         if foreground:
-            roots, archived, archive_hashes = deferred
-            result["deferred_archive"] = {"roots": roots, "snapshot": archived,
-                                          "carrier_hashes": archive_hashes, "endpoints": endpoints}
+            result["deferred_archive"] = _deferred_archive(deferred, endpoints, archive_versions)
         if managed:
             reusable = (inputs is not None and reusable_graph(graph)
                         and artifact_inputs(binding, config, watcher_guarded=watcher_guarded, **graph_option) == inputs)

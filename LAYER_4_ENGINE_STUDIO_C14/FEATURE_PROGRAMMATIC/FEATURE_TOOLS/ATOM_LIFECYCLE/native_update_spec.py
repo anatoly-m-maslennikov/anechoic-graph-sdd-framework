@@ -166,18 +166,40 @@ def _archive_spec_selected(selection, target, draft, path, digest, owner, previo
             if path != native_carrier_path(header, _summary(body), project_root=selection.control_root, owner_directory=owner):
                 raise InputError('target', 'SPEC Draft path disagrees with its Header and Summary.')
             used = {row['version'] for row in capture.atoms if row['id'] == draft['id'] and row is not fresh[0]}
-            version = target['version']
-            while True:
-                projected = {**header, 'state': {**header['state'], 'status': 'archived', 'version': version}}
-                destination = native_carrier_path(projected, _summary(body), project_root=selection.control_root, owner_directory=owner)
-                if version not in used and not destination.exists() and not destination.is_symlink():
-                    break
-                version += 1
-            archived = _state_bytes(raw, bounds, path, version, body, 'archived',
-                                    update_timestamp=version != target['version'])
+            version = max(target['version'], getattr(capture, 'max_archived_version', 0) + 1)
         except (OSError, RuntimeError, ValueError, KeyError, TypeError) as error:
             raise SourceChanged('SPEC Draft source is unavailable or changed.') from error
-        return _write_archived_spec(selection, target, draft, path, digest, destination, archived, version)
+        return _allocate_archived_spec(selection, target, draft, path, digest, owner, previous_capture,
+                                       raw, bounds, body, header, used, version)
+
+
+def _allocate_archived_spec(selection, target, draft, path, digest, owner, previous_capture,
+                            raw, bounds, body, header, used, version):
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import native_carrier_path
+    from .native_draft import _state_bytes, _summary
+    from . import common
+    while version <= 2**63 - 1:
+        if version in used:
+            version += 1
+            continue
+        projected = {**header, 'state': {**header['state'], 'status': 'archived', 'version': version}}
+        destination = native_carrier_path(projected, _summary(body), project_root=selection.control_root, owner_directory=owner)
+        archived = _state_bytes(raw, bounds, path, version, body, 'archived',
+                                update_timestamp=version != target['version'])
+        outcome = _write_archived_spec(selection, target, draft, path, digest, destination, archived, version)
+        if not common.destination_collision(outcome):
+            return outcome
+        try:
+            _selected_spec_bytes(selection, draft, path, digest)
+            refreshed = revalidate_native(selection, previous_capture)
+            if refreshed.errors:
+                raise SourceChanged('Native carrier capture is incomplete.')
+        except (OSError, RuntimeError, ValueError) as error:
+            raise SourceChanged('SPEC Draft changed after selection.') from error
+        version += 1
+    raise SourceChanged('No representable revision Version remains.')
+
+
 
 
 def _write_archived_spec(selection, target, draft, path, digest, destination, archived, version):

@@ -43,6 +43,7 @@ class _LifecycleContext(BaseModel):
     model: dict | None
     has_descendants: bool
     endpoints: dict
+    max_archived_version: int = Field(default=0, ge=0, le=2**63 - 1)
 
 
 class IndexedRequest(BaseModel):

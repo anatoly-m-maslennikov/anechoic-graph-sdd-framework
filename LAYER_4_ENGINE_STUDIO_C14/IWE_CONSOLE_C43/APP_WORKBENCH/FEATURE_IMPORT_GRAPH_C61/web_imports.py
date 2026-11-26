@@ -10,6 +10,7 @@ import subprocess
 
 _WEB = frozenset({'javascript', 'typescript', 'svelte'})
 _FRONTEND = Path(__file__).resolve().parent.parent / 'FEATURE_WORKBENCH_FRONTEND'
+_FRONTEND_PROJECT_PATH = _FRONTEND.relative_to(_FRONTEND.parents[3])
 _SCANNER = _FRONTEND / 'scripts' / 'import-graph-scanner.ts'
 _EXTENSIONS = ('', '.ts', '.tsx', '.cts', '.js', '.jsx', '.mjs', '.cjs', '.svelte')
 _BUILTINS = frozenset('assert buffer child_process crypto events fs http https module os path process stream string_decoder test timers url util worker_threads zlib'.split())
@@ -76,13 +77,10 @@ def _dependency_file(root, site, file, probe=None):
 
 def _lookup_local(root, spec, site, file, dependency_file, sources, written, probe, include_asset_target):
     if spec.startswith('/'):
-        try:
-            frontend = _FRONTEND.relative_to(root).as_posix()
-        except ValueError:
+        frontend = _FRONTEND.relative_to(root) if _FRONTEND.is_relative_to(root) else _FRONTEND_PROJECT_PATH
+        if not site.level or not file.is_relative_to(frontend):
             return written, None, 'unresolved'
-        if not site.level or not file.is_relative_to(PurePosixPath(frontend)):
-            return written, None, 'unresolved'
-        value = posixpath.normpath(posixpath.join(frontend, spec.lstrip('/')))
+        value = posixpath.normpath(posixpath.join(frontend.as_posix(), spec.lstrip('/')))
     else:
         value = posixpath.normpath(posixpath.join(dependency_file.parent.as_posix(), spec))
     if value == '..' or value.startswith('../'):

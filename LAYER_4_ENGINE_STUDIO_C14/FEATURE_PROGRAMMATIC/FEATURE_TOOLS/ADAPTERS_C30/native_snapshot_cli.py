@@ -13,7 +13,7 @@ from pydantic.dataclasses import dataclass
 
 from .ADAPTERS_C30__pub import CEILINGS, LimitReached, ReadContext
 from .carrier_read__pub import parse_carrier
-from .native_carrier_inventory import startup_reader
+from .native_carrier_inventory import archive_versions as scan_archive_versions, startup_reader
 from .native_carrier_placement__pub import ARCHIVE_DIRECTORY, TICKET_DIRECTORY, project_goal_filename
 from .native_generation_snapshot import row_summary, snapshot
 from .model_capture import model_inputs
@@ -133,7 +133,7 @@ def _partition_archived(capture):
 
 def prepare_generation_snapshot(
     binding, *, include_hashes=False, watcher_guarded=False, archive_stage=None, archive_roots=(),
-    include_model_inputs=False,
+    include_model_inputs=False, archive_versions=None,
 ):
     """Capture carriers once and recheck their versions and membership before use.
 
@@ -151,6 +151,9 @@ def prepare_generation_snapshot(
                              include_content_properties="archive-summary",
                              defer_archives=deferred, archive_roots=directories)
     foreground, archived = _partition_archived(capture) if deferred is not None else (capture, None)
+    if archive_versions is not None and deferred is not None:
+        archive_versions.update(scan_archive_versions(startup_reader(selection.root, archive=True), deferred, archived.atoms,
+                                                      selection.project_prefix))
     manifest_path = selection.manifest_path.relative_to(selection.root).as_posix()
 
     def finish(endpoints):
