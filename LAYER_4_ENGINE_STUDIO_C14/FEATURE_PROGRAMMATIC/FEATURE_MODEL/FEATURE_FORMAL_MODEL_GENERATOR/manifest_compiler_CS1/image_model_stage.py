@@ -86,17 +86,22 @@ def bounded_run(argv, *, cwd, timeout, capture_stdout=True, max_output=MAX_OUTPU
                 pass
 
 
-def previous_claims(component: Path, image: str, *, timeout: float | None) -> list[list[str]]:
+def inspect_previous_image(image: str, *, timeout: float | None) -> dict:
     if re.fullmatch(r"sha256:[0-9a-f]{64}", image) is None:
         raise ValueError("Previous image must be an immutable image ID")
-    deadline = None if timeout is None else time.monotonic() + timeout
-    result = bounded_run(["docker", "image", "inspect", image], cwd=ROOT, timeout=_remaining(deadline))
+    result = bounded_run(["docker", "image", "inspect", image], cwd=ROOT, timeout=timeout)
     if result.returncode:
         raise ValueError("Previous ready image is unavailable")
     [details] = json.loads(result.stdout)
     if (details.get("Id") != image or details.get("Os") != "linux"
             or (details["Config"]["Labels"] or {}).get("org.anechoic.runtime.schema") != "1"):
         raise ValueError("Previous ready image is not an admitted runtime image")
+    return details
+
+
+def previous_claims(component: Path, image: str, *, timeout: float | None) -> list[list[str]]:
+    deadline = None if timeout is None else time.monotonic() + timeout
+    details = inspect_previous_image(image, timeout=_remaining(deadline))
 
     selector = component.parent / "selector.py"
     if any(set(str(path)) & {",", "\n", "\r"} for path in (component, selector)):
@@ -148,6 +153,8 @@ def stage_model(project: Path, control: Path, timeout: float | None, previous: s
     source = control / ONTOLOGY
     compile_command = [sys.executable, "-B", "-P", "-m", COMPILE]
     if not source.exists() and not source.is_symlink():
+        if previous is not None:
+            inspect_previous_image(previous, timeout=_remaining(deadline))
         return _run(compile_command, deadline)
     reader = ReadContext(roots=[str(control)], limits=dict(CEILINGS))
     temporary = project / ".anechoic_tmp"
@@ -167,10 +174,10 @@ def stage_model(project: Path, control: Path, timeout: float | None, previous: s
                 (staged / path.name).write_bytes(raw)
                 hashes[path.name] = sha256(raw).hexdigest()
         selected = None
-        if previous:
+        if previous is not None:
             selected = previous_claims(staged, previous, timeout=_remaining(deadline))
         fingerprint = _run([*compile_command, str(staged.parent)], deadline)
-        if previous:
+        if previous is not None:
             records = json.loads((staged.parent / "model.json").read_text())["declarations"]
             names = [Path(location.rsplit("@", 1)[0]).name for location, _, _ in records]
             if selected != [[name, hashes[name]] for name in sorted(names)]:

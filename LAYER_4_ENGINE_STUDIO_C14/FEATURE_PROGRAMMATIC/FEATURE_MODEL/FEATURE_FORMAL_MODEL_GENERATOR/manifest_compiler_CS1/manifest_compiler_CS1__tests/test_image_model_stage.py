@@ -37,6 +37,31 @@ def fake_docker(root, *, valid=True, selection=None):
 
 
 class ImageModelStageTests(unittest.TestCase):
+    def test_bundled_model_validates_previous_image(self):
+        from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.manifest_compiler_CS1 import image_model_stage as stage
+        with tempfile.TemporaryDirectory() as temporary:
+            project = Path(temporary).resolve()
+            details = [{"Id": IMAGE_ID, "Os": "linux", "Config": {"Labels": {"org.anechoic.runtime.schema": "1"}}}]
+            with (patch.object(stage, "_run", return_value="fingerprint") as compile_model,
+                  patch.object(stage, "bounded_run", return_value=subprocess.CompletedProcess([], 0, json.dumps(details), "")) as docker):
+                self.assertEqual(stage.stage_model(project, project, 5, None), "fingerprint")
+                self.assertEqual(stage.stage_model(project, project, 5, IMAGE_ID), "fingerprint")
+                docker.assert_called_once()
+                with self.assertRaisesRegex(ValueError, "immutable image ID"):
+                    stage.stage_model(project, project, 5, "")
+                docker.return_value = subprocess.CompletedProcess([], 1, "", "")
+                with self.assertRaisesRegex(ValueError, "unavailable"):
+                    stage.stage_model(project, project, 5, IMAGE_ID)
+                details[0]["Config"]["Labels"] = {}
+                docker.return_value = subprocess.CompletedProcess([], 0, json.dumps(details), "")
+                with self.assertRaisesRegex(ValueError, "not an admitted runtime image"):
+                    stage.stage_model(project, project, 5, IMAGE_ID)
+                self.assertEqual(compile_model.call_count, 2)
+            (project / ".anechoic_tmp").mkdir()
+            (project / ONTOLOGY).mkdir()
+            with self.assertRaisesRegex(ValueError, "immutable image ID"):
+                stage.stage_model(project, project, 5, "")
+
     def test_previous_selector_mounts_exact_current_codecs_read_only(self):
         names = ("carrier_read__pub.py", "carrier_syntax__pub.py", "carrier_compat__pub.py",
                  "native_carrier_header__pub.py", "content_records__pub.py", "markdown_content__pub.py",
