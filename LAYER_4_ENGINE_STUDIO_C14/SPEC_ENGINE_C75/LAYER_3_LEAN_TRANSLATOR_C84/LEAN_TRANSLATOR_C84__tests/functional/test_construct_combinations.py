@@ -42,8 +42,6 @@ class ConstructCombinationTests(unittest.TestCase):
             "must_effect=(('convert', 'done', {'version': 'current'}),), "
             "must_precede=((('convert', 'done', {'version': 'old'}), "
             "('convert', 'done', {'version': 'current'})),))")
-        # The current-then-old pair is the minimized order regression.
-        # The table requires a current effect and an earlier old effect.
         for first, second in itertools.product(('old', 'current'), repeat=2):
             first_edge = transition('middle', 'effect', 'convert', 'done', {'version': first})
             second_edge = transition('end', 'effect', 'convert', 'done', {'version': second})
@@ -54,7 +52,6 @@ class ConstructCombinationTests(unittest.TestCase):
 
         bound = parse_trace_contract("declare_trace_contract(action='run', output='ready', "
             "must_effect=(('query', 'done', {'rows': {'at_most': 2}}),))")
-        # A ready alternate bypasses the bound; an alternate output does not.
         for rows, alternate in itertools.product((2, 3), (None, 'failed', 'ready')):
             first_edge = transition('middle', 'effect', 'query', 'done', {'rows': rows})
             second_edge = transition('end', 'trigger')

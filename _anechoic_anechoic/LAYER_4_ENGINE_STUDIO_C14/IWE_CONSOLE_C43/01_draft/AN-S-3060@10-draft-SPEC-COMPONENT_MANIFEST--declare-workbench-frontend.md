@@ -32,6 +32,16 @@ declare_entity(
         boundaries={
             'code': {
                 'imports': {'only': ['src.lib.lib__shared']},
+                'exports': {
+                    'FEATURE_WORKBENCH_FRONTEND__shared': None,
+                    'src.lib.lib__shared': {'shared': ['C46', 'LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND/src',
+                        'LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND/FEATURE_WORKBENCH_FRONTEND__tests']},
+                    'FEATURE_WORKBENCH_FRONTEND__shared.WorkbenchApi': None,
+                    'FEATURE_WORKBENCH_FRONTEND__shared.WorkspaceApi': None,
+                    'FEATURE_WORKBENCH_FRONTEND__shared.HttpOperationCaller': None,
+                    'FEATURE_WORKBENCH_FRONTEND__shared.McpAppTransport': None,
+                    'FEATURE_WORKBENCH_FRONTEND__shared.OperationCaller': None,
+                },
             },
             'io': {
                 'server': {
@@ -71,11 +81,11 @@ declare_entity(
                         },
                     }},
                     'source_imports': {'transport': 'cli', 'runner': 'node',
-                                       'path': 'LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND/scripts/import-graph-scanner.mjs'},
+                                       'path': 'LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND/scripts/import-graph-scanner.ts'},
                     'source_function_sizes': {
                         'transport': 'cli',
                         'runner': 'node',
-                        'path': 'LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND/scripts/source-function-sizes.mjs',
+                        'path': 'LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND/scripts/source-function-sizes.ts',
                     },
                 },
                 'client': [{'component': 'C21', 'interface': 'workbench_http', 'transport': 'http',
