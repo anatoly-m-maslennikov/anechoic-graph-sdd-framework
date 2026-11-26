@@ -54,6 +54,15 @@ class AnalysisProjectionTest(unittest.TestCase):
         self.assertEqual(db.execute('SELECT count(*) FROM biz_architecture_code_metrics').fetchone()[0], 4)
         self.assertEqual(db.execute('SELECT count(*) FROM mrt_real_graph_package_spec_bindings').fetchone()[0], 3)
 
+    def test_both_containment_spellings_at_each_ancestry_step(self):
+        for first in ('CONTAINED_BY', 'IS_CONTAINED_BY'):
+            for second in ('CONTAINED_BY', 'IS_CONTAINED_BY'):
+                with self.subTest(first=first, second=second):
+                    self.db.execute("UPDATE mrt_atom_graph_relations SET relation_type=? WHERE source_ref='AN-1'", [first])
+                    self.db.execute("UPDATE mrt_atom_graph_relations SET relation_type=? WHERE source_ref='AN-2'", [second])
+                    row = self.db.execute("SELECT denominator_bytes FROM biz_architecture_ratios WHERE scope_id='C1' AND spec_population='full' LIMIT 1").fetchone()
+                    self.assertEqual(row, (40,))
+
     def test_delta_batch_preserves_unaffected_rows_and_rejects_conflicts(self):
         db = self.db
         before = db.execute('SELECT * FROM biz_architecture_spec_metrics ORDER BY atom_ref').fetchall()

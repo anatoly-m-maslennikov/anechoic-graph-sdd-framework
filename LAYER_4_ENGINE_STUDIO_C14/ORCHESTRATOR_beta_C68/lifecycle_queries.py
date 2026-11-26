@@ -27,7 +27,7 @@ _SQL = '''WITH RECURSIVE
         r.target_kind AS owner_kind, r.target_ref AS owner_ref
       FROM main.atoms a JOIN main.native_references n ON a.reference=n.reference
       LEFT JOIN main.relations r ON r.source_kind='Atom' AND r.source_ref=a.reference
-        AND r.relation_type='CONTAINED_BY' AND NOT r.derived
+        AND r.relation_type IN ('IS_CONTAINED_BY', 'CONTAINED_BY') AND NOT r.derived
     ),
     owners(id) AS (
       SELECT id FROM (SELECT {owner_lit} AS id WHERE {owner_lit} <> ''
@@ -44,7 +44,7 @@ _SQL = '''WITH RECURSIVE
               AND NOT derived AND target_ref={target_lit}) AND n.status_group='Current') AS should_read
       FROM native n WHERE n.id={target_lit} OR n.id IN (SELECT id FROM owners)
         OR n.id IN {sources} AND n.status_group='Current'
-        OR n.ref IN (SELECT source_ref FROM main.relations WHERE relation_type='CONTAINED_BY'
+        OR n.ref IN (SELECT source_ref FROM main.relations WHERE relation_type IN ('IS_CONTAINED_BY', 'CONTAINED_BY')
             AND NOT derived AND target_kind='Atom' AND target_ref={target_lit})
         OR n.ref IN (SELECT source_ref FROM main.relations WHERE relation_type='IS_REPLACEMENT_FOR'
             AND NOT derived AND target_ref={target_lit}) AND n.status_group='Current'
@@ -62,7 +62,7 @@ _SQL = '''WITH RECURSIVE
         _source_sha256 := CASE WHEN should_read THEN json_extract_string((SELECT hashes FROM main.generation_carriers), '/' || replace(replace(path, '~', '~0'), '/', '~1')) ELSE NULL END, version := version, status := status, status_group := status_group,
         id := id, owner_kind := owner_kind, owner_ref := owner_ref, read := should_read)))::VARCHAR
         FROM selected), '[]'),
-      EXISTS(SELECT 1 FROM main.relations WHERE relation_type='CONTAINED_BY' AND NOT derived
+      EXISTS(SELECT 1 FROM main.relations WHERE relation_type IN ('IS_CONTAINED_BY', 'CONTAINED_BY') AND NOT derived
         AND target_kind='Atom' AND target_ref={target_lit}) OR EXISTS(SELECT 1 FROM native parent JOIN native child
         ON starts_with(child.path, regexp_replace(parent.path, '[.]md$', '') || '/')
         WHERE parent.id={target_lit} AND (parent.ref={exact_lit} OR parent.status_group='Current')), 
