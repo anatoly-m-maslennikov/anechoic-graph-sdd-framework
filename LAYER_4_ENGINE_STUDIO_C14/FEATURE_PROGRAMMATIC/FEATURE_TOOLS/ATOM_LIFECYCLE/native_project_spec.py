@@ -23,10 +23,7 @@ def validate_project_spec(header, validate, body=None):
             type(context.get('tier')) is not int or context['tier'] not in tiers):
         raise common.InputError('newAtom', 'Project SPEC requires its declared Tier and Project C00 container.')
     try:
-        if template == 'project_contract':
-            validate(template, header, 'C00', body)
-        else:
-            validate(template, header, 'C00')
+        validate(template, header, 'C00', body)
     except (ValueError, TypeError, KeyError) as error:
         raise common.InputError('newAtom', f'Project SPEC does not satisfy the compiled Model: {error}') from error
 

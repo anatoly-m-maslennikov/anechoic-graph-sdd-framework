@@ -22,32 +22,40 @@ def _rule(args, field, quote):
 
 
 def render_header_lean(parsed, nodes, quote):
-    paths = {'status': 'Node//Artifact//Atom.Header.State',
-             'tier': 'Node//Artifact//Atom//Spec Atom.Header',
-             'priority': 'Node//Artifact//Atom//Ticket Atom.Header'}
-    rules = {field: [] for field in paths}
+    targets = {name: target for _, name, target, _ in nodes}
+    try:
+        atom, spec_root, ticket_root = (targets[name] for name in ('Atom', 'SpecAtom', 'TicketAtom'))
+    except KeyError as error:
+        raise ValueError('Model lacks a pilot Atom family class') from error
+    paths = {'status': atom + '.Header.State',
+             'tier': spec_root + '.Header',
+             'priority': ticket_root + '.Header'}
+    properties = {field: [] for field in paths}
     for _, _, declaration in parsed:
         args = declaration['arguments']
         field = str(args.get('entity_name', '')).lower()
         if (declaration['kind'] != 'entity' or field not in paths or
                 args.get('base_path') != paths[field] or args.get('relation_name') != 'IS_PROPERTY_OF'):
             continue
-        owners = args.get('applies_to_entity_classes', ())
-        rule = _rule(args, field, quote)
-        if owners:
-            targets = [target for _, _, target, _ in nodes if any(
-                target == owner or target.startswith(owner + "//") for owner in owners)]
-            condition = '[' + ', '.join(map(quote, targets)) + ']'
-            rule = f'(if h.modelClass ∈ {condition} then {rule} else true)'
-        rules[field].append(rule)
-    if any(not values for values in rules.values()):
-        raise ValueError('Model lacks a pilot Atom Header declaration')
-    status, tier, priority = (' && '.join(rules[field]) for field in ('status', 'tier', 'priority'))
-    roots = ('Node//Artifact//Atom//Spec Atom', 'Node//Artifact//Atom//Ticket Atom')
-    families = [[target for _, _, target, _ in nodes if target == root or target.startswith(root + '//')]
-                for root in roots]
-    if any(not family for family in families):
-        raise ValueError('Model lacks a pilot Atom family class')
+        properties[field].append(args)
+    rules = {}
+    for field, declarations in properties.items():
+        bases = [args for args in declarations if not args.get('applies_to_entity_classes')]
+        if len(bases) != 1:
+            raise ValueError(f'Model must declare one base {field} Header Property')
+        field_rules = [_rule(bases[0], field, quote)]
+        for args in declarations:
+            owners = args.get('applies_to_entity_classes', ())
+            if owners:
+                scoped = [target for target in targets.values() if any(
+                    target == owner or target.startswith(owner + '//') for owner in owners)]
+                condition = '[' + ', '.join(map(quote, scoped)) + ']'
+                rule = _rule({**bases[0], **args}, field, quote)
+                field_rules.append(f'(if h.modelClass ∈ {condition} then {rule} else true)')
+        rules[field] = ' && '.join(field_rules)
+    status, tier, priority = (rules[field] for field in ('status', 'tier', 'priority'))
+    families = [[target for target in targets.values() if target == root or target.startswith(root + '//')]
+                for root in (spec_root, ticket_root)]
     spec, ticket = ('[' + ', '.join(map(quote, family)) + ']' for family in families)
     return [
         'inductive HeaderValue where | text : String → HeaderValue | integer : Int → HeaderValue | other : HeaderValue',

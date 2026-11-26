@@ -24,7 +24,7 @@ def _relation_bindings(relation_types, inverses):
             or set(inverses) & set(inverses.values())):
         raise ValueError("Invalid native relation declarations")
     inverse = dict(inverses) | {value: key for key, value in inverses.items()}
-    if "CONTAINED_BY" not in inverse:
+    if not {"IS_CONTAINED_BY", "CONTAINED_BY"} & inverse.keys():
         raise ValueError("Native containment requires a declared inverse")
     return inverse
 
@@ -84,8 +84,9 @@ def _projected_rows(capture, relation_types, inverse):
             })
 
     historical = _historical_relation_names(relation_types)
+    containment = "IS_CONTAINED_BY" if "IS_CONTAINED_BY" in inverse else "CONTAINED_BY"
     for edge in capture.containment:
-        add(dict(edge))
+        add(dict(edge, relation_type=containment))
     for row in rows:
         relations = row["header_json"].get("relations", {})
         direct, derived = ("IS_REFERENCE", "HAS_REFERENCE") if inverse.get("IS_REFERENCE") == "HAS_REFERENCE" else ("HAS_REFERENCE", "IS_REFERENCE_FOR")

@@ -171,20 +171,22 @@ class IncrementalStartupTest(unittest.TestCase):
         self.assertEqual({p.relative_to(self.root).as_posix() for p in (first, moved, added)}, set(result["carrier_hashes"]))
         self.assertEqual(3, len(result["snapshot"]["atoms"]))
 
-    def test_foreground_explicit_paths_capture_only_the_named_ticket(self):
+    def test_addressed_delta_captures_only_the_named_ticket(self):
         first = self.live / "AN-T-1-task.md"
         second = self.live / "AN-T-2-task.md"
         first.write_text(first.read_text().replace("Ticket 1.", "Ticket X."))
         second.write_text(second.read_text().replace("Ticket 2.", "Ticket Y."))
         relative = first.relative_to(self.root).as_posix()
-        request = {"binding": self.binding, "reuse": self.reuse, "foreground": True,
-                   "watcher_guarded": True, "paths": [relative]}
-        with TemporaryDirectory(dir=self.tmp.name) as output:
-            result = self.run_worker(Path(output).resolve(), request)
-            self.assertEqual([[first.parent.relative_to(self.root).as_posix(), first.name]], result["paths"])
-            self.assertEqual({relative: sha256(first.read_bytes()).hexdigest()}, result["carrier_hashes"])
-            self.assertEqual(["AN-T-1"], [row["reference"] for row in result["snapshot"]["atoms"]])
-            self.assertEqual([], list(Path(output).iterdir()))
+        deferred_reuse = self.reuse | {"graph_config": {}, "inputs": self.reuse["inputs"] | {"graph": "pending"}}
+        request = {"binding": self.binding, "watcher_guarded": True, "paths": [relative]}
+        for mode, reuse in (("foreground", self.reuse), ("defer_graph", deferred_reuse)):
+            with self.subTest(mode=mode), TemporaryDirectory(dir=self.tmp.name) as output:
+                result = self.run_worker(Path(output).resolve(), request | {mode: True, "reuse": reuse})
+                self.assertEqual(reuse["base_generation"], result.get("base_generation"))
+                self.assertEqual([[first.parent.relative_to(self.root).as_posix(), first.name]], result["paths"])
+                self.assertEqual({relative: sha256(first.read_bytes()).hexdigest()}, result["carrier_hashes"])
+                self.assertEqual(["AN-T-1"], [row["reference"] for row in result["snapshot"]["atoms"]])
+                self.assertEqual([], list(Path(output).iterdir()))
 
     def test_archive_unchanged_move_and_delete(self):
         self.assertEqual({"base_generation": "a" * 64, "unchanged": True}, self.capture(archive_roots=self.roots))

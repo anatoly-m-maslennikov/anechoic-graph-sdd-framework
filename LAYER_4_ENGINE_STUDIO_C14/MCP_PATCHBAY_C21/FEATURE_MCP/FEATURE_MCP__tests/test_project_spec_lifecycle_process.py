@@ -45,6 +45,17 @@ class ProjectSpecLifecycleProcessTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_axiom_zero_and_negative_tier(self):
         await self.reject('axiom', tier=-1)
+        await self.reject('axiom', body='\n## Claim\n\nExample\n')
+        await self.reject('axiom', body='\n## Summary\n\nExample\n\n## Summary\n\nDuplicate\n')
+        graph = await self.gateway.call(None, types.CallToolRequestParams(name='query_run', arguments={
+            'sql': "SELECT source_ref, target_ref, relation_type, derived FROM relations "
+                   "WHERE (source_ref, target_ref) IN (('AN-S-3037', 'C00'), ('C00', 'AN-S-3037')) "
+                   "AND relation_type IN ('IS_CONTAINED_BY', 'CONTAINS') ORDER BY derived",
+            'result_delivery': 'inline',
+        }))
+        self.assertFalse(graph.is_error, graph.structured_content)
+        self.assertEqual([['AN-S-3037', 'C00', 'IS_CONTAINED_BY', False],
+                          ['C00', 'AN-S-3037', 'CONTAINS', True]], graph.structured_content['rows'])
         draft = (await self.draft('axiom'))['savedDraft']
         target = {'ref_id': draft['ref_id'], 'version': 1}
         ready = (await self.call('promote_draft', {'target': target, 'targetStatus': 'ready'}))['artifact']

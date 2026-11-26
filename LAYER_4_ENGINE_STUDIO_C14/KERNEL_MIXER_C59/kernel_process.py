@@ -49,6 +49,7 @@ def _selection(args, model):
         root, args.control_root, validate_manifest=model.validate_manifest,
         require_atom_state=model.requires_atom_state,
         require_atom_header=model.requires_atom_header,
+        require_manifest_summary=model.declares_summary("Project Manifest"),
     )
     if selection.root != root or selection.control_relative != control:
         raise ValueError("Project binding changed")
@@ -82,6 +83,7 @@ def _inputs(model):
         require_atom_header=model.requires_atom_header,
         ticket_labels=model.ticket_labels,
         validate_project_spec=model.validate_project_spec,
+        require_manifest_summary=model.declares_summary("Project Manifest"),
     )
 
 

@@ -15,7 +15,7 @@ from mcp import ClientSession
 from mcp.client.stdio import StdioServerParameters, stdio_client
 
 from .test_beta_mcp_process import ENGINE, _stage
-from .FEATURE_MCP__tests__shared import project as make_project
+from .FEATURE_MCP__tests__shared import ONTOLOGY, project as make_project
 
 
 class BetaLifecycleFamilies(unittest.IsolatedAsyncioTestCase):
@@ -28,9 +28,9 @@ class BetaLifecycleFamilies(unittest.IsolatedAsyncioTestCase):
             subprocess.run(["git", "init", "--quiet", str(project)], check=True)
             make_project(project)
             control = project / "_anechoic_anechoic"
-            lens = "LAYER_1_META_ONTOLOGY_C9/_DES/AN-S-2272-DES--declare-evaluation-decision-form.md"
-            (control / lens).parent.mkdir()
-            shutil.copy2(ENGINE.parent / "_anechoic_anechoic/000_ANECHOIC_framework" / lens, control / lens)
+            lens = "_DES/AN-S-2272-DES--declare-evaluation-decision-form.md"
+            source = ENGINE.parent / "_anechoic_anechoic/000_ANECHOIC_framework/LAYER_1_META_ONTOLOGY_C9" / lens
+            shutil.copy2(source, control / ONTOLOGY / lens)
             source = ENGINE.parent / "_anechoic_anechoic/__PROJECT_CONFIG/AN-P-63-ACTION--author-atom-content-before-summary.md"
             shutil.copy2(source, control / "__PROJECT_CONFIG" / source.name)
             parameters = StdioServerParameters(command=sys.executable, args=[
@@ -56,9 +56,14 @@ class BetaLifecycleFamilies(unittest.IsolatedAsyncioTestCase):
             make_project(project)
             control = project / "_anechoic_anechoic"
             task = control / "__TICKETS/TASKS/AN-T-9999-TASK--promotion-canary.md"
-            task.parent.mkdir(parents=True, exist_ok=True)
+            contract = control / "AN-S-9998-SPEC-PROJECT_CONTRACT--promotion-canary.md"
+            contract.write_text("---\natom_family: SPEC\natom_id: AN-S-9998\ncontainer: {component: C00}\n"
+                "tier: 0\ncontext: {template: project_contract, lens: SPEC}\n"
+                "state: {status: active, version: 1, updated_at: '2026-11-19T00:00:00Z'}\n---\n"
+                "\n## Summary\n\nPromotion canary\n\n## Guarantee\n\nThe Task can be promoted.\n")
+            task.parent.mkdir(parents=True)
             task.write_text("---\natom_family: TKT\natom_id: AN-T-9999\ncontainer: {component: C00}\n"
-                "priority: 2\nrelations: {CHILD_OF: [AN-S-3037]}\ncontext: {template: task}\n"
+                "priority: 2\nrelations: {IS_SOLUTION_FOR: [AN-S-9998]}\ncontext: {template: task}\n"
                 "state: {status: in_queue, version: 1, updated_at: '2026-11-19T00:00:00Z'}\n---\n"
                 "\n## Summary\n\nPromotion canary\n\n## Work\n\nOld work.\n")
             parameters = StdioServerParameters(command=sys.executable, args=[
@@ -140,9 +145,9 @@ class BetaLifecycleFamilies(unittest.IsolatedAsyncioTestCase):
         self.assertEqual([["AN-T-9999@1", 1, "archived"], ["AN-T-9999", 2, "backlog"]],
                          await self._rows(client, "AN-T-9999"))
         relation = await client.call_tool("query_run", {"sql": "SELECT target_ref FROM relations "
-            "WHERE source_ref = 'AN-T-9999' AND relation_type = 'CHILD_OF' AND NOT derived",
+            "WHERE source_ref = 'AN-T-9999' AND relation_type = 'IS_SOLUTION_FOR' AND NOT derived",
             "result_delivery": "inline"})
-        self.assertEqual([["AN-S-3037"]], relation.structured_content["rows"])
+        self.assertEqual([["AN-S-9998"]], relation.structured_content["rows"])
         self._lean_headers(project / "_anechoic_anechoic", [before, draft_text,
                                                            archive.read_text(), current.read_text()])
 
@@ -160,12 +165,13 @@ class BetaLifecycleFamilies(unittest.IsolatedAsyncioTestCase):
         for carrier in carriers:
             header = self._header(carrier)
             observations.append({"family": header["atom_family"],
-                "model_class": "Node//Artifact//Atom//Ticket Atom", "status": header["state"]["status"],
+                "model_class": "Graph/Node//Artifact//SSOT//Prescribed/Content/Atom//Ticket",
+                "status": header["state"]["status"],
                 "tier": header.get("tier"), "priority": header.get("priority")})
         module = ("FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR."
                   "manifest_compiler_CS1.manifest_compiler_CS1__tests.functional.model_lean_pilot")
         env = {**os.environ, "PYTHONPATH": str(ENGINE)}
-        result = subprocess.run([sys.executable, "-B", "-P", "-m", module, str(control)],
+        result = subprocess.run([sys.executable, "-B", "-P", "-m", module, str(control), str(control / ONTOLOGY)],
             input=json.dumps(observations), text=True, capture_output=True, env=env, timeout=120)
         self.assertEqual(0, result.returncode, result.stdout + result.stderr)
 

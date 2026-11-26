@@ -1,8 +1,9 @@
 """Bind admitted Model declarations to generated runtime classes."""
 
 from hashlib import sha256
+from types import SimpleNamespace
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_native_model_claim
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_content, parse_native_model_claim
 from .model_declaration_bindings import bind_model_declarations
 from .reviewed_instance_check import bind_reviewed_instance_check
 from .validate_model_instance import validate_model_instance
@@ -29,6 +30,14 @@ def is_reviewed_claim(name: str, claim: str) -> bool:
 def normalize_reviewed_claim(claim: str) -> str:
     claim = claim.replace("from caprmedio.formal_claims import ", "from anechoic.formal_claims import ")
     return claim.replace("from caprmedio.model import ", "from anechoic.model import ")
+
+
+def _project_spec_summary_fields(body):
+    summaries = [section["direct_markdown"] for section in parse_content(body, tolerate_duplicate_siblings=True)
+                 if section["property_path"] == ["summary"]]
+    if len(summaries) > 1:
+        raise ValueError("Project SPEC has duplicate Summary properties")
+    return {"summary": summaries[0].strip()} if summaries and summaries[0] is not None else {}
 
 
 class BoundNativeModel:
@@ -122,8 +131,7 @@ class BoundNativeModel:
 
     def validate_project_spec(self, template, header, owner_id, body=None):
         from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.atom_reference__pub import derive_atom_ref
-        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import native_header_view
-        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import manifest_state_fields
+        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import manifest_state_fields, native_header_view
 
         view = native_header_view(header)
         state = view["state"]
@@ -132,7 +140,6 @@ class BoundNativeModel:
                   "ref_id": derive_atom_ref(atom_id, state["version"], state["status"]),
                   "tier": view["context"].get("tier"), "lens": view["context"].get("lens")}
         if self.requires_atom_state:
-            from types import SimpleNamespace
             fields.update(manifest_state_fields(SimpleNamespace(metadata=header), include_header=self.requires_atom_header))
         names = {"project_contract": ("Project Contract", (0,)), "axiom": ("Axiom", (0,)), "applicable_principle": ("Applicable Principle", (1, 2))}
         if template not in names or names[template][0] not in self._types:
@@ -144,6 +151,8 @@ class BoundNativeModel:
             raise ValueError("Project SPEC requires Project C00 and its declared Tier")
         if template == "axiom" and view["context"].get("lens") != "SPEC":
             raise ValueError("Axiom requires the SPEC Lens")
+        if self.declares_summary(name) and isinstance(body, str):
+            fields.update(_project_spec_summary_fields(body))
         if template == "project_contract":
             from markdown_it import MarkdownIt
             if not isinstance(body, str):

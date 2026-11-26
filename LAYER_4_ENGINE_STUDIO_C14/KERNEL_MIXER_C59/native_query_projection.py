@@ -227,6 +227,7 @@ class NativeQueryProjection:
             selection = resolve_native_project(
                 self._root, self.selection.control_relative, validate_manifest=self._inputs.validate_manifest,
                 require_atom_state=self._inputs.require_atom_state, require_atom_header=self._inputs.require_atom_header,
+                require_manifest_summary=self._inputs.require_manifest_summary,
             )
             if (selection.project_name != self.selection.project_name
                     or selection.project_prefix != self.selection.project_prefix

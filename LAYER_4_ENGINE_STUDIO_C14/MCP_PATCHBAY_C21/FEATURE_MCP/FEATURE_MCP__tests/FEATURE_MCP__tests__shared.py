@@ -20,6 +20,7 @@ from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__tests.packaged_image_fixture__pub
 
 ROOT = Path(__file__).resolve().parents[4]
 CONTROL = '_anechoic_anechoic'
+ONTOLOGY = Path('ONTOLOGY_SCORE_C82/CONTINUANT_PITCHFORK_C9')
 
 
 def project(root):
@@ -29,14 +30,18 @@ def project(root):
     text = (ROOT / manifest).read_text(encoding='utf-8')
     (root / manifest).write_text(text.replace("'storage': 'disk'", "'storage': 'memory'")
                                  .replace("'journal': {'storage': 'duckdb'}", "'journal': {'storage': 'files'}"))
-    (control / '_SPEC').mkdir()
-    for name in ('AN-S-3039-SPEC-COMPONENT_MANIFEST--declare-engine-studio.md',
-                 'AN-S-3040-SPEC-COMPONENT_MANIFEST--declare-meta-ontology.md'):
-        shutil.copy2(source / '_SPEC' / name, control / '_SPEC' / name)
-    for name in ('LAYER_1_META_ONTOLOGY_C9', 'LAYER_1_META_ONTOLOGY_C9/_SPEC', '__PROJECT_CONFIG/CUSTOM_MODEL'):
-        dest = control / name
+    for relative in ('_SPEC/AN-S-3039-SPEC-COMPONENT_MANIFEST--declare-engine-studio.md',
+                     '_SPEC/AN-S-4909-SPEC-COMPONENT_MANIFEST--declare-ontology-score.md',
+                     ONTOLOGY.parent / '_SPEC/AN-S-3040-SPEC-COMPONENT_MANIFEST--declare-meta-ontology.md'):
+        dest = control / relative
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source / relative, dest)
+    for directory, pattern in ((ONTOLOGY, '*.md'), (ONTOLOGY / '_SPEC', '*.md'),
+                               (ONTOLOGY / '_DES', '*-MANIFEST_PROPERTY--*.md'),
+                               (Path('__PROJECT_CONFIG/CUSTOM_MODEL'), '*.md')):
+        dest = control / directory
         dest.mkdir(parents=True, exist_ok=True)
-        for path in (source / name.replace('LAYER_1_META_ONTOLOGY_C9', 'ONTOLOGY_SCORE_C82/CONTINUANT_PITCHFORK_C9')).glob('*.md'):
+        for path in (source / directory).glob(pattern):
             shutil.copy2(path, dest / path.name)
     (control / 'LAYER_4_ENGINE_STUDIO_C14').mkdir()
     selection = select_runtime_project(root, CONTROL)

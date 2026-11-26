@@ -317,7 +317,7 @@ def _run(request, output):
         native = _deferred_incremental(binding, reuse, foreground, guarded)
         if native is not None:
             return native
-    if foreground and admitted.paths is not None:
+    if (foreground or admitted.defer_graph) and admitted.paths is not None:
         native = _ticket_delta(binding, reuse, admitted.paths)
         if native is not None:
             return native

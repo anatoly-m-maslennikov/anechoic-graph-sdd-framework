@@ -16,9 +16,6 @@ import unittest
 from unittest.mock import Mock, patch
 
 ROOT = Path(__file__).resolve().parents[4]
-NATIVE_CONTROL = ROOT.parent / "native-control"
-if not NATIVE_CONTROL.is_dir():
-    NATIVE_CONTROL = ROOT / "_anechoic_anechoic"
 ENGINE = ROOT / "LAYER_4_ENGINE_STUDIO_C14"
 PROGRAMMATIC = ENGINE / "FEATURE_PROGRAMMATIC"
 
@@ -31,24 +28,23 @@ from .kernel_probe import kernel_process, wait_ready, write_reviewed_declaration
 
 def _runtime_fixture(root):
     control = root / "_anechoic_anechoic"
-    control.mkdir()
-    source = NATIVE_CONTROL
+    source = ROOT / control.name
+    owner = Path("ONTOLOGY_SCORE_C82")
+    ontology = owner / "CONTINUANT_PITCHFORK_C9"
+    component = Path("_SPEC/AN-S-3039-SPEC-COMPONENT_MANIFEST--declare-engine-studio.md")
+    meta = owner / "_SPEC/AN-S-3040-SPEC-COMPONENT_MANIFEST--declare-meta-ontology.md"
     shutil.copyfile(ROOT / "AN-S-3037-SPEC-PROJECT_MANIFEST--declare-anechoic.md",
                     root / "AN-S-3037-SPEC-PROJECT_MANIFEST--declare-anechoic.md")
-    for name in ("AN-S-3039-SPEC-COMPONENT_MANIFEST--declare-engine-studio.md",
-                 "AN-S-3040-SPEC-COMPONENT_MANIFEST--declare-meta-ontology.md"):
-        path = source / name
-        shutil.copyfile(path if path.exists() else source / "_SPEC" / name, control / name)
-    ontology = "LAYER_1_META_ONTOLOGY_C9"
+    for relative in (component, Path("_SPEC/AN-S-4909-SPEC-COMPONENT_MANIFEST--declare-ontology-score.md"), meta):
+        destination = control / relative
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(source / relative, destination)
     write_reviewed_declarations(control, ROOT)
-    meta = control / "AN-S-3040-SPEC-COMPONENT_MANIFEST--declare-meta-ontology.md"
+    (control / "LAYER_1_META_ONTOLOGY_C9").rename(control / ontology)
+    meta = control / meta
     meta.write_text(meta.read_text(encoding="utf-8").replace(
         "relations:\n  CONTRIBUTES_TO:\n  - AN-S-3328\n", ""), encoding="utf-8")
-    custom = "002_PROJECT_CONFIG/CUSTOM_MODEL"
-    (control / custom).mkdir(parents=True)
-    for path in (source / custom).glob("*.md"):
-        shutil.copyfile(path, control / custom / path.name)
-    component = control / "AN-S-3039-SPEC-COMPONENT_MANIFEST--declare-engine-studio.md"
+    component = control / component
     original = component.read_text(encoding="utf-8")
     model = reviewed_native_model()
     selection = resolve_native_project(

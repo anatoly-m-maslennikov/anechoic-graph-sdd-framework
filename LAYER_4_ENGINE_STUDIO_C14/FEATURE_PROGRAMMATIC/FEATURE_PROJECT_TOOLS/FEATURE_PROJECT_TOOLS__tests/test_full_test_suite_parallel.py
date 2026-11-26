@@ -17,6 +17,7 @@ full = fixtures.full
 
 class FullTestSuiteParallelTests(unittest.TestCase):
     def setUp(self):
+        self.enterContext(patch.dict("os.environ", {"ANECHOIC_TEST_FANOUT": "2"}))
         self.case = fixtures.FullTestSuiteTests(methodName="runTest")
         self.case.setUp()
         self.addCleanup(self.case.doCleanups)

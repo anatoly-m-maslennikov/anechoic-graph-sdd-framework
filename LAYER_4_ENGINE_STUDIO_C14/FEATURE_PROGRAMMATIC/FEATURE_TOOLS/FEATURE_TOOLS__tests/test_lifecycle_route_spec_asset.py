@@ -79,8 +79,8 @@ class LifecycleRouteMatrix(LifecycleRouteSupport, unittest.TestCase):
             project, manifest_sha256=sha256(project.manifest_path.read_bytes()).hexdigest())
         rows = lambda: capture_native(project).atoms
         calls = []
-        def validate(kind, header, component):
-            calls.append((kind, component))
+        def validate(kind, header, component, body):
+            calls.append((kind, component, body))
         values = {'template': template, 'container': {'atom': 'AN-T-1'} if contained else {'component': 'C00'},
                   'lens': 'SPEC', 'body': '\n## Summary\n\nExample\n'}
         before = self.files(project)
@@ -103,7 +103,7 @@ class LifecycleRouteMatrix(LifecycleRouteSupport, unittest.TestCase):
         created = create_draft(project, {'newAtom': values}, current_rows=rows(),
                                validate_project_spec_model=validate)
         self.assertEqual('completed', created['outcome'])
-        self.assertEqual([(template, 'C00')], calls)
+        self.assertEqual([(template, 'C00', values['body'])], calls)
         draft = created['savedDraft']
         self.assertEqual(carrier_root / '01_draft', (project.root / draft['path']).parent)
         if template == 'axiom':

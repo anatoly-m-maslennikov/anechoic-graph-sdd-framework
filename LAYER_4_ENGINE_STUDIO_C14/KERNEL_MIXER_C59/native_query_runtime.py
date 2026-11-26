@@ -46,7 +46,8 @@ class NativeQueryInputs:
     require_atom_state: bool = False
     require_atom_header: bool = False
     ticket_labels: tuple[str, ...] = ()
-    validate_project_spec: Callable[[str, dict[str, object], str], object] | None = None
+    validate_project_spec: Callable[[str, dict[str, object], str, str | None], object] | None = None
+    require_manifest_summary: bool = False
 
 
 
