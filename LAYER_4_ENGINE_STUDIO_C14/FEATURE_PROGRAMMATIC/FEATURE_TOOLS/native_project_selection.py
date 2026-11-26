@@ -19,6 +19,7 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import
     ProjectSelectionError, active_manifest_carriers, select_manifest_carriers, manifest_inputs,
     manifest_sources, manifest_state_fields,
 )
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.project_manifest__pub import manifest_summary_fields
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.project_selection import _instance_id, _project_root
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import CEILINGS, ReadContext, open_regular, protected
 
@@ -90,11 +91,22 @@ def _validate_manifest_paths(fields, parameters, relative, manifest):
         if isinstance(paths, dict) and "control_root" in paths and paths["control_root"] != relative.as_posix():
             raise ProjectSelectionError("Project Manifest control_root contradicts the selection")
 
+
+def _manifest_validation_fields(path, carrier, require_state, require_header, require_summary):
+    fields, component_id = manifest_inputs(path, carrier)
+    if require_state or require_header:
+        fields.update(manifest_state_fields(carrier, include_header=require_header))
+    if require_summary:
+        fields.update(manifest_summary_fields(carrier))
+    return fields, component_id
+
+
 def resolve_native_project(
     project_root: str | Path, control_root: str | Path, *,
     validate_manifest: Callable[[dict[str, object], str], ManifestIdentity],
     require_atom_state: bool = False,
     require_atom_header: bool = False,
+    require_manifest_summary: bool = False,
 ) -> NativeProjectSelection:
     """Validate the Manifest with the caller's compiled model and Project container."""
     root = _project_root(project_root)
@@ -112,9 +124,8 @@ def resolve_native_project(
         if selected is None or next(sources, None) is not None:
             raise ProjectSelectionError("Expected one Active Tier -1 Project Manifest at Project root")
         path, carrier = selected
-        fields, component_id = manifest_inputs(path, carrier)
-        if require_atom_state or require_atom_header:
-            fields.update(manifest_state_fields(carrier, include_header=require_atom_header))
+        fields, component_id = _manifest_validation_fields(
+            path, carrier, require_atom_state, require_atom_header, require_manifest_summary)
         manifest = validate_manifest(fields, component_id)
         parameters = getattr(manifest, "parameters", fields.get("parameters", {}))
         if not isinstance(parameters, dict):

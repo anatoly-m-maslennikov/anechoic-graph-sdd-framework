@@ -100,6 +100,9 @@ class BoundNativeModel:
         label = getattr(ticket, "__dataclass_fields__", {}).get("label")
         return tuple(label.metadata.get("allowed_values", ())) if label is not None else ()
 
+    def declares_summary(self, name):
+        return "summary" in self._types[name].__dataclass_fields__
+
     def validate_manifest(self, fields, component_id):
         if component_id != "C00":
             raise ValueError("Project Manifest must be contained by Project C00")

@@ -120,7 +120,8 @@ def _structure(args, digest):
     with open_admitted_model(args.generation, descriptor['model_sha256'], digest) as model:
         selection = resolve_native_project(args.project_root, args.control_root, validate_manifest=model.validate_manifest,
                                            require_atom_state=model.requires_atom_state,
-                                           require_atom_header=model.requires_atom_header)
+                                           require_atom_header=model.requires_atom_header,
+                                           require_manifest_summary=model.declares_summary("Project Manifest"))
         if selection.manifest_sha256 != args.project_manifest_sha256:
             raise ValueError('Project Manifest changed. Restart to apply its settings.')
         return compile_structure(selection, model)
