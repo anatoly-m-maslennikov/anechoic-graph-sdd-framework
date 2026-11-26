@@ -55,7 +55,8 @@ class PythonBytecodeTests(unittest.TestCase):
         config = root / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/pyproject.toml"
         config.parent.mkdir(parents=True)
         config.write_text("[tool.ruff]\n", encoding="utf-8")
-        relative = "LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/launcher.py"
+        (root / "LAYER_3_DEVOPS_C80/_bypass__shared.py").touch()
+        relative = "LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/launcher__shared.py"
         launcher = root / relative
         unsafe_source = 'import subprocess\nsubprocess.run(["python", "worker.py"])\n'
         launcher.write_text(unsafe_source, encoding="utf-8")

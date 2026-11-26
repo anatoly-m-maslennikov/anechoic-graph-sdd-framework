@@ -47,12 +47,12 @@ def backfill_archive_versions(connection):
 
 
 def update_archive_versions(connection, old, atoms):
+    """Preserve admitted maxima until the full Archive history is available."""
     affected = {ref.partition('@')[0] for ref, _ in old if '@' in ref and not ref.endswith('-draft')}
     affected.update(row['reference'].partition('@')[0] for row in atoms if row['status_group'] == 'Archived')
     if not affected or not has_table(connection, "main", "ops_archive_versions"):
         return
     if archive_pending(connection):
-        # The full history can be absent during startup. Preserve admitted maxima until Archive reconciliation.
         connection.execute("""INSERT INTO main.ops_archive_versions
             SELECT split_part(reference, '@', 1), max("header.state.version")
             FROM int_admission_atoms WHERE status_group = 'Archived' GROUP BY 1

@@ -28,7 +28,7 @@ class SourceSizeTests(unittest.TestCase):
             engine_config = root / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/pyproject.toml"
             engine_config.parent.mkdir(parents=True)
             engine_config.write_text("[tool.ruff]\n")
-            path = root / "LAYER_5_USER_SETUP_C65/example.py"
+            path = root / "LAYER_5_USER_SETUP_C65/example__shared.py"
             path.write_text("def run():\n" + "    pass\n" * 45 + "value = 1\n" * 255)
             config = engine_config
             config.write_text("[tool.anechoic.test_suite]\nenforce_source_size = false\n")
