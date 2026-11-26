@@ -25,4 +25,4 @@ The merged checker at `73a994ef47` found 257 denied occurrences, all touching ch
 
 The incoming Spec Engine and eight child Component Manifests are Drafts. Keep publication in their existing review. Resolve required imports through their owning Package entries and narrow Manifest declarations under AN-S-3179. Recheck the graph with a matching checker and Model.
 
-[AN-T-3968](../TASKS/AN-T-3968-EPIC--merge-the-meta-ontology-and-spec-engine-into-amm-dev.md)
+[AN-T-3968](../TASKS/done/AN-T-3968-EPIC--merge-the-meta-ontology-and-spec-engine-into-amm-dev.md)

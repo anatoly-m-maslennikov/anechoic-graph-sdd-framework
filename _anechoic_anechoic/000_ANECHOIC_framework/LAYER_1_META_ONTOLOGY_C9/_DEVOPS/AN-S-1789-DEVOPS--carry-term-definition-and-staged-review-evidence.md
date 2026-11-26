@@ -7,9 +7,9 @@ tier: 3
 context:
   lens: DevOps
 state:
-  status: active
-  version: 4
-  updated_at: 2026-11-04 18:28:33 +0400
+  status: "active"
+  version: 7
+  updated_at: "2026-11-25T22:33:48.035782+00:00"
 ---
 ## Summary
 
@@ -27,11 +27,11 @@ an M/Term Definition **must** carry its Term spelling **and** authoritative mean
 
 ## Details
 
-Term Definition is the dedicated Method Type for lexical meaning; Entity Definition remains a Requirement Type for entity structure. The Method Type requires its own admitted Type declaration; CA-R-2468's Requirement Type declaration does not establish it. CA-M-439 explains how to write its content; Evaluation authority determines how to check well-formedness and usage consistency. Ordinary existing source carriers and ordinary review output carry the necessary content and evidence. This Policy governs their representation; it does not execute an Evaluation, create a Workflow, dispatch a Run, or manufacture validation evidence.
+Term Definition is the dedicated Method Type for lexical meaning; Entity Definition remains a Requirement Type for entity structure. The Method Type requires its own admitted Type declaration; AN-S-2175@3 records the legacy Declaration Requirement Form. AN-S-1716 explains how to write its content; Evaluation authority determines how to check well-formedness and usage consistency. Ordinary existing source carriers and ordinary review output carry the necessary content and evidence. This Policy governs their representation; it does not execute an Evaluation, create a Workflow, dispatch a Run, or manufacture validation evidence.
 
 ### Body and review representation
 
-CA-D-479@25 supplies the current RMED body layout: sibling `## Summary` and `## Claim`, with optional `## Claim scope` before Claim and optional `## Semantics` and `## Details` afterward. CA-D-495 supplies applicability placement. This Policy does not introduce new mandatory headings, content fields, report carriers, file locations, schemas, generated dictionaries, or runtime publication.
+CA-D-479@25 supplies the current RMED body layout: sibling `## Summary` and `## Claim`, with optional `## Claim scope` before Claim and optional `## Semantics` and `## Details` afterward. AN-S-2301 defines applicability placement. This Policy does not introduce new mandatory headings, content fields, report carriers, file locations, schemas, generated dictionaries, or runtime publication.
 
 The ordered usage-review stages identify logical fields: entity names, Claim, Claim scope, Semantics, Details, then remaining authored content. Carry the actual reviewed stage and boundary in the result. Where a logical field is absent or inapplicable, record that fact rather than invent content or silently claim full coverage. A later stage remains unreviewed until checked; an earlier pass is not an overall pass. Unknown or incomplete source coverage remains explicit uncertainty.
 
@@ -43,4 +43,4 @@ ID means a unique identifier used to find an entity instance, applying to Contin
 
 Term meaning comes from the single applicable dedicated Term Definition, not inferred agreement among Entity Definitions or spelling alone. A source-supported lexical Term target, such as `Term//ID`, is distinct from the property entities addressed by `atom.id` and `projection.id`. Its defining Claim can introduce the lexical target under the existing defining-Atom authority; parsing alone does not create or admit it. A review may identify missing or conflicting authority without fabricating a definition or waiving admission rules. Reusable Terms such as `Package` and `Unit` do not automatically create similarly named Subject Graph entities.
 
-Rejecting a mandatory dictionary for these checks does not retire CA-M-114 or existing optional Terms Graph or Catalog capabilities. Representation rules and authoring instructions alone are not proof of runtime behavior, completed review, corrected naming conflicts, or a naming migration. No parser change or automatic code identifier, path, or quoted external source rewrite is authorized by this Policy.
+Rejecting a mandatory dictionary for these checks does not retire AN-S-1701 or existing optional Terms Graph or Catalog capabilities. Representation rules and authoring instructions alone are not proof of runtime behavior, completed review, corrected naming conflicts, or a naming migration. No parser change or automatic code identifier, path, or quoted external source rewrite is authorized by this Policy.

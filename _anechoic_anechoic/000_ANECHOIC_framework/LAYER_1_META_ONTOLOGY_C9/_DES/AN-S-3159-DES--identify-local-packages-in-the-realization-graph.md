@@ -6,14 +6,10 @@ container:
 tier: 3
 context:
   lens: DES
-relations:
-  IS_REFERENCE:
-  - AN-S-2596
-  - AN-S-3014@2
 state:
-  status: active
-  version: 2
-  updated_at: '2026-11-20T23:12:09.705525+00:00'
+  status: "active"
+  version: 4
+  updated_at: "2026-11-25T19:42:27.673828+00:00"
 ---
 
 ## Summary
@@ -24,6 +20,6 @@ Identify local Packages in the Realization Graph
 
 ### Prose Claim
 
-- A local folder with a direct executable has one Package node across all languages.
-- A Test Package has direct executable tests. Its target can be a Package or a Component.
-- Use the common Package structure and the Package node kind.
+Give each admitted local folder one Package node across languages. Use its folder postfix to resolve its Package kind.
+
+Recognize Implementation Packages using the recursive executable rule in AN-S-4837. Exclude Test Package subtrees from that search. Agentic and Asset Packages need no executable. A Test Package can target a Package or a Component.

@@ -7,9 +7,9 @@ tier: 3
 context:
   lens: SWD
 state:
-  status: active
-  version: 28
-  updated_at: '2026-11-13T18:34:35.271162+00:00'
+  status: "active"
+  version: 29
+  updated_at: "2026-11-25T21:42:16.804782+00:00"
 ---
 ## Summary
 
@@ -36,7 +36,7 @@ ANECHOIC content wording.
 - distinguish reusable component Terms from full canonical entity names. read each component Term's meaning directly from its explicit authoritative Method Atom of Type Term Definition **and** preserve that meaning across compositions; agreement among Entity Definitions **or** Semantics does **not** define the Term. its consistent reuse **in** different full names is **not** a naming collision. outside the Term branch, a complete entity name **must** use its full admitted expression **and** **must not** be just one registered Term; the Subject root `Entity` is the sole exception. do **not** replace a component **within** an established full canonical name for stylistic variation **or** invent a graph entity for that component alone. unknown **or** incomplete defining-source coverage remains unresolved, **not** evidence of a successful check.
 - keep syntax symbols, delimiters, **and** selector keywords distinct from entity names. preserve the separate entity names using the registered `/`, `//`, `.`, `:`, `+>`, `<+`, `>|`, **and** `|<` constructs, qualified references to already declared Entities, logical grouping `()`, direct-value Format and count markers, the two independent Relation count positions, **and** a source-defined Relation Type name inside `((...))` under CA-R-1931 **and** CA-R-2244. the contextual topic/code spellings `atom.id` **and** `projection.id` distinguish their respective ID Properties; they are not alternative complete canonical Subject names **or** case-folded aliases. authored Subjects use their full admitted expressions; the dot remains syntax. under CA-R-1325, an arbitrary complete composite expression does **not** automatically become another full canonical name, entity, **or** separate Term node.
 
-for a Summary, simplify its wording while preserving its source faithfulness under CA-R-1273; this does **not** require restating the complete Claim.
+for a Summary, simplify its wording while preserving its source faithfulness under AN-S-2574; this does **not** require restating the complete Claim.
 
 This Method does not prohibit ordinary English alternatives outside canonical entity naming when the Claim permits them. A Term is a reusable lexical component; the complete canonical word or phrase, not each component Term, has the one-to-one entity binding. Direct source-based use requires no lookup table, generated dictionary, or semantic Projection. These authoring instructions do not establish that existing naming collisions or missing definitions have been repaired.
 

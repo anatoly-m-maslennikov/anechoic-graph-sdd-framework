@@ -7,9 +7,9 @@ tier: 3
 context:
   lens: DevOps
 state:
-  status: active
-  version: 21
-  updated_at: 2026-11-02 00:18:22 +0400
+  status: "active"
+  version: 22
+  updated_at: "2026-11-25T21:55:25.130642+00:00"
 ---
 ## Summary
 
@@ -26,4 +26,4 @@ filesystem folders that carry or place Project artifacts.
 a filesystem folder **must** be classified as a Directory Carrier **only** **when** it carries a Structural Entity under CA-D-263.
 
 - a folder's visibility **in** a graph **or** its containment of files does **not** itself establish that binding.
-- administrative Content Role directories **and** Status subdirectories provide Carrier placement, **not** separate Structural Entities **or** Directory Carriers. Status placement remains governed by CA-D-295 **and** CA-D-352.
+- administrative Content Role directories **and** Status subdirectories provide Carrier placement, **not** separate Structural Entities **or** Directory Carriers. Native Atom Status placement follows AN-S-3160. CA-D-295 and AN-S-454@26 describe historical placement.

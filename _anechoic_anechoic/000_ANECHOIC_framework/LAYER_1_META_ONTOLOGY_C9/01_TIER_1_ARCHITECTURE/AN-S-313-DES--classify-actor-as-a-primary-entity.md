@@ -23,4 +23,4 @@ Classify Actor as a Primary Entity
 the classification of Actor as a Primary Entity.
 
 
-the Term Actor **must** be NARROWER_THAN Primary Entity.
+the Term Actor **must** be IS_NARROWER_THAN Primary Entity.

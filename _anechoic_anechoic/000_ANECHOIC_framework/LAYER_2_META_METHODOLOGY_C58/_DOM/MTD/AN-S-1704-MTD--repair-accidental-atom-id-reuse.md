@@ -1,0 +1,36 @@
+---
+atom_family: SPEC
+atom_id: AN-S-1704
+container:
+  component: C58
+tier: 4
+context:
+  lens: DOM/MTD
+state:
+  status: "active"
+  version: 35
+  updated_at: "2026-11-25T22:33:47.188409+00:00"
+---
+## Summary
+
+Repair accidental Atom ID reuse
+
+## Claim
+
+### Prose Claim
+
+
+repair of accidental reuse of assigned Project Atom IDs.
+
+
+**to** repair accidental reuse of an assigned Project Atom ID, an AI Agent **must** perform **all** of:
+
+1. identify the distinct source Atoms by exact Carrier address, Revision, **and** recorded history. distinguish accidental reuse from legitimate Revisions of the same Atom **and** derived copies of its Carrier.
+2. establish the original valid owner from recorded assignment history. **if** the original owner cannot be established at the effective Confidence Threshold, request an Operator decision for that collision **before** changing its identities **or** references. filename order, discovery order, current filesystem timestamps, **or** the highest Version **must not** select the owner.
+3. preserve the original owner's Atom ID. give **every** later accidental reuse a new unused native Atom ID in its Atom Family under AN-S-3147 and AN-S-3160. this corrects invalid reuse **and** does **not** authorize changing a valid owner's immutable identity.
+4. preserve **every** affected Atom's Content, Atom Family, Template, declared Container, and applicability. preserve its immutable prior Revisions **and** recorded history; record the exact predecessor-to-corrected-identity mapping **in** the existing Work Journal **without** rewriting historical Carriers **or** Records.
+5. resolve **every** affected current reference against its intended Atom using the reference's context **and** recorded history. update references **only** **when** their intended targets are established; request an Operator decision for unresolved references. do **not** replace the ambiguous ID indiscriminately.
+6. verify that the repaired active identities resolve uniquely **and** **every** affected current reference still identifies its intended Claim **before** declaring the collision repaired. keep unrelated Claims **and** identities unchanged.
+7. perform repair as an explicitly authorized source change, **not** as an automatic side effect of lookup **or** compilation. preserve the failure on ambiguous lookup required by AN-S-2251 **until** source repair is complete, **and** regenerate affected Projections from their corrected sources through their existing governed workflows.
+
+Check a verified original owner, reversed Carrier discovery order, an unknown owner, an ambiguous incoming reference, and legitimate revisions or derived copies. Distinguish a paused collision from a completed repair.

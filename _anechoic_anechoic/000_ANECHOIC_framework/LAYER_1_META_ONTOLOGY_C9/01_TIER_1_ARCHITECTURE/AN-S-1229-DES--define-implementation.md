@@ -7,9 +7,9 @@ tier: 1
 context:
   lens: DES
 state:
-  status: active
-  version: 10
-  updated_at: 2026-11-10 14:38:45 +0400
+  status: "active"
+  version: 11
+  updated_at: "2026-11-25T22:52:52.373458+00:00"
 ---
 ## Summary
 
@@ -30,4 +30,4 @@ A Projection is a non-authoritative output produced from a declared source selec
 
 ## Details
 
-CA-R-2535 defines Projection and its source-only editing boundary. CA-R-1568 permits a derived view to be delivered as an Implementation output without classifying Implementation as a whole as Projection.
+A derived view can be a delivered result and retains its Projection kind under AN-S-2134. A refresh of generated output alone does not establish a new source change or new realization coverage.

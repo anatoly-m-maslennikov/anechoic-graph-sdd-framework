@@ -7,9 +7,9 @@ tier: 2
 context:
   lens: DES
 state:
-  status: active
-  version: 20
-  updated_at: 2026-11-02 19:33:47 +0400
+  status: "active"
+  version: 21
+  updated_at: "2026-11-25T19:46:36.596724+00:00"
 ---
 ## Summary
 
@@ -27,7 +27,7 @@ an FPF Analysis Report **means** a specialized Analysis Report whose bounded inq
 
 ## Details
 
-The common Analysis & Advisory body Properties remain Question, Scope, Approach, Results and TLDR under CA-D-479. The Analysis & Advisory lifecycle and applicable Status model remain governed by CA-R-1727@30 and CA-R-1875; this Form does not introduce another Status domain or transition rule. A Done report can retain unresolved questions and rejected candidates. Done does not mean that its proposals were adopted, its issues were closed, or a tested implementation succeeded.
+The common Analysis & Advisory body Properties remain Question, Scope, Approach, Results and TLDR under CA-D-479. Use the Status domain of the report Atom Family. A completed report can retain unresolved questions and rejected candidates. Adoption, Issue resolution, and successful implementation each require their own evidence.
 
 Historical statements remain bound to their original report context. Missing invocation, source revision, author, or execution evidence remains missing; the conversion must not invent it.
 

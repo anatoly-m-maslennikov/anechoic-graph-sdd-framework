@@ -1,0 +1,39 @@
+---
+atom_family: SPEC
+atom_id: AN-S-1737
+container:
+  component: C58
+tier: 3
+context:
+  lens: DOM/MTD
+state:
+  status: active
+  version: 24
+  updated_at: '2026-11-25T21:00:37.570471+00:00'
+---
+## Summary
+
+Validate nested Tool-call evidence
+
+## Claim
+
+### Prose Claim
+
+
+serialized Tool-call evidence within a Step Run.
+
+
+the Main Content of a Journal Carrier that encodes Tool-call evidence within a Step Run **must** undergo an actual Evaluation under AN-S-1618. Available wire evidence alone is **not** a passing result.
+
+## Details
+
+the Evaluation of that Main Content **must** run and report a passing, failed, or unresolved result. It **must**:
+
+- check whether several Tool calls by an Agentic Action inside a leaf Step Run carry their actual parent Step Run, Tool identities, inputs **or** admitted protected references, results **or** errors, **and** distinguishing call evidence; report failure when required wire evidence is absent;
+- check whether repeated attempts with the same Tool **and** inputs retain distinct attempt identities without claiming a second effect when its outcome is unknown; report unresolved when the supplied evidence cannot distinguish the effect;
+- check whether a failed Tool call or unconfirmed effect is recorded as that outcome rather than successful completion; report failure for a contradicted success claim;
+- check whether a rebuilt nested trace derives from the canonical Journal without another source of execution history; report failure when another source is claimed;
+- reject an inference that a Tool call automatically creates a Workflow Step, a Conditional Step route, **or** a new Action definition; and
+- check whether secret input uses a governed protected representation rather than plaintext duplication; report failure when plaintext is present.
+
+the Evaluation **must not** edit supplied wire evidence. Missing wire evidence **or** an unperformed Evaluation is **not** a passing result.
