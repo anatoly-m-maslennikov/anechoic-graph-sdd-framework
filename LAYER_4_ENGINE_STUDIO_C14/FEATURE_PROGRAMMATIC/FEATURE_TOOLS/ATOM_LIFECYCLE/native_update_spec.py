@@ -140,7 +140,7 @@ def archive_spec_draft(selection, params, *, current_rows, structure_snapshot=No
 
 def _archive_spec_selected(selection, target, draft, path, digest, owner, previous_capture):
     from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import native_carrier_path
-    from .native_draft import _state_bytes, _summary
+    from .native_draft import _summary
 
     with _project_write_lock(selection.root):
         try:
