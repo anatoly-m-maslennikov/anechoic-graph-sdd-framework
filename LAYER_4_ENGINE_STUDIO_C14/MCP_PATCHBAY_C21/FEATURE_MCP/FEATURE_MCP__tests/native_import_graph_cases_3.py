@@ -45,8 +45,8 @@ class ImportGraphCases3:
     async def _prepare_package_audit(self):
         package = "src/UNIT_C1/service_CS1"
         self._source("src/UNIT_C1/__init__.py", "")
-        marker = self._source(f"{package}/main__pub.py", "pass\n")
-        self._source(f"{package}/child/main__internal.py", "pass\n")
+        marker = self._source(f"{package}/main__public.py", "pass\n")
+        self._source(f"{package}/child/main__shared.py", "pass\n")
         self._source(f"{package}/service_CS1__tests/test_main.py", "pass\n")
         control = f"{fixture.CONTROL}/UNIT_C1"
         spec_source = (
@@ -116,7 +116,7 @@ class ImportGraphCases3:
         sidecar.unlink()
         await expect_audit([False, True, False, "missing", None, [], "AN-S-007@2", False])
         sidecar.write_text("implements: [AN-S-007@2]\n", encoding="utf-8")
-        marker.rename(marker.with_name("main__internal.py"))
+        marker.rename(marker.with_name("main__shared.py"))
         await expect_audit([True, False, True, "valid", True, [], "AN-S-007@2", True])
         updated_spec = spec_source.replace("version: 2", "version: 3")
         spec.write_text(updated_spec, encoding="utf-8")
@@ -139,9 +139,12 @@ class ImportGraphCases3:
 
 
     async def _prepare_boundaries(self):
+        self._source("src/_bypass__shared.py", "")
+        self._source("src/LEFT_C1/_package__shared.py", "")
+        self._source("src/RIGHT_C2/_package__shared.py", "")
         self._source("src/LEFT_C1/client.py", "from RIGHT_C2.api import exposed, hidden\n")
         self._source("src/RIGHT_C2/api.py", "exposed = 1\nhidden = 2\n")
-        self._source("src/RIGHT_C2/service_CS1/main.py", "pass\n")
+        self._source("src/RIGHT_C2/service_CS1/main__shared.py", "pass\n")
 
         def carrier(ref, fields, **relations):
             return {"ref": ref, "sha256": "fixture", "source_path": "manifest.md",

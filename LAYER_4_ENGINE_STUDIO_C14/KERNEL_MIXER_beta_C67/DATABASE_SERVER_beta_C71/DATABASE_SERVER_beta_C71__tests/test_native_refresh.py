@@ -223,11 +223,15 @@ class PendingGraphTest(unittest.TestCase):
             base = response.json()['result']['generation']
             artifacts = [client.get(path, params=BINDING).content for path in ('/model', '/structure')]
             core = _query(client, 'SELECT * FROM atoms').json()['result']['rows']
+            joined = _query(client, 'SELECT count(*) FROM atoms JOIN native_references USING (reference)')
+            self.assertEqual([[len(core)]], joined.json()['result']['rows'])
             native = _query(client, 'FROM GRAPH_TABLE (anechoic MATCH (s:Reference)-[e:CONTAINED_BY]->(t:Reference) COLUMNS (s.ref AS source))')
             self.assertEqual(200, native.status_code, native.text)
             self.assertEqual(200, client.get('/schema', params=BINDING).status_code)
             pending = _query(client, 'SELECT * FROM code_access_findings')
             self.assertEqual((409, 'project_graph_pending'), (pending.status_code, pending.json()['error']['code']))
+            joined_pending = _query(client, 'SELECT count(*) FROM code_access_findings JOIN (SELECT node_key AS source_key FROM import_nodes) USING (source_key)')
+            self.assertEqual((409, 'project_graph_pending'), (joined_pending.status_code, joined_pending.json()['error']['code']))
             ready = deepcopy(witness)
             ready['inputs']['graph'] = 'b' * 64
             payload = BINDING | {'base_generation': base, 'graph': graph, 'graph_sha256': _digest(graph), 'reuse': ready}

@@ -42,7 +42,10 @@ def _guard_pending_graph(connection, sql):
     names |= {"mrt_" + name for name in _REAL_GRAPH_NAMES | _DIAG_NAMES}
     names |= {"package_coupling", "architecture_code_metrics", "architecture_ratios", "package_review_profiles", "package_largest_files"}
     names |= {PUBLIC_NAMES[name] for name in names if name in PUBLIC_NAMES}
-    tables = {name.lower().split('.')[-1] for name in connection.get_table_names(sql)}
+    try:
+        tables = {name.lower().split('.')[-1] for name in connection.get_table_names(sql)}
+    except duckdb.BinderException:
+        tables = set(re.findall(r"\b\w+\b", sql.lower()))
     graph_labels = r"\b(importnode|codeunit|imports|tests|is_tested_by|tests_component|component_is_tested_by|moduleincludes|calls)\b"
     if tables & names or ("graph_table" in sql.lower() and re.search(graph_labels, sql, re.I)):
         raise ProjectGraphPending("Configured Realization Graph is pending")
