@@ -9,7 +9,7 @@ from tempfile import TemporaryDirectory
 
 import duckdb
 
-from .DATABASE_SERVER_beta_C71__tests__shared import PIN, _generation, _query, _server
+from .DATABASE_SERVER_beta_C71__tests__shared import BINDING, PIN, _generation, _query, _server
 
 
 def _digest(value):
@@ -36,6 +36,27 @@ def _native_generation():
 
 
 class NativeAtomTest(unittest.TestCase):
+    def test_generation_keeps_an_atom_with_an_undeclared_relation_issue(self):
+        data = _native_generation()
+        issue = {"relative_path": "_anechoic_anechoic/AN-T-1-TASK.md", "code": "undeclared_relation",
+                 "message": "Undeclared native relation: UNKNOWN", "atom_ref": "AN-T-1@2", "related_paths": []}
+        with _server() as client:
+            for row, status, message in (
+                (issue, 200, None),
+                (issue | {"atom_ref": "AN-T-1@1"}, 400, "Undeclared relation issue must match an admitted Atom"),
+                (issue | {"code": "invalid_value"}, 400, "Invalid carrier cannot have an admitted Atom"),
+            ):
+                with self.subTest(row=row):
+                    data["snapshot"]["ingestion_issues"] = [row]
+                    data["receipt"]["snapshot_sha256"] = _digest(data["snapshot"])
+                    response = client.put("/generation", json=data)
+                    self.assertEqual(status, response.status_code, response.text)
+                    if message is not None:
+                        self.assertEqual(message, response.json()["error"]["message"])
+            self.assert_native_rows(client)
+            rows = client.get("/ingestion/issues", params=BINDING).json()["result"]["rows"]
+            self.assertEqual([{"source": "atom", **issue}], rows)
+
     def test_strict_records_preserve_payload_and_error_order(self):
         original = _native_generation()
         with _server() as client:

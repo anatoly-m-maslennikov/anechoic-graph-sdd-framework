@@ -58,7 +58,8 @@ class NativeGenerationBoundaryTests(NativeCaptureFixture, unittest.TestCase):
         self.assertEqual(["AN-T-8", "AN-T-9"], [row["reference"] for row in snapshot["atoms"]])
         self.assertEqual(set(paths), result["carrier_hashes"].keys())
         issue, = snapshot["ingestion_issues"]
-        self.assertEqual((paths[0], "AN-T-8@1"), (issue["relative_path"], issue["atom_ref"]))
+        self.assertEqual((paths[0], "AN-T-8@1", "undeclared_relation"),
+                         (issue["relative_path"], issue["atom_ref"], issue["code"]))
         self.assertIn("Undeclared native relation", issue["message"])
 
     def test_unknown_relation_still_validates_targets_and_schema(self):
@@ -73,7 +74,8 @@ class NativeGenerationBoundaryTests(NativeCaptureFixture, unittest.TestCase):
                 path.write_text(path.read_text().replace("state:", f"relations: {{UNDECLARED: {targets}}}\nstate:"))
                 snapshot = capture_ticket_delta(binding, [path.relative_to(self.root).as_posix()], endpoints)["snapshot"]
                 self.assertEqual([], snapshot["atoms"])
-                self.assertEqual(message, snapshot["ingestion_issues"][0]["message"])
+                issue, = snapshot["ingestion_issues"]
+                self.assertEqual(("invalid_value", message), (issue["code"], issue["message"]))
 
     def test_manifest_and_worktree_keep_valid_edges_when_relation_is_unknown(self):
         current = self.write("AN-S-2--current.md", "AN-S-2", "active", 1)

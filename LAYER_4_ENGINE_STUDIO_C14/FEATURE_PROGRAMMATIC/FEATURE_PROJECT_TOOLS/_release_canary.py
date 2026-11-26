@@ -299,8 +299,10 @@ def _await_canary(root: Path, container: str, port: int, *, query_enabled: bool)
     while time.monotonic() < deadline:
         try:
             with _HTTP.open(base + "/anechoic/health", timeout=min(3, deadline - time.monotonic())) as response:
-                if json.load(response).get("state") == "ready":
+                if (state := json.load(response).get("state")) == "ready":
                     break
+                if state == "degraded":
+                    raise CanaryError("local-release-canary-health-degraded")
         except (OSError, ValueError):
             pass
         inspect_timeout = None if startup_timeout is None else max(0.01, min(30, deadline - time.monotonic()))

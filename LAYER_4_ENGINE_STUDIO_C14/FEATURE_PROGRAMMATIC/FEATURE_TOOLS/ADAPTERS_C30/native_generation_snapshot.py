@@ -157,7 +157,7 @@ def snapshot(binding, capture, endpoints, *, manifest_path):
             issues.append(_issue(row["source_path"], "invalid_value", str(error), row["_exact_ref"]))
             continue
         rows.append(row)
-        issues.extend(_issue(row["source_path"], "invalid_value", f"Undeclared native relation: {name}",
+        issues.extend(_issue(row["source_path"], "undeclared_relation", f"Undeclared native relation: {name}",
                              row["_exact_ref"]) for name in sorted(unknown))
         edges.extend(projected)
         if lens is not None and row["status_group"] == "Current" and "-S-" in row["ref"]:

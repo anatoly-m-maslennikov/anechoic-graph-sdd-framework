@@ -96,7 +96,7 @@ def archive_path(path):
     return "09_archived" in PurePosixPath(path).parts[:-1]
 
 
-def carrier_issue_paths(issues):
+def validate_carrier_issues(issues, admitted):
     batch = _admit_issues("atom", issues)
     paths = {issue.relative_path for issue in batch.issues}
     related = {path for issue in batch.issues for path in issue.related_paths}
@@ -104,7 +104,12 @@ def carrier_issue_paths(issues):
         if (not path or PurePosixPath(path).is_absolute() or str(PurePosixPath(path)) != path
                 or ".." in PurePosixPath(path).parts or not path.endswith(".md")):
             raise ValueError("Invalid carrier ingestion issue path")
-    return paths
+    for issue in batch.issues:
+        if issue.code == "undeclared_relation":
+            if issue.relative_path not in admitted or issue.atom_ref != admitted[issue.relative_path]:
+                raise ValueError("Undeclared relation issue must match an admitted Atom")
+        elif issue.relative_path in admitted:
+            raise ValueError("Invalid carrier cannot have an admitted Atom")
 
 
 def replace_carrier_issues(connection, snapshot, *, archive_pending=False, paths=None):

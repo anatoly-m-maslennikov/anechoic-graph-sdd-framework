@@ -6,7 +6,7 @@ import re
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from .ingestion_issues import carrier_issue_paths
+from .ingestion_issues import validate_carrier_issues
 
 _ATOM = re.compile(r"[A-Z]+-[STPC]-[0-9]+")
 _ATOM_REF = re.compile(r"[A-Z]+-[STPC]-[0-9]+(?:@[1-9][0-9]*(?:-draft)?)?")
@@ -177,9 +177,8 @@ def validate_native_snapshot(snapshot, manifest_sha256, bindings=None):
     if any(not _string(name) for name in types) or len(set(types)) != len(types):
         raise ValueError("Invalid native relation declarations")
     references, atoms = _atom_references(atoms, _status_domains(bindings or {}))
-    issue_paths = carrier_issue_paths(record.ingestion_issues)
-    if issue_paths & {str(PurePosixPath(row.relative_path) / row.filename) for row in atoms}:
-        raise ValueError("Invalid carrier cannot have an admitted Atom")
+    validate_carrier_issues(record.ingestion_issues, {
+        str(PurePosixPath(row.relative_path) / row.filename): row.exact_ref for row in atoms})
     measured = {atom.exact_ref for atom in atoms if atom.status_group == "Current"
                 and re.fullmatch(r"[A-Z][A-Z0-9]*-S-[0-9]+@[1-9][0-9]*", atom.exact_ref)}
     sizes = record.spec_sizes

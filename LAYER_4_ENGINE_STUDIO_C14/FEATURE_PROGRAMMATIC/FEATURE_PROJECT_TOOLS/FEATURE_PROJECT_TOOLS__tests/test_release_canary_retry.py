@@ -16,6 +16,16 @@ SETTINGS = b"[workbench]\nresult_ttl_seconds = 120\n"
 
 
 class CanaryRetryTests(unittest.TestCase):
+    def test_degraded_health_fails_when_deadlines_are_disabled(self):
+        with (
+            patch.dict(release_canary.os.environ, {"ANECHOIC_TEST_IMAGE_DEADLINES": "0"}),
+            patch.object(release_canary._HTTP, "open", return_value=io.BytesIO(b'{"state":"degraded"}')),
+            patch.object(release_canary.subprocess, "run") as inspect,
+            self.assertRaisesRegex(release_canary.CanaryError, "local-release-canary-health-degraded"),
+        ):
+            release_canary._await_canary(Path("."), "canary", 5050, query_enabled=True)
+        inspect.assert_not_called()
+
     def _assert_candidate_cleanup(self, root, staging, image, calls, deadline_mode):
         tag = calls[0][-1]
         self.assertTrue(tag.startswith("anechoic-runtime:candidate-session-1-"))
