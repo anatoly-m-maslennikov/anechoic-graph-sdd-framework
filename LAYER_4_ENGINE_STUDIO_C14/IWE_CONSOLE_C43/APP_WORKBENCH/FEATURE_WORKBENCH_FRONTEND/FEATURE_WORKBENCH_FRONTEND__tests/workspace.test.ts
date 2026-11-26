@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import type { QueryResult, SavedIdentity, ViewResult } from '../src/lib/lib__shared';
 import { loadLib } from './FEATURE_WORKBENCH_FRONTEND__tests__shared.ts';
-const { cleanAfterSave, newView, persistable, restore, storageKey, workspaceTabs } = await loadLib();
+const { cleanAfterSave, newView, persistable, restore, storageKey, workspaceTabs, performAction } = await loadLib();
 
 function queryResult(queryId: string, rows: unknown[][]): QueryResult {
   return {
@@ -113,4 +113,32 @@ test('a stale poll cannot overwrite an acknowledged permanent-unsaved draft', ()
   assert.equal(tabs[0].sql, 'SELECT after');
   assert.equal(tabs[0].revision, 3);
   assert.equal(tabs[0].dirty, true);
+});
+
+test('completed runs reject missing and mismatched IDs while retaining save outcomes', async () => {
+  for (const kind of ['run', 'save'] as const) {
+    for (const queryId of [undefined, 'run-1']) {
+      let tab = { ...newView(1), id: 'a', sql: 'SELECT 1' };
+      let fetches = 0;
+      let refreshed = false;
+      const ctx = {
+        active: tab, workspaceReady: true, savedBusy: false,
+        boundApi: {
+          run: async () => ({ status: 'success', revision: 1, query_id: queryId, save_error: 'Save refused' }),
+          fetch: async () => { fetches++; return queryResult('run-2', [[1]]); },
+        },
+        updateTab: (_id: string, changes: object) => { tab = { ...tab, ...changes }; },
+        fail: (_id: string, error: unknown) => { throw error; }, syncBeforeRun: async () => true, tabById: () => tab,
+        message: String, acceptResult: () => assert.fail('Unexpected result'), acceptSaved: () => assert.fail('Unexpected save'),
+        refreshSaved: async () => { refreshed = true; }, reportLogWarning: () => {}, resetGrid: () => {},
+        resultDisplay: () => ({ rowSizing: 'fixed', fixedPageSize: 25 }), grid: () => ({}),
+      };
+      await performAction(ctx as unknown as Parameters<typeof performAction>[0], kind, 0);
+      assert.equal((tab as {error?: string}).error, queryId ? 'The View result changed before it could be displayed.' : 'The completed query has no result ID.');
+      assert.equal((tab as {busy?: boolean}).busy, false);
+      assert.equal((tab as {saveError?: string}).saveError, 'Save refused');
+      assert.equal(refreshed, kind === 'save');
+      assert.equal(fetches, queryId ? 1 : 0);
+    }
+  }
 });

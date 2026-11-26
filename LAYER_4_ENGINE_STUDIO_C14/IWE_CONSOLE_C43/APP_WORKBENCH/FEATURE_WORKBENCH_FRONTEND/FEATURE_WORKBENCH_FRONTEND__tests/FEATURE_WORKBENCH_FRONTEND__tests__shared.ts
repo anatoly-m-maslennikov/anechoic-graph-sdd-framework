@@ -16,7 +16,8 @@ export async function loadLib() {
   try {
     const lib = await server.ssrLoadModule('/src/lib/lib__shared.ts') as WorkbenchLib;
     const { render } = await server.ssrLoadModule('svelte/server') as SvelteServer;
-    return { ...lib, render };
+    const { performAction } = await server.ssrLoadModule('/src/app_actions.ts') as typeof import('../src/app_actions');
+    return { ...lib, render, performAction };
   }
   finally { await server.close(); }
 }
