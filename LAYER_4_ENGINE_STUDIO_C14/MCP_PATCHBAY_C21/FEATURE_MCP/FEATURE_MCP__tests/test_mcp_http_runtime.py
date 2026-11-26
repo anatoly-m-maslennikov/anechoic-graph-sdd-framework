@@ -3,14 +3,43 @@ import os
 from pathlib import Path
 import re
 import tempfile
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
+
+from MCP_PATCHBAY_C21.FEATURE_MCP.backend_client import BackendClient
 
 APP = Path(__file__).resolve().parents[1]
 from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import Runtime  # noqa: E402
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import HEALTH_PATH, MCP_PATH  # noqa: E402
 
 IMAGE = "sha256:" + "a" * 64
+
+
+class BackendStartupBudgetTests(unittest.TestCase):
+    def test_dev_local_budget_only_applies_to_managed_backend(self):
+        cases = (
+            ("dev-local", True, 419, True),
+            ("dev-local", True, 420, False),
+            ("dev-local", False, 180, False),
+            ("dev-preprod", True, 180, False),
+            ("prod", True, 180, False),
+        )
+        for profile, managed, elapsed, ready in cases:
+            with self.subTest(profile=profile, managed=managed, elapsed=elapsed):
+                process = SimpleNamespace(pid=42, poll=lambda: None) if managed else None
+                client = BackendClient(None, process, None)
+                with (patch.dict(os.environ, {"ANECHOIC_RUNTIME_PROFILE": profile}, clear=True),
+                      patch("MCP_PATCHBAY_C21.FEATURE_MCP.backend_client.monotonic",
+                            side_effect=[0, elapsed]),
+                      patch.object(client, "_probe_state", return_value="ready") as probe):
+                    if ready:
+                        client.start()
+                        probe.assert_called_once_with()
+                    else:
+                        with self.assertRaisesRegex(RuntimeError, "Backend did not start"):
+                            client.start()
+                        probe.assert_not_called()
 
 
 class MCPHTTPRuntimeTests(unittest.TestCase):
