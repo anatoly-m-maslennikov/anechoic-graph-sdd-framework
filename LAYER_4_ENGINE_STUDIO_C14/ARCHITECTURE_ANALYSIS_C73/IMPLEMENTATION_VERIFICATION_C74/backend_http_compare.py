@@ -7,7 +7,9 @@ import tempfile
 from pathlib import Path
 
 from .backend_http_checks import extract_backend_checks
-from .backend_http_contract import _lean_string, contract_to_lean
+from SPEC_ENGINE_C75.LAYER_3_LEAN_TRANSLATOR_C84.lean_values__pub import lean_string
+
+from .backend_http_contract import contract_to_lean
 from .backend_http_source import extract_http_observations
 
 _CONTRACT = '_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/FEATURE_WORKBENCH_BACKEND_C45/AN-S-3185-DES-COMPONENT_CONTRACT--run-one-read-only-workbench-query.md'
@@ -17,7 +19,7 @@ _SOURCE = 'LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKB
 def _actual(rows, checks):
     values = ', '.join(f'({json.dumps(row["outcome"])}, {row["status_code"]}, '
                        f'{json.dumps(row["envelope"])})' for row in rows)
-    facts = ', '.join(f'({_lean_string(key)}, [{", ".join(_lean_string(v) for v in sorted(value))}])'
+    facts = ', '.join(f'({lean_string(key)}, [{", ".join(lean_string(v) for v in sorted(value))}])'
                       for key, value in sorted(checks.items()))
     return (f'namespace BackendHttpSource\ndef actual : List (String × Nat × String) := [{values}]\n'
             f'def actualChecks : List (String × List String) := [{facts}]\nend BackendHttpSource\n')
@@ -112,14 +114,63 @@ def compare(root, lean='lean', emit=None):
             'cases': rows, 'checks': check_results}
 
 
+def _compare_formal(root, lean, emit):
+    from .backend_http_formal import _expected_lean, _facts
+
+    expected, observed, facts, outcomes, extra, solution, sources = _facts(root)
+    expected_lean = _expected_lean(expected)
+    required = ('operation', 'interface.protocol', 'interface.transport',
+                'input_format.fields', 'error_handling.error_fields')
+    executable = shutil.which(str(lean))
+    if executable is None:
+        raise ValueError('Lean executable unavailable: ' + str(lean))
+    results = _checks_report(_run_lean(executable, expected_lean, _actual([], observed), emit))
+    for row in results:
+        row['manifest'] = row.pop('expected')
+        row['contract'] = row.pop('observed')
+    results.extend({'check': key, 'contract': observed.get(key), 'manifest': None,
+                    'status': 'unresolved'} for key in required if key not in expected)
+    pins = solution.metadata.get('relations', {}).get('IS_SOLUTION_FOR', [])
+    target = f"AN-S-3185@{sources['contract']['version']}"
+    reason = ('Solution binding does not pin the active Contract' if target not in pins else
+              'Workflow event and trace semantics have no modeled mapping to HTTP Contract facts')
+    manifest_solution = [{'check': row['check'], 'manifest': row['manifest'],
+                          'status': 'unresolved', 'reason': reason} for row in results]
+    manifest_solution.extend({'check': key, 'manifest': value, 'status': 'unresolved',
+                              'reason': reason}
+                             for key, value in sorted(extra.items()))
+    contract_solution = [{'check': key, 'contract': value, 'status': 'unresolved', 'reason': reason}
+                         for key, value in sorted(facts.items())]
+    contract_solution.append({'check': 'operation', 'contract': observed.get('operation'),
+                              'status': 'unresolved', 'reason': reason})
+    contract_solution.extend({'check': 'outcomes.' + name, 'contract': [status, kind],
+                              'status': 'unresolved', 'reason': reason}
+                             for name, status, kind in outcomes)
+    statuses = {row['status'] for row in results}
+    return {'status': 'mismatch' if 'mismatch' in statuses else 'unresolved',
+            'sources': sources,
+            'manifest_contract': results,
+            'manifest_unmodeled_count': len(extra),
+            'manifest_unmodeled': [{'check': key, 'manifest': value, 'status': 'unresolved',
+                                    'reason': 'No modeled Contract mapping'}
+                                   for key, value in sorted(extra.items())],
+            'manifest_solution': manifest_solution, 'contract_solution': contract_solution,
+            'solution_contract': {'status': 'unresolved', 'declared_pins': pins,
+                                  'active_contract': target, 'reason': reason}}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--root', required=True)
     parser.add_argument('--lean', default='lean')
     parser.add_argument('--emit')
+    parser.add_argument('--formal-only', action='store_true')
     args = parser.parse_args()
     try:
-        report = compare(args.root, args.lean, args.emit)
+        if args.formal_only:
+            report = _compare_formal(args.root, args.lean, args.emit)
+        else:
+            report = compare(args.root, args.lean, args.emit)
     except (OSError, ValueError, TypeError, SyntaxError, subprocess.TimeoutExpired) as exc:
         report = {'status': 'unresolved', 'reason': str(exc)}
     print(json.dumps(report, indent=2))

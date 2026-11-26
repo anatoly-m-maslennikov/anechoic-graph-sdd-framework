@@ -6,7 +6,8 @@ import shutil
 import subprocess
 import unittest
 
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.import_graph__shared import compile_workflow
+from SPEC_ENGINE_C75.workflow_model__pub import compile_workflow
+from SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C85.workflow_model__pub import parse_workflow
 
 LEAN = os.environ.get('LEAN_BIN') or shutil.which('lean')
 SCRIPT = Path(__file__).resolve().parents[1] / 'WorkflowTrace.lean'
@@ -32,6 +33,12 @@ def machine():
 
 
 class WorkflowCompilerTests(unittest.TestCase):
+    def test_parse_shared_workflow(self):
+        source = f"component_workflow(component='C61', action='run', machine={machine()!r})"
+        self.assertEqual(compile_workflow(parse_workflow(source)['machine']), compile_workflow(machine()))
+        with self.assertRaisesRegex(ValueError, 'unique string keys'):
+            parse_workflow("component_workflow(component='C61', action='run', machine={'id': 1, 'id': 2})")
+
     def test_model_and_mermaid(self):
         result = compile_workflow(machine())
         states = result['model']['states']
@@ -40,8 +47,8 @@ class WorkflowCompilerTests(unittest.TestCase):
         self.assertEqual(states[0]['transitions'][0]['expect'],
                          {'kind': 'output', 'outcome': 'success'})
         self.assertTrue(states[1]['final'])
-        for text in ('stateDiagram', 'NEXT / output / success',
-                     'NEXT / effect / retry', 'done --> [*]'):
+        for text in ('stateDiagram', 'NEXT / output / outcome=#quot;success#quot;',
+                     'NEXT / effect / outcome=#quot;retry#quot;', 'done --> [*]'):
             self.assertIn(text, result['mermaid'])
 
     def test_invalid_graphs(self):
@@ -87,6 +94,12 @@ class WorkflowCompilerTests(unittest.TestCase):
             ({'kind': 'output', 'detail': {'a': {'x': 1}}},
              {'kind': 'output', 'detail': {'a': {'x': 1, 'y': 2}}}, False),
             ({'kind': 'output', 'detail': {'a': True}}, {'kind': 'output', 'detail': {'a': 1}}, False),
+            ({'kind': 'output', 'detail': {'a': {'at_most': 45}}}, {'kind': 'output', 'detail': {'a': 45}}, True),
+            ({'kind': 'output', 'detail': {'a': 45.0}}, {'kind': 'output', 'detail': {'a': {'at_most': 45}}}, True),
+            ({'kind': 'output', 'detail': {'a': {'at_most': 45}}}, {'kind': 'output', 'detail': {'a': 46}}, False),
+            ({'kind': 'output', 'detail': {'a': {'at_most': 45}}}, {'kind': 'output', 'detail': {'a': True}}, False),
+            ({'kind': 'output', 'detail': {'a': {'at_most': 45}}},
+             {'kind': 'output', 'detail': {'a': {'at_most': 2}}}, True),
         ]
         for a, b, overlap in pairs:
             c = machine()
@@ -111,6 +124,20 @@ class WorkflowTraceTests(unittest.TestCase):
         run = self.run_case(value)
         self.assertEqual(run.returncode, 0, run.stderr)
         return json.loads(run.stdout)
+
+    def test_upper_bound_detail(self):
+        case = sample()
+        case['model']['states'][0]['transitions'][0]['expect']['detail'] = {
+            'rows': {'at_most': 45}, 'serialized_bytes': {'at_most': 300}}
+        for detail, expected in [({'rows': 45, 'serialized_bytes': 300}, 'matched'),
+                                 ({'rows': {'at_most': 20}, 'serialized_bytes': 299}, 'matched'),
+                                 ({'rows': 46, 'serialized_bytes': 300}, 'different'),
+                                 ({'rows': True, 'serialized_bytes': 300}, 'different'),
+                                 ({'rows': 45}, 'different'),
+                                 ({'rows': {'at_most': 46}, 'serialized_bytes': 300}, 'different')]:
+            case['events'][0]['detail'] = detail
+            with self.subTest(detail=detail):
+                self.assertEqual(self.result(case)['status'], expected)
 
     def test_match_and_mismatches(self):
         self.assertEqual(self.result(sample())['status'], 'matched')
