@@ -173,8 +173,6 @@ class LifecycleJobs:
         reuse = self.generation_reuse
         if reuse is None:
             raise ValueError("An admitted generation is required for lifecycle writes")
-        if self.unconfirmed_lifecycle_write:
-            raise ValueError("Lifecycle requires admission of the preceding write")
         self._require_lifecycle_coverage()
         reuse = reuse.model_dump(exclude_unset=True)
         base = reuse["base_generation"]
@@ -215,6 +213,10 @@ class LifecycleJobs:
             return True
 
     def _execute_lifecycle(self, job):
+        if self.unconfirmed_lifecycle_write:
+            return {"lifecycle": {"outcome": "blocked", "errors": [{"code": "write_blocked",
+                    "message": "Lifecycle requires admission of the preceding write"}]},
+                    "write_state": "known", "projection": {"state": "blocked"}}
         try:
             base, structure, facts = self._lifecycle_inputs(job)
         except ArchiveHistoryPending as error:

@@ -136,6 +136,9 @@ class LifecycleTest(unittest.TestCase):
 
     def test_status_and_failure_results(self):
         scenarios = [
+            ({"write_state": "known", "projection": {"state": "blocked"},
+              "lifecycle": {"outcome": "blocked", "errors": [{"code": "write_blocked"}]}},
+             "blocked", [{"code": "write_blocked"}]),
             ({"write_state": "known", "projection": {"state": "ready"},
               "lifecycle": {"outcome": "blocked", "warnings": ["wait"]}}, "blocked",
              [{"code": "backend_failure", "message": "Lifecycle operation failed."}]),
@@ -154,7 +157,11 @@ class LifecycleTest(unittest.TestCase):
         self.assertEqual("lifecycle_active", self.call("atom_lifecycle_archive", {"target": {}})["error"]["code"])
         missing_error = {"write_state": "known", "projection": {"state": "failed"},
                          "lifecycle": {"outcome": "completed"}}
-        for response in ({"result": {"write_state": "known"}}, {"result": missing_error}, b"not JSON"):
+        blocked = {"write_state": "known", "projection": {"state": "blocked"},
+                   "lifecycle": {"outcome": "completed"}}
+        unknown_blocked = {**blocked, "write_state": "unknown", "lifecycle": {"outcome": "blocked"}}
+        for response in ({"result": {"write_state": "known"}}, {"result": missing_error},
+                         {"result": blocked}, {"result": unknown_blocked}, b"not JSON"):
             self.jobs.response = response
             value = self.call("atom_lifecycle_archive", {"target": {}})["result"]["value"]
             self.assertEqual([UNKNOWN], value["errors"])

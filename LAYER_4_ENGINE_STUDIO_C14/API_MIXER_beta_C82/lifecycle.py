@@ -71,10 +71,15 @@ class ProjectionFailed(BaseModel):
     error: dict[str, Any]
 
 
+class ProjectionBlocked(BaseModel):
+    model_config = ConfigDict(strict=True, extra="allow")
+    state: Literal["blocked"]
+
+
 class Outcome(BaseModel):
     model_config = ConfigDict(strict=True, extra="allow")
     write_state: Literal["known", "unknown"]
-    projection: Annotated[ProjectionReady | ProjectionFailed, Field(discriminator="state")]
+    projection: Annotated[ProjectionReady | ProjectionFailed | ProjectionBlocked, Field(discriminator="state")]
     lifecycle: Any = None
 
 
@@ -88,6 +93,9 @@ def _result(name, reply):
     parsed = Outcome.model_validate(reply)
     projection = parsed.projection
     errors = [projection.error] if projection.state == "failed" else []
+    if projection.state == "blocked" and (parsed.write_state != "known"
+            or not isinstance(parsed.lifecycle, dict) or parsed.lifecycle.get("outcome") != "blocked"):
+        raise ValueError("Invalid lifecycle outcome")
     if parsed.write_state == "unknown":
         return _failure({}, [_UNKNOWN, *errors])
     if parsed.lifecycle is None:
