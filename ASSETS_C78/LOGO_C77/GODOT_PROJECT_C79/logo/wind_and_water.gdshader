@@ -152,13 +152,25 @@ vec3 atoms_and_molecules(vec2 pixel, vec3 water) {
 	return mix(water, vec3(0.97, 0.76, 0.49), 0.85 * center);
 }
 
+float electrical_wave_y(float x, float row) {
+	return 429.0 + row * 11.0 + 2.6 * sin(x * (0.17 + row * 0.018) + row * 1.4);
+}
+
 vec3 electricity(vec2 pixel, vec3 water) {
-	vec2 bolt = pixel - vec2(pixel.x < 250.0 ? 69.0 : 431.0, 440.0);
+	bool left = pixel.x < 250.0;
+	float start = left ? 5.0 : 342.0;
+	float pitch = left ? 18.5 : 17.0;
+	float count = left ? 8.0 : 9.0;
+	float index_on_side = floor((pixel.x - start) / pitch);
+	vec2 bolt = vec2(500.0);
+	if (index_on_side >= 0.0 && index_on_side < count) {
+		float x = start + pitch * (index_on_side + 0.5) + 2.1 * sin(index_on_side * 2.4);
+		float row = mod(index_on_side * 2.0 + (left ? 0.0 : 1.0), 3.0);
+		bolt = (pixel - vec2(x, electrical_wave_y(x, row))) * 3.0;
+	}
 	float clear_space = 1.0 - smoothstep(6.0, 12.0, length(bolt * vec2(1.0, 0.62)));
 	for (int index = 0; index < 3; index++) {
-		float row = float(index);
-		float wave = 2.6 * sin(pixel.x * (0.17 + row * 0.018) + row * 1.4);
-		float distance = abs(pixel.y - 429.0 - row * 11.0 - wave);
+		float distance = abs(pixel.y - electrical_wave_y(pixel.x, float(index)));
 		float glow = (1.0 - smoothstep(0.6, 3.1, distance)) * 0.15;
 		float current = 1.0 - smoothstep(0.3, 1.25, distance);
 		water = mix(water, vec3(0.34, 0.84, 0.77), (glow + 0.66 * current) * (1.0 - 0.84 * clear_space));
