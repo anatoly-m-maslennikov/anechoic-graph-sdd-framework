@@ -29,15 +29,12 @@ const PROFILE := [
 	Vector4(-2.85, 0.10, 0.12, -0.74),
 ]
 
-var rings: Array[PackedVector3Array] = []
-
 func _ready() -> void:
 	var arguments := OS.get_cmdline_user_args()
 	var icon := arguments.has("--icon")
 	var figure_scale := ICON_FIGURE_SCALE if icon else 1.0
 	_build_view(figure_scale)
 	var ice := _build_ice()
-	_build_clear_flow()
 	ice.set_shader_parameter("opening_mask", _build_path())
 	_build_summit_figure(figure_scale, icon)
 	_build_title(icon)
@@ -77,18 +74,25 @@ func _build_view(figure_scale: float) -> void:
 func _build_water_text() -> void:
 	var font := SystemFont.new()
 	font.font_names = PackedStringArray(["Menlo", "DejaVu Sans Mono", "monospace"])
-	var letters := "awdeirtpsnomtyave"
-	for index in range(letters.length()):
-		var x := 9.0 + index * 30.0 + 7.0 * sin(index * 2.4)
-		var y := 261.0 + _surface_swell(x) + 2.0 * sin(index * 4.1)
+	var letters := "aWdeIrTpsNoMtyAVeLcgUkn"
+	for index in range(62):
+		var x := 5.0 + index * 8.0
+		var crest := _surface_swell(x)
+		var y := 251.0 + crest
 		var slope := (_surface_swell(x + 1.0) - _surface_swell(x - 1.0)) * 0.5
-		var letter := _water_label(font, letters[index], Vector2(x, y), 11, Color("#a1e3d3"))
-		letter.rotation.z = -atan(slope) * 0.65
+		var size := roundi(lerpf(13.0, 10.0, smoothstep(-11.0, 1.0, crest)))
+		var letter := _water_label(font, letters[index % letters.length()], Vector2(x, y), size, Color("#e1f6e9"))
+		letter.rotation.z = -atan(slope)
+		letter.outline_size = 2
+		letter.outline_modulate = Color("#386460")
 
-	_water_label(font, "def build():\n    return 1", Vector2(59, 305), 12, Color("#b4e3ce"))
-	_water_label(font, "let n: number\n    = 1;", Vector2(443, 305), 12, Color("#a9daed"))
-	_water_label(font, "MOV AX, 1\nADD AX, BX", Vector2(55, 343), 11, Color("#e1c78a"))
-	_water_label(font, "DEC CX\nJNZ .loop", Vector2(446, 343), 11, Color("#e1c78a"))
+	_water_label(font, "def idea(): ...", Vector2(59, 286), 11, Color("#c7edba"))
+	_water_label(font, "record Idea() {}", Vector2(59, 301), 11, Color("#c6e6f0"))
+	_water_label(font, "let n: number\n    = 1;", Vector2(444, 294), 11, Color("#b4daf4"))
+	_water_label(font, "int n = 1;", Vector2(59, 324), 11, Color("#9edccf"))
+	_water_label(font, "let mut n = 1;", Vector2(446, 324), 11, Color("#9edccf"))
+	_water_label(font, "MOV AX, 1\nADD AX, BX", Vector2(55, 350), 11, Color("#e1c78a"))
+	_water_label(font, "DEC CX\nJNZ .loop", Vector2(446, 350), 11, Color("#e1c78a"))
 
 func _surface_swell(x: float) -> float:
 	# Match the crest in wind_and_water.gdshader.
@@ -110,6 +114,7 @@ func _water_label(font: Font, copy: String, pixel: Vector2, size: int, ink: Colo
 	return label
 
 func _build_ice() -> ShaderMaterial:
+	var rings: Array[PackedVector3Array] = []
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 893
 	for profile: Vector4 in PROFILE:
@@ -162,18 +167,6 @@ func _ice_face(surface: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, variati
 		surface.set_color(color)
 		surface.add_vertex(point)
 
-func _build_clear_flow() -> void:
-	var flow := SurfaceTool.new()
-	flow.begin(Mesh.PRIMITIVE_TRIANGLE_STRIP)
-	for index in range(41):
-		var progress := float(index) / 40.0
-		var angle := lerpf(-0.91, 0.37, progress)
-		var y := 1.08 + sin(progress * TAU) * 0.058
-		var half_width := sin(progress * PI) * 0.022
-		for edge: float in [y - half_width, y + half_width]:
-			flow.add_vertex(_wall_point(edge, angle) + Vector3(0, 0, 0.014))
-	_mesh("ClearFlowInsideIce", flow, Color("#fffcdf"))
-
 func _build_path() -> ImageTexture:
 	var above := _route_sections(ROUTE_TOP, 0.0, 140)
 	var underwater := _route_sections(0.0, ROUTE_BOTTOM, 200)
@@ -186,24 +179,36 @@ func _build_path() -> ImageTexture:
 	_cut_passage(mask, underwater)
 	return ImageTexture.create_from_image(mask)
 
-# Three straight runs in profile, with eased turns inside the shell.
 func _ramp_x(progress: float) -> float:
-	if progress < 0.43:
-		return lerpf(0.0, -1.12, progress / 0.43)
-	if progress < 0.69:
-		return lerpf(-1.12, 1.18, (progress - 0.43) / 0.26)
-	return lerpf(1.18, -0.57, (progress - 0.69) / 0.31)
+	const FIRST_TURN := 0.42
+	const SECOND_TURN := 0.677
+	const LEFT_EDGE := -1.53
+	const RIGHT_EDGE := 2.19
+	var approach := LEFT_EDGE / FIRST_TURN
+	var traverse := (RIGHT_EDGE - LEFT_EDGE) / (SECOND_TURN - FIRST_TURN)
+	var descent := (-0.57 - RIGHT_EDGE) / (1.0 - SECOND_TURN)
+	return (
+		approach * progress
+		+ (traverse - approach) * _rounded_turn(progress - FIRST_TURN)
+		+ (descent - traverse) * _rounded_turn(progress - SECOND_TURN)
+	)
+
+# Replace each sharp change of slope with a short parabolic turn.
+func _rounded_turn(distance: float) -> float:
+	const RADIUS := 0.079
+	var blend := clampf(distance + RADIUS, 0.0, 2.0 * RADIUS)
+	return maxf(0.0, distance - RADIUS) + blend * blend / (4.0 * RADIUS)
 
 func _route_sections(top: float, bottom: float, steps: int) -> Array[PackedVector3Array]:
 	var sections: Array[PackedVector3Array] = []
 	for index in range(steps + 1):
 		var y := lerpf(top, bottom, float(index) / steps)
 		var progress := inverse_lerp(ROUTE_TOP, ROUTE_BOTTOM, y)
-		var target_x := (_ramp_x(progress - 0.032) + _ramp_x(progress + 0.032)) * 0.5
+		var target_x := _ramp_x(progress)
 		var headroom := _route_headroom(y)
 		var floor_profile := _ellipse_at(y)
 		var roof_profile := _ellipse_at(y + headroom)
-		var phase := asin(clampf((target_x - floor_profile.z) / floor_profile.x, -0.91, 0.91))
+		var phase := asin(clampf((target_x - floor_profile.z) / floor_profile.x, -0.99, 0.99))
 		var heading := Vector3(sin(phase), 0, cos(phase))
 		var floor_spoke := heading * Vector3(floor_profile.x, 0, floor_profile.y)
 		var roof_spoke := heading * Vector3(roof_profile.x, 0, roof_profile.y)
@@ -212,7 +217,7 @@ func _route_sections(top: float, bottom: float, steps: int) -> Array[PackedVecto
 		var spoke := floor_spoke.lerp(roof_spoke, roof_weight)
 		var center := Vector3(lerpf(floor_profile.z, roof_profile.z, roof_weight), y, 0)
 		var direction := spoke.normalized()
-		var outer := center + spoke - direction * minf(0.15, spoke.length() * 0.33)
+		var outer := center + spoke - direction * minf(0.08, spoke.length() * 0.33)
 		var inner := outer - direction * minf(0.27, spoke.length() * 0.47)
 		var guard := outer + Vector3.UP * minf(0.15, headroom)
 		sections.append(PackedVector3Array([inner, outer, guard]))
@@ -244,10 +249,8 @@ func _ellipse_at(y: float) -> Vector3:
 
 func _build_path_section(sections: Array[PackedVector3Array], submerged: bool) -> void:
 	var track := SurfaceTool.new()
-	var rim := SurfaceTool.new()
-	var rails := SurfaceTool.new()
-	var posts := SurfaceTool.new()
-	for surface: SurfaceTool in [track, rim, rails, posts]:
+	var guardrail := SurfaceTool.new()
+	for surface: SurfaceTool in [track, guardrail]:
 		surface.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var handrail := PackedVector3Array()
 	var distance_since_post := 1.0
@@ -258,23 +261,19 @@ func _build_path_section(sections: Array[PackedVector3Array], submerged: bool) -
 		if index > 0:
 			var previous := sections[index - 1]
 			_quad(track, previous[0], previous[1], outer, inner)
-			_quad(rim, previous[1], previous[1] + Vector3.DOWN * 0.057, outer + Vector3.DOWN * 0.057, outer)
+			_quad(track, previous[1], previous[1] + Vector3.DOWN * 0.067, outer + Vector3.DOWN * 0.067, outer)
 			distance_since_post += outer.distance_to(previous[1])
 		handrail.append(guard)
-		if distance_since_post >= 0.34 or index == sections.size() - 1:
-			_route_tube(posts, PackedVector3Array([outer, guard]), 0.011)
+		if distance_since_post >= 0.49 or index == sections.size() - 1:
+			_route_tube(guardrail, PackedVector3Array([outer, guard]), 0.010)
 			distance_since_post = 0.0
-	_route_tube(rails, handrail, 0.018)
+	_route_tube(guardrail, handrail, 0.018)
 	if submerged:
-		_mesh("OceanariumWalkway", track, Color("#5f9598"))
-		_mesh("OceanariumWalkwayEdge", rim, Color("#dcf3e1"))
-		_mesh("OceanariumGuardrail", rails, Color("#d5efe7"))
-		_mesh("OceanariumGuardrailPosts", posts, Color("#8bafbe"))
+		_mesh("OceanariumWalkway", track, Color("#76b9b5"))
+		_mesh("OceanariumGuardrail", guardrail, Color("#e3f4e5"))
 	else:
-		_mesh("Walkway", track, Color("#a78a55"))
-		_mesh("WalkwayTimberEdge", rim, Color("#f9dba1"))
-		_mesh("Guardrail", rails, Color("#fff1c5"))
-		_mesh("GuardrailPosts", posts, Color("#dcc48f"))
+		_mesh("Walkway", track, Color("#d1ae72"))
+		_mesh("Guardrail", guardrail, Color("#fff1c5"))
 
 # A single profile cut follows the floor and ceiling of the interior route.
 func _cut_passage(mask: Image, sections: Array[PackedVector3Array]) -> void:
@@ -320,13 +319,8 @@ func _fill_passage_mask(mask: Image, polygon: PackedVector2Array) -> void:
 
 func _build_oceanarium(sections: Array[PackedVector3Array]) -> void:
 	var glass := SurfaceTool.new()
-	var frame := SurfaceTool.new()
-	var seam := SurfaceTool.new()
-	for surface: SurfaceTool in [glass, frame, seam]:
-		surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	glass.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var previous := PackedVector3Array()
-	var roofline := PackedVector3Array()
-	var rib_spacing := 0.0
 	for index in range(sections.size()):
 		var inner := sections[index][0]
 		var outer := sections[index][1]
@@ -337,22 +331,14 @@ func _build_oceanarium(sections: Array[PackedVector3Array]) -> void:
 		for point in range(ARCH_SEGMENTS + 1):
 			var angle := PI * float(point) / ARCH_SEGMENTS
 			arch.append(center + half_width * cos(angle) + Vector3.UP * height * sin(angle))
-		roofline.append(arch[ARCH_SEGMENTS / 2])
 		if index > 0:
 			for point in range(ARCH_SEGMENTS):
 				_quad(glass, previous[point], previous[point + 1], arch[point + 1], arch[point])
-			rib_spacing += arch[0].distance_to(previous[0])
-		if rib_spacing >= 0.48 or index == sections.size() - 1:
-			_route_tube(frame, arch, 0.009)
-			rib_spacing = 0.0
 		previous = arch
-	_route_tube(seam, roofline, 0.008)
-	var canopy := _mesh("OceanariumGlass", glass, Color(0.60, 0.88, 0.94, 0.21))
+	var canopy := _mesh("OceanariumGlass", glass, Color(0.60, 0.88, 0.94, 0.10))
 	var material := canopy.material_override as StandardMaterial3D
 	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	material.cull_mode = BaseMaterial3D.CULL_BACK
-	_mesh("OceanariumArchedRibs", frame, Color("#9acbd0"))
-	_mesh("OceanariumRoofSeam", seam, Color("#c2e4e4"))
 
 func _route_tube(surface: SurfaceTool, points: PackedVector3Array, radius: float) -> void:
 	const SIDES_AROUND_TUBE := 10
@@ -432,27 +418,6 @@ func _figure_bar(surface: SurfaceTool, outline: SurfaceTool,
 	var behind := Vector3(0, 0, -0.15)
 	var pad := (finish - start).normalized() * 0.009
 	_bar(outline, behind + start - pad, behind + finish + pad, radius + stroke)
-
-func _wall_point(y: float, angle: float) -> Vector3:
-	var step := fposmod(angle / TAU, 1.0) * SIDES
-	var side := int(floor(step))
-	var next := (side + 1) % SIDES
-	var along := step - side
-	for level in range(PROFILE.size() - 1):
-		var top: float = PROFILE[level].x
-		var bottom: float = PROFILE[level + 1].x
-		if y <= top and y >= bottom:
-			var down := (top - y) / (top - bottom)
-			var a := rings[level][side]
-			var b := rings[level + 1][side]
-			var c := rings[level][next]
-			var d := rings[level + 1][next]
-			# Match the triangulation of the ice wall.
-			if along + down <= 1.0:
-				return a + (b - a) * down + (c - a) * along
-			return d + (c - d) * (1.0 - down) + (b - d) * (1.0 - along)
-	assert(false, "Spiral height must remain within the iceberg profile.")
-	return Vector3(0, y, 0)
 
 func _bar(surface: SurfaceTool, start: Vector3, finish: Vector3, radius: float) -> void:
 	var direction := (finish - start).normalized()

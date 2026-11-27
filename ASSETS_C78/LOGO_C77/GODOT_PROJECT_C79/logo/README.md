@@ -2,9 +2,9 @@
 
 This Godot 4 project renders the Anechoic logo. The iceberg represents the project. Wind carries the person's ideas through the noosphere. The water represents the digital technosphere.
 
-The ocean swells around the midpoint of the image. A cutaway reveals three straight ramps connected by rounded turns inside the ice. Below the waterline, a glass canopy covers the route. A single smooth line in the ice represents an idea without echoes.
+The ocean swells around the midpoint of the image. A cutaway reveals a curved walkway with one guardrail. The turns approach the edges of the ice. Below the waterline, a frameless glass canopy covers the route.
 
-From the bottom up, the water shows electricity, building blocks, microcircuits, assembly, and Python and TypeScript. Individual letters ride the waves at the surface.
+From the bottom up, the water shows atoms, a sine wave for electricity, microcircuits, assembly, C and Rust, then Python, TypeScript, and Java. Letters form the crests and troughs at the surface.
 
 Edit the iceberg profile and the route in `iceberg.gd`. The scene uses Avenir Next Demi Bold for the wordmark, with a system sans-serif fallback.
 

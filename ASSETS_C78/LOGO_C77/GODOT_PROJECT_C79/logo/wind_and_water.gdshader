@@ -94,31 +94,35 @@ vec3 circuitry(vec2 pixel, vec3 water) {
 	return mix(water, vec3(0.46, 0.72, 0.66), clamp(circuits + 0.58 * wiring + 0.50 * pads, 0.0, 1.0));
 }
 
-vec3 building_blocks(vec2 pixel, vec3 water) {
-	vec2 grid = (pixel - vec2(4.0, 420.0)) / 16.0;
+float atom_orbit(vec2 point) {
+	float ring = abs(length(point / vec2(10.0, 4.0)) - 1.0);
+	return 1.0 - smoothstep(0.07, 0.21, ring);
+}
+
+vec3 atoms(vec2 pixel, vec3 water) {
+	vec2 grid = (pixel - vec2(0.0, 454.0)) / vec2(34.0, 23.0);
 	float row = floor(grid.y);
-	if (row < 0.0 || row >= 3.0) {
+	if (row < 0.0 || row >= 2.0) {
 		return water;
 	}
 	grid.x += mod(row, 2.0) * 0.5;
-	float signal = grain(floor(grid));
-	vec2 block = (fract(grid) - 0.5) * 16.0;
-	float face = box(block, vec2(6.6));
-	float bevel = box(block + vec2(1.0), vec2(5.4));
-	vec3 ink = mix(vec3(0.21, 0.44, 0.46), vec3(0.43, 0.65, 0.58), signal);
-	return mix(water, ink, face * (0.4 + 0.3 * bevel));
+	vec2 point = (fract(grid) - 0.5) * vec2(34.0, 23.0);
+	float orbits = max(atom_orbit(point), max(
+		atom_orbit(mat2(vec2(0.5, 0.866), vec2(-0.866, 0.5)) * point),
+		atom_orbit(mat2(vec2(0.5, -0.866), vec2(0.866, 0.5)) * point)));
+	float nucleus = 1.0 - smoothstep(1.5, 2.5, length(point));
+	float brightness = mix(0.46, 0.79, grain(floor(grid)));
+	water = mix(water, vec3(0.34, 0.63, 0.63), orbits * brightness);
+	return mix(water, vec3(0.98, 0.77, 0.46), nucleus * brightness);
 }
 
 vec3 electricity(vec2 pixel, vec3 water) {
-	float phase = pixel.x * 0.088;
-	float wave = 6.0 * sin(phase) + 2.0 * sin(phase * 2.0);
-	float distance = abs(pixel.y - 483.0 - wave);
-	float glow = (1.0 - smoothstep(1.0, 6.0, distance)) * 0.27;
-	float current = 1.0 - smoothstep(0.6, 2.0, distance);
-	float pulse = 1.0 - smoothstep(0.0, 0.15, abs(fract(pixel.x / 58.0) - 0.5));
-	vec3 spark = mix(vec3(0.25, 0.78, 0.74), vec3(0.99, 0.78, 0.38), pulse);
-	water = mix(water, spark, glow);
-	return mix(water, spark, current * 0.74);
+	float wave = 6.0 * sin(pixel.x * 0.085);
+	float distance = abs(pixel.y - 438.0 - wave);
+	float glow = (1.0 - smoothstep(1.0, 5.0, distance)) * 0.24;
+	float current = 1.0 - smoothstep(0.55, 1.65, distance);
+	water = mix(water, vec3(0.19, 0.77, 0.72), glow);
+	return mix(water, vec3(0.49, 0.94, 0.85), current * 0.75);
 }
 
 void fragment() {
@@ -132,8 +136,8 @@ void fragment() {
 		vec3 water = mix(vec3(0.236, 0.455, 0.47), vec3(0.057, 0.162, 0.206), smoothstep(0.0, 0.98, depth));
 		water = surface_water(pixel, swell, depth_below_swell, water);
 		water = circuitry(pixel, water);
-		water = building_blocks(pixel, water);
 		water = electricity(pixel, water);
+		water = atoms(pixel, water);
 		tint = mix(tint, water, smoothstep(-1.0, 1.0, depth_below_swell));
 	}
 	ALBEDO = tint;
