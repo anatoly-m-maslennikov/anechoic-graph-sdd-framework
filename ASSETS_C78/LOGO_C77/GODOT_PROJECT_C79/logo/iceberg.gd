@@ -25,8 +25,8 @@ const PROFILE := [
 	Vector4(-0.56, 1.88, 1.28, 0.05),
 	Vector4(-1.18, 2.00, 1.37, 0.06),
 	Vector4(-1.83, 1.63, 1.13, -0.08),
-	Vector4(-2.40, 0.97, 0.67, -0.32),
-	Vector4(-2.85, 0.10, 0.12, -0.74),
+	Vector4(-2.40, 0.97, 0.67, -0.11),
+	Vector4(-2.85, 0.055, 0.075, -0.05),
 ]
 
 func _ready() -> void:
@@ -205,7 +205,7 @@ func _ramp_x(progress: float) -> float:
 	const RIGHT_EDGE := 2.19
 	var approach := LEFT_EDGE / FIRST_TURN
 	var traverse := (RIGHT_EDGE - LEFT_EDGE) / (SECOND_TURN - FIRST_TURN)
-	var descent := (-0.57 - RIGHT_EDGE) / (1.0 - SECOND_TURN)
+	var descent := (-0.36 - RIGHT_EDGE) / (1.0 - SECOND_TURN)
 	return (
 		approach * progress
 		+ (traverse - approach) * _rounded_turn(progress - FIRST_TURN)
