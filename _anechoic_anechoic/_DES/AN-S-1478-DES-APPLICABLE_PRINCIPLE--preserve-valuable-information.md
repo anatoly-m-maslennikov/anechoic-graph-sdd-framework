@@ -3,7 +3,7 @@ atom_family: SPEC
 atom_id: AN-S-1478
 concern:
   subject: Durable information preservation
-  path: Design Foundations/Information and complexity
+  path: Project Practice/Project information and context
   relation: is_contained_by
 container:
   component: C00
@@ -13,8 +13,8 @@ context:
   template: applicable_principle
 state:
   status: "active"
-  version: 12
-  updated_at: "2026-11-27T13:00:59.943499+00:00"
+  version: 13
+  updated_at: "2026-11-27T13:06:14.882171+00:00"
 relations:
   CONTRIBUTES_TO:
   - AN-S-1486

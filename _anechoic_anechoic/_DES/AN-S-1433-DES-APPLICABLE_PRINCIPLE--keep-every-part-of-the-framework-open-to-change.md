@@ -3,7 +3,7 @@ atom_family: SPEC
 atom_id: AN-S-1433
 concern:
   subject: Operator control of instance changes
-  path: Design Foundations/Delegation and control
+  path: Project Practice/Framework configuration and evolution
   relation: is_contained_by
 container:
   component: C00
@@ -13,8 +13,8 @@ context:
   template: applicable_principle
 state:
   status: "active"
-  version: 6
-  updated_at: "2026-11-27T13:00:59.778402+00:00"
+  version: 7
+  updated_at: "2026-11-27T13:06:14.649592+00:00"
 relations:
   CONTRIBUTES_TO:
   - AN-S-1438

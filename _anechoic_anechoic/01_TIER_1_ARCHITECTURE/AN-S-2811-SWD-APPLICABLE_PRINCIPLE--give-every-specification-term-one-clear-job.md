@@ -3,7 +3,7 @@ atom_family: SPEC
 atom_id: AN-S-2811
 concern:
   subject: Distinct meanings for Spec terms
-  path: Design Foundations/Information and complexity
+  path: Project Practice/Specification language
   relation: is_contained_by
 container:
   component: C00
@@ -13,8 +13,8 @@ context:
   template: applicable_principle
 state:
   status: "active"
-  version: 6
-  updated_at: "2026-11-27T13:01:00.067612+00:00"
+  version: 7
+  updated_at: "2026-11-27T13:06:15.068075+00:00"
 relations:
   SERVES:
   - AN-S-1233

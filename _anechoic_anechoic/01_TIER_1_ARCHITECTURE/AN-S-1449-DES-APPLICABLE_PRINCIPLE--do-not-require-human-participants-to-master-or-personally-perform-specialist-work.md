@@ -3,7 +3,7 @@ atom_family: SPEC
 atom_id: AN-S-1449
 concern:
   subject: Access to specialist work
-  path: Design Foundations/Delegation and control
+  path: Project Practice/Operator authority and delegation
   relation: is_contained_by
 container:
   component: C00
@@ -13,8 +13,8 @@ context:
   template: applicable_principle
 state:
   status: "active"
-  version: 6
-  updated_at: "2026-11-27T13:00:59.876399+00:00"
+  version: 7
+  updated_at: "2026-11-27T13:06:14.783386+00:00"
 relations:
   APPLIES:
   - AN-S-1448

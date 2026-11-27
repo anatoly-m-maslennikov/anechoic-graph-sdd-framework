@@ -3,7 +3,7 @@ atom_family: SPEC
 atom_id: AN-S-2812
 concern:
   subject: Overloaded terminology
-  path: Design Foundations/Information and complexity
+  path: Project Practice/Specification language
   relation: is_contained_by
 container:
   component: C00
@@ -13,8 +13,8 @@ context:
   template: applicable_principle
 state:
   status: "active"
-  version: 7
-  updated_at: "2026-11-27T13:01:00.079107+00:00"
+  version: 8
+  updated_at: "2026-11-27T13:06:15.080561+00:00"
 relations:
   SERVES:
   - AN-S-1233

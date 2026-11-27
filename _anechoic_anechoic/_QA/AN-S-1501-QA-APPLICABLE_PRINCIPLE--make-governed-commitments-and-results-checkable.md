@@ -3,7 +3,7 @@ atom_family: SPEC
 atom_id: AN-S-1501
 concern:
   subject: Verification of commitments and results
-  path: Design Foundations/Delegation and control
+  path: Project Practice/Verification and rework
   relation: is_contained_by
 container:
   component: C00
@@ -13,8 +13,8 @@ context:
   template: applicable_principle
 state:
   status: "active"
-  version: 40
-  updated_at: "2026-11-27T13:00:59.998517+00:00"
+  version: 41
+  updated_at: "2026-11-27T13:06:14.972260+00:00"
 relations:
   CONTRIBUTES_TO:
   - AN-S-1440

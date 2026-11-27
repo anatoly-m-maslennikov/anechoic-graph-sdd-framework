@@ -3,7 +3,7 @@ atom_family: SPEC
 atom_id: AN-S-1855
 concern:
   subject: Access to execution evidence
-  path: Design Foundations/Delegation and control
+  path: Project Practice/Decision evidence and oversight
   relation: is_contained_by
 container:
   component: C00
@@ -13,8 +13,8 @@ context:
   template: applicable_principle
 state:
   status: "active"
-  version: 6
-  updated_at: "2026-11-27T13:01:00.009301+00:00"
+  version: 7
+  updated_at: "2026-11-27T13:06:14.986080+00:00"
 relations:
   CONTRIBUTES_TO:
   - AN-S-1443

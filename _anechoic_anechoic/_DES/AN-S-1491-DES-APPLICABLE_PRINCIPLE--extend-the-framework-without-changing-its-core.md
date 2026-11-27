@@ -3,7 +3,7 @@ atom_family: SPEC
 atom_id: AN-S-1491
 concern:
   subject: Framework extensibility
-  path: Design Foundations/Delegation and control
+  path: Project Practice/Framework configuration and evolution
   relation: is_contained_by
 container:
   component: C00
@@ -13,8 +13,8 @@ context:
   template: applicable_principle
 state:
   status: "active"
-  version: 5
-  updated_at: "2026-11-27T13:00:59.990157+00:00"
+  version: 6
+  updated_at: "2026-11-27T13:06:14.957434+00:00"
 relations:
   CONTRIBUTES_TO:
   - AN-S-1438

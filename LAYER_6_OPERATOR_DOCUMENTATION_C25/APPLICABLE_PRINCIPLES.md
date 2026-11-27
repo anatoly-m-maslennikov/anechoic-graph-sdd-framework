@@ -4,21 +4,57 @@ Each number also appears in its linked source Atom. The Atoms contain the author
 
 Each Principle shows its authored support relations and the Axioms it applies. The [Tier 1 design](../_anechoic_anechoic/__TICKETS/TASKS/AN-T-2932-TASK--admit-project-axioms-project-contracts-and-applicable-principles.md) says Tier 1 Principles serve the Project Goal.
 
-## Design Foundations
+## Project Practice
 
-### Information and complexity
+### Operator authority and delegation
 
-#### P5. Work with the specification as a collection of Operators’ decisions
+#### P4. Keep full authority and control with the Operator
 
-[AN-S-1439](../_anechoic_anechoic/01_TIER_1_ARCHITECTURE/AN-S-1439-SWD-APPLICABLE_PRINCIPLE--work-with-the-specification-as-a-collection-of-operators-decisions.md)
+[AN-S-1438](../_anechoic_anechoic/01_TIER_1_ARCHITECTURE/AN-S-1438-DES-APPLICABLE_PRINCIPLE--keep-full-authority-and-control-with-the-operator.md)
 
-Treat the Spec as a collection of decisions made by Operators or by AI Agents acting under their authority. Record every decision that matters to the Project, why it was made, and the facts and assumptions that mattered.
-
-When a similar choice comes up, the AI Agent reads the Spec to recover the context. If the relevant conditions still hold, it can reuse the Operator’s decision.
+The Operator has the final say over the Project and its ANECHOIC instance. The Operator can delegate authority to AI Agents, change it, or withdraw it, and can observe, guide, stop, and recover important work.
 
 **Supports** [AN-S-1233 — Project Goal](../AN-S-1233-SPEC-PROJECT_GOAL--create-and-evolve-a-working-anechoic-framework.md) through `SERVES`.
 
-**Applies** [1.1 — Operators and AI Agents can only work with so much context at once](../_anechoic_anechoic/AN-S-1484-SPEC-AXIOM--operators-and-ai-agents-can-only-work-with-so-much-context-at-once.md).
+#### P13. Do not require human participants to master or personally perform specialist work
+
+[AN-S-1449](../_anechoic_anechoic/01_TIER_1_ARCHITECTURE/AN-S-1449-DES-APPLICABLE_PRINCIPLE--do-not-require-human-participants-to-master-or-personally-perform-specialist-work.md)
+
+Let the Operator create, deliver, run, and maintain a feasible Project without having to master or personally perform its specialist work.
+
+**Supports** [AN-S-1233 — Project Goal](../AN-S-1233-SPEC-PROJECT_GOAL--create-and-evolve-a-working-anechoic-framework.md) through `SERVES`.
+
+**Applies** [2.1 — Directing specialist work does not require mastering the craft](../_anechoic_anechoic/AN-S-1448-SPEC-AXIOM--directing-specialist-work-does-not-require-mastering-the-craft.md).
+
+#### P15. Give Operators clear guidance for using the framework
+
+[AN-S-1453](../_anechoic_anechoic/01_TIER_1_ARCHITECTURE/AN-S-1453-DES-APPLICABLE_PRINCIPLE--give-operators-clear-guidance-for-using-the-framework.md)
+
+Provide the Operator with enough clear guidance to use the framework efficiently toward their Project goals.
+
+**Supports** [AN-S-1233 — Project Goal](../AN-S-1233-SPEC-PROJECT_GOAL--create-and-evolve-a-working-anechoic-framework.md) through `SERVES`.
+
+#### P17. Delegate decisions that can tolerate surprises
+
+[AN-S-1474](../_anechoic_anechoic/01_TIER_1_ARCHITECTURE/AN-S-1474-SWD-APPLICABLE_PRINCIPLE--delegate-decisions-that-can-tolerate-surprises.md)
+
+Let AI Agents make decisions where an unexpected result is acceptable.
+
+**Supports** [AN-S-1233 — Project Goal](../AN-S-1233-SPEC-PROJECT_GOAL--create-and-evolve-a-working-anechoic-framework.md) through `SERVES`.
+
+**Applies** [2.2 — Delegating judgment to AI Agents saves Operator effort but makes results less predictable](../_anechoic_anechoic/AN-S-1473-SPEC-AXIOM--delegating-judgment-to-ai-agents-saves-operator-effort-but-makes-results-less-predictable.md).
+
+#### P18. Reserve the Operator’s attention for key decisions
+
+[AN-S-1475](../_anechoic_anechoic/01_TIER_1_ARCHITECTURE/AN-S-1475-SWD-APPLICABLE_PRINCIPLE--reserve-the-operator-s-attention-for-key-decisions.md)
+
+Save the Operator’s time and attention for decisions where their judgment matters most.
+
+**Supports** [AN-S-1233 — Project Goal](../AN-S-1233-SPEC-PROJECT_GOAL--create-and-evolve-a-working-anechoic-framework.md) through `SERVES`.
+
+**Applies** [2.2 — Delegating judgment to AI Agents saves Operator effort but makes results less predictable](../_anechoic_anechoic/AN-S-1473-SPEC-AXIOM--delegating-judgment-to-ai-agents-saves-operator-effort-but-makes-results-less-predictable.md).
+
+### Project structure and scope
 
 #### P7. MECE — Cover the whole with non-overlapping parts
 
@@ -39,6 +75,51 @@ Represent Project decisions, structure, artifacts, and other objects as connecte
 **Supports** [AN-S-1233 — Project Goal](../AN-S-1233-SPEC-PROJECT_GOAL--create-and-evolve-a-working-anechoic-framework.md) through `SERVES`.
 
 **Applies** [1.2 — Information can be managed at any scale](../_anechoic_anechoic/AN-S-1428-SPEC-AXIOM--information-can-be-managed-at-any-scale.md).
+
+#### P21. Break work into scopes small enough to reason about
+
+[AN-S-1485](../_anechoic_anechoic/01_TIER_1_ARCHITECTURE/AN-S-1485-SWD-APPLICABLE_PRINCIPLE--break-work-into-scopes-small-enough-to-reason-about.md)
+
+Give each task a clear boundary and keep its dependencies easy to find. That lets people and agents work on one part without losing how it fits into the whole.
+
+**Supports** [AN-S-1233 — Project Goal](../AN-S-1233-SPEC-PROJECT_GOAL--create-and-evolve-a-working-anechoic-framework.md) through `SERVES`.
+
+**Applies** [1.1 — Operators and AI Agents can only work with so much context at once](../_anechoic_anechoic/AN-S-1484-SPEC-AXIOM--operators-and-ai-agents-can-only-work-with-so-much-context-at-once.md).
+
+#### P34. Prefer fractal structures with minimal exceptions
+
+[AN-S-3190](../_anechoic_anechoic/01_TIER_1_ARCHITECTURE/AN-S-3190-SPEC-APPLICABLE_PRINCIPLE--prefer-fractal-structures-with-minimal-exceptions.md)
+
+When you organize a structure, try to use the same rules at each level,
+with minimal exceptions.
+
+**Tier 1 purpose** [AN-S-1233 — Project Goal](../AN-S-1233-SPEC-PROJECT_GOAL--create-and-evolve-a-working-anechoic-framework.md). This Atom has no authored direct support relation.
+
+**Applies** [1.3 — Clear structure and ownership make information easier to maintain](../_anechoic_anechoic/AN-S-1432-SPEC-AXIOM--clear-structure-and-ownership-make-information-easier-to-maintain.md).
+
+#### P35. Constrain Project graph edges by hierarchy and type
+
+[AN-S-4802](../_anechoic_anechoic/01_TIER_1_ARCHITECTURE/AN-S-4802-SWD-APPLICABLE_PRINCIPLE--constrain-project-graph-edges-by-hierarchy-and-type.md)
+
+Prefer a hierarchical Project graph with typed nodes and relations. Minimize the number of allowed edges while keeping those the Project needs. Use endpoint types and scope to limit which edges are allowed.
+
+**Tier 1 purpose** [AN-S-1233 — Project Goal](../AN-S-1233-SPEC-PROJECT_GOAL--create-and-evolve-a-working-anechoic-framework.md). This Atom has no authored direct support relation.
+
+**Applies** [1.3 — Clear structure and ownership make information easier to maintain](../_anechoic_anechoic/AN-S-1432-SPEC-AXIOM--clear-structure-and-ownership-make-information-easier-to-maintain.md).
+
+### Project information and context
+
+#### P5. Work with the specification as a collection of Operators’ decisions
+
+[AN-S-1439](../_anechoic_anechoic/01_TIER_1_ARCHITECTURE/AN-S-1439-SWD-APPLICABLE_PRINCIPLE--work-with-the-specification-as-a-collection-of-operators-decisions.md)
+
+Treat the Spec as a collection of decisions made by Operators or by AI Agents acting under their authority. Record every decision that matters to the Project, why it was made, and the facts and assumptions that mattered.
+
+When a similar choice comes up, the AI Agent reads the Spec to recover the context. If the relevant conditions still hold, it can reuse the Operator’s decision.
+
+**Supports** [AN-S-1233 — Project Goal](../AN-S-1233-SPEC-PROJECT_GOAL--create-and-evolve-a-working-anechoic-framework.md) through `SERVES`.
+
+**Applies** [1.1 — Operators and AI Agents can only work with so much context at once](../_anechoic_anechoic/AN-S-1484-SPEC-AXIOM--operators-and-ai-agents-can-only-work-with-so-much-context-at-once.md).
 
 #### P12. SST — Keep a Single Source of Truth
 
@@ -66,16 +147,6 @@ Keep valuable Project information in durable, reliable storage so it remains rec
 
 **Supports** [P22 — Show what is needed; keep the rest](../_anechoic_anechoic/01_TIER_1_ARCHITECTURE/AN-S-1486-SWD-APPLICABLE_PRINCIPLE--show-what-is-needed-keep-the-rest.md) through `CONTRIBUTES_TO`.
 
-#### P21. Break work into scopes small enough to reason about
-
-[AN-S-1485](../_anechoic_anechoic/01_TIER_1_ARCHITECTURE/AN-S-1485-SWD-APPLICABLE_PRINCIPLE--break-work-into-scopes-small-enough-to-reason-about.md)
-
-Give each task a clear boundary and keep its dependencies easy to find. That lets people and agents work on one part without losing how it fits into the whole.
-
-**Supports** [AN-S-1233 — Project Goal](../AN-S-1233-SPEC-PROJECT_GOAL--create-and-evolve-a-working-anechoic-framework.md) through `SERVES`.
-
-**Applies** [1.1 — Operators and AI Agents can only work with so much context at once](../_anechoic_anechoic/AN-S-1484-SPEC-AXIOM--operators-and-ai-agents-can-only-work-with-so-much-context-at-once.md).
-
 #### P22. Show what is needed; keep the rest
 
 [AN-S-1486](../_anechoic_anechoic/01_TIER_1_ARCHITECTURE/AN-S-1486-SWD-APPLICABLE_PRINCIPLE--show-what-is-needed-keep-the-rest.md)
@@ -94,6 +165,18 @@ Keep only the reusable information needed to understand, govern, operate, and ch
 
 **Supports** [P22 — Show what is needed; keep the rest](../_anechoic_anechoic/01_TIER_1_ARCHITECTURE/AN-S-1486-SWD-APPLICABLE_PRINCIPLE--show-what-is-needed-keep-the-rest.md) through `CONTRIBUTES_TO`.
 
+### Specification language
+
+#### P30. Use familiar concepts with their usual meanings
+
+[AN-S-1953](../_anechoic_anechoic/01_TIER_1_ARCHITECTURE/AN-S-1953-SWD-APPLICABLE_PRINCIPLE--use-familiar-concepts-with-their-usual-meanings.md)
+
+Prefer concepts and terms that people and AI Agents already understand. Use familiar terms with their usual meanings.
+
+**Supports** [AN-S-1233 — Project Goal](../AN-S-1233-SPEC-PROJECT_GOAL--create-and-evolve-a-working-anechoic-framework.md) through `SERVES`.
+
+**Applies** [3.1 — Do not reinvent the wheel](../_anechoic_anechoic/AN-S-1951-SPEC-AXIOM--do-not-reinvent-the-wheel.md).
+
 #### P32. Give every specification term one clear job
 
 [AN-S-2811](../_anechoic_anechoic/01_TIER_1_ARCHITECTURE/AN-S-2811-SWD-APPLICABLE_PRINCIPLE--give-every-specification-term-one-clear-job.md)
@@ -110,60 +193,7 @@ Do not choose a term that already means too many different things. Choose a name
 
 **Supports** [AN-S-1233 — Project Goal](../AN-S-1233-SPEC-PROJECT_GOAL--create-and-evolve-a-working-anechoic-framework.md) through `SERVES`.
 
-#### P34. Prefer fractal structures with minimal exceptions
-
-[AN-S-3190](../_anechoic_anechoic/01_TIER_1_ARCHITECTURE/AN-S-3190-SPEC-APPLICABLE_PRINCIPLE--prefer-fractal-structures-with-minimal-exceptions.md)
-
-When you organize a structure, try to use the same rules at each level,
-with minimal exceptions.
-
-**Tier 1 purpose** [AN-S-1233 — Project Goal](../AN-S-1233-SPEC-PROJECT_GOAL--create-and-evolve-a-working-anechoic-framework.md). This Atom has no authored direct support relation.
-
-**Applies** [1.3 — Clear structure and ownership make information easier to maintain](../_anechoic_anechoic/AN-S-1432-SPEC-AXIOM--clear-structure-and-ownership-make-information-easier-to-maintain.md).
-
-#### P35. Constrain Project graph edges by hierarchy and type
-
-[AN-S-4802](../_anechoic_anechoic/01_TIER_1_ARCHITECTURE/AN-S-4802-SWD-APPLICABLE_PRINCIPLE--constrain-project-graph-edges-by-hierarchy-and-type.md)
-
-Prefer a hierarchical Project graph with typed nodes and relations. Minimize the number of allowed edges while keeping those the Project needs. Use endpoint types and scope to limit which edges are allowed.
-
-**Tier 1 purpose** [AN-S-1233 — Project Goal](../AN-S-1233-SPEC-PROJECT_GOAL--create-and-evolve-a-working-anechoic-framework.md). This Atom has no authored direct support relation.
-
-**Applies** [1.3 — Clear structure and ownership make information easier to maintain](../_anechoic_anechoic/AN-S-1432-SPEC-AXIOM--clear-structure-and-ownership-make-information-easier-to-maintain.md).
-
-### Delegation and control
-
-#### P1. Require usable inputs for reliance
-
-[AN-S-1081](../_anechoic_anechoic/_QA/AN-S-1081-QA-APPLICABLE_PRINCIPLE--require-usable-inputs-for-reliance.md)
-
-a governed conclusion **may** be treated as reliable for an affected use **only** **when** **every** required input is present, known, consistent, **and** valid.
-
-**Supports** [P16 — Give the Operator enough information to decide](../_anechoic_anechoic/01_TIER_1_ARCHITECTURE/AN-S-1458-DES-APPLICABLE_PRINCIPLE--give-the-operator-enough-information-to-decide.md) through `CONTRIBUTES_TO`.
-
-#### P2. Make framework behavior configurable
-
-[AN-S-1430](../_anechoic_anechoic/_DES/AN-S-1430-DES-APPLICABLE_PRINCIPLE--make-framework-behavior-configurable.md)
-
-Let the Operator inspect and change the framework’s effective configuration. Supported behavior can be selected through explicit configuration without changing the implementation.
-
-**Supports** [P4 — Keep full authority and control with the Operator](../_anechoic_anechoic/01_TIER_1_ARCHITECTURE/AN-S-1438-DES-APPLICABLE_PRINCIPLE--keep-full-authority-and-control-with-the-operator.md) through `CONTRIBUTES_TO`.
-
-#### P3. Keep every part of the framework open to change
-
-[AN-S-1433](../_anechoic_anechoic/_DES/AN-S-1433-DES-APPLICABLE_PRINCIPLE--keep-every-part-of-the-framework-open-to-change.md)
-
-The Operator can change any part of their ANECHOIC instance to meet the Project’s needs.
-
-**Supports** [P4 — Keep full authority and control with the Operator](../_anechoic_anechoic/01_TIER_1_ARCHITECTURE/AN-S-1438-DES-APPLICABLE_PRINCIPLE--keep-full-authority-and-control-with-the-operator.md) through `CONTRIBUTES_TO`.
-
-#### P4. Keep full authority and control with the Operator
-
-[AN-S-1438](../_anechoic_anechoic/01_TIER_1_ARCHITECTURE/AN-S-1438-DES-APPLICABLE_PRINCIPLE--keep-full-authority-and-control-with-the-operator.md)
-
-The Operator has the final say over the Project and its ANECHOIC instance. The Operator can delegate authority to AI Agents, change it, or withdraw it, and can observe, guide, stop, and recover important work.
-
-**Supports** [AN-S-1233 — Project Goal](../AN-S-1233-SPEC-PROJECT_GOAL--create-and-evolve-a-working-anechoic-framework.md) through `SERVES`.
+### Decision evidence and oversight
 
 #### P6. Keep decisions, work, and outcomes traceable
 
@@ -195,24 +225,6 @@ Show which Project information, instructions, and permissions guide important ac
 
 **Applies** [2.3 — Transparency supports informed control](../_anechoic_anechoic/AN-S-1435-SPEC-AXIOM--transparency-supports-informed-control.md).
 
-#### P13. Do not require human participants to master or personally perform specialist work
-
-[AN-S-1449](../_anechoic_anechoic/01_TIER_1_ARCHITECTURE/AN-S-1449-DES-APPLICABLE_PRINCIPLE--do-not-require-human-participants-to-master-or-personally-perform-specialist-work.md)
-
-Let the Operator create, deliver, run, and maintain a feasible Project without having to master or personally perform its specialist work.
-
-**Supports** [AN-S-1233 — Project Goal](../AN-S-1233-SPEC-PROJECT_GOAL--create-and-evolve-a-working-anechoic-framework.md) through `SERVES`.
-
-**Applies** [2.1 — Directing specialist work does not require mastering the craft](../_anechoic_anechoic/AN-S-1448-SPEC-AXIOM--directing-specialist-work-does-not-require-mastering-the-craft.md).
-
-#### P15. Give Operators clear guidance for using the framework
-
-[AN-S-1453](../_anechoic_anechoic/01_TIER_1_ARCHITECTURE/AN-S-1453-DES-APPLICABLE_PRINCIPLE--give-operators-clear-guidance-for-using-the-framework.md)
-
-Provide the Operator with enough clear guidance to use the framework efficiently toward their Project goals.
-
-**Supports** [AN-S-1233 — Project Goal](../AN-S-1233-SPEC-PROJECT_GOAL--create-and-evolve-a-working-anechoic-framework.md) through `SERVES`.
-
 #### P16. Give the Operator enough information to decide
 
 [AN-S-1458](../_anechoic_anechoic/01_TIER_1_ARCHITECTURE/AN-S-1458-DES-APPLICABLE_PRINCIPLE--give-the-operator-enough-information-to-decide.md)
@@ -223,42 +235,6 @@ Provide the Operator with the relevant information needed for Project decisions,
 
 **Applies** [2.3 — Transparency supports informed control](../_anechoic_anechoic/AN-S-1435-SPEC-AXIOM--transparency-supports-informed-control.md).
 
-#### P17. Delegate decisions that can tolerate surprises
-
-[AN-S-1474](../_anechoic_anechoic/01_TIER_1_ARCHITECTURE/AN-S-1474-SWD-APPLICABLE_PRINCIPLE--delegate-decisions-that-can-tolerate-surprises.md)
-
-Let AI Agents make decisions where an unexpected result is acceptable.
-
-**Supports** [AN-S-1233 — Project Goal](../AN-S-1233-SPEC-PROJECT_GOAL--create-and-evolve-a-working-anechoic-framework.md) through `SERVES`.
-
-**Applies** [2.2 — Delegating judgment to AI Agents saves Operator effort but makes results less predictable](../_anechoic_anechoic/AN-S-1473-SPEC-AXIOM--delegating-judgment-to-ai-agents-saves-operator-effort-but-makes-results-less-predictable.md).
-
-#### P18. Reserve the Operator’s attention for key decisions
-
-[AN-S-1475](../_anechoic_anechoic/01_TIER_1_ARCHITECTURE/AN-S-1475-SWD-APPLICABLE_PRINCIPLE--reserve-the-operator-s-attention-for-key-decisions.md)
-
-Save the Operator’s time and attention for decisions where their judgment matters most.
-
-**Supports** [AN-S-1233 — Project Goal](../AN-S-1233-SPEC-PROJECT_GOAL--create-and-evolve-a-working-anechoic-framework.md) through `SERVES`.
-
-**Applies** [2.2 — Delegating judgment to AI Agents saves Operator effort but makes results less predictable](../_anechoic_anechoic/AN-S-1473-SPEC-AXIOM--delegating-judgment-to-ai-agents-saves-operator-effort-but-makes-results-less-predictable.md).
-
-#### P25. Extend the framework without changing its core
-
-[AN-S-1491](../_anechoic_anechoic/_DES/AN-S-1491-DES-APPLICABLE_PRINCIPLE--extend-the-framework-without-changing-its-core.md)
-
-Let the Operator add capabilities without having to change the framework’s core.
-
-**Supports** [P4 — Keep full authority and control with the Operator](../_anechoic_anechoic/01_TIER_1_ARCHITECTURE/AN-S-1438-DES-APPLICABLE_PRINCIPLE--keep-full-authority-and-control-with-the-operator.md) through `CONTRIBUTES_TO`.
-
-#### P26. Make governed commitments and results checkable
-
-[AN-S-1501](../_anechoic_anechoic/_QA/AN-S-1501-QA-APPLICABLE_PRINCIPLE--make-governed-commitments-and-results-checkable.md)
-
-Before relying on a work commitment or result, establish a usable way to check it.
-
-**Supports** [P6 — Keep decisions, work, and outcomes traceable](../_anechoic_anechoic/01_TIER_1_ARCHITECTURE/AN-S-1440-SWD-APPLICABLE_PRINCIPLE--keep-decisions-work-and-outcomes-traceable.md) through `CONTRIBUTES_TO`.
-
 #### P27. Let the Operator inspect framework execution
 
 [AN-S-1855](../_anechoic_anechoic/_DES/AN-S-1855-DES-APPLICABLE_PRINCIPLE--let-the-operator-inspect-framework-execution.md)
@@ -267,25 +243,15 @@ Give the Operator access to relevant framework execution evidence and known limi
 
 **Supports** [P9 — Make Project state and ongoing work visible](../_anechoic_anechoic/01_TIER_1_ARCHITECTURE/AN-S-1443-SWD-APPLICABLE_PRINCIPLE--make-project-state-and-ongoing-work-visible.md) through `CONTRIBUTES_TO`.
 
-### Reuse automation and maintenance
+### Verification and rework
 
-#### P11. DRY — Don’t Repeat Yourself
+#### P1. Require usable inputs for reliance
 
-[AN-S-1445](../_anechoic_anechoic/01_TIER_1_ARCHITECTURE/AN-S-1445-SWD-APPLICABLE_PRINCIPLE--dry-don-t-repeat-yourself.md)
+[AN-S-1081](../_anechoic_anechoic/_QA/AN-S-1081-QA-APPLICABLE_PRINCIPLE--require-usable-inputs-for-reliance.md)
 
-Avoid repeating the same information or logic unnecessarily.
+a governed conclusion **may** be treated as reliable for an affected use **only** **when** **every** required input is present, known, consistent, **and** valid.
 
-**Supports** [AN-S-1233 — Project Goal](../AN-S-1233-SPEC-PROJECT_GOAL--create-and-evolve-a-working-anechoic-framework.md) through `SERVES`.
-
-#### P14. Reduce the overhead of applying the framework
-
-[AN-S-1451](../_anechoic_anechoic/01_TIER_1_ARCHITECTURE/AN-S-1451-DES-APPLICABLE_PRINCIPLE--reduce-the-overhead-of-applying-the-framework.md)
-
-Apply the framework using fewer LLM tokens, less Operator effort, and less waiting time, without weakening required Project outcomes.
-
-**Supports** [AN-S-1233 — Project Goal](../AN-S-1233-SPEC-PROJECT_GOAL--create-and-evolve-a-working-anechoic-framework.md) through `SERVES`.
-
-**Applies** [3.4 — Repeated work becomes more efficient through automation](../_anechoic_anechoic/AN-S-1436-SPEC-AXIOM--repeated-work-becomes-more-efficient-through-automation.md).
+**Supports** [P16 — Give the Operator enough information to decide](../_anechoic_anechoic/01_TIER_1_ARCHITECTURE/AN-S-1458-DES-APPLICABLE_PRINCIPLE--give-the-operator-enough-information-to-decide.md) through `CONTRIBUTES_TO`.
 
 #### P23. Prioritize problems by the rework they can cause
 
@@ -305,6 +271,34 @@ Check assumptions that would force substantial rework if wrong.
 
 **Supports** [P23 — Prioritize problems by the rework they can cause](../_anechoic_anechoic/01_TIER_1_ARCHITECTURE/AN-S-1487-SWD-APPLICABLE_PRINCIPLE--prioritize-problems-by-the-rework-they-can-cause.md) through `CONTRIBUTES_TO`.
 
+#### P26. Make governed commitments and results checkable
+
+[AN-S-1501](../_anechoic_anechoic/_QA/AN-S-1501-QA-APPLICABLE_PRINCIPLE--make-governed-commitments-and-results-checkable.md)
+
+Before relying on a work commitment or result, establish a usable way to check it.
+
+**Supports** [P6 — Keep decisions, work, and outcomes traceable](../_anechoic_anechoic/01_TIER_1_ARCHITECTURE/AN-S-1440-SWD-APPLICABLE_PRINCIPLE--keep-decisions-work-and-outcomes-traceable.md) through `CONTRIBUTES_TO`.
+
+### Reuse and efficiency
+
+#### P11. DRY — Don’t Repeat Yourself
+
+[AN-S-1445](../_anechoic_anechoic/01_TIER_1_ARCHITECTURE/AN-S-1445-SWD-APPLICABLE_PRINCIPLE--dry-don-t-repeat-yourself.md)
+
+Avoid repeating the same information or logic unnecessarily.
+
+**Supports** [AN-S-1233 — Project Goal](../AN-S-1233-SPEC-PROJECT_GOAL--create-and-evolve-a-working-anechoic-framework.md) through `SERVES`.
+
+#### P14. Reduce the overhead of applying the framework
+
+[AN-S-1451](../_anechoic_anechoic/01_TIER_1_ARCHITECTURE/AN-S-1451-DES-APPLICABLE_PRINCIPLE--reduce-the-overhead-of-applying-the-framework.md)
+
+Apply the framework using fewer LLM tokens, less Operator effort, and less waiting time, without weakening required Project outcomes.
+
+**Supports** [AN-S-1233 — Project Goal](../AN-S-1233-SPEC-PROJECT_GOAL--create-and-evolve-a-working-anechoic-framework.md) through `SERVES`.
+
+**Applies** [3.4 — Repeated work becomes more efficient through automation](../_anechoic_anechoic/AN-S-1436-SPEC-AXIOM--repeated-work-becomes-more-efficient-through-automation.md).
+
 #### P29. Prefer well-known technologies and interfaces
 
 [AN-S-1952](../_anechoic_anechoic/01_TIER_1_ARCHITECTURE/AN-S-1952-SWD-APPLICABLE_PRINCIPLE--prefer-well-known-technologies-and-interfaces.md)
@@ -315,15 +309,31 @@ Prefer technologies and interfaces that AI Agents already know. Use custom ones 
 
 **Applies** [3.2 — Figure out what wheel you need then adopt the best one that fits](../_anechoic_anechoic/AN-S-2810-SPEC-AXIOM--figure-out-what-wheel-you-need-then-adopt-the-best-one-that-fits.md).
 
-#### P30. Use familiar concepts with their usual meanings
+### Framework configuration and evolution
 
-[AN-S-1953](../_anechoic_anechoic/01_TIER_1_ARCHITECTURE/AN-S-1953-SWD-APPLICABLE_PRINCIPLE--use-familiar-concepts-with-their-usual-meanings.md)
+#### P2. Make framework behavior configurable
 
-Prefer concepts and terms that people and AI Agents already understand. Use familiar terms with their usual meanings.
+[AN-S-1430](../_anechoic_anechoic/_DES/AN-S-1430-DES-APPLICABLE_PRINCIPLE--make-framework-behavior-configurable.md)
 
-**Supports** [AN-S-1233 — Project Goal](../AN-S-1233-SPEC-PROJECT_GOAL--create-and-evolve-a-working-anechoic-framework.md) through `SERVES`.
+Let the Operator inspect and change the framework’s effective configuration. Supported behavior can be selected through explicit configuration without changing the implementation.
 
-**Applies** [3.1 — Do not reinvent the wheel](../_anechoic_anechoic/AN-S-1951-SPEC-AXIOM--do-not-reinvent-the-wheel.md).
+**Supports** [P4 — Keep full authority and control with the Operator](../_anechoic_anechoic/01_TIER_1_ARCHITECTURE/AN-S-1438-DES-APPLICABLE_PRINCIPLE--keep-full-authority-and-control-with-the-operator.md) through `CONTRIBUTES_TO`.
+
+#### P3. Keep every part of the framework open to change
+
+[AN-S-1433](../_anechoic_anechoic/_DES/AN-S-1433-DES-APPLICABLE_PRINCIPLE--keep-every-part-of-the-framework-open-to-change.md)
+
+The Operator can change any part of their ANECHOIC instance to meet the Project’s needs.
+
+**Supports** [P4 — Keep full authority and control with the Operator](../_anechoic_anechoic/01_TIER_1_ARCHITECTURE/AN-S-1438-DES-APPLICABLE_PRINCIPLE--keep-full-authority-and-control-with-the-operator.md) through `CONTRIBUTES_TO`.
+
+#### P25. Extend the framework without changing its core
+
+[AN-S-1491](../_anechoic_anechoic/_DES/AN-S-1491-DES-APPLICABLE_PRINCIPLE--extend-the-framework-without-changing-its-core.md)
+
+Let the Operator add capabilities without having to change the framework’s core.
+
+**Supports** [P4 — Keep full authority and control with the Operator](../_anechoic_anechoic/01_TIER_1_ARCHITECTURE/AN-S-1438-DES-APPLICABLE_PRINCIPLE--keep-full-authority-and-control-with-the-operator.md) through `CONTRIBUTES_TO`.
 
 #### P31. Rebuild Implementation from its governing specification
 

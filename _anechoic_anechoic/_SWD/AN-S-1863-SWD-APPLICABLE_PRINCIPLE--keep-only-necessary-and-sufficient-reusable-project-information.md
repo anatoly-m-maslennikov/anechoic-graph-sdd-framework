@@ -3,7 +3,7 @@ atom_family: SPEC
 atom_id: AN-S-1863
 concern:
   subject: Selection of reusable Project information
-  path: Design Foundations/Information and complexity
+  path: Project Practice/Project information and context
   relation: is_contained_by
 container:
   component: C00
@@ -13,8 +13,8 @@ context:
   template: applicable_principle
 state:
   status: "active"
-  version: 33
-  updated_at: "2026-11-27T13:01:00.020413+00:00"
+  version: 34
+  updated_at: "2026-11-27T13:06:14.999457+00:00"
 relations:
   CONTRIBUTES_TO:
   - AN-S-1486

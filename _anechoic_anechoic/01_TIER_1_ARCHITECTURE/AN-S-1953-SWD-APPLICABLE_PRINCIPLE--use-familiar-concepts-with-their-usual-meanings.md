@@ -3,7 +3,7 @@ atom_family: SPEC
 atom_id: AN-S-1953
 concern:
   subject: Familiar concepts and meanings
-  path: Design Foundations/Reuse automation and maintenance
+  path: Project Practice/Specification language
   relation: is_contained_by
 container:
   component: C00
@@ -13,8 +13,8 @@ context:
   template: applicable_principle
 state:
   status: "active"
-  version: 7
-  updated_at: "2026-11-27T13:01:00.045360+00:00"
+  version: 8
+  updated_at: "2026-11-27T13:06:15.035410+00:00"
 relations:
   APPLIES:
   - AN-S-1951

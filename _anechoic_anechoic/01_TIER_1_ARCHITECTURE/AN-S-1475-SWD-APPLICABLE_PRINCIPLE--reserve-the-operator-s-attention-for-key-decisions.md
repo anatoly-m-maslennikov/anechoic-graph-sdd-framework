@@ -3,7 +3,7 @@ atom_family: SPEC
 atom_id: AN-S-1475
 concern:
   subject: Operator attention for key decisions
-  path: Design Foundations/Delegation and control
+  path: Project Practice/Operator authority and delegation
   relation: is_contained_by
 container:
   component: C00
@@ -13,8 +13,8 @@ context:
   template: applicable_principle
 state:
   status: "active"
-  version: 6
-  updated_at: "2026-11-27T13:00:59.921410+00:00"
+  version: 7
+  updated_at: "2026-11-27T13:06:14.852939+00:00"
 relations:
   APPLIES:
   - AN-S-1473

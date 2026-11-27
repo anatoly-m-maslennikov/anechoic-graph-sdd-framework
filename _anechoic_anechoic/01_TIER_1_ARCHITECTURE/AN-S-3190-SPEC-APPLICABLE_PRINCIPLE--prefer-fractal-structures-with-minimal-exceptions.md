@@ -3,7 +3,7 @@ atom_family: SPEC
 atom_id: AN-S-3190
 concern:
   subject: Fractal structure consistency
-  path: Design Foundations/Information and complexity
+  path: Project Practice/Project structure and scope
   relation: is_contained_by
 container:
   component: C00
@@ -16,8 +16,8 @@ relations:
   - AN-S-1432
 state:
   status: "active"
-  version: 5
-  updated_at: "2026-11-27T13:01:00.088708+00:00"
+  version: 6
+  updated_at: "2026-11-27T13:06:15.101835+00:00"
 ---
 
 **P34**

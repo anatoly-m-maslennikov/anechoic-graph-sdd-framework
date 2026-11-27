@@ -3,7 +3,7 @@ atom_family: SPEC
 atom_id: AN-S-1952
 concern:
   subject: Familiar technologies and interfaces
-  path: Design Foundations/Reuse automation and maintenance
+  path: Project Practice/Reuse and efficiency
   relation: is_contained_by
 container:
   component: C00
@@ -13,8 +13,8 @@ context:
   template: applicable_principle
 state:
   status: "active"
-  version: 7
-  updated_at: "2026-11-27T13:01:00.031906+00:00"
+  version: 8
+  updated_at: "2026-11-27T13:06:15.015588+00:00"
 relations:
   APPLIES:
   - AN-S-2810
