@@ -13,13 +13,13 @@ context:
   template: applicable_principle
 state:
   status: "active"
-  version: 32
-  updated_at: "2026-11-27T13:06:14.623197+00:00"
+  version: 33
+  updated_at: "2026-11-27T13:13:58.892814+00:00"
 relations:
   CONTRIBUTES_TO:
   - AN-S-1458
 ---
-**P1**
+**6.1**
 
 ## Summary
 Require usable inputs for reliance

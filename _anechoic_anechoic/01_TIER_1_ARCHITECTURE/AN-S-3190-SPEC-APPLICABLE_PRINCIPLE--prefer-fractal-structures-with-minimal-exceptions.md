@@ -16,11 +16,11 @@ relations:
   - AN-S-1432
 state:
   status: "active"
-  version: 6
-  updated_at: "2026-11-27T13:06:15.101835+00:00"
+  version: 7
+  updated_at: "2026-11-27T13:13:59.257356+00:00"
 ---
 
-**P34**
+**2.4**
 
 ## Summary
 

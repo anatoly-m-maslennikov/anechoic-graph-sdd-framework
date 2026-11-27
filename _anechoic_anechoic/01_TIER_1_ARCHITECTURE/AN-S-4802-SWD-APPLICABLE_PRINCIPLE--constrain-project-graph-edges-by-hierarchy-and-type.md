@@ -13,14 +13,14 @@ context:
   template: applicable_principle
 state:
   status: "active"
-  version: 4
-  updated_at: "2026-11-27T13:06:15.117156+00:00"
+  version: 5
+  updated_at: "2026-11-27T13:13:59.269727+00:00"
 relations:
   APPLIES:
   - AN-S-1432
 ---
 
-**P35**
+**2.5**
 
 ## Summary
 

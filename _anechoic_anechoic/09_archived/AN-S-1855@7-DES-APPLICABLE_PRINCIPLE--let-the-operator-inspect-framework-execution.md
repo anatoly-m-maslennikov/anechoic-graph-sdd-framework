@@ -1,0 +1,39 @@
+---
+atom_family: SPEC
+atom_id: AN-S-1855
+concern:
+  subject: Access to execution evidence
+  path: Project Practice/Decision evidence and oversight
+  relation: is_contained_by
+container:
+  component: C00
+tier: 2
+context:
+  lens: DES
+  template: applicable_principle
+state:
+  status: "archived"
+  version: 7
+  updated_at: "2026-11-27T13:13:59.203487+00:00"
+relations:
+  CONTRIBUTES_TO:
+  - AN-S-1443
+---
+
+**P27**
+
+## Summary
+
+Let the Operator inspect framework execution
+
+## Claim
+
+### Prose Claim
+
+Give the Operator access to relevant framework execution evidence and known limitations.
+
+## Details
+
+### Examples
+
+An Operator inspects a Run record to see its result and any reported errors.

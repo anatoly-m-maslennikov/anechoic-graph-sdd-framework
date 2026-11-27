@@ -13,8 +13,8 @@ context:
   template: applicable_principle
 state:
   status: "active"
-  version: 7
-  updated_at: "2026-11-27T13:06:14.896943+00:00"
+  version: 8
+  updated_at: "2026-11-27T13:13:59.146000+00:00"
 relations:
   APPLIES:
   - AN-S-1484
@@ -22,7 +22,7 @@ relations:
   - AN-S-1233
 ---
 
-**P21**
+**2.3**
 
 ## Summary
 

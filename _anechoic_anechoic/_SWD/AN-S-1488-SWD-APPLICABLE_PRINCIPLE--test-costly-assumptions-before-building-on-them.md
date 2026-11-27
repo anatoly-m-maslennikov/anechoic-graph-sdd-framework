@@ -13,14 +13,14 @@ context:
   template: applicable_principle
 state:
   status: "active"
-  version: 7
-  updated_at: "2026-11-27T13:06:14.940069+00:00"
+  version: 8
+  updated_at: "2026-11-27T13:13:59.169715+00:00"
 relations:
   CONTRIBUTES_TO:
   - AN-S-1487
 ---
 
-**P24**
+**6.3**
 
 ## Summary
 

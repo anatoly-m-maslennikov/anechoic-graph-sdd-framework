@@ -13,13 +13,13 @@ context:
   template: applicable_principle
 state:
   status: "active"
-  version: 41
-  updated_at: "2026-11-27T13:06:14.869428+00:00"
+  version: 42
+  updated_at: "2026-11-27T13:13:59.128504+00:00"
 relations:
   CONTRIBUTES_TO:
   - AN-S-1486
 ---
-**P19**
+**3.3**
 
 ## Summary
 Expose only task necessary distinctions
