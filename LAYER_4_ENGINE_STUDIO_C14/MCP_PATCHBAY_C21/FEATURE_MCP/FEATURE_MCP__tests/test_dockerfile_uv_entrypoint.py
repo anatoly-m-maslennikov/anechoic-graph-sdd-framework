@@ -65,8 +65,13 @@ class DockerfileUVEntrypointTests(unittest.TestCase):
     def test_image_precompiles_only_the_current_runtime(self):
         dockerfile = _dockerfile()
         stages = re.findall(r"(?m)^FROM .+ AS (\w+)$", dockerfile)
-        self.assertEqual(["workbench_frontend", "runtime_build", "current"], stages)
-        _, current = dockerfile.split("FROM scratch AS current\n")
+        self.assertEqual(
+            ["workbench_frontend", "runtime_build", "current",
+             "openapi_build", "packaged"], stages
+        )
+        current = dockerfile.split("FROM scratch AS current\n")[1].split(
+            "FROM current AS openapi_build\n"
+        )[0]
         prefix = "/workspace/.anechoic_tmp/python/bytecode"
         self.assertIn(
             f"RUN PYTHONPYCACHEPREFIX={prefix} /opt/venv/bin/python -B -m compileall",
@@ -82,7 +87,7 @@ class DockerfileUVEntrypointTests(unittest.TestCase):
             self.assertIn(path, current[current.index("-m compileall") :])
         kernel = "LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_C59"
         self.assertIn(f"COPY {kernel} ./{kernel}", current)
-        self.assertNotRegex(dockerfile, r"_beta_C[0-9]+")
+        self.assertNotRegex(current, r"_beta_C[0-9]+")
         self.assertIn("ENV ANECHOIC_RUNTIME_STACK=current", current)
         self.assertIn("LABEL org.anechoic.runtime.stack=current", current)
         self.assertTrue(current.strip().endswith("USER anechoic"))

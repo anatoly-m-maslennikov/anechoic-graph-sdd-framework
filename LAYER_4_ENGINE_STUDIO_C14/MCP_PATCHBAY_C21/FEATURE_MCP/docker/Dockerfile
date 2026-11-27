@@ -114,3 +114,20 @@ HEALTHCHECK --interval=2s --timeout=5s --start-period=420s --retries=25 \
 ENTRYPOINT ["/opt/venv/bin/python", "-B", \
 "LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/entrypoint.py"]
 USER anechoic
+
+
+FROM current AS openapi_build
+USER root
+COPY LAYER_4_ENGINE_STUDIO_C14/API_MIXER_beta_C91/__init__.py \
+    LAYER_4_ENGINE_STUDIO_C14/API_MIXER_beta_C91/openapi.py \
+    ./LAYER_4_ENGINE_STUDIO_C14/API_MIXER_beta_C91/
+RUN mkdir -p /usr/local/share/anechoic \
+    && PYTHONPATH=/workspace/LAYER_4_ENGINE_STUDIO_C14 \
+    /opt/venv/bin/python -B -m API_MIXER_beta_C91.openapi \
+    --registry LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/\
+FEATURE_IWE_CONSOLE_BACKEND/tool_registry.json \
+    --version-file version.toml > /usr/local/share/anechoic/openapi.json
+
+FROM current AS packaged
+COPY --from=openapi_build /usr/local/share/anechoic/openapi.json \
+    /usr/local/share/anechoic/openapi.json

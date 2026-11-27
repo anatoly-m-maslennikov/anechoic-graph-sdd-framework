@@ -15,7 +15,12 @@ class PackagedBoundaryDockerE2E(_CanaryProject, unittest.TestCase):
             "engine = Path('/workspace/LAYER_4_ENGINE_STUDIO_C14'); "
             "assert os.environ['ANECHOIC_RUNTIME_STACK'] == 'current'; "
             "assert (engine / 'KERNEL_MIXER_C59').is_dir(); "
-            "assert not list(engine.glob('*_beta_C*'))"
+            "assert not list(engine.glob('*_beta_C*')); "
+            "import json; "
+            "doc = json.loads(Path('/usr/local/share/anechoic/openapi.json')"
+            ".read_text()); "
+            "assert doc['openapi'] == '3.1.0'; "
+            "assert '/tools' in doc['paths']"
         )
         subprocess.run(
             ["docker", "exec", self.container, "python", "-B", "-c", check],

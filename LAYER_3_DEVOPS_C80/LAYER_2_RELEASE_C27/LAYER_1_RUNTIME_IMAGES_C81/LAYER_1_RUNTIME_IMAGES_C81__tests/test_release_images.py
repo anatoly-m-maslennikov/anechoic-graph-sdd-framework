@@ -30,6 +30,16 @@ class ReleaseImagesTests(ReleaseImageFixture):
         ):
             manager.identity()
 
+    def test_exporter_changes_release_fingerprint(self):
+        manager = self.make_manager()
+        before = manager.identity(use_packaged_assets=True)
+        exporter = self.package / "LAYER_4_ENGINE_STUDIO_C14/API_MIXER_beta_C91/openapi.py"
+        exporter.write_text("changed exporter")
+        after = manager.identity(use_packaged_assets=True)
+        self.assertNotEqual(before.fingerprint, after.fingerprint)
+        self.assertIn(exporter.relative_to(self.package).as_posix(),
+                      {row[0] for row in after.manifest})
+
     def test_license_edits_keep_the_runtime_fingerprint(self):
         from LAYER_1_RUNTIME_IMAGES_C81.release_image_identity import (
             LICENSE_INPUTS,

@@ -118,6 +118,10 @@ class ImageFixture:
         (docker.parent / "server.py").write_text(
             "SERVER = 'one'\n", encoding="utf-8"
         )
+        exporter = root / "LAYER_4_ENGINE_STUDIO_C14/API_MIXER_beta_C91"
+        exporter.mkdir()
+        for name in ("__init__.py", "openapi.py"):
+            (exporter / name).write_text("fixture")
         for relative in LICENSE_INPUTS:
             (root / relative).write_text("fixture license\n", encoding="utf-8")
         for relative in (TOOL_REGISTRY,):

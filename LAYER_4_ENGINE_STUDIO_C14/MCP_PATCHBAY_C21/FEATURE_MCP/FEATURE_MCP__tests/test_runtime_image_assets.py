@@ -59,6 +59,15 @@ class LifecycleImageAssetsTests(unittest.TestCase):
             manager = images.ImageManager(root, project_root=root, executor=docker)
             before = manager.identity(use_packaged_assets=True)
             self.assert_source_layer_identity(root, manager, before)
+            exporter = (
+                root / image_inputs.ENGINE_ROOT / "API_MIXER_beta_C91/openapi.py"
+            )
+            exporter.write_text("changed exporter")
+            self.assertNotEqual(
+                before.fingerprint,
+                manager.identity(use_packaged_assets=True).fingerprint,
+            )
+            exporter.write_text("{}")
             component = root / image_inputs.ENGINE_ROOT / "KERNEL_beta_C67"
             component.mkdir()
             (component / "module.py").write_text("pass\n")

@@ -274,6 +274,10 @@ class ImageCredentialContextTests(unittest.TestCase):
         (docker / "Dockerfile").write_text("FROM scratch\n")
         (docker / "Dockerfile.dockerignore").write_text(".git\n")
         (docker.parent / "engine.py").write_text("ENGINE=True\n")
+        exporter = source / "LAYER_4_ENGINE_STUDIO_C14/API_MIXER_beta_C91"
+        exporter.mkdir()
+        for name in ("__init__.py", "openapi.py"):
+            (exporter / name).write_text("fixture")
         for relative in image_inputs.LICENSE_INPUTS:
             (source / relative).write_text("fixture license\n")
         for layer in ("LAYER_1_META_ONTOLOGY_C9", "LAYER_2_META_METHODOLOGY_C58"):

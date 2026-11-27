@@ -72,6 +72,8 @@ _REQUIRED = (
     "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/pyproject.toml",
     "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/uv.lock",
     "version.toml",
+    ENGINE + "/API_MIXER_beta_C91/__init__.py",
+    ENGINE + "/API_MIXER_beta_C91/openapi.py",
     DOCKERFILE,
     DOCKERIGNORE,
     *LICENSE_INPUTS,
