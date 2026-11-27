@@ -1,0 +1,1 @@
+../logo/ice_cutaway.gdshader

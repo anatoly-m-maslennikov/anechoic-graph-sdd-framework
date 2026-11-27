@@ -31,10 +31,11 @@ const PROFILE := [
 ]
 
 var ice_profile := PROFILE.duplicate()
+@export var favicon_mode := false
 
 func _ready() -> void:
 	var arguments := OS.get_cmdline_user_args()
-	var icon := arguments.has("--icon")
+	var icon := favicon_mode or arguments.has("--icon")
 	var figure_scale := ICON_FIGURE_SCALE if icon else 1.0
 	if icon:
 		ice_profile[0] = Vector4(1.92, 0.92, 0.46, 0.00)

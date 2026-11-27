@@ -1,0 +1,15 @@
+config_version=5
+
+[application]
+config/name="Anechoic Favicon"
+run/main_scene="res://favicon.tscn"
+config/features=PackedStringArray("4.4", "GL Compatibility")
+
+[display]
+window/size/viewport_width=500
+window/size/viewport_height=500
+window/stretch/mode="canvas_items"
+
+[rendering]
+renderer/rendering_method="gl_compatibility"
+anti_aliasing/quality/msaa_3d=2
