@@ -8,6 +8,7 @@ from collections.abc import Iterable, Mapping
 from pydantic import ConfigDict, WrapValidator
 from pydantic.dataclasses import dataclass
 import hashlib
+from itertools import batched
 from typing import Annotated, Any, TypeVar
 
 from .graph_import_projection import add_import_projection
@@ -46,6 +47,40 @@ def quote_identifier(name: str) -> str:
 
 def _hash(payload: Mapping[str, object]) -> str:
     return hashlib.sha256(canonical(payload).encode("utf-8")).hexdigest()
+
+
+def _insert_batches(
+    connection: Any, statement: str, rows: Iterable[tuple[str | bool, ...]],
+) -> None:
+    for batch in batched(rows, 1000):
+        columns = [list(column) for column in zip(*batch, strict=True)]
+        connection.execute(statement, columns)
+
+
+def _insert_references(connection: Any, references: Iterable[Reference]) -> None:
+    _insert_batches(
+        connection,
+        "INSERT INTO internal.reference SELECT "
+        "unnest(?::VARCHAR[]), unnest(?::VARCHAR[]), unnest(?::VARCHAR[])",
+        (
+            (kind, ref, _hash({"kind": kind, "ref": ref}))
+            for kind, ref in references
+        ),
+    )
+
+
+def _insert_edges(connection: Any, table: str, edges: Iterable[Edge]) -> None:
+    _insert_batches(
+        connection,
+        f"INSERT INTO internal.{table} SELECT "
+        "unnest(?::VARCHAR[]), unnest(?::VARCHAR[]), unnest(?::VARCHAR[]), "
+        "unnest(?::VARCHAR[]), unnest(?::VARCHAR[]), unnest(?::BOOLEAN[]), "
+        "unnest(?::VARCHAR[])",
+        (
+            (*edge, _hash(dict(zip(_EDGE_KEYS, edge, strict=True))))
+            for edge in edges
+        ),
+    )
 
 
 def edge_records(rows: Iterable[Mapping[str, object]]) -> list[tuple[str, str, str, str, str, bool]]:
@@ -152,22 +187,14 @@ def build_graph(
         "CREATE TABLE internal.reference(kind VARCHAR, ref VARCHAR, hash VARCHAR NOT NULL, "
         "PRIMARY KEY(kind, ref))"
     )
-    if state.references:
-        connection.executemany(
-            "INSERT INTO internal.reference VALUES (?, ?, ?)",
-        [(kind, ref, _hash({"kind": kind, "ref": ref})) for kind, ref in sorted(state.references)],
-        )
+    _insert_references(connection, sorted(state.references))
     for relation_type, table in state.tables.items():
         connection.execute(
             f"CREATE TABLE internal.{table}(source_kind VARCHAR, source_ref VARCHAR, "
             "target_kind VARCHAR, target_ref VARCHAR, relation_type VARCHAR NOT NULL, "
             "derived BOOLEAN NOT NULL, hash VARCHAR NOT NULL)"
         )
-        if state.edges[relation_type]:
-            connection.executemany(
-                f"INSERT INTO internal.{table} VALUES (?, ?, ?, ?, ?, ?, ?)",
-                [(*edge, _hash(dict(zip(_EDGE_KEYS, edge, strict=False)))) for edge in state.edges[relation_type]],
-            )
+        _insert_edges(connection, table, state.edges[relation_type])
     register_graph(connection, state)
     columns = ", ".join(_EDGE_KEYS)
     sources = [f"SELECT {columns} FROM internal.{table}" for table in state.tables.values()]
@@ -232,18 +259,12 @@ def update_graph(
             )
     for kind, ref in previous.references - current.references:
         connection.execute("DELETE FROM internal.reference WHERE kind = ? AND ref = ?", [kind, ref])
-    for kind, ref in current.references - previous.references:
-        connection.execute(
-            "INSERT INTO internal.reference VALUES (?, ?, ?)",
-            [kind, ref, _hash({"kind": kind, "ref": ref})],
-        )
+    _insert_references(connection, current.references - previous.references)
     for relation_type, table in current.tables.items():
-        added = current.edges[relation_type] - previous.edges[relation_type]
-        if added:
-            connection.executemany(
-                f"INSERT INTO internal.{table} VALUES (?, ?, ?, ?, ?, ?, ?)",
-                [(*edge, _hash(dict(zip(_EDGE_KEYS, edge, strict=False)))) for edge in added],
-            )
+        _insert_edges(
+            connection, table,
+            current.edges[relation_type] - previous.edges[relation_type],
+        )
     return current
 
 

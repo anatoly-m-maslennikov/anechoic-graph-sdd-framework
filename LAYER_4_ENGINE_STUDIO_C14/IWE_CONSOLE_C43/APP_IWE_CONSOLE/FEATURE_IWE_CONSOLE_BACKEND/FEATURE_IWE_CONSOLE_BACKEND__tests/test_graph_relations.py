@@ -122,6 +122,28 @@ class GraphRelationsTests(unittest.TestCase):
             ],
         )
 
+    def test_publishes_graph_facts_across_batch_boundaries(self) -> None:
+        targets = [f"target-{index:04d}" for index in range(1001)]
+        edges = [
+            self.edge("Atom", "A", "Atom", ref, "LINKS", index % 2 == 1)
+            for index, ref in enumerate(targets)
+        ]
+        self.store.replace([self.atom("A", [*edges, edges[0]])], [])
+
+        connection = self.store._connection
+        self.assertEqual(
+            [("Atom", ref) for ref in ["A", *targets]],
+            connection.execute(
+                "SELECT kind, ref FROM internal.reference ORDER BY rowid"
+            ).fetchall(),
+        )
+        self.assertEqual(
+            [(ref, index % 2 == 1) for index, ref in enumerate(targets)],
+            connection.execute(
+                "SELECT target_ref, derived FROM relations ORDER BY target_ref"
+            ).fetchall(),
+        )
+
     def test_flat_relations_follow_rebuild_and_incremental_updates(
         self,
     ) -> None:
