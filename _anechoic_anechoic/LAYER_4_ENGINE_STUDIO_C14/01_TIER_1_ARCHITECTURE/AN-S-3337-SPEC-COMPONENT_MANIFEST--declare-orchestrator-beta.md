@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: "active"
-  version: 31
-  updated_at: "2026-11-27T15:10:44.706424+00:00"
+  version: 34
+  updated_at: "2026-11-27T19:16:14.474556+00:00"
 ---
 ## Summary
 
@@ -24,7 +24,7 @@ from anechoic.model import ComponentManifest
 ComponentManifest(
     component_id='C68',
     name='Orchestrator Beta',
-    lens_whitelist=['DES', 'SPEC'],
+    lens_whitelist=['DES', 'SPEC', 'IO/API/IPC'],
 )
 ```
 
@@ -34,6 +34,9 @@ ComponentManifest(
 {'code': {'imports': {'only': ['archive_jobs',
                                'metrics__shared.is_measurement_input',
                                'ADAPTERS_C30__shared.console_state_path',
+                               'container_settings__pub.CONTAINER_SETTINGS_FILENAME',
+                               'container_settings__pub.parse_container_settings',
+                               'settings_carrier__pub.parse_settings_carrier',
                                'ADAPTERS_C30__shared.CEILINGS',
                                'ADAPTERS_C30__shared.ReadContext',
                                'ADAPTERS_C30__shared.native_carrier_path',
@@ -68,8 +71,6 @@ ComponentManifest(
  'io': {'server': {'project_peer_owner': {'transport': 'cli',
                                           'runner': 'managed_python',
                                           'module': 'ORCHESTRATOR_beta_C68.project_peer_owner',
-                                          'stack': 'beta_next',
-                                          'supervisor': 'C21',
                                           'arguments': 'selected Project '
                                                        'binding and peer '
                                                        'settings',
@@ -81,8 +82,6 @@ ComponentManifest(
                                                       'Unix socket',
                                          'runner': 'managed_python',
                                          'module': 'ORCHESTRATOR_beta_C68.shared_peer_owner',
-                                         'stack': 'beta_next',
-                                         'supervisor': 'C21',
                                          'arguments': ['--socket',
                                                        '<owner-socket>',
                                                        '--host-settings',
@@ -166,10 +165,9 @@ ComponentManifest(
 
 #### Guarantee
 
-For `beta_next`, own the selected Project's peer pair and warm Worker.
+For standalone operation, own the selected Project's peer pair and warm Worker.
 Report readiness after its bound peers start. Stop them with their owner.
-In shared mode, select Projects and serve status and leases over a private
-Unix socket. Keep leases with the owner and release them at request end.
+Apply AN-S-5192 to shared-mode Project selection, status, and leases.
 
 Establish watcher coverage before capture. Admit the pinned Current and
 Draft base and replay events through the completed observation before
