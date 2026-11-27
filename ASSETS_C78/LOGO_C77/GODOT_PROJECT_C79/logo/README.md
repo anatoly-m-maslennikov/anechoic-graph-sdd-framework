@@ -8,7 +8,7 @@ The water has three layers. Loose pixel currents sit near the surface, fine circ
 
 Edit the iceberg profile and the spiral in `iceberg.gd`. The scene uses Avenir Next Demi Bold for the wordmark, with a system sans-serif fallback.
 
-The [500 × 500 render](../../anechoic_logo_500.png) is the source for the [512 × 512 logo](../../anechoic_logo.png). A pale A spans the [64 × 64 icon](../../anechoic_logo_64.png). Both delivery sizes are also at the repository root.
+The [500 × 500 render](../../anechoic_logo_500.png) is the source for the [512 × 512 logo](../../anechoic_logo.png). A pale A spans the [64 × 64 icon](../../anechoic_logo_64.png), with the person standing on its apex. Both delivery sizes are also at the repository root.
 
 Open `project.godot` and run the project. Use windowed Godot to render the full wordmark or the icon artwork. Resize the icon render to 64 × 64 after export.
 
