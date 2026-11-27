@@ -8,6 +8,7 @@ const SIDES := 15
 const ICE_WIDTH := 0.876
 const FIGURE_HEAD := Vector3(0, 0.35, 0)
 const ICON_FIGURE_SCALE := 2.0
+const FIGURE_SPACING := 0.29
 const ROUTE_TOP := 1.79
 const ROUTE_BOTTOM := -2.62
 const ARCH_SEGMENTS := 20
@@ -17,7 +18,7 @@ const PRISM := [
 ]
 # Height, horizontal radius, depth radius, and horizontal center.
 const PROFILE := [
-	Vector4(1.92, 0.16, 0.12, 0.00),
+	Vector4(1.92, 0.55, 0.26, 0.00),
 	Vector4(1.62, 0.57, 0.43, -0.04),
 	Vector4(1.11, 0.98, 0.73, -0.10),
 	Vector4(0.55, 1.37, 0.96, -0.12),
@@ -29,14 +30,20 @@ const PROFILE := [
 	Vector4(-2.85, 0.055, 0.075, -0.05),
 ]
 
+var ice_profile := PROFILE.duplicate()
+
 func _ready() -> void:
 	var arguments := OS.get_cmdline_user_args()
 	var icon := arguments.has("--icon")
 	var figure_scale := ICON_FIGURE_SCALE if icon else 1.0
+	if icon:
+		ice_profile[0] = Vector4(1.92, 0.92, 0.46, 0.00)
+		ice_profile[1] = Vector4(1.62, 0.96, 0.59, -0.04)
 	_build_view(figure_scale)
 	var ice := _build_ice()
 	ice.set_shader_parameter("opening_mask", _build_path())
-	_build_summit_figure(figure_scale, icon)
+	for index in range(-1, 2):
+		_build_summit_figure(figure_scale, icon, index)
 	_build_title(icon)
 	var export_index := arguments.find("--render")
 	if export_index >= 0:
@@ -136,7 +143,7 @@ func _build_ice() -> ShaderMaterial:
 	var rings: Array[PackedVector3Array] = []
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 893
-	for profile: Vector4 in PROFILE:
+	for profile: Vector4 in ice_profile:
 		var ring := PackedVector3Array()
 		for side in range(SIDES):
 			var angle := TAU * float(side) / SIDES
@@ -199,24 +206,18 @@ func _build_path() -> ImageTexture:
 	return ImageTexture.create_from_image(mask)
 
 func _ramp_x(progress: float) -> float:
-	const FIRST_TURN := 0.42
-	const SECOND_TURN := 0.677
-	const LEFT_EDGE := -1.53
-	const RIGHT_EDGE := 2.19
-	var approach := LEFT_EDGE / FIRST_TURN
-	var traverse := (RIGHT_EDGE - LEFT_EDGE) / (SECOND_TURN - FIRST_TURN)
-	var descent := (-0.36 - RIGHT_EDGE) / (1.0 - SECOND_TURN)
-	return (
-		approach * progress
-		+ (traverse - approach) * _rounded_turn(progress - FIRST_TURN)
-		+ (descent - traverse) * _rounded_turn(progress - SECOND_TURN)
-	)
-
-# Replace each sharp change of slope with a short parabolic turn.
-func _rounded_turn(distance: float) -> float:
-	const RADIUS := 0.079
-	var blend := clampf(distance + RADIUS, 0.0, 2.0 * RADIUS)
-	return maxf(0.0, distance - RADIUS) + blend * blend / (4.0 * RADIUS)
+	const FIRST_TURN := 0.406
+	const SECOND_TURN := 0.69
+	const LEFT_EDGE := -1.34
+	const RIGHT_EDGE := 1.72
+	if progress < FIRST_TURN:
+		var t := progress / FIRST_TURN
+		# Start the ramp at a diagonal while easing into the first turn.
+		var ease := smoothstep(0.0, 1.0, t) + 0.72 * t * (1.0 - t) * (1.0 - t)
+		return lerpf(-0.18, LEFT_EDGE, ease)
+	if progress < SECOND_TURN:
+		return lerpf(LEFT_EDGE, RIGHT_EDGE, smoothstep(FIRST_TURN, SECOND_TURN, progress))
+	return lerpf(RIGHT_EDGE, -0.36, smoothstep(SECOND_TURN, 1.0, progress))
 
 func _route_sections(top: float, bottom: float, steps: int) -> Array[PackedVector3Array]:
 	var sections: Array[PackedVector3Array] = []
@@ -248,12 +249,12 @@ func _route_headroom(y: float) -> float:
 
 # Ellipse radii and horizontal center, in the same coordinates as the ice.
 func _ellipse_at(y: float) -> Vector3:
-	for i in range(PROFILE.size() - 1):
-		var top: Vector4 = PROFILE[i]
-		var bottom: Vector4 = PROFILE[i + 1]
+	for i in range(ice_profile.size() - 1):
+		var top: Vector4 = ice_profile[i]
+		var bottom: Vector4 = ice_profile[i + 1]
 		if y >= bottom.x:
-			var before: Vector4 = PROFILE[maxi(i - 1, 0)]
-			var after: Vector4 = PROFILE[mini(i + 2, PROFILE.size() - 1)]
+			var before: Vector4 = ice_profile[maxi(i - 1, 0)]
+			var after: Vector4 = ice_profile[mini(i + 2, ice_profile.size() - 1)]
 			var span := top.x - bottom.x
 			var start := Vector3(top.y, top.z, top.w)
 			var end := Vector3(bottom.y, bottom.z, bottom.w)
@@ -287,12 +288,8 @@ func _build_path_section(sections: Array[PackedVector3Array], submerged: bool) -
 			_route_tube(guardrail, PackedVector3Array([outer, guard]), 0.010)
 			distance_since_post = 0.0
 	_route_tube(guardrail, handrail, 0.018)
-	if submerged:
-		_mesh("OceanariumWalkway", track, Color("#76b9b5"))
-		_mesh("OceanariumGuardrail", guardrail, Color("#e3f4e5"))
-	else:
-		_mesh("Walkway", track, Color("#d1ae72"))
-		_mesh("Guardrail", guardrail, Color("#fff1c5"))
+	_mesh("OceanariumWalkway" if submerged else "Walkway", track, Color("#76b9b5"))
+	_mesh("OceanariumGuardrail" if submerged else "Guardrail", guardrail, Color("#e3f4e5"))
 
 # A single profile cut follows the floor and ceiling of the interior route.
 func _cut_passage(mask: Image, sections: Array[PackedVector3Array]) -> void:
@@ -387,10 +384,10 @@ func _route_tube(surface: SurfaceTool, points: PackedVector3Array, radius: float
 func _summit() -> Vector3:
 	return Vector3(PROFILE[0].w * ICE_WIDTH, PROFILE[0].x, 0.0)
 
-func _build_summit_figure(figure_scale: float, icon: bool) -> void:
+func _build_summit_figure(figure_scale: float, icon: bool, index: int) -> void:
 	var figure := Node3D.new()
-	figure.name = "SummitFigure"
-	figure.position = _summit()
+	figure.name = ["LeftFigure", "CenterFigure", "RightFigure"][index + 1]
+	figure.position = _summit() + Vector3.RIGHT * index * FIGURE_SPACING * figure_scale
 	figure.scale = Vector3.ONE * figure_scale
 	add_child(figure)
 
@@ -408,10 +405,10 @@ func _build_summit_figure(figure_scale: float, icon: bool) -> void:
 		Vector3(0.060, sole, -0.02), Vector3(0.041, 0.137, -0.02), 0.024, stroke)
 	_figure_bar(jacket, outline,
 		Vector3(0, 0.137, 0), Vector3(0, 0.286, 0), 0.06, stroke)
-	_figure_bar(jacket, outline,
-		Vector3(-0.060, 0.264, 0.014), Vector3(-0.106, 0.157, 0.038), 0.019, stroke)
-	_figure_bar(jacket, outline,
-		Vector3(0.060, 0.264, 0.012), Vector3(0.106, 0.181, 0.049), 0.019, stroke)
+	var left_hand := Vector3(-FIGURE_SPACING * 0.5, 0.191, 0.045) if index > -1 else Vector3(-0.106, 0.157, 0.045)
+	var right_hand := Vector3(FIGURE_SPACING * 0.5, 0.191, 0.045) if index < 1 else Vector3(0.106, 0.157, 0.045)
+	_figure_bar(jacket, outline, Vector3(-0.060, 0.264, 0.014), left_hand, 0.019, stroke)
+	_figure_bar(jacket, outline, Vector3(0.060, 0.264, 0.014), right_hand, 0.019, stroke)
 	_mesh("SummitFigureOutline", outline, outline_color).reparent(figure, false)
 	_mesh("SummitFigureLegs", boots, Color("#e3eded")).reparent(figure, false)
 	_mesh("SummitFigureJacket", jacket, Color("#fffefa")).reparent(figure, false)
