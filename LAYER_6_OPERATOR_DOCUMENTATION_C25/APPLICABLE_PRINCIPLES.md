@@ -46,7 +46,7 @@ When a similar choice comes up, the AI Agent reads the Spec to recover the conte
 
 **Supports** [AN-S-1233 — Project Goal](../AN-S-1233-SPEC-PROJECT_GOAL--create-and-evolve-a-working-anechoic-framework.md) through `SERVES`.
 
-**Applies** [A11 — Operators and AI Agents can only work with so much context at once](../_anechoic_anechoic/AN-S-1484-SPEC-AXIOM--operators-and-ai-agents-can-only-work-with-so-much-context-at-once.md).
+**Applies** [1.1 — Operators and AI Agents can only work with so much context at once](../_anechoic_anechoic/AN-S-1484-SPEC-AXIOM--operators-and-ai-agents-can-only-work-with-so-much-context-at-once.md).
 
 ## P6. Keep decisions, work, and outcomes traceable
 
@@ -56,7 +56,7 @@ Link decisions to their reasons, the work based on them, and the results observe
 
 **Supports** [AN-S-1233 — Project Goal](../AN-S-1233-SPEC-PROJECT_GOAL--create-and-evolve-a-working-anechoic-framework.md) through `SERVES`.
 
-**Applies** [A6 — Transparency supports informed control](../_anechoic_anechoic/AN-S-1435-SPEC-AXIOM--transparency-supports-informed-control.md).
+**Applies** [2.3 — Transparency supports informed control](../_anechoic_anechoic/AN-S-1435-SPEC-AXIOM--transparency-supports-informed-control.md).
 
 ## P7. MECE — Cover the whole with non-overlapping parts
 
@@ -66,7 +66,7 @@ When we split something into parts, include everything within the chosen boundar
 
 **Tier 1 purpose** [AN-S-1233 — Project Goal](../AN-S-1233-SPEC-PROJECT_GOAL--create-and-evolve-a-working-anechoic-framework.md). This Atom has no authored direct support relation.
 
-**Applies** [A4 — Clear structure and ownership make information easier to maintain](../_anechoic_anechoic/AN-S-1432-SPEC-AXIOM--clear-structure-and-ownership-make-information-easier-to-maintain.md).
+**Applies** [1.3 — Clear structure and ownership make information easier to maintain](../_anechoic_anechoic/AN-S-1432-SPEC-AXIOM--clear-structure-and-ownership-make-information-easier-to-maintain.md).
 
 ## P8. Represent systems through explicit graphs
 
@@ -76,7 +76,7 @@ Represent Project decisions, structure, artifacts, and other objects as connecte
 
 **Supports** [AN-S-1233 — Project Goal](../AN-S-1233-SPEC-PROJECT_GOAL--create-and-evolve-a-working-anechoic-framework.md) through `SERVES`.
 
-**Applies** [A1 — Information can be managed at any scale](../_anechoic_anechoic/AN-S-1428-SPEC-AXIOM--information-can-be-managed-at-any-scale.md).
+**Applies** [1.2 — Information can be managed at any scale](../_anechoic_anechoic/AN-S-1428-SPEC-AXIOM--information-can-be-managed-at-any-scale.md).
 
 ## P9. Make Project state and ongoing work visible
 
@@ -86,7 +86,7 @@ Show what is running, what has changed, what is blocked or failing, and what res
 
 **Supports** [AN-S-1233 — Project Goal](../AN-S-1233-SPEC-PROJECT_GOAL--create-and-evolve-a-working-anechoic-framework.md) through `SERVES`.
 
-**Applies** [A6 — Transparency supports informed control](../_anechoic_anechoic/AN-S-1435-SPEC-AXIOM--transparency-supports-informed-control.md).
+**Applies** [2.3 — Transparency supports informed control](../_anechoic_anechoic/AN-S-1435-SPEC-AXIOM--transparency-supports-informed-control.md).
 
 ## P10. Make the basis of decisions and actions understandable
 
@@ -96,7 +96,7 @@ Show which Project information, instructions, and permissions guide important ac
 
 **Supports** [AN-S-1233 — Project Goal](../AN-S-1233-SPEC-PROJECT_GOAL--create-and-evolve-a-working-anechoic-framework.md) through `SERVES`.
 
-**Applies** [A6 — Transparency supports informed control](../_anechoic_anechoic/AN-S-1435-SPEC-AXIOM--transparency-supports-informed-control.md).
+**Applies** [2.3 — Transparency supports informed control](../_anechoic_anechoic/AN-S-1435-SPEC-AXIOM--transparency-supports-informed-control.md).
 
 ## P11. DRY — Don’t Repeat Yourself
 
@@ -114,7 +114,7 @@ Keep one source of truth for each piece of Project information. Make copies from
 
 **Tier 1 purpose** [AN-S-1233 — Project Goal](../AN-S-1233-SPEC-PROJECT_GOAL--create-and-evolve-a-working-anechoic-framework.md). This Atom has no authored direct support relation.
 
-**Applies** [A4 — Clear structure and ownership make information easier to maintain](../_anechoic_anechoic/AN-S-1432-SPEC-AXIOM--clear-structure-and-ownership-make-information-easier-to-maintain.md).
+**Applies** [1.3 — Clear structure and ownership make information easier to maintain](../_anechoic_anechoic/AN-S-1432-SPEC-AXIOM--clear-structure-and-ownership-make-information-easier-to-maintain.md).
 
 ## P13. Do not require human participants to master or personally perform specialist work
 
@@ -124,7 +124,7 @@ Let the Operator create, deliver, run, and maintain a feasible Project without h
 
 **Supports** [AN-S-1233 — Project Goal](../AN-S-1233-SPEC-PROJECT_GOAL--create-and-evolve-a-working-anechoic-framework.md) through `SERVES`.
 
-**Applies** [A9 — Directing specialist work does not require mastering the craft](../_anechoic_anechoic/AN-S-1448-SPEC-AXIOM--directing-specialist-work-does-not-require-mastering-the-craft.md).
+**Applies** [2.1 — Directing specialist work does not require mastering the craft](../_anechoic_anechoic/AN-S-1448-SPEC-AXIOM--directing-specialist-work-does-not-require-mastering-the-craft.md).
 
 ## P14. Reduce the overhead of applying the framework
 
@@ -134,7 +134,7 @@ Apply the framework using fewer LLM tokens, less Operator effort, and less waiti
 
 **Supports** [AN-S-1233 — Project Goal](../AN-S-1233-SPEC-PROJECT_GOAL--create-and-evolve-a-working-anechoic-framework.md) through `SERVES`.
 
-**Applies** [A7 — Repeated work becomes more efficient through automation](../_anechoic_anechoic/AN-S-1436-SPEC-AXIOM--repeated-work-becomes-more-efficient-through-automation.md).
+**Applies** [3.4 — Repeated work becomes more efficient through automation](../_anechoic_anechoic/AN-S-1436-SPEC-AXIOM--repeated-work-becomes-more-efficient-through-automation.md).
 
 ## P15. Give Operators clear guidance for using the framework
 
@@ -152,7 +152,7 @@ Provide the Operator with the relevant information needed for Project decisions,
 
 **Supports** [AN-S-1233 — Project Goal](../AN-S-1233-SPEC-PROJECT_GOAL--create-and-evolve-a-working-anechoic-framework.md) through `SERVES`.
 
-**Applies** [A6 — Transparency supports informed control](../_anechoic_anechoic/AN-S-1435-SPEC-AXIOM--transparency-supports-informed-control.md).
+**Applies** [2.3 — Transparency supports informed control](../_anechoic_anechoic/AN-S-1435-SPEC-AXIOM--transparency-supports-informed-control.md).
 
 ## P17. Delegate decisions that can tolerate surprises
 
@@ -162,7 +162,7 @@ Let AI Agents make decisions where an unexpected result is acceptable.
 
 **Supports** [AN-S-1233 — Project Goal](../AN-S-1233-SPEC-PROJECT_GOAL--create-and-evolve-a-working-anechoic-framework.md) through `SERVES`.
 
-**Applies** [A10 — Delegating judgment to AI Agents saves Operator effort but makes results less predictable](../_anechoic_anechoic/AN-S-1473-SPEC-AXIOM--delegating-judgment-to-ai-agents-saves-operator-effort-but-makes-results-less-predictable.md).
+**Applies** [2.2 — Delegating judgment to AI Agents saves Operator effort but makes results less predictable](../_anechoic_anechoic/AN-S-1473-SPEC-AXIOM--delegating-judgment-to-ai-agents-saves-operator-effort-but-makes-results-less-predictable.md).
 
 ## P18. Reserve the Operator’s attention for key decisions
 
@@ -172,7 +172,7 @@ Save the Operator’s time and attention for decisions where their judgment matt
 
 **Supports** [AN-S-1233 — Project Goal](../AN-S-1233-SPEC-PROJECT_GOAL--create-and-evolve-a-working-anechoic-framework.md) through `SERVES`.
 
-**Applies** [A10 — Delegating judgment to AI Agents saves Operator effort but makes results less predictable](../_anechoic_anechoic/AN-S-1473-SPEC-AXIOM--delegating-judgment-to-ai-agents-saves-operator-effort-but-makes-results-less-predictable.md).
+**Applies** [2.2 — Delegating judgment to AI Agents saves Operator effort but makes results less predictable](../_anechoic_anechoic/AN-S-1473-SPEC-AXIOM--delegating-judgment-to-ai-agents-saves-operator-effort-but-makes-results-less-predictable.md).
 
 ## P19. Expose only task necessary distinctions
 
@@ -198,7 +198,7 @@ Give each task a clear boundary and keep its dependencies easy to find. That let
 
 **Supports** [AN-S-1233 — Project Goal](../AN-S-1233-SPEC-PROJECT_GOAL--create-and-evolve-a-working-anechoic-framework.md) through `SERVES`.
 
-**Applies** [A11 — Operators and AI Agents can only work with so much context at once](../_anechoic_anechoic/AN-S-1484-SPEC-AXIOM--operators-and-ai-agents-can-only-work-with-so-much-context-at-once.md).
+**Applies** [1.1 — Operators and AI Agents can only work with so much context at once](../_anechoic_anechoic/AN-S-1484-SPEC-AXIOM--operators-and-ai-agents-can-only-work-with-so-much-context-at-once.md).
 
 ## P22. Show what is needed; keep the rest
 
@@ -208,7 +208,7 @@ Show enough information for the current task without unnecessary context. Keep o
 
 **Supports** [AN-S-1233 — Project Goal](../AN-S-1233-SPEC-PROJECT_GOAL--create-and-evolve-a-working-anechoic-framework.md) through `SERVES`.
 
-**Applies** [A11 — Operators and AI Agents can only work with so much context at once](../_anechoic_anechoic/AN-S-1484-SPEC-AXIOM--operators-and-ai-agents-can-only-work-with-so-much-context-at-once.md).
+**Applies** [1.1 — Operators and AI Agents can only work with so much context at once](../_anechoic_anechoic/AN-S-1484-SPEC-AXIOM--operators-and-ai-agents-can-only-work-with-so-much-context-at-once.md).
 
 ## P23. Prioritize problems by the rework they can cause
 
@@ -218,7 +218,7 @@ Put the most effort into early checks and lasting fixes where a problem would fo
 
 **Supports** [AN-S-1233 — Project Goal](../AN-S-1233-SPEC-PROJECT_GOAL--create-and-evolve-a-working-anechoic-framework.md) through `SERVES`.
 
-**Applies** [A5 — Shift Left: Problems cost less when addressed before they spread](../_anechoic_anechoic/AN-S-1434-SPEC-AXIOM--shift-left-problems-cost-less-when-addressed-before-they-spread.md).
+**Applies** [3.5 — Shift Left: Problems cost less when addressed before they spread](../_anechoic_anechoic/AN-S-1434-SPEC-AXIOM--shift-left-problems-cost-less-when-addressed-before-they-spread.md).
 
 ## P24. Test costly assumptions before building on them
 
@@ -268,7 +268,7 @@ Prefer technologies and interfaces that AI Agents already know. Use custom ones 
 
 **Supports** [AN-S-1233 — Project Goal](../AN-S-1233-SPEC-PROJECT_GOAL--create-and-evolve-a-working-anechoic-framework.md) through `SERVES`.
 
-**Applies** [A13 — Figure out what wheel you need then adopt the best one that fits](../_anechoic_anechoic/AN-S-2810-SPEC-AXIOM--figure-out-what-wheel-you-need-then-adopt-the-best-one-that-fits.md).
+**Applies** [3.2 — Figure out what wheel you need then adopt the best one that fits](../_anechoic_anechoic/AN-S-2810-SPEC-AXIOM--figure-out-what-wheel-you-need-then-adopt-the-best-one-that-fits.md).
 
 ## P30. Use familiar concepts with their usual meanings
 
@@ -278,7 +278,7 @@ Prefer concepts and terms that people and AI Agents already understand. Use fami
 
 **Supports** [AN-S-1233 — Project Goal](../AN-S-1233-SPEC-PROJECT_GOAL--create-and-evolve-a-working-anechoic-framework.md) through `SERVES`.
 
-**Applies** [A12 — Do not reinvent the wheel](../_anechoic_anechoic/AN-S-1951-SPEC-AXIOM--do-not-reinvent-the-wheel.md).
+**Applies** [3.1 — Do not reinvent the wheel](../_anechoic_anechoic/AN-S-1951-SPEC-AXIOM--do-not-reinvent-the-wheel.md).
 
 ## P31. Rebuild Implementation from its governing specification
 
@@ -317,7 +317,7 @@ with minimal exceptions.
 
 **Tier 1 purpose** [AN-S-1233 — Project Goal](../AN-S-1233-SPEC-PROJECT_GOAL--create-and-evolve-a-working-anechoic-framework.md). This Atom has no authored direct support relation.
 
-**Applies** [A4 — Clear structure and ownership make information easier to maintain](../_anechoic_anechoic/AN-S-1432-SPEC-AXIOM--clear-structure-and-ownership-make-information-easier-to-maintain.md).
+**Applies** [1.3 — Clear structure and ownership make information easier to maintain](../_anechoic_anechoic/AN-S-1432-SPEC-AXIOM--clear-structure-and-ownership-make-information-easier-to-maintain.md).
 
 ## P35. Constrain Project graph edges by hierarchy and type
 
@@ -327,4 +327,4 @@ Prefer a hierarchical Project graph with typed nodes and relations. Minimize the
 
 **Tier 1 purpose** [AN-S-1233 — Project Goal](../AN-S-1233-SPEC-PROJECT_GOAL--create-and-evolve-a-working-anechoic-framework.md). This Atom has no authored direct support relation.
 
-**Applies** [A4 — Clear structure and ownership make information easier to maintain](../_anechoic_anechoic/AN-S-1432-SPEC-AXIOM--clear-structure-and-ownership-make-information-easier-to-maintain.md).
+**Applies** [1.3 — Clear structure and ownership make information easier to maintain](../_anechoic_anechoic/AN-S-1432-SPEC-AXIOM--clear-structure-and-ownership-make-information-easier-to-maintain.md).
