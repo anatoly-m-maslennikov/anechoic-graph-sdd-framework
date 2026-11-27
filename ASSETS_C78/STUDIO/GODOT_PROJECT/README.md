@@ -10,7 +10,7 @@ Import `project.godot` in Godot and open `studio.tscn`. Press F6 to view it.
 
 ## Render the studio
 
-The [day render](../../anechoic_studio_day.png) and [artwork without the frame and text](../../anechoic_studio_day_art.png) are in the Logo folder.
+The [day render](../anechoic_studio_day.png) and [artwork without the frame and text](../anechoic_studio_day_art.png) are in the Studio folder.
 
 Run these commands with a normal windowed Godot build. The render hides the keyboard help.
 

@@ -8,7 +8,7 @@ Tiny atoms and molecules form the bottom layer. Above them, sine waves and light
 
 Edit the iceberg profile and the route in `iceberg.gd`. The scene uses Avenir Next Demi Bold for the wordmark, with a system sans-serif fallback.
 
-The [500 × 500 render](../../anechoic_logo_500.png) is the source for the [512 × 512 logo](../../anechoic_logo.png). The [Favicon project](../favicon/README.md) shares the iceberg source and opens the small icon.
+The [500 × 500 render](../anechoic_logo_500.png) is the source for the [512 × 512 logo](../anechoic_logo.png). The [Favicon project](../../FAVICON/GODOT_PROJECT/README.md) shares the iceberg source and opens the small icon.
 
 Open `project.godot` and run the project. Use windowed Godot to render the full wordmark.
 

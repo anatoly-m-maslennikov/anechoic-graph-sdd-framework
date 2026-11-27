@@ -1,0 +1,1 @@
+../../LOGO/GODOT_PROJECT/ice_cutaway.gdshader

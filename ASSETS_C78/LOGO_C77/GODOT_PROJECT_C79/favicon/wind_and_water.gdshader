@@ -1,1 +1,0 @@
-../logo/wind_and_water.gdshader
