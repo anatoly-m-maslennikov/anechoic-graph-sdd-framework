@@ -75,16 +75,25 @@ func _build_water_text() -> void:
 	var font := SystemFont.new()
 	font.font_names = PackedStringArray(["Menlo", "DejaVu Sans Mono", "monospace"])
 	var letters := "aWdeIrTpsNoMtyAVeLcgUkn"
-	for index in range(71):
-		var x := 3.5 + index * 7.0 + 1.4 * sin(index * 1.8)
-		var crest := _surface_swell(x)
-		var y := 251.0 + crest + 2.0 * sin(index * 2.1)
-		var slope := (_surface_swell(x + 1.0) - _surface_swell(x - 1.0)) * 0.5
-		var size := 9 + (index * 7) % 10 + roundi(2.0 * (1.0 - smoothstep(-11.0, 1.0, crest)))
-		var letter := _water_label(font, letters[index % letters.length()], Vector2(x, y), size, Color("#e1f6e9"))
-		letter.rotation.z = -atan(slope) + 0.15 * sin(index * 3.7)
-		letter.outline_size = 1
-		letter.outline_modulate = Color("#386460")
+	var colors := [Color("#648d81"), Color("#e1f6e9"), Color("#a3dccc")]
+	for band in range(-1, 2):
+		for index in range(71):
+			var seed := index + (band + 1) * 17
+			var x := 3.5 + index * 7.0 + band * 1.9 + 2.1 * sin(seed * 1.8)
+			var crest := _surface_swell(x)
+			var offset := 9.5 + 4.3 * sin(x * 0.054 + band)
+			if band > 0:
+				offset *= 1.0 - 0.55 * smoothstep(4.0, 17.0, crest)
+			var y := 251.0 + crest + band * offset + 2.1 * sin(seed * 2.1)
+			var slope := (_surface_swell(x + 1.0) - _surface_swell(x - 1.0)) * 0.5
+			var size := 6 + (seed * 7) % 8
+			if band == 0:
+				size = 9 + (seed * 7) % 10 + roundi(2.0 * (1.0 - smoothstep(-11.0, 1.0, crest)))
+			var glyph := letters[seed % letters.length()]
+			var letter := _water_label(font, glyph, Vector2(x, y), size, colors[band + 1])
+			letter.rotation.z = -atan(slope) + 0.18 * sin(seed * 3.7)
+			letter.outline_size = 1 if band == 0 else 0
+			letter.outline_modulate = Color("#386460")
 
 	_water_label(font, "def idea(): ...", Vector2(59, 286), 11, Color("#c7edba"))
 	_water_label(font, "record Idea() {}", Vector2(59, 301), 11, Color("#c6e6f0"))
