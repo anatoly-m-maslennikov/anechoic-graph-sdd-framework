@@ -75,25 +75,26 @@ func _build_water_text() -> void:
 	var font := SystemFont.new()
 	font.font_names = PackedStringArray(["Menlo", "DejaVu Sans Mono", "monospace"])
 	var letters := "aWdeIrTpsNoMtyAVeLcgUkn"
-	var colors := [Color("#648d81"), Color("#e1f6e9"), Color("#a3dccc")]
-	for band in range(-1, 2):
-		for index in range(71):
-			var seed := index + (band + 1) * 17
-			var x := 3.5 + index * 7.0 + band * 1.9 + 2.1 * sin(seed * 1.8)
-			var crest := _surface_swell(x)
-			var breaking := 1.0 - smoothstep(-14.0, 0.0, crest)
-			var offset := 4.0 + breaking * (5.0 + 6.0 * sin(seed * 2.1))
-			var y := 251.0 + crest + band * offset + 1.9 * sin(seed * 3.1)
-			var slope := (_surface_swell(x + 1.0) - _surface_swell(x - 1.0)) * 0.5
-			var size := 6 + (seed * 7) % 8
-			if band == 0:
-				size = 9 + (seed * 7) % 10 + roundi(2.0 * (1.0 - smoothstep(-11.0, 1.0, crest)))
-			var glyph := letters[seed % letters.length()]
-			var ink: Color = colors[band + 1]
-			ink.a = lerpf(0.39, 1.0, breaking)
-			var letter := _water_label(font, glyph, Vector2(x, y), size, ink)
-			letter.rotation.z = -atan(slope) + 0.39 * sin(seed * 3.7)
-			letter.outline_size = 1 if band == 0 else 0
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 259
+	for sample in range(250):
+		var x := 2.0 * (sample + rng.randf())
+		var crest := _surface_swell(x)
+		var breaking := 1.0 - smoothstep(-16.0, 3.0, crest)
+		var count := floori(lerpf(0.30, 4.85, breaking) + rng.randf())
+		var slope := (_surface_swell(x + 1.0) - _surface_swell(x - 1.0)) * 0.5
+		for _index in range(count):
+			var spray := rng.randf_range(-7.0 - 22.0 * breaking, 9.0)
+			var pixel := Vector2(x + rng.randf_range(-4.0, 4.0) + minf(spray, 0.0) * 0.52,
+				251.0 + crest + spray)
+			var lip := 1.0 - smoothstep(1.0, 11.0, absf(spray))
+			var size := rng.randi_range(5, 10) + roundi(lip * rng.randf_range(2.0, 9.0))
+			var ink := Color("#e3f8ef").lerp(Color("#648d81"), 1.0 - smoothstep(-9.0, -2.0, spray))
+			ink.a = lerpf(0.46, 1.0, breaking) * rng.randf_range(0.60, 1.0)
+			var glyph := letters[rng.randi_range(0, letters.length() - 1)]
+			var letter := _water_label(font, glyph, pixel, size, ink)
+			letter.rotation.z = -atan(slope) * lip + rng.randf_range(-0.90, 0.90)
+			letter.outline_size = 1 if lip > 0.8 else 0
 			letter.outline_modulate = Color(0.22, 0.39, 0.38, ink.a * 0.6)
 
 	_water_label(font, "def idea(): ...", Vector2(59, 286), 11, Color("#c7edba"))
