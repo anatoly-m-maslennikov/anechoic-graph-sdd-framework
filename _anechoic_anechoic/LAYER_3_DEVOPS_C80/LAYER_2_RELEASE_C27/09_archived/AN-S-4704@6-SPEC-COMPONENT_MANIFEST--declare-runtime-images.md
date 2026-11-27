@@ -8,9 +8,9 @@ context:
   template: component_manifest
   lens: SPEC
 state:
-  status: draft
-  version: 7
-  updated_at: '2026-11-27T18:27:25.623815+00:00'
+  status: "archived"
+  version: 6
+  updated_at: "2026-11-26T15:52:25.502788+00:00"
 ---
 
 ## Summary
@@ -85,6 +85,9 @@ ComponentManifest(
                                                                                 'LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/LAYER_2_LOCAL_RELEASE_C63/LAYER_2_LOCAL_RELEASE_C63__tests']},
                       'LAYER_1_RUNTIME_IMAGES_C81__shared.TOOL_REGISTRY': {'private': ['parent',
                                                                                        'C63']},
+                      'LAYER_1_RUNTIME_IMAGES_C81__shared._BETA_REQUIRED': {'private': ['parent',
+                                                                                        'C63',
+                                                                                        'LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/LAYER_1_RUNTIME_IMAGES_C81/LAYER_1_RUNTIME_IMAGES_C81__tests']},
                       'LAYER_1_RUNTIME_IMAGES_C81__shared._LAYER_NAMES': {'private': ['parent',
                                                                                       'C63']},
                       'LAYER_1_RUNTIME_IMAGES_C81__shared._RUN_ID': {'private': ['parent',

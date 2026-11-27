@@ -11,9 +11,9 @@ relations:
   IS_SOLUTION_FOR:
   - AN-S-3191@5
 state:
-  status: draft
-  version: 7
-  updated_at: '2026-11-27T18:27:25.623815+00:00'
+  status: "archived"
+  version: 6
+  updated_at: "2026-11-27T15:50:51.353081+00:00"
 ---
 ## Summary
 
@@ -23,8 +23,8 @@ Forward an admitted MCP Tool call to the shared Backend
 
 ### Prose Claim
 
-MCP forwards the Tool name, arguments, and caller context to the C45
-shared Tool coordinator. It returns the Backend result or a failure.
+MCP forwards the Tool name, arguments, and caller context to the selected
+`current` or `beta_next` Backend. It returns the Backend result or a failure.
 
 ### Formal Claim
 
@@ -41,8 +41,12 @@ component_workflow(
                     {'kind': 'trigger'}}},
             }},
             'forwarding': {'on': {
-                'backend_call_completed': {'target': 'responding', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'effect', 'target': 'C45', 'outcome': 'succeeded'}}},
+                'backend_call_completed': [
+                    {'target': 'responding', 'guard': {'type': 'matchesTrace', 'params':
+                        {'kind': 'effect', 'target': 'C45', 'outcome': 'succeeded'}}},
+                    {'target': 'responding', 'guard': {'type': 'matchesTrace', 'params':
+                        {'kind': 'effect', 'target': 'C91', 'outcome': 'succeeded'}}},
+                ],
                 'tool_call_refused_or_failed': {'target': 'failed', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'output', 'outcome': 'failed'}}},
             }},

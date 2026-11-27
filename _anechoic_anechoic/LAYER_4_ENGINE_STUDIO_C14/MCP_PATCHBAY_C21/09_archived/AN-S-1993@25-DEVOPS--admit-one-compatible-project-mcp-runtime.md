@@ -5,11 +5,11 @@ container:
   component: C21
 tier: 3
 context:
-  lens: DES
+  lens: DevOps
 state:
-  status: "active"
-  version: 24
-  updated_at: "2026-11-24T23:45:07.548337+00:00"
+  status: "archived"
+  version: 25
+  updated_at: "2026-11-27T18:09:40.995150+00:00"
 ---
 ## Summary
 

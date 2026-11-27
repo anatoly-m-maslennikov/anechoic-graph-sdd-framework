@@ -12,8 +12,8 @@ relations:
   - AN-S-4794@1
 state:
   status: "active"
-  version: 3
-  updated_at: '2026-11-26T16:38:00.102504+00:00'
+  version: 5
+  updated_at: "2026-11-27T18:48:36.109195+00:00"
 ---
 
 ## Summary
@@ -47,12 +47,8 @@ component_workflow(
                     {'kind': 'trigger'}}},
             }},
             'running': {'on': {
-                'project_run_succeeded': [
-                    {'target': 'displaying', 'guard': {'type': 'matchesTrace', 'params':
-                        {'kind': 'effect', 'target': 'C45', 'outcome': 'succeeded'}}},
-                    {'target': 'displaying', 'guard': {'type': 'matchesTrace', 'params':
-                        {'kind': 'effect', 'target': 'C91', 'outcome': 'succeeded'}}},
-                ],
+                'project_run_succeeded': {'target': 'displaying', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'C45', 'outcome': 'succeeded'}}},
                 'project_run_failed': {'target': 'failed', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'output', 'outcome': 'failed'}}},
             }},
@@ -71,5 +67,5 @@ component_workflow(
 
 ## Details
 
-The Formal Claim covers View Run. C91 serves `beta_next`. C45 serves
-`current`. Trace conformance requires recorded evidence.
+The Formal Claim covers View Run through C45. Trace conformance requires
+recorded evidence.

@@ -8,13 +8,12 @@ context:
   template: DECISION
   lens: DES
 state:
-  status: active
-  version: 6
-  updated_at: "2026-11-27T17:36:37.991574+00:00"
+  status: "active"
+  version: 7
+  updated_at: "2026-11-27T18:48:36.365236+00:00"
 relations:
   IS_SOLUTION_FOR:
   - AN-S-4809@6
-
 ---
 
 ## Summary
@@ -31,8 +30,8 @@ shared mode, release every acquired lease on every exit, including errors
 and stale-binding refusal. C68 owns the lease record. Revalidate after
 dispatch and discard the result if the binding changed.
 
-Select C91 with `beta_next`. Before cutover, compare catalog capabilities,
-results, and errors on the same Project against the immutable Beta baseline.
+Run C91 through its standalone entry points. Compare catalog capabilities,
+results, and errors on the same Project when verifying standalone runs.
 
 ### Formal Claim
 

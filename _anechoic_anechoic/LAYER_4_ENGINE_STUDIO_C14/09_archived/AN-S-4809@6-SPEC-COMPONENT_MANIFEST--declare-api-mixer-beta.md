@@ -8,9 +8,9 @@ context:
   template: component_manifest
   lens: SPEC
 state:
-  status: draft
-  version: 8
-  updated_at: '2026-11-27T18:27:25.623815+00:00'
+  status: "archived"
+  version: 6
+  updated_at: "2026-11-27T17:36:37.991574+00:00"
 ---
 
 ## Summary
@@ -102,7 +102,7 @@ ComponentManifest(
 
 #### Guarantee
 
-Serve the installed Tool capabilities through private HTTP, including
+Serve the established 33 Tool capabilities through private HTTP, including
 query, Workspace, View, saved SQL, projection, and Atom lifecycle operations.
 MCP maps the catalog to its transport and forwards calls and results.
 Enforce the selected Project's Tool blacklist.

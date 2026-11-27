@@ -8,9 +8,9 @@ context:
   template: component_manifest
   lens: SPEC
 state:
-  status: draft
-  version: 14
-  updated_at: '2026-11-27T18:02:38.116327+00:00'
+  status: "archived"
+  version: 13
+  updated_at: "2026-11-27T17:41:27.738721+00:00"
 ---
 
 ## Summary
@@ -48,7 +48,7 @@ ComponentManifest(
                    'source_function_sizes': {'transport': 'cli',
                                              'runner': 'node',
                                              'path': 'LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_FRONTEND/scripts/source-function-sizes.ts'}},
-        'client': [{'component': 'C21', 'interface': 'tool_rest'}]},
+        'client': [{'component': 'C21', 'interface': 'workbench_http'}]},
  'state': {'reads': ['selected Project Workspace and View',
                      'query pages and check verdicts'],
            'writes': ['browser preferences',
@@ -105,66 +105,5 @@ declare_trace_contract(
  'page_refused': {'must_effect': (('C46.run_error', 'shown'),),
                   'forbid_effect': ('C46.result_display',)},
  'failed': {'forbid_effect': ('C46.result_display',)}},
-)
-```
-
-### Call the Backend Tool API from the Console page
-
-#### Guarantee
-
-Read the admitted Project instance from the `anechoic-project-instance`
-meta element. Require 64 lowercase hexadecimal characters before sending
-a request. Send Tool calls to same-origin `POST /tools` with
-`X-Anechoic-Project-Instance`.
-
-Send the canonical Tool envelope with `name`, `arguments`, `session_id`,
-and `public_base_url`. Supply `arguments.project_root` when the page
-URL selects a Project root.
-
-Return `result.value` only for a valid Tool result with a matching Project
-receipt. Preserve a typed refusal's code and message, including on HTTP
-200. Reject a malformed envelope. Keep the existing Console Run, Check,
-page delivery, and embedded MCP behavior.
-
-#### References
-
-AN-S-4809@6 and AN-T-4085@1-draft.
-
-```python trace
-declare_trace_contract(
-    action='workbench_frontend_call_tool',
-    cases={'succeeded': {'must_effect': (('C21.tool_rest',
-                                'requested',
-                                {'endpoint': 'POST /tools',
-                                 'instance_header': 'X-Anechoic-Project-Instance'}),
-                               ('C46.project_receipt', 'matched')),
-               'same_values': ((('rest_requested', 'instance_id'),
-                                ('project_receipt', 'instance_id')),),
-               'value_types': {('rest_requested', 'instance_id'): 'nonempty_string',
-                               ('project_receipt', 'instance_id'): 'nonempty_string'},
-               'must_precede': ((('C21.tool_rest', 'requested'),
-                                 ('C46.project_receipt',
-                                  'matched')),)},
- 'refused': {'must_effect': (('C21.tool_rest',
-                              'requested',
-                              {'endpoint': 'POST /tools',
-                               'instance_header': 'X-Anechoic-Project-Instance'}),
-                             ('C46.typed_refusal', 'preserved')),
-             'same_values': ((('typed_refusal', 'code'),
-                              ('return_refusal', 'code')),
-                             (('typed_refusal', 'message'),
-                              ('return_refusal', 'message'))),
-             'forbid_effect': ('C46.project_receipt',)},
- 'receipt_refused': {'must_effect': (('C21.tool_rest',
-                                      'requested',
-                                      {'endpoint': 'POST /tools',
-                                       'instance_header': 'X-Anechoic-Project-Instance'}),),
-                     'forbid_effect': ('C46.project_receipt',)},
- 'invalid_page_instance': {'forbid_effect': ('C21.tool_rest',)},
- 'invalid_response': {'must_effect': (('C21.tool_rest',
-                                       'requested',
-                                       {'endpoint': 'POST /tools',
-                                        'instance_header': 'X-Anechoic-Project-Instance'}),),
-                      'forbid_effect': ('C46.project_receipt',)}},
 )
 ```

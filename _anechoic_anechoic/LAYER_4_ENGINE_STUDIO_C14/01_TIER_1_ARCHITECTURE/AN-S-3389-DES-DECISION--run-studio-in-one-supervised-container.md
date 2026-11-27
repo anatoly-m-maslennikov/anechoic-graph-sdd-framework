@@ -11,9 +11,9 @@ relations:
   IS_SOLUTION_FOR:
   - AN-S-4800
 state:
-  status: active
-  version: 9
-  updated_at: "2026-11-27T17:35:01.150345+00:00"
+  status: "active"
+  version: 10
+  updated_at: "2026-11-27T18:48:35.765150+00:00"
 ---
 
 ## Summary
@@ -23,6 +23,9 @@ Run Studio in one supervised container
 ## Claim
 
 ### Prose Claim
+
+This Decision describes the standalone supervised Studio design.
+For the Current release runtime, apply AN-S-1993.
 
 Run Kernel, Orchestrator, Backend, and MCP as separate long-lived processes in one container. Kernel owns the Project database through Database Server C71. Its read-only Model and Structure Hosts expose the same admitted generation. Kernel commits artifacts and projection rows together. Orchestrator owns the watcher and job state. Isolated Workers build from pinned inputs. Backend serves Web and MCP and keeps durable Project state in Kernel.
 
@@ -42,10 +45,8 @@ flowchart LR
 
 Web and MCP use Backend's API with zero cross-Component imports. The Codex Hook returns its Project assertion to the host with zero cross-Component imports or outbound calls. Tools may import across Components only from Adapters. Adapters import no other Component. Declare Code Access, calls, and state in Manifests. Bind exact Contracts to the owning Packages.
 
-Use one `stack` selector in `LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/project.toml`. The parallel Components use `<name>_beta_<id>`. Use `beta_next` for the supervised stack and keep `current` selectable.
-
-Compare the immutable candidate and baseline images with the same fixture.
-Check each discrepancy against its Contract before cutover.
+When comparing this design with a baseline, use the same fixture for both.
+Check each discrepancy against its Contract.
 
 Apply the Orchestrator and Worker Contracts to watcher coverage,
 startup capture and replay, and incremental startup (AN-S-3337 and

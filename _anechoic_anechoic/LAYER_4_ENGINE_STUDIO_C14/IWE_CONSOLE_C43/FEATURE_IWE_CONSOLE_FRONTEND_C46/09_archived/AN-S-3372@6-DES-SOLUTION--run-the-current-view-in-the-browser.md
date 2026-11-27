@@ -9,11 +9,11 @@ context:
   lens: DES
 relations:
   ANSWERS:
-  - AN-S-3060@14-draft
+  - AN-S-3060@13
 state:
-  status: draft
-  version: 7
-  updated_at: '2026-11-27T18:02:38.116327+00:00'
+  status: "archived"
+  version: 6
+  updated_at: "2026-11-27T17:41:27.738432+00:00"
 ---
 
 ## Summary
@@ -96,50 +96,6 @@ component_workflow(
             'page_error': {'on': {'return': {'to': 'done',
                                              'expect': {'kind': 'output',
                                                         'outcome': 'page_refused'}}}},
-            'done': {'type': 'final'}}},
-)
-```
-
-```python
-component_workflow(
-    component='C46',
-    action='workbench_frontend_call_tool',
-    machine={'id': 'c46_tool_rest',
- 'initial': 'idle',
- 'states': {'idle': {'on': {'tool_requested': {'to': 'sending',
-                                               'expect': {'kind': 'trigger'}},
-                            'page_instance_invalid': {'to': 'done',
-                                                      'expect': {'kind': 'output',
-                                                                 'outcome': 'invalid_page_instance'}}}},
-            'sending': {'on': {'rest_requested': {'to': 'waiting',
-                                                  'expect': {'kind': 'effect',
-                                                             'target': 'C21.tool_rest',
-                                                             'outcome': 'requested',
-                                                             'detail': {'endpoint': 'POST '
-                                                                                    '/tools',
-                                                                        'instance_header': 'X-Anechoic-Project-Instance'}}}}},
-            'waiting': {'on': {'project_receipt': {'to': 'accepting',
-                                                   'expect': {'kind': 'effect',
-                                                              'target': 'C46.project_receipt',
-                                                              'outcome': 'matched',
-                                                              'detail': {}}},
-                               'typed_refusal': {'to': 'refusing',
-                                                 'expect': {'kind': 'effect',
-                                                            'target': 'C46.typed_refusal',
-                                                            'outcome': 'preserved',
-                                                            'detail': {}}},
-                               'project_receipt_mismatch': {'to': 'done',
-                                                            'expect': {'kind': 'output',
-                                                                       'outcome': 'receipt_refused'}},
-                               'invalid_response': {'to': 'done',
-                                                    'expect': {'kind': 'output',
-                                                               'outcome': 'invalid_response'}}}},
-            'accepting': {'on': {'return_value': {'to': 'done',
-                                                  'expect': {'kind': 'output',
-                                                             'outcome': 'succeeded'}}}},
-            'refusing': {'on': {'return_refusal': {'to': 'done',
-                                                   'expect': {'kind': 'output',
-                                                              'outcome': 'refused'}}}},
             'done': {'type': 'final'}}},
 )
 ```
