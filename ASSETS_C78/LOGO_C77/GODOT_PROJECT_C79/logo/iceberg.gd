@@ -39,9 +39,14 @@ func _ready() -> void:
 	if icon:
 		ice_profile[0] = Vector4(1.92, 0.92, 0.46, 0.00)
 		ice_profile[1] = Vector4(1.62, 0.96, 0.59, -0.04)
-	_build_view(figure_scale)
+		for index in range(2, ice_profile.size() - 1):
+			var section: Vector4 = ice_profile[index]
+			section.y *= 1.34
+			ice_profile[index] = section
+	_build_view(figure_scale, icon)
 	var ice := _build_ice()
-	ice.set_shader_parameter("opening_mask", _build_path())
+	ice.set_shader_parameter("opening_mask", _build_path(icon))
+	ice.set_shader_parameter("route_strength", 0.16 if icon else 1.0)
 	for index in range(-1, 2):
 		_build_summit_figure(figure_scale, icon, index)
 	_build_title(icon)
@@ -53,7 +58,7 @@ func _ready() -> void:
 		else:
 			_save_png(arguments[export_index + 1])
 
-func _build_view(figure_scale: float) -> void:
+func _build_view(figure_scale: float, icon: bool) -> void:
 	var camera := Camera3D.new()
 	camera.name = "ProfileCamera"
 	camera.projection = Camera3D.PROJECTION_ORTHOGONAL
@@ -70,15 +75,16 @@ func _build_view(figure_scale: float) -> void:
 	var figure_head := _summit() + FIGURE_HEAD * figure_scale
 	var wind_origin := Vector2(figure_head.x, -figure_head.y) / VIEW_SIZE + Vector2(0.5, 0.5)
 	shader.set_shader_parameter("wind_origin", wind_origin)
+	shader.set_shader_parameter("show_technology", not icon)
 	var panel := MeshInstance3D.new()
 	panel.name = "AnalogSkyDigitalWater"
 	panel.mesh = background
 	panel.material_override = shader
 	panel.position.z = -7.0
 	add_child(panel)
-	_build_water_text()
+	_build_water_text(icon)
 
-func _build_water_text() -> void:
+func _build_water_text(icon: bool) -> void:
 	var font := SystemFont.new()
 	font.font_names = PackedStringArray(["Menlo", "DejaVu Sans Mono", "monospace"])
 	var letters := "aWdeIrTpsNoMtyAVeLcgUkn"
@@ -103,6 +109,9 @@ func _build_water_text() -> void:
 			letter.rotation.z = -atan(slope) * lip + rng.randf_range(-0.90, 0.90)
 			letter.outline_size = 1 if lip > 0.8 else 0
 			letter.outline_modulate = Color(0.22, 0.39, 0.38, ink.a * 0.6)
+
+	if icon:
+		return
 
 	_water_label(font, "def idea(): ...", Vector2(59, 286), 11, Color("#c7edba"))
 	_water_label(font, "record Idea() {}", Vector2(59, 301), 11, Color("#c6e6f0"))
@@ -193,13 +202,14 @@ func _ice_face(surface: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, variati
 		surface.set_color(color)
 		surface.add_vertex(point)
 
-func _build_path() -> ImageTexture:
+func _build_path(icon: bool) -> ImageTexture:
 	var above := _route_sections(ROUTE_TOP, 0.0, 140)
 	var underwater := _route_sections(0.0, ROUTE_BOTTOM, 200)
 	assert(above[-1] == underwater[0])
-	_build_path_section(above, false)
-	_build_path_section(underwater, true)
-	_build_oceanarium(underwater)
+	if not icon:
+		_build_path_section(above, false)
+		_build_path_section(underwater, true)
+		_build_oceanarium(underwater)
 	var mask := Image.create_empty(SECTION_RESOLUTION, SECTION_RESOLUTION, false, Image.FORMAT_R8)
 	_cut_passage(mask, above)
 	_cut_passage(mask, underwater)

@@ -2,6 +2,7 @@ shader_type spatial;
 render_mode unshaded, cull_disabled, fog_disabled;
 
 uniform vec2 wind_origin;
+uniform bool show_technology = true;
 
 float gust(vec2 p, vec2 start, float end, float rise, float bow, float width) {
 	float t = clamp((p.x - start.x) / (end - start.x), 0.0, 1.0);
@@ -191,9 +192,11 @@ void fragment() {
 		float depth = (p.y - 0.5) * 2.0;
 		vec3 water = mix(vec3(0.236, 0.455, 0.47), vec3(0.057, 0.162, 0.206), smoothstep(0.0, 0.98, depth));
 		water = surface_water(pixel, swell, depth_below_swell, water);
-		water = circuitry(pixel, water);
-		water = electricity(pixel, water);
-		water = atoms_and_molecules(pixel, water);
+		if (show_technology) {
+			water = circuitry(pixel, water);
+			water = electricity(pixel, water);
+			water = atoms_and_molecules(pixel, water);
+		}
 		tint = mix(tint, water, smoothstep(-1.0, 1.0, depth_below_swell));
 	}
 	ALBEDO = tint;
