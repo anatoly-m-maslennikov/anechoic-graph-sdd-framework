@@ -56,6 +56,23 @@ def _additional_statements(address, args):
     return statements
 
 
+def _value_format(args, declaration, model_class_bindings):
+    model_class = declaration.get("model_value_format")
+    if model_class is not None:
+        targets = (model_class_bindings or {}).get(model_class)
+        if not isinstance(targets, (set, frozenset, list, tuple)) or len(set(targets)) != 1:
+            raise ValueError(f"missing or ambiguous Model class binding: {model_class}")
+        target = _model_base_path(next(iter(targets)))
+        return f" [{target}//]"
+    else:
+        format_name = _format(args['value_format'])
+        if "maximum_value" in args:
+            if "minimum_value" not in args:
+                raise ValueError("bounded range requires minimum_value")
+            format_name += f", {args['minimum_value']}..{args['maximum_value']}"
+        return f" [{format_name}]"
+
+
 def _property_statements(base, name, args, declaration, model_class_bindings):
     address = f"{base}.{name}"
     statement = address
@@ -64,20 +81,7 @@ def _property_statements(base, name, args, declaration, model_class_bindings):
     if "value_format" in args or "value_cardinality" in args:
         statement += " ::"
         if "value_format" in args:
-            model_class = declaration.get("model_value_format")
-            if model_class is not None:
-                targets = (model_class_bindings or {}).get(model_class)
-                if not isinstance(targets, (set, frozenset, list, tuple)) or len(set(targets)) != 1:
-                    raise ValueError(f"missing or ambiguous Model class binding: {model_class}")
-                target = _model_base_path(next(iter(targets)))
-                statement += f" [{target}//]"
-            else:
-                format_name = _format(args['value_format'])
-                if "maximum_value" in args:
-                    if "minimum_value" not in args:
-                        raise ValueError("bounded range requires minimum_value")
-                    format_name += f", {args['minimum_value']}..{args['maximum_value']}"
-                statement += f" [{format_name}]"
+            statement += _value_format(args, declaration, model_class_bindings)
         elif args.get("value_cardinality") == 0:
             statement += " []"
         if "value_cardinality" in args:

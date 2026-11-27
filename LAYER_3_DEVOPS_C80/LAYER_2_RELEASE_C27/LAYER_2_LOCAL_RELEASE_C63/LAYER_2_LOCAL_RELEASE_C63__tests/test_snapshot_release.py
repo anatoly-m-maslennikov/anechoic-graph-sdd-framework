@@ -68,7 +68,7 @@ class SnapshotReleaseFixture(SimpleReleaseFixture):
         self.calls.append((phase, argv))
         self.assertEqual(self.source, cwd)
         self.assertIn(str(self.source / _SUITE), argv)
-        self.assertIn(("--project-root", str(self.source)), tuple(zip(argv, argv[1:])))
+        self.assertIn(("--project-root", str(self.source)), tuple(zip(argv, argv[1:], strict=False)))
         output = ""
         if phase in {"image-tests", "canary"}:
             self.assertEqual(self.image_id, argv[argv.index("--candidate-image") + 1])
@@ -81,7 +81,7 @@ class SnapshotReleaseFixture(SimpleReleaseFixture):
 
     def assert_release_gate(self, argv):
         self.assertEqual(self.image_id, argv[argv.index("--candidate-image") + 1])
-        self.assertIn(("--canary-project-root", str(self.root)), tuple(zip(argv, argv[1:])))
+        self.assertIn(("--canary-project-root", str(self.root)), tuple(zip(argv, argv[1:], strict=False)))
         handoff = json.loads(argv[argv.index("--canary-selection") + 1])
         self.assertEqual(_MANIFEST.as_posix(), handoff["manifest_path"])
         settings = self.root / _SETTINGS

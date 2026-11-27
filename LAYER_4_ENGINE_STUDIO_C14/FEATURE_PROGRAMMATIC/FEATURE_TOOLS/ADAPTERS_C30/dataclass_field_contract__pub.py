@@ -46,6 +46,10 @@ def validate_field_contracts(declaration):
         if field["annotation"] not in {"str", "int", "float", "bool", "datetime", "markdown", "atom_id"}:
             raise ValueError(f"unsupported compiler format: {field['annotation']!r}")
         _cardinality(metadata["value_cardinality"])
+    _validate_incoming(args)
+
+
+def _validate_incoming(args):
     incoming = args.get("incoming_model_relations", ())
     if not isinstance(incoming, tuple):
         raise ValueError("incoming model relations must be a tuple")

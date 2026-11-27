@@ -17,13 +17,18 @@ def _check(value: Any, path: str) -> None:
     elif isinstance(value, list):
         for index, item in enumerate(value):
             _check(item, f"{path}[{index}]")
-    elif type(value) not in {str, int, float, bool} or (type(value) is float and not math.isfinite(value)):
-        raise ValueError(f"{path} cannot be represented in a native Manifest literal")
-
+    elif type(value) not in {str, int, float, bool} or (
+        type(value) is float and not math.isfinite(value)
+    ):
+        raise ValueError(
+            f"{path} cannot be represented in a native Manifest literal"
+        )
 
 
 def legacy_settings_to_manifest(
-    settings: dict[str, Any], *, runtime_settings: dict[str, Any] | None = None,
+    settings: dict[str, Any],
+    *,
+    runtime_settings: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Preserve each supplied value, moving the two identity fields to the Manifest.
 
@@ -45,15 +50,23 @@ def legacy_settings_to_manifest(
         parameters["runtime"] = deepcopy(runtime_settings)
     project = parameters.get("project")
     artifacts = parameters.get("artifacts")
-    identity = artifacts.get("identity") if isinstance(artifacts, dict) else None
+    identity = (
+        artifacts.get("identity") if isinstance(artifacts, dict) else None
+    )
     name = project.get("name") if isinstance(project, dict) else None
-    prefix = identity.get("project_prefix") if isinstance(identity, dict) else None
+    prefix = (
+        identity.get("project_prefix") if isinstance(identity, dict) else None
+    )
     if not isinstance(name, str) or not name.strip() or name != name.strip():
         raise ValueError("project.name must be a non-empty exact name")
     if not isinstance(prefix, str) or re.fullmatch(r"[A-Z]+", prefix) is None:
-        raise ValueError("artifacts.identity.project_prefix must contain uppercase letters")
+        raise ValueError(
+            "artifacts.identity.project_prefix must contain uppercase letters"
+        )
     if len(parameters) + 2 > 20:
-        raise ValueError("Project Settings exceed the native Manifest parameter limit")
+        raise ValueError(
+            "Project Settings exceed the native Manifest parameter limit"
+        )
     del project["name"]
     del identity["project_prefix"]
     return {"name": name, "prefix": prefix, "parameters": parameters}

@@ -5,7 +5,9 @@ import time
 import unittest
 from unittest.mock import patch
 
-from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.test_suite__shared import prune_private_tmp as cleanup
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.test_suite__shared import (
+    prune_private_tmp as cleanup,
+)
 
 
 class PrivateScratchCleanupTests(unittest.TestCase):
@@ -16,7 +18,8 @@ class PrivateScratchCleanupTests(unittest.TestCase):
             now = time.time()
             old = now - cleanup.RETENTION_SECONDS - 60
             stale, unmarked, fresh, active, mounted = (
-                root / name for name in ("stale", "unmarked", "fresh", "active", "mounted")
+                root / name
+                for name in ("stale", "unmarked", "fresh", "active", "mounted")
             )
             for path in (stale, unmarked, fresh, active, mounted, project):
                 path.mkdir(mode=0o700)
@@ -26,7 +29,11 @@ class PrivateScratchCleanupTests(unittest.TestCase):
                     os.utime(path / cleanup.MARKER, (old, old))
                 os.utime(path, (old, old))
             (root / "link").symlink_to(stale, target_is_directory=True)
-            with patch.object(cleanup, "protected_paths", return_value=([mounted / "output"], [active / "file"])):
+            with patch.object(
+                cleanup,
+                "protected_paths",
+                return_value=([mounted / "output"], [active / "file"]),
+            ):
                 cleanup.prune(root, project, now)
             self.assertFalse(stale.exists())
             for path in (unmarked, fresh, active, mounted, project):

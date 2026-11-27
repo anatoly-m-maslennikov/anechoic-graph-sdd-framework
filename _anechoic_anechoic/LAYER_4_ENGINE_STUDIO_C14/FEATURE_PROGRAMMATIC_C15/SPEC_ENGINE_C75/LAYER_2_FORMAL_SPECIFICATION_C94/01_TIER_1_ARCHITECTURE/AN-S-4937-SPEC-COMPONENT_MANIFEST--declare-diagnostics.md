@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 2
-  updated_at: "2026-11-27T05:39:19.358055+00:00"
+  version: 4
+  updated_at: '2026-11-27T12:22:53.034284+00:00'
 ---
 ## Summary
 
@@ -55,6 +55,10 @@ declare_entity(
 
 Form a diagnostic from the source, field, and message of a finding.
 
+Aggregate a list of comparison status strings. For the input observation,
+`has_conflict` means the list contains `conflicting`.
+`unresolved_or_empty` means the list is empty or contains `unresolved`.
+
 ```python trace
 declare_trace_contract(
     action='finding',
@@ -65,5 +69,25 @@ declare_trace_contract(
         (('requested', 'field'), ('result_returned', 'field')),
         (('requested', 'message'), ('result_returned', 'message')),
     ),
+)
+```
+
+```python trace
+declare_trace_contract(
+    action='verdict',
+    cases={
+        'conflicting': {'must_effect': ((
+            'C90.verdict_input', 'observed',
+            {'has_conflict': True},
+        ),)},
+        'unresolved': {'must_effect': ((
+            'C90.verdict_input', 'observed',
+            {'has_conflict': False, 'unresolved_or_empty': True},
+        ),)},
+        'matched': {'must_effect': ((
+            'C90.verdict_input', 'observed',
+            {'has_conflict': False, 'unresolved_or_empty': False},
+        ),)},
+    },
 )
 ```

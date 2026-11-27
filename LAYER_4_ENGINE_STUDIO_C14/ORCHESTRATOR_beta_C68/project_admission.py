@@ -12,7 +12,11 @@ import sys
 from typing import Literal
 
 from .jobs import ENGINE as _ENGINE
-_MODULE = "FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.FEATURE_MODEL_VALIDATION.project_admission__pub"
+
+_MODULE = (
+    "FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.FEATURE_MOD"
+    "EL_VALIDATION.project_admission__pub"
+)
 
 
 @dataclass(frozen=True, config=ConfigDict(strict=True, extra="forbid"))
@@ -50,7 +54,13 @@ class _WireBinding(BaseModel):
 
     def binding(self):
         data = self.model_dump()
-        for key in ("root", "control_root", "control_relative", "manifest_path", "host_root"):
+        for key in (
+            "root",
+            "control_root",
+            "control_relative",
+            "manifest_path",
+            "host_root",
+        ):
             if data[key] is not None:
                 data[key] = Path(data[key])
         data["tool_blacklist"] = tuple(data["tool_blacklist"])
@@ -102,19 +112,44 @@ class AdmissionClient:
         try:
             if os.getenv("ANECHOIC_TEST_IMAGE_DEADLINES") != "0":
                 parent.settimeout(90)
-            env = {**{k: v for k, v in os.environ.items() if k != "PYTHONHOME"}, "PYTHONPATH": str(_ENGINE)}
-            process = subprocess.Popen([sys.executable, "-B", "-P", "-m", _MODULE], cwd=_ENGINE.parent, env=env,
-                                       stdin=child, stdout=child)
+            env = {
+                **{k: v for k, v in os.environ.items() if k != "PYTHONHOME"},
+                "PYTHONPATH": str(_ENGINE),
+            }
+            process = subprocess.Popen(
+                [sys.executable, "-B", "-P", "-m", _MODULE],
+                cwd=_ENGINE.parent,
+                env=env,
+                stdin=child,
+                stdout=child,
+            )
         except BaseException:
             parent.close()
             raise
         finally:
             child.close()
-        self._connection, self._responses, self._process = parent, parent.makefile("rb"), process
+        self._connection, self._responses, self._process = (
+            parent,
+            parent.makefile("rb"),
+            process,
+        )
 
-    def __call__(self, project_root, control_root=None, *, instance_id=None, host_root=None):
-        request = {"project_root": str(project_root), "control_root": str(control_root) if control_root is not None else None,
-                   "instance_id": instance_id, "host_root": str(host_root) if host_root is not None else None}
+    def __call__(
+        self,
+        project_root,
+        control_root=None,
+        *,
+        instance_id=None,
+        host_root=None,
+    ):
+        request = {
+            "project_root": str(project_root),
+            "control_root": str(control_root)
+            if control_root is not None
+            else None,
+            "instance_id": instance_id,
+            "host_root": str(host_root) if host_root is not None else None,
+        }
         with self._lock:
             if self._closed:
                 raise RuntimeError("Project admission service closed")
@@ -124,11 +159,15 @@ class AdmissionClient:
                 self._stop()
                 raise RuntimeError("Project admission service closed")
             try:
-                self._connection.sendall(json.dumps(request).encode("utf-8") + b"\n")
+                self._connection.sendall(
+                    json.dumps(request).encode("utf-8") + b"\n"
+                )
                 response = json.loads(self._responses.readline())
             except (OSError, UnicodeError, json.JSONDecodeError) as error:
                 self._stop()
-                raise RuntimeError("Project admission service unavailable") from error
+                raise RuntimeError(
+                    "Project admission service unavailable"
+                ) from error
             return _selection(response)
 
     def _stop(self):

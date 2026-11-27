@@ -33,10 +33,39 @@ def invokeRenderer (claim : Val) (keywords : List (String × Val)) : EResult :=
 def rendererClaim (spec : Except String Lean.Json) : Except String Lean.Json :=
   spec >>= (fun program => program.getObjVal? "claim")
 
+def renderDetail : Lean.Json := Lean.Json.mkObj [("model", .str "request_normalized_model")]
+
 def renderingDeclared : Bool :=
   (rendererClaim AnechoicSpec.contract >>= (fun claim => claim.getObjVal? "must_effect")).toOption ==
     some (Lean.Json.arr #[.arr #[.str "C87.mermaid_diagram", .str "rendered",
-      Lean.Json.mkObj [("model", .str "request_normalized_model")]]])
+      renderDetail]])
+
+def rendererState (states : Array Lean.Json) (name : String) : Except String Lean.Json :=
+  match states.find? (fun state => (state.getObjValAs? String "name").toOption == some name) with
+  | some state => .ok state
+  | none => .error ("Missing renderer Solution state " ++ name)
+
+def rendererStep (states : Array Lean.Json) (name : String) (guard : Lean.Json) : Except String String := do
+  let edges ← (← rendererState states name).getObjValAs? (List Lean.Json) "transitions"
+  let [edge] := edges | throw ("Unobserved renderer Solution transitions at " ++ name)
+  let expected ← edge.getObjVal? "expect"
+  if expected != guard then
+    throw ("Unobserved renderer Solution guard at " ++ name ++ ": " ++ expected.compress)
+  edge.getObjValAs? String "target"
+
+def checkRendererWorkflow : Except String Unit := do
+  let claim ← rendererClaim AnechoicSpec.solution
+  if (← claim.getObjValAs? String "action") != "render_solution" then
+    throw "Expected the render_solution Action"
+  let states ← (← claim.getObjVal? "states").getArr?
+  let first ← rendererStep states (← claim.getObjValAs? String "initial")
+    (Lean.Json.mkObj [("kind", .str "trigger")])
+  let output ← rendererStep states first (Lean.Json.mkObj [("kind", .str "effect"),
+    ("target", .str "C87.mermaid_diagram"), ("outcome", .str "rendered"), ("detail", renderDetail)])
+  let final ← rendererStep states output
+    (Lean.Json.mkObj [("kind", .str "output"), ("outcome", .str "rendered")])
+  if !(← (← rendererState states final).getObjValAs? Bool "final") then
+    throw "Renderer Solution output does not end the observed path"
 
 def shapeInput (raw : Lean.Json) (names : List String) : Except String Val := do
   let fields ← raw.getObjVal? "fields"
@@ -78,10 +107,13 @@ def diagramStatus (names : List String) : Except String Lean.Json := do
   return .arr #[rendererResult (invokeRenderer claim []) expected,
                 rendererResult (invokeRenderer claim [("action", .unit)]) expected]
 
-#eval IO.println (Lean.toJson ([["header", "content"], ["content", "header"]].map
+def rendererCases : Lean.Json := Lean.toJson ([["header", "content"], ["content", "header"]].map
     (fun names => match diagramStatus names with
       | .ok status => status
-      | .error reason => .arr #[.str ("unresolved: " ++ reason), .str ("unresolved: " ++ reason)]))).compress
+      | .error reason => .arr #[.str ("unresolved: " ++ reason), .str ("unresolved: " ++ reason)]))
+
+#eval IO.println (Lean.Json.mkObj [("cases", rendererCases), ("solution_gap",
+  match checkRendererWorkflow with | .ok _ => .null | .error reason => .str reason)]).compress
 '''
 
 
@@ -123,6 +155,17 @@ def _shape_case(order, row):
             'calls': {'positional': positional, 'action_none': keyword}}
 
 
+def _renderer_results(observed):
+    if not isinstance(observed, dict) or observed.keys() != {'cases', 'solution_gap'}:
+        raise ValueError('Lean did not return renderer cases and Solution coverage')
+    values, gap = observed['cases'], observed['solution_gap']
+    if not isinstance(values, list) or len(values) != len(_ORDERS):
+        raise ValueError('Lean did not return both configured shape cases')
+    if gap is not None and (not isinstance(gap, str) or not gap.strip()):
+        raise ValueError('Lean returned an invalid Solution coverage gap')
+    return [_shape_case(order, row) for order, row in zip(_ORDERS, values, strict=True)], gap
+
+
 def compare_renderer(root, request, formal_verifier, lean):
     """Check the two configured shape orders; other behavior is unmeasured."""
     pins = {role: request[role] for role in ('manifest', 'solution')}
@@ -149,20 +192,20 @@ def compare_renderer(root, request, formal_verifier, lean):
         authored = shape + '\n' + report['formal']['C87']['lean'].removeprefix('import Lean\n')
         root = Path(root).resolve(strict=True)
         export = report['public_export'] = export_pin(root / _SOURCE_DIR, 'render_solution', root, request.get('export_sha256'))
-        values = _observe(root, digests, export, authored, lean)
-        if not isinstance(values, list) or len(values) != len(_ORDERS):
-            raise ValueError('Lean did not return both configured shape cases')
-        cases = [_shape_case(order, row) for order, row in zip(_ORDERS, values, strict=True)]
+        cases, gap = _renderer_results(_observe(root, digests, export, authored, lean))
     except (OSError, ValueError, SyntaxError, KeyError, TypeError, subprocess.TimeoutExpired) as error:
         report['unresolved'].append(str(error))
         return report
     export['status'] = 'matched'
     report['cases'] = cases
+    report['solution_gap'] = gap
+    if gap is not None:
+        report['unresolved'].append(gap)
     values = [case['status'] for case in cases]
     if any(value.startswith('unresolved') for value in values):
         report['unresolved'].append('Renderer execution is unresolved in at least one case.')
     if 'conflicting' in values:
         report['status'] = 'mismatch'
-    elif values == ['matched'] * len(_ORDERS):
+    elif gap is None and values == ['matched'] * len(_ORDERS):
         report['status'] = 'no_mismatch_in_cases'
     return report

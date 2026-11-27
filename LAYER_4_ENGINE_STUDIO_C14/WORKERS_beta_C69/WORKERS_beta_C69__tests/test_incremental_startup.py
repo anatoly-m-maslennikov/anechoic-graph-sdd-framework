@@ -1,4 +1,5 @@
 """Check scoped startup checkpoint reconciliation without a database."""
+from .incremental_startup_cases import IncrementalStartupCases
 from collections import defaultdict
 from hashlib import sha256
 import json
@@ -10,9 +11,6 @@ import unittest
 from unittest.mock import patch
 
 from .WORKERS_beta_C69__tests__shared import command_with_fixture, generation_fixture
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
-    UnrepresentableCarrierDelta,
-)
 
 
 WORKER = "WORKERS_beta_C69.WORKERS_beta_C69__shared"
@@ -32,7 +30,7 @@ def carrier(number, status="active"):
             f"state: {{status: {status}, version: 1, updated_at: '2026-11-22T00:00:00Z'}}\n---\n\n## Summary\n\nTicket {number}.\n")
 
 
-class IncrementalStartupTest(unittest.TestCase):
+class IncrementalStartupTest(IncrementalStartupCases, unittest.TestCase):
     def setUp(self):
         self.tmp = TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
@@ -233,12 +231,6 @@ class IncrementalStartupTest(unittest.TestCase):
         self.assertIn("receipt", self.capture())
         self.assertEqual({"incompatible": True}, self.capture(archive_roots=self.roots))
 
-    def test_hash_probe_errors_fall_back_to_full_capture(self):
-        for error in (OSError("unreadable file"), UnrepresentableCarrierDelta("unavailable file hash")):
-            with patch("FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared.native_carrier_hashes",
-                       side_effect=error):
-                self.assertIn("receipt", self.capture())
-                self.assertEqual({"incompatible": True}, self.capture(archive_roots=self.roots))
 
     def test_archive_delta_excludes_wrong_status_and_keeps_valid_rows(self):
         invalid = self.archive / "AN-T-9-task.md"

@@ -1,7 +1,8 @@
 """Check emitted Lean declaration values against the admitted source model."""
 
-import json
 from decimal import Decimal
+from hashlib import sha256
+import json
 
 from ..LAYER_1_DIAGNOSTICS_C90._package__shared import finding, verdict
 from ..LAYER_2_SPEC_READING_C83.SPECIFICATION_MODEL_C85._package__shared import (
@@ -100,6 +101,27 @@ def _check_declarations(model, claims, actual, issues):
             issues.append(finding(source, role, 'Lean declaration differs from the normalized source'))
 
 
+def _bounded_report(witnesses, pair_results, claims):
+    result = framing_comparison(witnesses, pair_results, claims)
+    encoded = json.dumps([claims, result], sort_keys=True, allow_nan=False,
+                         separators=(',', ':')).encode('utf-8')
+    return {'status': 'bounded_match', 'framing_comparison': result,
+            'framing_result_pin': sha256(encoded).hexdigest()}
+
+
+def _run_validation(program, claims, shape, framing, witnesses, lean):
+    evaluation = run_lean_json(
+        program + '\nrun_cmd liftM <| IO.print "["\n'
+        + ''.join(shape.values()) + _evaluation(claims, framing, witnesses),
+        lean, parse_float=Decimal)
+    if not isinstance(evaluation, list) or len(evaluation) != len(shape) + 1:
+        raise ValueError('Unexpected Lean translation validation output')
+    tail = evaluation[-1]
+    if not isinstance(tail, list) or len(tail) != 3:
+        raise ValueError('Unexpected Lean translation validation output')
+    return evaluation[:-1], *tail
+
+
 def validate_translation(model, program, *, lean='lean', bounded_framing=False):
     """Check emitted declarations, shape metadata, and bounded framing witnesses."""
     normalized = normalize_spec(model)
@@ -123,16 +145,9 @@ def validate_translation(model, program, *, lean='lean', bounded_framing=False):
     pair_results = None
     if claims:
         shape, framing, witnesses = _projection_checks(model, claims, unresolved, bounded_framing)
-        evaluation = run_lean_json(program + '\nrun_cmd liftM <| IO.print "["\n'
-                                   + ''.join(shape.values()) + _evaluation(claims, framing, witnesses),
-                                   lean, parse_float=Decimal)
-        if not isinstance(evaluation, list) or len(evaluation) != len(shape) + 1:
-            raise ValueError('Unexpected Lean translation validation output')
-        _check_shape(model, claims, shape, evaluation[:-1], issues)
-        evaluation = evaluation[-1]
-        if not isinstance(evaluation, list) or len(evaluation) != 3:
-            raise ValueError('Unexpected Lean translation validation output')
-        actual, witness_results, pair_results = evaluation
+        shapes, actual, witness_results, pair_results = _run_validation(
+            program, claims, shape, framing, witnesses, lean)
+        _check_shape(model, claims, shape, shapes, issues)
         _check_declarations(model, claims, actual, issues)
         _check_framing(model, framing, witness_results, issues,
                        coverage_unresolved if witnesses else unresolved)
@@ -143,5 +158,5 @@ def validate_translation(model, program, *, lean='lean', bounded_framing=False):
     if bounded_framing:
         report['coverage_unresolved'] = coverage_unresolved
         if witnesses and status == 'matched':
-            report.update(status='bounded_match', framing_comparison=framing_comparison(witnesses, pair_results, claims))
+            report.update(_bounded_report(witnesses, pair_results, claims))
     return report

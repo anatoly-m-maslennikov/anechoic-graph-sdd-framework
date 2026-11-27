@@ -2,7 +2,6 @@
 
 from dataclasses import replace
 import subprocess
-from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
@@ -16,7 +15,13 @@ from .native_import_graph_cases_3 import ImportGraphCases3
 from .native_import_graph_cases_4 import ImportGraphCases4
 
 
-class NativeImportGraphTests(ImportGraphCases1, ImportGraphCases2, ImportGraphCases3, ImportGraphCases4, unittest.IsolatedAsyncioTestCase):
+class NativeImportGraphTests(
+    ImportGraphCases1,
+    ImportGraphCases2,
+    ImportGraphCases3,
+    ImportGraphCases4,
+    unittest.IsolatedAsyncioTestCase,
+):
     _write = fixture.NativeQueryStdioTests._write
 
     def setUp(self):
@@ -34,16 +39,30 @@ class NativeImportGraphTests(ImportGraphCases1, ImportGraphCases2, ImportGraphCa
 
         def validate(fields, component):
             manifest = inputs.validate_manifest(fields, component)
-            workbench = {"import_graph": {"python_roots": ["src"]} if enabled else False}
-            return SimpleNamespace(name=manifest.name, prefix=manifest.prefix,
-                                   parameters={"runtime": {"workbench": workbench}})
+            workbench = {
+                "import_graph": {"python_roots": ["src"]} if enabled else False
+            }
+            return replace(
+                manifest, parameters={"runtime": {"workbench": workbench}}
+            )
 
-        gateway = create_native_gateway(self.root, fixture.CONTROL, replace(inputs, validate_manifest=validate))
+        gateway = create_native_gateway(
+            self.root,
+            fixture.CONTROL,
+            replace(inputs, validate_manifest=validate),
+        )
         if structure_snapshot is not None:
-            selected = replace(gateway.selection, structure_snapshot=structure_snapshot)
+            selected = replace(
+                gateway.selection, structure_snapshot=structure_snapshot
+            )
             gateway.selection = gateway._native_query.selection = selected
-        with patch("FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.source_watcher__pub.NativeObserver",
-                   lambda: PollingObserver(timeout=.05)):
+        with patch(
+            (
+                "FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.source_watche"
+                "r__pub.NativeObserver"
+            ),
+            lambda: PollingObserver(timeout=0.05),
+        ):
             await gateway.initialize()
         self.addAsyncCleanup(gateway.close)
         return gateway

@@ -21,18 +21,33 @@ class ImageOverrideTests(unittest.TestCase):
 
     def test_runtime_uses_explicit_immutable_image(self):
         with patch.dict(os.environ, {"ANECHOIC_IMAGE": IMMUTABLE_IMAGE}):
-            self.assertEqual(IMMUTABLE_IMAGE, Runtime(self.root).environment()["ANECHOIC_IMAGE"])
+            self.assertEqual(
+                IMMUTABLE_IMAGE,
+                Runtime(self.root).environment()["ANECHOIC_IMAGE"],
+            )
         instance = Runtime(self.root, image=IMMUTABLE_IMAGE)
         with patch.dict(os.environ, {"ANECHOIC_IMAGE": "sha256:" + "b" * 64}):
-            self.assertEqual(IMMUTABLE_IMAGE, instance.environment()["ANECHOIC_IMAGE"])
+            self.assertEqual(
+                IMMUTABLE_IMAGE, instance.environment()["ANECHOIC_IMAGE"]
+            )
 
     def test_runtime_empty_override_uses_safe_development_fallback(self):
         with patch.dict(os.environ, {"ANECHOIC_IMAGE": ""}):
-            self.assertEqual(IMAGE, Runtime(self.root).environment()["ANECHOIC_IMAGE"])
+            self.assertEqual(
+                IMAGE, Runtime(self.root).environment()["ANECHOIC_IMAGE"]
+            )
 
     def test_mutable_or_malformed_overrides_are_rejected(self):
-        for value in ("alpine:latest", "sha256:" + "A" * 64, "sha256:" + "a" * 63, "1"):
-            with self.subTest(value=value), patch.dict(os.environ, {"ANECHOIC_IMAGE": value}):
+        for value in (
+            "alpine:latest",
+            "sha256:" + "A" * 64,
+            "sha256:" + "a" * 63,
+            "1",
+        ):
+            with (
+                self.subTest(value=value),
+                patch.dict(os.environ, {"ANECHOIC_IMAGE": value}),
+            ):
                 with self.assertRaisesRegex(ValueError, "immutable sha256"):
                     Runtime(self.root).environment()
         with self.assertRaisesRegex(ValueError, "immutable sha256"):

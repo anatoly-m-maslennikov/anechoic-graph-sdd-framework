@@ -19,11 +19,13 @@ CLI = 'ARCHITECTURE_ANALYSIS_C73.IMPLEMENTATION_VERIFICATION_C74.carrier_compare
 PINS = {
     'manifest': {
         'path': (CARRIERS / '01_TIER_1_ARCHITECTURE/AN-S-4937-SPEC-COMPONENT_MANIFEST--declare-diagnostics.md').as_posix(),
-        'atom_id': 'AN-S-4937', 'version': 2, 'status': 'active', 'container_component': 'C94',
+        'atom_id': 'AN-S-4937', 'version': 4, 'status': 'active',
+        'container_component': 'C94',
     },
     'solution': {
         'path': (CARRIERS / 'LAYER_1_DIAGNOSTICS_C90/AN-S-5024-DES-SOLUTION--form-a-diagnostic-from-a-finding.md').as_posix(),
-        'atom_id': 'AN-S-5024', 'version': 2, 'status': 'active', 'container_component': 'C90',
+        'atom_id': 'AN-S-5024', 'version': 4, 'status': 'active',
+        'container_component': 'C90',
     },
 }
 
@@ -60,6 +62,78 @@ def _stage(root, pins, source):
 @unittest.skipUnless(all(os.environ.get(name) for name in ('AUTOFORM_CHECKOUT', 'JOERN_HOME', 'LEAN_PATH')),
                      'Autoform and its Lean libraries are not configured')
 class DiagnosticLeanComparisonTests(unittest.TestCase):
+    def test_shared_verdict_matches_policy_for_any_status_list(self):
+        pins, source = _pinned_specs(), SOURCE.read_bytes()
+        original = b"return ('conflicting' if 'conflicting' in statuses else"
+        mutated = (b"return ('unresolved' if 'unresolved' in statuses else\n"
+                   b"            " + original.removeprefix(b'return ('))
+        self.assertEqual(1, source.count(original))
+        changed = source.replace(original, mutated)
+        with TemporaryDirectory() as directory:
+            folder = Path(directory)
+            path = folder / 'pins.json'
+            code, control = _compare(pins, source, ROOT, path)
+            root = folder / 'mutation'
+            _stage(root, pins, changed)
+            result, report = _compare(pins, changed, root, path)
+        self.assertEqual((0, 'no_mismatch_in_cases'),
+                         (code, control['status']), control)
+        self.assertEqual('proved', control['verdict_proof']['status'], control)
+        self.assertEqual('publicVerdictMatchesContract',
+                         control['verdict_proof']['theorem'])
+        self.assertRegex(control['verdict_proof']['sha256'], r'^[0-9a-f]{64}$')
+        self.assertRegex(control['verdict_proof']['authored_lean_sha256'],
+                         r'^[0-9a-f]{64}$')
+        self.assertEqual((1, 'unresolved'), (result, report['status']), report)
+        self.assertEqual('unresolved', report['verdict_proof']['status'])
+        self.assertEqual('proved', report['effect']['status'])
+        self.assertEqual(['matched'] * 3,
+                         [row['implementation'] for row in report['facts']])
+
+    def test_agreeing_changed_verdict_specs_cannot_prove_original_code(self):
+        pins, source = _pinned_specs(), SOURCE.read_bytes()
+        pending = b"'unresolved_or_empty': True"
+        clear = b"'unresolved_or_empty': False"
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            _stage(root, pins, source)
+            for pin in pins.values():
+                path = root / pin['path']
+                original = path.read_bytes()
+                self.assertEqual((1, 1), (original.count(pending),
+                                          original.count(clear)))
+                changed = original.replace(pending, b'PLACEHOLDER', 1)
+                changed = changed.replace(clear, pending, 1)
+                changed = changed.replace(b'PLACEHOLDER', clear, 1)
+                path.write_bytes(changed)
+                pin['sha256'] = hashlib.sha256(changed).hexdigest()
+            code, report = _compare(pins, source, root, root / 'pins.json')
+        self.assertEqual((1, 'unresolved'), (code, report['status']), report)
+        self.assertEqual('proved', report['effect']['status'])
+        verdict = report['verdict_proof']
+        self.assertEqual('unresolved', verdict['status'])
+        self.assertRegex(verdict['authored_lean_sha256'], r'^[0-9a-f]{64}$')
+
+    def test_extra_verdict_solution_guard_leaves_proof_unresolved(self):
+        pins, source = _pinned_specs(), SOURCE.read_bytes()
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            _stage(root, pins, source)
+            path = root / pins['solution']['path']
+            original = path.read_bytes()
+            guard = b"{'has_conflict': True}"
+            self.assertEqual(1, original.count(guard))
+            changed = original.replace(
+                guard, b"{'has_conflict': True, 'unresolved_or_empty': True}")
+            path.write_bytes(changed)
+            pins['solution']['sha256'] = hashlib.sha256(changed).hexdigest()
+            code, report = _compare(pins, source, root, root / 'pins.json')
+        self.assertEqual((1, 'unresolved'), (code, report['status']), report)
+        self.assertEqual('proved', report['effect']['status'])
+        verdict = report['verdict_proof']
+        self.assertEqual('unresolved', verdict['status'])
+        self.assertRegex(verdict['authored_lean_sha256'], r'^[0-9a-f]{64}$')
+
     def test_cli_checks_declared_values_and_detects_wrong_field(self):
         pins = _pinned_specs()
         source = SOURCE.read_bytes()

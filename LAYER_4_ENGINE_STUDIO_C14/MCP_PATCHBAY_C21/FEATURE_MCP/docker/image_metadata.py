@@ -15,15 +15,19 @@ _SAFE_VERSION = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,127}")
 
 
 def read_framework_version(path: Path | str) -> str:
-    """Read the exact tag-safe framework version from one admitted TOML file."""
+    "Read the exact tag-safe framework version from one admitted TOML file."
     try:
         document = tomllib.loads(Path(path).read_text(encoding="utf-8"))
     except (OSError, TypeError, UnicodeError, ValueError) as error:
-        raise ValueError("framework version input is unreadable or invalid") from error
+        raise ValueError(
+            "framework version input is unreadable or invalid"
+        ) from error
     framework = document.get("framework")
     version = framework.get("version") if isinstance(framework, dict) else None
     if type(version) is not str or _SAFE_VERSION.fullmatch(version) is None:
-        raise ValueError("framework version is not one exact Docker-safe value")
+        raise ValueError(
+            "framework version is not one exact Docker-safe value"
+        )
     return version
 
 
@@ -43,7 +47,12 @@ def docker_created_utc(value: object, *, compact: bool = False) -> str:
 
 
 def display_image_tag(
-    version: str, created: object, image_id: str, *, role: str | None = "test", compact: bool = False
+    version: str,
+    created: object,
+    image_id: str,
+    *,
+    role: str | None = "test",
+    compact: bool = False,
 ) -> str:
     """Build the additive repository tag from verified image metadata."""
     if (

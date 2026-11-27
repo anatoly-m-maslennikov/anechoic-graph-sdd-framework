@@ -24,7 +24,9 @@ async def _maintain_checkpoint(connection, lock):
                     connection.rollback()
                     raise
     except duckdb.Error:
-        logging.getLogger("uvicorn.error").warning("Startup hash checkpoint update failed")
+        logging.getLogger("uvicorn.error").warning(
+            "Startup hash checkpoint update failed"
+        )
 
 
 @asynccontextmanager

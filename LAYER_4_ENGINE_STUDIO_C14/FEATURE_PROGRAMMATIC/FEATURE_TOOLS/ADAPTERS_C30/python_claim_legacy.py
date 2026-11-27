@@ -190,7 +190,8 @@ def _render_relation(args, node, validate_reference, validate_relation_endpoint)
         if validate_relation_endpoint is None:
             check = validate_reference
         else:
-            check = lambda value: validate_relation_endpoint(value, args.get("name"), key)
+            def check(value):
+                return validate_relation_endpoint(value, args.get("name"), key)
         return _reference(args[key], key, node, check)
 
     source = endpoint("source")

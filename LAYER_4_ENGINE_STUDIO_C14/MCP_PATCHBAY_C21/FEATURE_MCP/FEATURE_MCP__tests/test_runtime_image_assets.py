@@ -11,6 +11,7 @@ import sys
 import tempfile
 import unittest
 from types import SimpleNamespace
+from unittest.mock import NonCallableMock
 from unittest.mock import MagicMock, patch
 
 
@@ -176,7 +177,9 @@ class LifecycleImageAssetsTests(unittest.TestCase):
             state = root / ".anechoic_runtime/runtime/project_mcp" / project_id
             state.mkdir(parents=True)
             control = root / ".anechoic_project"
-            selection = SimpleNamespace(root=root, control_root=control, instance_id=project_id, launcher_state=state)
+            selection = NonCallableMock(
+                spec_set=['root', 'control_root', 'instance_id', 'launcher_state'],
+                root=root, control_root=control, instance_id=project_id, launcher_state=state)
             receipt = {"project_root": str(root), "control_root": str(control), "project_id": project_id,
                        "image_id": IMAGE_ID, "readiness": True}
             path = state / "ready.json"
@@ -196,7 +199,9 @@ class LifecycleImageAssetsTests(unittest.TestCase):
             state = root / ".anechoic_runtime/runtime/project_mcp" / project_id
             state.mkdir(parents=True)
             control = root / ".anechoic_project"
-            selection = SimpleNamespace(root=root, control_root=control, instance_id=project_id, launcher_state=state)
+            selection = NonCallableMock(
+                spec_set=['root', 'control_root', 'instance_id', 'launcher_state'],
+                root=root, control_root=control, instance_id=project_id, launcher_state=state)
             path = state / "ready.json"
             receipt = {"project_root": str(root), "control_root": str(control), "project_id": "e" * 64,
                        "image_id": IMAGE_ID, "readiness": True}

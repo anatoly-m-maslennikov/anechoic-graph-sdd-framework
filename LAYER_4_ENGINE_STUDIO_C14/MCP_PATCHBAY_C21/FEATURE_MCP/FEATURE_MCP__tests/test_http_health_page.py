@@ -1,5 +1,6 @@
 """Functional HTTP checks for the same-listener MCP health view."""
-from types import SimpleNamespace
+
+from unittest.mock import NonCallableMock
 
 from .health_fixture import HealthHTTPFixture
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import render_health_page
@@ -8,13 +9,19 @@ from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import HEALTH_PATH
 
 class HTTPHealthPageTests(HealthHTTPFixture):
     def test_renderer_escapes_dynamic_snapshot_fields(self):
-        gateway = SimpleNamespace(
-            ready=True, tools=[]
+        gateway = NonCallableMock(
+            spec_set=["ready", "tools"], ready=True, tools=[]
         )
         html = render_health_page(
             {
                 "started_at": "<script>bad</script>",
-                "calls": [{"observed_at": "<b>", "name": "<script>", "outcome": "returned"}],
+                "calls": [
+                    {
+                        "observed_at": "<b>",
+                        "name": "<script>",
+                        "outcome": "returned",
+                    }
+                ],
             },
             state="ready",
             gateway=gateway,
@@ -26,10 +33,14 @@ class HTTPHealthPageTests(HealthHTTPFixture):
         async with self.lifespan():
             async with self.raw_client() as client:
                 for accept in ("application/json", "text/html"):
-                    response = await client.get(HEALTH_PATH, headers=self.headers(accept=accept))
+                    response = await client.get(
+                        HEALTH_PATH, headers=self.headers(accept=accept)
+                    )
                     self.assertEqual(200, response.status_code)
                     self.assertEqual({"state": "ready"}, response.json())
                 self.app.gateway.ready = False
-                response = await client.get(HEALTH_PATH, headers=self.headers())
+                response = await client.get(
+                    HEALTH_PATH, headers=self.headers()
+                )
                 self.assertEqual(503, response.status_code)
                 self.assertEqual({"state": "unavailable"}, response.json())

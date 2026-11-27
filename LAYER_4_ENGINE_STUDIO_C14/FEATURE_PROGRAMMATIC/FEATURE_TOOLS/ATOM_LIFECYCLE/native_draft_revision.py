@@ -164,7 +164,7 @@ def _read_revision_sources(selection, draft, previous, previous_capture, paths, 
         raise common.InputError('target', 'The Draft Version already has a non-Draft revision.')
     reader = ReadContext(roots=[str(selection.root)], limits=dict(CEILINGS))
     raw_draft, raw_previous = (reader.read(path) for path in paths)
-    for row, path, raw in zip((draft, previous), paths, (raw_draft, raw_previous)):
+    for row, path, raw in zip((draft, previous), paths, (raw_draft, raw_previous), strict=False):
         bounds = frontmatter_bounds(raw)
         if (bounds is None or sha256(raw).hexdigest() != row['_source_sha256']
                 or raw[bounds[2]:] != row.get('_content_bytes')

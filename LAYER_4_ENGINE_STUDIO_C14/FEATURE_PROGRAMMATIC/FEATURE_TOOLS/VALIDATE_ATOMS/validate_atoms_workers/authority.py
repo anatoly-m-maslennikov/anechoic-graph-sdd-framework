@@ -7,17 +7,27 @@ from pydantic import ConfigDict
 from pydantic.dataclasses import dataclass
 from typing import Any
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import carrier_read_view
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
+    import carrier_read_view  # fmt: skip
 
 
 Record = dict[str, Any]
 _SOURCE_ROLES = {
-    "C": "Concern", "A": "Analysis", "P": "Plan", "R": "Requirement",
-    "M": "Method", "E": "Evaluation", "D": "Delivery", "O": "Operations",
+    "C": "Concern",
+    "A": "Analysis",
+    "P": "Plan",
+    "R": "Requirement",
+    "M": "Method",
+    "E": "Evaluation",
+    "D": "Delivery",
+    "O": "Operations",
 }
 
 
-@dataclass(config=ConfigDict(strict=True, extra="forbid", hide_input_in_errors=True), frozen=True)
+@dataclass(
+    config=ConfigDict(strict=True, extra="forbid", hide_input_in_errors=True),
+    frozen=True,
+)
 class Obligation:
     code: str
     authority: list[Record]
@@ -25,7 +35,10 @@ class Obligation:
     reason: str
 
 
-@dataclass(config=ConfigDict(strict=True, extra="forbid", hide_input_in_errors=True), frozen=True)
+@dataclass(
+    config=ConfigDict(strict=True, extra="forbid", hide_input_in_errors=True),
+    frozen=True,
+)
 class AuthorityContext:
     bindings: list[Record]
     required: int
@@ -49,7 +62,9 @@ def _verified(source: Record, entry: Record) -> bool:
     version, text = binding.get("version"), source.get("text")
     identifier = binding.get("atom_id")
     identity = identifier.rsplit("-", 2) if isinstance(identifier, str) else []
-    expected_role = _SOURCE_ROLES.get(identity[1]) if len(identity) == 3 else None
+    expected_role = (
+        _SOURCE_ROLES.get(identity[1]) if len(identity) == 3 else None
+    )
     return bool(
         type(version) is int
         and version > 0
@@ -65,5 +80,6 @@ def _verified(source: Record, entry: Record) -> bool:
         and isinstance(binding.get("path"), str)
         and binding["path"]
         and isinstance(text, str)
-        and hashlib.sha256(text.encode("utf-8")).hexdigest() == binding.get("sha256")
+        and hashlib.sha256(text.encode("utf-8")).hexdigest()
+        == binding.get("sha256")
     )

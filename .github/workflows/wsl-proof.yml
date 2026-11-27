@@ -12,7 +12,8 @@ jobs:
     runs-on: [self-hosted, windows, x64, wsl]
     steps:
       - name: Check out the tested commit
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        # v7.0.0
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         with:
           fetch-depth: 0
 
@@ -22,12 +23,16 @@ jobs:
           python3 -B -m pip install --no-compile uv==0.11.28
           engine="$PWD/LAYER_4_ENGINE_STUDIO_C14"
           UV_PROJECT_ENVIRONMENT="$engine/.venv-dev" PYTHONPATH="$engine" \
-            uv run --no-compile-bytecode --project "$PWD/LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine" \
+            uv run --no-compile-bytecode \
+              --project \
+              "$PWD/LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine" \
               --locked --no-env-file python -B -P -m \
               FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.test_suite__pub \
               --project-root "$PWD" --phase static
           UV_PROJECT_ENVIRONMENT="$engine/.venv-dev" PYTHONPATH="$engine" \
-            uv run --no-compile-bytecode --project "$PWD/LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine" \
+            uv run --no-compile-bytecode \
+              --project \
+              "$PWD/LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine" \
               --locked --no-env-file python -B -P -m \
               FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.test_suite__pub \
               --project-root "$PWD" --phase unit --required

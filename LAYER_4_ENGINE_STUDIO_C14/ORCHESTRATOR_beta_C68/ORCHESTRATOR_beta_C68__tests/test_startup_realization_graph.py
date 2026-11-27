@@ -1,4 +1,5 @@
 """Verify that startup graph work follows foreground replay."""
+
 import json
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -14,17 +15,34 @@ STARTUP_GRAPH = f"{orchestrator.__package__}.startup_graph"
 class StartupRealizationGraphTests(unittest.TestCase):
     def setUp(self):
         root = Path(self.enterContext(TemporaryDirectory())).resolve()
-        binding = {"root": str(root), "control_root": "control", "manifest_path": "manifest.md",
-                   "manifest_sha256": "a" * 64, "project_prefix": "AN"}
+        binding = {
+            "root": str(root),
+            "control_root": "control",
+            "manifest_path": "manifest.md",
+            "manifest_sha256": "a" * 64,
+            "project_prefix": "AN",
+        }
         self.jobs = orchestrator.GenerationJobs("test", binding, "socket")
         self.jobs.watcher = Mock()
         self.jobs.watcher.foreground_events.return_value = 0
         self.jobs.watcher.replay_fence.return_value = True
         self.jobs.live_generation = "core"
         self.jobs.generation_reuse = orchestrator.ReuseRecord(
-            base_generation="core", inputs={"graph": "pending"}, endpoints={}, graph_config={})
-        self.graph = {"base_generation": "core", "graph": {}, "graph_sha256": "b" * 64,
-                      "reuse": {"inputs": {"graph": "c" * 64}, "graph_config": {}, "endpoints": {}}}
+            base_generation="core",
+            inputs={"graph": "pending"},
+            endpoints={},
+            graph_config={},
+        )
+        self.graph = {
+            "base_generation": "core",
+            "graph": {},
+            "graph_sha256": "b" * 64,
+            "reuse": {
+                "inputs": {"graph": "c" * 64},
+                "graph_config": {},
+                "endpoints": {},
+            },
+        }
 
     def test_explicit_graph_uses_only_graph_admission(self):
         jobs = self.jobs
@@ -32,14 +50,37 @@ class StartupRealizationGraphTests(unittest.TestCase):
         jobs.watcher.capture_epoch.return_value = 1
         jobs.watcher.capture_fence.return_value = True
         module = STARTUP_GRAPH
-        with (patch(f"{module}.worker_request", return_value={"structure": {}}),
-              patch.object(jobs, "_communicate_worker", return_value=json.dumps(self.graph)) as worker,
-              patch(f"{module}.admit_generation", return_value={"generation": "next"}) as admit,
-              patch.object(jobs, "_capture_generation", side_effect=AssertionError("core capture"))):
+        with (
+            patch(f"{module}.worker_request", return_value={"structure": {}}),
+            patch.object(
+                jobs,
+                "_communicate_worker",
+                return_value=json.dumps(self.graph),
+            ) as worker,
+            patch(
+                f"{module}.admit_generation",
+                return_value={"generation": "next"},
+            ) as admit,
+            patch.object(
+                jobs,
+                "_capture_generation",
+                side_effect=AssertionError("core capture"),
+            ),
+        ):
             result = jobs._attempt_generation("realization_graph", reuse)
-        self.assertEqual({"state": "succeeded", "generation": "next", "result_ids": {}}, result)
-        self.assertEqual({"structure": {}, "graph_only": True, "force_graph": True, "watcher_guarded": True},
-                         worker.call_args.args[1])
+        self.assertEqual(
+            {"state": "succeeded", "generation": "next", "result_ids": {}},
+            result,
+        )
+        self.assertEqual(
+            {
+                "structure": {},
+                "graph_only": True,
+                "force_graph": True,
+                "watcher_guarded": True,
+            },
+            worker.call_args.args[1],
+        )
         self.assertEqual((None, self.graph, None), admit.call_args.args[2:])
         self.assertEqual({"force_graph": True}, admit.call_args.kwargs)
         self.assertEqual("next", jobs.generation_reuse.base_generation)
@@ -55,9 +96,19 @@ class StartupRealizationGraphTests(unittest.TestCase):
                 raise RuntimeError("Test Worker did not finish")
             return json.dumps(self.graph)
 
-        with (patch.object(jobs, "_communicate_worker", side_effect=capture) as worker,
-              patch(f"{STARTUP_GRAPH}.worker_request", return_value={"structure": {}}),
-              patch(f"{STARTUP_GRAPH}.admit_generation", return_value={"generation": "core"}) as admit):
+        with (
+            patch.object(
+                jobs, "_communicate_worker", side_effect=capture
+            ) as worker,
+            patch(
+                f"{STARTUP_GRAPH}.worker_request",
+                return_value={"structure": {}},
+            ),
+            patch(
+                f"{STARTUP_GRAPH}.admit_generation",
+                return_value={"generation": "core"},
+            ) as admit,
+        ):
             jobs._run_startup_graph()
             worker.assert_not_called()
             jobs.startup_replay = False
@@ -68,8 +119,13 @@ class StartupRealizationGraphTests(unittest.TestCase):
             release.set()
             jobs.graph_thread.join(5)
             jobs._run_startup_graph()
-        self.assertEqual(({"structure": {}, "graph_only": True, "watcher_guarded": True}, {"graph": True}),
-                         (worker.call_args.args[1], worker.call_args.kwargs))
+        self.assertEqual(
+            (
+                {"structure": {}, "graph_only": True, "watcher_guarded": True},
+                {"graph": True},
+            ),
+            (worker.call_args.args[1], worker.call_args.kwargs),
+        )
         self.assertEqual(self.graph, admit.call_args.args[3])
         self.assertEqual({"graph": "c" * 64}, jobs.generation_reuse.inputs)
 
@@ -103,7 +159,11 @@ class StartupRealizationGraphTests(unittest.TestCase):
             thread.return_value.start.assert_called_once()
 
     def test_graph_starts_when_archive_is_absent_or_finished(self):
-        for deferred, state in ((None, None), (None, "succeeded"), ({}, "failed")):
+        for deferred, state in (
+            (None, None),
+            (None, "succeeded"),
+            ({}, "failed"),
+        ):
             with self.subTest(state=state):
                 jobs = self.jobs
                 jobs.graph_queued = True
@@ -129,18 +189,31 @@ class StartupRealizationGraphTests(unittest.TestCase):
         jobs = self.jobs
         jobs.archive_reconciliation_pending = True
         event = {"event_type": orchestrator.ARCHIVE_RECONCILIATION}
-        with patch.object(jobs, "_generate", return_value={"state": "succeeded"}):
-            jobs._run_queued_generation(orchestrator.CurrentnessRetry(), Mock(target="realization_graph"), [event], False)
+        with patch.object(
+            jobs, "_generate", return_value={"state": "succeeded"}
+        ):
+            jobs._run_queued_generation(
+                orchestrator.CurrentnessRetry(),
+                Mock(target="realization_graph"),
+                [event],
+                False,
+            )
         self.assertTrue(jobs.archive_reconciliation_pending)
         jobs.watcher.queue.put.assert_called_once_with(event)
 
-    def test_explicit_build_consumes_reconciliation_without_sticking_graph(self):
+    def test_explicit_build_consumes_reconciliation_without_sticking_graph(
+        self,
+    ):
         jobs = self.jobs
         jobs.archive_reconciliation_pending = True
         job = Mock(target="all")
         event = {"event_type": orchestrator.ARCHIVE_RECONCILIATION}
-        with patch.object(jobs, "_generate", return_value={"state": "succeeded"}) as generate:
-            jobs._run_queued_generation(orchestrator.CurrentnessRetry(), job, [event], False)
+        with patch.object(
+            jobs, "_generate", return_value={"state": "succeeded"}
+        ) as generate:
+            jobs._run_queued_generation(
+                orchestrator.CurrentnessRetry(), job, [event], False
+            )
         self.assertFalse(jobs.archive_reconciliation_pending)
         generate.assert_called_once_with("all", changes=())
         jobs.graph_queued = True
@@ -150,18 +223,26 @@ class StartupRealizationGraphTests(unittest.TestCase):
 
     def test_explicit_build_preserves_reconciliation_not_in_batch(self):
         self.jobs.archive_reconciliation_pending = True
-        with patch.object(self.jobs, "_generate", return_value={"state": "failed"}):
-            self.jobs._run_queued_generation(orchestrator.CurrentnessRetry(), Mock(target="all"), [], False)
+        with patch.object(
+            self.jobs, "_generate", return_value={"state": "failed"}
+        ):
+            self.jobs._run_queued_generation(
+                orchestrator.CurrentnessRetry(), Mock(target="all"), [], False
+            )
         self.assertTrue(self.jobs.archive_reconciliation_pending)
 
     def test_reconciliation_marker_clears_when_event_is_handled(self):
         jobs = self.jobs
         jobs.archive_reconciliation_pending = True
         event = {"event_type": orchestrator.ARCHIVE_RECONCILIATION}
-        with patch.object(jobs, "_attempt_generation", return_value={}) as attempt:
+        with patch.object(
+            jobs, "_attempt_generation", return_value={}
+        ) as attempt:
             jobs._attempt_with_recovery(None, None, [event])
         self.assertFalse(jobs.archive_reconciliation_pending)
-        self.assertEqual({"reconciliation": True, "strict": True}, attempt.call_args.kwargs)
+        self.assertEqual(
+            {"reconciliation": True, "strict": True}, attempt.call_args.kwargs
+        )
 
     def test_graph_from_an_obsolete_generation_is_not_admitted(self):
         self.jobs.graph_result = ("earlier", 0, self.graph)

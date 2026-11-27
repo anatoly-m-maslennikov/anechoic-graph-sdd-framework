@@ -10,7 +10,7 @@ context:
 state:
   status: active
   version: 34
-  updated_at: '2026-11-27T01:04:20.461163+00:00'
+  updated_at: '2026-11-27T13:09:34.991865+00:00'
 ---
 ## Summary
 
@@ -39,7 +39,22 @@ ComponentManifest(
 ## Component Boundaries
 
 ```python
-{'code': {'imports': {'only': ['ADAPTERS_C30__shared.status_domains',
+{'code': {'imports': {'only': ['accepted_model.initialize',
+                               'accepted_model.managed',
+                               'accepted_model.prepare',
+                               'accepted_model.publish',
+                               'archive_generation',
+                               'database_lifespan',
+                               'generation_batch',
+                               'model_entity_properties.primary_entity_properties',
+                               'model_entity_tree.model_tree_rows',
+                               'carrier_checkpoint',
+                               'persistence',
+                               'carrier_checkpoint.read_checkpoint',
+                               'table_names.main_objects',
+                               'ADAPTERS_C30__shared.status_domains',
+                               'ADAPTERS_C30__shared.NODE_LINK_PREFIX',
+                               'model_generation__pub._validate_binding_descriptor',
                                'CS5',
                                'CS6',
                                'ADAPTERS_C30__shared.attach_framework',
@@ -51,7 +66,21 @@ ComponentManifest(
                                'DATABASE_SERVER_beta_C71__shared.create_app',
                                'DATABASE_SERVER_beta_C71__shared.result_ttl',
                                'DATABASE_SERVER_beta_C71__shared.open_database']},
-          'exports': {'DATABASE_SERVER_beta_C71__shared.open_database': {'private': ['LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_beta_C67/DATABASE_SERVER_beta_C71/DATABASE_SERVER_beta_C71__tests']},
+          'exports': {'accepted_model.initialize': {'private': ['LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_beta_C67/DATABASE_SERVER_beta_C71/DATABASE_SERVER_beta_C71__tests']},
+                      'accepted_model.managed': {'private': ['LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_beta_C67/DATABASE_SERVER_beta_C71/DATABASE_SERVER_beta_C71__tests']},
+                      'accepted_model.prepare': {'private': ['LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_beta_C67/DATABASE_SERVER_beta_C71/DATABASE_SERVER_beta_C71__tests']},
+                      'accepted_model.publish': {'private': ['LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_beta_C67/DATABASE_SERVER_beta_C71/DATABASE_SERVER_beta_C71__tests']},
+                      'archive_generation': {'private': ['LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_beta_C67/DATABASE_SERVER_beta_C71/DATABASE_SERVER_beta_C71__tests']},
+                      'database_lifespan': {'private': ['LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_beta_C67/DATABASE_SERVER_beta_C71/DATABASE_SERVER_beta_C71__tests']},
+                      'generation_batch': {'private': ['LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_beta_C67/DATABASE_SERVER_beta_C71/DATABASE_SERVER_beta_C71__tests']},
+                      'model_entity_properties.primary_entity_properties': {'private': ['LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_beta_C67/DATABASE_SERVER_beta_C71/DATABASE_SERVER_beta_C71__tests']},
+                      'model_entity_tree.model_tree_rows': {'private': ['LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_beta_C67/DATABASE_SERVER_beta_C71/DATABASE_SERVER_beta_C71__tests']},
+                      'carrier_checkpoint': {'private': ['LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_beta_C67/DATABASE_SERVER_beta_C71/DATABASE_SERVER_beta_C71__tests']},
+                      'persistence': {'private': ['LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_beta_C67/DATABASE_SERVER_beta_C71/DATABASE_SERVER_beta_C71__tests']},
+                      'carrier_checkpoint.read_checkpoint': {'private': ['LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_beta_C67/DATABASE_SERVER_beta_C71/DATABASE_SERVER_beta_C71__tests']},
+                      'table_names.main_objects': {'private': ['LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_beta_C67/DATABASE_SERVER_beta_C71/DATABASE_SERVER_beta_C71__tests']},
+                      'DATABASE_SERVER_beta_C71__shared.connect': {'shared': ['C45']},
+                      'DATABASE_SERVER_beta_C71__shared.open_database': {'private': ['LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_beta_C67/DATABASE_SERVER_beta_C71/DATABASE_SERVER_beta_C71__tests']},
                       'DATABASE_SERVER_beta_C71__shared.create_app': {'private': ['LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_beta_C67/DATABASE_SERVER_beta_C71/DATABASE_SERVER_beta_C71__tests']},
                       'DATABASE_SERVER_beta_C71__shared.result_ttl': {'private': ['LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_beta_C67/DATABASE_SERVER_beta_C71/DATABASE_SERVER_beta_C71__tests']}}},
  'io': {'server': {'database_api': {'transport': 'http',

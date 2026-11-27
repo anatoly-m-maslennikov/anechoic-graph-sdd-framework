@@ -90,6 +90,17 @@ def _compile_relation(args):
 
 
 
+def _compile_role_qualification(args, name):
+    statements = [f"Atom.Header.Context.Role :: {name}"]
+    axes = args.get("axes", {})
+    if "Role Order Number" in axes:
+        order = axes["Role Order Number"]
+        if type(order) is not int or order < 1:
+            raise ValueError("Role Order Number must be a positive integer")
+        statements.append(f"Atom/(.Header.Context.Role := {name}) >| (Role Order Number == {order})")
+    return tuple(statements)
+
+
 def _compile_qualified(declaration, args, name):
     qualifier = args.get("qualification_property_path")
     if qualifier == "Projection.Form":
@@ -98,14 +109,7 @@ def _compile_qualified(declaration, args, name):
             raise ValueError("a Projection Form requires Projection as its sole base")
         return (f"Projection.Form :: {name}", f"Projection/(.Form in ({name}))")
     if qualifier == "Atom.Header.Context.Role":
-        statements = [f"{qualifier} :: {name}"]
-        axes = args.get("axes", {})
-        if "Role Order Number" in axes:
-            order = axes["Role Order Number"]
-            if type(order) is not int or order < 1:
-                raise ValueError("Role Order Number must be a positive integer")
-            statements.append(f"Atom/(.Header.Context.Role := {name}) >| (Role Order Number == {order})")
-        return tuple(statements)
+        return _compile_role_qualification(args, name)
     if qualifier == "Atom.Header.Context.Form":
         classes = [item for item in declaration["classes"] if item["name"] == args.get("entity_class")]
         if len(classes) != 1 or len(classes[0]["bases"]) != 1:

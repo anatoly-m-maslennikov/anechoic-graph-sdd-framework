@@ -41,24 +41,31 @@ def _unique(pairs):
     return result
 
 
+def _receipt_path(root: Path, parts: tuple[str, ...]) -> Path | None:
+    path = root
+    for part in parts:
+        path /= part
+        if not os.path.lexists(path):
+            return None
+        if path.is_symlink() or not path.is_dir():
+            raise ValueError("unsafe launcher receipt")
+    path /= "ready.json"
+    if not os.path.lexists(path):
+        return None
+    if path.is_symlink():
+        raise ValueError("unsafe launcher receipt")
+    return path
+
+
 def ready_predecessor(selection) -> str | None:
     root, state = Path(selection.root), Path(selection.launcher_state)
     try:
         parts = state.relative_to(root).parts
         if not root.is_absolute() or root.is_symlink() or root.resolve() != root or ".." in parts:
             raise ValueError("unsafe launcher receipt")
-        path = root
-        for part in parts:
-            path /= part
-            if not os.path.lexists(path):
-                return None
-            if path.is_symlink() or not path.is_dir():
-                raise ValueError("unsafe launcher receipt")
-        path /= "ready.json"
-        if not os.path.lexists(path):
+        path = _receipt_path(root, parts)
+        if path is None:
             return None
-        if path.is_symlink():
-            raise ValueError("unsafe launcher receipt")
         fd = os.open(path, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0))
         with os.fdopen(fd, "rb") as stream:
             info = os.fstat(stream.fileno())
@@ -78,6 +85,17 @@ def ready_predecessor(selection) -> str | None:
         return image
     except (OSError, ValueError, UnicodeError, TypeError) as error:
         raise ValueError("invalid launcher receipt") from error
+
+
+def _remove_finder_metadata(path: Path) -> bool:
+    if path.name == ".DS_Store":
+        try:
+            if stat.S_ISREG(path.lstat().st_mode):
+                path.unlink(missing_ok=True)
+                return True
+        except FileNotFoundError:
+            return True
+    return False
 
 
 class ImageManager(ImageInputIdentity):
@@ -172,13 +190,8 @@ class ImageManager(ImageInputIdentity):
                 seen_directories.add(relative)
             for name in names:
                 path = Path(current) / name
-                if name == ".DS_Store":
-                    try:
-                        if stat.S_ISREG(path.lstat().st_mode):
-                            path.unlink(missing_ok=True)
-                            continue
-                    except FileNotFoundError:
-                        continue
+                if _remove_finder_metadata(path):
+                    continue
                 relative = path.relative_to(context).as_posix()
                 if (path.is_symlink() or not path.is_file() or relative not in expected
                         or (hashlib.sha256(path.read_bytes()).hexdigest(), path.stat().st_mode & 0o777) != expected[relative]):

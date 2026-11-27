@@ -21,6 +21,7 @@ from .directory_effect import _read_tree, move_directory
 from .common import InputError, SourceChanged, _create_parents, result, saved
 from .native_update_selection import _select_ticket, _status_bytes, _branch, _descendants
 from .native_update_publish import _publish_ticket
+from .native_update_promotion import promote_ticket_tree
 
 
 def _check_ticket_tree(selection, path, selected, capture, tree, close_tree, require_terminal):
@@ -294,7 +295,7 @@ def change_ticket_status(selection, params, *, current_rows, check_definition, p
         keys = ('id', 'version', 'status', 'source_path', '_source_sha256', 'header_json')
         if len(planned) != len(fresh) or any(
                 any(before.get(key) != after.get(key) for key in keys)
-                for before, after in zip(planned, fresh)):
+                for before, after in zip(planned, fresh, strict=False)):
             raise SourceChanged('Ticket descendants changed after selection.')
         if (move_tree and selected['status'] in ('done', 'canceled') and not terminal and status != 'in_queue'
                 and any(row['status'] != status for row in planned)):
@@ -303,8 +304,3 @@ def change_ticket_status(selection, params, *, current_rows, check_definition, p
         actions.append(selected)
         return _apply_status_actions(selection, actions, selected, status, current_rows, terminal,
                                      check_definition, raw, bounds, tree, recorded, domains)
-
-
-from .native_update_promotion import promote_ticket_tree
-from .native_update_archive import direct_update as direct_update, archive_ticket as archive_ticket
-from .native_update_spec import change_spec_status as change_spec_status, archive_spec_draft as archive_spec_draft

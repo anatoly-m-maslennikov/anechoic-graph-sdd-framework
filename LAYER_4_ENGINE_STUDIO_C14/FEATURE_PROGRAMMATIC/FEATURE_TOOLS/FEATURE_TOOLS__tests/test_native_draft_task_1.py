@@ -2,7 +2,7 @@ import json
 import os
 from pathlib import Path
 import subprocess
-from types import SimpleNamespace
+from unittest.mock import NonCallableMock
 import sys
 import unittest
 from unittest.mock import patch
@@ -139,8 +139,10 @@ class NewNativeTaskTests(fixtures.NewNativeTaskTests, unittest.TestCase):
 
         def partial_move(root, source, destination):
             destination.mkdir()
-            return SimpleNamespace(effects=[{'operation': 'create', 'target': str(destination)}],
-                                   errors=[{'code': 'backend_failure', 'message': 'copy interrupted'}])
+            return NonCallableMock(
+                spec_set=['effects', 'errors'],
+                effects=[{'operation': 'create', 'target': str(destination)}],
+                errors=[{'code': 'backend_failure', 'message': 'copy interrupted'}])
 
         with patch('FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.native_update.move_directory', side_effect=partial_move):
             outcome = promote_draft(self.selection, params, current_rows=capture_native(self.selection).atoms)
@@ -169,7 +171,9 @@ class NewNativeTaskTests(fixtures.NewNativeTaskTests, unittest.TestCase):
 
     def test_epic_uses_admitted_project_component(self):
         self.new['newAtom'].update(template='epic', container={'component': 'C21'})
-        snapshot = SimpleNamespace(components={'C21': object()})
+        snapshot = NonCallableMock(
+            spec_set=['components'],
+            components={'C21': object()})
         result = create_draft(self.selection, self.new, current_rows=self.rows, structure_snapshot=snapshot)
         draft = self.root / result['savedDraft']['path']
         header = yaml.safe_load(draft.read_text().split('---', 2)[1])

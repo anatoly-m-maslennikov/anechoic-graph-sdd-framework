@@ -66,7 +66,7 @@ class RuntimeSetupTests(unittest.TestCase):
         ]
         with patch.dict(install.__globals__, {"_preflight": Mock()}), patch.object(subprocess, "run", side_effect=replies) as run:
             install(arguments, source=source)
-        for call, subcommand in zip(run.call_args_list, ("build-image", "run-image")):
+        for call, subcommand in zip(run.call_args_list, ("build-image", "run-image"), strict=True):
             with self.subTest(subcommand=subcommand):
                 command = call.args[0]
                 self.assertEqual(str(source / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/release"), command[command.index("--project") + 1])
@@ -202,7 +202,7 @@ class RuntimeSetupTests(unittest.TestCase):
         ]
         output = StringIO()
         with (
-            patch.dict(install.__globals__, {"_preflight": Mock()}) as patched,
+            patch.dict(install.__globals__, {"_preflight": Mock()}),
             patch.dict(install.__globals__, {"_run_json": Mock(side_effect=[
                 {"outcome": "completed", "image_id": self.image},
                 {"ready": True, "image": self.image, "http_port": 8092},
@@ -219,7 +219,7 @@ class RuntimeSetupTests(unittest.TestCase):
         manifest = self.project / "EX-S-1-SPEC-PROJECT_MANIFEST--declare-project.md"
         claim = manifest.read_text()
         self.assertIn("name='Example'", claim)
-        self.assertIn("'workbench': {'storage': 'memory'}", claim)
+        self.assertIn("'iwe_console': {'storage': 'memory'}", claim)
         self.assertIn("'journal': {'storage': 'duckdb'}", claim)
 
 

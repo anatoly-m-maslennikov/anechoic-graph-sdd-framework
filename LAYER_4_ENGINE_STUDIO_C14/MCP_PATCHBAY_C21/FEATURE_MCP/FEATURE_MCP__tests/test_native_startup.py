@@ -19,15 +19,15 @@ import httpx2
 from starlette.responses import StreamingResponse
 from starlette.routing import Route
 
-MCP = Path(__file__).resolve().parents[1]
-PROGRAMMATIC = MCP.parents[1] / "FEATURE_PROGRAMMATIC"
-TOOLS = PROGRAMMATIC / "FEATURE_TOOLS"
-
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import (
     MCP_PATH, ProjectAdmissionError, ProjectBinding, http_main, project_admission, runtime_stack,
     select_runtime_project,
 )
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import write_scope_unit_declarations
+MCP = Path(__file__).resolve().parents[1]
+PROGRAMMATIC = MCP.parents[1] / "FEATURE_PROGRAMMATIC"
+TOOLS = PROGRAMMATIC / "FEATURE_TOOLS"
+
 
 
 def native_fixture_gateway(root, cache, *, selection=None):

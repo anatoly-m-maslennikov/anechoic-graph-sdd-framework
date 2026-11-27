@@ -1,8 +1,10 @@
 """Native Relation declarations preserve the two endpoint cardinalities."""
 from pathlib import Path
-import sys, unittest
-TOOL = Path(__file__).resolve().parents[1]
-sys.path[:0] = [str(TOOL.parent.parent), str(TOOL.parent), str(TOOL)]
+import sys
+import unittest
+sys.path.insert(0, str(TOOL := Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(TOOL.parent))
+sys.path.insert(0, str(TOOL.parent.parent))
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import extract_claim_constraints
 
 class RelationCardinalityTests(unittest.TestCase):
@@ -37,4 +39,5 @@ declare_relation(
             self.assertEqual({'minimum': 1, 'maximum': 1}, endpoint['targets_per_source'])
             self.assertEqual({'minimum': 1, 'maximum': None}, endpoint['sources_per_target'])
 
-if __name__ == '__main__': unittest.main()
+if __name__ == '__main__':
+    unittest.main()

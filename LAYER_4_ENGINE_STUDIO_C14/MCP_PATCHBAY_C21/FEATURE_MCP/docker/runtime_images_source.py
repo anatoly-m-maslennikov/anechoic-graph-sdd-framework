@@ -185,6 +185,22 @@ class ImageSource:
             if not count:
                 raise self._input_error()
 
+    def _engine_directories(self, folder, names, root, engine, beta_roots):
+        retained = []
+        for name in sorted(names):
+            path = folder / name
+            relative = path.relative_to(root).as_posix()
+            if (_excluded_directory(name) or _excluded_file(name)
+                    or (re.search(r"_beta_C[0-9]+\Z", name)
+                        and path.relative_to(engine).parts[0]
+                        not in beta_roots)
+                    or (beta_roots and relative in _REPLACED_COMPONENTS)):
+                continue
+            if path.is_symlink() or not path.is_dir():
+                raise self._input_error()
+            retained.append(name)
+        return retained
+
     def _files(self, root: Path, stack_input=None) -> tuple[Path, ...]:
         stack, selector, _ = self._stack_input(root) if stack_input is None else stack_input
         required = tuple(self._file(root, relative) for relative in _REQUIRED) + selector
@@ -200,18 +216,9 @@ class ImageSource:
 
         for current, directories, names in os.walk(engine, followlinks=False, onerror=unavailable):
             folder = Path(current)
-            retained = []
-            for name in sorted(directories):
-                path = folder / name
-                relative = path.relative_to(root).as_posix()
-                if (_excluded_directory(name) or _excluded_file(name)
-                        or (re.search(r"_beta_C[0-9]+\Z", name) and path.relative_to(engine).parts[0] not in beta_roots)
-                        or (beta_roots and relative in _REPLACED_COMPONENTS)):
-                    continue
-                if path.is_symlink() or not path.is_dir():
-                    raise self._input_error()
-                retained.append(name)
-            directories[:] = retained
+            directories[:] = self._engine_directories(
+                folder, directories, root, engine, beta_roots
+            )
             for name in sorted(names):
                 if _excluded_file(name):
                     continue

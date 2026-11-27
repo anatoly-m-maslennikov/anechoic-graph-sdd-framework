@@ -17,6 +17,14 @@ assert all(model is models[0] for model in models)
 assert not any('FEATURE_FORMAL_MODEL_GENERATOR' in name for name in sys.modules)
 """
         code_root = Path(__file__).resolve().parents[5]
-        environment = {**os.environ, "PYTHONPATH": str(code_root / "LAYER_4_ENGINE_STUDIO_C14")}
-        subprocess.run([sys.executable, "-B", "-P", "-c", source], cwd=code_root,
-                       env=environment, timeout=30, check=True)
+        environment = {
+            **os.environ,
+            "PYTHONPATH": str(code_root / "LAYER_4_ENGINE_STUDIO_C14"),
+        }
+        subprocess.run(
+            [sys.executable, "-B", "-P", "-c", source],
+            cwd=code_root,
+            env=environment,
+            timeout=30,
+            check=True,
+        )

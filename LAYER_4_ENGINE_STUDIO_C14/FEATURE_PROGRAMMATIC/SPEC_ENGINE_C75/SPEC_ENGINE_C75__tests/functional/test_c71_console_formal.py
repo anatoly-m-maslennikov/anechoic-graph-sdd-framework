@@ -16,7 +16,8 @@ from tempfile import TemporaryDirectory
 import unittest
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_read__pub import parse_carrier
-from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75._package__shared import compare_trace_values, verify_formal_chain
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75._package__shared import verify_formal_chain
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_4_SPEC_COMPARISON_C88._package__shared import compare_trace_values
 from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_1_SOURCE_ADAPTERS_C95._package__shared import SpecSnapshot
 
 ROOT = next(path for path in Path(__file__).resolve().parents if (path / '_anechoic_anechoic').is_dir())

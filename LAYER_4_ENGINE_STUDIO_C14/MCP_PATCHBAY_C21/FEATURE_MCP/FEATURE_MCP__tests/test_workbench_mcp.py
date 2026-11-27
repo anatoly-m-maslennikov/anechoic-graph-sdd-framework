@@ -6,14 +6,14 @@ from pathlib import Path
 import unittest
 from unittest.mock import Mock
 
+from .native_query_test_support import WorkbenchTools
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import QueryExecutionError, WorkbenchUnavailableError
 MCP_ROOT = Path(__file__).resolve().parents[1]
 
 from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.FEATURE_IWE_CONSOLE_BACKEND__shared import (  # noqa: E402
     CHECK, LOAD, NATIVE_TOOLS, PAGE, QUERY_LOG_LIST, RUN, SAVED_LIST, SAVE_VIEW, SCHEMA, VIEW_CREATE, VIEW_DUPLICATE, WORKSPACE_OPEN,
     native_tools,
 )
-from .native_query_test_support import WorkbenchTools
-from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import QueryExecutionError, WorkbenchUnavailableError
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import ExplicitBlockingRuntimeFailure  # noqa: E402
 
 

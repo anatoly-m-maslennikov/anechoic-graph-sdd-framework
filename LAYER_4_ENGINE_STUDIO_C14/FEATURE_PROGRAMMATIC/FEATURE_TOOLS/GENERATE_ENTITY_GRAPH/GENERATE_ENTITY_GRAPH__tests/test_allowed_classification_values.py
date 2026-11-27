@@ -3,8 +3,9 @@ from pathlib import Path
 import sys
 import unittest
 
-TOOL = Path(__file__).resolve().parents[1]
-sys.path[:0] = [str(TOOL.parents[1]), str(TOOL.parent), str(TOOL)]
+sys.path.insert(0, str(TOOL := Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(TOOL.parent))
+sys.path.insert(0, str(TOOL.parents[1]))
 
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import (
     CLASSIFICATION_PYTHON_BODY,

@@ -4,15 +4,18 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import StatusModelError
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import _staged_declarations
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
+    import StatusModelError  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared \
+    import _staged_declarations  # fmt: skip
 
 
 class StatusScanTypedPropertyTest(unittest.TestCase):
     def test_typed_property_is_not_a_status_declaration(self):
         with TemporaryDirectory() as directory:
             root = Path(directory)
-            (root / 'CA-R-2541.md').write_text('''---
+            (root / "CA-R-2541.md").write_text(
+                """---
 atom_id: CA-R-2541
 role: Requirement
 form: Declaration
@@ -35,10 +38,14 @@ declare_entity(
     dependent_property_cardinality=0,
 )
 ```
-''', encoding='utf-8')
-            with self.assertRaisesRegex(StatusModelError, 'no current Status declarations'):
+""",
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(
+                StatusModelError, "no current Status declarations"
+            ):
                 _staged_declarations(root)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

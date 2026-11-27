@@ -9,7 +9,9 @@ from pydantic import BaseModel, ConfigDict
 
 
 class _WorkerRun(BaseModel):
-    model_config = ConfigDict(strict=True, extra="forbid", validate_assignment=True)
+    model_config = ConfigDict(
+        strict=True, extra="forbid", validate_assignment=True
+    )
 
     id: str
     kind: Literal["model_build", "structure_refresh"]
@@ -33,8 +35,14 @@ class Orchestrator:
         """Return independent JSON-compatible snapshots of worker state."""
         with self._lock:
             return {
-                "active": [run.model_dump(exclude_unset=True) for run in self._active.values()],
-                "latest": [run.model_dump(exclude_unset=True) for run in self._latest.values()],
+                "active": [
+                    run.model_dump(exclude_unset=True)
+                    for run in self._active.values()
+                ],
+                "latest": [
+                    run.model_dump(exclude_unset=True)
+                    for run in self._latest.values()
+                ],
             }
 
     def stop(self):
@@ -52,8 +60,12 @@ class Orchestrator:
                 raise RuntimeError("Orchestrator is stopped")
             try:
                 process = subprocess.Popen(
-                    command, cwd=cwd, env=env, stdin=subprocess.DEVNULL,
-                    stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                    command,
+                    cwd=cwd,
+                    env=env,
+                    stdin=subprocess.DEVNULL,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
                 )
             except OSError:
                 run.status = "failed"
@@ -65,7 +77,7 @@ class Orchestrator:
         return process
 
     def run_worker(self, kind, command, *, cwd, env, timeout):
-        """Run a trusted compiler command with the runtime's process settings."""
+        "Run a trusted compiler command with the runtime's process settings."
         if kind not in ("model_build", "structure_refresh"):
             raise ValueError(f"Unknown worker kind: {kind}")
         run = _WorkerRun(id=uuid4().hex, kind=kind, pid=None, status="running")
@@ -84,7 +96,9 @@ class Orchestrator:
                 process.wait()
                 raise
             status = "completed" if process.returncode == 0 else "failed"
-            return subprocess.CompletedProcess(command, process.returncode, stdout, stderr)
+            return subprocess.CompletedProcess(
+                command, process.returncode, stdout, stderr
+            )
         finally:
             with self._lock:
                 if run.id in self._cancelled:

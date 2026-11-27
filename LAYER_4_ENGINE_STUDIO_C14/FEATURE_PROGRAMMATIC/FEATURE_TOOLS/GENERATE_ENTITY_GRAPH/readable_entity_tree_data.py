@@ -31,7 +31,11 @@ def rows(value: object) -> list[Record]:
 
 
 def text(value: object, field: str) -> str:
-    if not isinstance(value, str) or not value.strip() or any(c in value for c in "\n\r\t"):
+    if (
+        not isinstance(value, str)
+        or not value.strip()
+        or any(c in value for c in "\n\r\t")
+    ):
         raise ValueError(f"Invalid {field}")
     return value
 
@@ -40,14 +44,22 @@ def order(row: Record) -> tuple[int, float]:
     value = row.get("ordinal_position")
     if value is None:
         return (1, 0)
-    if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+    if (
+        isinstance(value, bool)
+        or not isinstance(value, (int, float))
+        or not math.isfinite(value)
+    ):
         raise ValueError("Invalid ordinal_position")
     return (0, value)
 
 
 def name_key(nodes: Nodes, key: str) -> tuple[str, str, str]:
     node = nodes[key]
-    return (cast(str, node.get("display_name", node["identity"])), node["identity"], key)
+    return (
+        cast(str, node.get("display_name", node["identity"])),
+        node["identity"],
+        key,
+    )
 
 
 def read_nodes(rows: list[Record]) -> Nodes:
@@ -76,7 +88,9 @@ def _endpoints(edge: Record, nodes: Nodes) -> tuple[str, str]:
     return child, parent
 
 
-def read_edges(rows: list[Record], nodes: Nodes) -> tuple[Children, set[str], Counter[str], bool]:
+def read_edges(
+    rows: list[Record], nodes: Nodes
+) -> tuple[Children, set[str], Counter[str], bool]:
     children: Children = {key: [] for key in nodes}
     dependents: set[str] = set()
     omitted: Counter[str] = Counter()
@@ -95,7 +109,13 @@ def read_edges(rows: list[Record], nodes: Nodes) -> tuple[Children, set[str], Co
         if kind in {"IS_PROPERTY_OF", "IS_BORNE_BY"}:
             dependents.add(child)
     for edges in children.values():
-        edges.sort(key=lambda pair: (*order(pair[1]), *name_key(nodes, pair[0]), pair[1]["kind"]))
+        edges.sort(
+            key=lambda pair: (
+                *order(pair[1]),
+                *name_key(nodes, pair[0]),
+                pair[1]["kind"],
+            )
+        )
     return children, _descendants(dependents, children), omitted, provisional
 
 
@@ -114,15 +134,30 @@ def _count(value: object) -> str:
         return ""
     value = record(value)
     minimum, maximum = value.get("minimum"), value.get("maximum")
-    if type(minimum) is not int or minimum < 0 or (maximum is not None and
-            (type(maximum) is not int or maximum < minimum)):
+    if (
+        type(minimum) is not int
+        or minimum < 0
+        or (
+            maximum is not None
+            and (type(maximum) is not int or maximum < minimum)
+        )
+    ):
         raise ValueError("Invalid relation cardinality")
-    suffix = "+" if maximum is None else "" if minimum == maximum else f"..{maximum}"
+    suffix = (
+        "+"
+        if maximum is None
+        else ""
+        if minimum == maximum
+        else f"..{maximum}"
+    )
     return "{" + str(minimum) + suffix + "}"
 
 
 def _label(edge: Record) -> str:
-    forward, reverse = edge.get("forward_cardinality"), edge.get("reverse_cardinality")
+    forward, reverse = (
+        edge.get("forward_cardinality"),
+        edge.get("reverse_cardinality"),
+    )
     if edge["kind"] == "IS_CONTAINED_BY":
         forward, reverse = reverse, forward
     return _count(forward) + LABELS[edge["kind"]] + _count(reverse) + " "
@@ -143,11 +178,18 @@ def tree(
     lines: list[str] = []
     appearances: list[str] = []
     cycles: set[str] = set()
-    stack: list[tuple[str, int, str, frozenset[str]]] = [(start, 0, "", frozenset())]
+    stack: list[tuple[str, int, str, frozenset[str]]] = [
+        (start, 0, "", frozenset())
+    ]
     while stack:
         key, depth, label, path = stack.pop()
         cyclic = key in path
-        lines.append("\t" * depth + label + _display(nodes[key]) + (" [cycle]" if cyclic else ""))
+        lines.append(
+            "\t" * depth
+            + label
+            + _display(nodes[key])
+            + (" [cycle]" if cyclic else "")
+        )
         if cyclic:
             cycles.add(key)
             continue
@@ -164,7 +206,12 @@ def tree(
 def primary_tree(
     nodes: Nodes, children: Children, primaries: set[str]
 ) -> tuple[list[str], list[str], set[str]]:
-    parents = {child for parent in primaries for child, _ in children[parent] if child in primaries}
+    parents = {
+        child
+        for parent in primaries
+        for child, _ in children[parent]
+        if child in primaries
+    }
 
     def root_key(key: str) -> tuple[int, float, str, str, str]:
         return (*order(nodes[key]), *name_key(nodes, key))
@@ -175,7 +222,9 @@ def primary_tree(
     cycles: set[str] = set()
     for root in roots + sorted(primaries, key=root_key):
         if root not in appearances:
-            lines, visited, found_cycles = tree(root, primaries, nodes, children)
+            lines, visited, found_cycles = tree(
+                root, primaries, nodes, children
+            )
             main.extend(lines)
             appearances.update(dict.fromkeys(visited))
             cycles.update(found_cycles)

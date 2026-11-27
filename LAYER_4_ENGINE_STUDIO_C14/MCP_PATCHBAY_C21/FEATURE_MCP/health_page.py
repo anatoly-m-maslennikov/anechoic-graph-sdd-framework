@@ -1,11 +1,9 @@
-
 """Bounded HTML representation of the MCP health snapshot."""
 
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from html import escape
-
 
 
 MAX_HISTORY = 32
@@ -34,11 +32,15 @@ def _cell(value: object, default: str = UNKNOWN) -> str:
 
 def _error(row: Mapping[str, object]) -> str:
     value = row.get("error_category", row.get("error"))
-    return value if isinstance(value, str) and value in SAFE_ERRORS else UNKNOWN
+    return (
+        value if isinstance(value, str) and value in SAFE_ERRORS else UNKNOWN
+    )
 
 
 def _recent(value: object) -> list[Mapping[str, object]]:
-    if not isinstance(value, Sequence) or isinstance(value, (str, bytes, bytearray)):
+    if not isinstance(value, Sequence) or isinstance(
+        value, (str, bytes, bytearray)
+    ):
         return []
     return [row for row in value[-MAX_HISTORY:] if isinstance(row, Mapping)]
 
@@ -53,25 +55,36 @@ def _field(row: Mapping[str, object], *names: str) -> object:
 def _project(row: Mapping[str, object]) -> str:
     prefix = _field(row, "project_prefix", "prefix")
     instance = _field(row, "project_instance_id", "instance_id")
-    return " / ".join(str(value) for value in (prefix, instance) if isinstance(value, str))
+    return " / ".join(
+        str(value) for value in (prefix, instance) if isinstance(value, str)
+    )
 
 
 def _availability(value: object) -> str:
     return (
         value
-        if isinstance(value, str) and value in {"available", "unavailable", UNKNOWN}
+        if isinstance(value, str)
+        and value in {"available", "unavailable", UNKNOWN}
         else UNKNOWN
     )
 
 
 def _gateway_availability(gateway: object) -> str:
     ready = getattr(gateway, "ready", None)
-    return "available" if ready is True else "unavailable" if ready is False else UNKNOWN
+    return (
+        "available"
+        if ready is True
+        else "unavailable"
+        if ready is False
+        else UNKNOWN
+    )
 
 
 def _registry_availability(gateway: object) -> tuple[str, str]:
     tools = getattr(gateway, "tools", None)
-    if not isinstance(tools, Sequence) or isinstance(tools, (str, bytes, bytearray)):
+    if not isinstance(tools, Sequence) or isinstance(
+        tools, (str, bytes, bytearray)
+    ):
         return UNKNOWN, UNKNOWN
     return "available", str(len(tools))
 
@@ -99,12 +112,20 @@ def _call_rows(calls: Sequence[Mapping[str, object]]) -> str:
 
 def _context_rows(contexts: Sequence[Mapping[str, object]]) -> str:
     if not contexts:
-        return "<tr><td>No Project contexts observed since gateway start.</td></tr>"
-    return "".join(f"<tr><td>{_cell(_project(context))}</td></tr>" for context in contexts)
+        return (
+            "<tr><td>No Project contexts observed since gateway "
+            "start.</td></tr>"
+        )
+    return "".join(
+        f"<tr><td>{_cell(_project(context))}</td></tr>" for context in contexts
+    )
 
 
 def render_health_page(
-    snapshot: Mapping[str, object], *, state: str, gateway: object,
+    snapshot: Mapping[str, object],
+    *,
+    state: str,
+    gateway: object,
 ) -> str:
     """Render only admitted snapshot fields; this function performs no I/O."""
     if not isinstance(snapshot, Mapping):

@@ -19,21 +19,40 @@ _BARE_VALUE = re.compile(r"[A-Za-z_][A-Za-z0-9_ -]*\Z")
 
 
 def _error(node: ast.AST, message: str) -> PythonModelClaimError:
-    return PythonModelClaimError(f"line {node.lineno}, column {node.col_offset + 1}: {message}")
+    return PythonModelClaimError(
+        f"line {node.lineno}, column {node.col_offset + 1}: {message}"
+    )
 
 
-def _text(value: object, label: str, node: ast.AST, *, empty: bool = False) -> str:
-    if not isinstance(value, str) or (not empty and not value.strip()) or value != value.strip():
-        raise _error(node, f"{label} must be a {'string' if empty else 'nonempty string'}")
+def _text(
+    value: object, label: str, node: ast.AST, *, empty: bool = False
+) -> str:
+    if (
+        not isinstance(value, str)
+        or (not empty and not value.strip())
+        or value != value.strip()
+    ):
+        raise _error(
+            node,
+            f"{label} must be a {'string' if empty else 'nonempty string'}",
+        )
     if any(ord(char) < 32 or ord(char) == 127 for char in value):
         raise _error(node, f"{label} contains a control character")
     return value
 
 
-def _reference(value: object, label: str, node: ast.AST,
-               validate_reference: Callable[[str], object] | None) -> str:
+def _reference(
+    value: object,
+    label: str,
+    node: ast.AST,
+    validate_reference: Callable[[str], object] | None,
+) -> str:
     text = _text(value, label, node)
-    if any(char in text for char in ";#\\{}\n\r`") or "::" in text or re.search(r"\(\s*\(", text):
+    if (
+        any(char in text for char in ";#\\{}\n\r`")
+        or "::" in text
+        or re.search(r"\(\s*\(", text)
+    ):
         raise _error(node, f"{label} contains an unsupported character")
     if not re.fullmatch(r"[\w\s.*/():=,!'\"<>|+@$\[\]-]+", text):
         raise _error(node, f"{label} contains an unsupported character")
@@ -60,7 +79,7 @@ def _check_delimiters(text: str, label: str, node: ast.AST) -> None:
         elif char in "([":
             stack.append(char)
         elif char in ")]":
-            if not stack or stack.pop() != {')': '(', ']': '['}[char]:
+            if not stack or stack.pop() != {")": "(", "]": "["}[char]:
                 raise _error(node, f"{label} has unbalanced delimiters")
     if quote or stack:
         raise _error(node, f"{label} has unbalanced delimiters")
@@ -86,7 +105,11 @@ def _name(value: object, label: str, node: ast.AST) -> str:
 
 def _literal(value: object, node: ast.AST) -> str:
     text = _text(value, "value", node)
-    return text if _BARE_VALUE.fullmatch(text) else json.dumps(text, ensure_ascii=False)
+    return (
+        text
+        if _BARE_VALUE.fullmatch(text)
+        else json.dumps(text, ensure_ascii=False)
+    )
 
 
 def _items(value: object, label: str, node: ast.AST) -> tuple:
@@ -100,5 +123,3 @@ def _items(value: object, label: str, node: ast.AST) -> tuple:
 def _optional_count(args: dict, key: str, node: ast.AST) -> str:
     value = args.get(key)
     return "" if value is None else f"{{::{_count(value, key, node)}}}"
-
-

@@ -156,7 +156,7 @@ class LifecycleJobs:
             except ProcessLookupError:
                 pass
             process.communicate()
-            raise RuntimeError("Lifecycle worker deadline exceeded")
+            raise RuntimeError("Lifecycle worker deadline exceeded") from None
         finally:
             with self.lock:
                 self.process = None

@@ -4,12 +4,13 @@ import tempfile
 from types import SimpleNamespace
 from unittest.mock import patch
 
-WORKBENCH = Path(__file__).resolve().parents[2]
-TOOLS = WORKBENCH.parents[1] / 'FEATURE_PROGRAMMATIC' / 'FEATURE_TOOLS'
-
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__tests.FEATURE_TOOLS__tests__shared import compile_candidate_schema, load_candidate_schema
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_content
 from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.FEATURE_IWE_CONSOLE_BACKEND__tests.legacy_source_schema_audit import SourceSchemaAudit
+
+
+WORKBENCH = Path(__file__).resolve().parents[2]
+TOOLS = WORKBENCH.parents[1] / 'FEATURE_PROGRAMMATIC' / 'FEATURE_TOOLS'
 
 
 def declaration(number, name, base_path, extra="", *, values=1):

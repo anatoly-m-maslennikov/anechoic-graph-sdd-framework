@@ -15,7 +15,13 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
 sys.path.insert(0, str(HERE.parent.parent))
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (  # noqa: E402
-    CarrierError, LimitReached, ReadContext, ReadFailure, frontmatter_bounds, parse_carrier, source_body,
+    CarrierError,
+    LimitReached,
+    ReadContext,
+    ReadFailure,
+    frontmatter_bounds,
+    parse_carrier,
+    source_body,
 )
 
 
@@ -24,24 +30,33 @@ class CarrierTests(unittest.TestCase):
         raw = b"---\r\n---\r\n\xffbody"
         self.assertEqual((5, 4, 10), frontmatter_bounds(raw))
         self.assertEqual(b"\xffbody", source_body(raw, Path("case.md")))
-        with self.assertRaisesRegex(ValueError, "case.md: unsupported frontmatter delimiter"):
+        with self.assertRaisesRegex(
+            ValueError, "case.md: unsupported frontmatter delimiter"
+        ):
             source_body(b"plain", Path("case.md"))
 
     def test_valid_and_no_identity_inference(self) -> None:
-        parsed = parse_carrier(b"---\nstatus: Active\n---\n# Summary\n\nHi\n", Path("/CA-R-001.md"))
+        parsed = parse_carrier(
+            b"---\nstatus: Active\n---\n# Summary\n\nHi\n",
+            Path("/CA-R-001.md"),
+        )
         self.assertEqual(parsed._view["status"], "Active")
         self.assertEqual(parsed.metadata, {"status": "Active"})
         self.assertNotIn("atom_id", parsed.metadata)
 
     def test_duplicate_nested_key(self) -> None:
         with self.assertRaises(CarrierError) as caught:
-            parse_carrier(b"---\nsubjects: {governs: A, governs: B}\n---\nx", Path("/a.md"))
+            parse_carrier(
+                b"---\nsubjects: {governs: A, governs: B}\n---\nx",
+                Path("/a.md"),
+            )
         self.assertEqual(caught.exception.code, "YAML_DUPLICATE_KEY")
 
     def test_unsafe_tag(self) -> None:
         with self.assertRaises(CarrierError):
             parse_carrier(
-                b'---\nx: !!python/object/apply:os.system ["exit 0"]\n---\nx', Path("/a.md")
+                b'---\nx: !!python/object/apply:os.system ["exit 0"]\n---\nx',
+                Path("/a.md"),
             )
 
     def test_alias_is_explicitly_unsupported(self) -> None:
@@ -64,7 +79,9 @@ class ReadTests(unittest.TestCase):
     def setUp(self) -> None:
         parent = HERE.parents[4] / ".anechoic_tmp"
         parent.mkdir(exist_ok=True)
-        self.root = Path(tempfile.mkdtemp(dir=parent, prefix="validator-input-test-"))
+        self.root = Path(
+            tempfile.mkdtemp(dir=parent, prefix="validator-input-test-")
+        )
         self.limits = dict(
             max_candidates=10,
             max_file_bytes=20,
@@ -121,17 +138,23 @@ class ReadTests(unittest.TestCase):
                 return super().read(size)
 
         with ThreadPoolExecutor(max_workers=1) as pool:
-            first = pool.submit(self.reader._read_bytes, BlockedRead(b"x" * 11), 11)
+            first = pool.submit(
+                self.reader._read_bytes, BlockedRead(b"x" * 11), 11
+            )
             try:
                 self.assertTrue(started.wait(5))
-                with self.assertRaisesRegex(LimitReached, "max_total_read_bytes"):
+                with self.assertRaisesRegex(
+                    LimitReached, "max_total_read_bytes"
+                ):
                     self.reader._read_bytes(BytesIO(b"y" * 11), 11)
             finally:
                 release.set()
             self.assertEqual(first.result(), b"x" * 11)
         self.assertEqual(self.reader.bytes_read, 11)
 
-    def test_inventory_rechecks_entry_type_when_it_visits_the_path(self) -> None:
+    def test_inventory_rechecks_entry_type_when_it_visits_the_path(
+        self,
+    ) -> None:
         entry = self.root / "pending"
         entry.touch()
         self.assertEqual(self.reader.inventory(self.root), [])
@@ -146,7 +169,13 @@ class ReadTests(unittest.TestCase):
                 entry.mkdir()
                 (entry / "a.md").write_text("new input", encoding="utf-8")
 
-        with patch('FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__pub.os.scandir', scan_and_replace):
+        with patch(
+            (
+                "FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30_"
+                "_pub.os.scandir"
+            ),
+            scan_and_replace,
+        ):
             self.assertEqual(self.reader.currentness()["state"], "changed")
 
     def test_symlink_escape(self) -> None:
@@ -177,7 +206,9 @@ class ReadTests(unittest.TestCase):
         self.assertEqual(self.reader.currentness()["state"], "changed")
         self.assertEqual(self.reader.bytes_read, len(b"original"))
 
-    def test_metadata_guard_rejects_replaced_parent_with_same_file(self) -> None:
+    def test_metadata_guard_rejects_replaced_parent_with_same_file(
+        self,
+    ) -> None:
         directory = self.root / "source"
         directory.mkdir()
         path = directory / "a.md"
@@ -186,7 +217,9 @@ class ReadTests(unittest.TestCase):
         self.reader.read(path, metadata_guard=True)
         moved = directory.rename(self.root / "moved")
         directory.symlink_to(moved, target_is_directory=True)
-        self.assertIn({"path": str(path)}, self.reader.currentness()["affected_inputs"])
+        self.assertIn(
+            {"path": str(path)}, self.reader.currentness()["affected_inputs"]
+        )
 
 
 if __name__ == "__main__":

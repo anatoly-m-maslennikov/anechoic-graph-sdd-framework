@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from .subject_notation_expression import _RESERVED
 from .subject_notation_types import (
-    Cardinality, DeclaredReference, InitialAtomSelector, Name, ParsedSubject, Path, Qualification,
+    Cardinality, DeclaredReference, InitialAtomSelector, MembershipPredicate, Name, ParsedSubject, Path, Qualification,
     RelationChain, SelectionGroup, SelectionSuffix, ValueLiteral,
 )
 
@@ -41,7 +41,10 @@ def render_subject(parsed: ParsedSubject | Path | RelationChain) -> str:
     return result + _render_cardinality(parsed.value_cardinality)
 
 
-def _render_operand(node: Name | ValueLiteral | InitialAtomSelector | Qualification | DeclaredReference | Path | RelationChain | SelectionGroup | SelectionSuffix) -> str:
+def _render_operand(node: Name | ValueLiteral | MembershipPredicate | InitialAtomSelector | Qualification | DeclaredReference | Path | RelationChain | SelectionGroup | SelectionSuffix) -> str:
+    if isinstance(node, MembershipPredicate):
+        values = ", ".join(_render_operand(value) for value in node.values)
+        return f"(.{_escaped_name(node.property.value)} in ({values}))"
     if isinstance(node, SelectionGroup):
         return "(" + ",".join(render_subject(member) for member in node.members) + ")"
     if isinstance(node, SelectionSuffix):

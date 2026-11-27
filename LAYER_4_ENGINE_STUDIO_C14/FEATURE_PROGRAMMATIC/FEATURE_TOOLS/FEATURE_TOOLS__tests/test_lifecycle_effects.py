@@ -1,4 +1,5 @@
 """Mechanical carrier effects use exact pins and report partial outcomes."""
+
 import hashlib
 import sys
 import tempfile
@@ -12,7 +13,9 @@ from pydantic import ValidationError
 TOOLS = Path(__file__).resolve().parents[1]
 ROOT = TOOLS.parents[2]
 sys.path.insert(0, str(TOOLS))
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import effects_module as effects  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import (  # noqa: E402
+    effects_module as effects,
+)
 
 
 def digest(value):
@@ -28,7 +31,14 @@ class LifecycleEffectsTest(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
 
     def test_result_preserves_mutable_receipts_and_rejects_nonlists(self):
-        effect_rows = [{"operation": "create", "target": "test.md", "state": "known", "evidence": "digest"}]
+        effect_rows = [
+            {
+                "operation": "create",
+                "target": "test.md",
+                "state": "known",
+                "evidence": "digest",
+            }
+        ]
         result = effects.Result(effect_rows)
         self.assertIs(replace(result).effects, effect_rows)
         result.errors.append({"code": "backend_failure", "field": None})
@@ -45,7 +55,9 @@ class LifecycleEffectsTest(unittest.TestCase):
         stale = effects.replace(ROOT, path, digest(b"old"), b"two")
         self.assertTrue(stale.errors)
         self.assertEqual(b"one", path.read_bytes())
-        self.assertEqual([], effects.replace(ROOT, path, digest(b"one"), b"one").effects)
+        self.assertEqual(
+            [], effects.replace(ROOT, path, digest(b"one"), b"one").effects
+        )
         changed = effects.replace(ROOT, path, digest(b"one"), b"two")
         self.assertEqual("known", changed.effects[0]["state"])
         self.assertEqual(b"two", path.read_bytes())
@@ -58,19 +70,27 @@ class LifecycleEffectsTest(unittest.TestCase):
         destination = self.directory / "target.md"
         source.write_bytes(b"one")
         real_remove = effects.remove
+
         def change_then_remove(root, path, expected):
             path.write_bytes(b"changed")
             return real_remove(root, path, expected)
+
         with patch.object(effects, "remove", side_effect=change_then_remove):
-            result = effects.relocate(ROOT, source, digest(b"one"), destination)
-        self.assertEqual(["create"], [effect["operation"] for effect in result.effects])
+            result = effects.relocate(
+                ROOT, source, digest(b"one"), destination
+            )
+        self.assertEqual(
+            ["create"], [effect["operation"] for effect in result.effects]
+        )
         self.assertEqual("stale_state", result.errors[0]["code"])
         self.assertEqual(b"changed", source.read_bytes())
         self.assertEqual(b"one", destination.read_bytes())
 
     def test_readback_failure_reports_unknown_effect(self):
         path = self.directory / "carrier.md"
-        with patch.object(effects, "_read", side_effect=OSError("readback unavailable")):
+        with patch.object(
+            effects, "_read", side_effect=OSError("readback unavailable")
+        ):
             result = effects.create(ROOT, path, b"one")
         self.assertEqual("unknown", result.effects[0]["state"])
         self.assertEqual("effect_uncertain", result.errors[0]["code"])
@@ -90,8 +110,12 @@ class LifecycleEffectsTest(unittest.TestCase):
                 raise FileNotFoundError(name)
             return read(parent, name)
 
-        with (patch.object(effects.os, "link", side_effect=record_staging),
-              patch.object(effects, "_read", side_effect=read_while_staging_exists)):
+        with (
+            patch.object(effects.os, "link", side_effect=record_staging),
+            patch.object(
+                effects, "_read", side_effect=read_while_staging_exists
+            ),
+        ):
             result = effects.create(ROOT, path, b"one")
 
         self.assertEqual([], result.errors)
@@ -117,7 +141,9 @@ class LifecycleEffectsTest(unittest.TestCase):
                 elif state == "altered":
                     path.write_bytes(b"changed")
 
-            with patch.object(effects.os, "link", side_effect=link_then_remove_staging):
+            with patch.object(
+                effects.os, "link", side_effect=link_then_remove_staging
+            ):
                 result = effects.create(ROOT, path, b"one")
 
             self.assertEqual(1, len(staging_paths))
@@ -131,8 +157,13 @@ class LifecycleEffectsTest(unittest.TestCase):
             else:
                 self.assertEqual("effect_uncertain", result.errors[0]["code"])
                 self.assertEqual("unknown", result.effects[0]["state"])
-                exception_type = "FileNotFoundError" if state == "missing" else "OSError"
-                self.assertEqual(f"filesystem operation failed ({exception_type})", result.errors[0]["message"])
+                exception_type = (
+                    "FileNotFoundError" if state == "missing" else "OSError"
+                )
+                self.assertEqual(
+                    f"filesystem operation failed ({exception_type})",
+                    result.errors[0]["message"],
+                )
                 if state == "missing":
                     self.assertFalse(path.exists())
                 else:
@@ -151,7 +182,9 @@ class LifecycleEffectsTest(unittest.TestCase):
         alias.symlink_to(directory, target_is_directory=True)
         for result in (
             effects.create(ROOT, alias / "new.md", b"two"),
-            effects.replace(ROOT, alias / "original.md", digest(b"one"), b"two"),
+            effects.replace(
+                ROOT, alias / "original.md", digest(b"one"), b"two"
+            ),
             effects.remove(ROOT, alias / "original.md", digest(b"one")),
             effects.create(ROOT, ROOT / ".." / "escape.md", b"two"),
             effects.remove(ROOT, ROOT.parent / "escape.md", digest(b"one")),
@@ -165,7 +198,9 @@ class LifecycleEffectsTest(unittest.TestCase):
     def test_effect_targets_are_project_relative(self):
         path = self.directory / "carrier.md"
         result = effects.create(ROOT, path, b"one")
-        self.assertEqual(path.relative_to(ROOT).as_posix(), result.effects[0]["target"])
+        self.assertEqual(
+            path.relative_to(ROOT).as_posix(), result.effects[0]["target"]
+        )
         self.assertNotIn(str(ROOT), str(result.effects))
 
     def test_symlink_source_is_refused(self):

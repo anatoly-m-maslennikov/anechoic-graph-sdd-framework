@@ -50,7 +50,7 @@ def code_rows(nodes, test_edges, component_paths, sizes, test_assets):
     tests.update({key: packages[key] for key, _ in test_edges if key in packages})
     rows = {}
     for node in nodes:
-        key, kind, _, path, status, owner, _ = node
+        _, kind, _, path, status, owner, _ = node
         if kind != 'module' or path is None:
             continue
         if path not in sizes:

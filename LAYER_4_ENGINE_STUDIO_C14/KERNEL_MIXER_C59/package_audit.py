@@ -16,6 +16,28 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import
 from .component_metrics import realization_component_paths
 
 
+def _embedded_contract(row, path, carrier, embedded_contracts):
+    if row['tier'] != 1:
+        return
+    try:
+        fields, _ = parse_component_manifest(carrier.body, tier=1)
+        if component_contract_fences(carrier.body) is not None:
+            embedded_contracts[fields['component_id']].append(row['_exact_ref'])
+    except ValueError as error:
+        print(f'Invalid Component Manifest {path}: {error}', file=sys.stderr)
+
+
+def _contract_context(row, edge):
+    if row["status_group"] != "Current" or edge.get("target_kind") != "Component":
+        return None
+    context = native_header_view(row["header_json"]).get("context", {})
+    if context.get("template") not in ("component_contract", "component_seed_manifest", "component_manifest"):
+        return None
+    if context.get("template") != "component_contract" and context.get("lens") != "SPEC":
+        return None
+    return context
+
+
 def _contract_candidates(selection, capture):
     edges = {edge['source_ref']: edge for edge in capture.containment}
     specs = defaultdict(list)
@@ -23,27 +45,16 @@ def _contract_candidates(selection, capture):
     embedded_contracts = defaultdict(list)
     for row in capture.atoms:
         edge = edges.get(row['ref'], {})
-        if row['status_group'] != 'Current' or edge.get('target_kind') != 'Component':
+        context = _contract_context(row, edge)
+        if context is None:
             continue
         header = row['header_json']
-        context = native_header_view(header).get('context', {})
-        if context.get('template') not in ('component_contract', 'component_seed_manifest', 'component_manifest'):
-            continue
-        if context.get('template') != 'component_contract' and context.get('lens') != 'SPEC':
-            continue
         path = Path(row['source_path'])
         carrier = SimpleNamespace(  # pragma: anechoic-model-adapter - carrier parser
             metadata=header, body=row['_content_bytes'].decode('utf-8'),
         )
         if context.get('template') == 'component_manifest':
-            if row['tier'] != 1:
-                continue
-            try:
-                fields, _ = parse_component_manifest(carrier.body, tier=1)
-                if component_contract_fences(carrier.body) is not None:
-                    embedded_contracts[fields['component_id']].append(row['_exact_ref'])
-            except ValueError as error:
-                print(f'Invalid Component Manifest {path}: {error}', file=sys.stderr)
+            _embedded_contract(row, path, carrier, embedded_contracts)
             continue
         if context.get('template') == 'component_contract':
             try:

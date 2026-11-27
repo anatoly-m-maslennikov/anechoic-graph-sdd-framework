@@ -7,9 +7,15 @@ import hashlib
 from pathlib import Path
 from typing import Any
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import source_body
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import carrier_read_view
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import SubjectNotationError, parse_subject_expression
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
+    import source_body  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
+    import carrier_read_view  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
+    import (
+        SubjectNotationError,
+        parse_subject_expression,
+    )  # fmt: skip
 
 
 Record = dict[str, Any]
@@ -22,7 +28,11 @@ def _view(carrier: Mapping[str, object]) -> Mapping[str, object]:
     if isinstance(value, Mapping):
         return value
     metadata = carrier.get("metadata")
-    return carrier_read_view(dict(metadata)) if isinstance(metadata, Mapping) else {}
+    return (
+        carrier_read_view(dict(metadata))
+        if isinstance(metadata, Mapping)
+        else {}
+    )
 
 
 def _source(carrier: Mapping[str, object]) -> Record | None:
@@ -30,7 +40,12 @@ def _source(carrier: Mapping[str, object]) -> Record | None:
     if not isinstance(value, Mapping):
         return None
     atom_id, version = value.get("atom_id"), value.get("version")
-    if not isinstance(atom_id, str) or not atom_id.strip() or type(version) is not int or version < 1:
+    if (
+        not isinstance(atom_id, str)
+        or not atom_id.strip()
+        or type(version) is not int
+        or version < 1
+    ):
         return None
     return {key: item for key, item in value.items()}
 
@@ -38,7 +53,11 @@ def _source(carrier: Mapping[str, object]) -> Record | None:
 def _source_with_matching_bytes(
     source: Record | None, raw: object, raw_body: object
 ) -> Record | None:
-    if source is None or not isinstance(raw, bytes) or not isinstance(raw_body, str):
+    if (
+        source is None
+        or not isinstance(raw, bytes)
+        or not isinstance(raw_body, str)
+    ):
         return None
     if hashlib.sha256(raw).hexdigest() != source.get("sha256"):
         return None
@@ -62,13 +81,19 @@ def _subjects(carrier: Mapping[str, object]) -> list[str]:
     return [item for item in values if isinstance(item, str) and item.strip()]
 
 
-def _single_valid_governed_subject(carrier: Mapping[str, object]) -> str | None:
+def _single_valid_governed_subject(
+    carrier: Mapping[str, object],
+) -> str | None:
     subjects = _subjects_mapping(carrier)
     if not isinstance(subjects, Mapping):
         return None
     value = subjects.get("governs")
     values = value if isinstance(value, list) else [value]
-    if len(values) != 1 or not isinstance(values[0], str) or not values[0].strip():
+    if (
+        len(values) != 1
+        or not isinstance(values[0], str)
+        or not values[0].strip()
+    ):
         return None
     try:
         parse_subject_expression(values[0], subject_profile="approved")
@@ -77,7 +102,9 @@ def _single_valid_governed_subject(carrier: Mapping[str, object]) -> str | None:
     return values[0]
 
 
-def _subjects_mapping(carrier: Mapping[str, object]) -> Mapping[str, object] | None:
+def _subjects_mapping(
+    carrier: Mapping[str, object],
+) -> Mapping[str, object] | None:
     subjects = carrier.get("subjects")
     if not isinstance(subjects, Mapping):
         subjects = _view(carrier).get("subjects")

@@ -7,16 +7,16 @@ from collections import Counter
 from pathlib import Path
 
 
-ROOT = Path(__file__).resolve().parents[5]
-PLAN = ROOT / ".anechoic_anechoic/02_analysis/draft/header-groups-20261106"
-SNAPSHOT = PLAN / "native-snapshot.json"
-OUT = Path(__file__).with_name("impact.json")
-
 from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.FEATURE_IWE_CONSOLE_BACKEND__tests.assets.content_declaration_schema.reference_impact_patterns import (
     COMMON, ROLE_FIELDS, ALL_FIELDS, DIRECT_ATOM, DIRECT_VAR, DIRECT_ROLE, RELATIVE,
     ROLE_QUALIFIED, ATOM_CONTEXT, ATOM_ROLE, ATOM_BINDING, TYPED_ATOM, SUMMARY,
     E240_BARE, BARE_COMMON, BARE_COMMON_PATHS, E240_PATHS,
 )
+ROOT = Path(__file__).resolve().parents[5]
+PLAN = ROOT / ".anechoic_anechoic/02_analysis/draft/header-groups-20261106"
+SNAPSHOT = PLAN / "native-snapshot.json"
+OUT = Path(__file__).with_name("impact.json")
+
 
 
 def sha256(text):

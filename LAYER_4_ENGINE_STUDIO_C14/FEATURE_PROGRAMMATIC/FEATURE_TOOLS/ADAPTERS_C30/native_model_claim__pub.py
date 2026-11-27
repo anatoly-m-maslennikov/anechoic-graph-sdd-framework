@@ -47,18 +47,8 @@ def parse_native_model_claim(text: str) -> dict[str, Any] | None:  # noqa: C901
     if unknown := keywords.keys() - _DECLARATION_KEYS[function]:
         _fail(declaration, f"unsupported {function} arguments: {', '.join(sorted(unknown))}")
     arguments, property_manifest = _decode(keywords, function, names, imports)
-    _validate_manifest_arguments(arguments, declaration)
-    _validate_axes(arguments, declaration, function, classes, functions, imports, property_manifest)
-    _validate_aspects(arguments, declaration, function, classes, functions, imports, property_manifest)
-    _validate_fallback(arguments, declaration, function, classes, functions, imports, property_manifest)
-    _validate_callback(arguments, declaration, function, classes, functions, imports, property_manifest)
-    _validate_property_prerequisites(arguments, declaration, function, classes, functions, imports, property_manifest)
-    _validate_property(arguments, declaration, function, classes, functions, imports, property_manifest)
-    _validate_uniqueness(arguments, declaration, function, classes, functions, imports, property_manifest)
-    _validate_dependencies(arguments, declaration, function, classes, functions, imports, property_manifest)
-    _validate_ordered(arguments, declaration, function, classes, functions, imports, property_manifest)
-    _validate_relation(arguments, declaration, function, classes, functions, imports, property_manifest)
-    _validate_constraints(arguments, declaration, function, classes, functions, imports, property_manifest)
+    _validate_claim(arguments, declaration, function, classes, functions,
+                    imports, property_manifest)
     result = {"kind": _DECLARATIONS[function], "arguments": arguments, "classes": tuple(classes),
               "imports": imports, "line": declaration.lineno}
     value_format_node = keywords.get("value_format")
@@ -67,6 +57,24 @@ def parse_native_model_claim(text: str) -> dict[str, Any] | None:  # noqa: C901
     if functions:
         result["instance_check"] = functions[0]
     return result
+
+
+def _validate_claim(arguments, declaration, function, classes, functions,
+                    imports, property_manifest):
+    _validate_manifest_arguments(arguments, declaration)
+    inputs = (arguments, declaration, function, classes, functions, imports,
+              property_manifest)
+    _validate_axes(*inputs)
+    _validate_aspects(*inputs)
+    _validate_fallback(*inputs)
+    _validate_callback(*inputs)
+    _validate_property_prerequisites(*inputs)
+    _validate_property(*inputs)
+    _validate_uniqueness(*inputs)
+    _validate_dependencies(*inputs)
+    _validate_ordered(*inputs)
+    _validate_relation(*inputs)
+    _validate_constraints(*inputs)
 
 
 def parse_manifest_declaration(text, *, entity_name, class_name):

@@ -1,12 +1,63 @@
 import { mockGraph } from './console-graph-mock';
-import { checkObservedValues, formalCases, type CorrelatedCase } from './console-formal-cases';
-import { expect, test, type Page } from '@playwright/test';
+import { checkObservedEffects, checkObservedValues, formalCases, type CorrelatedCase, type Effect } from './console-formal-cases';
+import { expect, test, type Page, type Request } from '@playwright/test';
 
 type Case = CorrelatedCase & { input: Record<string, string>; effect: [string, string, Record<string, string>] };
 const cases = formalCases<Case>('edit_console_builder', 'run_console_builder', 'select_console_view', 'inspect_console_diagnostics');
 
+const builderEvents = {
+  view_update: ['update_requested', 'update_returned', 'C21.view_update', 'succeeded'],
+  view_run: ['run_requested', 'run_returned', 'C21.view_run.query_id', 'returned'],
+  view_fetch: ['fetch_requested', 'first_page_received', 'C21.view_fetch', 'succeeded'],
+} as const;
+type BuilderObservation =
+  | { phase: 'request' | 'response'; request: Request; operation: keyof typeof builderEvents }
+  | { phase: 'display'; detail: Record<string, unknown> };
+
+function observeBuilderDisplay() {
+  const report = (window as typeof window & { reportBuilderDisplay(detail: Record<string, unknown>): Promise<void> })
+    .reportBuilderDisplay;
+  const seen = new Set<string>();
+  new MutationObserver(() => {
+    const cells = Array.from(document.querySelectorAll('[role="grid"] .tabulator-cell'));
+    if (cells.length !== 4 || !cells[2].checkVisibility()) return;
+    const [viewId, revision, queryId, sql] = cells.map(cell => cell.textContent ?? '');
+    if (!viewId || !revision || !queryId || !sql || seen.has(queryId)) return;
+    seen.add(queryId);
+    void report({ view_id: viewId, revision: Number(revision), query_id: queryId, sql });
+  }).observe(document, { childList: true, characterData: true, subtree: true, attributes: true });
+}
+
+async function observeBuilder(page: Page) {
+  const observations: BuilderObservation[] = [];
+  function record(request: Request, phase: 'request' | 'response') {
+    if (request.method() !== 'POST' || !new URL(request.url()).pathname.endsWith('/interface')) return;
+    const { operation } = request.postDataJSON();
+    if (Object.hasOwn(builderEvents, operation)) observations.push({ request, operation, phase });
+  }
+  page.on('request', request => record(request, 'request'));
+  page.on('requestfinished', request => record(request, 'response'));
+  await page.exposeFunction('reportBuilderDisplay', (detail: Record<string, unknown>) => {
+    observations.push({ phase: 'display', detail });
+  });
+  await page.addInitScript(observeBuilderDisplay);
+  return observations;
+}
+
+async function builderEffect(observation: BuilderObservation): Promise<[string, Effect] | undefined> {
+  if (observation.phase === 'display') return ['result_displayed', ['workbench_display', 'shown', observation.detail]];
+  const { request, operation, phase } = observation;
+  const [requested, returned, target, outcome] = builderEvents[operation];
+  if (phase === 'request') return [requested, [`C21.${operation}`, 'requested', request.postDataJSON().arguments]];
+  const response = await request.response();
+  if (!response?.ok()) return;
+  const detail = await response.json();
+  if (operation === 'view_run' && (typeof detail.query_id !== 'string' || !detail.query_id.trim())) return;
+  return [returned, [target, outcome, detail]];
+}
+
 async function builderFixture(page: Page, fault?: 'revision' | 'query_id') {
-  const operations: { operation: string; arguments: any; reply: any }[] = [];
+  const observations = await observeBuilder(page);
   const view = { id: 'v1', name: 'View 1', sql: 'SELECT * FROM atoms LIMIT 5', cursor_position: 0, revision: 1 };
   const workspace = { workspace_id: 'test', project_name: 'Fixture', active_view_id: view.id, views: [view] };
   let run = { view_id: '', revision: 0, query_id: '', sql: '' };
@@ -29,17 +80,16 @@ async function builderFixture(page: Page, fault?: 'revision' | 'query_id') {
           rows: [[run.view_id, run.revision, run.query_id, run.sql]], row_count: 1, column_count: 4,
           offset: 0, page_size: request.arguments.page_size, has_more: false }; break;
     }
-    if (['view_update', 'view_run', 'view_fetch'].includes(request.operation)) operations.push({ ...request, reply });
     return route.fulfill({ json: reply });
   });
   await page.goto(process.env.WORKBENCH_E2E_URL!);
   await expect(page.getByRole('textbox', { name: 'Query editor' })).toHaveText(view.sql);
-  return { view, operations };
+  return { view, observations };
 }
 
 for (const scenario of cases.run_console_builder) {
   test(`formal Builder Run: ${scenario.name}`, async ({ page }) => {
-    const { view, operations } = await builderFixture(page);
+    const { view, observations } = await builderFixture(page);
     const builder = page.getByLabel('SQL builder');
     const editor = page.getByRole('textbox', { name: 'Query editor' });
     const cells = page.getByRole('grid').locator('.tabulator-cell');
@@ -49,40 +99,40 @@ for (const scenario of cases.run_console_builder) {
       ['Template', 'solution', `"header.context.template" = 'solution'`],
       ['Limit', '3', 'LIMIT 3'],
     ]) {
-      const start = operations.length;
+      const start = observations.length;
       const base = view.revision;
       await builder.getByLabel(field).fill(value); await builder.getByLabel(field).blur();
       await expect(editor).toContainText(fragment);
-      await expect(cells.nth(2)).toHaveText(`query-${base + 1}`);
-      const [update, run, fetch] = operations.slice(start)
-        .filter(call => call.operation !== 'view_fetch' || call.reply.query_id === `query-${base + 1}`);
-      expect([update.operation, run.operation, fetch.operation]).toEqual(['view_update', 'view_run', 'view_fetch']);
-      const [viewId, revision, queryId, sql] = await cells.allTextContents();
+      const queryId = `query-${base + 1}`;
+      await expect(cells.nth(2)).toHaveText(queryId);
+      await expect.poll(() => observations.some(entry => entry.phase === 'display' && entry.detail.query_id === queryId)).toBe(true);
+      const effects = (await Promise.all(observations.slice(start).map(builderEffect))).filter(effect => effect !== undefined);
+      checkObservedEffects(scenario, effects.map(([, effect]) => effect));
+      const values: Record<string, Record<string, unknown>> = {};
+      for (const [name, [, , detail]] of effects) values[name] ??= detail ?? {};
       checkObservedValues(scenario, {
         edited_run: { view_id: view.id, sql: await editor.innerText(), revision: base },
-        update_requested: update.arguments, update_returned: update.reply,
-        run_requested: run.arguments, run_returned: run.reply,
-        fetch_requested: fetch.arguments, first_page_received: fetch.reply,
-        result_displayed: { view_id: viewId, revision: Number(revision), query_id: queryId, sql },
+        ...values,
       });
     }
-    const submitted = operations.filter(item => item.operation === 'view_run').length;
+    const submitted = observations.filter(item => item.phase === 'request' && item.operation === 'view_run').length;
     await builder.getByLabel('Limit').fill('bad'); await builder.getByLabel('Limit').blur();
     await expect(page.getByRole('alert')).toHaveText('Limit must be a non-negative integer.');
     await expect(editor).toContainText('LIMIT 3');
-    expect(operations.filter(item => item.operation === 'view_run')).toHaveLength(submitted);
+    expect(observations.filter(item => item.phase === 'request' && item.operation === 'view_run')).toHaveLength(submitted);
   });
 
   for (const fault of ['revision', 'query_id'] as const) {
     test(`formal Builder Run: ${scenario.name} refuses stale ${fault}`, async ({ page }) => {
-      const { operations } = await builderFixture(page, fault);
+      const { observations } = await builderFixture(page, fault);
       const limit = page.getByLabel('SQL builder').getByLabel('Limit');
       await limit.fill('3'); await limit.blur();
       const error = fault === 'revision' ? 'The View changed before its query could be displayed.'
         : 'The View result changed before it could be displayed.';
       await expect(page.getByRole('alert')).toHaveText(error);
       await expect(page.getByRole('grid')).toHaveCount(0);
-      expect(operations.map(item => item.operation)).toEqual(fault === 'revision'
+      expect(observations.some(item => item.phase === 'display')).toBe(false);
+      expect(observations.flatMap(item => item.phase === 'request' ? [item.operation] : [])).toEqual(fault === 'revision'
         ? ['view_update', 'view_run'] : ['view_update', 'view_run', 'view_fetch']);
     });
   }

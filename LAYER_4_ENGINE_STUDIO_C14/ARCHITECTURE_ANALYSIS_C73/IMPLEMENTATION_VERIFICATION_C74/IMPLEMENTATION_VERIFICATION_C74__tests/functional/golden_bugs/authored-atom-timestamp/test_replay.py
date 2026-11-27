@@ -1,8 +1,8 @@
 """Replay the pinned selection functions with bounded collaborators."""
+from unittest.mock import NonCallableMock
 from copy import deepcopy
 from datetime import datetime
 from pathlib import Path
-from types import SimpleNamespace
 import unittest
 
 HERE = Path(__file__).parent
@@ -23,12 +23,18 @@ class Reader:
 
 
 def select(version, state):
-    carrier = SimpleNamespace(metadata={'state': state})
+    carrier = NonCallableMock(spec_set=['metadata'], metadata={'state': state})
     path = Path('/project/.anechoic_demo/manifest')
     seen = []
     def validate(fields, component):
         seen.append(fields.copy())
-        return SimpleNamespace(name='Demo', prefix='AN', parameters={})
+        manifest = NonCallableMock(
+            spec_set=[
+                'name', 'prefix', 'parameters'
+            ],
+            prefix='AN', parameters={})
+        manifest.name = 'Demo'
+        return manifest
     env = {'Path': Path, 'datetime': datetime, 'deepcopy': deepcopy,
            'ProjectSelectionError': ProjectSelectionError, 'ReadContext': Reader,
            'CEILINGS': {}, '_project_root': lambda root: Path(root),

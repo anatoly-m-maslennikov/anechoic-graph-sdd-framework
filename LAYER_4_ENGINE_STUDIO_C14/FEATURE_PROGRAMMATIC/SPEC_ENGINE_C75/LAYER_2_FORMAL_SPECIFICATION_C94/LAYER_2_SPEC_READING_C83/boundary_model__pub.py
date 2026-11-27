@@ -1,10 +1,12 @@
 """Bind a Component's formal Manifest, public Contract and Solution."""
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
-    component_contract_fences, derive_atom_ref, formal_claim_fences, parse_component_manifest,
+    component_contract_fences, formal_claim_fences, parse_component_manifest,
 )
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.atom_reference__pub import derive_atom_ref
 from markdown_it import MarkdownIt
 
-from .boundary_sources__pub import SourceError, read_source, recognized_claim, require_link
+from ...LAYER_1_SOURCE_ADAPTERS_C95._package__shared import SourceError, read_source
+from .boundary_sources__pub import recognized_claim, require_link
 
 
 def load_boundary_model(root, component_id, manifest, contract=None, solution=None):

@@ -6,7 +6,6 @@ import threading
 import unittest
 from http.server import BaseHTTPRequestHandler
 from pathlib import Path
-from types import SimpleNamespace
 
 import httpx2
 
@@ -92,7 +91,8 @@ class AtomDocumentTests(unittest.TestCase):
         self.assertEqual(self.call(ref_id='AN-T-1@2')[0], 404)
 
     def test_ticket_status_options_use_only_the_selected_generations_model(self):
-        self.server.jobs.generation_reuse = SimpleNamespace(
+        self.server.jobs.generation_reuse = orchestrator.ReuseRecord(
+            inputs={}, graph_config=None, endpoints={},
             base_generation='g', status_domains={'T': ['active', 'in_queue', 'done', 'canceled', 'waiting_review']},
         )
         _, current = self.call()

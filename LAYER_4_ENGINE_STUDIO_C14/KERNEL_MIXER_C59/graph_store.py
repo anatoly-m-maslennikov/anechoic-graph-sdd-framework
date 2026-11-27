@@ -164,7 +164,7 @@ def build_graph(
         if state.edges[relation_type]:
             connection.executemany(
                 f"INSERT INTO internal.{table} VALUES (?, ?, ?, ?, ?, ?, ?)",
-                [(*edge, _hash(dict(zip(_EDGE_KEYS, edge)))) for edge in state.edges[relation_type]],
+                [(*edge, _hash(dict(zip(_EDGE_KEYS, edge, strict=False)))) for edge in state.edges[relation_type]],
             )
     register_graph(connection, state)
     columns = ", ".join(_EDGE_KEYS)
@@ -221,7 +221,7 @@ def update_graph(
         if removed:
             connection.executemany(
                 f"DELETE FROM internal.{table} WHERE hash = ?",
-                [(_hash(dict(zip(_EDGE_KEYS, edge))),) for edge in removed],
+                [(_hash(dict(zip(_EDGE_KEYS, edge, strict=False))),) for edge in removed],
             )
     for kind, ref in previous.references - current.references:
         connection.execute("DELETE FROM internal.reference WHERE kind = ? AND ref = ?", [kind, ref])
@@ -235,7 +235,7 @@ def update_graph(
         if added:
             connection.executemany(
                 f"INSERT INTO internal.{table} VALUES (?, ?, ?, ?, ?, ?, ?)",
-                [(*edge, _hash(dict(zip(_EDGE_KEYS, edge)))) for edge in added],
+                [(*edge, _hash(dict(zip(_EDGE_KEYS, edge, strict=False)))) for edge in added],
             )
     return current
 
@@ -306,7 +306,7 @@ def apply_graph_delta(
     for edge in removed_edges:
         table = candidate.tables[edge[4]]
         connection.execute(
-            f"DELETE FROM internal.{table} WHERE hash = ?", [_hash(dict(zip(_EDGE_KEYS, edge)))],
+            f"DELETE FROM internal.{table} WHERE hash = ?", [_hash(dict(zip(_EDGE_KEYS, edge, strict=False)))],
         )
     for kind, ref in removed_references:
         connection.execute("DELETE FROM internal.reference WHERE kind = ? AND ref = ?", [kind, ref])
@@ -319,6 +319,6 @@ def apply_graph_delta(
         table = candidate.tables[edge[4]]
         connection.execute(
             f"INSERT INTO internal.{table} VALUES (?, ?, ?, ?, ?, ?, ?)",
-            [*edge, _hash(dict(zip(_EDGE_KEYS, edge)))],
+            [*edge, _hash(dict(zip(_EDGE_KEYS, edge, strict=False)))],
         )
     return candidate, len(removed_references) + len(added_references) + len(removed_edges) + len(added_edges)

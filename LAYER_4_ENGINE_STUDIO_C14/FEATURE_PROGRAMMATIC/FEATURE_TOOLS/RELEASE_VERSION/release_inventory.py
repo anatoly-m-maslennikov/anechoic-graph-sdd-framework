@@ -62,10 +62,15 @@ def _is_ephemeral_directory(name: str) -> bool:
 
 
 def _is_ephemeral_file(name: str) -> bool:
-    return name in _EPHEMERAL_FILE_NAMES or Path(name).suffix in _BYTECODE_SUFFIXES
+    return (
+        name in _EPHEMERAL_FILE_NAMES
+        or Path(name).suffix in _BYTECODE_SUFFIXES
+    )
 
 
-def _retain_directories(root: Path, current_path: Path, directories: list[str]) -> None:
+def _retain_directories(
+    root: Path, current_path: Path, directories: list[str]
+) -> None:
     retained_directories: list[str] = []
     for name in sorted(directories):
         path = current_path / name
@@ -98,10 +103,14 @@ def persistent_regular_files(root: Path, directory: Path) -> list[Path]:
     try:
         directory.relative_to(root)
     except ValueError as error:
-        raise ReleaseInventoryError("release-inventory-path-unsafe", "inventory root escapes project") from error
+        raise ReleaseInventoryError(
+            "release-inventory-path-unsafe", "inventory root escapes project"
+        ) from error
     refuse_secret_path(directory.relative_to(root))
     files: list[Path] = []
-    for current, directories, names in os.walk(directory, topdown=True, followlinks=False):
+    for current, directories, names in os.walk(
+        directory, topdown=True, followlinks=False
+    ):
         current_path = Path(current)
         _retain_directories(root, current_path, directories)
         for name in sorted(names):
@@ -121,7 +130,13 @@ def persistent_regular_files(root: Path, directory: Path) -> list[Path]:
                     f"inventory entry is not a regular file: {relative.as_posix()}",
                 )
             files.append(path)
-    return sorted(files, key=lambda path: path.relative_to(directory).as_posix())
+    return sorted(
+        files, key=lambda path: path.relative_to(directory).as_posix()
+    )
 
 
-__all__ = ["ReleaseInventoryError", "persistent_regular_files", "refuse_secret_path"]
+__all__ = [
+    "ReleaseInventoryError",
+    "persistent_regular_files",
+    "refuse_secret_path",
+]

@@ -11,6 +11,7 @@ import unittest
 from unittest.mock import patch
 
 
+from .launcher_images_test_support import ImageFixture
 APP = Path(__file__).resolve().parents[1]
 DOCKER = APP / "docker"
 
@@ -21,7 +22,6 @@ IMAGE_ID = "sha256:" + "a" * 64
 FRAMEWORK_VERSION = "0.4.4.9"
 
 
-from .launcher_images_test_support import ImageFixture
 
 
 class ImageGoldenTests(ImageFixture, unittest.TestCase):

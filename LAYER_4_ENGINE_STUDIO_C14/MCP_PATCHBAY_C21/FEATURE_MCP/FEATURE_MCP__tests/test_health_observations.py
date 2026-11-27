@@ -1,8 +1,9 @@
 """Bounded, process-local MCP health observations."""
+
 import json
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from types import SimpleNamespace
+from mcp import types
 import unittest
 
 
@@ -10,14 +11,24 @@ APP = Path(__file__).resolve().parents[1]
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import HealthObservations  # noqa: E402
 
 
-SAFE_ERROR_CATEGORIES = {"timeout", "connection", "returned-error", "uncertain"}
-FORBIDDEN_FIELDS = {"args", "arguments", "response", "result", "path", "provider_error"}
+SAFE_ERROR_CATEGORIES = {
+    "timeout",
+    "connection",
+    "returned-error",
+    "uncertain",
+}
+FORBIDDEN_FIELDS = {
+    "args",
+    "arguments",
+    "response",
+    "result",
+    "path",
+    "provider_error",
+}
 
 
 def _row_error(row):
     return row.get("error_category", row.get("error"))
-
-
 
 
 class HealthObservationsTests(unittest.TestCase):
@@ -38,24 +49,47 @@ class HealthObservationsTests(unittest.TestCase):
         self.assertEqual({"started_at", "calls"}, set(snapshot))
         self.assertEqual(started_at, snapshot["started_at"])
         self.assertEqual(32, len(snapshot["calls"]))
-        self.assertEqual([f"tool-{index}" for index in range(8, 40)],
-                         [row["name"] for row in snapshot["calls"]])
+        self.assertEqual(
+            [f"tool-{index}" for index in range(8, 40)],
+            [row["name"] for row in snapshot["calls"]],
+        )
         self.assertNotIn("workflows", snapshot)
 
         encoded = json.dumps(snapshot, sort_keys=True)
-        for secret in ("SECRET_ARGUMENT", "SECRET_RESULT", "/private/argument/path",
-                       "/private/result/path"):
+        for secret in (
+            "SECRET_ARGUMENT",
+            "SECRET_RESULT",
+            "/private/argument/path",
+            "/private/result/path",
+        ):
             self.assertNotIn(secret, encoded)
         for row in snapshot["calls"]:
             self.assertTrue(FORBIDDEN_FIELDS.isdisjoint(row))
 
-    def test_safe_error_categories_preserve_uncertainty_without_provider_text(self):
-        provider_message = "provider exception /srv/project/secret SECRET_PROVIDER_TEXT"
-        self.observations.record("timeout-tool", {}, None, error=TimeoutError(provider_message))
-        self.observations.record("connection-tool", {}, None, error=ConnectionError(provider_message))
-        self.observations.record("failed-tool", {}, {"outcome": "failed"},
-                                 error=RuntimeError(provider_message))
-        self.observations.record("uncertain-tool", {}, None, error=RuntimeError(provider_message))
+    def test_safe_error_categories_preserve_uncertainty_without_provider_text(
+        self,
+    ):
+        provider_message = (
+            "provider exception /srv/project/secret SECRET_PROVIDER_TEXT"
+        )
+        self.observations.record(
+            "timeout-tool", {}, None, error=TimeoutError(provider_message)
+        )
+        self.observations.record(
+            "connection-tool",
+            {},
+            None,
+            error=ConnectionError(provider_message),
+        )
+        self.observations.record(
+            "failed-tool",
+            {},
+            {"outcome": "failed"},
+            error=RuntimeError(provider_message),
+        )
+        self.observations.record(
+            "uncertain-tool", {}, None, error=RuntimeError(provider_message)
+        )
         snapshot = self.observations.snapshot()
 
         self.assertEqual(4, len(snapshot["calls"]))
@@ -69,9 +103,10 @@ class HealthObservationsTests(unittest.TestCase):
         self.assertNotIn("/srv/project/secret", encoded)
         self.assertNotIn("SECRET_PROVIDER_TEXT", encoded)
 
-
     def test_invalid_tool_names_do_not_become_truncated_paths(self):
-        self.observations.record("../../private/provider-secret", {}, {"outcome": "completed"})
+        self.observations.record(
+            "../../private/provider-secret", {}, {"outcome": "completed"}
+        )
         row = self.observations.snapshot()["calls"][-1]
         self.assertIn(row["name"], {"unknown"})
         self.assertRegex(row["name"], r"^[A-Za-z0-9_.-]{1,128}$|^unknown$")
@@ -90,7 +125,9 @@ class HealthObservationsTests(unittest.TestCase):
 
         snapshot = self.observations.snapshot()
         self.assertEqual(32, len(snapshot["calls"]))
-        self.assertEqual({"alpha", "beta"}, {row["name"] for row in snapshot["calls"]})
+        self.assertEqual(
+            {"alpha", "beta"}, {row["name"] for row in snapshot["calls"]}
+        )
         encoded = json.dumps(snapshot, sort_keys=True)
         self.assertNotIn("TOKEN-", encoded)
         self.assertNotIn("RESULT-", encoded)
@@ -104,14 +141,48 @@ class HealthObservationsTests(unittest.TestCase):
         self.assertIsInstance(snapshot["started_at"], str)
 
     def test_typed_lifecycle_statuses_and_mcp_error_are_not_rpc_success(self):
-        for status in ("completed", "needs_input", "cancelled", "failed", "blocked", "partial"):
-            self.observations.record("lifecycle", {}, SimpleNamespace(
-                structured_content={"status": status, "errors": ["private"]}, is_error=False))
-        self.observations.record("error", {}, SimpleNamespace(
-            structured_content={"detail": "private"}, is_error=True))
+        for status in (
+            "completed",
+            "needs_input",
+            "cancelled",
+            "failed",
+            "blocked",
+            "partial",
+        ):
+            self.observations.record(
+                "lifecycle",
+                {},
+                types.CallToolResult(
+                    content=[],
+                    structured_content={
+                        "status": status,
+                        "errors": ["private"],
+                    },
+                    is_error=False,
+                ),
+            )
+        self.observations.record(
+            "error",
+            {},
+            types.CallToolResult(
+                content=[],
+                structured_content={"detail": "private"},
+                is_error=True,
+            ),
+        )
         rows = self.observations.snapshot()["calls"]
-        self.assertEqual(["completed", "needs_input", "cancelled", "failed", "blocked", "partial", "failed"],
-                         [row["outcome"] for row in rows])
+        self.assertEqual(
+            [
+                "completed",
+                "needs_input",
+                "cancelled",
+                "failed",
+                "blocked",
+                "partial",
+                "failed",
+            ],
+            [row["outcome"] for row in rows],
+        )
         self.assertEqual("returned-error", rows[-1]["error_category"])
         self.assertNotIn("private", json.dumps(rows))
 

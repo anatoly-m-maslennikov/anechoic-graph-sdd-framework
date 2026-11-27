@@ -132,7 +132,7 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
         for destination, step in ((self.installed, "copy_product_to_installed_framework"),
                                   (self.root / ".agents/skills/ane", "install_project_runtime")):
             with self.subTest(destination=destination):
-                def corrupt(source, target, **kwargs):
+                def corrupt(source, target, *, destination=destination, **kwargs):
                     copy_tree(source, target, **kwargs)
                     if target == destination:
                         next(path for path in target.rglob("*") if path.is_file() and path.name != "config.toml").write_text("corrupt")

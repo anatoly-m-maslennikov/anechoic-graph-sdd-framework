@@ -10,7 +10,7 @@ context:
 state:
   status: "active"
   version: 31
-  updated_at: "2026-11-26T15:52:28.559289+00:00"
+  updated_at: "2026-11-27T13:05:35.834603+00:00"
 ---
 ## Summary
 
@@ -37,6 +37,8 @@ ComponentManifest(
                                'ADAPTERS_C30__shared.parse_structure',
                                'ADAPTERS_C30__shared.realization_component_paths',
                                'ADAPTERS_C30__shared.formal_claim_fences',
+                               '_package__shared.compile_workflow',
+                               '_package__shared.parse_workflow',
                                'realization_ownership__pub.build_code_access_ownership',
                                'FEATURE_MODEL_VALIDATION__shared.check_code_access',
                                'import_graph__shared.capture',

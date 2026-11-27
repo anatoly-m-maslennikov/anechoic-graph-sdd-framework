@@ -2,9 +2,8 @@
 
 from pathlib import Path
 import subprocess
-from types import SimpleNamespace
 import unittest
-from unittest.mock import Mock, call
+from unittest.mock import Mock, NonCallableMock, call
 
 from LAYER_2_LOCAL_RELEASE_C63.LAYER_2_LOCAL_RELEASE_C63__tests import test_simple_local_release as fixtures
 from LAYER_2_LOCAL_RELEASE_C63.LAYER_2_LOCAL_RELEASE_C63__shared import run_local_release
@@ -14,7 +13,9 @@ from LAYER_1_RUNTIME_IMAGES_C81.LAYER_1_RUNTIME_IMAGES_C81__shared import releas
 class ReleaseImageProvenanceTests(unittest.TestCase):
     def test_native_provenance_uses_validated_manifest_name(self) -> None:
         root = Path("/owner")
-        selection = SimpleNamespace(
+        selection = NonCallableMock(
+            spec_set=["instance_id", "control_relative", "project_name",
+                      "settings"],
             instance_id="c" * 64, control_relative=Path(".anechoic_anechoic"),
             project_name="Anechoic", settings={"project": {"name": "Legacy"}},
         )
@@ -25,7 +26,8 @@ class ReleaseImageProvenanceTests(unittest.TestCase):
 
     def test_owner_name_and_full_head_are_observed_from_owning_root(self) -> None:
         root = Path("/owning-repository")
-        selection = SimpleNamespace(
+        selection = NonCallableMock(
+            spec_set=["instance_id", "control_relative", "settings"],
             instance_id="c" * 64,
             control_relative=Path(".anechoic_anechoic"),
             settings={"project": {"name": "Named Project"}},
@@ -45,11 +47,14 @@ class ReleaseImageProvenanceTests(unittest.TestCase):
         )
 
     def test_missing_name_bad_head_and_failed_git_refuse(self) -> None:
-        selection = SimpleNamespace(
+        selection = NonCallableMock(
+            spec_set=["instance_id", "control_relative", "project_name",
+                      "settings"],
             instance_id="c" * 64,
             control_relative=Path(".anechoic_anechoic"),
             settings={"project": {"name": "Named Project"}},
         )
+        del selection.project_name
         for status, output in ((0, "short-sha"), (1, "d" * 40), (0, "")):
             with self.subTest(status=status, output=output), self.assertRaises(ValueError):
                 release_image_provenance(

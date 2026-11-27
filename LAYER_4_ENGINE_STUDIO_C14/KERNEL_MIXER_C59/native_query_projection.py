@@ -233,7 +233,7 @@ class NativeQueryProjection:
             if (selection.project_name != self.selection.project_name
                     or selection.project_prefix != self.selection.project_prefix
                     or selection.manifest_ref.partition("@")[0] != self.selection.manifest_ref.partition("@")[0]):
-                raise ValueError("Project identity changed. Restart required.")
+                raise ValueError("Project identity changed. Restart required.") from None
             return capture_native(selection, domains=self._inputs.status_domains), selection
 
     def _refresh_atom_sources(self, store: QueryStore, paths: set[PurePosixPath] | None) -> NativeCapture:

@@ -10,5 +10,3 @@ Record = dict[str, Any]
 
 def _source_ref(source: Mapping[str, Any]) -> str:
     return f"{source['atom_id']}@{source['version']}"
-
-

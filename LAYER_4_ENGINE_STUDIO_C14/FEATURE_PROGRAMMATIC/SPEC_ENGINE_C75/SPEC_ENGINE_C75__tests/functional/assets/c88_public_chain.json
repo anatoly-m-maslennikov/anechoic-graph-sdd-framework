@@ -1,0 +1,30 @@
+{
+  "request": {
+    "manifest": {
+      "atom_id": "AN-S-4935",
+      "version": 1,
+      "status": "active",
+      "container_component": "C94",
+      "path": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/SPEC_ENGINE_C75/LAYER_2_FORMAL_SPECIFICATION_C94/01_TIER_1_ARCHITECTURE/AN-S-4935-SPEC-COMPONENT_MANIFEST--declare-spec-comparison.md",
+      "sha256": "929c914afb640966de04ce2f96420b484a3eaaab991066c2eaf3203d10b2d9cd"
+    },
+    "solution": {
+      "atom_id": "AN-S-5030",
+      "version": 1,
+      "status": "active",
+      "container_component": "C88",
+      "path": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/SPEC_ENGINE_C75/LAYER_2_FORMAL_SPECIFICATION_C94/LAYER_4_SPEC_COMPARISON_C88/AN-S-5030-DES-SOLUTION--compare-formal-spec-obligations.md",
+      "sha256": "ad6af299477be8d524d398f808d99acd79b9ebc96361d7bb44a413dfe0d1822d"
+    },
+    "implementation_sha256": {
+      "LAYER_4_SPEC_COMPARISON_C88/top_down__pub.py": "bca25fce6afe81f6ba28525b145d5e8f44af65858accf68c2d39c66147d1086a",
+      "LAYER_1_DIAGNOSTICS_C90/diagnostics__pub.py": "11d686c9eb26d4dcbbd329a05e2d455c02ceabf924928bf301608514825fd2df",
+      "LAYER_1_DIAGNOSTICS_C90/_package__shared.py": "0940be82328ebe15ed38853cb06d54b803f5a93de06bd194815292f856b4991a",
+      "LAYER_3_LEAN_TRANSLATOR_C84/lean_values__pub.py": "777358859e60b8d977390a8ea2eda3c61a1a5558b618bba1b9ba4d4f2242825c",
+      "LAYER_3_LEAN_TRANSLATOR_C84/lean_check__pub.py": "fa8061bfb8c547608e558e2e62835b59748455b7795a0016d23819c4fddbca70",
+      "LAYER_3_LEAN_TRANSLATOR_C84/_package__shared.py": "36708a997a3b5f8c26722e43db6398fa6ae56c4e1339025ad73df0f77c28ff61",
+      "LAYER_4_SPEC_COMPARISON_C88/_package__shared.py": "00fc902282bb688d4abefeca45b4ef43343ecd41cc45e5d8c4480fd8335566d0"
+    }
+  },
+  "worker": "import Lean\ndef manifest : List (String \u00d7 String) := [(\"a\", \"2\"), (\"m\", \"8\"), (\"z\", \"1\")]\ndef contract : List (String \u00d7 String) := [(\"a\", \"2\"), (\"z\", \"1\")]\ndef solution : List (String \u00d7 String) := [(\"a\", \"2\"), (\"z\", \"3\")]\ndef sameValue (left right : String) : Bool :=\n  if left == right then true else\n    match Lean.Json.parse left, Lean.Json.parse right with\n    | .ok a, .ok b => a.compress == b.compress\n    | _, _ => false\ndef compare (left right : List (String \u00d7 String)) : List String :=\n  left.map fun fact =>\n    match right.find? (fun candidate => candidate.1 == fact.1) with\n    | none => \"unresolved\"\n    | some candidate => if sameValue candidate.2 fact.2 then \"matched\" else \"conflicting\"\n#eval IO.println (Lean.toJson [compare manifest contract, compare manifest solution, compare contract solution]).compress\n"
+}

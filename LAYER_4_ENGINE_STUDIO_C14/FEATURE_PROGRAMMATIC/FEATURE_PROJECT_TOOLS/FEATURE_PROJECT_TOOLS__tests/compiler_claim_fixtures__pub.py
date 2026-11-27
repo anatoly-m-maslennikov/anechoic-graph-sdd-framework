@@ -112,7 +112,11 @@ declare_entity(entity_name='Work Report', entity_class=WorkReport, qualification
 ANALYSIS = """from anechoic.formal_claims import declare_entity
 declare_entity(entity_name="Status", relation_name="IS_PROPERTY_OF", base_path="Atom.Header.State", applies_to_role="Analysis and Advisory", applies_to_forms=("Analysis Report", "Rationale"), allowed_values=("Done",))"""
 
-CLASSIFICATION_PYTHON_BODY = '## Claim\n### Formal Claim\n```python\nfrom anechoic.formal_claims import declare_entity\ndeclare_entity(entity_name="Node", allowed_classification_values={"Container": ("yes", "no")})\n```\n'
+CLASSIFICATION_PYTHON_BODY = (
+    "## Claim\n### Formal Claim\n```python\nfrom anechoic.formal_claims "
+    'import declare_entity\ndeclare_entity(entity_name="Node", '
+    'allowed_classification_values={"Container": ("yes", "no")})\n```\n'
+)
 
 EVENT_CLAIM = """from anechoic.formal_claims import declare_entity
 declare_entity(entity_name="ID", relation_name="IS_PROPERTY_OF", base_path="Event Record",
@@ -129,7 +133,9 @@ declare_entity(entity_name="Atom", entity_class=Atom,
 """
 
 FALLBACK_PLAN = "Atom/(.Header.Context.Role:=Plan)"
-FALLBACK_PROP = FALLBACK_PLAN + ".Header.Context.Plan.AI Agent Confidence Threshold"
+FALLBACK_PROP = (
+    FALLBACK_PLAN + ".Header.Context.Plan.AI Agent Confidence Threshold"
+)
 FALLBACK_PROJECT = "Project.Settings.AI Agent Confidence Threshold"
 FALLBACK_CLAIM = f'''from anechoic.formal_claims import Cardinality, declare_entity
 declare_entity(entity_name="AI Agent Confidence Threshold", relation_name="IS_PROPERTY_OF",

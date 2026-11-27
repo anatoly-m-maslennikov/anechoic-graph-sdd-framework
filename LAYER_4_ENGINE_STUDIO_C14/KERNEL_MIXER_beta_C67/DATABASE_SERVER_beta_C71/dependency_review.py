@@ -84,7 +84,9 @@ def _prepare_antipattern_findings(connection):
         "SELECT 1 FROM duckdb_tables() WHERE database_name = current_database() "
         "AND schema_name = 'main' AND table_name = 'mrt_diag_antipatterns'"
     ).fetchone():
-        connection.execute("INSERT INTO realization_internal.int_source_antipatterns SELECT * FROM main.mrt_diag_antipatterns")
+        connection.execute(
+            "INSERT INTO realization_internal.int_source_antipatterns SELECT * FROM main.mrt_diag_antipatterns"
+        )
         connection.execute("DROP TABLE main.mrt_diag_antipatterns")
     connection.execute("""CREATE VIEW IF NOT EXISTS main.mrt_diag_antipatterns AS
         SELECT relative_path, line, "column", rule, status, detail

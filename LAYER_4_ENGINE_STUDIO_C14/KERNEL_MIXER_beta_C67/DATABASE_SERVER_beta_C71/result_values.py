@@ -1,4 +1,3 @@
-
 """Convert native result values without changing their positional structure."""
 
 from __future__ import annotations
@@ -52,4 +51,6 @@ def result_value(value: Any) -> Any:
 def group_key(value: Any) -> str:
     """Provide an equality key after conversion while keeping the original value public."""
 
-    return json.dumps(value, ensure_ascii=False, separators=(",", ":"), sort_keys=True)
+    return json.dumps(
+        value, ensure_ascii=False, separators=(",", ":"), sort_keys=True
+    )

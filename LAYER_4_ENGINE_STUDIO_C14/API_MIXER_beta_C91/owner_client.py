@@ -63,7 +63,11 @@ async def exchange(reader, writer, message):
     response = json.loads(line)
     if isinstance(response, dict) and set(response) == {"result"}:
         return response["result"]
-    if isinstance(response, dict) and set(response) == {"error", "message"} and isinstance(response["message"], str):
+    if (
+        isinstance(response, dict)
+        and set(response) == {"error", "message"}
+        and isinstance(response["message"], str)
+    ):
         if response["error"] == "ValueError":
             raise ValueError(response["message"])
         if response["error"] == "RuntimeError":
@@ -81,7 +85,9 @@ class Owner:
 
     @asynccontextmanager
     async def connection(self):
-        reader, writer = await asyncio.open_unix_connection(self.path, limit=1024 * 1024)
+        reader, writer = await asyncio.open_unix_connection(
+            self.path, limit=1024 * 1024
+        )
         try:
             yield reader, writer
         finally:
@@ -98,12 +104,18 @@ class Owner:
         return Binding.model_validate(await self.request(request))
 
     async def status(self):
-        return Status.model_validate(await self.request({"operation": "status"}))
+        return Status.model_validate(
+            await self.request({"operation": "status"})
+        )
 
     @asynccontextmanager
     async def lease(self, binding, *, start=True):
         async with self.connection() as (reader, writer):
-            request = {"operation": "lease", "binding": binding.model_dump(), "start": start}
+            request = {
+                "operation": "lease",
+                "binding": binding.model_dump(),
+                "start": start,
+            }
             result = await exchange(reader, writer, encode(request))
             try:
                 yield None if result is None else Lease.model_validate(result)

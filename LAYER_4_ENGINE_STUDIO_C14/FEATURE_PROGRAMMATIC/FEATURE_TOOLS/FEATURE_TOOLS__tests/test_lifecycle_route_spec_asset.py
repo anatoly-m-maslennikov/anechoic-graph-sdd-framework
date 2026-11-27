@@ -188,7 +188,8 @@ class LifecycleRouteMatrix(LifecycleRouteSupport, unittest.TestCase):
         project.manifest_path.write_text(project.manifest_path.read_text().replace('component: C0}', 'component: C00}'))
         self.selection = project = replace(
             project, manifest_sha256=sha256(project.manifest_path.read_bytes()).hexdigest())
-        rows = lambda: capture_native(project).atoms
+        def rows():
+            return capture_native(project).atoms
         calls = []
         def validate(kind, header, component, body):
             calls.append((kind, component, body))

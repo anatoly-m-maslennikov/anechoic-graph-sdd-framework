@@ -25,6 +25,7 @@ dev = [
     "ruff==0.16.8",
     "mypy==2.3.1",
     "types-PyYAML==6.0.12.20260906",
+    "editorconfig-checker==3.11.1",
 ]
 http-contract-tests = [
     "httpx==0.28.1",
@@ -45,6 +46,17 @@ select = ["E4", "E7", "E9", "F", "C901"]
 [tool.ruff.lint.mccabe]
 max-complexity = 10
 
+[tool.ruff.lint.per-file-ignores]
+# The exact generated Scope predicate uses delayed type annotations.
+"**/FEATURE_FORMAL_MODEL_ENGINE/assets/scope_level_check.py" = ["F821"]
+
+[tool.ruff.format]
+# Preserve imported test Carriers and the hash-bound Scope predicate.
+exclude = [
+    "**/*__tests/**/assets/**/*.md",
+    "**/FEATURE_FORMAL_MODEL_ENGINE/assets/scope_level_check.py",
+]
+
 [tool.mypy]
 python_version = "3.14"
 strict = true
@@ -62,10 +74,11 @@ follow_imports = "silent"
 [tool.anechoic.test_suite]
 enforce_source_languages = true
 enforce_source_size = true
-enforce_source_line_length = false
+enforce_source_line_length = true
 functional_test_modules = [
     "LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/SPEC_ENGINE_C75__tests/functional/test_boundary_model.py",
     "LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/SPEC_ENGINE_C75__tests/functional/test_c71_console_formal.py",
+    "LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/SPEC_ENGINE_C75__tests/functional/test_c88_comparison_directions.py",
     "LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/SPEC_ENGINE_C75__tests/functional/test_structure_formal_boundary.py",
     "LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/LAYER_2_PROJECT_STRUCTURE_C93/LAYER_2_PROJECT_STRUCTURE_C93__tests/test_structure_compile.py",
     "LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_beta_C67/DATABASE_SERVER_beta_C71/DATABASE_SERVER_beta_C71__tests/test_accepted_model.py",
@@ -80,12 +93,14 @@ functional_test_modules = [
     "LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/SPEC_ENGINE_C75__tests/functional/test_direct_framing_chain.py",
     "LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/SPEC_ENGINE_C75__tests/functional/test_generated_exact_draft.py",
     "LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/SPEC_ENGINE_C75__tests/functional/test_generated_self_verification.py",
+    "LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/SPEC_ENGINE_C75__tests/functional/test_group_spec.py",
     "LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/SPEC_ENGINE_C75__tests/functional/test_http_authoring_vocabulary.py",
     "LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/SPEC_ENGINE_C75__tests/functional/test_lean_replay_evidence.py",
     "LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/SPEC_ENGINE_C75__tests/functional/test_manifest_child_delegation.py",
     "LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/SPEC_ENGINE_C75__tests/functional/test_openapi.py",
     "LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/SPEC_ENGINE_C75__tests/functional/test_tool_api_obligations.py",
     "LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/SPEC_ENGINE_C75__tests/functional/test_trace_values.py",
+    "LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/SPEC_ENGINE_C75__tests/functional/test_workflow_transition_syntax.py",
     "LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ADAPTERS_C30/ADAPTERS_C30__tests/test_ticket_delta.py",
     "LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ADAPTERS_C30/ADAPTERS_C30__tests/test_native_generation.py",
     "LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ADAPTERS_C30/ADAPTERS_C30__tests/test_native_generation_boundaries.py",
@@ -132,6 +147,7 @@ functional_test_modules = [
     "LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_beta_C67/DATABASE_SERVER_beta_C71/DATABASE_SERVER_beta_C71__tests/test_archive_versions.py",
     "LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_beta_C67/DATABASE_SERVER_beta_C71/DATABASE_SERVER_beta_C71__tests/test_archive_seed.py",
     "LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_beta_C67/DATABASE_SERVER_beta_C71/DATABASE_SERVER_beta_C71__tests/test_native_delta.py",
+    "LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_beta_C67/DATABASE_SERVER_beta_C71/DATABASE_SERVER_beta_C71__tests/test_native_delta_edges.py",
     "LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_beta_C67/DATABASE_SERVER_beta_C71/DATABASE_SERVER_beta_C71__tests/test_grid_results.py",
     "LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_beta_C67/DATABASE_SERVER_beta_C71/DATABASE_SERVER_beta_C71__tests/test_generation_refresh.py",
     "LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_beta_C67/DATABASE_SERVER_beta_C71/DATABASE_SERVER_beta_C71__tests/test_query_history.py",

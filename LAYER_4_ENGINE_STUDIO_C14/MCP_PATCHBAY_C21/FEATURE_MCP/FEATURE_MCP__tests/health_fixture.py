@@ -1,10 +1,11 @@
 """Native Workbench ASGI fixture with controlled backend outcomes."""
+
 from .native_query_test_support import local_gateway
 
 import asyncio
 from pathlib import Path
 import tempfile
-from types import SimpleNamespace
+from unittest.mock import NonCallableMock
 import unittest
 
 import httpx2
@@ -13,7 +14,9 @@ from mcp.client.streamable_http import streamable_http_client
 
 
 APP = Path(__file__).resolve().parents[1]
-from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import create_http_app as create_app  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import (  # noqa: E402
+    create_http_app as create_app,
+)
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import MCP_PATH  # noqa: E402
 
 
@@ -25,7 +28,9 @@ class HealthHTTPFixture(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
         directory = APP.parents[2] / ".anechoic_tmp/tests/mcp-health"
         directory.mkdir(parents=True, exist_ok=True)
-        self.temp = tempfile.TemporaryDirectory(dir=directory, ignore_cleanup_errors=True)
+        self.temp = tempfile.TemporaryDirectory(
+            dir=directory, ignore_cleanup_errors=True
+        )
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
         self.marker = self.root / "backend.calls"
@@ -33,11 +38,19 @@ class HealthHTTPFixture(unittest.IsolatedAsyncioTestCase):
 
     async def backend_call(self, name, arguments):
         if name == "query_schema":
-            return {"outcome": "completed", "secret": SECRET, "result": "fixture-result"}
+            return {
+                "outcome": "completed",
+                "secret": SECRET,
+                "result": "fixture-result",
+            }
         if name == "query_page":
             return {"outcome": "partial", "result": "partial-result"}
         if name == "query_load":
-            return {"outcome": SECRET, "disposition": PROVIDER_DIAGNOSTIC, "error": SECRET}
+            return {
+                "outcome": SECRET,
+                "disposition": PROVIDER_DIAGNOSTIC,
+                "error": SECRET,
+            }
         if name == "query_check":
             raise RuntimeError(PROVIDER_DIAGNOSTIC)
         if name == "query_run":
@@ -51,15 +64,23 @@ class HealthHTTPFixture(unittest.IsolatedAsyncioTestCase):
         return {"host": "127.0.0.1:18092", **extra}
 
     def lifespan(self):
-        return self.app.starlette_app.router.lifespan_context(self.app.starlette_app)
+        return self.app.starlette_app.router.lifespan_context(
+            self.app.starlette_app
+        )
 
     def new_app(self):
-        owner = SimpleNamespace(
-            selection=SimpleNamespace(root=self.root, parameters={}),
+        owner = NonCallableMock(
+            spec_set=["selection", "start", "close"],
+            selection=NonCallableMock(
+                spec_set=["root", "parameters"], root=self.root, parameters={}
+            ),
             start=lambda: None,
             close=lambda: None,
         )
-        app = create_app(self.root, runtime_gateway=local_gateway(self.root, native_query=owner))
+        app = create_app(
+            self.root,
+            runtime_gateway=local_gateway(self.root, native_query=owner),
+        )
         app.gateway.workbench.call = self.backend_call
         return app
 
@@ -91,7 +112,6 @@ class HealthHTTPFixture(unittest.IsolatedAsyncioTestCase):
     @staticmethod
     def outcome(row):
         return row.get("outcome", row.get("actual_outcome"))
-
 
 
 if __name__ == "__main__":

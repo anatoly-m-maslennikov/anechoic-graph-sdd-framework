@@ -26,20 +26,37 @@ class CheckpointLifespanTest(unittest.TestCase):
         current = snapshot["atoms"][0]
         path = _path(current)
         updated = "d" * 64
-        with open_database() as connection, patch.object(database_lifespan, "fold_checkpoint", observe):
+        with (
+            open_database() as connection,
+            patch.object(database_lifespan, "fold_checkpoint", observe),
+        ):
             app = create_app(connection, "instance", PIN)
             with TestClient(app) as client:
                 response = client.put("/generation", json=data)
                 self.assertEqual(200, response.status_code, response.text)
                 generation = response.json()["result"]["generation"]
                 paths = [[current["relative_path"], current["filename"]]]
-                delta = _delta(generation, snapshot, paths, [current], {path: updated})
+                delta = _delta(
+                    generation, snapshot, paths, [current], {path: updated}
+                )
                 response = client.put("/generation/native-delta", json=delta)
                 self.assertEqual(200, response.status_code, response.text)
-                self.assertTrue(applied.wait(5), "Running server did not fold the admitted hash")
-                self.assertTrue(client.get("/health").json()["result"]["ready"])
+                self.assertTrue(
+                    applied.wait(5),
+                    "Running server did not fold the admitted hash",
+                )
+                self.assertTrue(
+                    client.get("/health").json()["result"]["ready"]
+                )
                 with connection.cursor() as reader:
-                    self.assertFalse(database_lifespan.checkpoint_changes_pending(reader))
-                    digest = reader.execute("SELECT digest FROM ops_generation_carrier_digests WHERE path = ?",
-                                            [path]).fetchone()
+                    self.assertFalse(
+                        database_lifespan.checkpoint_changes_pending(reader)
+                    )
+                    digest = reader.execute(
+                        (
+                            "SELECT digest FROM ops_generation_carrier_digests"
+                            " WHERE path = ?"
+                        ),
+                        [path],
+                    ).fetchone()
                     self.assertEqual((updated,), digest)

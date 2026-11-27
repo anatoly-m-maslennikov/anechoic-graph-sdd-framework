@@ -41,7 +41,7 @@ class IndexedReader:
         contexts = []
         for identity, path in self.rows:
             if identity == ref_id:
-                carrier = parse_carrier(path.read_bytes(), path)
+                parse_carrier(path.read_bytes(), path)
         return contexts
 
     def lifecycle_last_id(self, selection, prefix, *, ceiling=None):

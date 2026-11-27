@@ -77,6 +77,9 @@ def _typed_web(root):
 
 
 def check(root):
+    boundary_scope = ("--import-component", "C14", "--require-state") if (
+        root / CODE_ROOTS[0] / "FEATURE_PROGRAMMATIC"
+    ).is_dir() else ()
     checks = [
         python_bytecode.check(root), *_python_quality(root), source_sizes.check(root),
         source_line_length.check(root), source_languages.check(root), python_boundaries.check(root),
@@ -84,7 +87,7 @@ def check(root):
         _run("import ownership", (sys.executable, "-B", "-m", "IWE_CONSOLE_C43.APP_IWE_CONSOLE."
                                   "FEATURE_IMPORT_GRAPH_C61.import_ownership", str(root.resolve())),
              FRAMEWORK / CODE_ROOTS[0], 90),
-        _run("state boundaries", (sys.executable, "-B", "-m", "KERNEL_MIXER_C59.state_lint",
-                                  str(root.resolve())), FRAMEWORK, 120),
+        _run("Manifest boundaries", (sys.executable, "-B", "-m", "KERNEL_MIXER_C59.state_lint",
+                                     str(root.resolve()), *boundary_scope), FRAMEWORK, 120),
     ]
     return int(any(checks))

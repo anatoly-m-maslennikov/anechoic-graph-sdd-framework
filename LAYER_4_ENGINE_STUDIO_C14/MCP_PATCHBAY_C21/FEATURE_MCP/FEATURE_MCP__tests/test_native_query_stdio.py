@@ -6,7 +6,7 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
-from types import SimpleNamespace
+from unittest.mock import NonCallableMock
 import unittest
 from unittest.mock import patch
 
@@ -17,14 +17,14 @@ from mcp.client.streamable_http import streamable_http_client
 import yaml
 
 
+from .native_query_behavior_cases import NativeQueryBehaviorCases
+from .native_query_test_support import create_native_gateway
 MCP = Path(__file__).resolve().parents[1]
 PROGRAMMATIC = MCP.parents[1] / "FEATURE_PROGRAMMATIC"
 
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import validate_manifest  # noqa: E402
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import extension_directory, polling_source_watcher  # noqa: E402
 
-from .native_query_behavior_cases import NativeQueryBehaviorCases
-from .native_query_test_support import create_native_gateway
 
 
 CONTROL = ".anechoic_anechoic"
@@ -58,7 +58,9 @@ class NativeJournalOwnershipTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as root:
             for journal in ("_anechoic_other/_journal", ".anechoic_other/_journal"):
-                selection = SimpleNamespace(root=Path(root).resolve(), control_relative=Path("_anechoic_anechoic"),
+                selection = NonCallableMock(
+                    spec_set=['root', 'control_relative', 'parameters'],
+                    root=Path(root).resolve(), control_relative=Path("_anechoic_anechoic"),
                                             parameters={"paths": {"journal_root": journal}})
                 with self.subTest(journal=journal), self.assertRaisesRegex(ValueError, "another records tree"):
                     NativeQueryOwner(selection, None)
@@ -285,7 +287,8 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
         from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import http_main, server_main
 
         inputs = _native_inputs()
-        factory = lambda root, control: create_native_gateway(root, control, inputs)
+        def factory(root, control):
+            return create_native_gateway(root, control, inputs)
         args = ["--project-root", str(self.root), "--control-root", CONTROL]
         with patch("MCP_PATCHBAY_C21.FEATURE_MCP.http_server.startup_selection", side_effect=AssertionError("legacy selection")), \
                 patch("uvicorn.run") as run:

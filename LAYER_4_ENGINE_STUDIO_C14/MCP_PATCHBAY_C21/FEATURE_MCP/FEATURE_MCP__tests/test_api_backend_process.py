@@ -21,10 +21,10 @@ from mcp.client.session import ClientSession
 from mcp.client.stdio import StdioServerParameters, stdio_client
 from starlette.applications import Starlette
 
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__tests.FEATURE_MCP__tests__shared import project as _project
 MCP = Path(__file__).resolve().parents[1]
 ROOT = MCP.parents[2]
 
-from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__tests.FEATURE_MCP__tests__shared import project as _project
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import native_runtime_gateway  # noqa: E402
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import BackendClient  # noqa: E402
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import ToolProtocolError  # noqa: E402

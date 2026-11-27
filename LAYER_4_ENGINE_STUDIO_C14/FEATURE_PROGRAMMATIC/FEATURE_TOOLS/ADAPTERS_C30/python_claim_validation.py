@@ -6,12 +6,21 @@ import json
 import re
 
 from .python_claim_values import (
-    _RELATION, _count, _error, _items, _name, _reference, _text,
+    _RELATION,
+    _count,
+    _error,
+    _items,
+    _name,
+    _reference,
+    _text,
 )
 
 
-def _validate_structured_call(name, args, node, validate_reference, validate_relation_endpoint):
+def _validate_structured_call(
+    name, args, node, validate_reference, validate_relation_endpoint
+):
     """Validate helper arguments without constructing a legacy expression."""
+
     def ref(key, callback=validate_reference):
         return _reference(args[key], key, node, callback)
 
@@ -22,12 +31,23 @@ def _validate_structured_call(name, args, node, validate_reference, validate_rel
     if name in {"composition", "unique", "allow_roles_for_form"}:
         _validate_structure(name, args, node, ref, validate_reference)
     elif name == "relation":
-        _validate_relation(args, node, ref, count, validate_reference, validate_relation_endpoint)
+        _validate_relation(
+            args,
+            node,
+            ref,
+            count,
+            validate_reference,
+            validate_relation_endpoint,
+        )
     elif name == "order_before":
         ref("first")
         ref("second")
     elif name in {"deliver", "copy_value"}:
-        for key in (("source", "carrier") if name == "deliver" else ("address", "source")):
+        for key in (
+            ("source", "carrier")
+            if name == "deliver"
+            else ("address", "source")
+        ):
             ref(key)
     elif name == "set_value":
         _validate_value(args, node, ref, validate_reference)
@@ -58,15 +78,29 @@ def _validate_structure(name, args, node, ref, validate_reference):
         _name(args["form"], "form", node)
         for role in _items(args["roles"], "roles", node):
             _name(role, "role", node)
-        for address in ("Atom", "Atom.Header.Context.Form", "Atom.Header.Context.Role"):
+        for address in (
+            "Atom",
+            "Atom.Header.Context.Form",
+            "Atom.Header.Context.Role",
+        ):
             _reference(address, "address", node, validate_reference)
 
 
-def _validate_relation(args, node, ref, count, validate_reference, validate_relation_endpoint):
+def _validate_relation(
+    args, node, ref, count, validate_reference, validate_relation_endpoint
+):
     def endpoint(key):
-        callback = validate_reference if validate_relation_endpoint is None else (
-            lambda value: validate_relation_endpoint(value, args.get("name"), key))
+        callback = (
+            validate_reference
+            if validate_relation_endpoint is None
+            else (
+                lambda value: validate_relation_endpoint(
+                    value, args.get("name"), key
+                )
+            )
+        )
         ref(key, callback)
+
     endpoint("source")
     relation_name = _text(args["name"], "name", node)
     if relation_name != "*" and not _RELATION.fullmatch(relation_name):
@@ -85,10 +119,14 @@ def _validate_value(args, node, ref, validate_reference):
     address = _text(args["address"], "address", node)
     alias = re.match(r"alias\s*\(", address)
     if alias:
-        match = re.fullmatch(r"alias\(Relation//([A-Za-z_][A-Za-z0-9_]*)\)", address)
+        match = re.fullmatch(
+            r"alias\(Relation//([A-Za-z_][A-Za-z0-9_]*)\)", address
+        )
         if match is None:
             raise _error(node, "invalid Relation alias address")
-        _reference("Relation//" + match[1], "address", node, validate_reference)
+        _reference(
+            "Relation//" + match[1], "address", node, validate_reference
+        )
     else:
         ref("address")
     value = args["value"]
@@ -99,8 +137,15 @@ def _validate_value(args, node, ref, validate_reference):
             try:
                 value = json.loads(value)
             except (ValueError, TypeError) as error:
-                raise _error(node, "value must be a valid quoted string") from error
-            _text(value, "Relation alias" if alias else "value", node, empty=not alias)
+                raise _error(
+                    node, "value must be a valid quoted string"
+                ) from error
+            _text(
+                value,
+                "Relation alias" if alias else "value",
+                node,
+                empty=not alias,
+            )
         else:
             _text(value, "Relation alias" if alias else "value", node)
     elif type(value) not in (int, bool):
@@ -112,12 +157,18 @@ def _validate_property(name, args, node, count):
         count("occurrences")
         count("values")
         fmt = args.get("value_format")
-        if fmt is None and args.get("values") is None and args.get("occurrences") is None:
+        if (
+            fmt is None
+            and args.get("values") is None
+            and args.get("occurrences") is None
+        ):
             raise _error(node, "property_rule requires a constraint")
         if fmt is not None:
             fmt = _text(fmt, "value_format", node, empty=True)
             if fmt and not re.fullmatch(r"[A-Za-z0-9_,. +()/$-]+", fmt):
-                raise _error(node, "value_format contains an unsupported character")
+                raise _error(
+                    node, "value_format contains an unsupported character"
+                )
     elif name == "allowed_children":
         for child in _items(args["names"], "names", node):
             _name(child, "child name", node)
@@ -148,8 +199,16 @@ def _validate_layout(name, args, node, count):
         if type(grouped) is not bool:
             raise _error(node, "grouped must be a boolean")
         notation = args.get("notation", "assignment")
-        if notation not in ("assignment", "allowed") and not (notation == "relation" and not grouped):
-            raise _error(node, "notation must be 'assignment', 'allowed', or 'relation' without grouping")
+        if notation not in ("assignment", "allowed") and not (
+            notation == "relation" and not grouped
+        ):
+            raise _error(
+                node,
+                (
+                    "notation must be 'assignment', 'allowed', or 'relation' "
+                    "without grouping"
+                ),
+            )
     elif name == "path_template":
         _text(args["template"], "template", node)
     elif name == "minimum_value":

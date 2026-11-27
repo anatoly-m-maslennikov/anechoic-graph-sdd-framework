@@ -10,7 +10,12 @@ IMAGE = "sha256:" + "a" * 64
 
 class FakeRunner:
     def __init__(self, config, image=IMAGE, *, failure=False):
-        self.config, self.image, self.failure, self.commands = config, image, failure, []
+        self.config, self.image, self.failure, self.commands = (
+            config,
+            image,
+            failure,
+            [],
+        )
 
     def __call__(self, command, **kwargs):
         self.commands.append((command, kwargs))
@@ -23,7 +28,12 @@ class FakeRunner:
                 "Image": self.image,
                 "State": {"Status": "running"},
                 "Mounts": [
-                    {"Type": "volume", "Name": "anechoic-framework-db", "Destination": "/var/lib/anechoic", "RW": True},
+                    {
+                        "Type": "volume",
+                        "Name": "anechoic-framework-db",
+                        "Destination": "/var/lib/anechoic",
+                        "RW": True,
+                    },
                     {
                         "Type": "bind",
                         "Source": str(self.config.projects_root),
@@ -40,7 +50,10 @@ class FakeRunner:
                 "NetworkSettings": {
                     "Ports": {
                         "8092/tcp": [
-                            {"HostIp": "127.0.0.1", "HostPort": str(self.config.http_port)}
+                            {
+                                "HostIp": "127.0.0.1",
+                                "HostPort": str(self.config.http_port),
+                            }
                         ]
                     }
                 },

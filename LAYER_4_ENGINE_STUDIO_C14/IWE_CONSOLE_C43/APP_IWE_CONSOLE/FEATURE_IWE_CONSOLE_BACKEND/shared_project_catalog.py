@@ -1,4 +1,3 @@
-
 """A bounded, startup-time public Tool frontier for the shared MCP."""
 
 from __future__ import annotations
@@ -14,10 +13,16 @@ import os
 from typing import Annotated, Any, Callable
 
 from .host_runtime_config import HostRuntimeConfig, resolve_host_project
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import FailureRecord
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import is_native_control_name
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import (
+    FailureRecord,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import (
+    is_native_control_name,
+)
 from .project_tool_session import ToolProtocolError
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import report_failure
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import (
+    report_failure,
+)
 from .shared_tool_contract import ToolContract, contract_digest, public_tool
 
 MAX_PROJECT_CANDIDATES = 256
@@ -25,12 +30,20 @@ MAX_PROJECT_CANDIDATES = 256
 
 @dataclass(config=ConfigDict(strict=True, extra="forbid"))
 class SharedToolFrontier:
-    tools: Annotated[dict[str, ToolContract], InstanceOf()] = field(default_factory=dict)
-    project_contracts: Annotated[dict[str, dict[str, str]], InstanceOf()] = field(default_factory=dict)
+    tools: Annotated[dict[str, ToolContract], InstanceOf()] = field(
+        default_factory=dict
+    )
+    project_contracts: Annotated[dict[str, dict[str, str]], InstanceOf()] = (
+        field(default_factory=dict)
+    )
     quarantined: Annotated[set[str], InstanceOf()] = field(default_factory=set)
-    warnings: Annotated[list[dict[str, str]], InstanceOf()] = field(default_factory=list)
+    warnings: Annotated[list[dict[str, str]], InstanceOf()] = field(
+        default_factory=list
+    )
 
-    def warning(self, code: str, root: Path | None = None, tool: str | None = None) -> None:
+    def warning(
+        self, code: str, root: Path | None = None, tool: str | None = None
+    ) -> None:
         row = {"code": code}
         if root is not None:
             row["project_root"] = str(root)
@@ -74,7 +87,9 @@ def _has_marker(root: Path, frontier: SharedToolFrontier) -> bool:
     return False
 
 
-def _candidate_paths(config: HostRuntimeConfig, frontier: SharedToolFrontier) -> list[Path]:
+def _candidate_paths(
+    config: HostRuntimeConfig, frontier: SharedToolFrontier
+) -> list[Path]:
     if getattr(config, "single_project", False):
         return [config.projects_root]
     entries: list[Path] = []
@@ -111,7 +126,9 @@ def _add_project(
             candidate = public_tool(native)
             digest = contract_digest(native)
         except TypeError, ValueError:
-            frontier.warning("PROJECT_TOOL_CONTRACT_INVALID", selection.root, native["name"])
+            frontier.warning(
+                "PROJECT_TOOL_CONTRACT_INVALID", selection.root, native["name"]
+            )
             continue
         contracts[native["name"]] = digest
         existing = frontier.tools.get(native["name"])
@@ -119,10 +136,18 @@ def _add_project(
             frontier.tools[native["name"]] = ToolContract(candidate, digest)
         elif existing.digest != digest:
             frontier.quarantined.add(native["name"])
-            frontier.warning("PROJECT_TOOL_CONTRACT_CONFLICT", selection.root, native["name"])
+            frontier.warning(
+                "PROJECT_TOOL_CONTRACT_CONFLICT",
+                selection.root,
+                native["name"],
+            )
             for root, contracts in frontier.project_contracts.items():
                 if native["name"] in contracts:
-                    frontier.warning("PROJECT_TOOL_CONTRACT_CONFLICT", Path(root), native["name"])
+                    frontier.warning(
+                        "PROJECT_TOOL_CONTRACT_CONFLICT",
+                        Path(root),
+                        native["name"],
+                    )
     frontier.project_contracts[str(selection.root)] = contracts
 
 
@@ -137,10 +162,17 @@ async def _discover_project(
     selection = None
     try:
         if selector is None:
-            selection = await asyncio.to_thread(resolve_host_project, config, root)
+            selection = await asyncio.to_thread(
+                resolve_host_project, config, root
+            )
         else:
-            selection = await asyncio.to_thread(resolve_host_project, config, root, selector=selector)
-        if not getattr(config, "single_project", False) and selection.root.parent != config.projects_root:
+            selection = await asyncio.to_thread(
+                resolve_host_project, config, root, selector=selector
+            )
+        if (
+            not getattr(config, "single_project", False)
+            and selection.root.parent != config.projects_root
+        ):
             raise ValueError("Project root is not a direct host child")
         gateway = gateway_factory(selection.root, selection=selection)
         await gateway.initialize()
@@ -150,7 +182,9 @@ async def _discover_project(
     except ToolProtocolError:
         raise
     except OSError, RuntimeError, TypeError, ValueError, KeyError:
-        frontier.warning("PROJECT_CANDIDATE_INVALID", selection.root if selection else None)
+        frontier.warning(
+            "PROJECT_CANDIDATE_INVALID", selection.root if selection else None
+        )
     finally:
         if gateway is not None:
             try:
@@ -159,14 +193,18 @@ async def _discover_project(
                 raise
             except OSError, RuntimeError, TypeError, ValueError, KeyError:
                 frontier.warning(
-                    "PROJECT_CANDIDATE_CLOSE_FAILED", selection.root if selection else None
+                    "PROJECT_CANDIDATE_CLOSE_FAILED",
+                    selection.root if selection else None,
                 )
 
 
 async def discover_frontier(
-    config: HostRuntimeConfig, gateway_factory: Callable[..., Any], *, selector=None
+    config: HostRuntimeConfig,
+    gateway_factory: Callable[..., Any],
+    *,
+    selector=None,
 ) -> SharedToolFrontier:
-    """Eagerly union direct child Projects; discovery children never stay warm."""
+    "Eagerly union direct child Projects; discovery children never stay warm."
     frontier = SharedToolFrontier()
     try:
         roots = _candidate_paths(config, frontier)
@@ -176,7 +214,9 @@ async def discover_frontier(
         frontier.warning("PROJECT_CATALOG_READ_FAILED")
         roots = []
     for root in roots:
-        await _discover_project(config, root, gateway_factory, frontier, selector)
+        await _discover_project(
+            config, root, gateway_factory, frontier, selector
+        )
     for name in frontier.quarantined:
         frontier.tools.pop(name, None)
     return frontier

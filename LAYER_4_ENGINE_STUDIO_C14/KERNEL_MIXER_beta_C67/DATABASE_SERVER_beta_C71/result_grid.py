@@ -16,6 +16,16 @@ def _order(value):
     return value
 
 
+def _validate_filters(filters):
+    for item in filters:
+        if type(item) is not dict or set(item) != {"column", "operator", "value"}:
+            raise ValueError("grid filter must contain exactly column, operator and value")
+        if type(item["column"]) is not int or item["column"] < 0:
+            raise ValueError("grid column must be a non-negative integer")
+        if item["operator"] != "contains" or type(item["value"]) is not str:
+            raise ValueError("grid filter requires contains and a string value")
+
+
 def parse_grid(grid, count):
     if grid is None:
         grid = {}
@@ -30,13 +40,7 @@ def parse_grid(grid, count):
         _order(item)
     if group is not None:
         _order(group)
-    for item in filters:
-        if type(item) is not dict or set(item) != {"column", "operator", "value"}:
-            raise ValueError("grid filter must contain exactly column, operator and value")
-        if type(item["column"]) is not int or item["column"] < 0:
-            raise ValueError("grid column must be a non-negative integer")
-        if item["operator"] != "contains" or type(item["value"]) is not str:
-            raise ValueError("grid filter requires contains and a string value")
+    _validate_filters(filters)
     for item in sort + filters + ([group] if group else []):
         if item["column"] >= count:
             raise ValueError("grid column is out of range")
@@ -79,7 +83,7 @@ def grid_page(rows, count, offset, size, grid, columns=None):
     groups = None
     if group is not None:
         groups, seen = [], set()
-        for row, native in zip(page, raw):
+        for row, native in zip(page, raw, strict=False):
             value = row[group["column"]]
             key = json.dumps(value, ensure_ascii=False, separators=(",", ":"), sort_keys=True)
             if key not in seen:

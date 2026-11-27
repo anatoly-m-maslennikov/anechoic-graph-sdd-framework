@@ -1,4 +1,5 @@
 """Governed Workbench carrier reader; scheduling belongs to the service."""
+
 from __future__ import annotations
 import sys
 import re
@@ -10,19 +11,34 @@ from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import HeaderSchema
 from .source_content_schema import SourceContentSchema
 from .source_header_schema import SourceHeaderSchema
 from .source_rows import (
-    ReferenceIndex, scope as source_scope,
+    ReferenceIndex,
+    scope as source_scope,
 )
-from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import ROLE_MARKERS, CANONICAL_ROLE_MARKERS
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import control_root as configured_control_root  # noqa: E402
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (
+    ROLE_MARKERS,
+    CANONICAL_ROLE_MARKERS,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    control_root as configured_control_root,
+)  # noqa: E402
 from .source_reader_archive import SourceReaderArchive
 from .source_reader_capture import SourceReaderCapture
 from .source_reader_inventory import SourceReaderInventory
 from .source_reader_validation import SourceReaderValidation
 
 
-class SourceReader(SourceReaderArchive, SourceReaderCapture, SourceReaderInventory, SourceReaderValidation):
+class SourceReader(
+    SourceReaderArchive,
+    SourceReaderCapture,
+    SourceReaderInventory,
+    SourceReaderValidation,
+):
     def __init__(
-        self, root: Path, control_root: Path | None = None, *, schema_mode: int = 2,
+        self,
+        root: Path,
+        control_root: Path | None = None,
+        *,
+        schema_mode: int = 2,
         compiled_schema: tuple[ContentSchema, HeaderSchema] | None = None,
         status_groups: tuple[tuple[str, str, str], ...] = (),
         role_folders: tuple[tuple[str, str], ...] | None = None,
@@ -57,7 +73,9 @@ class SourceReader(SourceReaderArchive, SourceReaderCapture, SourceReaderInvento
         generated = {"_projection"}
         if not include_installed_framework:
             generated.add("000_ANECHOIC_framework")
-        self._excluded_directories = frozenset(self.control_root / name for name in generated)
+        self._excluded_directories = frozenset(
+            self.control_root / name for name in generated
+        )
         self._initialize_cache(compiled_schema)
 
     def _initialize_cache(self, compiled_schema):
@@ -84,8 +102,12 @@ class SourceReader(SourceReaderArchive, SourceReaderCapture, SourceReaderInvento
         self._references = ReferenceIndex()
         self._inventory_ready = False
         self._compiled_schema = compiled_schema
-        self._content_schema = SourceContentSchema(compiled_schema[0] if compiled_schema else None)
-        self._header_schema = SourceHeaderSchema(compiled_schema[1] if compiled_schema else None)
+        self._content_schema = SourceContentSchema(
+            compiled_schema[0] if compiled_schema else None
+        )
+        self._header_schema = SourceHeaderSchema(
+            compiled_schema[1] if compiled_schema else None
+        )
         self._observed_header_schema: HeaderSchema | None = None
         self._content_invalid: set[Path] = set()
         self._header_invalid: set[Path] = set()
@@ -93,31 +115,19 @@ class SourceReader(SourceReaderArchive, SourceReaderCapture, SourceReaderInvento
         self.capture_changed = True
         self.capture_delta: dict[str, dict[str, Any] | None] | None = None
         self.audit_delta: set[str] | None = None
+
     @property
     def content_schema(self) -> ContentSchema | None:
         return self._content_schema.schema
+
     @property
     def header_schema(self) -> HeaderSchema | None:
         return self._header_schema.schema
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     def set_observed_header_schema(self, schema: HeaderSchema) -> None:
         """Retain the Mode 2 Header shape observed during this owner's cold start."""
         self._observed_header_schema = schema
+
     def release_cache(self) -> None:
         """Release parsed successful rows while retaining failed signatures."""
         self._cached.clear()
@@ -132,24 +142,35 @@ class SourceReader(SourceReaderArchive, SourceReaderCapture, SourceReaderInvento
         self.capture_delta = None
         self.audit_delta = None
 
-
-
-
-
     def _rows(self) -> list[dict[str, Any]]:
         return [
             self._cached[path][1]
             for path in sorted(self._source_paths)
             if path in self._cached
         ]
+
     def _cached_row(self, path: Path) -> dict[str, Any] | None:
         return self._cached.get(path, (None, None))[1]
+
     def _cached_rows(
-        self, cached: dict[Path, tuple[tuple[int, ...], dict[str, Any]]] | None = None,
+        self,
+        cached: dict[Path, tuple[tuple[int, ...], dict[str, Any]]]
+        | None = None,
     ) -> dict[Path, dict[str, Any]]:
-        return {path: item[1] for path, item in (self._cached if cached is None else cached).items()}
+        return {
+            path: item[1]
+            for path, item in (
+                self._cached if cached is None else cached
+            ).items()
+        }
+
     def _accepted_rows(self) -> list[dict[str, Any]]:
-        return [self._cached[path][1] for path in sorted(self._references.accepted_paths()) if path in self._cached]
+        return [
+            self._cached[path][1]
+            for path in sorted(self._references.accepted_paths())
+            if path in self._cached
+        ]
+
     def _scopes(self) -> list[dict[str, Any]]:
         assert self._declarations is not None
         rows = [
@@ -158,10 +179,13 @@ class SourceReader(SourceReaderArchive, SourceReaderCapture, SourceReaderInvento
         ]
         rows[0]["scope_unit_id"] = self._project_scope_id
         return rows
+
     def _error(self, path: Path, error: BaseException) -> None:
         if path in self._source_paths:
             self._diagnostics[path] = str(error)
         print(f"source-reader: {path}: {error}", file=sys.stderr)
+
+
 def capture_inventory(
     root: Path, control_root: Path | None = None
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:

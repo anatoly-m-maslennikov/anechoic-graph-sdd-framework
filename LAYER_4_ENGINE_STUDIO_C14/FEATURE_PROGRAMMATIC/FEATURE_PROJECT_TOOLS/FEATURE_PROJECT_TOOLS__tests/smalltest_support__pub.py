@@ -13,15 +13,20 @@ from watchdog.observers.polling import PollingObserver
 
 def polling_source_watcher():
     """Use filesystem snapshots for transport fixtures that run in a sandbox."""
-    return patch("FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.source_watcher__pub.NativeObserver", PollingObserver)
+    return patch(
+        "FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.source_watcher__pub.NativeObserver",
+        PollingObserver,
+    )
 
 
 def extension_directory(root: Path) -> Path:
     """Use the suite-prepared DuckPGQ cache, overridable for local runs."""
-    return Path(os.environ.get(
-        "ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY",
-        root / ".anechoic_tmp" / "workbench" / "extensions",
-    ))
+    return Path(
+        os.environ.get(
+            "ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY",
+            root / ".anechoic_tmp" / "workbench" / "extensions",
+        )
+    )
 
 
 def write_settings(root: Path) -> Path:
@@ -58,14 +63,15 @@ def write_atom(
         f"subjects: {subjects}\n"
         f"relations: {relations}\n"
         f"{extra}"
-        "---\n"
-        + body,
+        "---\n" + body,
         encoding="utf-8",
     )
     return path
 
 
-def source_path(declarations: dict[str, dict[str, Any]], scope: str, role: str, name: str) -> Path:
+def source_path(
+    declarations: dict[str, dict[str, Any]], scope: str, role: str, name: str
+) -> Path:
     relative = Path(name)
     if not re.match(r"^[A-Za-z0-9_]+-[A-Z]-", relative.name):
         name = str(relative.with_name("CA-R-" + relative.name))

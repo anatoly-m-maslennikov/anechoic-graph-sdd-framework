@@ -9,8 +9,8 @@ context:
   label: Task
 state:
   status: in_queue
-  version: 15
-  updated_at: '2026-11-27T09:39:27.772416+00:00'
+  version: 23
+  updated_at: '2026-11-27T13:13:16.498406+00:00'
 ---
 ## Summary
 
@@ -260,3 +260,138 @@ An explicit-loop C88 experiment emitted identical Lean for four native
 cases. Autoform reached unsupported JSON serialization on the mixed
 input. The staged valid replay still provides evidence at those
 boundaries.
+
+### Renderer call forms and snapshot IDs
+
+C74 reproduced a false pass with the pinned C87 and C52 Specs. A
+renderer with a renamed keyword still produced the diagram when called
+without keywords, but the real C75 call raised `TypeError`. The
+translated replay now checks both call forms for each field order. Its
+report shows which call conflicts. The same mutation exits nonzero and
+the unchanged renderer passes.
+
+The Lean trace value check used ASCII trim for `nonempty_string`.
+Whitespace-only Unicode and control strings could pass. The Lean
+predicate now agrees with Python whitespace classification across all
+Unicode code points. A staged C75 admission also accepted such an ID
+before the fix. C75 rejects blank IDs before invoking the Model
+delegate. The pinned C95 replay still carries one valid snapshot ID
+from the DuckDB route through Worker staging to C75. Lean rejects the
+blank observation. Unobserved IDs and malformed event rows stay
+unresolved.
+
+### Unbounded verdict comparison
+
+The published C90 Manifest declares the shared verdict export. Lean
+resolved that export in the freshly translated facade and provider.
+For every modeled list of strings, a conflict wins. An empty list or
+an unresolved entry without a conflict yields unresolved. Other lists
+yield matched. The reference uses the comparison policy for conflict
+precedence and the existing verdict controls for empty input. The
+published Contract specifies the separate finding operation.
+
+The same proof rejected a Python mutation that gave unresolved
+priority over conflicting. The two mixed orders failed in the boxed
+list replay, and all six boxed controls passed on the original.
+The Functional regression now regenerates the implementation Lean.
+The universal theorem covers heap-backed lists in Autoform.
+
+### Public verdict proof and unobserved renderer guards
+
+The pinned C90 command now reports `verdict_proof` separately from the
+finding proof. Lean resolves the declared export and proves the
+comparison policy for every modeled heap-backed list of strings.
+A precedence mutation leaves the verdict unresolved and exits
+nonzero. The report retains the proved finding effect and its three
+matched bindings. Missing, empty, and wrong-type proof artifacts
+also leave the verdict unresolved.
+
+The pinned C87 command used to pass a Solution with an added return
+guard that the shape replay never observed. The same Manifest,
+Solution, renderer, and witness pins now report `solution_gap` and
+exit nonzero. All four diagram calls still match. The valid
+published pair still passes.
+
+All 14 focused Functional tests passed with Autoform and Lean. The
+C90 check covers the verdict policy and finding obligations. The C87
+check covers the admitted shape workflow and calls. External effects
+and other implementation paths remain unresolved.
+
+For the fixed C88 witness, independently built strings match both the
+fresh native capture and the buffered Lean observations. Changed
+join, literal ordering, and string serialization sources fail pin
+admission. General serialization, process effects, and the public
+implementation comparator remain unresolved.
+
+### Public Spec Comparison replay
+
+C74 now compares the pinned C88 Manifest and Solution with fresh
+implementation Lean on one mixed input. Lean checks the three ordered
+directions against the authored effect and terminal path. The returned
+report contains eight checked facts and the expected conflicting domain
+verdict. The wrapper reports agreement on the witness.
+
+The two fixed join observations replace only the exact unsupported
+assignments. Lean executes the rest of the generated function. The
+worker receives the exact reviewed bytes. The public replay rejects
+changed source pins. The worker classification proof rejects a branch
+swap. All three focused Functional tests pass.
+
+General serialization, other inputs, Python consumer visibility,
+and runtime effects remain unresolved.
+
+C85's translated missing and empty boundary cases retain the source,
+field, and message. Three checks pass on the pinned validator. All
+three fail when the translated diagnostic loses its source argument.
+Full parsing and validation effects remain unresolved.
+
+### C89 client admission
+
+Autoform translated the exact C89 sibling-delegation source against
+Active AN-S-4936@1 and AN-S-5031@1. All three Lean probes reached the
+unsupported `call:isinstance` boundary before the admission check.
+C89 client admission remains unresolved.
+
+### C90 verdict from authored Specs
+
+The C90 public replay checks Active AN-S-4937@4 and AN-S-5024@4
+against the translated shared export. Lean proves that the Manifest
+Contract, Solution, and implementation choose one verdict for every
+modeled heap-backed list of strings.
+
+Two Functional controls pass. Lean rejects an agreeing change to both
+Specs and a Solution guard that excludes a conflict-only list. The
+finding formation proof passed in the same public replay. AN-S-3394@18
+describes the authored Lean digest in the report.
+
+### C75 workflow handoff and relative imports
+
+Lean checks the pinned C75 Contract and Solution against the emitted
+workflow body with supplied child results. The renderer model and
+returned model match the normalizer result. The supplied ValueError
+reaches the caller before rendering. A changed Python call that gives
+the renderer the raw configuration fails the Model handoff check.
+
+The combined Autoform translation bound missing child imports to C75's
+root facade. C74 now stops before translation when this fallback would
+bind a different staged module. It reports the importer and both paths.
+The C87, C88, and C90 comparison groups pass import admission.
+
+The native public check confirms the C75 export and child bindings.
+The Lean replay uses the translated leaf and explicit read-only probes.
+Full Autoform initialization and child implementations remain unresolved.
+
+### C84 compact Lean strings
+
+A zero-width joiner in a normalized effect value caused the old encoder
+to expand every scalar into a Lean character constructor. Lean failed
+to elaborate the 16,384-scalar example at its recursion limit.
+
+The encoder now emits quoted Lean strings. Lean 4.31 decoded the exact
+effect value without changing its limits. The generated file shrank
+from 264,428 bytes to 17,310 bytes. C84 round-trip checks cover control
+characters, literal escape spellings, Unicode, and surrogate rejection.
+
+The C88 comparison passed with the new encoder pin. Fresh Autoform
+execution of the encoder stops at string join or hexadecimal formatting.
+Translated encoder execution remains unresolved.

@@ -12,9 +12,9 @@ context:
   template: STANDARD
   lens: SWD/SWCS
 state:
-  status: active
+  status: archived
   version: 1
-  updated_at: '2026-11-27T10:14:59.835668+00:00'
+  updated_at: '2026-11-27T10:52:53.677257+00:00'
 ---
 
 ## Summary

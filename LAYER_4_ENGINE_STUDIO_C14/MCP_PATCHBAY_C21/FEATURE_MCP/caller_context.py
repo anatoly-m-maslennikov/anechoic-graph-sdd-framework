@@ -4,7 +4,10 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict
 
-from MCP_PATCHBAY_C21.FEATURE_MCP.runtime_request_context import RuntimeRequestContext, current_request_context
+from MCP_PATCHBAY_C21.FEATURE_MCP.runtime_request_context import (
+    RuntimeRequestContext,
+    current_request_context,
+)
 
 
 class CallerContextError(ValueError):
@@ -17,15 +20,23 @@ class _CallerContext(BaseModel):
     session_id: str
 
 
-def take_caller_context(arguments: Any) -> tuple[Any, RuntimeRequestContext | None]:
+def take_caller_context(
+    arguments: Any,
+) -> tuple[Any, RuntimeRequestContext | None]:
     if not isinstance(arguments, dict) or "caller_context" not in arguments:
         return arguments, None
     value = arguments["caller_context"]
     try:
-        context = RuntimeRequestContext(session_id=_CallerContext.model_validate(value).session_id)
+        context = RuntimeRequestContext(
+            session_id=_CallerContext.model_validate(value).session_id
+        )
     except (TypeError, ValueError) as error:
         raise CallerContextError("invalid_caller_context") from error
     current = current_request_context()
     if current is not None and current != context:
         raise CallerContextError("caller_context_conflict")
-    return {key: value for key, value in arguments.items() if key != "caller_context"}, context
+    return {
+        key: value
+        for key, value in arguments.items()
+        if key != "caller_context"
+    }, context

@@ -9,7 +9,9 @@ from .graph_store import quote_identifier
 
 
 class QueryLifecycle:
-    def lifecycle_candidates(self, atom_ids=(), references=(), prefix=None, under=None):
+    def lifecycle_candidates(
+        self, atom_ids=(), references=(), prefix=None, under=None
+    ):
         clauses = ["regexp_full_match(atom_id, '.+-[A-Z]-[0-9]+')"]
         parameters = []
         if atom_ids:
@@ -22,14 +24,17 @@ class QueryLifecycle:
             clauses.append("starts_with(atom_id, ?)")
             parameters.append(prefix)
         if under is not None:
-            clauses.append("(relative_path = ? OR starts_with(relative_path, ?))")
+            clauses.append(
+                "(relative_path = ? OR starts_with(relative_path, ?))"
+            )
             parameters.extend((under, under.rstrip("/") + "/"))
         with self._lock:
             return self._connection.execute(
                 "SELECT reference, relative_path, filename FROM (SELECT reference, relative_path, filename, "
                 f"split_part(reference, '@', 1) AS atom_id FROM main.atoms WHERE TRUE{self._native_atom_clause()}) WHERE "
                 + " AND ".join(clauses)
-                + " ORDER BY relative_path || '/' || filename", parameters,
+                + " ORDER BY relative_path || '/' || filename",
+                parameters,
             ).fetchall()
 
     def lifecycle_archive_candidates(self, atom_id: str):
@@ -41,33 +46,65 @@ class QueryLifecycle:
                 "AND regexp_full_match(reference, '[^@]+@[1-9][0-9]*')"
                 f"{self._native_atom_clause()} "
                 "ORDER BY length(split_part(reference, '@', 2)) DESC, split_part(reference, '@', 2) DESC, "
-                "relative_path || '/' || filename", [atom_id],
+                "relative_path || '/' || filename",
+                [atom_id],
             ).fetchall()
 
     def _native_atom_clause(self) -> str:
-        return "".join(f" AND {quote_identifier(name)} IS NULL" for name in self._header_schema.names
-                       if name == "header.projection" or name.startswith("header.projection."))
+        return "".join(
+            f" AND {quote_identifier(name)} IS NULL"
+            for name in self._header_schema.names
+            if name == "header.projection"
+            or name.startswith("header.projection.")
+        )
 
     def lifecycle_contexts(self, reference: str) -> list[dict[str, Any]]:
         candidates = (
-            "header.identity.atom_id", "header.identity.id", "header.atom_id",
-            "header.identity.ref_id", "header.ref_id", "header.state.version", "header.state.version_number",
-            "header.version", "header.version_number", "header.state.status", "header.status",
-            "header.context.role", "header.role", "header.content_role", "header.context.form", "header.form", "header.type",
-            "header.context.container", "header.container", "header.context.container.atom",
-            "header.context.container.scope_unit", "header.container.atom", "header.container.scope_unit", "content.summary",
+            "header.identity.atom_id",
+            "header.identity.id",
+            "header.atom_id",
+            "header.identity.ref_id",
+            "header.ref_id",
+            "header.state.version",
+            "header.state.version_number",
+            "header.version",
+            "header.version_number",
+            "header.state.status",
+            "header.status",
+            "header.context.role",
+            "header.role",
+            "header.content_role",
+            "header.context.form",
+            "header.form",
+            "header.type",
+            "header.context.container",
+            "header.container",
+            "header.context.container.atom",
+            "header.context.container.scope_unit",
+            "header.container.atom",
+            "header.container.scope_unit",
+            "content.summary",
         )
         with self._lock:
-            available = set(self._header_schema.names) | set(self._content_schema.names)
-            names = ["relative_path", "filename", *(name for name in candidates if name in available)]
+            available = set(self._header_schema.names) | set(
+                self._content_schema.names
+            )
+            names = [
+                "relative_path",
+                "filename",
+                *(name for name in candidates if name in available),
+            ]
             columns = ", ".join(map(quote_identifier, names))
             rows = self._connection.execute(
                 f"SELECT {columns} FROM main.atoms WHERE status_group IN ('Current', 'Backlog') "
-                f"AND reference = ?{self._native_atom_clause()} ORDER BY relative_path || '/' || filename", [reference],
+                f"AND reference = ?{self._native_atom_clause()} ORDER BY relative_path || '/' || filename",
+                [reference],
             ).fetchall()
-        return [dict(zip(names, row)) for row in rows]
+        return [dict(zip(names, row, strict=False)) for row in rows]
 
-    def lifecycle_last_id(self, prefix: str, *, ceiling: int | None = None, eligible=None) -> str | None:
+    def lifecycle_last_id(
+        self, prefix: str, *, ceiling: int | None = None, eligible=None
+    ) -> str | None:
         suffix_start = len(prefix) + 1
         parameters: list[str | int] = [suffix_start, prefix, suffix_start]
         limit = ""
@@ -89,9 +126,11 @@ class QueryLifecycle:
             return None
 
     def _create_atom_version_max(self) -> None:
-        if not self._connection.execute("SELECT count(*) FROM information_schema.tables "
-                                        "WHERE table_catalog = current_database() AND table_schema = 'main' "
-                                        "AND table_name = 'archive_version_max'").fetchall()[0][0]:
+        if not self._connection.execute(
+            "SELECT count(*) FROM information_schema.tables "
+            "WHERE table_catalog = current_database() AND table_schema = 'main' "
+            "AND table_name = 'archive_version_max'"
+        ).fetchall()[0][0]:
             return
         source = revision_query(self._connection, stable_only=False)
         self._connection.execute(
@@ -105,7 +144,9 @@ class QueryLifecycle:
             ") GROUP BY atom_id"
         )
 
-    def lifecycle_latest_draft_version(self, atom_id: str, *, eligible=None) -> int | None:
+    def lifecycle_latest_draft_version(
+        self, atom_id: str, *, eligible=None
+    ) -> int | None:
         with self._lock:
             source = revision_query(self._connection, stable_only=False)
             rows = self._connection.execute(
@@ -113,10 +154,17 @@ class QueryLifecycle:
                 "JOIN main.atoms USING (reference, relative_path, filename) "
                 "WHERE revisions.atom_id = ? AND revisions.version > 0 "
                 "AND status_group IN ('Current', 'Backlog', 'Draft') "
-                f"{self._native_atom_clause()}", [atom_id],
+                f"{self._native_atom_clause()}",
+                [atom_id],
             ).fetchall()
-            return max((version for version, directory, filename in rows
-                        if eligible is None or eligible(directory, filename)), default=None)
+            return max(
+                (
+                    version
+                    for version, directory, filename in rows
+                    if eligible is None or eligible(directory, filename)
+                ),
+                default=None,
+            )
 
     def project_consistency(self) -> dict[str, int]:
         with self._lock:
@@ -125,15 +173,25 @@ class QueryLifecycle:
                 "(SELECT count(*) AS carriers FROM main.atoms WHERE reference IS NOT NULL "
                 "GROUP BY reference HAVING count(*) > 1)"
             ).fetchone()
-            issues = sum(self._connection.execute(f"SELECT count(*) FROM main.{table}").fetchone()[0]
-                         for table in ATOM_AUDIT_TABLES)
+            issues = sum(
+                self._connection.execute(
+                    f"SELECT count(*) FROM main.{table}"
+                ).fetchone()[0]
+                for table in ATOM_AUDIT_TABLES
+            )
             revisions = self._connection.execute(
                 "SELECT count(*) FROM (SELECT observed, expected FROM main.atom_duplicate_revision_issues GROUP BY ALL)"
             ).fetchone()[0]
-            return {"duplicate_references": duplicates, "duplicate_carriers": extra,
-                    "duplicate_revisions": revisions, "carrier_issues": issues}
+            return {
+                "duplicate_references": duplicates,
+                "duplicate_carriers": extra,
+                "duplicate_revisions": revisions,
+                "carrier_issues": issues,
+            }
 
-    def lifecycle_descendants(self, references: tuple[str, ...], relation: str) -> set[str]:
+    def lifecycle_descendants(
+        self, references: tuple[str, ...], relation: str
+    ) -> set[str]:
         with self._lock:
             rows = self._connection.execute(
                 """
@@ -150,7 +208,7 @@ class QueryLifecycle:
                     WHERE (edge.value ->> 'kind') = 'Atom'
                 )
                 SELECT reference FROM reached
-                """, [list(references), f"$.{relation}"],
+                """,
+                [list(references), f"$.{relation}"],
             ).fetchall()
             return {row[0] for row in rows}
-

@@ -10,7 +10,7 @@ context:
 state:
   status: active
   version: 4
-  updated_at: "2026-11-25T10:31:29.590036+00:00"
+  updated_at: "2026-11-27T13:09:34.996603+00:00"
 ---
 # Manifest Build
 
@@ -26,6 +26,10 @@ declare_entity(
         component_seed_id='CS4',
         boundaries={
             'code': {'imports': {'only': []}, 'exports': {
+                'manifest_build_CS4__shared._COMPILER_SOURCE_DIRECTORIES': {'private': ['LAYER_4_ENGINE_STUDIO_C14/WORKERS_beta_C69/manifest_build_CS4/manifest_build_CS4__tests']},
+                'manifest_build_CS4__shared._REVIEWED_CLAIMS': {'private': ['LAYER_4_ENGINE_STUDIO_C14/WORKERS_beta_C69/manifest_build_CS4/manifest_build_CS4__tests']},
+                'manifest_build_CS4__shared._compiler_sha256': {'private': ['LAYER_4_ENGINE_STUDIO_C14/WORKERS_beta_C69/manifest_build_CS4/manifest_build_CS4__tests']},
+                'manifest_build_CS4__shared.compile_generation': {'private': ['LAYER_4_ENGINE_STUDIO_C14/WORKERS_beta_C69/manifest_build_CS4/manifest_build_CS4__tests']},
                 'manifest_build_CS4__shared': {'private': ['LAYER_4_ENGINE_STUDIO_C14/WORKERS_beta_C69/manifest_build_CS4/manifest_build_CS4__tests']},
                 'manifest_build_CS4__shared.manifest_input_signature': {'shared': ['C69', 'LAYER_4_ENGINE_STUDIO_C14/WORKERS_beta_C69/manifest_build_CS4/manifest_build_CS4__tests']},
             }},

@@ -5,13 +5,21 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import value_excluding_declared_children
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import direct_markdown, section_markdown
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
+    import value_excluding_declared_children  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
+    import (
+        direct_markdown,
+        section_markdown,
+    )  # fmt: skip
 
 
 def _value(
-    records: Mapping[tuple[str, ...], list[Mapping[str, Any]]], path: tuple[str, ...], applies: bool,
-    declared_children: frozenset[tuple[str, ...]], lines: list[str] | None,
+    records: Mapping[tuple[str, ...], list[Mapping[str, Any]]],
+    path: tuple[str, ...],
+    applies: bool,
+    declared_children: frozenset[tuple[str, ...]],
+    lines: list[str] | None,
 ) -> str | None:
     if not applies:
         return None
@@ -22,11 +30,20 @@ def _value(
     record = next(iter(records.get(path, ())), None)
     if record is not None:
         spans_available, value = value_excluding_declared_children(
-            record, records, declared_children, lines,
+            record,
+            records,
+            declared_children,
+            lines,
         )
         if not spans_available:
             value = direct_markdown(
-                record, (candidate for group in records.values() for candidate in group), lines,
+                record,
+                (
+                    candidate
+                    for group in records.values()
+                    for candidate in group
+                ),
+                lines,
             )
         if isinstance(value, str) and value.strip():
             return value.strip()
@@ -34,15 +51,20 @@ def _value(
 
 
 def _prose_claim(
-    records: Mapping[tuple[str, ...], list[Mapping[str, Any]]], path: tuple[str, ...],
-    declared_children: frozenset[tuple[str, ...]], lines: list[str] | None,
+    records: Mapping[tuple[str, ...], list[Mapping[str, Any]]],
+    path: tuple[str, ...],
+    declared_children: frozenset[tuple[str, ...]],
+    lines: list[str] | None,
 ) -> str | None:
-    """Keep undeclared prose headings, subtracting exact declared child spans."""
+    "Keep undeclared prose headings, subtracting exact declared child spans."
     record = next(iter(records.get(path, ())), None)
     if record is None:
         return _legacy_prose_claim(records, path[:-1], lines)
     spans_available, value = value_excluding_declared_children(
-        record, records, declared_children, lines,
+        record,
+        records,
+        declared_children,
+        lines,
     )
     if spans_available:
         return value
@@ -54,10 +76,11 @@ def _prose_claim(
 
 
 def _legacy_prose_claim(
-    records: Mapping[tuple[str, ...], list[Mapping[str, Any]]], parent_path: tuple[str, ...],
+    records: Mapping[tuple[str, ...], list[Mapping[str, Any]]],
+    parent_path: tuple[str, ...],
     lines: list[str] | None,
 ) -> str | None:
-    """Retain admitted direct Claim prose while removing declared Claim children."""
+    "Retain admitted direct Claim prose while removing declared Claim children."
     parent = next(iter(records.get(parent_path, ())), None)
     if parent is None:
         return None
@@ -67,9 +90,9 @@ def _legacy_prose_claim(
     value = section.split("\n", 1)[1] if "\n" in section else ""
     for child_name in ("formal_claim", "prose_claim"):
         child = next(iter(records.get((*parent_path, child_name), ())), None)
-        child_section = section_markdown(child, lines) if child is not None else None
+        child_section = (
+            section_markdown(child, lines) if child is not None else None
+        )
         if child_section is not None:
             value = value.replace(child_section, "", 1)
     return value.strip() or None
-
-

@@ -5,6 +5,10 @@ from unittest import TestCase
 from unittest.mock import patch
 import json
 
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    NativeCapture,
+)
+
 from KERNEL_MIXER_C59.package_audit import _audit_rows, _contract_candidates
 from .test_component_projection import IDENTITY
 
@@ -18,10 +22,10 @@ class EmbeddedContractAuditTests(TestCase):
 
         legacy = row('AN-S-4', 'component_contract', '', 0)
         manifest = row('AN-S-3', 'component_manifest', IDENTITY + '\n## Component Contract\n\nGuarantee.\n', 1)
-        capture = SimpleNamespace(atoms=[legacy, manifest], containment=[
+        capture = NativeCapture(atoms=[legacy, manifest], containment=[
             {'source_ref': 'AN-S-4', 'target_kind': 'Component', 'target_ref': 'C3'},
             {'source_ref': 'AN-S-3', 'target_kind': 'Component', 'target_ref': 'C1'},
-        ])
+        ], errors={})
         selection = SimpleNamespace(project_prefix='AN')
         with patch('KERNEL_MIXER_C59.package_audit.read_component_contract',
                    return_value={'ref_id': 'AN-S-4@2'}):

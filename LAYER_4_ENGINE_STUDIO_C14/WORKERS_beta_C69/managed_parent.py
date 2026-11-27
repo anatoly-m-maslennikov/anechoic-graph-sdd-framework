@@ -17,7 +17,12 @@ def watch_managed_parent():
     if expected is None:
         return
     parent, group = int(expected), os.getpid()
-    if parent <= 0 or parent == group or os.getpgrp() != group or os.getsid(0) != group:
+    if (
+        parent <= 0
+        or parent == group
+        or os.getpgrp() != group
+        or os.getsid(0) != group
+    ):
         raise ValueError("Managed Worker requires an isolated process group")
     if os.getppid() != parent:
         raise RuntimeError("Orchestrator exited before Worker startup")

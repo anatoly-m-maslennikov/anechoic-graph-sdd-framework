@@ -1,15 +1,21 @@
-
 """Safe, source-preserving scalar reads for declared Headers."""
-
 
 from typing import Any
 
 import yaml
-from yaml.events import AliasEvent, MappingEndEvent, MappingStartEvent, SequenceEndEvent, SequenceStartEvent
+from yaml.events import (
+    AliasEvent,
+    MappingEndEvent,
+    MappingStartEvent,
+    SequenceEndEvent,
+    SequenceStartEvent,
+)
 from yaml.nodes import MappingNode, Node, ScalarNode, SequenceNode
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import carrier_read_view
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import header_path
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
+    import carrier_read_view  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
+    import header_path  # fmt: skip
 
 
 _STRING = "tag:yaml.org,2002:str"
@@ -23,13 +29,23 @@ def _metadata(document: Node) -> dict[str, Any]:
     while pending:
         node, depth = pending.pop()
         if id(node) in seen or depth > 64 or len(seen) >= 100_000:
-            raise ValueError("Header aliases or excessive YAML resources are unsupported.")
+            raise ValueError(
+                "Header aliases or excessive YAML resources are unsupported."
+            )
         seen.add(id(node))
         if isinstance(node, MappingNode):
-            keys = [key.value for key, _ in node.value if isinstance(key, ScalarNode) and key.tag == _STRING]
+            keys = [
+                key.value
+                for key, _ in node.value
+                if isinstance(key, ScalarNode) and key.tag == _STRING
+            ]
             if len(keys) != len(node.value) or len(set(keys)) != len(keys):
-                raise ValueError("Header keys must be unique strings; merge keys are unsupported.")
-            pending.extend((child, depth + 1) for pair in node.value for child in pair)
+                raise ValueError(
+                    "Header keys must be unique strings; merge keys are unsupported."
+                )
+            pending.extend(
+                (child, depth + 1) for pair in node.value for child in pair
+            )
         elif isinstance(node, SequenceNode):
             pending.extend((child, depth + 1) for child in node.value)
     loader = yaml.SafeLoader("")
@@ -47,7 +63,9 @@ def _metadata(document: Node) -> dict[str, Any]:
 
 def _check_resources(frontmatter: str) -> None:
     depth = 0
-    for count, event in enumerate(yaml.parse(frontmatter, Loader=yaml.SafeLoader), 1):
+    for count, event in enumerate(
+        yaml.parse(frontmatter, Loader=yaml.SafeLoader), 1
+    ):
         if isinstance(event, AliasEvent):
             raise ValueError("Header YAML aliases are unsupported.")
         if isinstance(event, (MappingStartEvent, SequenceStartEvent)):
@@ -64,7 +82,9 @@ def _document(frontmatter: str) -> MappingNode:
         document = yaml.compose(frontmatter, Loader=yaml.SafeLoader)
         if document is None:
             mark = yaml.error.Mark("<Header>", 0, 0, 0, frontmatter, 0)
-            document = MappingNode("tag:yaml.org,2002:map", [], mark, mark, flow_style=False)
+            document = MappingNode(
+                "tag:yaml.org,2002:map", [], mark, mark, flow_style=False
+            )
         if not isinstance(document, MappingNode):
             raise ValueError("Header must contain one mapping.")
         _metadata(document)

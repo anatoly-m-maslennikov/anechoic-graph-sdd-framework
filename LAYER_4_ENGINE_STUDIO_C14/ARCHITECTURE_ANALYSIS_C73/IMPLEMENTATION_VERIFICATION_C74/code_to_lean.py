@@ -1,6 +1,7 @@
 """Translate selected implementation source files to Lean."""
 
 import argparse
+import ast
 import os
 import shutil
 import subprocess
@@ -80,6 +81,40 @@ def _stage_sources(sources, inputs, digests):
         target.write_bytes(content)
 
 
+def _relative_module_alias(package, statement, staged):
+    ascent = statement.level - 1
+    outside = max(ascent - len(package), 0)
+    target = package[:max(len(package) - ascent, 0)]
+    if statement.module:
+        target += tuple(statement.module.split('.'))
+    for index in range(len(target)):
+        suffix = '/'.join(target[index:])
+        for candidate in (f'{suffix}.py', f'{suffix}/__init__.py'):
+            if candidate in staged:
+                if outside or index:
+                    return '../' * outside + '/'.join(target), candidate
+                return None
+    return None
+
+
+def _check_python_imports(inputs):
+    staged = {path.relative_to(inputs).as_posix()
+              for path in inputs.rglob('*') if path.is_file()}
+    for importer in sorted(staged):
+        tree = ast.parse((inputs / importer).read_bytes(), filename=importer)
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.ImportFrom) or not node.level:
+                continue
+            alias = _relative_module_alias(Path(importer).parent.parts, node, staged)
+            if alias:
+                requested, candidate = alias
+                written = '.' * node.level + (node.module or '')
+                raise ValueError(
+                    f'{importer}:{node.lineno}: Autoform relative import {written!r} '
+                    f'requests {requested!r} but would bind to {candidate!r}'
+                )
+
+
 def main():
     parser = argparse.ArgumentParser(
         description=__doc__,
@@ -111,13 +146,16 @@ def main():
             _stage_sources(sources, inputs, args.sha256)
             generated = directory / 'Implementation.lean'
             if args.translator == 'autoform':
-                _autoform(inputs, next(iter(languages)), generated, directory)
+                language = next(iter(languages))
+                if language == 'PYTHONSRC':
+                    _check_python_imports(inputs)
+                _autoform(inputs, language, generated, directory)
             else:
                 _pastalean(inputs / sources[0].name, generated, directory)
             if not generated.is_file() or generated.stat().st_size == 0:
                 raise ValueError(f'{args.translator} produced no Lean source')
             shutil.copyfile(generated, args.output)
-    except (OSError, ValueError) as error:
+    except (OSError, SyntaxError, ValueError) as error:
         parser.exit(1, f'code-to-lean: {error}\n')
     return 0
 

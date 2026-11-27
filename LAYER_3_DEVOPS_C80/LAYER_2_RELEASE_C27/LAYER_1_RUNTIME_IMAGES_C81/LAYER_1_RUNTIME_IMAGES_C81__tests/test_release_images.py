@@ -4,9 +4,8 @@ import json
 from pathlib import Path
 import shutil
 import subprocess
-from types import SimpleNamespace
 import unittest
-from unittest.mock import patch
+from unittest.mock import NonCallableMock, patch
 
 from LAYER_1_RUNTIME_IMAGES_C81 import release_images as images
 
@@ -272,7 +271,11 @@ class ReleaseImagesTests(ReleaseImageFixture):
         state = self.root / ".anechoic_runtime/project/id"
         state.mkdir(parents=True)
         control = self.root / ".anechoic_test"
-        selection = SimpleNamespace(root=self.root, launcher_state=state, control_root=control, instance_id="b" * 64)
+        selection = NonCallableMock(
+            spec_set=["root", "launcher_state", "control_root", "instance_id"],
+            root=self.root, launcher_state=state, control_root=control,
+            instance_id="b" * 64,
+        )
         receipt = state / "ready.json"
         self.assertIsNone(images.ready_predecessor(selection))
         payload = {"project_root": str(self.root), "control_root": str(control), "project_id": selection.instance_id,

@@ -1,4 +1,6 @@
+import json
 import unittest
+from contextlib import nullcontext
 from importlib import import_module
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -7,6 +9,17 @@ from unittest.mock import patch
 from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75._package__shared import verify_formal_chain
 from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_2_SPEC_READING_C83._package__shared import load_boundary_model
 from .test_boundary_model import _inputs
+
+_CAPTURE = ('FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.formal_chain__pub'
+            '.capture_lean_json')
+
+
+def _validation_contexts(model, claims):
+    declarations = [[{'source': model[role]['source'], 'claim': value}]
+                    for role, value in claims.items()]
+    captured = {'program': 'lean source\n',
+                'stdout': json.dumps([[declarations, [], None]])}
+    return nullcontext([captured]), nullcontext([])
 
 
 class FormalChainRegressions(unittest.TestCase):
@@ -37,6 +50,7 @@ class FormalChainRegressions(unittest.TestCase):
                 model['contract']['claims'] = [(language, '')]
                 model['solution']['claims'] = [('python' if language == 'python trace' else 'python shape', '')]
                 claims = {'contract': {}, 'solution': {}, 'manifest': {}}
+                contexts = _validation_contexts(model, claims)
                 compiled = {'lean': 'lean source', 'claims': claims, 'issues': [], 'unresolved': []}
                 directions = {role: {'status': 'matched', 'facts': []} for role in
                               ('manifest_contract', 'manifest_solution', 'contract_solution')}
@@ -48,7 +62,10 @@ class FormalChainRegressions(unittest.TestCase):
                     return 'diagram'
                 def compare(*args, **kwargs):
                     events.append('compare')
-                    return directions if language == 'python trace' else {'status': 'matched', 'directions': directions}
+                    if language == 'python trace':
+                        return directions
+                    return {'status': 'matched', 'directions': directions,
+                            'sources': args[0]}
                 entry_name = 'compare_trace_spec' if language == 'python trace' else 'compare_shape_spec'
                 comparison_module = f'{base}.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_4_SPEC_COMPARISON_C88.{module}'
                 entry = getattr(import_module(comparison_module), entry_name)
@@ -56,6 +73,7 @@ class FormalChainRegressions(unittest.TestCase):
                     events.append('comparison entry')
                     return entry(*args, **kwargs)
                 with patch(f'{base}.formal_chain__pub.load_boundary_model', return_value=model), \
+                     patch(_CAPTURE, side_effect=contexts), \
                      patch(f'{base}.formal_chain__pub.compile_lean', return_value=compiled), \
                      patch(f'{base}.formal_chain__pub.validate_translation', side_effect=validate), \
                      patch(f'{base}.formal_chain__pub.render_solution', side_effect=render), \

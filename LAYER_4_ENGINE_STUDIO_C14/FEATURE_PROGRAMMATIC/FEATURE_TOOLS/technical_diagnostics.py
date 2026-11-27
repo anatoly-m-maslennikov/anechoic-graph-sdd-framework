@@ -1,4 +1,3 @@
-
 """Bounded structured diagnostics for the container stderr stream."""
 
 from __future__ import annotations
@@ -12,9 +11,9 @@ from pathlib import Path
 import re
 import sys
 import tomllib
-from typing import Protocol, TextIO, runtime_checkable
+from typing import Any, Protocol, TextIO, runtime_checkable
 
-from pydantic import ConfigDict
+from pydantic import BaseModel, ConfigDict
 from pydantic.dataclasses import dataclass
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.project_settings_schema import _string
@@ -24,28 +23,43 @@ _FIELD_LIMIT = 512
 _RECORD_LIMIT = 4_096
 _SEVERITIES = frozenset({"ERROR", "WARNING", "INFO", "DEBUG"})
 _SECRET = re.compile(
-    r"(?i)\b(password|passwd|secret|token|api[_-]?key|authorization)\b\s*[:=]\s*[^\s,;]+"
+    (
+        "(?i)\\b(password|passwd|secret|token|api[_-]?key|authorization)\\b\\s"
+        "*[:=]\\s*[^\\s,;]+"
+    )
 )
 _BEARER = re.compile(r"(?i)\bBearer\s+[^\s,;]+")
 
 
-def _sanitize(value: object, *, limit: int = _FIELD_LIMIT, root: Path | None = None) -> str:
+def _sanitize(
+    value: object, *, limit: int = _FIELD_LIMIT, root: Path | None = None
+) -> str:
     text = str(value)
     if root is not None:
         text = text.replace(str(root), "<project>")
     text = _SECRET.sub(lambda match: f"{match.group(1)}=<redacted>", text)
     text = _BEARER.sub("Bearer <redacted>", text)
-    text = "".join(character if character.isprintable() else " " for character in text)
+    text = "".join(
+        character if character.isprintable() else " " for character in text
+    )
     return text[:limit]
 
 
 def _project_prefix(settings: Mapping[str, object]) -> str:
     artifacts = settings.get("artifacts")
-    identity = artifacts.get("identity") if isinstance(artifacts, Mapping) else None
-    value = identity.get("project_prefix") if isinstance(identity, Mapping) else None
+    identity = (
+        artifacts.get("identity") if isinstance(artifacts, Mapping) else None
+    )
+    value = (
+        identity.get("project_prefix")
+        if isinstance(identity, Mapping)
+        else None
+    )
     prefix: str = _string(value, "artifacts.identity.project_prefix")
     if prefix != prefix.upper():
-        raise ValueError("validated Project Settings lack an uppercase project prefix")
+        raise ValueError(
+            "validated Project Settings lack an uppercase project prefix"
+        )
     return prefix
 
 
@@ -67,10 +81,37 @@ def _runtime_environment() -> str:
     return "docker" if Path("/.dockerenv").is_file() else "host"
 
 
-def _render(record: dict[str, str | float]) -> str:
-    line = json.dumps(record, ensure_ascii=False, separators=(",", ":"))
+class _DiagnosticRecord(BaseModel):
+    model_config = ConfigDict(strict=True, extra="forbid")
+
+    timestamp: str
+    severity: str
+    event: str
+    component: str
+    environment: str
+    version: str
+    operation: str
+    outcome: str
+    code: str
+    relative_path: str
+    reason: str
+    project_binding: str | None = None
+    project_prefix: str | None = None
+    correlation_id: str | None = None
+    exception_class: str | None = None
+    elapsed_ms: Any = None
+
+
+def _render(record: _DiagnosticRecord) -> str:
+    line = json.dumps(
+        record.model_dump(exclude_unset=True),
+        ensure_ascii=False,
+        separators=(",", ":"),
+    )
     if len((line + "\n").encode("utf-8")) > _RECORD_LIMIT:
-        raise ValueError("technical diagnostic record exceeds bounded output size")
+        raise ValueError(
+            "technical diagnostic record exceeds bounded output size"
+        )
     return line
 
 
@@ -83,7 +124,9 @@ class _DiagnosticStream(Protocol):
 
 @dataclass(
     frozen=True,
-    config=ConfigDict(strict=True, extra="forbid", arbitrary_types_allowed=True),
+    config=ConfigDict(
+        strict=True, extra="forbid", arbitrary_types_allowed=True
+    ),
 )
 class TechnicalDiagnosticLogger:
     """Emit one bounded diagnostic record without touching Project state."""
@@ -108,32 +151,34 @@ class TechnicalDiagnosticLogger:
         outcome: str = "skipped",
         exception_class: str | None = None,
         elapsed_ms: float | None = None,
-    ) -> dict[str, str | float]:
-        record: dict[str, str | float] = {
-            "timestamp": datetime.now(timezone.utc)
+    ) -> _DiagnosticRecord:
+        record = _DiagnosticRecord(
+            timestamp=datetime.now(timezone.utc)
             .isoformat(timespec="milliseconds")
             .replace("+00:00", "Z"),
-            "severity": _sanitize(severity, limit=32),
-            "event": _sanitize(event, limit=128),
-            "component": _sanitize(self.component, limit=128),
-            "environment": _sanitize(self.environment, limit=128),
-            "version": _sanitize(self.version, limit=128),
-            "operation": _sanitize(operation, limit=128),
-            "outcome": _sanitize(outcome, limit=64),
-            "code": _sanitize(code, limit=128),
-            "relative_path": _sanitize(relative_path, limit=_FIELD_LIMIT, root=self.root),
-            "reason": _sanitize(reason, limit=_FIELD_LIMIT, root=self.root),
-        }
+            severity=_sanitize(severity, limit=32),
+            event=_sanitize(event, limit=128),
+            component=_sanitize(self.component, limit=128),
+            environment=_sanitize(self.environment, limit=128),
+            version=_sanitize(self.version, limit=128),
+            operation=_sanitize(operation, limit=128),
+            outcome=_sanitize(outcome, limit=64),
+            code=_sanitize(code, limit=128),
+            relative_path=_sanitize(
+                relative_path, limit=_FIELD_LIMIT, root=self.root
+            ),
+            reason=_sanitize(reason, limit=_FIELD_LIMIT, root=self.root),
+        )
         if self.project_prefix is None:
-            record["project_binding"] = "unbound"
+            record.project_binding = "unbound"
         else:
-            record["project_prefix"] = self.project_prefix
+            record.project_prefix = self.project_prefix
         if correlation_id is not None:
-            record["correlation_id"] = _sanitize(correlation_id, limit=128)
+            record.correlation_id = _sanitize(correlation_id, limit=128)
         if exception_class is not None:
-            record["exception_class"] = _sanitize(exception_class, limit=128)
+            record.exception_class = _sanitize(exception_class, limit=128)
         if elapsed_ms is not None:
-            record["elapsed_ms"] = elapsed_ms
+            record.elapsed_ms = elapsed_ms
         return record
 
     def emit(
@@ -185,7 +230,7 @@ def make_technical_logger(
     environment: str | None = None,
     component: str = "RUNTIME",
 ) -> tuple[TechnicalDiagnosticLogger | None, str | None]:
-    """Build a logger from the already validated, bound Project Settings view."""
+    "Build a logger from the already validated, bound Project Settings view."
 
     try:
         prefix = _project_prefix(settings)
@@ -223,4 +268,8 @@ def make_unbound_technical_logger(
     ), None
 
 
-__all__ = ["TechnicalDiagnosticLogger", "make_technical_logger", "make_unbound_technical_logger"]
+__all__ = [
+    "TechnicalDiagnosticLogger",
+    "make_technical_logger",
+    "make_unbound_technical_logger",
+]

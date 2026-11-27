@@ -9,12 +9,13 @@ DEFAULT_SCHEMA_MODE = 2
 
 
 def schema_mode(root: Path) -> int:
-    """Return the selected cold-start schema mode without a public query option."""
+    "Return the selected cold-start schema mode without a public query option."
     path = Path(root) / ".anechoic_runtime" / "anechoic_runtime_settings.toml"
     if not path.exists():
         return DEFAULT_SCHEMA_MODE
 
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import read_settings_carrier
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
+        import read_settings_carrier  # fmt: skip
 
     try:
         document = read_settings_carrier(path)

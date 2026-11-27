@@ -22,18 +22,24 @@ EXPECTED = {
 class SharedDefinitionContracts(unittest.TestCase):
     def test_exact_step_action_integrated_bindings(self):
         self.assertEqual(
-            {p.stem.removesuffix(".prompt") for p in HERE.glob("*.prompt.md")}, set(EXPECTED)
+            {p.stem.removesuffix(".prompt") for p in HERE.glob("*.prompt.md")},
+            set(EXPECTED),
         )
         for step, action in EXPECTED.items():
             with self.subTest(step=step):
                 text = (HERE / f"{step}.prompt.md").read_text()
-                self.assertIn(f"Step: {step} | Action: {action} | Context: Integrated", text)
+                self.assertIn(
+                    f"Step: {step} | Action: {action} | Context: Integrated",
+                    text,
+                )
                 self.assertNotIn("Context: Isolated", text)
                 self.assertIn("complete common input packet", text)
                 self.assertIn("permission", text)
 
     def test_frontier_is_definition_only_not_runtime_admission(self):
-        frontier = json.loads((HERE / "definition_frontier.projection.json").read_text())
+        frontier = json.loads(
+            (HERE / "definition_frontier.projection.json").read_text()
+        )
         self.assertEqual(frontier["kind"], "definition_only_source_frontier")
         self.assertIs(frontier["runtime_admitted"], False)
         self.assertEqual(frontier["steps"], EXPECTED)
@@ -73,10 +79,14 @@ class SharedDefinitionContracts(unittest.TestCase):
         for step in EXPECTED:
             prompt = (HERE / f"{step}.prompt.md").read_text()
             self.assertIn("full current Method SourceRows", prompt)
-            self.assertIn("optional legacy `method_projection` is not required", prompt)
+            self.assertIn(
+                "optional legacy `method_projection` is not required", prompt
+            )
             self.assertNotIn("full current M projection", prompt)
 
-    def test_integrated_pending_handoff_returns_through_the_same_mcp_operation(self):
+    def test_integrated_pending_handoff_returns_through_the_same_mcp_operation(
+        self,
+    ):
         readme = (HERE / "README.md").read_text()
         self.assertIn("pending handoff", readme)
         self.assertIn("same MCP operation", readme)
@@ -84,7 +94,9 @@ class SharedDefinitionContracts(unittest.TestCase):
         self.assertIn("does\nnot complete the Plan", readme)
         self.assertIn("independent `child_of`", readme)
 
-    def test_review_requires_explicit_phase_and_never_accepts_preliminary(self):
+    def test_review_requires_explicit_phase_and_never_accepts_preliminary(
+        self,
+    ):
         review = (HERE / "CA-O-230.prompt.md").read_text()
         self.assertIn("caller-supplied", review)
         self.assertIn("When omitted or invalid, return `unresolved`", review)
@@ -102,7 +114,13 @@ class SharedDefinitionContracts(unittest.TestCase):
             labels = re.findall(r"`([a-z_]+)`", result[1])
             self.assertEqual(len(labels), len(set(labels)), step)
         review = (HERE / "CA-O-230.prompt.md").read_text()
-        for label in ("preliminary_clear", "passed", "findings", "partial", "unresolved"):
+        for label in (
+            "preliminary_clear",
+            "passed",
+            "findings",
+            "partial",
+            "unresolved",
+        ):
             self.assertIn(f"`{label}`", review)
 
     def test_preparation_and_repair_keep_review_and_check_closure(self):
@@ -116,19 +134,29 @@ class SharedDefinitionContracts(unittest.TestCase):
 
     def test_final_checks_require_current_preliminary_clearance(self):
         checks = (HERE / "CA-O-094.prompt.md").read_text()
-        self.assertIn("For final checks require actual `preliminary_clear`", checks)
+        self.assertIn(
+            "For final checks require actual `preliminary_clear`", checks
+        )
         self.assertIn("this exact", checks)
-        self.assertIn("candidate and relevant source/test/input bindings", checks)
+        self.assertIn(
+            "candidate and relevant source/test/input bindings", checks
+        )
         self.assertIn("If it is missing or stale", checks)
         self.assertIn("return `blocked`, never `passed`", checks)
         self.assertIn("baseline checks", checks)
         self.assertIn("do not require preliminary clearance", checks)
 
     def test_summary_replacements_use_distinct_current_source_identities(self):
-        frontier = json.loads((HERE / "definition_frontier.projection.json").read_text())
+        frontier = json.loads(
+            (HERE / "definition_frontier.projection.json").read_text()
+        )
         ids = {row["atom_id"] for row in frontier["sources"]}
-        self.assertTrue({"CA-O-231", "CA-O-232", "CA-O-233", "CA-O-234", "CA-E-652"} <= ids)
-        self.assertFalse({"CA-O-091", "CA-O-092", "CA-O-093", "CA-O-095", "CA-E-519"} & ids)
+        self.assertTrue(
+            {"CA-O-231", "CA-O-232", "CA-O-233", "CA-O-234", "CA-E-652"} <= ids
+        )
+        self.assertFalse(
+            {"CA-O-091", "CA-O-092", "CA-O-093", "CA-O-095", "CA-E-519"} & ids
+        )
 
 
 if __name__ == "__main__":

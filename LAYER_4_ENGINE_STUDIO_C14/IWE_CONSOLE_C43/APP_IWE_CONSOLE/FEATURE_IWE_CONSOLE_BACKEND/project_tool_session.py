@@ -47,7 +47,6 @@ class ProjectToolSession:
     def _start(self, socket):
         engine = Path(__file__).resolve().parents[3]
         root = engine.parent
-        programmatic = engine / "FEATURE_PROGRAMMATIC"
         paths = (engine,)
         environment = {**os.environ, "PYTHONPATH": os.pathsep.join(map(str, paths))}
         selection = self.selection

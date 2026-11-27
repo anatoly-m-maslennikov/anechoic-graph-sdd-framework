@@ -1,4 +1,3 @@
-
 """Two-day Workbench query-attempt log without result data."""
 
 from __future__ import annotations
@@ -13,7 +12,8 @@ import threading
 from typing import Any, Callable
 import uuid
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import console_state_path
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
+    import console_state_path  # fmt: skip
 
 
 class QueryLog:
@@ -27,7 +27,9 @@ class QueryLog:
         self._legacy_path = runtime / "query-log.json"
         self._lock = threading.RLock()
         self._submit_lock = threading.Lock()
-        self._writer = ThreadPoolExecutor(max_workers=1, thread_name_prefix="workbench-query-log")
+        self._writer = ThreadPoolExecutor(
+            max_workers=1, thread_name_prefix="workbench-query-log"
+        )
         self._closed = False
         self._on_record: Callable[[dict[str, Any]], None] | None = None
 
@@ -37,15 +39,34 @@ class QueryLog:
 
     @staticmethod
     def _record(value: object) -> dict[str, Any]:
-        keys = {"log_id", "at", "sql", "outcome", "error", "row_count", "column_count"}
-        if not isinstance(value, dict) or set(value) != keys or not all(
-            isinstance(value[key], str) for key in ("log_id", "at", "sql", "outcome")
+        keys = {
+            "log_id",
+            "at",
+            "sql",
+            "outcome",
+            "error",
+            "row_count",
+            "column_count",
+        }
+        if (
+            not isinstance(value, dict)
+            or set(value) != keys
+            or not all(
+                isinstance(value[key], str)
+                for key in ("log_id", "at", "sql", "outcome")
+            )
         ):
             raise ValueError("query log is unavailable")
-        if value["outcome"] not in {"success", "failed"} or value["error"] is not None and not isinstance(value["error"], str):
+        if (
+            value["outcome"] not in {"success", "failed"}
+            or value["error"] is not None
+            and not isinstance(value["error"], str)
+        ):
             raise ValueError("query log is unavailable")
         for key in ("row_count", "column_count"):
-            if value[key] is not None and (isinstance(value[key], bool) or not isinstance(value[key], int)):
+            if value[key] is not None and (
+                isinstance(value[key], bool) or not isinstance(value[key], int)
+            ):
                 raise ValueError("query log is unavailable")
         return dict(value)
 
@@ -85,7 +106,9 @@ class QueryLog:
         return [self._record(item) for item in value]
 
     @classmethod
-    def _retain(cls, records: list[dict[str, Any]], now: dt.datetime) -> list[dict[str, Any]]:
+    def _retain(
+        cls, records: list[dict[str, Any]], now: dt.datetime
+    ) -> list[dict[str, Any]]:
         cutoff = now - cls._TTL
         return [record for record in records if cls._at(record) > cutoff]
 
@@ -94,7 +117,11 @@ class QueryLog:
         if not records:
             path.unlink(missing_ok=True)
             return
-        content = "".join(json.dumps(record, ensure_ascii=False, separators=(",", ":")) + "\n" for record in records)
+        content = "".join(
+            json.dumps(record, ensure_ascii=False, separators=(",", ":"))
+            + "\n"
+            for record in records
+        )
         path.write_text(content, encoding="utf-8")
 
     def _hourly_records(self, now: dt.datetime) -> list[dict[str, Any]]:
@@ -110,15 +137,25 @@ class QueryLog:
         return retained
 
     def _retained(self, now: dt.datetime) -> list[dict[str, Any]]:
-        return self._hourly_records(now) + self._retain(self._read_legacy(), now)
+        return self._hourly_records(now) + self._retain(
+            self._read_legacy(), now
+        )
 
-    def _new_record(self, sql: str, result: dict[str, Any], now: dt.datetime) -> dict[str, Any]:
+    def _new_record(
+        self, sql: str, result: dict[str, Any], now: dt.datetime
+    ) -> dict[str, Any]:
         if not isinstance(sql, str):
             raise ValueError("SQL must be a string")
         return {
-            "log_id": str(uuid.uuid7()), "at": now.isoformat(), "sql": sql,
-            "outcome": "success" if result["status"] == "success" else "failed",
-            "error": result["error"], "row_count": result["row_count"], "column_count": result["column_count"],
+            "log_id": str(uuid.uuid7()),
+            "at": now.isoformat(),
+            "sql": sql,
+            "outcome": "success"
+            if result["status"] == "success"
+            else "failed",
+            "error": result["error"],
+            "row_count": result["row_count"],
+            "column_count": result["column_count"],
         }
 
     def _append_record(self, record: dict[str, Any], now: dt.datetime) -> None:
@@ -128,14 +165,21 @@ class QueryLog:
             try:
                 path.parent.mkdir(parents=True, exist_ok=True)
                 with path.open("a", encoding="utf-8") as handle:
-                    handle.write(json.dumps(record, ensure_ascii=False, separators=(",", ":")) + "\n")
+                    handle.write(
+                        json.dumps(
+                            record, ensure_ascii=False, separators=(",", ":")
+                        )
+                        + "\n"
+                    )
             except (OSError, UnicodeError) as error:
                 raise ValueError("query log is unavailable") from error
             if self._on_record is not None:
                 self._on_record(dict(record))
 
-    def bind(self, on_record: Callable[[dict[str, Any]], None]) -> list[dict[str, Any]]:
-        """Bind a consumer and read existing records without rewriting the log."""
+    def bind(
+        self, on_record: Callable[[dict[str, Any]], None]
+    ) -> list[dict[str, Any]]:
+        "Bind a consumer and read existing records without rewriting the log."
         with self.snapshot() as records:
             self._on_record = on_record
             return records
@@ -157,7 +201,9 @@ class QueryLog:
         self._append_record(record, now)
         return record
 
-    def _append_background(self, record: dict[str, Any], now: dt.datetime) -> None:
+    def _append_background(
+        self, record: dict[str, Any], now: dt.datetime
+    ) -> None:
         try:
             self._append_record(record, now)
         except Exception as error:
@@ -181,14 +227,20 @@ class QueryLog:
 
     @staticmethod
     def _limit(value: object) -> int:
-        if isinstance(value, bool) or not isinstance(value, int) or not 1 <= value <= 1000:
+        if (
+            isinstance(value, bool)
+            or not isinstance(value, int)
+            or not 1 <= value <= 1000
+        ):
             raise ValueError("limit must be an integer from 1 to 1000")
         return value
 
     def list(self, limit: object = 20) -> dict[str, list[dict[str, Any]]]:
         limit = self._limit(limit)
         with self._lock:
-            records = sorted(self._retained(self._now()), key=self._at, reverse=True)
+            records = sorted(
+                self._retained(self._now()), key=self._at, reverse=True
+            )
         return {"items": records[:limit]}
 
     def get(self, log_id: object) -> dict[str, Any]:

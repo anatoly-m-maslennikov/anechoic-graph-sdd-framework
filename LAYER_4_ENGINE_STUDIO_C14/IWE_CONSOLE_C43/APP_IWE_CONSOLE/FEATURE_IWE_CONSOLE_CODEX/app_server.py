@@ -1,4 +1,3 @@
-
 """Small JSON-RPC stdio client for the installed Codex app-server."""
 
 from __future__ import annotations
@@ -13,7 +12,12 @@ from typing import Any
 
 
 class AppServer:
-    def __init__(self, project_root: Path, mcp_url: str, on_event: Callable[[dict[str, Any]], None]) -> None:
+    def __init__(
+        self,
+        project_root: Path,
+        mcp_url: str,
+        on_event: Callable[[dict[str, Any]], None],
+    ) -> None:
         codex = shutil.which("codex")
         if codex is None:
             raise RuntimeError("Codex CLI is unavailable")
@@ -32,7 +36,10 @@ class AppServer:
         )
         self._reader = threading.Thread(target=self._read, daemon=True)
         self._reader.start()
-        self.request("initialize", {"clientInfo": {"name": "anechoic-workbench", "version": "1"}})
+        self.request(
+            "initialize",
+            {"clientInfo": {"name": "anechoic-workbench", "version": "1"}},
+        )
         self._write({"jsonrpc": "2.0", "method": "initialized", "params": {}})
 
     def _read(self) -> None:
@@ -52,7 +59,12 @@ class AppServer:
         finally:
             with self._waiting:
                 self._waiting.notify_all()
-            self._events({"method": "bridge/failed", "params": {"message": "Codex app-server stopped"}})
+            self._events(
+                {
+                    "method": "bridge/failed",
+                    "params": {"message": "Codex app-server stopped"},
+                }
+            )
 
     @staticmethod
     def _is_response(packet: object) -> bool:
@@ -65,7 +77,14 @@ class AppServer:
     def request(self, method: str, params: dict[str, Any]) -> dict[str, Any]:
         with self._waiting:
             identifier, self._next_id = self._next_id, self._next_id + 1
-        self._write({"jsonrpc": "2.0", "id": identifier, "method": method, "params": params})
+        self._write(
+            {
+                "jsonrpc": "2.0",
+                "id": identifier,
+                "method": method,
+                "params": params,
+            }
+        )
         with self._waiting:
             while identifier not in self._responses:
                 if self.process.poll() is not None:
@@ -85,7 +104,9 @@ class AppServer:
     def _write(self, packet: dict[str, Any]) -> None:
         if self.process.stdin is None or self.process.poll() is not None:
             raise RuntimeError("Codex app-server is unavailable")
-        self.process.stdin.write(json.dumps(packet, separators=(",", ":")) + "\n")
+        self.process.stdin.write(
+            json.dumps(packet, separators=(",", ":")) + "\n"
+        )
         self.process.stdin.flush()
 
     def close(self) -> None:

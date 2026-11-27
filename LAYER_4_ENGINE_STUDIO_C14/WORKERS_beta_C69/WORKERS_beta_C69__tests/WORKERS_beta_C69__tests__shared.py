@@ -1,4 +1,5 @@
 """Fixtures for the Beta worker CLI tests."""
+
 from contextlib import redirect_stderr, redirect_stdout
 from hashlib import sha256
 from io import StringIO
@@ -11,8 +12,8 @@ from unittest.mock import patch
 
 
 def generation_fixture(directory):
-    root = Path(directory).resolve() / 'project'
-    control = root / '_anechoic_anechoic'
+    root = Path(directory).resolve() / "project"
+    control = root / "_anechoic_anechoic"
     control.mkdir(parents=True)
     manifest = root / "AN-S-1-SPEC-PROJECT_MANIFEST--declare-anechoic.md"
     manifest.write_text(
@@ -24,23 +25,36 @@ def generation_fixture(directory):
         "from anechoic.model import ProjectManifest\n"
         "declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Anechoic', prefix='AN'))\n```\n",
     )
-    output = Path(directory).resolve() / 'generation'
+    output = Path(directory).resolve() / "generation"
     output.mkdir()
-    return ({'root': str(root), 'control_root': control.name, 'manifest_path': manifest.name,
-             'manifest_sha256': sha256(manifest.read_bytes()).hexdigest(), 'project_prefix': 'AN'}, output, manifest)
+    return (
+        {
+            "root": str(root),
+            "control_root": control.name,
+            "manifest_path": manifest.name,
+            "manifest_sha256": sha256(manifest.read_bytes()).hexdigest(),
+            "project_prefix": "AN",
+        },
+        output,
+        manifest,
+    )
 
 
 def command_with_fixture(module, payload, *arguments):
     """Run the command entry point while its external peers can be replaced by fixtures."""
     stdout, stderr = StringIO(), StringIO()
     argv = [module, *arguments]
-    with (patch.object(sys, 'argv', argv), patch.object(sys, 'stdin', StringIO(json.dumps(payload))),
-          patch.object(sys, 'dont_write_bytecode', True), redirect_stdout(stdout), redirect_stderr(stderr)):
+    with (
+        patch.object(sys, "argv", argv),
+        patch.object(sys, "stdin", StringIO(json.dumps(payload))),
+        patch.object(sys, "dont_write_bytecode", True),
+        redirect_stdout(stdout),
+        redirect_stderr(stderr),
+    ):
         try:
-            run_module(module, run_name='__main__')
+            run_module(module, run_name="__main__")
         except SystemExit as exit_requested:
             status = exit_requested.code
         else:
             status = 0
     return CompletedProcess(argv, status, stdout.getvalue(), stderr.getvalue())
-

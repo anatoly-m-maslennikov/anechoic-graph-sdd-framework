@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 43
-  updated_at: '2026-11-27T01:04:20.461163+00:00'
+  version: 44
+  updated_at: '2026-11-27T13:12:55.647486+00:00'
 ---
 
 ## Summary
@@ -32,7 +32,7 @@ ComponentManifest(component_id='C53', name='MODEL_VALIDATION', lens_whitelist=['
 ## Component Boundaries
 
 ```python
-{'code': {'exports': {'model_declaration_bindings._MIGRATED_RUNTIME_NAMES': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/LAYER_2_FORMAL_MODEL_C51/FEATURE_MODEL_VALIDATION/FEATURE_MODEL_VALIDATION__tests']},
+{'code': {'exports': {'model_generation__pub._validate_binding_descriptor': {'private': ['C71']}, 'model_declaration_bindings._MIGRATED_RUNTIME_NAMES': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/LAYER_2_FORMAL_MODEL_C51/FEATURE_MODEL_VALIDATION/FEATURE_MODEL_VALIDATION__tests']},
                       'model_relation_validation.validate_model_relations': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/LAYER_2_FORMAL_MODEL_C51/FEATURE_FORMAL_MODEL_GENERATOR/manifest_compiler_CS1/manifest_compiler_CS1__tests']},
                       'FEATURE_MODEL_VALIDATION__pub': 'public',
                       'FEATURE_MODEL_VALIDATION__pub.BoundNativeModel': 'public',
@@ -134,6 +134,14 @@ ComponentManifest(component_id='C53', name='MODEL_VALIDATION', lens_whitelist=['
 
 ## Component Contract
 
+For a successful Model opening, verify the supplied Model fingerprint and
+descriptor SHA-256, and bind and yield the verified Model.
+The descriptor SHA-256 attests the bytes opened; the yielded Model carries
+the fingerprint. At `open_succeeded`, observe the yielded fingerprint and
+the digest of the verified bytes. Do not require the yielded Model to carry
+the descriptor digest. Compare independently observed values. Missing
+observations leave identity unresolved.
+
 Select Project SPEC templates and Atom Status domains from the admitted
 Model. Check template creation eligibility only for new Atoms.
 
@@ -166,6 +174,14 @@ declare_trace_contract(
     transport='in_process',
     output='succeeded',
     must_effect=(('C53.admitted_model', 'opened'),),
+    same_values=(
+        (('open_requested', 'model_sha256'), ('admitted_model_opened', 'model_sha256')),
+        (('admitted_model_opened', 'model_sha256'), ('open_succeeded', 'model_sha256')),
+        (('open_requested', 'descriptor_sha256'), ('admitted_model_opened', 'descriptor_sha256')),
+        (('admitted_model_opened', 'descriptor_sha256'), ('open_succeeded', 'descriptor_sha256')),
+    ),
+    value_types={('open_requested', 'model_sha256'): 'nonempty_string',
+                 ('open_requested', 'descriptor_sha256'): 'nonempty_string'},
 )
 ```
 

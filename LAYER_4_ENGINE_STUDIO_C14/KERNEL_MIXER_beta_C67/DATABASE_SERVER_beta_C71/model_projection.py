@@ -124,6 +124,23 @@ def _replace_primary_projections(connection, descriptor, entities, properties, n
              for subject in [subject_by_path[path]]])
 
 
+def _entity_rows(entities, relations, paths, normalize):
+    entity_rows = []
+    for subject, target, args in entities:
+        parts = re.split(r'(//|/)', target)
+        parent = normalize(''.join(parts[:-2])) if len(parts) > 1 else None
+        operator = parts[-2] if len(parts) > 1 else None
+        entity_rows.append((subject, target, args['entity_name'], parent, operator, _json(args)))
+    for subject, args in relations:
+        declared = canonical_model_address(subject)
+        parent, operator, name = declared.rpartition('//')
+        if operator and name == args.get('relation_name'):
+            parent = normalize(parent)
+            if parent in paths:
+                entity_rows.append((subject, parent + operator + name, name, parent, operator, _json(args)))
+    return entity_rows
+
+
 def replace_model_projection(connection, descriptor):
     """Replace Model tables from the validated descriptor in the caller's transaction."""
     entities, properties, relations = _classify_declarations(descriptor)
@@ -141,19 +158,7 @@ def replace_model_projection(connection, descriptor):
         matches = names.get(re.split(r'/+', path)[-1], set())
         return next(iter(matches)) if len(matches) == 1 else path
 
-    entity_rows = []
-    for subject, target, args in entities:
-        parts = re.split(r'(//|/)', target)
-        parent = normalize(''.join(parts[:-2])) if len(parts) > 1 else None
-        operator = parts[-2] if len(parts) > 1 else None
-        entity_rows.append((subject, target, args['entity_name'], parent, operator, _json(args)))
-    for subject, args in relations:
-        declared = canonical_model_address(subject)
-        parent, operator, name = declared.rpartition('//')
-        if operator and name == args.get('relation_name'):
-            parent = normalize(parent)
-            if parent in paths:
-                entity_rows.append((subject, parent + operator + name, name, parent, operator, _json(args)))
+    entity_rows = _entity_rows(entities, relations, paths, normalize)
     property_rows = _property_rows(properties, normalize)
     connection.execute('DELETE FROM mrt_model_entities')
     connection.execute('DELETE FROM mrt_model_properties')

@@ -2,6 +2,7 @@
 from hashlib import sha256
 from pathlib import Path
 from types import SimpleNamespace
+from unittest.mock import NonCallableMock
 import tempfile
 import unittest
 
@@ -18,8 +19,13 @@ class NativeLifecycleStructurePinningTests(unittest.TestCase):
         self.control.mkdir()
         manifest = self.write('AN-S-1-PROJECT_MANIFEST--manifest.md', 'AN-S-1')
         self.path = self.write('001_TICKETS/TASKS/AN-T-1-TASK--example.md', 'AN-T-1')
-        self.selection = SimpleNamespace(root=self.root, control_root=self.control, manifest_path=manifest,
+        self.selection = NonCallableMock(
+            spec_set=['root', 'control_root', 'manifest_path', 'manifest_sha256',
+                'project_prefix', 'structure_snapshot', 'parameters',
+                'control_relative'],
+            root=self.root, control_root=self.control, manifest_path=manifest,
                                          manifest_sha256=sha256(manifest.read_bytes()).hexdigest(), project_prefix='AN')
+        del self.selection.structure_snapshot, self.selection.parameters, self.selection.control_relative
         self.rows = capture_native(self.selection).atoms
         self.params = {'sourceCurrent': {'ref_id': 'AN-T-1', 'version': 1},
                        'changes': {'body': '\n# Summary\n\nExample\n\n## Details\n\nNew\n'}}
@@ -86,6 +92,8 @@ declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Te
             errors = capture.errors
             ingestion_issues = capture.ingestion_issues
             containment = capture.containment
+            status_domains = capture.status_domains
+            classified_templates = capture.classified_templates
 
             @property
             def atoms(self):

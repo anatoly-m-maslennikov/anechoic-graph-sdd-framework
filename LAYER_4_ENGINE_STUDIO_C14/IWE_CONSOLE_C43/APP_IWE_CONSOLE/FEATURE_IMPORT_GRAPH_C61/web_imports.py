@@ -7,6 +7,10 @@ import posixpath
 from pathlib import Path, PurePosixPath
 import shutil
 import subprocess
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .source import Source
 
 _WEB = frozenset({'javascript', 'typescript', 'svelte'})
 _FRONTEND = Path(__file__).resolve().parent.parent / 'FEATURE_IWE_CONSOLE_FRONTEND'

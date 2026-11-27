@@ -69,7 +69,7 @@ def test_context_checks_generation():
         except ValueError:
             pass
         else:
-            assert False, 'stale generation accepted'
+            raise AssertionError('stale generation accepted')
 
 
 class LifecycleQueryTests(unittest.TestCase):

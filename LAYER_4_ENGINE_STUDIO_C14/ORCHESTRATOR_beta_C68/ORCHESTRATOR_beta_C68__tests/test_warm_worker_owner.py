@@ -84,7 +84,11 @@ def exchange(address, request):
 
 class WarmWorkerOwnerTests(unittest.TestCase):
     def setUp(self):
-        self.root = Path(self.enterContext(TemporaryDirectory(prefix="ane-warm-owner-", dir="/tmp"))).resolve()
+        self.root = Path(
+            self.enterContext(
+                TemporaryDirectory(prefix="ane-warm-owner-", dir="/tmp")
+            )
+        ).resolve()
         self.address = self.root / "owner.sock"
         self.receipt = self.root / "worker.json"
         self.probe = self.root / "probe.json"
@@ -92,13 +96,36 @@ class WarmWorkerOwnerTests(unittest.TestCase):
 
     def start_owner(self, mode):
         settings = self.root / "host.toml"
-        settings.write_text(f"schema_version=1\n[shared_mcp]\nproject_root={json.dumps(str(self.root))}\nhttp_port=8092\n")
-        env = {**os.environ, "PYTHONPATH": str(ENGINE), "ANECHOIC_TEST_IMAGE_DEADLINES": "0"}
+        settings.write_text(
+            f"schema_version=1\n[shared_mcp]\nproject_root={json.dumps(str(self.root))}\nhttp_port=8092\n"
+        )
+        env = {
+            **os.environ,
+            "PYTHONPATH": str(ENGINE),
+            "ANECHOIC_TEST_IMAGE_DEADLINES": "0",
+        }
         with self.log.open("wb") as stderr:
             self.owner = subprocess.Popen(
-                [sys.executable, "-B", "-P", "-c", OWNER_CLI, mode, str(self.receipt), str(self.probe),
-                 HEALTH_PEER, "--socket", str(self.address), "--host-settings", str(settings)],
-                cwd=ENGINE, env=env, stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=stderr,
+                [
+                    sys.executable,
+                    "-B",
+                    "-P",
+                    "-c",
+                    OWNER_CLI,
+                    mode,
+                    str(self.receipt),
+                    str(self.probe),
+                    HEALTH_PEER,
+                    "--socket",
+                    str(self.address),
+                    "--host-settings",
+                    str(settings),
+                ],
+                cwd=ENGINE,
+                env=env,
+                stdin=subprocess.PIPE,
+                stdout=subprocess.DEVNULL,
+                stderr=stderr,
             )
         self.addCleanup(self.clean_up)
 
@@ -124,12 +151,16 @@ class WarmWorkerOwnerTests(unittest.TestCase):
         while self.owner.poll() is None and monotonic() < deadline:
             try:
                 return read()
-            except (FileNotFoundError, ConnectionRefusedError):
+            except FileNotFoundError, ConnectionRefusedError:
                 sleep(0.02)
-        self.fail(f"Peer owner did not reach its expected state: {self.log.read_text()}")
+        self.fail(
+            f"Peer owner did not reach its expected state: {self.log.read_text()}"
+        )
 
     def assert_owner_ready(self):
-        value = self.wait_for(lambda: exchange(self.address, {"operation": "status"}))["result"]
+        value = self.wait_for(
+            lambda: exchange(self.address, {"operation": "status"})
+        )["result"]
         self.assertEqual(0, value["loaded_project_count"])
 
     def assert_worker_reaped(self, worker):
@@ -142,14 +173,19 @@ class WarmWorkerOwnerTests(unittest.TestCase):
 
     def stop_owner(self):
         self.owner.stdin.close()
-        self.assertEqual(0, self.owner.wait(timeout=TIMEOUT), self.log.read_text())
+        self.assertEqual(
+            0, self.owner.wait(timeout=TIMEOUT), self.log.read_text()
+        )
         self.assertFalse(self.address.exists())
 
     def test_owner_keeps_ready_worker_until_shutdown(self):
         self.start_owner("ready")
         self.assert_owner_ready()
         worker = json.loads(self.receipt.read_text())
-        self.assertEqual({"ready": True, "pid": worker["pid"]}, exchange(worker["socket"], {"kind": "health"}))
+        self.assertEqual(
+            {"ready": True, "pid": worker["pid"]},
+            exchange(worker["socket"], {"kind": "health"}),
+        )
         self.stop_owner()
         self.assert_worker_cleaned(worker)
         self.assertNotIn(FALLBACK, self.log.read_text())
@@ -157,7 +193,9 @@ class WarmWorkerOwnerTests(unittest.TestCase):
     def test_owner_reaps_invalid_health_worker_before_falling_back(self):
         self.start_owner("invalid_health")
         self.assert_owner_ready()
-        self.assertEqual({"kind": "health"}, json.loads(self.probe.read_text()))
+        self.assertEqual(
+            {"kind": "health"}, json.loads(self.probe.read_text())
+        )
         worker = json.loads(self.receipt.read_text())
         self.assert_worker_reaped(worker)
         self.assertEqual(1, self.log.read_text().count(FALLBACK))
@@ -173,7 +211,9 @@ class WarmWorkerOwnerTests(unittest.TestCase):
 
     def test_closing_parent_pipe_cancels_unready_worker_startup(self):
         self.start_owner("unready")
-        self.assertEqual({"kind": "health"}, json.loads(self.wait_for(self.probe.read_text)))
+        self.assertEqual(
+            {"kind": "health"}, json.loads(self.wait_for(self.probe.read_text))
+        )
         self.assertFalse(self.address.exists())
         worker = json.loads(self.receipt.read_text())
         os.kill(worker["pid"], 0)

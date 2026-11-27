@@ -1,11 +1,10 @@
 """Read relation declarations in the pinned Claim syntax."""
 
-from pathlib import Path
 import unittest
 
-PROGRAMMATIC = Path(__file__).resolve().parents[2]
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import canonical_model_address
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
+    import canonical_model_address  # fmt: skip
 
 
 class ProjectClaimLintTests(unittest.TestCase):
@@ -14,7 +13,8 @@ class ProjectClaimLintTests(unittest.TestCase):
             subject = f"ANECHOIC_MODEL <+ {branch}Relation//SPECIALIZES"
             with self.subTest(subject=subject):
                 self.assertEqual(
-                    canonical_model_address(subject), f"{branch}Relation//SPECIALIZES",
+                    canonical_model_address(subject),
+                    f"{branch}Relation//SPECIALIZES",
                 )
 
 

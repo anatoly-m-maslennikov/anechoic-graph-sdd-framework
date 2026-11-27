@@ -7,10 +7,55 @@ from pathlib import Path
 import re
 import subprocess
 import tomllib
+from typing import Literal
+
+from pydantic import BaseModel, ConfigDict
+
+
+_REVIEW_INSTRUCTIONS = (
+    "Delegate a Luna review of the pinned Git diff against completed Task "
+    "and Epic evidence. Start with the pinned --stat and --name-status "
+    "commands, then inspect path-scoped patches to narrow the diff. Include "
+    "missed changes. Return one UTF-8 JSON object matching "
+    "content_draft_schema; use full commit pins."
+)
 
 
 class PublicReleaseError(ValueError):
     """The release comparison or reviewed content is invalid."""
+
+
+class _CompletedTicket(BaseModel):
+    model_config = ConfigDict(strict=True, extra="forbid")
+
+    path: str
+    content: str
+
+
+class _ReleaseResult(BaseModel):
+    model_config = ConfigDict(strict=True, extra="forbid")
+
+    run_id: str
+    base_commit: str
+    head_commit: str
+    merge_base: str
+    version: str
+
+
+class _CompletedRelease(_ReleaseResult):
+    outcome: Literal["completed"] = "completed"
+    pr_description: str
+    version_history_entry: str
+
+
+class _ReleaseReview(_ReleaseResult):
+    outcome: Literal["input_required"] = "input_required"
+    completed_tickets: list[_CompletedTicket]
+    diff_argv: list[str]
+    instructions: str
+    diff_stat_argv: list[str]
+    diff_name_status_argv: list[str]
+    content_draft_schema: dict[str, object]
 
 
 def _git(root: Path, *args: str) -> str:
@@ -34,6 +79,34 @@ def _commit(root: Path, ref: str) -> str:
     return commit
 
 
+def _validate_change(change):
+    if not isinstance(change, Mapping) or set(change) != {
+        "title", "details", "evidence", "highlight",
+    }:
+        raise PublicReleaseError(
+            "each change must contain title, details, evidence and highlight"
+        )
+    if any(
+        not isinstance(change[key], str) or not change[key].strip()
+        or "\n" in change[key] for key in ("title", "details")
+    ):
+        raise PublicReleaseError(
+            "change title and details must be non-empty single-line strings"
+        )
+    if not isinstance(change["highlight"], bool):
+        raise PublicReleaseError("change highlight must be a boolean")
+    if change["highlight"] and len(change["title"].strip()) > 120:
+        raise PublicReleaseError("highlight titles must be at most 120 characters")
+    evidence = change["evidence"]
+    if not isinstance(evidence, list) or not evidence or any(
+        not isinstance(item, str) or not item.strip() or "\n" in item
+        for item in evidence
+    ):
+        raise PublicReleaseError(
+            "change evidence must be a non-empty list of single-line strings"
+        )
+
+
 def _draft(draft: Mapping[str, object], base: str, head: str, version: str) -> tuple[str, str]:
     if not isinstance(draft, Mapping) or set(draft) != {"base_commit", "head_commit", "changes"}:
         raise PublicReleaseError("content_draft must contain base_commit, head_commit and changes")
@@ -43,17 +116,7 @@ def _draft(draft: Mapping[str, object], base: str, head: str, version: str) -> t
     if not isinstance(changes, list) or not changes:
         raise PublicReleaseError("content_draft.changes must be a non-empty list")
     for change in changes:
-        if not isinstance(change, Mapping) or set(change) != {"title", "details", "evidence", "highlight"}:
-            raise PublicReleaseError("each change must contain title, details, evidence and highlight")
-        if any(not isinstance(change[key], str) or not change[key].strip() or "\n" in change[key] for key in ("title", "details")):
-            raise PublicReleaseError("change title and details must be non-empty single-line strings")
-        if not isinstance(change["highlight"], bool):
-            raise PublicReleaseError("change highlight must be a boolean")
-        if change["highlight"] and len(change["title"].strip()) > 120:
-            raise PublicReleaseError("highlight titles must be at most 120 characters")
-        evidence = change["evidence"]
-        if not isinstance(evidence, list) or not evidence or any(not isinstance(item, str) or not item.strip() or "\n" in item for item in evidence):
-            raise PublicReleaseError("change evidence must be a non-empty list of single-line strings")
+        _validate_change(change)
     if not 1 <= sum(change["highlight"] for change in changes) <= 5:
         raise PublicReleaseError("mark between one and five changes as highlights")
     description = f"# ANECHOIC {version}\n\n## Changes\n\n"
@@ -68,7 +131,7 @@ def _ticket_candidates(root: Path, merge_base: str, head: str):
                *(f":(glob)[._]anechoic_*/{branch}/TASKS/**/*-{kind}--*.md"
                  for branch in ("__TICKETS", "001_TICKETS", "__TKT") for kind in ("TASK", "EPIC"))).split("\0")
     candidates = []
-    for meta, path in zip(raw[0::2], raw[1::2]):
+    for meta, path in zip(raw[0::2], raw[1::2], strict=False):
         fields = meta.split()
         parts = Path(path).parts
         name = re.fullmatch(r"([A-Z]+-T-[0-9]+)-(TASK|EPIC)--[^/]+\.md", parts[-1])
@@ -78,7 +141,22 @@ def _ticket_candidates(root: Path, merge_base: str, head: str):
     return candidates
 
 
-def _ticket_evidence(root: Path, candidates):
+def _ticket_blob(output, oid):
+    header, separator, output = output.partition(b"\n")
+    fields = header.split()
+    if (
+        not separator or len(fields) != 3 or fields[0].decode() != oid
+        or fields[1] != b"blob"
+    ):
+        raise PublicReleaseError("invalid Git ticket batch")
+    size = int(fields[2])
+    content, output = output[:size], output[size:]
+    if not output.startswith(b"\n") or len(content) != size:
+        raise PublicReleaseError("invalid Git ticket batch")
+    return content, output[1:]
+
+
+def _ticket_evidence(root: Path, candidates) -> list[_CompletedTicket]:
     tickets = []
     if candidates:
         try:
@@ -94,15 +172,7 @@ def _ticket_evidence(root: Path, candidates):
         output = batch.stdout
         seen = set()
         for path, oid, ticket_id, kind in candidates:
-            header, separator, output = output.partition(b"\n")
-            fields = header.split()
-            if not separator or len(fields) != 3 or fields[0].decode() != oid or fields[1] != b"blob":
-                raise PublicReleaseError("invalid Git ticket batch")
-            size = int(fields[2])
-            content, output = output[:size], output[size:]
-            if not output.startswith(b"\n") or len(content) != size:
-                raise PublicReleaseError("invalid Git ticket batch")
-            output = output[1:]
+            content, output = _ticket_blob(output, oid)
             try:
                 text = content.decode("utf-8")
             except UnicodeDecodeError as error:
@@ -118,8 +188,21 @@ def _ticket_evidence(root: Path, candidates):
             if ticket_id in seen:
                 raise PublicReleaseError(f"duplicate completed ticket ID: {ticket_id}")
             seen.add(ticket_id)
-            tickets.append({"path": path, "content": text})
+            tickets.append(_CompletedTicket(path=path, content=text))
     return tickets
+
+
+def _draft_example(base: str, head: str) -> dict[str, object]:
+    return {
+        "base_commit": base,
+        "head_commit": head,
+        "changes": [{
+            "title": "brief history bullet",
+            "details": "detailed PR description",
+            "evidence": ["ticket ID or changed path"],
+            "highlight": True,
+        }],
+    }
 
 
 def run_public_release(
@@ -145,15 +228,22 @@ def run_public_release(
             raise ValueError
     except (KeyError, TypeError, ValueError, tomllib.TOMLDecodeError) as error:
         raise PublicReleaseError("head version.toml must declare a framework version") from error
-    result: dict[str, object] = {"run_id": run_id, "base_commit": base, "head_commit": head, "merge_base": merge_base, "version": version}
+    fields = dict(run_id=run_id, base_commit=base, head_commit=head,
+                  merge_base=merge_base, version=version)
     if content_draft is not None:
         description, history = _draft(content_draft, base, head, version)
-        return {**result, "outcome": "completed", "pr_description": description, "version_history_entry": history}
+        return _CompletedRelease(
+            **fields, pr_description=description, version_history_entry=history,
+        ).model_dump()
     candidates = _ticket_candidates(root, merge_base, head)
-    tickets = _ticket_evidence(root, candidates)
-    diff_argv = ["git", "diff", "--find-renames", merge_base, head, "--"]
-    return {**result, "outcome": "input_required", "completed_tickets": tickets, "diff_argv": diff_argv,
-            "instructions": "Delegate a Luna review of the pinned Git diff against completed Task and Epic evidence. Start with the pinned --stat and --name-status commands, then inspect path-scoped patches to narrow the diff. Include missed changes. Return one UTF-8 JSON object matching content_draft_schema; use full commit pins.",
-            "diff_stat_argv": ["git", "diff", "--stat", merge_base, head, "--"],
-            "diff_name_status_argv": ["git", "diff", "--name-status", merge_base, head, "--"],
-            "content_draft_schema": {"base_commit": base, "head_commit": head, "changes": [{"title": "brief history bullet", "details": "detailed PR description", "evidence": ["ticket ID or changed path"], "highlight": True}]}}
+    return _ReleaseReview(
+        **fields,
+        completed_tickets=_ticket_evidence(root, candidates),
+        diff_argv=["git", "diff", "--find-renames", merge_base, head, "--"],
+        instructions=_REVIEW_INSTRUCTIONS,
+        diff_stat_argv=["git", "diff", "--stat", merge_base, head, "--"],
+        diff_name_status_argv=[
+            "git", "diff", "--name-status", merge_base, head, "--"
+        ],
+        content_draft_schema=_draft_example(base, head),
+    ).model_dump()

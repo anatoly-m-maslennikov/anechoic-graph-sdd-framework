@@ -1,4 +1,3 @@
-
 """Read the deliberately small Workbench Codex runtime state."""
 
 from __future__ import annotations
@@ -8,35 +7,42 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.project_database__pub import (
-    console_state_path,
-)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.project_database__pub \
+    import console_state_path  # fmt: skip
 
 
 def runtime_directory(root: Path) -> Path:
     return console_state_path(root) / "codex"
 
 
-def public_state(root: Path, expected_host_root: Path | None = None) -> dict[str, Any]:
+def public_state(
+    root: Path, expected_host_root: Path | None = None
+) -> dict[str, Any]:
     root = Path(root).resolve(strict=True)
     directory = runtime_directory(root)
     try:
         bridge = json.loads((directory / "bridge.json").read_text())
-    except (OSError, ValueError, TypeError):
+    except OSError, ValueError, TypeError:
         bridge = {}
     try:
         thread = json.loads((directory / "thread.json").read_text())
-    except (OSError, ValueError, TypeError):
+    except OSError, ValueError, TypeError:
         thread = {}
-    bridge_url = bridge.get("url") if isinstance(bridge.get("url"), str) else None
-    if expected_host_root is not None and bridge.get("project_root") != str(expected_host_root):
+    bridge_url = (
+        bridge.get("url") if isinstance(bridge.get("url"), str) else None
+    )
+    if expected_host_root is not None and bridge.get("project_root") != str(
+        expected_host_root
+    ):
         bridge_url = None
     if not _loopback_url(bridge_url):
         bridge_url = None
     return {
         "bridge_url": bridge_url,
         "ready": bridge.get("ready") is True and bridge_url is not None,
-        "thread_id": thread.get("thread_id") if isinstance(thread.get("thread_id"), str) else None,
+        "thread_id": thread.get("thread_id")
+        if isinstance(thread.get("thread_id"), str)
+        else None,
     }
 
 

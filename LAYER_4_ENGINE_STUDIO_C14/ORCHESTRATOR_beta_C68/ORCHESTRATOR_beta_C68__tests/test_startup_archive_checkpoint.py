@@ -1,4 +1,5 @@
 """Exercise the default startup checkpoint and deferred Archive protocol."""
+from .startup_archive_checkpoint_cases import StartupArchiveCheckpointCases
 from contextlib import redirect_stderr
 from io import StringIO
 import json
@@ -47,7 +48,7 @@ class ReplayCapture:
         return {"generation": generation}
 
 
-class StartupArchiveCheckpointTests(unittest.TestCase):
+class StartupArchiveCheckpointTests(StartupArchiveCheckpointCases, unittest.TestCase):
     def setUp(self):
         root = Path(self.enterContext(TemporaryDirectory())).resolve()
         binding = {"root": str(root), "control_root": "control", "manifest_path": "manifest.md",
@@ -184,28 +185,6 @@ class StartupArchiveCheckpointTests(unittest.TestCase):
         worker.assert_called_once()
         admit.assert_not_called()
 
-    def test_timed_recovery_loads_persisted_checkpoint_and_preserves_archive_scope(self):
-        self.jobs.startup_capture = False
-        self.jobs.thread = object()
-        self.jobs.watcher.replay_fence.return_value = True
-        self.jobs.latest = Mock(code="watcher_coverage_lost")
-        self.jobs.archive_run = RunFixture(state="succeeded")
-        checkpoint = Mock()
-        checkpoint.model_dump.return_value = self.reuse
-        unchanged = {"base_generation": "old", "unchanged": True}
-        with (patch("ORCHESTRATOR_beta_C68.generation_worker.read_reuse", return_value=checkpoint) as read,
-              patch.object(self.jobs, "_run_worker", return_value=unchanged) as worker,
-              patch.object(orchestrator, "confirm_reuse", return_value={"generation": "old", "kind": "reused"}) as admit):
-            self.jobs._run_queued_generation(orchestrator.CurrentnessRetry(), None, [], True)
-        read.assert_called_once_with("socket", "test")
-        self.assertEqual(self.reuse, worker.call_args.args[1])
-        self.assertEqual({"foreground": True, "watcher_guarded": True, "defer_graph": True, "incremental": True,
-                          "force_model": False}, worker.call_args.kwargs)
-        self.assertEqual(unchanged | {"archive_pending": True}, admit.call_args.args[-1])
-        self.assertEqual({"control/09_archived/a.md": "c" * 64},
-                         self.jobs.deferred_archive["checkpoint"]["carrier_hashes"])
-        self.assertTrue(self.jobs.archive_dirty)
-        self.assertTrue(self.jobs.graph_queued)
 
     def test_recovery_falls_back_to_fenced_capture_for_an_incompatible_delta(self):
         checkpoint = Mock()

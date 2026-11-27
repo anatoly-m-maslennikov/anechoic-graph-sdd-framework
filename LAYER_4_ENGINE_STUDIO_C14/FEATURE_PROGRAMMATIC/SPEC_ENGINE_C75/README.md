@@ -47,6 +47,13 @@ For mixed framing and workflow claims, select `framing` for the bounded byte
 comparison or select the workflow by its Action name.
 The Workbench workflow CLI uses `--action` to render or replay one workflow.
 
+For a Group comparison, `structure_children` supplies the direct child IDs.
+To check the role assignments too, supply `role_providers` selected separately
+from the Group claims. Each role supplies `component_id`, the exact declared
+`name`, and a `manifest` pin with SHA-256. The check confirms the parent and
+child identities and compares each selected role with both Group claims.
+`role_provider_coverage` reports incomplete or omitted selections.
+
 HTTP Manifest route maps use endpoint keys such as `"GET /reports"` and
 operation names as values. Author new HTTP Contract bindings with `endpoint`
 and `route_name`. Existing `route` and `operation` spellings remain readable.
@@ -55,10 +62,10 @@ Class shapes are declared in `boundaries.io.class_shapes`.
 Use `to` and `expect` in new Solution transitions. Use `same_values` in a
 Contract outcome when two named event fields must agree. The concrete
 `value_types` clause declares the types of named fields. `nonempty_string`
-requires a string with a character other than ASCII whitespace. `nonempty_array` requires
-at least one item. The concrete
-`compare_trace_values` check reports missing fields as unresolved. This
-check uses observations from an execution.
+requires a string with a character Python classifies as non-whitespace.
+`nonempty_array` requires at least one item. The concrete
+`compare_trace_values` check reports missing fields and malformed event
+rows as unresolved. This check uses observations from an execution.
 
 The C45 `query_run` Contract exports its wire schemas as OpenAPI 3.1.
 Distinct schemas for the same status appear in `oneOf`. The governed tests

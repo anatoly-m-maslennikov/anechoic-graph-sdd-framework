@@ -20,7 +20,7 @@ from .local_release_delivery import (
     verify_recorded_targets,
 )
 from .local_release_progress import BUILD, CANARY, COPY, IMAGE, IMAGE_TEST, STATIC, ReleaseProgress
-from .local_release_state import PHASES, Journal, completed_result
+from .local_release_state import PHASES, Journal
 from .release_support import _build_predecessor
 
 _VERSION = "bump candidate version"
@@ -313,4 +313,18 @@ class ResumableRelease(ReleaseProgress):
             self.journal.save()
 
     def _completed_result(self):
-        return completed_result(self)
+        return {
+            "outcome": ("completed_with_cleanup_pending"
+                        if self.cleanup_pending else "completed"),
+            "failed_step": None,
+            "report_path": None,
+            "receipt_path": self.receipt_path,
+            "test_log_path": self.test_log_path,
+            "test_log_paths": self.test_log_paths,
+            "endpoint": self.endpoint,
+            "canary_endpoint": self.canary_endpoint,
+            "test_scope": self.test_scope,
+            "test_modules": self.selected_test_modules,
+            "image_mode": self.image_mode,
+            "evidence": self.journal.data["evidence"],
+        }

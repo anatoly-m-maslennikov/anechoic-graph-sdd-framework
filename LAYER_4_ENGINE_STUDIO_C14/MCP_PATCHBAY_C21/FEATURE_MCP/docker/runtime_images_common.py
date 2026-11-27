@@ -14,21 +14,33 @@ try:
     from .image_reference import IMMUTABLE_IMAGE
     from .image_tool_registry import TOOL_REGISTRY
 except ImportError:
-    from MCP_PATCHBAY_C21.FEATURE_MCP.docker.image_reference import IMMUTABLE_IMAGE
-    from MCP_PATCHBAY_C21.FEATURE_MCP.docker.image_tool_registry import TOOL_REGISTRY
+    from MCP_PATCHBAY_C21.FEATURE_MCP.docker.image_reference import (
+        IMMUTABLE_IMAGE,
+    )
+    from MCP_PATCHBAY_C21.FEATURE_MCP.docker.image_tool_registry import (
+        TOOL_REGISTRY,
+    )
 
 ENGINE_ROOT = "LAYER_4_ENGINE_STUDIO_C14"
 DOCKER_ROOT = ENGINE_ROOT + "/MCP_PATCHBAY_C21/FEATURE_MCP/docker"
 DOCKERFILE = DOCKER_ROOT + "/Dockerfile"
 DOCKERIGNORE = DOCKER_ROOT + "/Dockerfile.dockerignore"
-LICENSE_INPUTS = ("LICENSE", "LICENSE.TLDR.md", DOCKER_ROOT + "/DuckPGQ.LICENSE")
+LICENSE_INPUTS = (
+    "LICENSE",
+    "LICENSE.TLDR.md",
+    DOCKER_ROOT + "/DuckPGQ.LICENSE",
+)
 RETIRED_ASSETS = frozenset(
     ENGINE_ROOT + "/" + directory + "/" + name
     for directory, names in (
-        ("IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_BACKEND",
-         ("canonical_relation_registry.json", "workbench_schema.json")),
-        ("FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ATOM_LIFECYCLE",
-         ("status_model.json", "candidate_schema.json")),
+        (
+            "IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_BACKEND",
+            ("canonical_relation_registry.json", "workbench_schema.json"),
+        ),
+        (
+            "FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ATOM_LIFECYCLE",
+            ("status_model.json", "candidate_schema.json"),
+        ),
     )
     for name in names
 )
@@ -39,20 +51,55 @@ SCHEMA = "1"
 _REQUIRED = (
     "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/pyproject.toml",
     "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/uv.lock",
-    "version.toml", DOCKERFILE, DOCKERIGNORE, *LICENSE_INPUTS,
+    "version.toml",
+    DOCKERFILE,
+    DOCKERIGNORE,
+    *LICENSE_INPUTS,
 )
-_TRANSIENT_DIRECTORIES = frozenset({
-    ".git", "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache",
-    ".tox", ".nox", ".venv", ".venv-dev", ".venv-prod", ".virtualenv", "venv", "virtualenv",
-    "node_modules", "testcache", ".testcache", "tmp",
-})
-_SECRET_FILES = frozenset({
-    "auth.json", "credentials.json", "token.txt", "token.json", "secrets.json", "secrets.txt",
-})
-_CREDENTIAL_DIRECTORIES = frozenset({
-    "vault", ".vault", "secrets", ".secrets", "credentials", ".credentials",
-})
-_PLATFORM = re.compile(r"linux/(?:amd64|arm64|arm|386|ppc64le|s390x|riscv64)(?:/v[0-9]+)?")
+_TRANSIENT_DIRECTORIES = frozenset(
+    {
+        ".git",
+        "__pycache__",
+        ".pytest_cache",
+        ".mypy_cache",
+        ".ruff_cache",
+        ".tox",
+        ".nox",
+        ".venv",
+        ".venv-dev",
+        ".venv-prod",
+        ".virtualenv",
+        "venv",
+        "virtualenv",
+        "node_modules",
+        "testcache",
+        ".testcache",
+        "tmp",
+    }
+)
+_SECRET_FILES = frozenset(
+    {
+        "auth.json",
+        "credentials.json",
+        "token.txt",
+        "token.json",
+        "secrets.json",
+        "secrets.txt",
+    }
+)
+_CREDENTIAL_DIRECTORIES = frozenset(
+    {
+        "vault",
+        ".vault",
+        "secrets",
+        ".secrets",
+        "credentials",
+        ".credentials",
+    }
+)
+_PLATFORM = re.compile(
+    r"linux/(?:amd64|arm64|arm|386|ppc64le|s390x|riscv64)(?:/v[0-9]+)?"
+)
 _STRICT = ConfigDict(strict=True, extra="forbid")
 
 
@@ -66,7 +113,9 @@ class ImageError(RuntimeError):
             "IMAGE_REFUSED": "A matching immutable runtime image could not be admitted",
             "BUILD_FAILED": "Runtime image build did not produce an admitted immutable image",
         }
-        super().__init__(message or defaults.get(code, "Runtime image operation failed"))
+        super().__init__(
+            message or defaults.get(code, "Runtime image operation failed")
+        )
 
 
 @dataclass(frozen=True, config=_STRICT)
@@ -92,24 +141,42 @@ class ImageIdentity:
     @classmethod
     def _retain_manifest(cls, value, validate: ValidatorFunctionWrapHandler):
         validated = validate(value)
-        return value if isinstance(value, tuple) and value == validated else validated
+        return (
+            value
+            if isinstance(value, tuple) and value == validated
+            else validated
+        )
 
 
 def _canonical(value: object) -> bytes:
-    return json.dumps(value, sort_keys=True, separators=(",", ":"),
-                      ensure_ascii=False, allow_nan=False).encode("utf-8")
+    return json.dumps(
+        value,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+        allow_nan=False,
+    ).encode("utf-8")
 
 
 def _excluded_directory(name: str) -> bool:
-    return (name in _TRANSIENT_DIRECTORIES or name in _CREDENTIAL_DIRECTORIES
-            or name.startswith((".anechoic_", "_anechoic_")) or name.endswith("__tests"))
+    return (
+        name in _TRANSIENT_DIRECTORIES
+        or name in _CREDENTIAL_DIRECTORIES
+        or name.startswith((".anechoic_", "_anechoic_"))
+        or name.endswith("__tests")
+    )
 
 
 def _excluded_file(name: str) -> bool:
-    return (_excluded_directory(name)
-            or name == ".env" or name.startswith(".env.") or name.endswith(".env")
-            or name in _SECRET_FILES or name == ".DS_Store"
-            or Path(name).suffix in {".pyc", ".pyo", ".pem", ".key"})
+    return (
+        _excluded_directory(name)
+        or name == ".env"
+        or name.startswith(".env.")
+        or name.endswith(".env")
+        or name in _SECRET_FILES
+        or name == ".DS_Store"
+        or Path(name).suffix in {".pyc", ".pyo", ".pem", ".key"}
+    )
 
 
 def _unique_object(pairs):
@@ -121,24 +188,42 @@ def _unique_object(pairs):
     return value
 
 
-def _receipt_image(path: Path, selection: object, timeout: float | None) -> str:
-    guard = (Path(__file__).resolve().parents[3] / "FEATURE_PROGRAMMATIC/FEATURE_TOOLS"
-             / "ADAPTERS_C30/ADAPTERS_C30__pub.py")
-    result = subprocess.run([sys.executable, "-B", str(guard), "--read-bounded", str(path)],
-                            stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
-                            stderr=subprocess.DEVNULL, timeout=timeout, check=True)
+def _receipt_image(
+    path: Path, selection: object, timeout: float | None
+) -> str:
+    guard = (
+        Path(__file__).resolve().parents[3]
+        / "FEATURE_PROGRAMMATIC/FEATURE_TOOLS"
+        / "ADAPTERS_C30/ADAPTERS_C30__pub.py"
+    )
+    result = subprocess.run(
+        [sys.executable, "-B", str(guard), "--read-bounded", str(path)],
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+        timeout=timeout,
+        check=True,
+    )
     payload = json.loads(result.stdout, object_pairs_hook=_unique_object)
     image = payload.get("image_id")
-    if (payload.get("project_root") != str(selection.root)
-            or payload.get("control_root") != str(selection.control_root)
-            or payload.get("project_id") != selection.instance_id
-            or payload.get("readiness") is not True
-            or not isinstance(image, str) or IMMUTABLE_IMAGE.fullmatch(image) is None):
+    if (
+        payload.get("project_root") != str(selection.root)
+        or payload.get("control_root") != str(selection.control_root)
+        or payload.get("project_id") != selection.instance_id
+        or payload.get("readiness") is not True
+        or not isinstance(image, str)
+        or IMMUTABLE_IMAGE.fullmatch(image) is None
+    ):
         raise ValueError("launcher receipt does not match selected Project")
     return image
 
 
-def ready_predecessor(selection, *, enforce_deadlines: bool = True) -> str | None:
+def ready_predecessor(
+    selection, *, enforce_deadlines: bool = True
+) -> str | None:
     path = selection.launcher_state / "ready.json"
-    return _receipt_image(path, selection, 10 if enforce_deadlines else None) if os.path.lexists(path) else None
-
+    return (
+        _receipt_image(path, selection, 10 if enforce_deadlines else None)
+        if os.path.lexists(path)
+        else None
+    )

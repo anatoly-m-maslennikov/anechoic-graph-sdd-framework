@@ -168,7 +168,7 @@ def generation_route(connection, instance_id, manifest_sha256, lock, queries, wo
             return error_response("model_publication_failed", "Accepted Model publication failed; reconciliation required", 409)
         except (ValueError, TypeError, UnicodeError, duckdb.Error) as error:
             return error_response("invalid_generation", str(error), 400)
-        except (OSError, RuntimeError):
+        except RuntimeError:
             return error_response("journal_unavailable", "Work Journal is unavailable", 409)
 
     return admit_generation

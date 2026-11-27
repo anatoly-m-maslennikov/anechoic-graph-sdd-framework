@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from types import SimpleNamespace
+from unittest.mock import NonCallableMock
 
 
 MCP_ROOT = Path(__file__).resolve().parents[1]
@@ -146,7 +147,9 @@ class FakeGateway:
         self.roots = []
         self.root = Path.cwd()
         self.tool_blacklist = frozenset()
-        self.selection = SimpleNamespace(project_name=PROJECT_NAME, root=self.root, host_root=None)
+        self.selection = NonCallableMock(
+            spec_set=['project_name', 'root', 'host_root'],
+            project_name=PROJECT_NAME, root=self.root, host_root=None)
         self.workbench.selection = self.selection
 
     async def select_project(self, root):

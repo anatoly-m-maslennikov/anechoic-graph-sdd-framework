@@ -111,6 +111,16 @@ def _exact_int(value: Any, message: str, *, minimum: int, maximum: int) -> int:
     return value
 
 
+def _log_level(value: dict) -> str:
+    logging = value.get("logging", {})
+    if not isinstance(logging, dict) or logging.keys() - {"level"}:
+        raise _error("Host runtime logging keys are invalid")
+    level = logging.get("level", "INFO")
+    if level not in ("DEBUG", "INFO", "WARNING", "ERROR"):
+        raise _error("Host runtime logging level is invalid")
+    return level
+
+
 def _document(raw: bytes) -> tuple[Path, int, int, bool, str, str, str]:
     try:
         value = tomllib.loads(raw.decode("utf-8"))
@@ -148,13 +158,7 @@ def _document(raw: bytes) -> tuple[Path, int, int, bool, str, str, str]:
     journal = defaults.get("journal_storage", "files")
     if workbench not in ("disk", "memory") or journal not in ("files", "duckdb"):
         raise _error("Host runtime project_defaults storage is invalid")
-    logging = value.get("logging", {})
-    if not isinstance(logging, dict) or logging.keys() - {"level"}:
-        raise _error("Host runtime logging keys are invalid")
-    level = logging.get("level", "INFO")
-    if level not in ("DEBUG", "INFO", "WARNING", "ERROR"):
-        raise _error("Host runtime logging level is invalid")
-    return root, port, maximum, single_project, workbench, journal, level
+    return root, port, maximum, single_project, workbench, journal, _log_level(value)
 
 
 @dataclass(config=ConfigDict(strict=True, extra="forbid"), frozen=True)

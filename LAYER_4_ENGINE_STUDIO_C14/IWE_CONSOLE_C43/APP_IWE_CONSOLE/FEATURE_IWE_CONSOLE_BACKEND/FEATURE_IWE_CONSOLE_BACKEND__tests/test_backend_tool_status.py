@@ -1,7 +1,7 @@
 """Exercise the actual Tool callback across the HTTP boundary."""
+from unittest.mock import Mock, NonCallableMock
 
 from pathlib import Path
-from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
@@ -19,8 +19,8 @@ from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.tool_registry_r
 
 
 class Registry:
-    def ensure_current(self):
-        pass
+    def __init__(self):
+        self.ensure_current = Mock(return_value=None)
 
     def permits(self, name):
         return name != "missing"
@@ -37,8 +37,16 @@ class Registry:
 
 def make_tool_app():
     """Build the production callback with a deterministic local registry."""
-    selection = SimpleNamespace(instance_id="test", root=Path("/test"), host_root=None)
-    api = BackendToolAPI(SimpleNamespace(selection=selection), {})
+    selection = NonCallableMock(
+        spec_set=[
+            'instance_id', 'root', 'host_root'
+        ],
+        instance_id="test", root=Path("/test"), host_root=None)
+    api = BackendToolAPI(NonCallableMock(
+        spec_set=[
+            'selection'
+        ],
+        selection=selection), {})
     api._registry, api._selection, api._blacklist = Registry(), selection, frozenset()
     return Starlette(routes=[Route("/tools", api.invoke, methods=["POST"])])
 
@@ -52,7 +60,11 @@ class ToolStatusTests(unittest.IsolatedAsyncioTestCase):
     def test_status_aliases_dispatch_and_descriptors(self):
         from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.workbench_operations import WorkbenchOperations
         from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.workbench_tools import native_tools
-        operations = WorkbenchOperations(query_owner=SimpleNamespace(status=lambda: {"ready": True}))
+        operations = WorkbenchOperations(query_owner=NonCallableMock(
+            spec_set=[
+                'status'
+            ],
+            status=lambda: {"ready": True}))
         for name in ("iwe_console_status", "workbench_status"):
             self.assertIn(name, [tool.name for tool in native_tools()])
             self.assertEqual({"ready": True}, operations.call(name, {}))
@@ -61,10 +73,22 @@ class ToolStatusTests(unittest.IsolatedAsyncioTestCase):
 
     def test_status_blacklist_blocks_both_names(self):
         module = "IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.backend_tool_api"
-        selection = SimpleNamespace(root=Path("/test"), parameters={})
-        api = BackendToolAPI(SimpleNamespace(selection=selection), {})
+        selection = NonCallableMock(
+            spec_set=[
+                'root', 'parameters'
+            ],
+            root=Path("/test"), parameters={})
+        api = BackendToolAPI(NonCallableMock(
+            spec_set=[
+                'selection'
+            ],
+            selection=selection), {})
         with patch(f"{module}.pinned_project", return_value=selection), \
-             patch(f"{module}.load_active_registry", return_value=SimpleNamespace(global_blacklist=frozenset())), \
+             patch(f"{module}.load_active_registry", return_value=NonCallableMock(
+                 spec_set=[
+                     'global_blacklist'
+                 ],
+                 global_blacklist=frozenset())), \
              patch(f"{module}.project_tool_policy") as policy:
             for name in ("workbench_status", "iwe_console_status"):
                 policy.return_value = ([name], True)

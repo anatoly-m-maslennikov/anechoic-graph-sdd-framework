@@ -109,16 +109,7 @@ def install_codex(source_root: Path, endpoint: str, *, codex_home: Path | None =
             "hooks_changed": hooks_changed, "approval": "Review and trust the hook in Codex /hooks."}
 
 
-def _hook_registration(hooks_path: Path, hook_path: Path, uv: str) -> tuple[bytes, bool]:
-    document = json.loads(hooks_path.read_text(encoding="utf-8")) if hooks_path.exists() else {}
-    if not isinstance(document, dict) or not isinstance(document.setdefault("hooks", {}), dict):
-        raise ValueError("Invalid Codex hooks configuration")
-    groups = document["hooks"].setdefault("PreToolUse", [])
-    if not isinstance(groups, list):
-        raise ValueError("Invalid Codex PreToolUse configuration")
-    args = [uv, "run", "--no-project", "--no-env-file", "--managed-python", "--python", "3.14", str(hook_path)]
-    command = subprocess.list2cmdline(args) if os.name == "nt" else shlex.join(args)
-    group = {"matcher": MATCHER, "hooks": [{"type": "command", "command": command}]}
+def _validate_hook_groups(groups: list, group: dict, hook_path: Path) -> None:
     for existing in groups:
         if not isinstance(existing, dict):
             raise ValueError("Invalid Codex PreToolUse group")
@@ -132,6 +123,18 @@ def _hook_registration(hooks_path: Path, hook_path: Path, uv: str) -> tuple[byte
                 raise ValueError("Invalid Codex hook handler")
             if str(hook_path) in str(handler.get("command", "")) and existing != group:
                 raise ValueError("Conflicting existing ANECHOIC hook registration")
+
+def _hook_registration(hooks_path: Path, hook_path: Path, uv: str) -> tuple[bytes, bool]:
+    document = json.loads(hooks_path.read_text(encoding="utf-8")) if hooks_path.exists() else {}
+    if not isinstance(document, dict) or not isinstance(document.setdefault("hooks", {}), dict):
+        raise ValueError("Invalid Codex hooks configuration")
+    groups = document["hooks"].setdefault("PreToolUse", [])
+    if not isinstance(groups, list):
+        raise ValueError("Invalid Codex PreToolUse configuration")
+    args = [uv, "run", "--no-project", "--no-env-file", "--managed-python", "--python", "3.14", str(hook_path)]
+    command = subprocess.list2cmdline(args) if os.name == "nt" else shlex.join(args)
+    group = {"matcher": MATCHER, "hooks": [{"type": "command", "command": command}]}
+    _validate_hook_groups(groups, group, hook_path)
     if groups.count(group) > 1:
         raise ValueError("Duplicate ANECHOIC hook registration")
     added_group = group not in groups

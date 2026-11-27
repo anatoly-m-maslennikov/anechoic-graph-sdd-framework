@@ -13,18 +13,20 @@ from unittest.mock import patch
 from mcp import ClientSession
 from mcp.client.stdio import StdioServerParameters, stdio_client
 
+from unittest.mock import NonCallableMock
+from .test_beta_next_query_comparison import project
 MCP = Path(__file__).resolve().parents[1]
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import ProjectAdmissionError  # noqa: E402
-from types import SimpleNamespace
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import create_http_app as create_app  # noqa: E402
-from .test_beta_next_query_comparison import project
 
 
 class DefaultMCPRuntimeTests(unittest.IsolatedAsyncioTestCase):
     async def test_injected_gateway_owner_needs_no_child_process(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory).resolve()
-            owner = SimpleNamespace(selection=SimpleNamespace(root=root, parameters={}),
+            owner = NonCallableMock(
+                spec_set=['selection', 'start', 'close'],
+                selection=NonCallableMock(spec_set=['root', 'parameters'], root=root, parameters={}),
                                     start=lambda: None, close=lambda: None)
             gateway = local_gateway(root, native_query=owner)
             with patch("asyncio.create_subprocess_exec", side_effect=AssertionError("unexpected child")):

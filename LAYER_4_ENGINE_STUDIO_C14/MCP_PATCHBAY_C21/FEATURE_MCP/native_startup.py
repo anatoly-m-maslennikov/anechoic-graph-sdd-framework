@@ -15,6 +15,7 @@ from pydantic.dataclasses import dataclass
 
 from MCP_PATCHBAY_C21.FEATURE_MCP.runtime_stack import runtime_stack
 
+
 class ProjectAdmissionError(ValueError):
     """The Backend refused a Project binding."""
 
@@ -39,31 +40,70 @@ class ProjectBinding:
     @classmethod
     def _retain_collection(cls, value, validate: ValidatorFunctionWrapHandler):
         validated = validate(value)
-        return value if isinstance(value, type(validated)) and value == validated else validated
+        return (
+            value
+            if isinstance(value, type(validated)) and value == validated
+            else validated
+        )
 
     @property
     def launcher_state(self) -> Path:
-        return self.root / ".anechoic_runtime/runtime/project_mcp" / self.instance_id
+        return (
+            self.root
+            / ".anechoic_runtime/runtime/project_mcp"
+            / self.instance_id
+        )
 
     @property
     def compose_project(self) -> str:
         return "anechoic-mcp-" + self.instance_id[:24]
 
-_MODULE = "IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.project_admission"
-_BETA_MODULE = "FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.FEATURE_MODEL_VALIDATION.project_admission__pub"
+
+_MODULE = (
+    "IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.project_admis"
+    "sion"
+)
+_BETA_MODULE = (
+    "FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.FEATURE_MOD"
+    "EL_VALIDATION.project_admission__pub"
+)
 _PATH_FIELDS = ("root", "control_root", "control_relative", "manifest_path")
-_TEXT_FIELDS = ("instance_id", "project_name", "project_prefix", "manifest_ref", "manifest_sha256")
+_TEXT_FIELDS = (
+    "instance_id",
+    "project_name",
+    "project_prefix",
+    "manifest_ref",
+    "manifest_sha256",
+)
 
 
 def _selection(value):
-    keys = set(_PATH_FIELDS + _TEXT_FIELDS + ("host_root", "parameters", "tool_blacklist", "release_workflows_enabled"))
-    if (not isinstance(value, dict) or set(value) != keys
-            or any(not isinstance(value[key], str) for key in _PATH_FIELDS + _TEXT_FIELDS)
-            or not isinstance(value["parameters"], dict)
-            or not isinstance(value["tool_blacklist"], list)
-            or any(not isinstance(item, str) for item in value["tool_blacklist"])
-            or type(value["release_workflows_enabled"]) is not bool
-            or (value["host_root"] is not None and not isinstance(value["host_root"], str))):
+    keys = set(
+        _PATH_FIELDS
+        + _TEXT_FIELDS
+        + (
+            "host_root",
+            "parameters",
+            "tool_blacklist",
+            "release_workflows_enabled",
+        )
+    )
+    if (
+        not isinstance(value, dict)
+        or set(value) != keys
+        or any(
+            not isinstance(value[key], str)
+            for key in _PATH_FIELDS + _TEXT_FIELDS
+        )
+        or not isinstance(value["parameters"], dict)
+        or not isinstance(value["tool_blacklist"], list)
+        or any(not isinstance(item, str) for item in value["tool_blacklist"])
+        or type(value["release_workflows_enabled"]) is not bool
+        or (
+            value["host_root"] is not None
+            and not isinstance(value["host_root"], str)
+        )
+    ):
         raise RuntimeError("Invalid Project admission response")
     data = dict(value)
     for key in _PATH_FIELDS:
@@ -86,33 +126,63 @@ class _AdmissionClient:
         except OSError:
             pass
 
-    def __call__(self, project_root, control_root=None, *, instance_id=None, host_root=None):
-        request = {"project_root": str(project_root), "control_root": str(control_root) if control_root is not None else None,
-                   "instance_id": instance_id, "host_root": str(host_root) if host_root is not None else None}
+    def __call__(
+        self,
+        project_root,
+        control_root=None,
+        *,
+        instance_id=None,
+        host_root=None,
+    ):
+        request = {
+            "project_root": str(project_root),
+            "control_root": str(control_root)
+            if control_root is not None
+            else None,
+            "instance_id": instance_id,
+            "host_root": str(host_root) if host_root is not None else None,
+        }
         with self._lock:
             try:
-                self._connection.sendall(json.dumps(request).encode("utf-8") + b"\n")
+                self._connection.sendall(
+                    json.dumps(request).encode("utf-8") + b"\n"
+                )
                 response = json.loads(self._responses.readline())
             except (OSError, UnicodeError, json.JSONDecodeError) as error:
                 self._responses.close()
                 self._connection.close()
-                raise RuntimeError("Project admission service unavailable") from error
+                raise RuntimeError(
+                    "Project admission service unavailable"
+                ) from error
         if isinstance(response, dict) and set(response) == {"result"}:
             return _selection(response["result"])
         if isinstance(response, dict) and set(response) == {"error"}:
             error = response["error"]
-            if (isinstance(error, dict) and set(error) == {"code", "message"}
-                    and error["code"] == "project_selection_error" and isinstance(error["message"], str)):
+            if (
+                isinstance(error, dict)
+                and set(error) == {"code", "message"}
+                and error["code"] == "project_selection_error"
+                and isinstance(error["message"], str)
+            ):
                 raise ProjectAdmissionError(error["message"])
         raise RuntimeError("Invalid Project admission response")
+
 
 def _start(connection):
     engine = Path(__file__).resolve().parents[2]
     root = engine.parent
-    environment = {**{k: v for k, v in os.environ.items() if k != "PYTHONHOME"}, "PYTHONPATH": str(engine)}
+    environment = {
+        **{k: v for k, v in os.environ.items() if k != "PYTHONHOME"},
+        "PYTHONPATH": str(engine),
+    }
     module = _MODULE if runtime_stack() == "current" else _BETA_MODULE
-    return subprocess.Popen([sys.executable, "-B", "-P", "-m", module], cwd=root, env=environment,
-                            stdin=connection, stdout=connection)
+    return subprocess.Popen(
+        [sys.executable, "-B", "-P", "-m", module],
+        cwd=root,
+        env=environment,
+        stdin=connection,
+        stdout=connection,
+    )
 
 
 def _close(process):
@@ -146,7 +216,14 @@ def project_admission():
         child.close()
 
 
-def select_runtime_project(project_root, control_root=None, *, instance_id=None, host_root=None):
+def select_runtime_project(
+    project_root, control_root=None, *, instance_id=None, host_root=None
+):
     """Return one native Project with an active Project Manifest."""
     with project_admission() as select:
-        return select(project_root, control_root, instance_id=instance_id, host_root=host_root)
+        return select(
+            project_root,
+            control_root,
+            instance_id=instance_id,
+            host_root=host_root,
+        )

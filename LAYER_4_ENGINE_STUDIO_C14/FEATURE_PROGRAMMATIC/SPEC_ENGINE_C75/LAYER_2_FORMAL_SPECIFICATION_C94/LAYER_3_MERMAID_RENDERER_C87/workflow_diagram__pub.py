@@ -34,6 +34,9 @@ def render_operation_diagram(operations):
     lines = ["stateDiagram-v2"]
     for index, (action, workflow) in enumerate(operations.items(), 1):
         name = f"operation_{index}_" + re.sub(r"[^A-Za-z0-9_]", "_", action)[:60]
+        label = "".join(f"#{ord(c)};" if c.isspace() or c in '#;%&<>\\|"'
+                        else c for c in action)
+        lines.append(f"    {name}: {label}")
         lines.append(f"    state {name} {{")
         lines.extend("    " + line for line in render_workflow_diagram(
             workflow, prefix=name + "_").splitlines()[1:])

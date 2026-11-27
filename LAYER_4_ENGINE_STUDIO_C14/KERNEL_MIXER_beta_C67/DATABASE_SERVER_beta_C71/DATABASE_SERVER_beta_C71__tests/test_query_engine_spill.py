@@ -20,17 +20,35 @@ class QueryEngineSpillTest(unittest.TestCase):
             with patch.dict(os.environ, environment):
                 for path in (root / "projection.duckdb", None):
                     with self.subTest(path=path):
-                        connection = open_database(str(path) if path else None, PIN, "instance")
+                        connection = open_database(
+                            str(path) if path else None, PIN, "instance"
+                        )
                         try:
-                            values = dict(connection.execute("SELECT name, value FROM duckdb_settings() "
-                                "WHERE name IN ('temp_directory', 'max_temp_directory_size', 'memory_limit')").fetchall())
-                            self.assertEqual("244.1 MiB", values["memory_limit"])
-                            self.assertEqual(str(path) + ".tmp" if path else "", values["temp_directory"])
+                            values = dict(
+                                connection.execute(
+                                    "SELECT name, value FROM duckdb_settings() "
+                                    "WHERE name IN ('temp_directory', 'max_temp_directory_size', 'memory_limit')"
+                                ).fetchall()
+                            )
+                            self.assertEqual(
+                                "244.1 MiB", values["memory_limit"]
+                            )
+                            self.assertEqual(
+                                str(path) + ".tmp" if path else "",
+                                values["temp_directory"],
+                            )
                             if path:
-                                self.assertEqual("488.2 MiB", values["max_temp_directory_size"])
+                                self.assertEqual(
+                                    "488.2 MiB",
+                                    values["max_temp_directory_size"],
+                                )
                             with self.assertRaises(duckdb.Error):
-                                connection.execute("SET enable_external_access = true")
+                                connection.execute(
+                                    "SET enable_external_access = true"
+                                )
                             with self.assertRaises(duckdb.Error):
-                                connection.execute("SELECT * FROM read_text('/etc/passwd')")
+                                connection.execute(
+                                    "SELECT * FROM read_text('/etc/passwd')"
+                                )
                         finally:
                             connection.close()

@@ -1,4 +1,3 @@
-
 """Admitted Workbench source-role directory and filename markers."""
 
 from __future__ import annotations
@@ -34,10 +33,44 @@ ROLE_MARKERS = {
     "06_evaluation": {"E", "EVAL", "EVALUATION"},
     "07_delivery": {"D", "DEL", "DELIVERY"},
     "08_implementation": {"I", "IMPL", "IMPLEMENTATION"},
-    "09_operations": {"O", "OPER", "OPERATION", "OPERATIONS", "ACTION", "WORKFLOW", "STEP"},
+    "09_operations": {
+        "O",
+        "OPER",
+        "OPERATION",
+        "OPERATIONS",
+        "ACTION",
+        "WORKFLOW",
+        "STEP",
+    },
 }
 
-CANONICAL_ROLE_MARKERS = dict(zip(
-    ("Concern", "Analysis and Advisory", "Plan", "Requirement", "Method", "Evaluation", "Delivery", "Implementation", "Operations"),
-    (ROLE_MARKERS[name] for name in ("01_concern", "02_analysis", "03_plan", "04_requirement", "05_method", "06_evaluation", "07_delivery", "08_implementation", "09_operations")),
-))
+CANONICAL_ROLE_MARKERS = dict(
+    zip(
+        (
+            "Concern",
+            "Analysis and Advisory",
+            "Plan",
+            "Requirement",
+            "Method",
+            "Evaluation",
+            "Delivery",
+            "Implementation",
+            "Operations",
+        ),
+        (
+            ROLE_MARKERS[name]
+            for name in (
+                "01_concern",
+                "02_analysis",
+                "03_plan",
+                "04_requirement",
+                "05_method",
+                "06_evaluation",
+                "07_delivery",
+                "08_implementation",
+                "09_operations",
+            )
+        ),
+        strict=False,
+    )
+)

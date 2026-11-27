@@ -100,6 +100,27 @@ class ImageBuild:
             raise ImageError("BUILD_FAILED", "Private image context could not be assembled") from error
         self._verify_context(context, identity)
 
+    def _verify_context_file(self, path, relative, expected):
+        if (path.name == ".DS_Store" and not path.is_symlink()
+                and path.is_file()):
+            path.unlink(missing_ok=True)
+            return False
+        if relative not in expected or path.is_symlink() or not path.is_file():
+            raise self._input_error()
+        row = expected[relative]
+        if (hashlib.sha256(path.read_bytes()).hexdigest() != row.sha256
+                or path.stat().st_mode & 0o777 != row.mode):
+            raise self._input_error()
+        return True
+
+    def _verify_context_directory(self, path, relative, expected):
+        if path.is_symlink() or not path.is_dir():
+            raise self._input_error()
+        if relative not in expected:
+            path.rmdir()
+            return False
+        return True
+
     def _verify_context(self, context: Path, identity: ImageIdentity):
         expected = {row.path: row for row in identity.manifest}
         expected_directories = {parent.as_posix() for row in identity.manifest
@@ -118,25 +139,15 @@ class ImageBuild:
                 for name in directories:
                     path = folder / name
                     relative = path.relative_to(context).as_posix()
-                    if path.is_symlink() or not path.is_dir():
-                        raise self._input_error()
-                    if relative not in expected_directories:
-                        path.rmdir()
-                        continue
-                    observed_directories.add(relative)
+                    if self._verify_context_directory(
+                        path, relative, expected_directories
+                    ):
+                        observed_directories.add(relative)
                 for name in names:
                     path = folder / name
                     relative = path.relative_to(context).as_posix()
-                    if name == ".DS_Store" and not path.is_symlink() and path.is_file():
-                        path.unlink(missing_ok=True)
-                        continue
-                    if relative not in expected or path.is_symlink() or not path.is_file():
-                        raise self._input_error()
-                    row = expected[relative]
-                    if (hashlib.sha256(path.read_bytes()).hexdigest() != row.sha256
-                            or path.stat().st_mode & 0o777 != row.mode):
-                        raise self._input_error()
-                    observed.add(relative)
+                    if self._verify_context_file(path, relative, expected):
+                        observed.add(relative)
         except OSError as error:
             raise self._input_error() from error
         if observed != expected.keys() or observed_directories != expected_directories:

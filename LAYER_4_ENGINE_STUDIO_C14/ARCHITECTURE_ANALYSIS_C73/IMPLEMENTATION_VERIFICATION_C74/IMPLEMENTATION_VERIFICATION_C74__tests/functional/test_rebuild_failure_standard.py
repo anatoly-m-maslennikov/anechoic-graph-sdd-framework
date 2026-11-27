@@ -2,13 +2,13 @@
 
 import json
 import os
-from pathlib import Path
 import re
 import shutil
 import subprocess
 import sys
 import tempfile
 import unittest
+from pathlib import Path
 
 ROOT = next(path for path in Path(__file__).resolve().parents if (path / '_anechoic_anechoic').is_dir())
 STUDIO = ROOT / 'LAYER_4_ENGINE_STUDIO_C14'
@@ -25,7 +25,7 @@ class RebuildFailureStandardTests(unittest.TestCase):
         terms = ', '.join(f'.{event}' for event in events)
         lean_file.write_text(claim + '\n\ndef observed : List WorkbenchRebuildFailure.Event := [' + terms + ']\n'
                              '#eval WorkbenchRebuildFailure.conforms observed\n')
-        check = subprocess.run([lean, str(lean_file)], capture_output=True, text=True, timeout=45)
+        check = subprocess.run([lean, str(lean_file)], capture_output=True, text=True, timeout=45, check=False)
         self.assertEqual(check.returncode, 0, check.stdout + check.stderr)
         return check.stdout.strip()
 
@@ -60,7 +60,7 @@ class RebuildFailureStandardTests(unittest.TestCase):
                 env = os.environ.copy()
                 env['PYTHONPATH'] = os.pathsep.join(map(str, [*prefix, STUDIO]))
                 run = subprocess.run([sys.executable, '-B', '-m', OBSERVER], cwd=ROOT, env=env,
-                                     capture_output=True, text=True, timeout=300)
+                                     capture_output=True, text=True, timeout=300, check=False)
                 self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
                 record = json.loads(run.stdout.splitlines()[-1])
                 self.assertEqual(Path(record['source']).resolve(), expected_source.resolve())

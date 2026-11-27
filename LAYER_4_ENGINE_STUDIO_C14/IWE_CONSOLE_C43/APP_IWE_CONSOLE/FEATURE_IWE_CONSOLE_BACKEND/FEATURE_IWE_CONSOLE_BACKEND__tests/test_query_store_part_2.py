@@ -7,9 +7,6 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-
-APP_ROOT = Path(__file__).resolve().parents[3]
-
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (  # noqa: E402
     QueryExecutionError,
     WorkbenchUnavailableError,
@@ -17,6 +14,9 @@ from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (  # noqa: E402
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import public_rows as public_rows_module  # noqa: E402
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import SCOPE_FIELDS  # noqa: E402
 from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.FEATURE_IWE_CONSOLE_BACKEND__tests.query_store_test_support import QueryStoreFixture
+
+
+APP_ROOT = Path(__file__).resolve().parents[3]
 
 
 class QueryStoreTest(QueryStoreFixture, unittest.TestCase):

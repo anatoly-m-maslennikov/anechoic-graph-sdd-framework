@@ -53,10 +53,15 @@ def update_draft(selection, params, *, current_rows, previous_capture=None):
     if relative.is_absolute() or '..' in relative.parts or not path.is_relative_to(selection.control_root) or path.parent.name not in {'01_draft', '000_draft'}:
         raise InputError('target', 'Select a native Draft carrier.')
     with _project_write_lock(selection.root):
-        candidate, updated = _prepare(selection, params, changes, target, selected, digest, path, previous_capture)
+        candidate, updated = _prepare(selection, params, changes, target,
+                                      selected, digest, path, previous_capture)
+        artifact = saved(selection, path, selected['id'], target['ref_id'],
+                         target['version'], 'Draft') | {'updated_at': updated}
+        if candidate is None:
+            return result(artifact=artifact)
         with bind_query_reader(None):
             outcome = effects.replace(selection.root, path, digest, candidate)
-        data = {} if outcome.errors else {'artifact': {**saved(selection, path, selected['id'], target['ref_id'], target['version'], 'Draft'), 'updated_at': updated}}
+        data = {} if outcome.errors else {'artifact': artifact}
         return result(effects=outcome.effects, errors=outcome.errors, **data)
 
 
@@ -80,7 +85,9 @@ def _prepare(selection, params, changes, target, selected, digest, path, previou
         body = changes.get('body', old_body)
         if _summary(body) != _summary(old_body):
             raise InputError('summary', 'Changing a Summary is not supported.')
-        return _candidate(raw, bounds, path, header, body, changes.get('removeRelations', []))
+        candidate = _candidate(raw, bounds, path, header, body,
+                               changes.get('removeRelations', []))
+        return candidate if candidate is not None else (None, observed)
     except (InputError, SourceChanged):
         raise
     except (OSError, RuntimeError, TypeError, ValueError, KeyError, UnicodeError, yaml.YAMLError) as error:
@@ -96,8 +103,6 @@ def _candidate(raw, bounds, path, before, body, removals):
     timestamps = [value for key, value in state.value if key.value == 'updated_at']
     if len(timestamps) != 1 or not isinstance(timestamps[0], yaml.ScalarNode):
         raise InputError('target', 'Draft requires a scalar updated_at timestamp.')
-    updated = datetime.now(timezone.utc).isoformat()
-    edits = [(timestamps[0].start_mark.index, timestamps[0].end_mark.index, json.dumps(updated))]
     relations = before.get('relations', {})
     if not isinstance(relations, dict):
         raise InputError('changes', 'Draft relations are invalid.')
@@ -109,6 +114,13 @@ def _candidate(raw, bounds, path, before, body, removals):
         values.remove(item['ref_id'])
         if not values:
             del relations[item['type']]
+    body_bytes = body.encode('utf-8')
+    if not removals and body_bytes == raw[bounds[2]:]:
+        return None
+    updated = datetime.now(timezone.utc).isoformat()
+    stamp = timestamps[0]
+    edits = [(stamp.start_mark.index, stamp.end_mark.index,
+              json.dumps(updated))]
     expected = dict(before)
     if removals:
         relation_key, relation_node = next((key, value) for key, value in node.value if key.value == 'relations')
@@ -119,7 +131,8 @@ def _candidate(raw, bounds, path, before, body, removals):
     expected['state'] = {**before['state'], 'updated_at': updated}
     for start, end, value in sorted(edits, reverse=True):
         header = header[:start] + value + header[end:]
-    candidate = raw[:bounds[0]] + header.encode('utf-8') + raw[bounds[1]:bounds[2]] + body.encode('utf-8')
+    candidate = (raw[:bounds[0]] + header.encode('utf-8')
+                 + raw[bounds[1]:bounds[2]] + body_bytes)
     if parse_carrier(candidate, path).metadata != expected:
         raise InputError('changes', 'The Draft header cannot be updated safely.')
     return candidate, updated

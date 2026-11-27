@@ -6,9 +6,11 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-from .backend_http_checks import extract_backend_checks
-from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_3_LEAN_TRANSLATOR_C84._package__shared import lean_string
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_3_LEAN_TRANSLATOR_C84._package__shared import (
+    lean_string,
+)
 
+from .backend_http_checks import extract_backend_checks
 from .backend_http_contract import contract_to_lean
 from .backend_http_source import extract_http_observations
 

@@ -23,7 +23,7 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
         prepare = package_phases._prepare_package
         for field in ("bytes", "mode"):
             with self.subTest(field=field):
-                def tamper(*args, **kwargs):
+                def tamper(*args, field=field, **kwargs):
                     expected = prepare(*args, **kwargs)
                     path = args[2] / "uv.lock"
                     if field == "bytes":

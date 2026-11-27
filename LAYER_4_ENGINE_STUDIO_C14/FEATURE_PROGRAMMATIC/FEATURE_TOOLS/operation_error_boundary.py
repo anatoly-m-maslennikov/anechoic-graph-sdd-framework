@@ -1,4 +1,3 @@
-
 """Small shared boundary for observable public-operation failures."""
 
 from __future__ import annotations
@@ -13,7 +12,9 @@ from typing import Any, Literal, ParamSpec, TypeVar, cast
 from pydantic import ConfigDict
 from pydantic.dataclasses import dataclass
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.technical_diagnostics import TechnicalDiagnosticLogger
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.technical_diagnostics import (
+    TechnicalDiagnosticLogger,
+)
 
 
 P = ParamSpec("P")
@@ -25,16 +26,23 @@ FailureClassifier = Callable[[Exception], "FailureRecord | None"]
 class ExplicitBlockingRuntimeFailure(Exception):
     """A caller-declared runtime failure that prevents safe operation."""
 
-    def __init__(self, code: str, message: str, details: Mapping[str, object] | None = None) -> None:
+    def __init__(
+        self,
+        code: str,
+        message: str,
+        details: Mapping[str, object] | None = None,
+    ) -> None:
         self.code = code
         self.message = message
         self.details = dict(details or {})
         super().__init__(message)
 
 
-@dataclass(frozen=True, slots=True, config=ConfigDict(strict=True, extra="forbid"))
+@dataclass(
+    frozen=True, slots=True, config=ConfigDict(strict=True, extra="forbid")
+)
 class FailureRecord:
-    """A caller-neutral classification; the caller still owns its response shape."""
+    "A caller-neutral classification; the caller still owns its response shape."
 
     severity: Severity
     code: str
@@ -44,7 +52,9 @@ class FailureRecord:
     exception_class: str | None = None
 
 
-def classify_failure(error: Exception, *, classifier: FailureClassifier | None = None) -> FailureRecord:
+def classify_failure(
+    error: Exception, *, classifier: FailureClassifier | None = None
+) -> FailureRecord:
     """Classify without treating Python exception ancestry as impact.
 
     Only ``ExplicitBlockingRuntimeFailure`` can produce an ``ERROR`` record;
@@ -52,16 +62,30 @@ def classify_failure(error: Exception, *, classifier: FailureClassifier | None =
     """
 
     if isinstance(error, ExplicitBlockingRuntimeFailure):
-        return FailureRecord("ERROR", error.code, error.message, error.details,
-                             exception_class=type(error).__name__)
+        return FailureRecord(
+            "ERROR",
+            error.code,
+            error.message,
+            error.details,
+            exception_class=type(error).__name__,
+        )
     if classifier is not None:
         classified = classifier(error)
         if classified is not None:
-            classified = replace(classified, exception_class=type(error).__name__)
-            return (classified if classified.severity == "WARNING"
-                    else replace(classified, severity="WARNING"))
-    return FailureRecord("WARNING", "internal_failure", "operation failure",
-                         exception_class=type(error).__name__)
+            classified = replace(
+                classified, exception_class=type(error).__name__
+            )
+            return (
+                classified
+                if classified.severity == "WARNING"
+                else replace(classified, severity="WARNING")
+            )
+    return FailureRecord(
+        "WARNING",
+        "internal_failure",
+        "operation failure",
+        exception_class=type(error).__name__,
+    )
 
 
 def emit_failure_diagnostic(
@@ -72,7 +96,7 @@ def emit_failure_diagnostic(
     relative_path: str = "",
     correlation_id: str | None = None,
 ) -> str | None:
-    """Emit a safe technical record and return a secondary sink failure, if any."""
+    "Emit a safe technical record and return a secondary sink failure, if any."
 
     if logger is None:
         return "diagnostic logger unavailable"
@@ -80,8 +104,14 @@ def emit_failure_diagnostic(
         sink_failure = logger.emit(
             code=failure.code,
             relative_path=relative_path,
-            reason=(f"Operation failed: {failure.code}"
-                    + (f" ({failure.exception_class})" if failure.exception_class else "")),
+            reason=(
+                f"Operation failed: {failure.code}"
+                + (
+                    f" ({failure.exception_class})"
+                    if failure.exception_class
+                    else ""
+                )
+            ),
             severity=failure.severity,
             event="operation_failure",
             operation=operation,
@@ -98,7 +128,7 @@ def operation_error_boundary(
     *,
     on_error: Callable[[Exception], R],
 ) -> Callable[[Callable[P, Any]], Callable[P, R]]:
-    """Return a sync/async boundary that delegates response construction to its caller."""
+    "Return a sync/async boundary that delegates response construction to its caller."
 
     def decorate(function: Callable[P, Any]) -> Callable[P, R]:
         if inspect.iscoroutinefunction(function):

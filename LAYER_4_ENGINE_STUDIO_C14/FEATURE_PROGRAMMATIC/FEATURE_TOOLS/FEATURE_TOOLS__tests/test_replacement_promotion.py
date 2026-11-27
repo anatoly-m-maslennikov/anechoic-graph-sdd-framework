@@ -22,7 +22,7 @@ class ReplacementPromotionTests(fixtures.NativeRevisionCarrierTests, unittest.Te
         self.paths = [root / '_SPEC/AN-S-3196-SPEC--declare-applicable-principle.md',
                       root / '_SPEC/AN-S-3302-SPEC--set-the-applicable-principle-encapsulation.md',
                       root / '01_draft/AN-S-3196@3-draft-SPEC-MANIFEST_NODE--declare-applicable-principle.md']
-        for path, text in zip(self.paths, (SOURCE_0, SOURCE_1, SOURCE_2)):
+        for path, text in zip(self.paths, (SOURCE_0, SOURCE_1, SOURCE_2), strict=False):
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(text)
         self.params = {'target': {'ref_id': 'AN-S-3196@3-draft', 'version': 3}, 'targetStatus': 'ready'}
@@ -81,8 +81,10 @@ class ReplacementPromotionTests(fixtures.NativeRevisionCarrierTests, unittest.Te
                 self.promote()
             self.assertTrue(self.paths[0].exists())
             self.assertTrue(self.paths[2].exists())
-            if case == 'missing': self.paths[1].write_bytes(original)
-            else: archive.unlink()
+            if case == 'missing':
+                self.paths[1].write_bytes(original)
+            else:
+                archive.unlink()
 
     def test_new_identity_replaces_multiple_targets_once(self):
         ready = self.control / 'UNIT_C9/02_ready' / self.paths[1].name

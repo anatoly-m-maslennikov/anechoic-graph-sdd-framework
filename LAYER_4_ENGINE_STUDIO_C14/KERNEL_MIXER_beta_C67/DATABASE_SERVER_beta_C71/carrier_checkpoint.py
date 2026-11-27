@@ -107,7 +107,7 @@ def _replace_checkpoint(connection, hashes):
         rows = [(path, PurePosixPath(path).parent.as_posix(), digest) for path, digest in hashes.items()]
         if rows:
             connection.execute("""INSERT INTO main.ops_generation_carrier_digests
-                SELECT unnest(?::VARCHAR[]), unnest(?::VARCHAR[]), unnest(?::VARCHAR[])""", list(zip(*rows)))
+                SELECT unnest(?::VARCHAR[]), unnest(?::VARCHAR[]), unnest(?::VARCHAR[])""", list(zip(*rows, strict=False)))
         _write_folder_hashes(connection, rows)
         connection.execute("INSERT INTO main.ops_generation_carrier_checkpoint VALUES (true)")
 
@@ -213,7 +213,7 @@ def _read_folders(connection, witness, hashes, scope=None):
 def _reuse_result(connection, scope=None):
     from .archive_generation import archive_pending
     from .accepted_model import generation_rows
-    from .native_atoms import _status_domains
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import status_domains as _status_domains
 
     if not has_table(connection, "main", "ops_generation_reuse"):
         return None

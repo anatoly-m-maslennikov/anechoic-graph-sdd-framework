@@ -1,4 +1,3 @@
-
 """Generated relation metadata uses the runtime declaration compiler."""
 
 from __future__ import annotations
@@ -10,14 +9,15 @@ import unittest
 from unittest.mock import patch
 
 
-
 from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.FEATURE_IWE_CONSOLE_BACKEND__shared import (
     load_registry_asset,
     registry_asset,
 )  # noqa: E402
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import compile_registry  # noqa: E402
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import compile_relation_registry  # noqa: E402
-from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import relation_registry_module as compiler  # noqa: E402
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (
+    relation_registry_module as compiler,
+)  # noqa: E402
 
 
 def declaration(reference: str, name: str, body: str = "") -> dict:
@@ -34,9 +34,14 @@ def declaration(reference: str, name: str, body: str = "") -> dict:
         "form": "Relation Declaration",
         "tier": 1,
         "updated_at": None,
-        "header_json": {"subjects": {"active": f"CFEL <+ Relation//{name}"}, "relations": {}},
-        "_content_bytes": ("## Claim\n### Formal Claim\n```python\n"
-            f'subject_path(address="Relation//{name}")\n{body}\n```\n').encode("utf-8"),
+        "header_json": {
+            "subjects": {"active": f"CFEL <+ Relation//{name}"},
+            "relations": {},
+        },
+        "_content_bytes": (
+            "## Claim\n### Formal Claim\n```python\n"
+            f'subject_path(address="Relation//{name}")\n{body}\n```\n'
+        ).encode("utf-8"),
         "content_properties_json": [],
         "relation_edges_json": [],
         "hash": None,
@@ -76,47 +81,73 @@ subject_path(address="Relation//DETAIL")
         first = declaration("CA-R-1", "FIRST")
         second = declaration("CA-R-1", "SECOND")
         second["source_path"] = "other.md"
-        self.assertEqual({"FIRST"}, set(compile_relation_registry([first, second]).names))
+        self.assertEqual(
+            {"FIRST"}, set(compile_relation_registry([first, second]).names)
+        )
 
-    def test_instance_scoped_inverse_metadata_is_warned_and_skipped(self) -> None:
+    def test_instance_scoped_inverse_metadata_is_warned_and_skipped(
+        self,
+    ) -> None:
         from contextlib import redirect_stderr
         from io import StringIO
 
         row = declaration(
-            "CA-R-1", "DIRECT",
-            '# instances\nrelation(source="Relation//DIRECT", name="HAS_INVERSE", target="Relation//INVERSE")',
+            "CA-R-1",
+            "DIRECT",
+            (
+                '# instances\nrelation(source="Relation//DIRECT", '
+                'name="HAS_INVERSE", target="Relation//INVERSE")'
+            ),
         )
         errors = StringIO()
         with redirect_stderr(errors):
             registry = compile_relation_registry([row])
         self.assertEqual({"DIRECT"}, set(registry.names))
         self.assertEqual({}, registry.inverse)
-        self.assertIn("unsupported Python relation metadata", errors.getvalue())
+        self.assertIn(
+            "unsupported Python relation metadata", errors.getvalue()
+        )
 
-    def test_asset_is_deterministic_and_pins_literal_declaration_inputs(self) -> None:
+    def test_asset_is_deterministic_and_pins_literal_declaration_inputs(
+        self,
+    ) -> None:
         direct = declaration(
             "CA-R-1",
             "IS_CONTAINED_BY",
-            'relation(source="Relation//IS_CONTAINED_BY", name="HAS_INVERSE", target="Relation//CONTAINS")',
+            (
+                'relation(source="Relation//IS_CONTAINED_BY", '
+                'name="HAS_INVERSE", target="Relation//CONTAINS")'
+            ),
         )
         inverse = declaration(
             "CA-R-2",
             "CONTAINS",
-            'relation(source="Relation//CONTAINS", name="HAS_INVERSE", target="Relation//IS_CONTAINED_BY", reverse=True)',
+            (
+                'relation(source="Relation//CONTAINS", name="HAS_INVERSE", '
+                'target="Relation//IS_CONTAINED_BY", reverse=True)'
+            ),
         )
 
         first = registry_asset([direct, inverse])
         self.assertEqual(first, registry_asset([direct, inverse]))
         payload = json.loads(first)
         self.assertEqual(1, payload["schema_version"])
-        self.assertEqual(["CONTAINS", "IS_CONTAINED_BY"], payload["registered_names"])
         self.assertEqual(
-            [{"direct": "IS_CONTAINED_BY", "inverse": "CONTAINS"}], payload["inverse_bindings"]
+            ["CONTAINS", "IS_CONTAINED_BY"], payload["registered_names"]
         )
-        self.assertEqual(["CA-R-1", "CA-R-2"], [source["atom_id"] for source in payload["sources"]])
+        self.assertEqual(
+            [{"direct": "IS_CONTAINED_BY", "inverse": "CONTAINS"}],
+            payload["inverse_bindings"],
+        )
+        self.assertEqual(
+            ["CA-R-1", "CA-R-2"],
+            [source["atom_id"] for source in payload["sources"]],
+        )
         self.assertEqual(64, len(payload["input_digest"]))
 
-    def test_invalid_declaration_identity_is_omitted_before_asset_pinning(self) -> None:
+    def test_invalid_declaration_identity_is_omitted_before_asset_pinning(
+        self,
+    ) -> None:
         valid = declaration("CA-R-1", "DIRECT")
         invalid = declaration("CA-R-2", "INVERSE")
         invalid["id"] = None
@@ -125,7 +156,9 @@ subject_path(address="Relation//DETAIL")
         registry = compile_relation_registry([valid, invalid])
         payload = json.loads(registry_asset([valid, invalid]))
         self.assertEqual({"DIRECT"}, set(registry.names))
-        self.assertEqual(["CA-R-1"], [source["atom_id"] for source in payload["sources"]])
+        self.assertEqual(
+            ["CA-R-1"], [source["atom_id"] for source in payload["sources"]]
+        )
         self.assertTrue(
             all(
                 type(source["version"]) is int and source["version"] > 0
@@ -158,7 +191,9 @@ subject_path(address="Relation//DETAIL")
             declaration("CA-R-2", "OTHER"),
         ]
         original = compiler.registry_contribution
-        with patch.object(compiler, "registry_contribution", wraps=original) as contribution:
+        with patch.object(
+            compiler, "registry_contribution", wraps=original
+        ) as contribution:
             compiled = compile_registry(rows)
             registry_asset(rows, compiled)
         self.assertEqual(len(rows), contribution.call_count)

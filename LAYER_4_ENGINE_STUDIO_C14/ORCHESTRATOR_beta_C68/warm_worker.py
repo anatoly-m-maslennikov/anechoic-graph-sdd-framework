@@ -1,4 +1,5 @@
 """Private client for the optional warm Worker broker."""
+
 import json
 import os
 import socket
@@ -54,7 +55,11 @@ def _accepted_capture(sock, ack):
     if not isinstance(ack, dict) or set(ack) != {"accepted", "pid"}:
         raise ValueError("Invalid Worker acceptance")
     pid = ack["pid"]
-    if ack["accepted"] is not True or type(pid) is not int or not 0 < pid < 2**31:
+    if (
+        ack["accepted"] is not True
+        or type(pid) is not int
+        or not 0 < pid < 2**31
+    ):
         raise ValueError("Invalid Worker acceptance")
     return WarmCapture(sock, pid)
 
@@ -63,10 +68,16 @@ def request(socket_path, load_seconds, binding, reuse, paths, register):
     """Return the worker payload, or None when the broker cannot serve it."""
     try:
         load_seconds = operation_timeout(load_seconds)
-        start_by = (None if load_seconds is None
-                    else time.monotonic() + load_seconds)
-        payload = {"kind": "ticket_delta", "start_by": start_by,
-                   "binding": binding, "reuse": reuse, "paths": paths}
+        start_by = (
+            None if load_seconds is None else time.monotonic() + load_seconds
+        )
+        payload = {
+            "kind": "ticket_delta",
+            "start_by": start_by,
+            "binding": binding,
+            "reuse": reuse,
+            "paths": paths,
+        }
         with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
             if start_by is not None:
                 sock.settimeout(max(0.0, start_by - time.monotonic()))
@@ -80,25 +91,34 @@ def request(socket_path, load_seconds, binding, reuse, paths, register):
             if not isinstance(reply, dict) or set(reply) != {"result"}:
                 return None
             return reply["result"]
-    except (OSError, ValueError, TypeError, OverflowError):
+    except OSError, ValueError, TypeError, OverflowError:
         return None
 
 
 def run_lifecycle(socket_path, load_seconds, request, register, timeout):
     load_seconds = operation_timeout(load_seconds)
-    start_by = (None if load_seconds is None
-                else time.monotonic() + load_seconds)
-    payload = {"kind": "indexed_lifecycle", "start_by": start_by, "request": request}
+    start_by = (
+        None if load_seconds is None else time.monotonic() + load_seconds
+    )
+    payload = {
+        "kind": "indexed_lifecycle",
+        "start_by": start_by,
+        "request": request,
+    }
     with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
         sock.settimeout(load_seconds)
         try:
             sock.connect(socket_path)
         except OSError as error:
-            raise WarmLifecycleUnavailable("Warm lifecycle Worker is unavailable") from error
+            raise WarmLifecycleUnavailable(
+                "Warm lifecycle Worker is unavailable"
+            ) from error
         sock.sendall(json.dumps(payload, allow_nan=False).encode() + b"\n")
         ack = _line(sock, 1024, deadline=start_by, single_byte=True)
         if ack == {"accepted": False}:
-            raise WarmLifecycleUnavailable("Warm lifecycle Worker refused the request")
+            raise WarmLifecycleUnavailable(
+                "Warm lifecycle Worker refused the request"
+            )
         if not register(_accepted_capture(sock, ack)):
             raise RuntimeError("Orchestrator stopped during lifecycle write")
         sock.settimeout(timeout)
@@ -108,12 +128,16 @@ def run_lifecycle(socket_path, load_seconds, request, register, timeout):
         return reply["result"]
 
 
-def validated_result(socket_path, load_seconds, binding, reuse, paths, register):
-    result = request(socket_path, load_seconds, binding, reuse, paths, register)
+def validated_result(
+    socket_path, load_seconds, binding, reuse, paths, register
+):
+    result = request(
+        socket_path, load_seconds, binding, reuse, paths, register
+    )
     if result is None:
         return None
     try:
         result = parse_worker_result(json.dumps(result), reuse, paths)
         return result if "base_generation" in result else None
-    except (ValueError, TypeError, KeyError):
+    except ValueError, TypeError, KeyError:
         return None

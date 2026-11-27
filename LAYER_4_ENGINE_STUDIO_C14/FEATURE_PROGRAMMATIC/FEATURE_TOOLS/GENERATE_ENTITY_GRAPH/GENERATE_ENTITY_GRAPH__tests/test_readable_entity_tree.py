@@ -8,16 +8,26 @@ import unittest
 
 import yaml
 
-sys.path[:0] = [str(Path(__file__).resolve().parents[1]), str(Path(__file__).resolve().parents[2])]
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import readable_entity_tree as readable  # noqa: E402
+sys.path[:0] = [
+    str(Path(__file__).resolve().parents[1]),
+    str(Path(__file__).resolve().parents[2]),
+]
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import (  # noqa: E402
+    readable_entity_tree as readable,
+)
 
 
 STAMP = "2026-10-15 19:00:00 +0400"
-PROJECTION = {"projection_id": "CA-PROJ-900", "named_selection": "Controlled fixture"}
+PROJECTION = {
+    "projection_id": "CA-PROJ-900",
+    "named_selection": "Controlled fixture",
+}
 
 
 def edge(child, parent, kind="NARROWER_THAN", **fields):
-    return dict(relation_source=child, relation_target=parent, kind=kind, **fields)
+    return dict(
+        relation_source=child, relation_target=parent, kind=kind, **fields
+    )
 
 
 def fixture():
@@ -32,7 +42,9 @@ def fixture():
         "bp": "Beta.Label",
     }
     graph = {
-        "nodes": [dict(id=key, identity=value) for key, value in names.items()],
+        "nodes": [
+            dict(id=key, identity=value) for key, value in names.items()
+        ],
         "edges": [
             edge("s", "a"),
             edge("s", "b"),
@@ -53,7 +65,11 @@ def fixture():
                 "sha256": "a" * 64,
             }
         }
-        for atom_id, version in (("CA-R-9002", 3), ("CA-M-9001", 2), ("CA-R-9002", 3))
+        for atom_id, version in (
+            ("CA-R-9002", 3),
+            ("CA-M-9001", 2),
+            ("CA-R-9002", 3),
+        )
     ]
     return graph, {"owners": owners}
 
@@ -78,7 +94,9 @@ def text_blocks(document):
 
 
 class ReadableEntityTreeTests(unittest.TestCase):
-    def test_frontmatter_sources_timestamp_selection_and_provisional_warning(self):
+    def test_frontmatter_sources_timestamp_selection_and_provisional_warning(
+        self,
+    ):
         document = render()
         self.assertTrue(document.startswith("---\n"))
         frontmatter = document.split("---\n", 2)[1]
@@ -86,13 +104,20 @@ class ReadableEntityTreeTests(unittest.TestCase):
         self.assertEqual("Projection", metadata["artifact_form"])
         self.assertEqual("Map", metadata["form"])
         self.assertEqual(STAMP, metadata["updated_at"])
-        self.assertEqual("Named Selection//Controlled fixture", metadata["source"]["named_selection"])
-        self.assertEqual(["CA-M-9001@2", "CA-R-9002@3"], metadata["source"]["atoms"])
+        self.assertEqual(
+            "Named Selection//Controlled fixture",
+            metadata["source"]["named_selection"],
+        )
+        self.assertEqual(
+            ["CA-M-9001@2", "CA-R-9002@3"], metadata["source"]["atoms"]
+        )
         self.assertNotIn("type", metadata)
         self.assertNotIn("sources", metadata)
         self.assertNotIn("\t", frontmatter)
         self.assertIn("controlled Core fixture", document)
-        self.assertRegex(document.lower(), r"provisional|admission.*not|not.*admission")
+        self.assertRegex(
+            document.lower(), r"provisional|admission.*not|not.*admission"
+        )
         self.assertIn("## Inherency tree", document)
         self.assertNotIn("## Construction", document)
         graph, provenance = fixture()
@@ -113,20 +138,38 @@ class ReadableEntityTreeTests(unittest.TestCase):
     def test_qualified_dependents_values_and_relation_meanings_use_tabs(self):
         document = render()
         details = document.split("### Shared\n", 1)[1].split("\n### ", 1)[0]
-        for name in ("Shared.Status", "Shared.Status: Active", "Shared.Status/Special"):
+        for name in (
+            "Shared.Status",
+            "Shared.Status: Active",
+            "Shared.Status/Special",
+        ):
             self.assertIn(name, details)
-        for relation in ("NARROWER_THAN", "IS_PROPERTY_OF", "IS_ALLOWED_VALUE_OF"):
+        for relation in (
+            "NARROWER_THAN",
+            "IS_PROPERTY_OF",
+            "IS_ALLOWED_VALUE_OF",
+        ):
             self.assertIn(relation, document)
         blocks = text_blocks(document)
         self.assertTrue(blocks)
         self.assertTrue(
-            any(line.startswith("\t\t") for block in blocks for line in block.splitlines())
+            any(
+                line.startswith("\t\t")
+                for block in blocks
+                for line in block.splitlines()
+            )
         )
         self.assertFalse(
-            any(line.startswith(" ") for block in blocks for line in block.splitlines())
+            any(
+                line.startswith(" ")
+                for block in blocks
+                for line in block.splitlines()
+            )
         )
 
-    def test_instance_relation_renders_kind_to_named_instance_and_keeps_bearer_details(self):
+    def test_instance_relation_renders_kind_to_named_instance_and_keeps_bearer_details(
+        self,
+    ):
         names = {
             "kind": "Workflow",
             "instance": "Workflow//Daily",
@@ -136,11 +179,15 @@ class ReadableEntityTreeTests(unittest.TestCase):
             "child_status": "Workflow/Child.Status",
         }
         graph = {
-            "nodes": [dict(id=key, identity=value) for key, value in names.items()],
+            "nodes": [
+                dict(id=key, identity=value) for key, value in names.items()
+            ],
             "edges": [
                 edge("instance", "kind", "INSTANCE_OF"),
                 edge("instance_status", "instance", "IS_BORNE_BY"),
-                edge("instance_value", "instance_status", "IS_ALLOWED_VALUE_OF"),
+                edge(
+                    "instance_value", "instance_status", "IS_ALLOWED_VALUE_OF"
+                ),
                 edge("child_kind", "kind", "NARROWER_THAN"),
                 edge("child_status", "child_kind", "IS_BORNE_BY"),
             ],
@@ -156,15 +203,35 @@ class ReadableEntityTreeTests(unittest.TestCase):
         self.assertIn("Workflow//Daily.Status: Active", document)
         self.assertIn("Workflow/Child.Status", document)
         sections = re.findall(r"^### (.+)$", document, re.MULTILINE)
-        self.assertEqual(["Primary entities", "Workflow//Daily", "Workflow/Child"], sections)
+        self.assertEqual(
+            ["Primary entities", "Workflow//Daily", "Workflow/Child"], sections
+        )
 
-    def test_containment_classification_and_value_constraints_are_visible(self):
-        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import compose_current_graph
-        graph, provenance = compose_current_graph([{
-            "source": {"atom_id": "CA-R-9999", "version": 1, "path": "fixture.md"},
-            "subjects": {"governs": "Part {1+}+>{2} Whole",
-                         "depends_on": ["Part >| Category", "Part.Label:Name[Text]{1+}"]},
-        }])
+    def test_containment_classification_and_value_constraints_are_visible(
+        self,
+    ):
+        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.\
+            GENERATE_ENTITY_GRAPH__shared \
+            import compose_current_graph  # fmt: skip
+
+        graph, provenance = compose_current_graph(
+            [
+                {
+                    "source": {
+                        "atom_id": "CA-R-9999",
+                        "version": 1,
+                        "path": "fixture.md",
+                    },
+                    "subjects": {
+                        "governs": "Part {1+}+>{2} Whole",
+                        "depends_on": [
+                            "Part >| Category",
+                            "Part.Label:Name[Text]{1+}",
+                        ],
+                    },
+                }
+            ]
+        )
         document = render(graph, provenance)
         self.assertIn("{2}<+{1+} Part", document)
         self.assertIn(">| Category", document)
@@ -180,10 +247,16 @@ class ReadableEntityTreeTests(unittest.TestCase):
         graph["edges"].reverse()
         provenance["owners"].reverse()
         self.assertEqual(expected, render(graph, provenance))
-        later = render(graph, provenance, updated_at="2026-10-15 19:01:00 +0400")
-        self.assertEqual(expected.split("---\n", 2)[2], later.split("---\n", 2)[2])
+        later = render(
+            graph, provenance, updated_at="2026-10-15 19:01:00 +0400"
+        )
+        self.assertEqual(
+            expected.split("---\n", 2)[2], later.split("---\n", 2)[2]
+        )
 
-    def test_declared_root_and_sibling_order_precedes_alphabetical_fallback(self):
+    def test_declared_root_and_sibling_order_precedes_alphabetical_fallback(
+        self,
+    ):
         graph, provenance = fixture()
         graph["nodes"][1]["ordinal_position"] = 1
         graph["edges"][2]["ordinal_position"] = 1
@@ -205,8 +278,13 @@ class ReadableEntityTreeTests(unittest.TestCase):
 
     def test_unclassified_and_non_inherency_edges_are_not_guessed(self):
         graph = {
-            "nodes": [{"id": name, "identity": name} for name in ("A", "B", "C")],
-            "edges": [edge("B", "A", "UNCLASSIFIED"), edge("C", "A", "DEPENDS_ON")],
+            "nodes": [
+                {"id": name, "identity": name} for name in ("A", "B", "C")
+            ],
+            "edges": [
+                edge("B", "A", "UNCLASSIFIED"),
+                edge("C", "A", "DEPENDS_ON"),
+            ],
         }
         document = render(graph)
         self.assertIn("UNCLASSIFIED", document)

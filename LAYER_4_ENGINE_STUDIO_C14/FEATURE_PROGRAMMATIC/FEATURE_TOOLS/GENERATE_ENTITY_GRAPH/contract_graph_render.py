@@ -5,13 +5,12 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-Record = dict[str, Any]
-
-
 import re
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.contract_graph_common import _source_ref
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.readable_entity_tree_data import primary_tree, read_edges, read_nodes
+
+Record = dict[str, Any]
 
 
 def _tree_lines(narrowing: Mapping[str, Any]) -> list[str]:

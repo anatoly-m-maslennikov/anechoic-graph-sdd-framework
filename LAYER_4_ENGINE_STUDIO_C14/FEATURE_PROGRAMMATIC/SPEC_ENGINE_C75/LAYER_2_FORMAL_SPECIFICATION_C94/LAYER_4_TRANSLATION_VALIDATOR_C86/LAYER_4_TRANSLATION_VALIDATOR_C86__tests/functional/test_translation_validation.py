@@ -58,12 +58,11 @@ class TranslationValidationTests(unittest.TestCase):
         self.assertEqual('conflicting', validate_translation(source, incorrect, lean=lean)['status'])
 
     def test_comparison_failure_leaves_chain_incomplete(self):
+        lean = lean_path(self)
         with patch('FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.formal_chain__pub.load_boundary_model', return_value=model()), \
-             patch('FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.formal_chain__pub.validate_translation',
-                   return_value={'status': 'matched', 'claims': {}}), \
              patch('FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.formal_chain__pub.compare_trace_spec',
                    side_effect=ValueError('Lean comparison timed out')):
-            result = verify_formal_chain('.', 'C52', {}, {}, {})
+            result = verify_formal_chain('.', 'C52', {}, {}, {}, lean=lean)
         self.assertEqual({'outcome': 'incomplete', 'diagnostics': [
             {'source': {'atom_id': 'M'}, 'field': 'comparison', 'message': 'Lean comparison timed out'}]}, result)
 
@@ -86,19 +85,34 @@ class TranslationValidationTests(unittest.TestCase):
     def test_chain_compares_only_after_translation_matches(self):
         lean = lean_path(self)
         source = model()
+        source['solution']['claims'] = [
+            ('python', SOLUTION.replace('1.0', '-0.0'))]
+        compiler = 'FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.formal_chain__pub'
+        def compared(loaded, compiled, *, mermaid, **options):
+            return {'status': 'matched', 'mermaid': mermaid,
+                    'sources': {role: loaded[role]['source']
+                                for role in ('manifest', 'contract', 'solution')}}
+
         with patch('FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.formal_chain__pub.load_boundary_model', return_value=source), \
              patch('FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.formal_chain__pub.compare_trace_spec',
-                   return_value={'status': 'matched'}) as compare:
+                   side_effect=compared) as compare:
             compiled = compile_lean(source)
             expected = compiled['claims']
-            compiled['claims'] = {}
-            with patch('FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.formal_chain__pub.compile_lean', return_value=compiled):
+            with patch(compiler + '.compile_lean', return_value=compiled):
                 valid = verify_formal_chain('.', 'C52', {}, {}, {}, lean=lean)
             self.assertEqual('compared', valid['outcome'])
             self.assertEqual('matched', valid['translation']['status'])
             compare.assert_called_once()
             self.assertEqual(expected, compare.call_args.args[1]['claims'])
             compare.reset_mock()
+            with patch(compiler + '.compile_lean',
+                       return_value={**compiled, 'claims': {}}):
+                changed = verify_formal_chain('.', 'C52', {}, {}, {},
+                                              lean=lean)
+            self.assertEqual('incomplete', changed['outcome'])
+            self.assertIn('Model identities differ',
+                          changed['diagnostics'][0]['message'])
+            compare.assert_not_called()
             compiled['lean'] = mutate(compiled['lean'])
             with patch('FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.formal_chain__pub.compile_lean', return_value=compiled):
                 rejected = verify_formal_chain('.', 'C52', {}, {}, {}, lean=lean)

@@ -7,15 +7,38 @@ from collections import defaultdict
 def _binding(node):
     if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
         args = node.args
-        if not node.decorator_list and not node.returns and not args.defaults and not any(args.kw_defaults) and not any(a.annotation for a in (*args.posonlyargs, *args.args, *args.kwonlyargs, *([args.vararg] if args.vararg else []), *([args.kwarg] if args.kwarg else []))):
+        if (
+            not node.decorator_list
+            and not node.returns
+            and not args.defaults
+            and not any(args.kw_defaults)
+            and not any(
+                a.annotation
+                for a in (
+                    *args.posonlyargs,
+                    *args.args,
+                    *args.kwonlyargs,
+                    *([args.vararg] if args.vararg else []),
+                    *([args.kwarg] if args.kwarg else []),
+                )
+            )
+        ):
             return {node.name}
     if isinstance(node, (ast.Assign, ast.AnnAssign)):
-        targets = node.targets if isinstance(node, ast.Assign) else [node.target]
+        targets = (
+            node.targets if isinstance(node, ast.Assign) else [node.target]
+        )
         value = node.value
         if all(isinstance(t, ast.Name) for t in targets) and value is not None:
             try:
                 ast.literal_eval(value)
-            except (ValueError, TypeError, SyntaxError, MemoryError, RecursionError):
+            except (
+                ValueError,
+                TypeError,
+                SyntaxError,
+                MemoryError,
+                RecursionError,
+            ):
                 pass
             else:
                 if not isinstance(node, ast.AnnAssign):
@@ -32,13 +55,28 @@ def _capture(texts, occurrences):
     for path, text in texts.items():
         try:
             tree = ast.parse(text, filename=path)
-            compile(tree, path, 'exec')
+            compile(tree, path, "exec")
             trees[path] = tree
-        except (SyntaxError, ValueError, RecursionError):
+        except SyntaxError, ValueError, RecursionError:
             continue
     sites, graph = defaultdict(list), defaultdict(set)
-    for _, source, target, written, line, column, status, type_only in occurrences:
-        if type_only or status != 'internal' or not source.startswith('module:') or not target or not target.startswith('module:'):
+    for (
+        _,
+        source,
+        target,
+        written,
+        line,
+        column,
+        status,
+        type_only,
+    ) in occurrences:
+        if (
+            type_only
+            or status != "internal"
+            or not source.startswith("module:")
+            or not target
+            or not target.startswith("module:")
+        ):
             continue
         src, dst = source[7:], target[7:]
         if src in trees and dst in trees:
@@ -49,12 +87,18 @@ def _capture(texts, occurrences):
 
 def _target(node, path, sites):
     candidates = sites.get((path, node.lineno, node.col_offset), [])
-    if len(node.names) != 1 or len(candidates) != 1 or node.names[0].name == '*':
+    if (
+        len(node.names) != 1
+        or len(candidates) != 1
+        or node.names[0].name == "*"
+    ):
         return None
     dest, written = candidates[0]
     if isinstance(node, ast.ImportFrom):
-        base = written.lstrip('.').replace('.', '/')
-        if not base or not (dest.endswith('/' + base + '.py') or dest == base + '.py'):
+        base = written.lstrip(".").replace(".", "/")
+        if not base or not (
+            dest.endswith("/" + base + ".py") or dest == base + ".py"
+        ):
             return None
     return dest
 
@@ -67,20 +111,51 @@ class _Traversal:
 
     def _witness(self, path, dest, node, edge):
         alias = node.names[0]
-        if not isinstance(node, ast.ImportFrom) or alias.name in self.bound[dest]:
+        if (
+            not isinstance(node, ast.ImportFrom)
+            or alias.name in self.bound[dest]
+        ):
             return None
         after = next((e[2] for e in self.stack if e[0] == dest), node.lineno)
-        later = [n for n in self.trees[dest].body if n.lineno > after and alias.name in (_binding(n) or set())]
-        hooks = any(isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)) and n.name == '__getattr__' for n in self.trees[dest].body)
+        later = [
+            n
+            for n in self.trees[dest].body
+            if n.lineno > after and alias.name in (_binding(n) or set())
+        ]
+        hooks = any(
+            isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))
+            and n.name == "__getattr__"
+            for n in self.trees[dest].body
+        )
         if not later or hooks:
             return None
         witness = self.stack + [edge]
-        detail = 'entry ' + self.entry + ': ' + ' -> '.join(f'{a}:{line} imports {b}' for a, b, line, _ in witness) + f'; reads {alias.name} before {dest}:{later[0].lineno} binds it'
+        detail = (
+            "entry "
+            + self.entry
+            + ": "
+            + " -> ".join(
+                f"{a}:{line} imports {b}" for a, b, line, _ in witness
+            )
+            + f"; reads {alias.name} before {dest}:{later[0].lineno} binds it"
+        )
         self.confirmed_edges.update((a, b) for a, b, _, _ in witness)
-        return (path, node.lineno, node.col_offset, 'python_import_order', 'confirmed', detail)
+        return (
+            path,
+            node.lineno,
+            node.col_offset,
+            "python_import_order",
+            "confirmed",
+            detail,
+        )
 
     def visit(self, path):
-        if '/' in path or path.endswith('__init__.py') or len(self.stack) >= 64 or path in self.active:
+        if (
+            "/" in path
+            or path.endswith("__init__.py")
+            or len(self.stack) >= 64
+            or path in self.active
+        ):
             return None
         self.active.add(path)
         self.bound[path] = set()
@@ -129,6 +204,14 @@ def python_import_order(texts, occurrences):
     for (src, line, column), candidates in sorted(sites.items()):
         for dst, _ in sorted(set(candidates)):
             if (src, dst) not in confirmed_edges and _reaches(graph, dst, src):
-                results.append((src, line, column, 'python_import_order', 'unresolved',
-                                f'structural cycle includes {src}:{line} imports {dst}; execution order or premature read not established'))
+                results.append(
+                    (
+                        src,
+                        line,
+                        column,
+                        "python_import_order",
+                        "unresolved",
+                        f"structural cycle includes {src}:{line} imports {dst}; execution order or premature read not established",
+                    )
+                )
     return results

@@ -1,4 +1,5 @@
 """Distinguish admitted lifecycle effects from independent watcher changes."""
+
 from hashlib import file_digest
 from pathlib import Path
 import stat
@@ -28,11 +29,19 @@ class WriteReceipts:
                 continue
             path = self.root / effect["target"]
             operation = effect["operation"]
-            if path.suffix == ".md" and operation in {"create", "modify", "remove"}:
-                self._remember(path, None if operation == "remove" else effect["evidence"])
+            if path.suffix == ".md" and operation in {
+                "create",
+                "modify",
+                "remove",
+            }:
+                self._remember(
+                    path, None if operation == "remove" else effect["evidence"]
+                )
                 if operation != "remove":
                     carriers.append(path)
-            elif operation == "create" and effect.get("evidence") == "directory":
+            elif (
+                operation == "create" and effect.get("evidence") == "directory"
+            ):
                 directories.append(path)
         self._remember_directories(directories, carriers, archive_epoch)
         while len(self.writes) > self.limit:
@@ -43,12 +52,20 @@ class WriteReceipts:
             if path == self.root or not path.is_relative_to(self.root):
                 continue
             archive = self.archives.root_for(path)
-            if archive is not None and (path != archive or archive_epoch is None):
+            if archive is not None and (
+                path != archive or archive_epoch is None
+            ):
                 continue
-            witnesses = tuple(str(carrier) for carrier in carriers if carrier.is_relative_to(path))
+            witnesses = tuple(
+                str(carrier)
+                for carrier in carriers
+                if carrier.is_relative_to(path)
+            )
             if witnesses and (identity := _directory_identity(path)):
                 epoch = archive_epoch if archive is not None else None
-                self._remember(path, (epoch, identity, witnesses, monotonic_ns()))
+                self._remember(
+                    path, (epoch, identity, witnesses, monotonic_ns())
+                )
 
     def _remember(self, path, witness):
         value = str(path)
@@ -69,7 +86,11 @@ class WriteReceipts:
     def _handled(self, change, archive_epoch):
         if change["is_directory"]:
             return self._handled_directory_creation(change, archive_epoch)
-        return all(self._handled_file(path) for path in (change["old_path"], change["new_path"]) if path)
+        return all(
+            self._handled_file(path)
+            for path in (change["old_path"], change["new_path"])
+            if path
+        )
 
     def _handled_directory_creation(self, change, archive_epoch):
         if change.get("event_type") != "created":
@@ -79,11 +100,15 @@ class WriteReceipts:
         if not isinstance(witness, tuple):
             return False
         epoch, identity, carriers, since = witness
-        if epoch is not None and (archive_epoch is None or archive_epoch[0] is not epoch[0]
-                                  or archive_epoch[2] != epoch[2]):
+        if epoch is not None and (
+            archive_epoch is None
+            or archive_epoch[0] is not epoch[0]
+            or archive_epoch[2] != epoch[2]
+        ):
             return False
-        if (_directory_identity(Path(path)) != identity
-                or not all(self._handled_file(carrier) for carrier in carriers)):
+        if _directory_identity(Path(path)) != identity or not all(
+            self._handled_file(carrier) for carrier in carriers
+        ):
             return False
         if epoch is None:
             return True

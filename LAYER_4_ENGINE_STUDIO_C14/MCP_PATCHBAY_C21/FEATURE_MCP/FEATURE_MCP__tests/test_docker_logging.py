@@ -5,6 +5,7 @@ import io
 import json
 import os
 from pathlib import Path
+import re
 import runpy
 import sys
 import unittest
@@ -28,6 +29,11 @@ EXPECTED_LOGGING = {
 
 def _compose(name: str) -> dict[str, object]:
     return yaml.safe_load((DOCKER / name).read_text(encoding="utf-8"))
+
+
+def _dockerfile():
+    text = (DOCKER / "Dockerfile").read_text(encoding="utf-8")
+    return re.sub(r"[ \t]*\\\n[ \t]*", " ", text)
 
 
 class DockerLoggingTests(unittest.TestCase):
@@ -125,7 +131,7 @@ class DockerLoggingTests(unittest.TestCase):
         self.assertEqual({"framework-db"}, set(config["volumes"]))
 
     def test_entrypoint_uses_built_python_without_retained_uv_supervisor(self):
-        line = next(line for line in (DOCKER / "Dockerfile").read_text().splitlines()
+        line = next(line for line in _dockerfile().splitlines()
                     if line.startswith("ENTRYPOINT "))
         self.assertEqual([
             "/opt/venv/bin/python",
@@ -134,7 +140,7 @@ class DockerLoggingTests(unittest.TestCase):
         ], json.loads(line.removeprefix("ENTRYPOINT ")))
 
     def test_image_carries_framework_version_into_workspace(self):
-        dockerfile = (DOCKER / "Dockerfile").read_text(encoding="utf-8")
+        dockerfile = _dockerfile()
         self.assertRegex(dockerfile, r"(?m)^COPY version\.toml(?: [^ \n]+)* \./$")
         self.assertIn("COPY LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/pyproject.toml LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/uv.lock ./LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/", dockerfile)
         self.assertIn("--mount=type=cache,id=anechoic-uv,target=/tmp/uv-cache uv sync --project LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine --locked", dockerfile)

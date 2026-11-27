@@ -8,8 +8,17 @@ from threading import Lock
 from time import perf_counter_ns
 from typing import Literal
 
-from .ADAPTERS_C30__pub import CEILINGS, LimitReached, ReadContext, open_regular, protected
-from .native_carrier_placement__pub import ARCHIVE_DIRECTORY, project_goal_filename
+from .ADAPTERS_C30__pub import (
+    CEILINGS,
+    LimitReached,
+    ReadContext,
+    open_regular,
+    protected,
+)
+from .native_carrier_placement__pub import (
+    ARCHIVE_DIRECTORY,
+    project_goal_filename,
+)
 from .startup_timing import mark_startup_timing, startup_timing_enabled
 
 
@@ -52,11 +61,19 @@ class StartupReadContext(ReadContext):
             self._record("sha256_ns", start)
 
     def emit_scan_metrics(self):
-        mark_startup_timing("scan_metrics", mode=self.mode, census_ns=self.census_ns,
-                            carrier_count=self.carrier_count, bytes_read=self.bytes_read, **self._timings)
+        mark_startup_timing(
+            "scan_metrics",
+            mode=self.mode,
+            census_ns=self.census_ns,
+            carrier_count=self.carrier_count,
+            bytes_read=self.bytes_read,
+            **self._timings,
+        )
 
 
-def startup_reader(root: Path, mode: ScanMode | None = None, *, archive: bool = False) -> ReadContext:
+def startup_reader(
+    root: Path, mode: ScanMode | None = None, *, archive: bool = False
+) -> ReadContext:
     limits = dict(CEILINGS)
     if archive:
         del limits["timeout_seconds"]
@@ -66,8 +83,11 @@ def startup_reader(root: Path, mode: ScanMode | None = None, *, archive: bool = 
 
 
 def root_carriers(reader, selection, *, remember=True):
-    return [path for path in reader.inventory_shallow(selection.root, remember=remember)
-            if path == selection.manifest_path or project_goal_filename(path.name)]
+    return [
+        path
+        for path in reader.inventory_shallow(selection.root, remember=remember)
+        if path == selection.manifest_path or project_goal_filename(path.name)
+    ]
 
 
 def _carrier_paths(reader, selection, defer_archives, archive_roots):
@@ -75,7 +95,9 @@ def _carrier_paths(reader, selection, defer_archives, archive_roots):
     if archive_roots is not None:
         paths = set()
         for root in archive_roots:
-            paths.update(path for path in reader.inventory(root) if path.suffix == ".md")
+            paths.update(
+                path for path in reader.inventory(root) if path.suffix == ".md"
+            )
             if len(paths) > reader.limits["max_candidates"]:
                 raise LimitReached("max_candidates")
         return sorted(paths)
@@ -88,9 +110,14 @@ def _carrier_paths(reader, selection, defer_archives, archive_roots):
             return True
         return False
 
-    paths = [path for path in reader.inventory(selection.control_root,
-                                               prune=prune if defer_archives is not None else None)
-             if path.suffix == ".md" and not path.is_relative_to(installed)]
+    paths = [
+        path
+        for path in reader.inventory(
+            selection.control_root,
+            prune=prune if defer_archives is not None else None,
+        )
+        if path.suffix == ".md" and not path.is_relative_to(installed)
+    ]
     return sorted(set(paths + root_carriers(reader, selection)))
 
 
@@ -108,7 +135,7 @@ def full_carriers(reader, selection, defer_archives=None, archive_roots=None):
 
 
 def archive_versions(reader, roots, rows, prefix):
-    """Find archive maxima from filenames and already captured off-path rows."""
+    "Find archive maxima from filenames and already captured off-path rows."
     versions = {}
     pattern = re.compile(rf"({re.escape(prefix)}-[STPC]-[0-9]+)@([1-9][0-9]*)")
 
@@ -133,9 +160,14 @@ def archive_versions(reader, roots, rows, prefix):
                         child = directory / entry.name
                         if not protected(child):
                             pending.append(child)
-                    elif entry.is_file(follow_symlinks=False) and entry.name.endswith(".md"):
+                    elif entry.is_file(
+                        follow_symlinks=False
+                    ) and entry.name.endswith(".md"):
                         match = pattern.match(entry.name)
-                        if match and (entry.name[match.end():] == ".md" or entry.name[match.end():].startswith("-")):
+                        if match and (
+                            entry.name[match.end() :] == ".md"
+                            or entry.name[match.end() :].startswith("-")
+                        ):
                             add(*match.groups())
         finally:
             os.close(descriptor)

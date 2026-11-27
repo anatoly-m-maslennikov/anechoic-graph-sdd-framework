@@ -12,7 +12,9 @@ from pydantic.dataclasses import dataclass
 _STRICT = ConfigDict(strict=True, extra="forbid")
 
 
-def _preserve_mapping(value: Mapping, validate: ValidatorFunctionWrapHandler) -> Mapping:
+def _preserve_mapping(
+    value: Mapping, validate: ValidatorFunctionWrapHandler
+) -> Mapping:
     """Validate the mapping while preserving its identity and mutability."""
     validate(value)
     return value
@@ -20,7 +22,9 @@ def _preserve_mapping(value: Mapping, validate: ValidatorFunctionWrapHandler) ->
 
 def _freeze(value):
     if isinstance(value, dict):
-        return MappingProxyType({key: _freeze(item) for key, item in value.items()})
+        return MappingProxyType(
+            {key: _freeze(item) for key, item in value.items()}
+        )
     if isinstance(value, list):
         return tuple(_freeze(item) for item in value)
     return value
@@ -55,7 +59,9 @@ class Component:
     fields: Mapping
     source_path: str
 
-    _validate_fields = field_validator("fields", mode="wrap")(_preserve_mapping)
+    _validate_fields = field_validator("fields", mode="wrap")(
+        _preserve_mapping
+    )
 
     @property
     def name(self):
@@ -78,7 +84,9 @@ class ComponentSeed:
     fields: Mapping
     source_path: str
 
-    _validate_fields = field_validator("fields", mode="wrap")(_preserve_mapping)
+    _validate_fields = field_validator("fields", mode="wrap")(
+        _preserve_mapping
+    )
 
 
 @dataclass(frozen=True, config=_STRICT)
@@ -88,7 +96,9 @@ class StructureSnapshot:
     components: Mapping[str, Component]
     packages: Mapping[str, ComponentSeed]
 
-    _validate_mappings = field_validator("project", "components", "packages", mode="wrap")(_preserve_mapping)
+    _validate_mappings = field_validator(
+        "project", "components", "packages", mode="wrap"
+    )(_preserve_mapping)
 
     def component(self, cid: str) -> Component:
         return self.components[cid]
@@ -103,14 +113,26 @@ def _carrier(record, label):
     fields = _object(record.get("fields"), f"{label} fields")
     source_path = _string(record.get("source_path"), f"{label} source_path")
     source = PurePosixPath(source_path)
-    if source.is_absolute() or ".." in source.parts or "\\" in source_path or source_path == ".":
+    if (
+        source.is_absolute()
+        or ".." in source.parts
+        or "\\" in source_path
+        or source_path == "."
+    ):
         raise ValueError(f"{label} source_path must be control-root-relative")
-    return (_string(record.get("ref"), f"{label} ref"),
-            _string(record.get("sha256"), f"{label} sha256"), _freeze(fields), source_path)
+    return (
+        _string(record.get("ref"), f"{label} ref"),
+        _string(record.get("sha256"), f"{label} sha256"),
+        _freeze(fields),
+        source_path,
+    )
 
 
 def parse_structure(content: bytes) -> StructureSnapshot:
-    data = _object(json.loads(content.decode("utf-8"), object_pairs_hook=_unique_object), "snapshot")
+    data = _object(
+        json.loads(content.decode("utf-8"), object_pairs_hook=_unique_object),
+        "snapshot",
+    )
     model_sha256 = _string(data.get("model_sha256"), "model_sha256")
     project = _object(data.get("project"), "project")
     _string(project.get("ref"), "project ref")
@@ -136,8 +158,12 @@ def parse_structure(content: bytes) -> StructureSnapshot:
         if component_id != "C00" and component_id not in components:
             raise ValueError(f"{label} has an unknown component")
         packages[pid] = ComponentSeed(component_id, *_carrier(record, label))
-    return StructureSnapshot(model_sha256, _freeze(project), MappingProxyType(components),
-                             MappingProxyType(packages))
+    return StructureSnapshot(
+        model_sha256,
+        _freeze(project),
+        MappingProxyType(components),
+        MappingProxyType(packages),
+    )
 
 
 __all__ = ["read_structure"]

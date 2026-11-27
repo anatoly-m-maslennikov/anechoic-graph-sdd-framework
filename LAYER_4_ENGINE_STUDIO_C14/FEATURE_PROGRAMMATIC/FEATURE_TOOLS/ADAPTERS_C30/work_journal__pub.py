@@ -111,23 +111,7 @@ def _append_disk_event(root: Path, event: Any, author: str, local_date: str) -> 
             child = os.open(part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=directory)
             os.close(directory)
             directory = child
-        record_id = str(uuid.uuid7())
-        temporary = f".{record_id}.tmp"
-        descriptor = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
-                             0o600, dir_fd=directory)
-        try:
-            with os.fdopen(descriptor, "wb") as stream:
-                stream.write(payload)
-                stream.flush()
-                os.fsync(stream.fileno())
-            os.rename(temporary, f"{record_id}.json", src_dir_fd=directory, dst_dir_fd=directory)
-            os.fsync(directory)
-        except BaseException:
-            try:
-                os.unlink(temporary, dir_fd=directory)
-            except FileNotFoundError:
-                pass
-            raise
+        record_id = _write_disk_event(directory, payload)
     finally:
         os.close(directory)
     references = event if isinstance(event, Mapping) else {}
@@ -139,6 +123,27 @@ def _append_disk_event(root: Path, event: Any, author: str, local_date: str) -> 
         "record_id": record_id,
         "status": "staged",
     }
+
+
+def _write_disk_event(directory: int, payload: bytes) -> str:
+    record_id = str(uuid.uuid7())
+    temporary = f".{record_id}.tmp"
+    descriptor = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+                         0o600, dir_fd=directory)
+    try:
+        with os.fdopen(descriptor, "wb") as stream:
+            stream.write(payload)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.rename(temporary, f"{record_id}.json", src_dir_fd=directory, dst_dir_fd=directory)
+        os.fsync(directory)
+    except BaseException:
+        try:
+            os.unlink(temporary, dir_fd=directory)
+        except FileNotFoundError:
+            pass
+        raise
+    return record_id
 
 
 def append_record(root: Path, record: dict[str, object]) -> Path:

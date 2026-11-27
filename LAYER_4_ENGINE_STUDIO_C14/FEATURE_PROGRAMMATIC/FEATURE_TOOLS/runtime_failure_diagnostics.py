@@ -1,4 +1,3 @@
-
 """Shared technical diagnostic facade for public runtime failures."""
 
 from __future__ import annotations
@@ -13,17 +12,24 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.operation_error_boundary import (
     classify_failure,
     emit_failure_diagnostic,
 )
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.project_selection import active_selection
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.technical_diagnostics import make_technical_logger, make_unbound_technical_logger
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.project_selection import (
+    active_selection,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.technical_diagnostics import (
+    make_technical_logger,
+    make_unbound_technical_logger,
+)
 
 
-_DIAGNOSTIC_SEQUENCE: ContextVar[int] = ContextVar("anechoic_diagnostic_sequence", default=0)
+_DIAGNOSTIC_SEQUENCE: ContextVar[int] = ContextVar(
+    "anechoic_diagnostic_sequence", default=0
+)
 _LOGGER_UNAVAILABLE = "diagnostic logger unavailable"
 _BINDING_UNAVAILABLE = "project binding unavailable"
 
 
 def diagnostic_sequence() -> int:
-    """Return the successful diagnostic count for the current execution context."""
+    "Return the successful diagnostic count for the current execution context."
     return _DIAGNOSTIC_SEQUENCE.get()
 
 
@@ -41,14 +47,22 @@ def _classify(error: Exception | FailureRecord) -> FailureRecord:
     if not isinstance(error, Exception):
         raise error
     failure = classify_failure(error)
-    return replace(failure, severity="WARNING") if failure.code == "query_error" else failure
+    return (
+        replace(failure, severity="WARNING")
+        if failure.code == "query_error"
+        else failure
+    )
 
 
 def _logger(root: Path, component: str):
     try:
         selection = active_selection(root)
         logger, _error = make_technical_logger(selection.settings, root)
-        return replace(logger, component=component) if logger is not None else None
+        return (
+            replace(logger, component=component)
+            if logger is not None
+            else None
+        )
     except FutureCancelledError:
         raise
     except Exception:
@@ -65,7 +79,9 @@ def _unbound_logger(component: str):
         return None
 
 
-def _emit(logger, failure: FailureRecord, operation: str, correlation_id: str | None) -> str | None:
+def _emit(
+    logger, failure: FailureRecord, operation: str, correlation_id: str | None
+) -> str | None:
     try:
         secondary = emit_failure_diagnostic(
             logger, failure, operation=operation, correlation_id=correlation_id

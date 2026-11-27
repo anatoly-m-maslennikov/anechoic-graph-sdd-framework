@@ -10,7 +10,9 @@ from .archive_generation import backfill_archive_versions, set_archive_pending
 from .carrier_checkpoint import checkpoint_exists
 from .generation import FULL_GENERATION_BODY_LIMIT, GenerationBaseChanged, _HEX, _artifacts, _digest, _unique, _write_reuse
 from .model_projection import replace_model_projection
-from .native_atoms import NATIVE_PROJECTION_COLUMNS, _status_domains
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import status_domains as _status_domains
+
+from .native_atoms import NATIVE_PROJECTION_COLUMNS
 from .native_delta import _inverse, apply_native_delta_in_transaction
 from .project_structure import replace_structure
 from .realization_projection import _replace_test_projection, has_table, restore_property_graph
@@ -78,8 +80,7 @@ def _components(connection, previous, structure):
     return True
 
 
-def refresh_compiler(connection, data, manifest_sha256):
-    model, structure, descriptor, document = _compiler(data["compiler"], manifest_sha256)
+def _refresh_delta(data):
     if "archive_pending" in data and data["archive_pending"] is not True:
         raise ValueError("Invalid startup archive transition")
     delta = data.get("delta")
@@ -87,6 +88,12 @@ def refresh_compiler(connection, data, manifest_sha256):
         raise ValueError("Invalid native delta fields")
     if "delta" in data and delta is None:
         raise ValueError("Invalid native delta fields")
+    return delta
+
+
+def refresh_compiler(connection, data, manifest_sha256):
+    model, structure, descriptor, document = _compiler(data["compiler"], manifest_sha256)
+    delta = _refresh_delta(data)
     connection.execute("BEGIN TRANSACTION")
     graph_changed = False
     pending_file = None

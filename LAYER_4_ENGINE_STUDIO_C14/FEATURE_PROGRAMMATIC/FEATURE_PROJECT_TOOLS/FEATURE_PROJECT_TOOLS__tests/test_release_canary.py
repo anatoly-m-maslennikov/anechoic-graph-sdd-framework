@@ -1,18 +1,19 @@
 """Check that the candidate probe isolates and removes its own container."""
 from errno import ENOTEMPTY
+from functools import partial
 import io
 from hashlib import sha256
 import json
-from subprocess import TimeoutExpired
 import sys
 import tempfile
 import unittest
 from pathlib import Path
-from types import SimpleNamespace
+from unittest.mock import NonCallableMock
 from unittest.mock import AsyncMock, patch
 
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.test_suite__shared import _release_canary as release_canary
-from .. import test_suite__shared as suite
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS import test_suite__shared as suite
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.canary_test_support import assert_failed_queries, startup_run
 
 
 class CanaryTests(unittest.TestCase):
@@ -86,8 +87,10 @@ class CanaryTests(unittest.TestCase):
             transport.return_value.__aenter__.return_value = streams
             initialize = AsyncMock()
             session.return_value.__aenter__.return_value.initialize = initialize
-            query = AsyncMock(return_value=SimpleNamespace(
-                is_error=False, structured_content={"rows": [[1]]},
+            query = AsyncMock(return_value=NonCallableMock(
+                spec_set=['is_error', 'structured_content'],
+                is_error=False,
+                structured_content={"rows": [[1]]},
             ))
             session.return_value.__aenter__.return_value.call_tool = query
             self.assertTrue(release_canary._mcp_ready(54321, 2.0))
@@ -103,14 +106,7 @@ class CanaryTests(unittest.TestCase):
                 "result_delivery": "inline",
                 "result_format": "json_matrix",
             })
-            for failed in (
-                SimpleNamespace(is_error=True, structured_content={"rows": [[1]]}),
-                SimpleNamespace(is_error=False, structured_content={"rows": []}),
-                SimpleNamespace(is_error=False, structured_content=None),
-            ):
-                with self.subTest(failed=failed):
-                    query.return_value = failed
-                    self.assertFalse(release_canary._mcp_ready(54321, 2.0))
+            assert_failed_queries(self, query)
             ping = AsyncMock()
             session.return_value.__aenter__.return_value.send_ping = ping
             query.reset_mock()
@@ -264,24 +260,12 @@ class CanaryTests(unittest.TestCase):
             with self.subTest(reason=reason, log_timeout=log_timeout):
                 calls = []
 
-                def run(argv, **kwargs):
-                    calls.append(argv)
-                    if argv[1] == "port":
-                        self.assertEqual(30 if deadline_mode == "1" else None, kwargs["timeout"])
-                        return SimpleNamespace(stdout="127.0.0.1:54321\n")
-                    if argv[1] == "container":
-                        return SimpleNamespace(stdout="false\n")
-                    if argv[1] == "logs":
-                        self.assertEqual(5, kwargs["timeout"])
-                        if log_timeout:
-                            raise TimeoutExpired(argv, kwargs["timeout"])
-                        return SimpleNamespace(stdout="a" * 9000 + "startup context", stderr="startup error\n")
-
                 error_output = io.StringIO()
                 with (
                     patch.dict(release_canary.os.environ, {"ANECHOIC_TEST_IMAGE_DEADLINES": deadline_mode}),
                     patch.object(release_canary, "_start_canary_container"),
-                    patch.object(release_canary.subprocess, "run", side_effect=run),
+                    patch.object(release_canary.subprocess, "run",
+                                 side_effect=partial(startup_run, self, calls, deadline_mode, log_timeout)),
                     patch.object(release_canary._HTTP, "open", side_effect=OSError),
                     patch.object(release_canary.time, "monotonic", side_effect=clock),
                     patch("sys.stderr", error_output),
@@ -307,7 +291,9 @@ class CanaryTests(unittest.TestCase):
                 io.BytesIO(b'{"state": "pending"}'), io.BytesIO(b'{"ready": true}'),
                 io.BytesIO(b'{"state": "ready"}'),
             ]),
-            patch.object(release_canary.subprocess, "run", return_value=SimpleNamespace(stdout="true\n")) as inspect,
+            patch.object(release_canary.subprocess, "run", return_value=NonCallableMock(
+                spec_set=['stdout'],
+                stdout="true\n")) as inspect,
             patch.object(release_canary, "_mcp_ready", return_value=True) as probe,
         ):
             self.assertEqual(release_canary._await_canary(Path("."), "canary", 5050, query_enabled=True),

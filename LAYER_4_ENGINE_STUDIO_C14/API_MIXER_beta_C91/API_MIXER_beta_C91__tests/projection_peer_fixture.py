@@ -1,4 +1,5 @@
 """Simulate private projection peers for the API process tests."""
+
 import json
 import os
 import socketserver
@@ -23,21 +24,36 @@ class Peer(BaseHTTPRequestHandler):
             self.close_connection = True
             return
         if self.path.startswith("/jobs/worker-runs"):
-            runs = {"active": {"state": "running", "run_id": "run-1", "worker_alive": True},
-                    "latest": {"state": "succeeded", "finished_at": 1.0}, "archive": {"state": "ready"}}
+            runs = {
+                "active": {
+                    "state": "running",
+                    "run_id": "run-1",
+                    "worker_alive": True,
+                },
+                "latest": {"state": "succeeded", "finished_at": 1.0},
+                "archive": {"state": "ready"},
+            }
             return self.reply({"result": getattr(self.server, "runs", runs)})
         if self.path.startswith("/ingestion/issues"):
             return self.reply({"result": {"rows": [{"code": "warning"}]}})
         result = {"instance_id": INSTANCE, "pid": os.getpid()}
         if self.server.kind == "db":
             ready = getattr(self.server, "ready", False)
-            result.update(manifest_sha256=DIGEST, ready=ready, generation="g1" if ready else None)
+            result.update(
+                manifest_sha256=DIGEST,
+                ready=ready,
+                generation="g1" if ready else None,
+            )
             pending = getattr(self.server, "archive_pending", None)
             if pending is not None:
                 result["archive_pending"] = pending
         else:
-            result["startup_replay_pending"] = getattr(self.server, "startup_replay_pending", True)
-            result["watcher_active"] = getattr(self.server, "watcher_active", True)
+            result["startup_replay_pending"] = getattr(
+                self.server, "startup_replay_pending", True
+            )
+            result["watcher_active"] = getattr(
+                self.server, "watcher_active", True
+            )
         self.reply({"result": result})
 
     def do_POST(self):
@@ -48,8 +64,15 @@ class Peer(BaseHTTPRequestHandler):
                 self.server.entered.set()
                 if not self.server.release.wait(8):
                     return
-            result = {"query_id": QUERY_ID, "columns": [{"name": "answer", "type": "INTEGER", "has_values": True}],
-                      "rows": [[42]], "offset": 0, "has_more": False}
+            result = {
+                "query_id": QUERY_ID,
+                "columns": [
+                    {"name": "answer", "type": "INTEGER", "has_values": True}
+                ],
+                "rows": [[42]],
+                "offset": 0,
+                "has_more": False,
+            }
         elif self.path == "/jobs/abort":
             result = {"run_id": data["run_id"], "state": "aborting"}
         else:
@@ -70,11 +93,19 @@ class Owner(socketserver.StreamRequestHandler):
         self.server.requests.append(request)
         operation = request["operation"]
         if operation == "status":
-            value = {"loaded_project_count": 0, "max_loaded_projects": 2, "loaded_project_processes": []}
+            value = {
+                "loaded_project_count": 0,
+                "max_loaded_projects": 2,
+                "loaded_project_processes": [],
+            }
         elif operation == "select":
             value = self.server.binding
         else:
-            value = self.server.lease if request["start"] or not self.server.cold else None
+            value = (
+                self.server.lease
+                if request["start"] or not self.server.cold
+                else None
+            )
         self.send(value)
         if operation == "lease":
             self.server.releases.append(self.rfile.read(1))

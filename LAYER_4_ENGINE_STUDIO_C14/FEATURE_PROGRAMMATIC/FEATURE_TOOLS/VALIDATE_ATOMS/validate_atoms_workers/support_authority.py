@@ -21,12 +21,17 @@ def support_sources() -> dict[str, Any]:
     return json.loads(path.read_text())["sources"]
 
 
-def exact_source(inputs: dict[str, Any], identifier: str) -> dict[str, Any] | None:
+def exact_source(
+    inputs: dict[str, Any], identifier: str
+) -> dict[str, Any] | None:
     entry = support_sources().get(identifier)
     if entry is None:
         return None
-    rows = [row for row in inputs.get("sources", [])
-            if row.get("binding", {}).get("atom_id") == identifier]
+    rows = [
+        row
+        for row in inputs.get("sources", [])
+        if row.get("binding", {}).get("atom_id") == identifier
+    ]
     if len(rows) != 1:
         return None
     row = cast(dict[str, Any], rows[0])
@@ -36,11 +41,20 @@ def exact_source(inputs: dict[str, Any], identifier: str) -> dict[str, Any] | No
 
 
 def require_sources(check: Check, identifiers: tuple[str, ...]) -> bool:
-    sources = [exact_source(check.inputs, identifier) for identifier in identifiers]
-    missing = [identifier for identifier, source in zip(identifiers, sources) if source is None]
+    sources = [
+        exact_source(check.inputs, identifier) for identifier in identifiers
+    ]
+    missing = [
+        identifier
+        for identifier, source in zip(identifiers, sources)
+        if source is None
+    ]
     if missing:
         check.gap(
-            "authority", "Missing or changed supporting authority: " + ", ".join(missing) + "."
+            "authority",
+            "Missing or changed supporting authority: "
+            + ", ".join(missing)
+            + ".",
         )
         return False
     bindings = list(check.obligation.authority)

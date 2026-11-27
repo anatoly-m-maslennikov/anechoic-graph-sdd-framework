@@ -11,6 +11,7 @@ source = { virtual = "." }
 dev = [
     { name = "duckdb" },
     { name = "dulwich" },
+    { name = "editorconfig-checker" },
     { name = "jsonschema" },
     { name = "markdown-it-py" },
     { name = "mcp" },
@@ -49,6 +50,7 @@ runtime = [
 dev = [
     { name = "duckdb", specifier = "==2.0.0" },
     { name = "dulwich", specifier = "==1.2.21" },
+    { name = "editorconfig-checker", specifier = "==3.11.1" },
     { name = "jsonschema", specifier = ">=4.23,<5" },
     { name = "markdown-it-py", specifier = "==4.2.0" },
     { name = "mcp", specifier = "==2.3.0" },
@@ -417,6 +419,12 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/96/9f/3069a81a1263e72fc2072102917dc7ff1208d88f290f0802cd6026c6db43/dulwich-1.2.21-cp314-cp314t-win_arm64.whl", hash = "sha256:adf4318d7da19f1b63f3f7ed7290a9f7bfdbf9219d98d7ed8b172c1df917a6c0", size = 1193385, upload-time = "2026-11-05T02:26:25.555Z" },
     { url = "https://files.pythonhosted.org/packages/6d/0e/e44bc7c8619596af498738917bb21f8511d0f928f32cae0c4a2ba01fdebd/dulwich-1.2.21-py3-none-any.whl", hash = "sha256:31a522b9611e8032a43b8fb6941469c24e65ff4f14e0427986c58e90c22e154f", size = 762744, upload-time = "2026-11-05T02:26:58.412Z" },
 ]
+
+[[package]]
+name = "editorconfig-checker"
+version = "3.11.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/c3/2d/d19e303795e994d02864b1ecbeefcecc125ba3a04a3458b4478f597fd0eb/editorconfig_checker-3.11.1.tar.gz", hash = "sha256:043b5ae504bc2e6d4497ac4e3058f143339eb3cffd56abb7a215c44ebfd73a1b", size = 4763, upload-time = "2026-08-10T20:05:33.484Z" }
 
 [[package]]
 name = "fqdn"

@@ -159,6 +159,28 @@ class RendererDispatchLeanTests(unittest.TestCase):
         self.assertEqual([{'positional': 'matched', 'action_none': 'conflicting'}] * 2,
                          [case['calls'] for case in report['cases']])
 
+    def test_unobserved_solution_guard_withholds_a_passing_result(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory) / 'project'
+            digests = {name: _stage(root, COMPONENT / name) for name in SOURCE_NAMES}
+            export = _stage(root, COMPONENT / '_package__shared.py')
+            pins = _pins(root, 'C87')
+            solution = root / pins['solution']['path']
+            original = solution.read_bytes()
+            guard = b"'kind': 'output',"
+            self.assertEqual(original.count(guard), 1)
+            changed = original.replace(guard, guard + b" 'detail': {'required_output_field': 'available'},")
+            solution.write_bytes(changed)
+            pins['solution']['sha256'] = hashlib.sha256(changed).hexdigest()
+            request = {**pins, 'witness': _pins(root, 'C52'),
+                       'implementation_sha256': digests, 'export_sha256': export}
+            status, report = _compare(root, request)
+        self.assertEqual((1, 'unresolved'), (status, report['status']), report)
+        self.assertEqual([{'positional': 'matched', 'action_none': 'matched'}] * 2,
+                         [case['calls'] for case in report['cases']])
+        self.assertIn('required_output_field', report['solution_gap'])
+        self.assertIn(report['solution_gap'], report['unresolved'])
+
     def test_replay_rejects_a_changed_export_digest(self):
         with TemporaryDirectory() as directory:
             root = Path(directory) / 'project'

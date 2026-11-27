@@ -9,9 +9,6 @@ import tempfile
 import unittest
 from unittest.mock import Mock, patch
 
-
-APP_ROOT = Path(__file__).resolve().parents[3]
-
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (ContentRule, DeclarationSource, _schema_from_rules, compile_content_schema, content_schema_from_statements)  # noqa: E402
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import compile_header_rules, header_rules_from_statements  # noqa: E402
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (  # noqa: E402
@@ -25,8 +22,10 @@ from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.FEATURE_IWE_CON
     schema_asset,
 )
 
-
 from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.FEATURE_IWE_CONSOLE_BACKEND__tests.workbench_schema_fixture import WorkbenchSchemaFixture, atom
+
+
+APP_ROOT = Path(__file__).resolve().parents[3]
 
 
 class WorkbenchSchemaAssetTests(WorkbenchSchemaFixture):

@@ -10,7 +10,7 @@ context:
 state:
   status: active
   version: 67
-  updated_at: '2026-11-27T01:04:20.461163+00:00'
+  updated_at: '2026-11-27T13:14:18.707224+00:00'
 ---
 ## Summary
 
@@ -31,7 +31,19 @@ ComponentManifest(
 ## Component Boundaries
 
 ```python
-{'code': {'imports': ['VALIDATE_ATOMS.validate_atoms_workers.validate_atoms_workers__shared.validate_graph_rule_body',
+{'code': {'imports': ['typed_property_relation_lowering._field_assignments',
+                      'ATOM_LIFECYCLE.native_draft_guards._validate_c9_typed_manifest',
+                      'ATOM_LIFECYCLE.native_draft_guards._has_formal_declaration',
+                      'ATOM_LIFECYCLE.native_draft_guards.is_c9_typed_manifest',
+                      'ATOM_LIFECYCLE.native_draft_revision._check_revision_headers',
+                      'ATOM_LIFECYCLE.native_replacement_promotion',
+                      'project_manifest__pub.manifest_summary_fields',
+                      'model_ontology_path__pub.component_path',
+                      'continuant_concern__pub.CONTINUANT_LENS',
+                      'continuant_concern__pub.continuant_model_subject',
+                      'continuant_concern__pub.implicit_continuant_node',
+                      'continuant_concern__pub.validate_continuant_variant',
+                      'VALIDATE_ATOMS.validate_atoms_workers.validate_atoms_workers__shared.validate_graph_rule_body',
                       'VALIDATE_ATOMS.validate_atoms_workers.validate_atoms_workers__shared.validated_graph_rule_payload',
                       'COMPILE_APPLICABLE_METHODOLOGY.methodology_paths__shared.declaration_source_pins',
                       'COMPILE_APPLICABLE_METHODOLOGY.methodology_paths__shared.DEFAULT_SETTINGS_NAME',
@@ -255,7 +267,13 @@ ComponentManifest(
                       'FEATURE_FORMAL_MODEL_ENGINE.FEATURE_FORMAL_MODEL_ENGINE__shared.DEPENDENCIES_CLAIM_SHA256',
                       'FEATURE_FORMAL_MODEL_ENGINE.FEATURE_FORMAL_MODEL_ENGINE__shared.dependencies_are_distinct',
                       'FEATURE_FORMAL_MODEL_ENGINE.FEATURE_FORMAL_MODEL_ENGINE__shared.verify_packaged_dependencies_check'],
-          'exports': {'VALIDATE_ATOMS.validate_atoms_workers.validate_atoms_workers__shared.validate_graph_rule_body': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/VALIDATE_ATOMS/validate_atoms_workers/validate_atoms_workers__tests']},
+          'exports': {'ATOM_LIFECYCLE.native_draft_guards._has_formal_declaration': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FEATURE_TOOLS__tests']},
+                      'ATOM_LIFECYCLE.native_draft_guards.is_c9_typed_manifest': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FEATURE_TOOLS__tests']},
+                      'ATOM_LIFECYCLE.native_draft_revision._check_revision_headers': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FEATURE_TOOLS__tests']},
+                      'ATOM_LIFECYCLE.native_replacement_promotion': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FEATURE_TOOLS__tests']},
+                      'ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared.update_draft': {'private': ['C16']},
+                      'ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared.ticket_status_options': {'private': ['C68']},
+                      'VALIDATE_ATOMS.validate_atoms_workers.validate_atoms_workers__shared.validate_graph_rule_body': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/VALIDATE_ATOMS/validate_atoms_workers/validate_atoms_workers__tests']},
                       'VALIDATE_ATOMS.validate_atoms_workers.validate_atoms_workers__shared.validated_graph_rule_payload': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/VALIDATE_ATOMS/validate_atoms_workers/validate_atoms_workers__tests']},
                       'COMPILE_APPLICABLE_METHODOLOGY.methodology_paths__shared.declaration_source_pins': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/COMPILE_APPLICABLE_METHODOLOGY/COMPILE_APPLICABLE_METHODOLOGY__tests']},
                       'COMPILE_APPLICABLE_METHODOLOGY.methodology_paths__shared.DEFAULT_SETTINGS_NAME': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/COMPILE_APPLICABLE_METHODOLOGY/COMPILE_APPLICABLE_METHODOLOGY__tests']},
@@ -322,7 +340,8 @@ ComponentManifest(
                       'GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared.render_model': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/GENERATE_ENTITY_GRAPH/GENERATE_ENTITY_GRAPH__tests']},
                       'GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared.render_primary_projection': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/GENERATE_ENTITY_GRAPH/GENERATE_ENTITY_GRAPH__tests']},
                       'GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared.subject_projection_views': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/GENERATE_ENTITY_GRAPH/GENERATE_ENTITY_GRAPH__tests']},
-                      'ATOM_LIFECYCLE.native_draft_guards._validate_c9_typed_manifest': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/LAYER_2_FORMAL_MODEL_C51/FEATURE_FORMAL_MODEL_GENERATOR/manifest_compiler_CS1/manifest_compiler_CS1__tests']},
+                      'ATOM_LIFECYCLE.native_draft_guards._validate_c9_typed_manifest': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FEATURE_TOOLS__tests',
+                                                                                                     'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/LAYER_2_FORMAL_MODEL_C51/FEATURE_FORMAL_MODEL_GENERATOR/manifest_compiler_CS1/manifest_compiler_CS1__tests']},
                       'ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared.InputError': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/LAYER_2_FORMAL_MODEL_C51/FEATURE_FORMAL_MODEL_GENERATOR/manifest_compiler_CS1/manifest_compiler_CS1__tests',
                                                                                   'C16',
                                                                                        'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FEATURE_TOOLS__tests']},

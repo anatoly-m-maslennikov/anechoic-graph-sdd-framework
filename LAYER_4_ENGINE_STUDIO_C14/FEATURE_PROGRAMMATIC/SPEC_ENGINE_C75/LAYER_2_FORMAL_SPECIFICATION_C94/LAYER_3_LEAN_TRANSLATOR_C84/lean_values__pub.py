@@ -1,9 +1,14 @@
-import json
-
-
 def lean_string(value):
-    if not value or value.isprintable():
-        return json.dumps(value, ensure_ascii=False)
-    if any(0xD800 <= ord(char) <= 0xDFFF for char in value):
-        raise ValueError('Lean strings require Unicode scalar values')
-    return '(String.ofList [' + ', '.join(f'Char.ofNat {ord(char)}' for char in value) + '])'
+    escaped = ['"']
+    for char in value:
+        code = ord(char)
+        if 0xD800 <= code <= 0xDFFF:
+            raise ValueError('Lean strings require Unicode scalar values')
+        if char in ('"', '\\'):
+            escaped.append('\\' + char)
+        elif code < 0x20 or 0x7F <= code <= 0x9F:
+            escaped.append(f'\\x{code:02x}')
+        else:
+            escaped.append(char)
+    escaped.append('"')
+    return ''.join(escaped)

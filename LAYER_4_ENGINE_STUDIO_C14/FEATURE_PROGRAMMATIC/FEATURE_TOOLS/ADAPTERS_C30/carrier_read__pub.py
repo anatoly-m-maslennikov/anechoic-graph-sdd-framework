@@ -20,12 +20,16 @@ class ParsedCarrier:
     frontmatter: str
     body: str
     metadata: dict[str, Any]
-    _view: dict[str, Any] | None = field(default=None, compare=False, repr=False)
+    _view: dict[str, Any] | None = field(
+        default=None, compare=False, repr=False
+    )
 
     @field_validator("metadata", "_view", mode="wrap")
     @classmethod
     def _preserve_metadata(
-        cls, value: dict[str, Any] | None, validate: ValidatorFunctionWrapHandler,
+        cls,
+        value: dict[str, Any] | None,
+        validate: ValidatorFunctionWrapHandler,
     ) -> dict[str, Any] | None:
         validate(value)
         return value
@@ -38,5 +42,7 @@ def parse_carrier(raw: bytes, path: Path) -> ParsedCarrier:
     except ValueError as error:
         raise CarrierError("CARRIER_ALIAS_CONFLICT", str(error)) from error
     except RuntimeError as error:
-        raise CarrierError("CARRIER_INVALID", "Unreadable UTF-8 or malformed frontmatter.") from error
+        raise CarrierError(
+            "CARRIER_INVALID", "Unreadable UTF-8 or malformed frontmatter."
+        ) from error
     return ParsedCarrier(text, frontmatter, body, metadata, view)

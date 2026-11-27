@@ -20,7 +20,10 @@ class PromptContracts(unittest.TestCase):
         for step, prompt in self.prompts.items():
             with self.subTest(step=step):
                 binding = re.search(
-                    r"^Step: (CA-O-\d+) \| Action: (CA-O-\d+) \| Context: (Integrated|Isolated)$",
+                    (
+                        "^Step: (CA-O-\\d+) \\| Action: (CA-O-\\d+) \\| "
+                        "Context: (Integrated|Isolated)$"
+                    ),
                     prompt,
                     re.M,
                 )
@@ -30,7 +33,9 @@ class PromptContracts(unittest.TestCase):
     def test_prompt_result_labels_are_unique(self):
         for step, prompt in self.prompts.items():
             with self.subTest(step=step):
-                actual = re.search(r"^Results: (.+)$", prompt, re.M)[1].split(" | ")
+                actual = re.search(r"^Results: (.+)$", prompt, re.M)[1].split(
+                    " | "
+                )
                 self.assertEqual(len(actual), len(set(actual)))
 
     def test_prompts_are_short_and_grounded(self):
@@ -48,10 +53,17 @@ class PromptContracts(unittest.TestCase):
         tests = self.prompts["CA-O-092"]
         self.assertIn("E2E tests first", tests)
         self.assertIn("golden corpus", tests)
-        self.assertIn("Mock external boundaries, not the implementation", tests)
-        self.assertIn("Do not create or promote M Atoms", self.prompts["CA-O-099"])
+        self.assertIn(
+            "Mock external boundaries, not the implementation", tests
+        )
+        self.assertIn(
+            "Do not create or promote M Atoms", self.prompts["CA-O-099"]
+        )
         self.assertIn("Method learning is separate", self.prompts["CA-O-091"])
-        self.assertIn("initial failed Evaluation consumes zero retries", self.prompts["CA-O-096"])
+        self.assertIn(
+            "initial failed Evaluation consumes zero retries",
+            self.prompts["CA-O-096"],
+        )
 
     def test_preparation_packet_separates_what_how_and_checks(self):
         prompt = self.prompts["CA-O-091"]

@@ -1,10 +1,19 @@
 """Read and pin Spec source carriers without executing their source."""
 import re
 from copy import deepcopy
-from types import SimpleNamespace
+from typing import Any
+
+from pydantic import BaseModel, ConfigDict
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.atom_reference__pub import derive_atom_ref
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.spec_file_reader import read_spec_file
+
+
+class _Carrier(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    metadata: dict[str, Any]
+    body: str
 
 
 class SourceError(ValueError):
@@ -69,7 +78,8 @@ def read_source(root, pin, role):
             raise SourceError(role, pin, 'path', f'{role} source path not in snapshot')
         if row['exact_ref'] != derive_atom_ref(pin['atom_id'], pin['version'], pin['status']):
             raise SourceError(role, pin, 'exact_ref', f'{role} does not match source pin')
-        carrier = SimpleNamespace(metadata=row['metadata'], body=row['body'])
+        carrier = _Carrier.model_construct(metadata=row['metadata'],
+                                           body=row['body'])
         digest = row['sha256']
     else:
         try:

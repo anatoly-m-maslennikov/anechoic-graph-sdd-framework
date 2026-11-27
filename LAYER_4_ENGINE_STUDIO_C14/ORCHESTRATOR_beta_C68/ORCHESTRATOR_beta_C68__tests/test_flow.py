@@ -4,8 +4,9 @@ import tempfile
 import time
 import unittest
 from pathlib import Path
-from types import SimpleNamespace
 from unittest.mock import patch
+
+from watchdog.events import FileModifiedEvent
 
 from ORCHESTRATOR_beta_C68.ORCHESTRATOR_beta_C68__shared import Flow, GenerationJobs
 
@@ -61,8 +62,7 @@ class FlowTests(unittest.TestCase):
             jobs = GenerationJobs("id", binding, "socket")
             before = time.time()
             for name in ("one.md", "two.md"):
-                jobs.watcher.on_any_event(SimpleNamespace(src_path=str(root / name), dest_path=None,
-                                                         event_type="modified", is_directory=False))
+                jobs.watcher.on_any_event(FileModifiedEvent(str(root / name)))
             after = time.time()
             self.assertEqual(2, jobs.status()["watcher_queue_depth"])
             changes = jobs.watcher.changes(0)

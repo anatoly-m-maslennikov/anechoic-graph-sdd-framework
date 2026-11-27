@@ -1,4 +1,3 @@
-
 """Bounded durable watcher observations for one Workbench Project."""
 
 from __future__ import annotations
@@ -9,7 +8,8 @@ import sys
 from typing import Any
 from pathlib import Path, PurePosixPath
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import console_state_path
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
+    import console_state_path  # fmt: skip
 
 from .errors import WorkbenchUnavailableError
 
@@ -21,7 +21,11 @@ def _path_value(value: object, field: str, *, required: bool) -> str | None:
     if value is None and not required:
         return None
     if not isinstance(value, str) or not value:
-        raise ValueError(f"{field} must be a non-empty string" if required else f"{field} must be a string or null")
+        raise ValueError(
+            f"{field} must be a non-empty string"
+            if required
+            else f"{field} must be a string or null"
+        )
     try:
         value.encode("utf-8")
     except UnicodeEncodeError as error:
@@ -38,7 +42,11 @@ def validate_change_record(value: object) -> dict[str, str | None]:
     if not isinstance(value, dict) or set(value) != fields:
         raise ValueError("watcher change log is unavailable")
     observed_at, operation = value["observed_at"], value["operation"]
-    if not isinstance(observed_at, str) or not isinstance(operation, str) or operation not in _OPERATIONS:
+    if (
+        not isinstance(observed_at, str)
+        or not isinstance(operation, str)
+        or operation not in _OPERATIONS
+    ):
         raise ValueError("watcher change log is unavailable")
     try:
         timestamp = dt.datetime.fromisoformat(observed_at)
@@ -46,11 +54,26 @@ def validate_change_record(value: object) -> dict[str, str | None]:
         raise ValueError("watcher change log is unavailable") from error
     if timestamp.tzinfo is None:
         raise ValueError("watcher change log is unavailable")
-    old_path = _path_value(value["old_path"], "old_path", required=operation in {"remove", "rename", "move"})
-    new_path = _path_value(value["new_path"], "new_path", required=operation in {"create", "update", "rename", "move"})
-    if (operation in {"create", "update"} and old_path is not None) or (operation == "remove" and new_path is not None):
+    old_path = _path_value(
+        value["old_path"],
+        "old_path",
+        required=operation in {"remove", "rename", "move"},
+    )
+    new_path = _path_value(
+        value["new_path"],
+        "new_path",
+        required=operation in {"create", "update", "rename", "move"},
+    )
+    if (operation in {"create", "update"} and old_path is not None) or (
+        operation == "remove" and new_path is not None
+    ):
         raise ValueError("watcher change log is unavailable")
-    return {"observed_at": observed_at, "operation": operation, "old_path": old_path, "new_path": new_path}
+    return {
+        "observed_at": observed_at,
+        "operation": operation,
+        "old_path": old_path,
+        "new_path": new_path,
+    }
 
 
 class WatcherChangeLog:
@@ -60,7 +83,9 @@ class WatcherChangeLog:
     MAX_ROWS = 100_000
 
     def __init__(self, root: Path) -> None:
-        self._path = console_state_path(Path(root)) / "watcher-change-log.ndjson"
+        self._path = (
+            console_state_path(Path(root)) / "watcher-change-log.ndjson"
+        )
         self._rows: list[dict[str, str | None]] | None = None
         self._next_expiry: dt.datetime | None = None
 
@@ -76,14 +101,21 @@ class WatcherChangeLog:
         except (OSError, UnicodeError) as error:
             raise ValueError("watcher change log is unavailable") from error
         try:
-            return [validate_change_record(json.loads(line)) for line in lines if line]
+            return [
+                validate_change_record(json.loads(line))
+                for line in lines
+                if line
+            ]
         except json.JSONDecodeError as error:
             raise ValueError("watcher change log is unavailable") from error
 
     def _write(self, rows: list[dict[str, str | None]]) -> None:
         self._path.parent.mkdir(parents=True, exist_ok=True)
         temporary = self._path.with_suffix(".tmp")
-        content = "".join(json.dumps(row, ensure_ascii=False, separators=(",", ":")) + "\n" for row in rows)
+        content = "".join(
+            json.dumps(row, ensure_ascii=False, separators=(",", ":")) + "\n"
+            for row in rows
+        )
         temporary.write_text(content, encoding="utf-8")
         temporary.replace(self._path)
 
@@ -91,12 +123,18 @@ class WatcherChangeLog:
         self._path.parent.mkdir(parents=True, exist_ok=True)
         with self._path.open("a", encoding="utf-8") as handle:
             for row in rows:
-                handle.write(json.dumps(row, ensure_ascii=False, separators=(",", ":")) + "\n")
+                handle.write(
+                    json.dumps(row, ensure_ascii=False, separators=(",", ":"))
+                    + "\n"
+                )
 
     def _set_rows(self, rows: list[dict[str, str | None]]) -> None:
         self._rows = rows
         self._next_expiry = min(
-            (dt.datetime.fromisoformat(str(row["observed_at"])) + self.TTL for row in rows),
+            (
+                dt.datetime.fromisoformat(str(row["observed_at"])) + self.TTL
+                for row in rows
+            ),
             default=None,
         )
 
@@ -107,7 +145,9 @@ class WatcherChangeLog:
         return self._rows
 
     @classmethod
-    def _retain(cls, rows: list[dict[str, str | None]], now: dt.datetime) -> list[dict[str, str | None]]:
+    def _retain(
+        cls, rows: list[dict[str, str | None]], now: dt.datetime
+    ) -> list[dict[str, str | None]]:
         cutoff = now - cls.TTL
         dated: list[tuple[dt.datetime, int, dict[str, str | None]]] = []
         for index, row in enumerate(rows):
@@ -115,12 +155,15 @@ class WatcherChangeLog:
             if timestamp >= cutoff:
                 dated.append((timestamp, index, row))
         if len(dated) > cls.MAX_ROWS:
-            retained_indexes = {index for _at, index, _row in sorted(dated)[:-cls.MAX_ROWS]}
+            retained_indexes = {
+                index for _at, index, _row in sorted(dated)[: -cls.MAX_ROWS]
+            }
             dated = [item for item in dated if item[1] not in retained_indexes]
         return [row for _at, _index, row in dated]
 
     def append_delta(
-        self, events: object,
+        self,
+        events: object,
     ) -> tuple[list[dict[str, str | None]], list[dict[str, str | None]], bool]:
         """Append a batch, reporting whether retention required a full replacement."""
         if not isinstance(events, list):
@@ -135,9 +178,22 @@ class WatcherChangeLog:
         observed_at = now.isoformat()
         additions: list[dict[str, str | None]] = []
         for event in events:
-            if not isinstance(event, dict) or set(event) - {"operation", "old_path", "new_path"} or "operation" not in event:
+            if (
+                not isinstance(event, dict)
+                or set(event) - {"operation", "old_path", "new_path"}
+                or "operation" not in event
+            ):
                 raise ValueError("watcher event is invalid")
-            additions.append(validate_change_record({"observed_at": observed_at, "operation": event["operation"], "old_path": event.get("old_path"), "new_path": event.get("new_path")}))
+            additions.append(
+                validate_change_record(
+                    {
+                        "observed_at": observed_at,
+                        "operation": event["operation"],
+                        "old_path": event.get("old_path"),
+                        "new_path": event.get("new_path"),
+                    }
+                )
+            )
         retained = self._retain(before + additions, now)
         replace_required = replace_required or retained != before + additions
         if replace_required:
@@ -147,7 +203,9 @@ class WatcherChangeLog:
         self._set_rows(retained)
         return retained, additions, replace_required
 
-    def append(self, events: object) -> tuple[list[dict[str, str | None]], bool]:
+    def append(
+        self, events: object
+    ) -> tuple[list[dict[str, str | None]], bool]:
         rows, additions, replace_required = self.append_delta(events)
         return rows, bool(additions) or replace_required
 
@@ -165,8 +223,12 @@ class WatcherChangeLog:
 
 
 def mirror_change_log(
-    connection: Any, log: WatcherChangeLog, events: list[dict[str, str | None]] | None = None,
-    *, initialize: bool = False, in_transaction: bool = False,
+    connection: Any,
+    log: WatcherChangeLog,
+    events: list[dict[str, str | None]] | None = None,
+    *,
+    initialize: bool = False,
+    in_transaction: bool = False,
 ) -> None:
     """Mirror the file owner's delta while the caller holds its database lock."""
     if events is not None:
@@ -198,5 +260,9 @@ def mirror_change_log(
         if not in_transaction:
             connection.execute("COMMIT")
     except Exception as error:
-        print(f"query store change-log refresh failed: {error}", file=sys.stderr)
-        raise WorkbenchUnavailableError("query store unavailable; Workbench restart required") from error
+        print(
+            f"query store change-log refresh failed: {error}", file=sys.stderr
+        )
+        raise WorkbenchUnavailableError(
+            "query store unavailable; Workbench restart required"
+        ) from error

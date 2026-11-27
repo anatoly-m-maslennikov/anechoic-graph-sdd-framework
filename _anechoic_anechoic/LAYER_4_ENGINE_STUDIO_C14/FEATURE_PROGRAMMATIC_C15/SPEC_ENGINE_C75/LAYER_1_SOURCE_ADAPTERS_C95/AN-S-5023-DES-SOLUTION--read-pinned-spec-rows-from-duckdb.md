@@ -9,11 +9,11 @@ context:
   lens: DES
 relations:
   ANSWERS:
-  - AN-S-5021@2
+  - AN-S-5021@3
 state:
   status: active
-  version: 1
-  updated_at: '2026-11-26T22:00:52.285223+00:00'
+  version: 2
+  updated_at: '2026-11-27T11:37:27.939414+00:00'
 ---
 ## Summary
 
@@ -26,6 +26,9 @@ Read pinned Spec rows from DuckDB
 Accept the snapshot returned by its database owner for the selected Project.
 Match each pin against the stored row before returning its Header, body,
 exact ref, and carrier digest. Keep the original digest from ingestion.
+Check the exact setting of path, Atom identity, revision status, and
+container Component against the pin. An optional requested SHA-256
+must match. Include the observed digest in the returned source record.
 Use an explicit error for missing or mismatched rows and an unavailable
 outcome when no snapshot is ready.
 

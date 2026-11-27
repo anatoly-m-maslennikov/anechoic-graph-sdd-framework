@@ -9,8 +9,8 @@ context:
   lens: QA
 state:
   status: active
-  version: 2
-  updated_at: '2026-11-27T10:14:59.835668+00:00'
+  version: 3
+  updated_at: '2026-11-27T11:11:44.727957+00:00'
 
 ---
 
@@ -25,7 +25,8 @@ Check Engine source quality
 #### PROGRAMMATIC Standards
 
 For PROGRAMMATIC source, check the C15 Standards for Module and function
-size, line length, Python records, and authored web source.
+size, line length, Python records, and authored web source. Apply the
+Python record and web language checks to authored Project source.
 
 #### Analyzer profile
 
@@ -34,6 +35,11 @@ selection F401 and B006. Use the committed Ruff formatter and
 lint/complexity profile, including its configured C901 limits. This selection
 does not make every Ruff rule required. Run the locked Mypy profile against
 its declared targets.
+
+#### Web analysis
+
+Within the Static source roots, run each Package's declared `check:types`
+script. Run `lint` when the Package declares it and configures typed ESLint.
 
 #### Suppressions and evidence
 
@@ -47,7 +53,8 @@ under AN-S-3355.
 
 Outside PROGRAMMATIC, where `enforce_source_size` is enabled, limit Python,
 JavaScript and TypeScript modules to 300 nonblank lines and functions to 45.
-Use the locked frontend parser to measure web functions.
+Use the locked frontend parser to measure web functions. When the line
+length gate is enabled, check source covered by the root EditorConfig.
 
 #### Prose comments
 

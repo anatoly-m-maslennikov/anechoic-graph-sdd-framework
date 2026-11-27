@@ -1,67 +1,112 @@
 """Keep image startup inside the built, isolated Python environment."""
 
-
 import json
 from pathlib import Path
+import re
 import unittest
 
 
+def _dockerfile():
+    path = Path(__file__).resolve().parents[1] / "docker/Dockerfile"
+    return re.sub(r"[ \t]*\\\n[ \t]*", " ", path.read_text(encoding="utf-8"))
+
+
 class DockerfileUVEntrypointTests(unittest.TestCase):
-    def test_runtime_omits_git_and_strips_only_the_cryptography_extension(self):
-        dockerfile = Path(__file__).resolve().parents[1] / "docker/Dockerfile"
-        contents = dockerfile.read_text()
+    def test_runtime_omits_git_and_strips_only_the_cryptography_extension(
+        self,
+    ):
+        contents = _dockerfile()
         self.assertNotIn("git config", contents)
         self.assertNotIn("no-install-recommends git", contents)
         self.assertIn("no-install-recommends ca-certificates", contents)
         extension = "/opt/venv/lib/python3.14/site-packages/cryptography/hazmat/bindings/_rust.abi3.so"
-        self.assertIn(f"strip --strip-unneeded -o /tmp/cryptography-rust.so {extension}", contents)
+        self.assertIn(
+            f"strip --strip-unneeded -o /tmp/cryptography-rust.so {extension}",
+            contents,
+        )
         self.assertIn(f"mv /tmp/cryptography-rust.so {extension}", contents)
         self.assertIn("apt-get purge -y --auto-remove binutils", contents)
-        self.assertIn("/usr/bin/perl /usr/bin/perl5.* /usr/lib/*/perl-base", contents)
-        self.assertIn("! command -v git && ! command -v perl && ! command -v strip", contents)
+        self.assertIn(
+            "/usr/bin/perl /usr/bin/perl5.* /usr/lib/*/perl-base", contents
+        )
+        self.assertIn(
+            "! command -v git && ! command -v perl && ! command -v strip",
+            contents,
+        )
 
-    def test_entrypoint_has_no_ambient_python_or_environment_file_fallback(self):
-        dockerfile = Path(__file__).resolve().parents[1] / "docker/Dockerfile"
-        rows = [line for line in dockerfile.read_text().splitlines() if line.startswith("ENTRYPOINT ")]
+    def test_entrypoint_has_no_ambient_python_or_environment_file_fallback(
+        self,
+    ):
+        dockerfile = _dockerfile()
+        rows = [
+            line
+            for line in dockerfile.splitlines()
+            if line.startswith("ENTRYPOINT ")
+        ]
         self.assertEqual(len(rows), 1)
         command = json.loads(rows[0].removeprefix("ENTRYPOINT "))
         self.assertEqual(command[0], "/opt/venv/bin/python")
-        self.assertEqual(command[1:], ["-B", "LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/entrypoint.py"])
-        self.assertNotIn("workflow-orchestrator", dockerfile.read_text())
+        self.assertEqual(
+            command[1:],
+            [
+                "-B",
+                "LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/entrypoint.py",
+            ],
+        )
+        self.assertNotIn("workflow-orchestrator", dockerfile)
         self.assertNotIn(
             "RUN /opt/venv/bin/python LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/"
             "FEATURE_MCP/generate_tool_registry.py --package-root /workspace",
-            dockerfile.read_text(),
+            dockerfile,
         )
 
     def test_image_precompiles_only_image_sources_in_each_runtime_stage(self):
-        dockerfile = (Path(__file__).resolve().parents[1] / "docker/Dockerfile").read_text()
+        dockerfile = _dockerfile()
         base, stages = dockerfile.split("FROM runtime_base AS beta_base\n")
         common, stages = stages.split("FROM beta_base AS beta_next\n")
         candidate, current = stages.split("FROM runtime_base AS current\n")
         prefix = "/workspace/.anechoic_tmp/python/bytecode"
         self.assertIn(f"PYTHONPYCACHEPREFIX={prefix}", base)
         for stage in (base, common, candidate, current):
-            self.assertIn(f"RUN PYTHONPYCACHEPREFIX={prefix} /opt/venv/bin/python -B -m compileall", stage)
+            self.assertIn(
+                f"RUN PYTHONPYCACHEPREFIX={prefix} /opt/venv/bin/python -B -m compileall",
+                stage,
+            )
             self.assertIn("--invalidation-mode timestamp", stage)
             self.assertIn('chmod -R a+rX "$PYTHONPYCACHEPREFIX"', stage)
-        for path in ("/usr/local/lib/python3.14", "/opt/venv/lib/python3.14/site-packages",
-                     "/workspace/LAYER_4_ENGINE_STUDIO_C14"):
-            self.assertIn(path, base[base.index("-m compileall"):])
-        for component in ("KERNEL_MIXER_beta_C67", "ORCHESTRATOR_beta_C68", "WORKERS_beta_C69"):
-            self.assertIn(f"/workspace/LAYER_4_ENGINE_STUDIO_C14/{component}", common[common.index("-m compileall"):])
+        for path in (
+            "/usr/local/lib/python3.14",
+            "/opt/venv/lib/python3.14/site-packages",
+            "/workspace/LAYER_4_ENGINE_STUDIO_C14",
+        ):
+            self.assertIn(path, base[base.index("-m compileall") :])
+        for component in (
+            "KERNEL_MIXER_beta_C67",
+            "ORCHESTRATOR_beta_C68",
+            "WORKERS_beta_C69",
+        ):
+            self.assertIn(
+                f"/workspace/LAYER_4_ENGINE_STUDIO_C14/{component}",
+                common[common.index("-m compileall") :],
+            )
         backend = "WORKBENCH_BACKEND_beta_C70"
         self.assertNotIn(backend, dockerfile)
         self.assertNotIn("FROM beta_base AS beta\n", dockerfile)
         self.assertNotIn("API_MIXER_beta_C91", base + common + current)
-        self.assertIn("/workspace/LAYER_4_ENGINE_STUDIO_C14/API_MIXER_beta_C91", candidate[candidate.index("-m compileall"):])
+        self.assertIn(
+            "/workspace/LAYER_4_ENGINE_STUDIO_C14/API_MIXER_beta_C91",
+            candidate[candidate.index("-m compileall") :],
+        )
         self.assertIn("ENV ANECHOIC_RUNTIME_STACK=beta_next", candidate)
         self.assertIn("LABEL org.anechoic.runtime.stack=beta_next", candidate)
         self.assertTrue(candidate.strip().endswith("USER anechoic"))
-        self.assertIn("/workspace/LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_C59", current[current.index("-m compileall"):])
+        self.assertIn(
+            "/workspace/LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_C59",
+            current[current.index("-m compileall") :],
+        )
 
     def test_image_copies_runtime_components_and_canonical_ca_skill(self):
-        dockerfile = (Path(__file__).resolve().parents[1] / "docker/Dockerfile").read_text()
+        dockerfile = _dockerfile()
         self.assertIn(
             "COPY LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC ./LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC",
             dockerfile,
@@ -70,7 +115,10 @@ class DockerfileUVEntrypointTests(unittest.TestCase):
             path = f"LAYER_4_ENGINE_STUDIO_C14/{component}"
             self.assertIn(f"COPY {path} ./{path}", dockerfile)
         self.assertIn("FEATURE_AGENTIC/FEATURE_SKILLS/ane", dockerfile)
-        self.assertNotIn("COPY LAYER_4_ENGINE_STUDIO_C14 ./LAYER_4_ENGINE_STUDIO_C14", dockerfile)
+        self.assertNotIn(
+            "COPY LAYER_4_ENGINE_STUDIO_C14 ./LAYER_4_ENGINE_STUDIO_C14",
+            dockerfile,
+        )
         self.assertNotIn("FEATURE_AGENTIC/FEATURE_PROMPTS", dockerfile)
 
 

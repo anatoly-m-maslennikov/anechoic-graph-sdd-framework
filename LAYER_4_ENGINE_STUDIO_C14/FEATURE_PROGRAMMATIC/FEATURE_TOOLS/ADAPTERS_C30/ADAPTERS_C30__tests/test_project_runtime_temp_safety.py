@@ -14,8 +14,13 @@ TOOLS_ROOT = Path(__file__).resolve().parents[2]
 if str(TOOLS_ROOT) not in sys.path:
     sys.path.insert(0, str(TOOLS_ROOT))
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import TemporaryBoundaryError  # noqa: E402
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import TEMPORARY_DIRECTORY, atomic_tempfile  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (  # noqa: E402
+    TemporaryBoundaryError,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (  # noqa: E402
+    TEMPORARY_DIRECTORY,
+    atomic_tempfile,
+)
 
 
 TEST_TEMP_ROOT = (
@@ -34,20 +39,26 @@ class ProjectRuntimeTemporarySafetyTests(unittest.TestCase):
         root = Path(fixture.name)
         return root
 
-    def test_symlinked_temporary_root_is_refused_without_outside_mutation(self) -> None:
+    def test_symlinked_temporary_root_is_refused_without_outside_mutation(
+        self,
+    ) -> None:
         root = self.project()
         outside = root / "outside"
         outside.mkdir()
         sentinel = outside / "sentinel.txt"
         sentinel.write_text("unchanged\n", encoding="utf-8")
-        (root / TEMPORARY_DIRECTORY).symlink_to(outside, target_is_directory=True)
+        (root / TEMPORARY_DIRECTORY).symlink_to(
+            outside, target_is_directory=True
+        )
         destination = root / "state" / "current.json"
 
         with self.assertRaises(TemporaryBoundaryError):
             atomic_tempfile(root, destination, "unit")
 
         self.assertEqual(sentinel.read_text(encoding="utf-8"), "unchanged\n")
-        self.assertEqual({path.name for path in outside.iterdir()}, {sentinel.name})
+        self.assertEqual(
+            {path.name for path in outside.iterdir()}, {sentinel.name}
+        )
         self.assertFalse(destination.parent.exists())
 
     def test_symlinked_owner_or_atomic_directory_is_refused(self) -> None:
@@ -70,25 +81,35 @@ class ProjectRuntimeTemporarySafetyTests(unittest.TestCase):
                 with self.assertRaises(TemporaryBoundaryError):
                     atomic_tempfile(root, destination, "unit")
 
-                self.assertEqual(sentinel.read_text(encoding="utf-8"), "unchanged\n")
-                self.assertEqual({path.name for path in outside.iterdir()}, {sentinel.name})
+                self.assertEqual(
+                    sentinel.read_text(encoding="utf-8"), "unchanged\n"
+                )
+                self.assertEqual(
+                    {path.name for path in outside.iterdir()}, {sentinel.name}
+                )
                 self.assertFalse(destination.parent.exists())
 
-    def test_valid_allocation_stays_below_project_temporary_state(self) -> None:
+    def test_valid_allocation_stays_below_project_temporary_state(
+        self,
+    ) -> None:
         root = self.project()
         destination = root / "state" / "current.json"
         descriptor, temporary_name = atomic_tempfile(root, destination, "unit")
         temporary = Path(temporary_name)
         try:
             self.assertTrue(
-                temporary.is_relative_to(root / TEMPORARY_DIRECTORY / "unit" / "atomic")
+                temporary.is_relative_to(
+                    root / TEMPORARY_DIRECTORY / "unit" / "atomic"
+                )
             )
             with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
                 handle.write("{}\n")
         finally:
             temporary.unlink(missing_ok=True)
 
-    def test_cross_filesystem_refusal_precedes_stage_and_destination_creation(self) -> None:
+    def test_cross_filesystem_refusal_precedes_stage_and_destination_creation(
+        self,
+    ) -> None:
         root = self.project()
         owner = root / TEMPORARY_DIRECTORY / "unit"
         owner.mkdir(parents=True)

@@ -41,11 +41,18 @@ def record_performance(
     if items > 1:
         metric["atoms_per_second"] = round(items / elapsed, 3)
         metric["minimum_atoms_per_second"] = round(items / budget_seconds, 3)
-    print("WORKBENCH_PERFORMANCE " + json.dumps(metric, sort_keys=True), flush=True)
-    case.assertFalse(
-        tracemalloc.is_tracing(), "Allocation profiling must be disabled for performance gates"
+    print(
+        "WORKBENCH_PERFORMANCE " + json.dumps(metric, sort_keys=True),
+        flush=True,
     )
-    case.assertIsNone(sys.getprofile(), "CPU profiling must be disabled for performance gates")
+    case.assertFalse(
+        tracemalloc.is_tracing(),
+        "Allocation profiling must be disabled for performance gates",
+    )
+    case.assertIsNone(
+        sys.getprofile(),
+        "CPU profiling must be disabled for performance gates",
+    )
     case.assertLessEqual(
         elapsed,
         budget_seconds,

@@ -10,7 +10,7 @@ context:
 state:
   status: "active"
   version: 67
-  updated_at: "2026-11-26T15:52:26.085424+00:00"
+  updated_at: "2026-11-27T13:07:25+00:00"
 relations:
   CONTRIBUTES_TO:
   - AN-S-3329
@@ -80,6 +80,16 @@ ComponentManifest(
                                'FEATURE_MCP.FEATURE_MCP__tests.FEATURE_MCP__tests__shared.observing',
                                'FEATURE_MCP.FEATURE_MCP__tests.FEATURE_MCP__tests__shared.request',
                                'FEATURE_MCP.FEATURE_MCP__tests.FEATURE_MCP__tests__shared.write_manifest',
+                               'FEATURE_MCP.FEATURE_MCP__tests.FEATURE_MCP__tests__shared.run_workbench_browser',
+                               'FEATURE_MCP.FEATURE_MCP__tests.image.image__shared.PackagedProbe',
+                               'FEATURE_MCP.FEATURE_MCP__tests.image.image__shared.cgroup_resources',
+                               'FEATURE_MCP.FEATURE_MCP__tests.image.image__shared.cold_throughput',
+                               'FEATURE_MCP.FEATURE_MCP__tests.image.image__shared.started_at_ns',
+                               'FEATURE_MCP.FEATURE_MCP__tests.image.image__shared.startup_events',
+                               'FEATURE_MCP.FEATURE_MCP__tests.image.image__shared.startup_outcome',
+                               'FEATURE_MCP.FEATURE_MCP__tests.image.image__shared.timing_summary',
+                               'FEATURE_MCP.FEATURE_MCP__tests.image.image__shared.staged_startup',
+                               'FEATURE_MCP.FEATURE_MCP__tests.image.image__shared.generation_load',
                                'FEATURE_IWE_CONSOLE_BACKEND__shared.CHECK',
                                'FEATURE_IWE_CONSOLE_BACKEND__shared.LOAD',
                                'FEATURE_IWE_CONSOLE_BACKEND__shared.NATIVE_TOOLS',
@@ -216,10 +226,21 @@ ComponentManifest(
                       'FEATURE_MCP.FEATURE_MCP__tests.FEATURE_MCP__tests__shared.observing': {'private': ['LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/FEATURE_MCP__tests/image']},
                       'FEATURE_MCP.FEATURE_MCP__tests.FEATURE_MCP__tests__shared.request': {'private': ['LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/FEATURE_MCP__tests/image']},
                       'FEATURE_MCP.FEATURE_MCP__tests.FEATURE_MCP__tests__shared.write_manifest': {'private': ['LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/FEATURE_MCP__tests/image']},
+                      'FEATURE_MCP.FEATURE_MCP__tests.FEATURE_MCP__tests__shared.run_workbench_browser': {'private': ['LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/FEATURE_MCP__tests/image']},
+                      'FEATURE_MCP.FEATURE_MCP__tests.image.image__shared.PackagedProbe': {'private': ['parent']},
+                      'FEATURE_MCP.FEATURE_MCP__tests.image.image__shared.cgroup_resources': {'private': ['parent']},
+                      'FEATURE_MCP.FEATURE_MCP__tests.image.image__shared.cold_throughput': {'private': ['parent']},
+                      'FEATURE_MCP.FEATURE_MCP__tests.image.image__shared.started_at_ns': {'private': ['parent']},
+                      'FEATURE_MCP.FEATURE_MCP__tests.image.image__shared.startup_events': {'private': ['parent']},
+                      'FEATURE_MCP.FEATURE_MCP__tests.image.image__shared.startup_outcome': {'private': ['parent']},
+                      'FEATURE_MCP.FEATURE_MCP__tests.image.image__shared.timing_summary': {'private': ['parent']},
+                      'FEATURE_MCP.FEATURE_MCP__tests.image.image__shared.staged_startup': {'private': ['parent']},
+                      'FEATURE_MCP.FEATURE_MCP__tests.image.image__shared.generation_load': {'private': ['parent']},
                       'FEATURE_MCP.FEATURE_MCP__tests.FEATURE_MCP__tests__shared.packaged_identity_reader': {'shared': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests']},
                       'FEATURE_MCP.FEATURE_MCP__shared.ExplicitStartupFailure': {'private': ['LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker',
                                                                                              'LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/FEATURE_MCP__tests']},
-                      'FEATURE_MCP.FEATURE_MCP__shared.beta_runtime_arguments': {'private': ['LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker']},
+                      'FEATURE_MCP.FEATURE_MCP__shared.beta_runtime_arguments': {'private': ['LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker',
+                                                                                              'LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/FEATURE_MCP__tests']},
                       'FEATURE_MCP.FEATURE_MCP__shared.select_runtime_project': {'private': ['LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker',
                                                                                              'LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/FEATURE_MCP__tests']},
                       'FEATURE_MCP.FEATURE_MCP__shared.ProjectBinding': {'private': ['LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker',

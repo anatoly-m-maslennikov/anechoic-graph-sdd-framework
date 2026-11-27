@@ -54,7 +54,7 @@ def drop(connection):
 def _insert_rows(connection, table, rows, types):
     if rows:
         columns = ', '.join(f'unnest(?::{kind}[])' for kind in types)
-        connection.execute(f'INSERT INTO {table} SELECT {columns}', [list(column) for column in zip(*rows)])
+        connection.execute(f'INSERT INTO {table} SELECT {columns}', [list(column) for column in zip(*rows, strict=False)])
 
 
 def replace_code(connection, rows):

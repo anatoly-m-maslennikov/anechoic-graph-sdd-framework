@@ -25,29 +25,7 @@ def _validate_axes(arguments, declaration, function, classes, functions, imports
                        or not items or any(not isinstance(item, str) or not item.strip() for item in items)
                        or len(set(items)) != len(items) for axis, items in values.items())):
             _fail(declaration, "allowed_axis_values requires named nonempty tuples of distinct text values")
-    if "form_roles" in arguments:
-        roles = arguments["form_roles"]
-        values = arguments.get("allowed_values")
-        form_property = (arguments.get("relation_name") == "IS_PROPERTY_OF"
-                         and arguments.get("base_path") == "Atom.Header.Context"
-                         and arguments.get("entity_name") == "Form"
-                         and isinstance(values, tuple) and len(values) == 1
-                         and isinstance(values[0], str) and bool(values[0].strip()))
-        qualified_form = arguments.get("qualification_property_path") == "Atom.Header.Context.Form"
-        if (not (form_property or qualified_form) or not isinstance(roles, tuple) or not roles
-                or any(not isinstance(role, str) or not role.strip() for role in roles)
-                or len(set(roles)) != len(roles)):
-            _fail(declaration, "form_roles requires one Form and distinct Roles")
-    if "form_content" in arguments:
-        content = arguments["form_content"]
-        if (arguments.get("qualification_property_path") != "Atom.Header.Context.Form"
-                or not isinstance(content, dict) or set(content) != {"required_value", "no_children", "after"}
-                or any(not isinstance(value, str) or not value.strip() for value in content.values())):
-            _fail(declaration, "form_content requires a qualified Form and named Content properties")
-    if "project_form_content" in arguments:
-        if (arguments.get("qualification_property_path") != "Atom.Header.Context.Form"
-                or arguments["project_form_content"] is not True):
-            _fail(declaration, "project_form_content requires a qualified Form and true")
+    _validate_form_axes(arguments, declaration)
 
 
 def _validate_aspects(arguments, declaration, function, classes, functions, imports, property_manifest):
@@ -72,19 +50,7 @@ def _validate_aspects(arguments, declaration, function, classes, functions, impo
 
 
 def _validate_fallback(arguments, declaration, function, classes, functions, imports, property_manifest):
-    if "maximum_value" in arguments or "fallback_value" in arguments:
-        if (function != "declare_entity" or arguments.get("relation_name") != "IS_PROPERTY_OF"
-                or arguments.get("value_format") != "int"):
-            _fail(declaration, "numeric bounds and literal fallback require an integer Property")
-        for key in ("minimum_value", "maximum_value", "fallback_value"):
-            if key in arguments and type(arguments[key]) is not int:
-                _fail(declaration, f"{key} must be an integer")
-        if arguments.get("minimum_value", float("-inf")) > arguments.get("maximum_value", float("inf")):
-            _fail(declaration, "minimum_value exceeds maximum_value")
-        if ("fallback_value" in arguments and not arguments.get("minimum_value", float("-inf")) <= arguments["fallback_value"] <= arguments.get("maximum_value", float("inf"))):
-            _fail(declaration, "fallback_value violates numeric bounds")
-        if "fallback_property_name" in arguments and "fallback_value" in arguments:
-            _fail(declaration, "only one fallback is supported")
+    _validate_numeric_fallback(arguments, declaration, function)
     if "fallback_chain" in arguments:
         chain = arguments["fallback_chain"]
         if (function != "declare_entity" or arguments.get("relation_name") != "IS_PROPERTY_OF"
@@ -167,23 +133,7 @@ def _validate_property(arguments, declaration, function, classes, functions, imp
         forms = arguments.get("applies_to_forms")
         role = arguments.get("applies_to_role")
         groups = arguments.get("status_groups")
-        if any(key in arguments for key in ("applies_to_forms", "applies_to_role", "status_groups")):
-            if base != "Atom.Header.State" or arguments.get("entity_name") != "Status":
-                _fail(declaration, "Status qualifiers require Atom Header Status")
-            if "applies_to_forms" in arguments or "applies_to_role" in arguments:
-                permitted = {"entity_name", "relation_name", "base_path", "applies_to_role", "applies_to_forms", "allowed_values"}
-                if (not isinstance(role, str) or not role.strip() or role != role.strip()
-                        or not isinstance(forms, tuple) or not forms or not allowed
-                        or any(not isinstance(form, str) or not form.strip() or form != form.strip() for form in forms)
-                        or len(forms) != len(set(forms)) or set(arguments) - permitted):
-                    _fail(declaration, "Form-qualified Status requires one Role and distinct Forms")
-            if "status_groups" in arguments:
-                applicable_classes = arguments.get("applies_to_entity_classes")
-                if (not isinstance(groups, dict) or not groups or not isinstance(applicable_classes, (tuple, list))
-                        or len(applicable_classes) != 1
-                        or any(status not in allowed or not isinstance(group, str) or not group.strip() or group != group.strip()
-                               for status, group in groups.items())):
-                    _fail(declaration, "Status Groups require allowed values and one Role")
+        _validate_status_qualifiers(arguments, declaration, base, allowed, forms, role, groups)
         if "status_order_numbers" in arguments:
             orders = arguments["status_order_numbers"]
             if (base != "Atom.Header.State" or arguments.get("entity_name") != "Status"
@@ -194,3 +144,65 @@ def _validate_property(arguments, declaration, function, classes, functions, imp
                 _fail(declaration, "invalid base Status Order Numbers")
 
 
+
+
+def _validate_form_axes(arguments, declaration):
+    if "form_roles" in arguments:
+        roles = arguments["form_roles"]
+        values = arguments.get("allowed_values")
+        form_property = (arguments.get("relation_name") == "IS_PROPERTY_OF"
+                         and arguments.get("base_path") == "Atom.Header.Context"
+                         and arguments.get("entity_name") == "Form"
+                         and isinstance(values, tuple) and len(values) == 1
+                         and isinstance(values[0], str) and bool(values[0].strip()))
+        qualified_form = arguments.get("qualification_property_path") == "Atom.Header.Context.Form"
+        if (not (form_property or qualified_form) or not isinstance(roles, tuple) or not roles
+                or any(not isinstance(role, str) or not role.strip() for role in roles)
+                or len(set(roles)) != len(roles)):
+            _fail(declaration, "form_roles requires one Form and distinct Roles")
+    if "form_content" in arguments:
+        content = arguments["form_content"]
+        if (arguments.get("qualification_property_path") != "Atom.Header.Context.Form"
+                or not isinstance(content, dict) or set(content) != {"required_value", "no_children", "after"}
+                or any(not isinstance(value, str) or not value.strip() for value in content.values())):
+            _fail(declaration, "form_content requires a qualified Form and named Content properties")
+    if "project_form_content" in arguments:
+        if (arguments.get("qualification_property_path") != "Atom.Header.Context.Form"
+                or arguments["project_form_content"] is not True):
+            _fail(declaration, "project_form_content requires a qualified Form and true")
+
+
+def _validate_numeric_fallback(arguments, declaration, function):
+    if "maximum_value" in arguments or "fallback_value" in arguments:
+        if (function != "declare_entity" or arguments.get("relation_name") != "IS_PROPERTY_OF"
+                or arguments.get("value_format") != "int"):
+            _fail(declaration, "numeric bounds and literal fallback require an integer Property")
+        for key in ("minimum_value", "maximum_value", "fallback_value"):
+            if key in arguments and type(arguments[key]) is not int:
+                _fail(declaration, f"{key} must be an integer")
+        if arguments.get("minimum_value", float("-inf")) > arguments.get("maximum_value", float("inf")):
+            _fail(declaration, "minimum_value exceeds maximum_value")
+        if ("fallback_value" in arguments and not arguments.get("minimum_value", float("-inf")) <= arguments["fallback_value"] <= arguments.get("maximum_value", float("inf"))):
+            _fail(declaration, "fallback_value violates numeric bounds")
+        if "fallback_property_name" in arguments and "fallback_value" in arguments:
+            _fail(declaration, "only one fallback is supported")
+
+
+def _validate_status_qualifiers(arguments, declaration, base, allowed, forms, role, groups):
+    if any(key in arguments for key in ("applies_to_forms", "applies_to_role", "status_groups")):
+        if base != "Atom.Header.State" or arguments.get("entity_name") != "Status":
+            _fail(declaration, "Status qualifiers require Atom Header Status")
+        if "applies_to_forms" in arguments or "applies_to_role" in arguments:
+            permitted = {"entity_name", "relation_name", "base_path", "applies_to_role", "applies_to_forms", "allowed_values"}
+            if (not isinstance(role, str) or not role.strip() or role != role.strip()
+                    or not isinstance(forms, tuple) or not forms or not allowed
+                    or any(not isinstance(form, str) or not form.strip() or form != form.strip() for form in forms)
+                    or len(forms) != len(set(forms)) or set(arguments) - permitted):
+                _fail(declaration, "Form-qualified Status requires one Role and distinct Forms")
+        if "status_groups" in arguments:
+            applicable_classes = arguments.get("applies_to_entity_classes")
+            if (not isinstance(groups, dict) or not groups or not isinstance(applicable_classes, (tuple, list))
+                    or len(applicable_classes) != 1
+                    or any(status not in allowed or not isinstance(group, str) or not group.strip() or group != group.strip()
+                           for status, group in groups.items())):
+                _fail(declaration, "Status Groups require allowed values and one Role")

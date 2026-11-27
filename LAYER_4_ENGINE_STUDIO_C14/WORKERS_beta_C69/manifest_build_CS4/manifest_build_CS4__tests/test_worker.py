@@ -11,8 +11,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from ..manifest_build_CS4__shared import (
-    _COMPILER_SOURCE_DIRECTORIES,
-    _REVIEWED_CLAIMS,
+    _COMPILER_SOURCE_DIRECTORIES, _REVIEWED_CLAIMS,
     _compiler_sha256,
     compile_generation,
     manifest_input_signature,
@@ -239,7 +238,7 @@ class InputSignatureTests(unittest.TestCase):
         replacement.replace(candidate)
         self.assertEqual(before, self.signature())
 
-    def test_compiler_sources_affect_the_signature_and_tests_do_not(self):
+    def compiler_sources(self):
         engine = self.root / 'engine'
         generator = engine / 'FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/LAYER_2_FORMAL_MODEL_C51/FEATURE_FORMAL_MODEL_GENERATOR'
         compiler = generator / 'manifest_compiler_CS1/compiler.py'
@@ -256,6 +255,10 @@ class InputSignatureTests(unittest.TestCase):
         reviewed.mkdir()
         for name in _REVIEWED_CLAIMS:
             (reviewed / name).write_text('{}')
+        return engine, generator, compiler, coordinator, structure, reviewed
+
+    def test_compiler_sources_affect_the_signature_and_tests_do_not(self):
+        engine, generator, compiler, coordinator, structure, reviewed = self.compiler_sources()
         with patch('WORKERS_beta_C69.manifest_build_CS4.manifest_build_CS4__shared.ENGINE', engine), \
                 patch('WORKERS_beta_C69.manifest_build_CS4.manifest_build_CS4__shared._REVIEWED_MODEL', reviewed):
             before = self.signature()

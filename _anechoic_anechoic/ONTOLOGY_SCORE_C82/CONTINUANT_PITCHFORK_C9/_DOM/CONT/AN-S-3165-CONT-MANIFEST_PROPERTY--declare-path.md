@@ -13,8 +13,8 @@ context:
   lens: DOM/CONT
 state:
   status: active
-  version: 7
-  updated_at: '2026-11-26T18:34:31.644797+00:00'
+  version: 8
+  updated_at: '2026-11-27T10:52:53.677257+00:00'
 ---
 
 ## Summary
@@ -29,6 +29,7 @@ Concern Path Notation uses operators as shorthand for relations, Properties, and
 - `//` follows specialization from the broader kind to the narrower kind.
 - `.` selects a Property.
 - `:=` selects an allowed Property value.
+- `in (...)` selects a Property value from a list of allowed values.
 - `()` groups a qualifier.
 - `>|` follows an Axis or Axis value from an entity.
 - `|<` follows an Axis or Axis value toward the entity.
@@ -36,6 +37,7 @@ Concern Path Notation uses operators as shorthand for relations, Properties, and
 ```text
 atom.state.status >| status group := current
 status group := current |< atom.state.status
+Module/Unit//(.Form in (function, method))
 ```
 
 For a template-defined variant, keep the specialization step in the Path. For example, use `Atom//Spec Atom//.Header.Context` as the Path, `.` as the Relation, and `Template := axiom` as the Subject. Group the selection to append further steps.

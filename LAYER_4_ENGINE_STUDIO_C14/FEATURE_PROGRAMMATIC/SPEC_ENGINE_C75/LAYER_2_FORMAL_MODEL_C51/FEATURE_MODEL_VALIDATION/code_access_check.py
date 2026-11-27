@@ -30,7 +30,8 @@ def _package_entry_problems(sources):
     parents = {}
     for name in sorted(sources):
         path = PurePosixPath(name)
-        if path.name.endswith((".d.ts", ".d.cts", ".d.mts")):
+        if (_in_test_package(path.parent)
+                or path.name.endswith((".d.ts", ".d.cts", ".d.mts"))):
             continue
         folders[path.parent].append(path)
         for parent in path.parent.parents:

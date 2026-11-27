@@ -13,8 +13,8 @@ context:
   lens: SWD/SWCS
 state:
   status: active
-  version: 16
-  updated_at: '2026-11-27T10:14:59.835668+00:00'
+  version: 18
+  updated_at: '2026-11-27T12:07:53.368595+00:00'
 ---
 
 ## Summary
@@ -61,6 +61,10 @@ its declared targets.
    model internally without repeating validation solely to pass it.
 
 ### Failure or stop
+
+Static rejects identifiable unmodeled records. Report possible dictionary
+records for review. Convert confirmed records to Pydantic and retain
+ordinary maps. Use admission tests for dynamically constructed records.
 
 Refuse admission when the boundary is undeclared, coercion is silent, or
 a closed contract accepts extra fields.

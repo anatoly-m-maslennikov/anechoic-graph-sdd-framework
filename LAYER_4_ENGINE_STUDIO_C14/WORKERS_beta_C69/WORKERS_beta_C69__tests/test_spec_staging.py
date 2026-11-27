@@ -1,3 +1,4 @@
+from argparse import Namespace
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
@@ -91,7 +92,6 @@ class SpecStagingTests(unittest.TestCase):
         import io
         import json
         import sys
-        from types import SimpleNamespace
         from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75 import compile_project__pub as compiler
         row = {'source_path': 'control/model.md', 'exact_ref': 'AN-S-1@1',
                'metadata': {}, 'body': 'body', 'sha256': 'a' * 64}
@@ -107,7 +107,8 @@ class SpecStagingTests(unittest.TestCase):
                 observed.append(compile_snapshot(args, None, payload['spec_rows'], payload['manifest_path']))
             assert compile_rows.call_args.kwargs['alias_issues'] == raw['structure_alias_issues']
             print(json.dumps({'structure': 'structure'}))
-        args = SimpleNamespace(control_root='control', project_root='.', project_manifest_sha256='b' * 64)
+        args = Namespace(control_root='control', project_root='.',
+                         project_manifest_sha256='b' * 64)
         output = io.StringIO()
         with patch.object(sys, 'stdin', io.StringIO(json.dumps(raw))), \
              patch.object(sys, 'stdout', output), patch.object(compiler, 'compile_ingested_cli', side_effect=admit):
@@ -128,7 +129,6 @@ class SpecStagingTests(unittest.TestCase):
         import io
         import json
         import sys
-        from types import SimpleNamespace
         from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75 import compile_project__pub as compiler
         raw = {'snapshot_id': 'snap', 'spec_rows': [], 'manifest_path': 'manifest.md', 'rows': [],
                'structure_alias_issues': [{'relative_path': 'control/AN-S-2-SPEC-OTHER--x.md',
@@ -137,7 +137,8 @@ class SpecStagingTests(unittest.TestCase):
         def admit(args, structure, *, compile_snapshot):
             calls.append(json.load(sys.stdin))
             compile_snapshot(args, object(), [], 'manifest.md')
-        args = SimpleNamespace(control_root='control', project_root='.', project_manifest_sha256='b' * 64)
+        args = Namespace(control_root='control', project_root='.',
+                         project_manifest_sha256='b' * 64)
         with patch.object(sys, 'stdin', io.StringIO(json.dumps(raw))), \
              patch.object(compiler, 'compile_ingested_cli', side_effect=admit), \
              patch.object(compiler, 'compile_structure_rows', side_effect=compiler.StructureAdmissionError('bad alias')):
@@ -148,11 +149,10 @@ class SpecStagingTests(unittest.TestCase):
 
     def test_structure_admission_error_bypasses_model_fallback(self):
         import importlib
-        from types import SimpleNamespace
         from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75 import compile_project__pub as compiler
         ingestion = importlib.import_module(compiler.compile_ingested_cli.__module__)
         with TemporaryDirectory() as directory:
-            args = SimpleNamespace(generation=Path(directory).resolve())
+            args = Namespace(generation=Path(directory).resolve())
             raw = {'rows': [], 'has_c9': False, 'issues': [], 'accepted_model': None}
             with patch.object(ingestion, '_stage', return_value='digest') as stage, \
                  patch.object(ingestion, '_structure', side_effect=compiler.StructureAdmissionError('bad alias')), \

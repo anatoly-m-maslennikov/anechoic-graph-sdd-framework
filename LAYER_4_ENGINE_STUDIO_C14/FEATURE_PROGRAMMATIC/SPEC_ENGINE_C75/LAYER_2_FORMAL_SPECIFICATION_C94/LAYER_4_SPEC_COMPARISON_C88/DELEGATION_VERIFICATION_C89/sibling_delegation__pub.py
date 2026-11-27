@@ -1,7 +1,8 @@
 """Compare declared sibling calls with their pinned provider Specs."""
 
 from ...LAYER_1_DIAGNOSTICS_C90._package__shared import verdict
-from ...LAYER_2_SPEC_READING_C83._package__shared import SourceError, load_boundary_model, read_source
+from ....LAYER_1_SOURCE_ADAPTERS_C95._package__shared import SourceError, read_source
+from ...LAYER_2_SPEC_READING_C83._package__shared import load_boundary_model
 from ...LAYER_2_SPEC_READING_C83.SPECIFICATION_MODEL_C85._package__shared import (
     _IN_PROCESS_TRACE_BINDING,
     http_binding,
@@ -12,7 +13,7 @@ from ...LAYER_2_SPEC_READING_C83.SPECIFICATION_MODEL_C85._package__shared import
 from ...LAYER_3_LEAN_TRANSLATOR_C84._package__shared import compile_lean
 from .._package__shared import compare_delegation
 from .._package__shared import _manifest_binding, _operation_claims, _solution_binding
-from .manifest_delegation import derive_atom_ref
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.atom_reference__pub import derive_atom_ref
 
 
 def _call_binding(workflow, event, fields, *, caller_action=None, manifest_pin=False):

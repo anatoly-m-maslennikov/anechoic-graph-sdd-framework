@@ -3,7 +3,8 @@
 import os
 from pathlib import Path
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import read_structure
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
+    import read_structure  # fmt: skip
 
 __all__ = ["publish_structure"]
 

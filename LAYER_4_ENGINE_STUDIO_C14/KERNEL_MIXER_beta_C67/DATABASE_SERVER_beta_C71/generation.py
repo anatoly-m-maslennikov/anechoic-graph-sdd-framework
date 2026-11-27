@@ -1,9 +1,9 @@
 """Validate and atomically admit one Worker generation."""
 
-from collections import namedtuple
 from hashlib import sha256
 import json
 import re
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, ValidationError, field_validator
 
@@ -184,8 +184,20 @@ def _replace_snapshot(connection, native, snapshot, components, *, archive_pendi
             connection.executemany("INSERT INTO mrt_atoms VALUES (?, ?)", [(a["reference"], a["summary"]) for a in atoms])
 
 
-_PreparedGeneration = namedtuple(
-    "_PreparedGeneration", "native snapshot model structure graph components descriptor diagnostics pending versions generation")
+class _PreparedGeneration(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    native: bool
+    snapshot: dict[str, Any]
+    model: str
+    structure: str
+    graph: dict[str, Any] | None
+    components: set[str]
+    descriptor: dict[str, Any]
+    diagnostics: list[dict[str, Any]] | None
+    pending: bool
+    versions: dict[str, int] | None
+    generation: str
 
 
 def prepare_generation(data, manifest_sha256):
@@ -202,13 +214,17 @@ def prepare_generation(data, manifest_sha256):
         identity["archive_pending"] = True
     if diagnostics is not None:
         identity["model_diagnostics"] = diagnostics
-    return _PreparedGeneration(native, snapshot, model, structure, graph, components, descriptor,
-                               diagnostics, pending, versions, _digest(identity))
+    return _PreparedGeneration.model_construct(
+        native=native, snapshot=snapshot, model=model, structure=structure, graph=graph,
+        components=components, descriptor=descriptor, diagnostics=diagnostics,
+        pending=pending, versions=versions, generation=_digest(identity))
 
 
 def replace_generation(connection, data, prepared, *, stage_refresh=None):
-    (native, snapshot, model, structure, graph, components, descriptor,
-     diagnostics, pending, versions, generation) = prepared
+    native, snapshot, model = prepared.native, prepared.snapshot, prepared.model
+    structure, graph, components = prepared.structure, prepared.graph, prepared.components
+    descriptor, diagnostics, pending = prepared.descriptor, prepared.diagnostics, prepared.pending
+    versions, generation = prepared.versions, prepared.generation
     if not native and has_table(connection, "main", "mrt_atom_graph_relations"):
         raise ValueError("Cannot replace a native generation with the legacy snapshot format")
     pending_file = None

@@ -112,6 +112,7 @@ def test_package_entry_findings_include_grouping_folders_without_structure(tmp_p
         "marked/_bypass__shared.py": "",
         "marked/child/child__shared.py": "",
         "tests__tests/test_main.py": "pass\n",
+        "test_only/fixtures__tests/unit/test_main.py": "pass\n",
         "alias/alias__pub.py": "pass\n",
         "public/public__public.py": "pass\n",
         "shared/shared__shared.py": "pass\n",
@@ -136,6 +137,4 @@ def test_package_entry_findings_include_grouping_folders_without_structure(tmp_p
          "Expected one __shared or __public entry in many, found 2"],
         ["module:missing/main.py", "missing/main.py", None, None, "Package entry", "denied",
          "Expected one __shared or __public entry in missing, found 0"],
-        ["module:tests__tests/test_main.py", "tests__tests/test_main.py", None, None, "Package entry", "denied",
-         "Expected one __shared or __public entry in tests__tests, found 0"],
     ]

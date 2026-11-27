@@ -1,8 +1,8 @@
 """Check native state findings publication and rebuild dependencies."""
+from unittest.mock import NonCallableMock
 
 from contextlib import redirect_stderr
 from io import StringIO
-from types import SimpleNamespace
 from unittest import TestCase
 from unittest.mock import patch
 
@@ -30,12 +30,28 @@ class StateProjectionTests(TestCase):
         replace_boundaries(connection, ([], [], [row]))
         connection.execute('COMMIT')
         self.assertEqual([row], connection.execute('SELECT * FROM state_effect_findings').fetchall())
-        schema = public_schema(connection, SimpleNamespace(status_names=[]))
+        schema = public_schema(connection, NonCallableMock(
+            spec_set=[
+                'status_names'
+            ],
+            status_names=[]))
         self.assertIn('state_effect_findings', schema['tables'])
 
         rebuild = NativeQueryRebuild()
         rebuild._realization_options = ()
-        store = SimpleNamespace(_projection=SimpleNamespace(graph=SimpleNamespace(tables={})))
+        store = NonCallableMock(
+            spec_set=[
+                '_projection'
+            ],
+            _projection=NonCallableMock(
+            spec_set=[
+                'graph'
+            ],
+            graph=NonCallableMock(
+            spec_set=[
+                'tables'
+            ],
+            tables={})))
         table, scope, dependencies = rebuild._rebuild_scope(store, 'state_effect_findings')
         self.assertEqual((table, scope), ('state_effect_findings', 'realization'))
         self.assertIn('state_effect_findings', dependencies)
@@ -45,11 +61,23 @@ class StateProjectionTests(TestCase):
         connection.execute('ROLLBACK')
         self.assertEqual([row], connection.execute('SELECT * FROM state_effect_findings').fetchall())
         remove_boundaries(connection)
-        self.assertNotIn('state_effect_findings', public_schema(connection, SimpleNamespace(status_names=[]))['tables'])
+        self.assertNotIn('state_effect_findings', public_schema(connection, NonCallableMock(
+            spec_set=[
+                'status_names'
+            ],
+            status_names=[]))['tables'])
 
     def test_analysis_receives_same_ownership_as_access_check(self):
-        selection = SimpleNamespace(root='root', control_root='control')
-        snapshot = SimpleNamespace(components={}, packages={})
+        selection = NonCallableMock(
+            spec_set=[
+                'root', 'control_root'
+            ],
+            root='root', control_root='control')
+        snapshot = NonCallableMock(
+            spec_set=[
+                'components', 'packages'
+            ],
+            components={}, packages={})
         sources, ownership, expected = {'a.py': object()}, object(), [('finding',)]
         with (patch(f'{_BOUNDARY_TABLES}.code_access_occurrences', return_value=(set(), [])),
               patch(f'{_BOUNDARY_TABLES}.build_code_access_ownership', return_value=ownership) as build,
@@ -62,7 +90,7 @@ class StateProjectionTests(TestCase):
         analyze.assert_called_once_with('root', sources, ownership=ownership)
 
     def test_analysis_runs_without_structure(self):
-        selection = SimpleNamespace(root='root')
+        selection = NonCallableMock(spec_set=['root'], root='root')
         sources = {'a.py': object()}
         with patch(f'{_BOUNDARY_TABLES}.analyze_state', return_value=[]) as analyze:
             declarations, findings, state = prepare_boundaries(selection, None, sources, [], None, {})

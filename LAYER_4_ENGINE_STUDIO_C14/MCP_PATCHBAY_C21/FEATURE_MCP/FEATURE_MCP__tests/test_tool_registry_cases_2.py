@@ -14,6 +14,8 @@ from mcp.client.session import ClientSession
 from mcp import types
 
 
+from . import native_query_test_support
+from .tool_registry_test_support import ToolRegistryFixture, _drifting_provider_source, _context_provider_source, _native_gateway
 MCP = Path(__file__).resolve().parents[1]
 from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.generate_tool_registry import generate  # noqa: E402
 from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.tool_registry_assets import ToolRegistryAssetError  # noqa: E402
@@ -23,8 +25,6 @@ from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.FEATURE_IWE_CON
 
 
 
-from . import native_query_test_support
-from .tool_registry_test_support import ToolRegistryFixture, _drifting_provider_source, _context_provider_source, _native_gateway
 
 
 class ToolRegistryTests(ToolRegistryFixture, unittest.IsolatedAsyncioTestCase):

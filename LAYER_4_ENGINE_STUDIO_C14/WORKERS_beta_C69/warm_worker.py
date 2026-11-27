@@ -1,4 +1,5 @@
 """Serve Ticket delta captures and indexed lifecycle writes in isolated children."""
+
 import argparse
 import json
 import math
@@ -13,9 +14,8 @@ from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
-    capture_ticket_delta,
-)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
+    import capture_ticket_delta  # fmt: skip
 
 from .native_refresh import _ReuseHint, _ticket_delta
 from .lifecycle_worker import _validate_indexed, run as lifecycle_run
@@ -31,7 +31,9 @@ class _TicketDelta(_Envelope):
     kind: Literal["ticket_delta"]
     binding: _Binding
     reuse: _ReuseHint
-    paths: list[Annotated[str, Field(min_length=1)]] = Field(min_length=1, max_length=32)
+    paths: list[Annotated[str, Field(min_length=1)]] = Field(
+        min_length=1, max_length=32
+    )
 
 
 class _IndexedLifecycle(_Envelope):
@@ -39,25 +41,31 @@ class _IndexedLifecycle(_Envelope):
     request: Any
 
 
-_REQUEST = TypeAdapter(Annotated[_TicketDelta | _IndexedLifecycle, Field(discriminator="kind")])
+_REQUEST = TypeAdapter(
+    Annotated[_TicketDelta | _IndexedLifecycle, Field(discriminator="kind")]
+)
 
 
 def _within_start_window(start_by):
     if start_by is None:
         return os.getenv("ANECHOIC_TEST_IMAGE_DEADLINES") == "0"
-    return (type(start_by) in (int, float) and math.isfinite(start_by)
-            and start_by > time.monotonic())
+    return (
+        type(start_by) in (int, float)
+        and math.isfinite(start_by)
+        and start_by > time.monotonic()
+    )
 
 
 def _admit(request):
-    if (not isinstance(request, dict)
-            or not _within_start_window(request.get("start_by"))):
+    if not isinstance(request, dict) or not _within_start_window(
+        request.get("start_by")
+    ):
         return None
     try:
         admitted = _REQUEST.validate_python(request)
         if isinstance(admitted, _IndexedLifecycle):
             admitted.request = _validate_indexed(admitted.request)
-    except (ValidationError, TypeError, ValueError, KeyError):
+    except ValidationError, TypeError, ValueError, KeyError:
         return None
     return admitted if _within_start_window(admitted.start_by) else None
 
@@ -71,9 +79,16 @@ def _capture(connection, request, read_fd, write_fd, indexed_draft):
         connection.close()
         os.close(read_fd)
         if isinstance(request, _IndexedLifecycle):
-            result = lifecycle_run(request.request, indexed_draft=indexed_draft)
+            result = lifecycle_run(
+                request.request, indexed_draft=indexed_draft
+            )
         else:
-            result = _ticket_delta(request.binding.model_dump(), request.reuse, request.paths, capture_ticket_delta)
+            result = _ticket_delta(
+                request.binding.model_dump(),
+                request.reuse,
+                request.paths,
+                capture_ticket_delta,
+            )
         with os.fdopen(write_fd, "w") as out:
             json.dump(result, out, ensure_ascii=False, separators=(",", ":"))
     finally:
@@ -122,7 +137,10 @@ def _job(connection, request, stop, indexed_draft):
 
 
 def _send(connection, value):
-    connection.sendall(json.dumps(value, ensure_ascii=False, separators=(",", ":")).encode() + b"\n")
+    connection.sendall(
+        json.dumps(value, ensure_ascii=False, separators=(",", ":")).encode()
+        + b"\n"
+    )
 
 
 def _serve(connection, stop, indexed_draft):
@@ -138,12 +156,12 @@ def _serve(connection, stop, indexed_draft):
         elif (admitted := _admit(request)) is not None:
             try:
                 result = _job(connection, admitted, stop, indexed_draft)
-            except (OSError, RuntimeError, TypeError, ValueError):
+            except OSError, RuntimeError, TypeError, ValueError:
                 result = None
             _send(connection, {"result": result})
         else:
             _send(connection, {"accepted": False})
-    except (OSError, ValueError, UnicodeError):
+    except OSError, ValueError, UnicodeError:
         pass
 
 
@@ -152,7 +170,9 @@ def _wake_on_signal(_signal, _frame):
 
 
 def main():
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import indexed_draft_runner
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import (
+        indexed_draft_runner,
+    )
 
     indexed_draft = indexed_draft_runner()
     parser = argparse.ArgumentParser(description=__doc__)
@@ -160,11 +180,22 @@ def main():
     args = parser.parse_args()
     path = Path(args.socket)
     parent = path.parent.stat()
-    if (not path.is_absolute() or not stat.S_ISDIR(parent.st_mode) or parent.st_uid != os.getuid()
-            or parent.st_mode & 0o077 or path.parent.resolve() != path.parent):
-        raise ValueError("Socket must be in a private canonical runtime directory")
+    if (
+        not path.is_absolute()
+        or not stat.S_ISDIR(parent.st_mode)
+        or parent.st_uid != os.getuid()
+        or parent.st_mode & 0o077
+        or path.parent.resolve() != path.parent
+    ):
+        raise ValueError(
+            "Socket must be in a private canonical runtime directory"
+        )
     stop, wake = socket.socketpair()
-    with stop, wake, socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as server:
+    with (
+        stop,
+        wake,
+        socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as server,
+    ):
         server.bind(str(path))
         try:
             wake.setblocking(False)

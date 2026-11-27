@@ -56,7 +56,12 @@ def checkType (expected raw : String) : String :=
 
 def _value(events, reference):
     event, field = reference
-    observed = [row.get('detail', {}) for row in events if row.get('event') == event]
+    observed = []
+    for row in events:
+        if not isinstance(row, dict):
+            return _MISSING
+        if row.get('event') == event:
+            observed.append(row.get('detail', {}))
     if len(observed) != 1 or not isinstance(observed[0], dict):
         return _MISSING
     return observed[0].get(field, _MISSING)

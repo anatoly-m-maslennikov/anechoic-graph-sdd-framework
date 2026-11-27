@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 import tempfile
 import threading
-from types import SimpleNamespace
+from unittest.mock import NonCallableMock
 from unittest.mock import patch
 
 
@@ -19,7 +19,12 @@ from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import (  # noqa: E402
 )
 
 
-GOLDENS = Path(__file__).parent / "assets" / "launcher_golden" / "startup_output_cases.json"
+GOLDENS = (
+    Path(__file__).parent
+    / "assets"
+    / "launcher_golden"
+    / "startup_output_cases.json"
+)
 IMAGE_ID = "sha256:" + "a" * 64
 FINGERPRINT = "b" * 64
 INSTANCE_ID = "c" * 64
@@ -69,33 +74,56 @@ class Backend:
         return self.health_result
 
 
-def healthy_row(*, project=INSTANCE_ID, image=IMAGE_ID, fingerprint=FINGERPRINT,
-                host_ip="127.0.0.1", host_port="56317", ports=None):
+def healthy_row(
+    *,
+    project=INSTANCE_ID,
+    image=IMAGE_ID,
+    fingerprint=FINGERPRINT,
+    host_ip="127.0.0.1",
+    host_port="56317",
+    ports=None,
+):
     return {
         "Id": "container-a",
         "Image": image,
-        "Config": {"Labels": {
-            "org.anechoic.project": project,
-            "org.anechoic.runtime.fingerprint": fingerprint,
-            "org.anechoic.service": "mcp-http",
-        }},
+        "Config": {
+            "Labels": {
+                "org.anechoic.project": project,
+                "org.anechoic.runtime.fingerprint": fingerprint,
+                "org.anechoic.service": "mcp-http",
+            }
+        },
         "State": {"Status": "running", "Health": {"Status": "healthy"}},
-        "NetworkSettings": {"Ports": {
-            "8092/tcp": ports if ports is not None else [
-                {"HostIp": host_ip, "HostPort": host_port}
-            ]
-        }},
+        "NetworkSettings": {
+            "Ports": {
+                "8092/tcp": ports
+                if ports is not None
+                else [{"HostIp": host_ip, "HostPort": host_port}]
+            }
+        },
     }
 
 
 class LauncherStartupFixture:
     def setUp(self) -> None:
-        parent = APP.parents[2] / ".anechoic_tmp" / "launcher-epic-1829" / "startup"
+        parent = (
+            APP.parents[2] / ".anechoic_tmp" / "launcher-epic-1829" / "startup"
+        )
         parent.mkdir(parents=True, exist_ok=True)
         self.project_root = Path(tempfile.mkdtemp(dir=parent))
         self.control_root = self.project_root / ".anechoic_local"
         self.control_root.mkdir()
-        self.selection = SimpleNamespace(
+        self.selection = NonCallableMock(
+            spec_set=[
+                "root",
+                "rootPath",
+                "control_root",
+                "control_rootPath",
+                "control_relative",
+                "control_relativePath",
+                "instance_id",
+                "parameters",
+            ],
             root=self.project_root,
             rootPath=self.project_root,
             control_root=self.control_root,
@@ -110,11 +138,16 @@ class LauncherStartupFixture:
 
     def launch(self, *, token=None, **kwargs):
         kwargs.setdefault("source_root", APP.parents[2])
-        with patch("MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_launcher.resolve_project", return_value=self.selection):
+        with patch(
+            (
+                "MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_launcher.reso"
+                "lve_project"
+            ),
+            return_value=self.selection,
+        ):
             return self.launcher.launch(self.project_root, token, **kwargs)
 
     def assert_public_failure(self, result, disposition, condition):
         self.assertEqual(disposition, result["disposition"])
         self.assertEqual(condition, result["condition"])
         self.assertNotIn("url", result)
-

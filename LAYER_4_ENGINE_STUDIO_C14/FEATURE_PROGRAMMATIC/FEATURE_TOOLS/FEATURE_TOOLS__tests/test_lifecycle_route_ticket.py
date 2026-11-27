@@ -31,7 +31,8 @@ class LifecycleRouteMatrix(LifecycleRouteSupport, unittest.TestCase):
             for contained in (False, True):
                 with self.subTest(template=template, contained=contained):
                     project = self.project()
-                    rows = lambda: capture_native(project).atoms
+                    def rows():
+                        return capture_native(project).atoms
                     container = {'atom': 'AN-T-1'} if contained else {'component': 'C00'}
                     created = create_draft(project, {'newAtom': {'template': template, 'container': container,
                                           'body': '\n## Summary\n\nExample\n'}}, current_rows=rows())
@@ -63,7 +64,8 @@ class LifecycleRouteMatrix(LifecycleRouteSupport, unittest.TestCase):
             for contained in (False, True):
                 with self.subTest(template=template, contained=contained):
                     project = self.project()
-                    rows = lambda: capture_native(project).atoms
+                    def rows():
+                        return capture_native(project).atoms
                     container = {'atom': 'AN-T-1'} if contained else {'component': 'C00'}
                     created = create_draft(project, {'newAtom': {'template': template, 'container': container,
                                           'body': '\n## Summary\n\nExample\n'}}, current_rows=rows())
@@ -98,7 +100,8 @@ class LifecycleRouteMatrix(LifecycleRouteSupport, unittest.TestCase):
             for contained in (False, True):
                 with self.subTest(template=template, contained=contained):
                     project = self.project()
-                    rows = lambda: capture_native(project).atoms
+                    def rows():
+                        return capture_native(project).atoms
                     container = {'atom': 'AN-T-1'} if contained else {'component': 'C00'}
                     before = self.files(project)
                     with self.assertRaises(InputError):

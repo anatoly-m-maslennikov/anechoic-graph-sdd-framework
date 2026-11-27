@@ -20,7 +20,7 @@ def exclude_directory(relative: str, control_relative: Path) -> bool:
 def test_asset_change(root: Path, relative: str) -> bool:
     parts = (root.name, *PurePosixPath(relative).parts)
     return any(test == parent + "__tests" and child == "assets"
-               for parent, test, child in zip(parts, parts[1:], parts[2:]))
+               for parent, test, child in zip(parts, parts[1:], parts[2:], strict=False))
 
 
 def prepare(store, root, selection, options, read_structure, *,

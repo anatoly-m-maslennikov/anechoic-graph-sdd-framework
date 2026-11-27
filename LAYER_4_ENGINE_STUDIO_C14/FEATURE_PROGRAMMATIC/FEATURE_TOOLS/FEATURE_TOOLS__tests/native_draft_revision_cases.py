@@ -157,7 +157,8 @@ class FirstSpecRevisionCases:
         body = body.replace('# Summary', '## Summary')
         body += '\n## Claim\n\n### Formal Claim\n\n```python\nfrom anechoic.formal_claims import declare_relation\ndeclare_relation(relation_name="LINK", source_endpoint={}, target_endpoint={})\n```\n'
         current.write_text('---\n' + yaml.safe_dump(canonical_native_header(metadata), sort_keys=False) + '---' + body)
-        rows = lambda: capture_native(self.selection).atoms
+        def rows():
+            return capture_native(self.selection).atoms
         params = {'sourceCurrent': {'ref_id': 'AN-S-44', 'version': 1}}
         first = create_draft(self.selection, params, current_rows=rows())['savedDraft']
         old_draft = self.root / first['path']
@@ -242,7 +243,8 @@ class FirstSpecRevisionCases:
         current = self.control / 'UNIT_C9/_SPEC/AN-S-4856-SPEC-MANIFEST_PROPERTY--declare-artifact-kind-classification.md'
         current.parent.mkdir(parents=True, exist_ok=True)
         current.write_text(DRAFT_4856.replace('status: draft', 'status: active'))
-        rows = lambda: capture_native(self.selection).atoms
+        def rows():
+            return capture_native(self.selection).atoms
         saved = create_draft(self.selection, {'sourceCurrent': {'ref_id': 'AN-S-4856', 'version': 1}},
                              current_rows=rows())['savedDraft']
         draft = self.root / saved['path']

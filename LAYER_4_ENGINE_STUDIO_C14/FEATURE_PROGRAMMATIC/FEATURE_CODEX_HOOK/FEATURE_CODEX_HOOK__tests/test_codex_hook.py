@@ -1,4 +1,3 @@
-
 """Exercise the Codex command-hook boundary without an installed plugin."""
 
 import json
@@ -13,7 +12,11 @@ HOOK = Path(__file__).resolve().parents[1] / "codex_hook.py"
 
 def invoke(event):
     completed = subprocess.run(
-        [sys.executable, "-B", str(HOOK)], input=event, text=True, capture_output=True, check=True
+        [sys.executable, "-B", str(HOOK)],
+        input=event,
+        text=True,
+        capture_output=True,
+        check=True,
     )
     return json.loads(completed.stdout)
 
@@ -44,12 +47,18 @@ class CodexHookTests(unittest.TestCase):
         result = self.decision(self.event)
         self.assertEqual("allow", result["permissionDecision"])
         self.assertEqual(
-            {**self.event["tool_input"], "caller_context": {"session_id": "codex-session-123"}},
+            {
+                **self.event["tool_input"],
+                "caller_context": {"session_id": "codex-session-123"},
+            },
             result["updatedInput"],
         )
 
     def test_matching_existing_context_is_preserved(self):
-        self.event["tool_input"]["caller_context"] = {"session_id": "codex-session-123", "other": 4}
+        self.event["tool_input"]["caller_context"] = {
+            "session_id": "codex-session-123",
+            "other": 4,
+        }
         result = self.decision(self.event)
         self.assertEqual(self.event["tool_input"], result["updatedInput"])
 
@@ -60,63 +69,138 @@ class CodexHookTests(unittest.TestCase):
         nested = subdir / "nested"
         nested.mkdir()
         (nested / ".git").write_text("gitdir: /worktree/gitdir\n")
-        for folder, root in ((self.project, self.project), (subdir, self.project), (nested, nested)):
+        for folder, root in (
+            (self.project, self.project),
+            (subdir, self.project),
+            (nested, nested),
+        ):
             with self.subTest(folder=folder):
                 result = self.decision({**self.event, "cwd": str(folder)})
                 self.assertEqual("allow", result["permissionDecision"])
-                self.assertEqual(str(root), result["updatedInput"]["project_root"])
+                self.assertEqual(
+                    str(root), result["updatedInput"]["project_root"]
+                )
+
+    def test_resolves_symlinked_cwd_to_canonical_worktree(self):
+        alias = Path(self.temp.name) / "alias"
+        alias.symlink_to(self.project, target_is_directory=True)
+        del self.event["tool_input"]["project_root"]
+        result = self.decision({**self.event, "cwd": str(alias)})
+        self.assertEqual("allow", result["permissionDecision"])
+        self.assertEqual(
+            str(self.project), result["updatedInput"]["project_root"]
+        )
 
     def test_subdirectory_accepts_only_canonical_explicit_root(self):
         child = self.project / "child"
         child.mkdir()
         self.event["cwd"] = str(child)
-        self.assertEqual("allow", self.decision(self.event)["permissionDecision"])
+        self.assertEqual(
+            "allow", self.decision(self.event)["permissionDecision"]
+        )
         self.event["tool_input"]["project_root"] = str(child)
-        self.assertEqual("deny", self.decision(self.event)["permissionDecision"])
+        self.assertEqual(
+            "deny", self.decision(self.event)["permissionDecision"]
+        )
 
     def test_rejects_missing_root_and_unsafe_marker(self):
         del self.event["tool_input"]["project_root"]
         outside = Path(self.temp.name).resolve() / "outside"
         outside.mkdir()
-        self.assertEqual("deny", self.decision({**self.event, "cwd": str(outside)})["permissionDecision"])
+        self.assertEqual(
+            "deny",
+            self.decision({**self.event, "cwd": str(outside)})[
+                "permissionDecision"
+            ],
+        )
         child = self.project / "child"
         child.mkdir()
         (child / ".git").symlink_to(self.project / ".git")
-        self.assertEqual("deny", self.decision({**self.event, "cwd": str(child)})["permissionDecision"])
-        self.assertEqual("deny", self.decision({**self.event, "cwd": str(child / "missing")})["permissionDecision"])
+        self.assertEqual(
+            "deny",
+            self.decision({**self.event, "cwd": str(child)})[
+                "permissionDecision"
+            ],
+        )
+        self.assertEqual(
+            "deny",
+            self.decision({**self.event, "cwd": str(child / "missing")})[
+                "permissionDecision"
+            ],
+        )
 
     def test_conflicting_project_root_is_denied(self):
-        self.event["tool_input"]["project_root"] = str(self.project.with_name("another"))
-        self.assertEqual("deny", self.decision(self.event)["permissionDecision"])
+        self.event["tool_input"]["project_root"] = str(
+            self.project.with_name("another")
+        )
+        result = self.decision(self.event)
+        self.assertEqual("deny", result["permissionDecision"])
+        self.assertNotIn("updatedInput", result)
 
     def test_missing_or_invalid_session_folder_is_denied(self):
         del self.event["cwd"]
-        self.assertEqual("deny", self.decision(self.event)["permissionDecision"])
-        for folder in (None, "", "relative/project", str(self.project / "bad\x00path")):
+        self.assertEqual(
+            "deny", self.decision(self.event)["permissionDecision"]
+        )
+        for folder in (
+            None,
+            "",
+            "relative/project",
+            str(self.project / "bad\x00path"),
+        ):
             with self.subTest(folder=folder):
                 result = self.decision({**self.event, "cwd": folder})
                 self.assertEqual("deny", result["permissionDecision"])
 
     def test_conflicting_session_is_denied(self):
-        self.event["tool_input"]["caller_context"] = {"session_id": "another-session"}
-        self.assertEqual("deny", self.decision(self.event)["permissionDecision"])
+        self.event["tool_input"]["caller_context"] = {
+            "session_id": "another-session"
+        }
+        result = self.decision(self.event)
+        self.assertEqual("deny", result["permissionDecision"])
+        self.assertNotIn("updatedInput", result)
 
     def test_missing_or_invalid_context_is_denied(self):
-        for key, value in (("session_id", None), ("session_id", ""), ("tool_input", None)):
+        for key, value in (
+            ("session_id", None),
+            ("session_id", ""),
+            ("tool_input", None),
+        ):
             with self.subTest(key=key, value=value):
                 changed = {**self.event, key: value}
-                self.assertEqual("deny", self.decision(changed)["permissionDecision"])
-        for key, value in (("project_root", None), ("project_root", ""), ("caller_context", None)):
+                self.assertEqual(
+                    "deny", self.decision(changed)["permissionDecision"]
+                )
+        for key, value in (
+            ("project_root", None),
+            ("project_root", ""),
+            ("caller_context", None),
+        ):
             with self.subTest(key=key, value=value):
-                changed = {**self.event, "tool_input": {**self.event["tool_input"], key: value}}
-                self.assertEqual("deny", self.decision(changed)["permissionDecision"])
+                changed = {
+                    **self.event,
+                    "tool_input": {**self.event["tool_input"], key: value},
+                }
+                self.assertEqual(
+                    "deny", self.decision(changed)["permissionDecision"]
+                )
 
     def test_other_servers_are_untouched(self):
-        result = invoke(json.dumps({**self.event, "cwd": None, "tool_name": "mcp__other__query_run"}))
+        result = invoke(
+            json.dumps(
+                {
+                    **self.event,
+                    "cwd": None,
+                    "tool_name": "mcp__other__query_run",
+                }
+            )
+        )
         self.assertEqual({}, result)
 
     def test_invalid_json_is_denied(self):
-        self.assertEqual("deny", invoke("{")["hookSpecificOutput"]["permissionDecision"])
+        self.assertEqual(
+            "deny", invoke("{")["hookSpecificOutput"]["permissionDecision"]
+        )
 
     def test_large_deep_and_non_unicode_input_is_denied(self):
         for raw in (
@@ -127,10 +211,16 @@ class CodexHookTests(unittest.TestCase):
         ):
             with self.subTest(size=len(raw)):
                 result = subprocess.run(
-                    [sys.executable, "-B", str(HOOK)], input=raw, capture_output=True, check=True
+                    [sys.executable, "-B", str(HOOK)],
+                    input=raw,
+                    capture_output=True,
+                    check=True,
                 )
                 self.assertEqual(
-                    "deny", json.loads(result.stdout)["hookSpecificOutput"]["permissionDecision"]
+                    "deny",
+                    json.loads(result.stdout)["hookSpecificOutput"][
+                        "permissionDecision"
+                    ],
                 )
 
 

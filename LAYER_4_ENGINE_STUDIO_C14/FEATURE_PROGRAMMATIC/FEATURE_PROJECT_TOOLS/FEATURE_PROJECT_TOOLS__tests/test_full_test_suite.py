@@ -15,9 +15,10 @@ import time
 import unittest
 from unittest.mock import patch
 
-TOOLS = Path(__file__).resolve().parents[1]
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS import test_suite__shared as full
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.test_suite__shared import APP
+
+TOOLS = Path(__file__).resolve().parents[1]
 
 PASSING = (
     "import unittest\nclass Test(unittest.TestCase):\n def test_one(self): self.assertTrue(True)\n"

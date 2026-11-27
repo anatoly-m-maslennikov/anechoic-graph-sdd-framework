@@ -33,30 +33,58 @@ class RenderEntityTreeTests(unittest.TestCase):
         self.projection = self.root / ".anechoic_anechoic/_projection"
         self.projection.mkdir(parents=True)
         settings = self.projection.parent / "anechoic_project_settings.toml"
-        settings.write_text('[artifact_timestamps]\ntimezone = "UTC"\n', encoding="utf-8")
+        settings.write_text(
+            '[artifact_timestamps]\ntimezone = "UTC"\n', encoding="utf-8"
+        )
         self.source = self.root / "sources/CA-R-9001.md"
         self.source.parent.mkdir()
         self.source.write_text(atom(), encoding="utf-8")
         self.snapshot = self.projection / "graph.json"
-        self.snapshot.write_text('{"stale": "irrelevant old graph"}', encoding="utf-8")
-        self.output = self.projection / "CA-PROJ-901-CORE--Entities-Graph--Current-Atoms.md"
+        self.snapshot.write_text(
+            '{"stale": "irrelevant old graph"}', encoding="utf-8"
+        )
+        self.output = (
+            self.projection
+            / "CA-PROJ-901-CORE--Entities-Graph--Current-Atoms.md"
+        )
 
-    def run_cli(self, output=None, source_root=None, *, view="inherency", selection="Current Atoms", stdout=False):
+    def run_cli(
+        self,
+        output=None,
+        source_root=None,
+        *,
+        view="inherency",
+        selection="Current Atoms",
+        stdout=False,
+    ):
         command = [
-            sys.executable, "-B", str(SCRIPT), str(source_root or self.source.parent),
-            "--projection-id", "CA-PROJ-901", "--named-selection", selection,
-            "--scope-name", "CORE", "--view", view,
+            sys.executable,
+            "-B",
+            str(SCRIPT),
+            str(source_root or self.source.parent),
+            "--projection-id",
+            "CA-PROJ-901",
+            "--named-selection",
+            selection,
+            "--scope-name",
+            "CORE",
+            "--view",
+            view,
         ]
         if stdout:
             command.append("--stdout")
         if output is not None:
             command.extend(["--output", str(output)])
-        return subprocess.run(command, cwd=self.root, text=True, capture_output=True, timeout=30)
+        return subprocess.run(
+            command, cwd=self.root, text=True, capture_output=True, timeout=30
+        )
 
     def source_bytes(self):
         return [path.read_bytes() for path in (self.source, self.snapshot)]
 
-    def test_stdout_and_published_markdown_use_current_atoms_and_preserve_inputs(self):
+    def test_stdout_and_published_markdown_use_current_atoms_and_preserve_inputs(
+        self,
+    ):
         before = self.source_bytes()
         started = dt.datetime.now(dt.UTC).replace(microsecond=0)
         stdout = self.run_cli(stdout=True)
@@ -67,18 +95,25 @@ class RenderEntityTreeTests(unittest.TestCase):
         self.assertEqual("", published.stdout)
         document = self.output.read_text(encoding="utf-8")
         metadata = yaml.safe_load(document.split("---\n", 2)[1])
-        moment = dt.datetime.strptime(metadata["updated_at"], "%Y-%m-%d %H:%M:%S %z")
+        moment = dt.datetime.strptime(
+            metadata["updated_at"], "%Y-%m-%d %H:%M:%S %z"
+        )
         self.assertLessEqual(started, moment)
         self.assertLessEqual(moment, dt.datetime.now(dt.UTC))
         self.assertEqual(dt.timedelta(0), moment.utcoffset())
         self.assertEqual(["CA-R-9001@7"], metadata["source"]["atoms"])
         self.assertEqual("CA-PROJ-901", metadata["projection_id"])
         self.assertEqual("Map", metadata["form"])
-        self.assertEqual("Named Selection//Current Atoms", metadata["source"]["named_selection"])
+        self.assertEqual(
+            "Named Selection//Current Atoms",
+            metadata["source"]["named_selection"],
+        )
         self.assertNotIn("type", metadata)
         self.assertNotIn("source_of_truth", metadata)
         self.assertNotIn("sources", metadata)
-        self.assertEqual(stdout.stdout.split("---\n", 2)[2], document.split("---\n", 2)[2])
+        self.assertEqual(
+            stdout.stdout.split("---\n", 2)[2], document.split("---\n", 2)[2]
+        )
         self.assertIn("sources", document)
         self.assertNotIn("Saved snapshot", document)
         self.assertIn("### Alpha", document)
@@ -89,13 +124,23 @@ class RenderEntityTreeTests(unittest.TestCase):
     def test_declaration_view_excludes_live_atom_relation_tuples(self):
         self.source.write_text(
             atom(subject="Entity/Relation/Type: Custom").replace(
-                "\n---\n# Source", "\nrelations: {depends_on: [CA-R-123]}\n---\n# Source"
-            ), encoding="utf-8",
+                "\n---\n# Source",
+                "\nrelations: {depends_on: [CA-R-123]}\n---\n# Source",
+            ),
+            encoding="utf-8",
         )
         before = self.source_bytes()
-        result = self.run_cli(view="declarations", selection="Relation Types and Graph Rules", stdout=True)
+        result = self.run_cli(
+            view="declarations",
+            selection="Relation Types and Graph Rules",
+            stdout=True,
+        )
         self.assertEqual(0, result.returncode, result.stderr)
-        for heading in ("## Relation Types", "## Graph Rules", "## Source limitations"):
+        for heading in (
+            "## Relation Types",
+            "## Graph Rules",
+            "## Source limitations",
+        ):
             self.assertIn(heading, result.stdout)
         self.assertIn("Custom", result.stdout)
         self.assertIn("empty for the selected source set", result.stdout)
@@ -105,19 +150,33 @@ class RenderEntityTreeTests(unittest.TestCase):
     def test_model_view_renders_constraint_sections_without_publishing(self):
         self.source.write_text(
             atom(subject="Node.Property: literal").replace(
-                "# Source\n", "# Source\n\n## Claim\n\n```python\nproperty_rule(address='Node.Property', value_format='string', values='1')\n```\n"
-            ), encoding="utf-8",
+                "# Source\n",
+                (
+                    "# Source\n\n## Claim\n\n```python\nproperty_rule(address="
+                    "'Node.Property', value_format='string', "
+                    "values='1')\n```\n"
+                ),
+            ),
+            encoding="utf-8",
         )
         before = self.source_bytes()
         result = self.run_cli(view="model", stdout=True)
         self.assertEqual(0, result.returncode, result.stderr)
-        for heading in ("## Model graph", "## Properties", "## Allowed literals", "## Constraints", "## Python Formal Claim diagnostics"):
+        for heading in (
+            "## Model graph",
+            "## Properties",
+            "## Allowed literals",
+            "## Constraints",
+            "## Python Formal Claim diagnostics",
+        ):
             self.assertIn(heading, result.stdout)
         self.assertFalse(self.output.exists())
         self.assertEqual(before, self.source_bytes())
 
     def test_model_view_uses_model_graph_filename(self):
-        model_output = self.projection / "CA-PROJ-901-CORE--Model-Graph--Current-Atoms.md"
+        model_output = (
+            self.projection / "CA-PROJ-901-CORE--Model-Graph--Current-Atoms.md"
+        )
         result = self.run_cli(model_output, view="model")
         self.assertEqual(0, result.returncode, result.stderr)
         self.assertTrue(model_output.exists())
@@ -126,7 +185,9 @@ class RenderEntityTreeTests(unittest.TestCase):
         self.assertEqual(1, wrong_name.returncode)
         self.assertIn("Model-Graph", wrong_name.stderr)
 
-    def test_identity_mismatch_or_wrong_filename_preserves_existing_output(self):
+    def test_identity_mismatch_or_wrong_filename_preserves_existing_output(
+        self,
+    ):
         self.assertEqual(0, self.run_cli(self.output).returncode)
         document = self.output.read_bytes()
         renamed = self.run_cli(self.output, selection="Other Atoms")
@@ -137,14 +198,20 @@ class RenderEntityTreeTests(unittest.TestCase):
         self.assertEqual(1, other_view.returncode)
         self.assertIn("distinct Projection identity", other_view.stderr)
         self.assertEqual(document, self.output.read_bytes())
-        self.output.write_bytes(document.replace(b"projection_id: CA-PROJ-901", b"projection_id: CA-PROJ-902"))
+        self.output.write_bytes(
+            document.replace(
+                b"projection_id: CA-PROJ-901", b"projection_id: CA-PROJ-902"
+            )
+        )
         mismatched = self.output.read_bytes()
         result = self.run_cli(self.output)
         self.assertEqual(1, result.returncode)
         self.assertIn("Existing Projection identity", result.stderr)
         self.assertEqual(mismatched, self.output.read_bytes())
 
-    def test_legacy_type_header_is_read_compatibly_then_rewritten_as_form(self):
+    def test_legacy_type_header_is_read_compatibly_then_rewritten_as_form(
+        self,
+    ):
         self.output.write_text(
             "---\n"
             "artifact_form: Projection\n"
@@ -161,13 +228,20 @@ class RenderEntityTreeTests(unittest.TestCase):
         )
         result = self.run_cli(self.output)
         self.assertEqual(0, result.returncode, result.stderr)
-        metadata = yaml.safe_load(self.output.read_text(encoding="utf-8").split("---\n", 2)[1])
+        metadata = yaml.safe_load(
+            self.output.read_text(encoding="utf-8").split("---\n", 2)[1]
+        )
         self.assertEqual("Map", metadata["form"])
-        self.assertEqual("Named Selection//Current Atoms", metadata["source"]["named_selection"])
+        self.assertEqual(
+            "Named Selection//Current Atoms",
+            metadata["source"]["named_selection"],
+        )
         self.assertEqual(["CA-R-9001@7"], metadata["source"]["atoms"])
         self.assertNotIn("type", metadata)
 
-    def test_next_run_reflects_live_subject_version_and_ignores_stale_snapshot(self):
+    def test_next_run_reflects_live_subject_version_and_ignores_stale_snapshot(
+        self,
+    ):
         first = self.run_cli()
         self.assertEqual(0, first.returncode, first.stderr)
         self.source.write_text(atom(8, "Beta.Code"), encoding="utf-8")
@@ -177,7 +251,10 @@ class RenderEntityTreeTests(unittest.TestCase):
         document = self.output.read_text(encoding="utf-8")
         metadata = yaml.safe_load(document.split("---\n", 2)[1])
         self.assertEqual("CA-PROJ-901", metadata["projection_id"])
-        self.assertEqual("Named Selection//Current Atoms", metadata["source"]["named_selection"])
+        self.assertEqual(
+            "Named Selection//Current Atoms",
+            metadata["source"]["named_selection"],
+        )
         self.assertIn("CA-R-9001@8", document)
         self.assertIn("Beta.Code", document)
         self.assertNotIn("Alpha.Label", document)
@@ -195,14 +272,19 @@ class RenderEntityTreeTests(unittest.TestCase):
 
     def test_invalid_source_metadata_preserves_existing_output(self):
         self.output.write_bytes(b"prior projection\n")
-        for malformed in (atom(version=0), "---\natom_id: [broken\n---\n# Source\n"):
+        for malformed in (
+            atom(version=0),
+            "---\natom_id: [broken\n---\n# Source\n",
+        ):
             self.source.write_text(malformed, encoding="utf-8")
             before = self.source_bytes()
             result = self.run_cli()
             with self.subTest(source=malformed):
                 self.assertEqual(1, result.returncode)
                 self.assertIn("Cannot render Entities Graph", result.stderr)
-                self.assertEqual(b"prior projection\n", self.output.read_bytes())
+                self.assertEqual(
+                    b"prior projection\n", self.output.read_bytes()
+                )
                 self.assertEqual(before, self.source_bytes())
 
     def test_outside_projection_and_symlink_outputs_are_rejected(self):
@@ -212,11 +294,17 @@ class RenderEntityTreeTests(unittest.TestCase):
         linked_folder = self.projection / "linked"
         linked_folder.symlink_to(self.root, target_is_directory=True)
         before = self.source_bytes()
-        for destination in (outside, self.output, linked_folder / self.output.name):
+        for destination in (
+            outside,
+            self.output,
+            linked_folder / self.output.name,
+        ):
             result = self.run_cli(destination)
             with self.subTest(destination=destination.name):
                 self.assertEqual(1, result.returncode)
-                self.assertIn("Output must be a non-symlink path", result.stderr)
+                self.assertIn(
+                    "Output must be a non-symlink path", result.stderr
+                )
                 self.assertEqual(b"unrelated bytes\n", outside.read_bytes())
                 self.assertTrue(self.output.is_symlink())
                 self.assertFalse((self.root / self.output.name).exists())

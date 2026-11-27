@@ -10,6 +10,7 @@ import unittest
 from unittest.mock import patch
 
 
+from .launcher_images_test_support import ImageFixture
 APP = Path(__file__).resolve().parents[1]
 DOCKER = APP / "docker"
 
@@ -22,13 +23,13 @@ IMAGE_ID = "sha256:" + "a" * 64
 FRAMEWORK_VERSION = "0.4.4.9"
 
 
-from .launcher_images_test_support import ImageFixture
 
 
 class ImageGoldenTests(ImageFixture, unittest.TestCase):
     def test_identity_is_source_bound_but_independent_of_project_context(self) -> None:
         source = APP.parents[2]
-        no_docker = lambda *_args, **_kwargs: self.fail("identity must not invoke Docker")
+        def no_docker(*_args, **_kwargs):
+            return self.fail("identity must not invoke Docker")
         before = self.manager(source, no_docker).identity()
 
         project_state = self.fixture_root / "project" / ".anechoic_demo"
@@ -106,7 +107,8 @@ class ImageGoldenTests(ImageFixture, unittest.TestCase):
 
     def test_admitted_source_change_changes_fingerprint(self) -> None:
         source = self.source_fixture()
-        no_docker = lambda *_args, **_kwargs: self.fail("identity must not invoke Docker")
+        def no_docker(*_args, **_kwargs):
+            return self.fail("identity must not invoke Docker")
         before = self.manager(source, no_docker).identity()
         server = source / "LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/server.py"
         server.write_text("SERVER = 'two'\n", encoding="utf-8")

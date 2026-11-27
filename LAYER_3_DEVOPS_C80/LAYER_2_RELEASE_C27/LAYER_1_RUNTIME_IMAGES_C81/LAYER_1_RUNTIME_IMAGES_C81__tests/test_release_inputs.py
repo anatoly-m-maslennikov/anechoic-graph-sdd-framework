@@ -11,16 +11,23 @@ from LAYER_1_RUNTIME_IMAGES_C81 import release_inputs
 
 class ReleaseInputsTests(unittest.TestCase):
     def setUp(self):
-        self.root = Path(self.enterContext(tempfile.TemporaryDirectory())).resolve()
+        self.root = Path(
+            self.enterContext(tempfile.TemporaryDirectory())
+        ).resolve()
 
-    def manifest(self, *, control=".anechoic_anechoic", flat=False, parameters=None):
+    def manifest(
+        self, *, control=".anechoic_anechoic", flat=False, parameters=None
+    ):
         folder = self.root / control
         folder.mkdir(exist_ok=True)
         path = folder / "AN-S-001-PROJECT_MANIFEST--declare.md"
-        header = ("atom_family: SPEC\natom_id: AN-S-001\ncontainer:\n  component: C00\ntier: -1\n"
-                  "context:\n  template: project_manifest\n" if flat else
-                  "identity:\n  atom_id: AN-S-001\ncontext:\n  container:\n    component: C00\n"
-                  "  tier: -1\n  template: project_manifest\n")
+        header = (
+            "atom_family: SPEC\natom_id: AN-S-001\ncontainer:\n  component: C00\ntier: -1\n"
+            "context:\n  template: project_manifest\n"
+            if flat
+            else "identity:\n  atom_id: AN-S-001\ncontext:\n  container:\n    component: C00\n"
+            "  tier: -1\n  template: project_manifest\n"
+        )
         path.write_text(
             f"---\n{header}state:\n  status: active\n  version: 1\n---\n"
             "## Claim\n\n### Formal Claim\n\n```python\n"
@@ -28,7 +35,9 @@ class ReleaseInputsTests(unittest.TestCase):
             "from anechoic.model import ProjectManifest\n"
             "declare_entity(entity_name='Project Manifest', instance=ProjectManifest("
             f"name='Anechoic', prefix='AN', parameters={parameters or {'project_mcp': {'http_port': 56317}}!r}))\n"
-            "```\n", encoding="utf-8")
+            "```\n",
+            encoding="utf-8",
+        )
         return path
 
     def test_flat_and_nested_headers_and_exact_identity(self):
@@ -37,13 +46,27 @@ class ReleaseInputsTests(unittest.TestCase):
             if flat:
                 self.manifest(flat=True)
             selected = release_inputs.read_release_selection(self.root)
-            self.assertEqual(selected, release_inputs.read_release_selection(self.root, ".anechoic_anechoic"))
+            self.assertEqual(
+                selected,
+                release_inputs.read_release_selection(
+                    self.root, ".anechoic_anechoic"
+                ),
+            )
             self.assertEqual("AN-S-001@1", selected.manifest_ref)
-            self.assertEqual(56317, selected.parameters["project_mcp"]["http_port"])
-            self.assertEqual(sha256(path.read_bytes()).hexdigest(), selected.manifest_sha256)
-            expected = sha256(f"{self.root}\0.anechoic_anechoic".encode()).hexdigest()
+            self.assertEqual(
+                56317, selected.parameters["project_mcp"]["http_port"]
+            )
+            self.assertEqual(
+                sha256(path.read_bytes()).hexdigest(), selected.manifest_sha256
+            )
+            expected = sha256(
+                f"{self.root}\0.anechoic_anechoic".encode()
+            ).hexdigest()
             self.assertEqual(expected, selected.instance_id)
-            self.assertEqual(self.root / ".anechoic_runtime/runtime/project_mcp" / expected, selected.launcher_state)
+            self.assertEqual(
+                self.root / ".anechoic_runtime/runtime/project_mcp" / expected,
+                selected.launcher_state,
+            )
 
     def test_root_manifest_takes_precedence_and_binds_control(self):
         old = self.manifest()
@@ -52,13 +75,24 @@ class ReleaseInputsTests(unittest.TestCase):
         old.write_text("invalid legacy carrier", encoding="utf-8")
         selected = release_inputs.read_release_selection(self.root)
         self.assertEqual(root_manifest, selected.manifest_path)
-        self.assertEqual(self.root / ".anechoic_anechoic", selected.control_root)
-        self.assertEqual(selected, release_inputs.read_release_selection(self.root, ".anechoic_anechoic"))
+        self.assertEqual(
+            self.root / ".anechoic_anechoic", selected.control_root
+        )
+        self.assertEqual(
+            selected,
+            release_inputs.read_release_selection(
+                self.root, ".anechoic_anechoic"
+            ),
+        )
         with self.assertRaises(ValueError):
-            release_inputs.read_release_selection(self.root, "_anechoic_anechoic")
+            release_inputs.read_release_selection(
+                self.root, "_anechoic_anechoic"
+            )
 
     def test_root_manifest_duplicates_invalid_and_control_guards(self):
-        old = self.manifest(parameters={"project": {"root": {"prefix": "dot"}}})
+        old = self.manifest(
+            parameters={"project": {"root": {"prefix": "dot"}}}
+        )
         root_manifest = self.root / old.name
         root_manifest.write_bytes(old.read_bytes())
         duplicate = self.root / "AN-S-001-PROJECT_MANIFEST--other.md"
@@ -66,7 +100,9 @@ class ReleaseInputsTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             release_inputs.read_release_selection(self.root)
         duplicate.unlink()
-        root_manifest.write_text(root_manifest.read_text().replace("prefix='AN'", "prefix='BAD'"))
+        root_manifest.write_text(
+            root_manifest.read_text().replace("prefix='AN'", "prefix='BAD'")
+        )
         with self.assertRaises(ValueError):
             release_inputs.read_release_selection(self.root)
         root_manifest.write_bytes(old.read_bytes())
@@ -96,8 +132,13 @@ class ReleaseInputsTests(unittest.TestCase):
             with self.subTest(port=value):
                 self.manifest(parameters={"project_mcp": {"http_port": value}})
                 selection = release_inputs.read_release_selection(self.root)
-                self.assertIs(type(selection.parameters["project_mcp"]["http_port"]), type(value))
-                self.assertEqual(value, selection.parameters["project_mcp"]["http_port"])
+                self.assertIs(
+                    type(selection.parameters["project_mcp"]["http_port"]),
+                    type(value),
+                )
+                self.assertEqual(
+                    value, selection.parameters["project_mcp"]["http_port"]
+                )
 
     def test_copy_gets_its_own_bound_instance_id(self):
         source = self.manifest()
@@ -106,25 +147,40 @@ class ReleaseInputsTests(unittest.TestCase):
         copied_control = copied_root / original.control_relative
         copied_control.mkdir(parents=True)
         (copied_control / source.name).write_bytes(source.read_bytes())
-        copied = release_inputs.read_release_selection(copied_root, original.control_relative)
+        copied = release_inputs.read_release_selection(
+            copied_root, original.control_relative
+        )
         self.assertEqual(original.manifest_sha256, copied.manifest_sha256)
         self.assertNotEqual(original.instance_id, copied.instance_id)
-        self.assertEqual(sha256(f"{copied_root}\0.anechoic_anechoic".encode()).hexdigest(), copied.instance_id)
+        self.assertEqual(
+            sha256(f"{copied_root}\0.anechoic_anechoic".encode()).hexdigest(),
+            copied.instance_id,
+        )
 
     def test_control_ambiguity_and_symlinks_are_refused(self):
         self.manifest()
         self.manifest(control="_anechoic_anechoic")
         with self.assertRaises(ValueError):
             release_inputs.read_release_selection(self.root)
-        (self.root / "_anechoic_anechoic" / "AN-S-001-PROJECT_MANIFEST--declare.md").unlink()
+        (
+            self.root
+            / "_anechoic_anechoic"
+            / "AN-S-001-PROJECT_MANIFEST--declare.md"
+        ).unlink()
         (self.root / "_anechoic_anechoic").rmdir()
-        (self.root / "_anechoic_anechoic").symlink_to(self.root / ".anechoic_anechoic")
+        (self.root / "_anechoic_anechoic").symlink_to(
+            self.root / ".anechoic_anechoic"
+        )
         with self.assertRaises(ValueError):
             release_inputs.read_release_selection(self.root)
         with self.assertRaises(ValueError):
-            release_inputs.read_release_selection(self.root, "_anechoic_anechoic")
+            release_inputs.read_release_selection(
+                self.root, "_anechoic_anechoic"
+            )
         with self.assertRaises(ValueError):
-            release_inputs.read_release_selection(self.root, "../.anechoic_anechoic")
+            release_inputs.read_release_selection(
+                self.root, "../.anechoic_anechoic"
+            )
 
     def test_rejects_unsafe_claim_and_conflicting_identity(self):
         path = self.manifest()
@@ -137,17 +193,27 @@ class ReleaseInputsTests(unittest.TestCase):
             ("version: 1", "version: 1\n  version: 2"),
         ):
             with self.subTest(replacement=replacement):
-                path.write_text(source.replace(original, replacement), encoding="utf-8")
+                path.write_text(
+                    source.replace(original, replacement), encoding="utf-8"
+                )
                 with self.assertRaises(ValueError):
                     release_inputs.read_release_selection(self.root)
 
     def test_control_prefix_and_declared_control_are_checked(self):
-        self.manifest(parameters={"project_mcp": {"http_port": 56317},
-                                  "project": {"root": {"prefix": "underscore"}}})
+        self.manifest(
+            parameters={
+                "project_mcp": {"http_port": 56317},
+                "project": {"root": {"prefix": "underscore"}},
+            }
+        )
         with self.assertRaises(ValueError):
             release_inputs.read_release_selection(self.root)
-        self.manifest(parameters={"project_mcp": {"http_port": 56317},
-                                  "paths": {"control_root": "other"}})
+        self.manifest(
+            parameters={
+                "project_mcp": {"http_port": 56317},
+                "paths": {"control_root": "other"},
+            }
+        )
         with self.assertRaises(ValueError):
             release_inputs.read_release_selection(self.root)
 
@@ -160,10 +226,16 @@ class ReleaseInputsTests(unittest.TestCase):
             nonlocal calls
             calls += 1
             if calls == 2:
-                path.write_text(path.read_text(encoding="utf-8") + "\nchanged\n", encoding="utf-8")
+                path.write_text(
+                    path.read_text(encoding="utf-8") + "\nchanged\n",
+                    encoding="utf-8",
+                )
             return original(fd, name)
 
-        with patch.object(release_inputs, "_read", side_effect=change), self.assertRaises(ValueError):
+        with (
+            patch.object(release_inputs, "_read", side_effect=change),
+            self.assertRaises(ValueError),
+        ):
             release_inputs.read_release_selection(self.root)
 
     def test_file_symlink_and_symlink_root_are_refused(self):

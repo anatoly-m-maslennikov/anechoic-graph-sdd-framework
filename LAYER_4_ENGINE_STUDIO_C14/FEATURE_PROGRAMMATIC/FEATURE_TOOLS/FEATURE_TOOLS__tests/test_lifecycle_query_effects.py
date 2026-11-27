@@ -1,4 +1,5 @@
 """Bound lifecycle effects read through Workbench and publish index changes."""
+
 import hashlib
 from contextlib import contextmanager
 import os
@@ -12,7 +13,11 @@ import unittest
 TOOLS = Path(__file__).resolve().parents[1]
 ROOT = TOOLS.parents[2]
 sys.path.insert(0, str(TOOLS))
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import directory_effect_module as directory_effect, effects_module as effects, source_module as source  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import (  # noqa: E402
+    directory_effect_module as directory_effect,
+    effects_module as effects,
+    source_module as source,
+)
 
 
 class Reader:
@@ -22,7 +27,11 @@ class Reader:
 
     def lifecycle_read(self, path, *, descriptor=None):
         self.events.append(("read", path))
-        return path.read_bytes() if descriptor is None else os.pread(descriptor, os.fstat(descriptor).st_size, 0)
+        return (
+            path.read_bytes()
+            if descriptor is None
+            else os.pread(descriptor, os.fstat(descriptor).st_size, 0)
+        )
 
     def lifecycle_changed(self, old, new):
         self.events.append(("changed", old, new))
@@ -41,15 +50,28 @@ def carrier_dir():
 def test_bound_create_update_and_remove_use_workbench(carrier_dir):
     path = carrier_dir / "CA-R-100-TEST.md"
     reader = Reader()
-    with source.bind_query_reader(reader), patch.object(
-            effects, "_read", side_effect=AssertionError("direct Atom read")):
+    with (
+        source.bind_query_reader(reader),
+        patch.object(
+            effects, "_read", side_effect=AssertionError("direct Atom read")
+        ),
+    ):
         assert not effects.create(ROOT, path, b"one").errors
         assert reader.events == [("changed", None, path), ("read", path)]
         reader.events.clear()
-        assert not effects.replace(ROOT, path, hashlib.sha256(b"one").hexdigest(), b"two").errors
-        assert reader.events == [("read", path), ("read", path), ("changed", path, path), ("read", path)]
+        assert not effects.replace(
+            ROOT, path, hashlib.sha256(b"one").hexdigest(), b"two"
+        ).errors
+        assert reader.events == [
+            ("read", path),
+            ("read", path),
+            ("changed", path, path),
+            ("read", path),
+        ]
         reader.events.clear()
-        assert not effects.remove(ROOT, path, hashlib.sha256(b"two").hexdigest()).errors
+        assert not effects.remove(
+            ROOT, path, hashlib.sha256(b"two").hexdigest()
+        ).errors
         assert reader.events == [("read", path), ("changed", path, None)]
 
 
@@ -76,13 +98,18 @@ def test_readback_allows_metadata_change_after_verified_content(carrier_dir):
         target.chmod(0o640)
         return raw
 
-    with source.bind_query_reader(reader), patch.object(reader, "lifecycle_read", read_then_change_mode):
+    with (
+        source.bind_query_reader(reader),
+        patch.object(reader, "lifecycle_read", read_then_change_mode),
+    ):
         result = effects.create(ROOT, path, b"one")
     assert not result.errors
     assert result.effects[0]["state"] == "known"
 
 
-def test_readback_rejects_carrier_replacement_after_verified_content(carrier_dir):
+def test_readback_rejects_carrier_replacement_after_verified_content(
+    carrier_dir,
+):
     path = carrier_dir / "CA-R-100-TEST.md"
     replacement = carrier_dir / "replacement.md"
     replacement.write_bytes(b"concurrent edit")
@@ -94,7 +121,10 @@ def test_readback_rejects_carrier_replacement_after_verified_content(carrier_dir
         replacement.replace(target)
         return raw
 
-    with source.bind_query_reader(reader), patch.object(reader, "lifecycle_read", read_then_replace):
+    with (
+        source.bind_query_reader(reader),
+        patch.object(reader, "lifecycle_read", read_then_replace),
+    ):
         result = effects.create(ROOT, path, b"one")
 
     assert path.read_bytes() == b"concurrent edit"
@@ -123,13 +153,24 @@ def test_directory_move_reads_atoms_through_workbench(carrier_dir):
     (source / "asset.bin").write_bytes(b"asset")
     destination = carrier_dir / "destination"
     reader = Reader()
-    with patch.object(effects, "_reader", side_effect=lambda path: reader if path.name == atom.name else None), \
-            patch.object(effects, "_read", wraps=effects._read) as direct:
+    with (
+        patch.object(
+            effects,
+            "_reader",
+            side_effect=lambda path: (
+                reader if path.name == atom.name else None
+            ),
+        ),
+        patch.object(effects, "_read", wraps=effects._read) as direct,
+    ):
         result = directory_effect.move_directory(ROOT, source, destination)
     assert not result.errors
     assert (destination / atom.name).read_bytes() == b"atom"
     assert (destination / "asset.bin").read_bytes() == b"asset"
-    assert any(event == ("changed", None, destination / atom.name) for event in reader.events)
+    assert any(
+        event == ("changed", None, destination / atom.name)
+        for event in reader.events
+    )
     assert any(event == ("changed", atom, None) for event in reader.events)
     assert all(call.args[1] != atom.name for call in direct.call_args_list)
 
@@ -139,5 +180,10 @@ def load_tests(loader, tests, pattern):
         with carrier_dir() as directory:
             test(directory)
 
-    return unittest.TestSuite(unittest.FunctionTestCase(lambda test=test: run(test), description=test.__name__)
-                              for name, test in globals().items() if name.startswith("test_") and callable(test))
+    return unittest.TestSuite(
+        unittest.FunctionTestCase(
+            lambda test=test: run(test), description=test.__name__
+        )
+        for name, test in globals().items()
+        if name.startswith("test_") and callable(test)
+    )

@@ -190,6 +190,29 @@ class WorkspaceStore:
                     continue
         return {"items": [{"workspace_id": value} for value in sorted(ids)]}
 
+    def _load_document(self, directory, workspace_id, opening):
+        try:
+            document = self._read(directory, _filename(workspace_id))
+        except FileNotFoundError as error:
+            if not opening:
+                raise ValueError("unknown workspace_id") from error
+            view = _new_view()
+            document = _Workspace(workspace_id=workspace_id, project_root=str(self._root),
+                                  active_view_id=view.id, views=[view])
+            _write_document(directory, document)
+        return document
+
+    def _operation_directory(self, opening, operation):
+        try:
+            directory = self._open_directory(opening)
+        except FileNotFoundError as error:
+            if operation == "workspace_list":
+                return None
+            raise ValueError("unknown workspace_id") from error
+        except OSError as error:
+            raise ValueError("workspace directory is unavailable or unsafe") from error
+        return directory
+
     def invoke(self, operation: str, arguments: dict) -> dict:
         """Apply one explicit state operation under the Project's store lock."""
         if not isinstance(operation, str) or operation not in _ARGUMENTS:
@@ -201,27 +224,14 @@ class WorkspaceStore:
         id_field = "session_id" if opening else "workspace_id"
         if operation != "workspace_list":
             workspace_id = _text(arguments[id_field], id_field, nonempty=True)
-        try:
-            directory = self._open_directory(opening)
-        except FileNotFoundError as error:
-            if operation == "workspace_list":
-                return {"items": []}
-            raise ValueError("unknown workspace_id") from error
-        except OSError as error:
-            raise ValueError("workspace directory is unavailable or unsafe") from error
+        directory = self._operation_directory(opening, operation)
+        if directory is None:
+            return {"items": []}
         try:
             flock(directory, LOCK_EX)
             if operation == "workspace_list":
                 return self._list(directory)
-            try:
-                document = self._read(directory, _filename(workspace_id))
-            except FileNotFoundError as error:
-                if not opening:
-                    raise ValueError("unknown workspace_id") from error
-                view = _new_view()
-                document = _Workspace(workspace_id=workspace_id, project_root=str(self._root),
-                                      active_view_id=view.id, views=[view])
-                _write_document(directory, document)
+            document = self._load_document(directory, workspace_id, opening)
             if document.workspace_id != workspace_id:
                 raise ValueError("workspace is unavailable")
             if operation in ("workspace_open", "workspace_get"):
@@ -234,17 +244,39 @@ class WorkspaceStore:
         finally:
             os.close(directory)
 
+    def _edit_view(self, operation, arguments, document, view):
+        views = document.views
+        if operation == "view_duplicate":
+            view = _duplicate(views, view)
+        elif operation == "view_remove":
+            views.remove(view)
+            if document.active_view_id == view.id:
+                document.active_view_id = views[0].id
+        elif operation == "view_update":
+            self._update(view, arguments)
+        elif operation == "view_rename":
+            name = _text(arguments["name"], "name")
+            if name.strip():
+                view.name = name
+            else:
+                view.name = None
+        return view
+
+    def _create_view(self, arguments, views):
+        position = arguments.get("position", "last")
+        if position not in ("first", "last"):
+            raise ValueError("position must be first or last")
+        view = _new_view()
+        name = arguments.get("name")
+        if name is not None and _text(name, "name").strip():
+            view.name = name
+        views.insert(0 if position == "first" else len(views), view)
+        return view
+
     def _view_operation(self, operation, arguments, directory, document):
         views = document.views
         if operation == "view_create":
-            position = arguments.get("position", "last")
-            if position not in ("first", "last"):
-                raise ValueError("position must be first or last")
-            view = _new_view()
-            name = arguments.get("name")
-            if name is not None and _text(name, "name").strip():
-                view.name = name
-            views.insert(0 if position == "first" else len(views), view)
+            view = self._create_view(arguments, views)
         else:
             if operation == "view_remove" and len(views) == 1:
                 raise ValueError("cannot remove the last view")
@@ -254,20 +286,7 @@ class WorkspaceStore:
                 raise ValueError("unknown view_id")
             if operation == "view_get":
                 return _view_response(document, view)
-            if operation == "view_duplicate":
-                view = _duplicate(views, view)
-            elif operation == "view_remove":
-                views.remove(view)
-                if document.active_view_id == view.id:
-                    document.active_view_id = views[0].id
-            elif operation == "view_update":
-                self._update(view, arguments)
-            elif operation == "view_rename":
-                name = _text(arguments["name"], "name")
-                if name.strip():
-                    view.name = name
-                else:
-                    view.name = None
+            view = self._edit_view(operation, arguments, document, view)
         if operation in ("view_create", "view_duplicate", "view_focus"):
             document.active_view_id = view.id
         _write_document(directory, document)

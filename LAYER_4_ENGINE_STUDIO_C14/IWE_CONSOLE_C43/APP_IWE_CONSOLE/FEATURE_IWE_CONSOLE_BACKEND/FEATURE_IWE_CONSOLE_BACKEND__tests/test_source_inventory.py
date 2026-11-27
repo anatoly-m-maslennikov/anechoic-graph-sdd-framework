@@ -10,7 +10,9 @@ from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import markdown_paths
 
 
 class SourceInventoryTest(unittest.TestCase):
-    def test_markdown_inventory_skips_symlinks_and_unreadable_directories(self):
+    def test_markdown_inventory_skips_symlinks_and_unreadable_directories(
+        self,
+    ):
         with TemporaryDirectory() as temporary:
             root = Path(temporary)
             current = root / "current.md"
@@ -37,5 +39,11 @@ class SourceInventoryTest(unittest.TestCase):
                 return scandir(path)
 
             with patch("os.scandir", side_effect=scan):
-                self.assertEqual(set(markdown_paths(root)), {current, folder, nested, historical})
-                self.assertEqual(set(markdown_paths(root, include_archived=False)), {current, folder, nested})
+                self.assertEqual(
+                    set(markdown_paths(root)),
+                    {current, folder, nested, historical},
+                )
+                self.assertEqual(
+                    set(markdown_paths(root, include_archived=False)),
+                    {current, folder, nested},
+                )

@@ -1,6 +1,5 @@
 """Cleanup uses exact ownership and immutable IDs, without a Docker daemon."""
 
-
 from __future__ import annotations
 
 import json
@@ -14,8 +13,14 @@ from LAYER_2_LOCAL_RELEASE_C63.release_cleanup import (  # noqa: E402
     cleanup_obsolete_images,
     cleanup_stopped_containers,
 )
-from LAYER_1_RUNTIME_IMAGES_C81.LAYER_1_RUNTIME_IMAGES_C81__shared import Cleanup, FINGERPRINT, SCHEMA  # noqa: E402
-from LAYER_2_LOCAL_RELEASE_C63.release_cleanup_images import record_ready_images  # noqa: E402
+from LAYER_1_RUNTIME_IMAGES_C81.LAYER_1_RUNTIME_IMAGES_C81__shared import (  # noqa: E402
+    Cleanup,
+    FINGERPRINT,
+    SCHEMA,
+)
+from LAYER_2_LOCAL_RELEASE_C63.release_cleanup_images import (  # noqa: E402
+    record_ready_images,
+)
 
 ROOT = Path("/project")
 CURRENT = "sha256:" + "a" * 64
@@ -30,9 +35,15 @@ class ReadyImageHistoryTests(unittest.TestCase):
             previous = None
             for index, current in enumerate(images):
                 expected = tuple(reversed(images[:index]))[:2]
-                self.assertEqual(expected, record_ready_images(history, "project", current, previous))
+                self.assertEqual(
+                    expected,
+                    record_ready_images(history, "project", current, previous),
+                )
                 previous = current
-            self.assertEqual((images[2], images[1]), record_ready_images(history, "project", images[3], images[3]))
+            self.assertEqual(
+                (images[2], images[1]),
+                record_ready_images(history, "project", images[3], images[3]),
+            )
             with self.assertRaisesRegex(ValueError, "history is invalid"):
                 record_ready_images(history, "other", images[3], images[2])
 
@@ -74,20 +85,15 @@ class DockerFixture:
             }
         return identifier, image
 
-    def run(self, argv: tuple[str, ...], root: Path) -> subprocess.CompletedProcess[str]:
+    def run(
+        self, argv: tuple[str, ...], root: Path
+    ) -> subprocess.CompletedProcess[str]:
         self.calls.append(argv)
         if self.fail is not None and argv[: len(self.fail)] == self.fail:
             return subprocess.CompletedProcess(argv, 1, "", "failure")
         output = ""
         if argv[1:3] == ("container", "ls"):
-            output = (
-                "in-use"
-                if any(f"ancestor={image}" in argv for image in self.references)
-                or any(f"ancestor={row['Image']}" in argv for row in self.containers.values())
-                else ""
-            )
-            if "--no-trunc" in argv:
-                output = "\n".join(self.containers)
+            output = self._listed_containers(argv)
         elif argv[1:3] == ("container", "inspect"):
             output = json.dumps(self.containers[argv[-1]])
         elif argv[1:3] == ("container", "rm"):
@@ -115,6 +121,16 @@ class DockerFixture:
                     del self.image_tags[image]
         return subprocess.CompletedProcess(argv, 0, output, "")
 
+    def _listed_containers(self, argv):
+        used = any(f"ancestor={image}" in argv for image in self.references)
+        used = used or any(
+            f"ancestor={row['Image']}" in argv
+            for row in self.containers.values()
+        )
+        if "--no-trunc" in argv:
+            return "\n".join(self.containers)
+        return "in-use" if used else ""
+
 
 class ReleaseCleanupTests(unittest.TestCase):
     def sweep(self, docker: DockerFixture) -> Cleanup:
@@ -132,12 +148,18 @@ class ReleaseCleanupTests(unittest.TestCase):
         self.assertEqual(cleanup.images, {first, second})
         self.assertEqual(docker.containers, {})
         cleanup_obsolete_images(ROOT, CURRENT, FINGER, cleanup, docker.run)
-        removed = {argv[-1] for argv in docker.calls if argv[1:3] == ("image", "rm")}
+        removed = {
+            argv[-1] for argv in docker.calls if argv[1:3] == ("image", "rm")
+        }
         self.assertEqual(removed, set())
         self.assertTrue(cleanup.pending)
-        self.assertTrue(any("without Project ownership" in note for note in cleanup.notes))
+        self.assertTrue(
+            any("without Project ownership" in note for note in cleanup.notes)
+        )
 
-    def test_same_fingerprint_noncandidate_stopped_container_is_removed(self) -> None:
+    def test_same_fingerprint_noncandidate_stopped_container_is_removed(
+        self,
+    ) -> None:
         docker = DockerFixture()
         identifier, matching = docker.add("3")
         docker.images[matching] = FINGER
@@ -146,7 +168,9 @@ class ReleaseCleanupTests(unittest.TestCase):
         self.assertEqual(cleanup.images, {matching})
         self.assertFalse(cleanup.pending)
 
-    def test_running_current_foreign_and_unknown_states_are_preserved(self) -> None:
+    def test_running_current_foreign_and_unknown_states_are_preserved(
+        self,
+    ) -> None:
         docker = DockerFixture()
         docker.add("1", State={"Running": True, "Status": "running"})
         docker.add("2", Image=CURRENT)
@@ -162,7 +186,9 @@ class ReleaseCleanupTests(unittest.TestCase):
             0,
         )
 
-    def test_in_use_candidate_and_unowned_matching_fingerprint_images_are_preserved(self) -> None:
+    def test_in_use_candidate_and_unowned_matching_fingerprint_images_are_preserved(
+        self,
+    ) -> None:
         docker = DockerFixture()
         _, used = docker.add("1")
         docker.references.add(used)
@@ -171,9 +197,13 @@ class ReleaseCleanupTests(unittest.TestCase):
         cleanup = Cleanup(images={used, CURRENT, matching})
         cleanup_obsolete_images(ROOT, CURRENT, FINGER, cleanup, docker.run)
         self.assertTrue(cleanup.pending)
-        self.assertFalse(any(argv[1:3] == ("image", "rm") for argv in docker.calls))
+        self.assertFalse(
+            any(argv[1:3] == ("image", "rm") for argv in docker.calls)
+        )
 
-    def test_failed_discovery_inspection_and_removal_are_reported_without_retry(self) -> None:
+    def test_failed_discovery_inspection_and_removal_are_reported_without_retry(
+        self,
+    ) -> None:
         for command in (
             ("docker", "container", "ls"),
             ("docker", "container", "inspect"),
@@ -187,7 +217,13 @@ class ReleaseCleanupTests(unittest.TestCase):
                 cleanup = self.sweep(docker)
                 self.assertTrue(cleanup.pending)
                 self.assertEqual(len(docker.containers), 1)
-                self.assertEqual(sum(argv[: len(command)] == command for argv in docker.calls), 1)
+                self.assertEqual(
+                    sum(
+                        argv[: len(command)] == command
+                        for argv in docker.calls
+                    ),
+                    1,
+                )
 
     def test_invalid_container_image_labels_are_retained_pending(self) -> None:
         docker = DockerFixture()
@@ -196,9 +232,13 @@ class ReleaseCleanupTests(unittest.TestCase):
         cleanup = self.sweep(docker)
         self.assertIn(identifier, docker.containers)
         self.assertTrue(cleanup.pending)
-        self.assertFalse(any(argv[1:3] == ("container", "rm") for argv in docker.calls))
+        self.assertFalse(
+            any(argv[1:3] == ("container", "rm") for argv in docker.calls)
+        )
 
-    def test_failed_image_removal_and_unproven_image_are_reported(self) -> None:
+    def test_failed_image_removal_and_unproven_image_are_reported(
+        self,
+    ) -> None:
         for failed in (True, False):
             with self.subTest(failed=failed):
                 docker = DockerFixture()
@@ -209,9 +249,14 @@ class ReleaseCleanupTests(unittest.TestCase):
                 else:
                     docker.images[old] = "invalid"
                 cleanup = Cleanup(images={old})
-                cleanup_obsolete_images(ROOT, CURRENT, FINGER, cleanup, docker.run)
+                cleanup_obsolete_images(
+                    ROOT, CURRENT, FINGER, cleanup, docker.run
+                )
                 self.assertTrue(cleanup.pending)
-                self.assertLessEqual(sum(argv[1:3] == ("image", "rm") for argv in docker.calls), 1)
+                self.assertLessEqual(
+                    sum(argv[1:3] == ("image", "rm") for argv in docker.calls),
+                    1,
+                )
 
     def test_default_docker_invocation_has_timeout_and_no_force(self) -> None:
         with patch(
@@ -225,7 +270,9 @@ class ReleaseCleanupTests(unittest.TestCase):
         self.assertEqual(run.call_args.kwargs["timeout"], 30)
         self.assertNotIn("--force", run.call_args.args[0])
 
-    def test_post_smoke_repeat_does_not_retry_failed_container_removal(self) -> None:
+    def test_post_smoke_repeat_does_not_retry_failed_container_removal(
+        self,
+    ) -> None:
         docker = DockerFixture()
         docker.add("1")
         docker.fail = ("docker", "container", "rm")
@@ -240,7 +287,9 @@ class ReleaseCleanupTests(unittest.TestCase):
             cleanup=cleanup,
         )
         self.assertTrue(cleanup.pending)
-        self.assertEqual(sum(argv[1:3] == ("container", "rm") for argv in docker.calls), 1)
+        self.assertEqual(
+            sum(argv[1:3] == ("container", "rm") for argv in docker.calls), 1
+        )
 
 
 if __name__ == "__main__":

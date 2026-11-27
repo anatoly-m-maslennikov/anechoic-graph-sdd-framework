@@ -30,7 +30,11 @@ from .tool_registry_runtime import (
     ToolRegistryStaleError,
     load_active_registry,
 )
-from .workbench_schema_asset import compile_schema, load_image_schema, schema_asset
+from .workbench_schema_asset import (
+    compile_schema,
+    load_image_schema,
+    schema_asset,
+)
 from .workbench_tools import (
     CHECK,
     LOAD,

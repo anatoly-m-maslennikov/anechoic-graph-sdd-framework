@@ -5,22 +5,32 @@ import os
 from pathlib import Path
 
 
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
+    import canonical  # fmt: skip
+
 APP_ROOT = Path(__file__).resolve().parents[3]
 
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import QueryStore  # noqa: E402
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import canonical
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_content  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (  # noqa: E402
+    parse_content,
+)
+
+
 def extension_directory(root: Path) -> Path:
     """Use the suite-prepared DuckPGQ cache, overridable for local runs."""
-    return Path(os.environ.get(
-        "ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY",
-        root / ".anechoic_tmp" / "workbench" / "extensions",
-    ))
+    return Path(
+        os.environ.get(
+            "ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY",
+            root / ".anechoic_tmp" / "workbench" / "extensions",
+        )
+    )
 
 
 class QueryStoreFixture:
     def setUp(self) -> None:
-        self.store = QueryStore(extension_directory=extension_directory(APP_ROOT.parents[1]))
+        self.store = QueryStore(
+            extension_directory=extension_directory(APP_ROOT.parents[1])
+        )
 
     def tearDown(self) -> None:
         self.store.close()
@@ -58,7 +68,9 @@ class QueryStoreFixture:
                 "nested": {"zero": 0, "empty": None},
             },
             "content_markdown": body,
-            "content_properties_json": parse_content(body, tolerate_duplicate_siblings=True),
+            "content_properties_json": parse_content(
+                body, tolerate_duplicate_siblings=True
+            ),
             "relation_edges_json": edges or [],
             "hash": f"atom-{ref or 'anonymous'}",
         }
@@ -79,8 +91,14 @@ class QueryStoreFixture:
         }
 
     @staticmethod
-    def edge(source_kind: str, source_ref: str, target_kind: str, target_ref: str,
-             relation_type: str = "CONTAINS", derived: bool = False) -> dict:
+    def edge(
+        source_kind: str,
+        source_ref: str,
+        target_kind: str,
+        target_ref: str,
+        relation_type: str = "CONTAINS",
+        derived: bool = False,
+    ) -> dict:
         return {
             "source_kind": source_kind,
             "source_ref": source_ref,
@@ -93,4 +111,3 @@ class QueryStoreFixture:
     @staticmethod
     def mapping_hash(value: dict) -> str:
         return hashlib.sha256(canonical(value).encode("utf-8")).hexdigest()
-

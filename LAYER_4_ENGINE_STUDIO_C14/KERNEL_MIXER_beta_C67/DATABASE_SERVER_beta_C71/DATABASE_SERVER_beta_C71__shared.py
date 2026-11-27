@@ -121,6 +121,14 @@ async def _read_object(request, size_limit, *allowed_fields):
     return data
 
 
+def _workspace_provider(operation, store, history, saved_queries):
+    if operation in SAVED_QUERY_OPERATIONS:
+        return saved_queries
+    if operation in {"query_log_list", "query_log_get"}:
+        return history
+    return store
+
+
 def _workspace_route(store, instance_id, lock, history, saved_queries):
     async def workspace(request):
         if store is None:
@@ -133,14 +141,9 @@ def _workspace_route(store, instance_id, lock, history, saved_queries):
                 raise ValueError("Invalid Workspace request")
             with lock:
                 operation, arguments = data["operation"], data["arguments"]
-                if operation in SAVED_QUERY_OPERATIONS:
-                    if saved_queries is None:
-                        return _error("workspace_unavailable", "Saved query storage is unavailable", 409)
-                    provider = saved_queries
-                elif operation in {"query_log_list", "query_log_get"}:
-                    provider = history
-                else:
-                    provider = store
+                provider = _workspace_provider(operation, store, history, saved_queries)
+                if operation in SAVED_QUERY_OPERATIONS and provider is None:
+                    return _error("workspace_unavailable", "Saved query storage is unavailable", 409)
                 result = provider.invoke(operation, arguments)
             return JSONResponse({"result": result})
         except ProjectGraphPending as error:

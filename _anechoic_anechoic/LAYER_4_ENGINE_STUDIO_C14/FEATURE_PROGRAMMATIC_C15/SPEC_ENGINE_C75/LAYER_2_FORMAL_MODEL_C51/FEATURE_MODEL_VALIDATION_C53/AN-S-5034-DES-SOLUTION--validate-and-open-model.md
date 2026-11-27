@@ -9,11 +9,11 @@ context:
   lens: DES
 relations:
   ANSWERS:
-  - AN-S-3067@43
+  - AN-S-3067@44
 state:
   status: active
-  version: 2
-  updated_at: '2026-11-27T01:04:20.461163+00:00'
+  version: 3
+  updated_at: '2026-11-27T11:43:54.041100+00:00'
 ---
 
 ## Summary
@@ -32,7 +32,10 @@ pass. Raise an error when validation fails. The caller writes the instance.
 Open a generation from its path, Model fingerprint, and descriptor SHA-256.
 Verify the descriptor and module bytes, then bind and yield a BoundNativeModel
 in a context manager. Binding or verification errors propagate to the caller.
-The temporary loaded modules are removed when the context exits.
+The temporary loaded modules are removed when the context exits. Preserve the
+supplied Model fingerprint and descriptor SHA-256 through the opening. The
+yielded BoundNativeModel carries that fingerprint, and the verified
+descriptor bytes have the supplied digest.
 
 ### Formal Claim
 
@@ -51,10 +54,10 @@ component_workflow(component='C53', action='validate_proposed_model_instance',
 ```python
 component_workflow(component='C53', action='open_admitted_model',
     machine={'id': 'c53_open_admitted_model', 'initial': 'idle', 'states': {
-        'idle': {'on': {'open_requested': {'target': 'opening', 'guard': {'type': 'matchesTrace', 'params': {'kind': 'trigger', 'target': 'admitted_model', 'detail': {'interface': 'admitted_model', 'action': 'open_admitted_model', 'entry': 'FEATURE_MODEL_VALIDATION__shared.open_admitted_model', 'transport': 'in_process'}}}}}},
-        'opening': {'on': {'admitted_model_opened': {'target': 'returning', 'guard': {'type': 'matchesTrace', 'params': {'kind': 'effect', 'target': 'C53.admitted_model', 'outcome': 'opened'}}}, 'artifact_unavailable_or_invalid': {'target': 'reporting_failure', 'guard': {'type': 'matchesTrace', 'params': {'kind': 'effect', 'target': 'C53.admitted_model', 'outcome': 'failed'}}}}},
+        'idle': {'on': {'open_requested': {'target': 'opening', 'guard': {'type': 'matchesTrace', 'params': {'kind': 'trigger', 'target': 'admitted_model', 'detail': {'interface': 'admitted_model', 'action': 'open_admitted_model', 'entry': 'FEATURE_MODEL_VALIDATION__shared.open_admitted_model', 'transport': 'in_process'}, 'bind': {'selected_model': 'model_sha256', 'selected_descriptor': 'descriptor_sha256'}}}}}},
+        'opening': {'on': {'admitted_model_opened': {'target': 'returning', 'guard': {'type': 'matchesTrace', 'params': {'kind': 'effect', 'target': 'C53.admitted_model', 'outcome': 'opened', 'same_as': {'model_sha256': 'selected_model', 'descriptor_sha256': 'selected_descriptor'}}}}, 'artifact_unavailable_or_invalid': {'target': 'reporting_failure', 'guard': {'type': 'matchesTrace', 'params': {'kind': 'effect', 'target': 'C53.admitted_model', 'outcome': 'failed'}}}}},
         'reporting_failure': {'on': {'failure_reported': {'target': 'failed', 'guard': {'type': 'matchesTrace', 'params': {'kind': 'output', 'outcome': 'failed'}}}}},
-        'returning': {'on': {'open_succeeded': {'target': 'succeeded', 'guard': {'type': 'matchesTrace', 'params': {'kind': 'output', 'outcome': 'succeeded'}}}}},
+        'returning': {'on': {'open_succeeded': {'target': 'succeeded', 'guard': {'type': 'matchesTrace', 'params': {'kind': 'output', 'outcome': 'succeeded', 'same_as': {'model_sha256': 'selected_model', 'descriptor_sha256': 'selected_descriptor'}}}}}},
         'succeeded': {'type': 'final'},
         'failed': {'type': 'final'},
     }})

@@ -1,13 +1,19 @@
 import tempfile
 import unittest
 from pathlib import Path
-from types import SimpleNamespace
+from unittest.mock import NonCallableMock
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import build_code_access_ownership
 
 
 def component(parent, source):
-    return SimpleNamespace(parent=parent, source_path=source, fields={}, name='unused')
+    result = NonCallableMock(
+        spec_set=['parent', 'source_path', 'fields', 'name'],
+        source_path=source,
+        fields={})
+    result.parent = parent
+    result.name = 'unused'
+    return result
 
 
 class OwnershipTests(unittest.TestCase):
@@ -19,12 +25,19 @@ class OwnershipTests(unittest.TestCase):
         for directory in ('control/ENGINE_C1/FEATURE_C2', 'ENGINE_C1/FEATURE/pkg_pkg1/sub',
                           'ENGINE_C1/bridge/GRAPH_C3'):
             (self.root / directory).mkdir(parents=True, exist_ok=True)
-        self.snapshot = SimpleNamespace(project={}, components={
+        self.snapshot = NonCallableMock(
+            spec_set=['project', 'components', 'packages'],
+            project={},
+            components={
             'C1': component('C00', 'one.md'),
             'C2': component('C1', 'ENGINE_C1/two.md'),
             'C3': component('C1', 'ENGINE_C1/three.md'),
             'C4': component('C1', 'ENGINE_C1/four.md'),
-        }, packages={'pkg1': SimpleNamespace(component='C2', fields={})})
+        },
+            packages={'pkg1': NonCallableMock(
+            spec_set=['component', 'fields'],
+            component='C2',
+            fields={})})
         self.paths = {'ENGINE_C1', 'ENGINE_C1/FEATURE', 'ENGINE_C1/FEATURE/pkg_pkg1',
                       'ENGINE_C1/FEATURE/pkg_pkg1/sub', 'ENGINE_C1/bridge',
                       'ENGINE_C1/bridge/GRAPH_C3'}

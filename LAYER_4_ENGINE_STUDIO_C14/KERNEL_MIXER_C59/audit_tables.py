@@ -327,4 +327,4 @@ def query_content_rows(connection: Any, paths: set[str] | None) -> dict[tuple[st
     if paths is not None:
         sql += ' AND ("relative_path", filename) IN (SELECT unnest(?::VARCHAR[]), unnest(?::VARCHAR[]))'
         args = [[Path(p).parent.as_posix() for p in paths], [Path(p).name for p in paths]]
-    return {(row[0], row[1]): dict(zip(names, row[2:])) for row in connection.execute(sql, args).fetchall()}
+    return {(row[0], row[1]): dict(zip(names, row[2:], strict=False)) for row in connection.execute(sql, args).fetchall()}

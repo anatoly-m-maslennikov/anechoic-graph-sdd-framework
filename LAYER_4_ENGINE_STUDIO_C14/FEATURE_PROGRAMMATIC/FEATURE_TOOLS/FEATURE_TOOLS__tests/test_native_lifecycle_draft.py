@@ -117,6 +117,35 @@ class NativeDraftTests(unittest.TestCase):
         self.assertEqual('completed', promoted['outcome'], promoted)
         self.assertNotIn('AN-T-9', (self.path.parent / 'backlog' / self.path.name).read_text())
 
+    def test_exact_draft_no_op_preserves_carrier_and_artifact(self):
+        created = create_draft(self.selection, self.params,
+                               current_rows=self.rows)['savedDraft']
+        path = self.root / created['path']
+        before, stat = path.read_bytes(), path.stat()
+        capture = capture_native(self.selection)
+        body = self.params['changes']['body']
+        variants = ({'body': body}, {'removeRelations': []},
+                    {'body': body, 'removeRelations': []})
+        for changes in variants:
+            with self.subTest(changes=changes):
+                args = {
+                    'target': {'ref_id': created['ref_id'],
+                               'version': created['version']},
+                    'changes': changes,
+                    'expectedUpdatedAt': created['updated_at'],
+                }
+                output = execute_native_lifecycle(
+                    self.selection, 'atom_lifecycle_update', args, capture,
+                    None, previous_capture=None, ticket_labels=(),
+                    validate_project_spec=None,
+                )
+                self.assertEqual('completed', output['outcome'], output)
+                self.assertEqual(created, output['artifact'])
+                self.assertEqual([], output['effects'])
+                self.assertEqual(before, path.read_bytes())
+                self.assertEqual(stat.st_ino, path.stat().st_ino)
+                self.assertEqual(stat.st_mtime_ns, path.stat().st_mtime_ns)
+
     def test_indexed_max_and_real_collision_retries(self):
         from unittest.mock import Mock, patch
         capture = capture_native(self.selection)
@@ -169,16 +198,26 @@ class NativeDraftTests(unittest.TestCase):
                 params = {'sourceCurrent': dict(self.params['sourceCurrent']), 'changes': dict(self.params['changes'])}
                 row = next(row for row in rows if row['id'] == 'AN-T-1')
                 original, manifest = self.path.read_bytes(), self.selection.manifest_path.read_bytes()
-                if case == 'version': params['sourceCurrent']['version'] = 2
-                if case == 'selector': params['sourceCurrent']['extra'] = 'x'
-                if case == 'foreign': params['sourceCurrent']['ref_id'] = 'XX-T-1'
-                if case == 'digest': row.pop('_source_sha256')
-                if case == 'path': row['source_path'] = '../escape.md'
-                if case == 'bytes': self.path.write_bytes(original.replace(b'Old', b'Altered'))
-                if case == 'summary': params['changes']['body'] = params['changes']['body'].replace('Example', 'Changed')
-                if case == 'extra': params['changes']['status'] = 'done'
-                if case == 'template': row['header_json'] = {**row['header_json'], 'context': {'template': 'epic'}}
-                if case == 'manifest': self.selection.manifest_path.write_bytes(manifest + b'changed')
+                if case == 'version':
+                    params['sourceCurrent']['version'] = 2
+                if case == 'selector':
+                    params['sourceCurrent']['extra'] = 'x'
+                if case == 'foreign':
+                    params['sourceCurrent']['ref_id'] = 'XX-T-1'
+                if case == 'digest':
+                    row.pop('_source_sha256')
+                if case == 'path':
+                    row['source_path'] = '../escape.md'
+                if case == 'bytes':
+                    self.path.write_bytes(original.replace(b'Old', b'Altered'))
+                if case == 'summary':
+                    params['changes']['body'] = params['changes']['body'].replace('Example', 'Changed')
+                if case == 'extra':
+                    params['changes']['status'] = 'done'
+                if case == 'template':
+                    row['header_json'] = {**row['header_json'], 'context': {'template': 'epic'}}
+                if case == 'manifest':
+                    self.selection.manifest_path.write_bytes(manifest + b'changed')
                 with self.assertRaises((InputError, SourceChanged)):
                     create_draft(self.selection, params, current_rows=rows)
                 self.assertFalse((self.control / '001_TICKETS/TASKS/01_draft').exists())

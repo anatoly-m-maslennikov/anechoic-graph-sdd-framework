@@ -12,7 +12,6 @@ from .carrier_model import _SOURCE, generate
 from .carrier_observations import lean_bytes, observe, python_checks
 from .carrier_runtime_effects import analyze_carrier
 
-
 _REQUIRED_PROOFS = ''.join(f'''
 example (raw : List Nat) :
     frontmatterBounds raw = {namespace}.bounds raw :=

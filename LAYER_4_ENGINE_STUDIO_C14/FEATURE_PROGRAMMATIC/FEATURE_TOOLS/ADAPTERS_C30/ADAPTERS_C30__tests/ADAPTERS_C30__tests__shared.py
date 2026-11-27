@@ -28,14 +28,24 @@ class NativeSelectionStub(BaseModel):
 
 class NativeCaptureFixture:
     def setUp(self):
-        self.root = Path(self.enterContext(tempfile.TemporaryDirectory())).resolve()
+        self.root = Path(
+            self.enterContext(tempfile.TemporaryDirectory())
+        ).resolve()
         self.control = self.root / ".anechoic_test"
         self.control.mkdir()
-        self.manifest = self.write("AN-S-001-PROJECT_MANIFEST--manifest.md", "AN-S-001", "active", 1)
+        self.manifest = self.write(
+            "AN-S-001-PROJECT_MANIFEST--manifest.md", "AN-S-001", "active", 1
+        )
         self.selection = NativeSelectionStub(
-            root=self.root, control_root=self.control, control_relative=self.control.relative_to(self.root),
-            instance_id="a" * 64, project_name="Test", project_prefix="AN", manifest_path=self.manifest,
-            manifest_ref="AN-S-001@1", manifest_sha256=sha256(self.manifest.read_bytes()).hexdigest(),
+            root=self.root,
+            control_root=self.control,
+            control_relative=self.control.relative_to(self.root),
+            instance_id="a" * 64,
+            project_name="Test",
+            project_prefix="AN",
+            manifest_path=self.manifest,
+            manifest_ref="AN-S-001@1",
+            manifest_sha256=sha256(self.manifest.read_bytes()).hexdigest(),
         )
 
     def write(self, relative, atom_id, status, version, container=None):
@@ -43,7 +53,19 @@ class NativeCaptureFixture:
             relative = "__TKT/TASKS/" + relative
         path = self.control / relative
         path.parent.mkdir(parents=True, exist_ok=True)
-        header = {"identity": {"atom_id": atom_id}, "context": {"container": container or {"component": "C0"}},
-                  "state": {"status": status, "version": version, "updated_at": "2026-11-19T00:00:00Z"}}
-        path.write_text("---\n" + yaml.safe_dump(header) + "---\n\n## Summary\n\nExample\n", encoding="utf-8")
+        header = {
+            "identity": {"atom_id": atom_id},
+            "context": {"container": container or {"component": "C0"}},
+            "state": {
+                "status": status,
+                "version": version,
+                "updated_at": "2026-11-19T00:00:00Z",
+            },
+        }
+        path.write_text(
+            "---\n"
+            + yaml.safe_dump(header)
+            + "---\n\n## Summary\n\nExample\n",
+            encoding="utf-8",
+        )
         return path

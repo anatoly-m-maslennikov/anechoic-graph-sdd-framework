@@ -1,5 +1,12 @@
 """Validate managed Worker capture requests."""
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
+
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    ValidationError,
+    model_validator,
+)
 
 
 _REPLAY_ERROR = "Graph replay requires a watcher-guarded foreground capture"
@@ -50,7 +57,11 @@ class _ManagedRequest(BaseModel):
     @model_validator(mode="after")
     def _capture_mode(self):
         variant = self.model_fields_set & {"paths", "structure", "archive"}
-        if self.replay_graph and (not self.watcher_guarded or not self.foreground or variant - {"structure"}):
+        if self.replay_graph and (
+            not self.watcher_guarded
+            or not self.foreground
+            or variant - {"structure"}
+        ):
             raise ValueError(_REPLAY_ERROR)
         if self.force_graph and not self.graph_only:
             raise ValueError(_FIELDS_ERROR)
@@ -59,7 +70,11 @@ class _ManagedRequest(BaseModel):
         if len(variant) > 1:
             raise ValueError(_FIELDS_ERROR)
         if "archive" in variant:
-            if self.archive is None or not self.incremental and self.archive.endpoints is None:
+            if (
+                self.archive is None
+                or not self.incremental
+                and self.archive.endpoints is None
+            ):
                 raise ValueError(_FIELDS_ERROR)
             if self.batch_full and self.archive.seed is None:
                 raise ValueError(_FIELDS_ERROR)
@@ -70,8 +85,11 @@ def _managed_request(request):
     try:
         return _ManagedRequest.model_validate(request)
     except ValidationError as error:
-        if any(issue["type"] == "bool_type" for issue in error.errors(include_input=False, include_url=False)):
+        if any(
+            issue["type"] == "bool_type"
+            for issue in error.errors(include_input=False, include_url=False)
+        ):
             raise ValueError("Invalid managed Worker option") from None
-        raise ValueError(_REPLAY_ERROR if request.get("replay_graph") else _FIELDS_ERROR) from None
-
-
+        raise ValueError(
+            _REPLAY_ERROR if request.get("replay_graph") else _FIELDS_ERROR
+        ) from None

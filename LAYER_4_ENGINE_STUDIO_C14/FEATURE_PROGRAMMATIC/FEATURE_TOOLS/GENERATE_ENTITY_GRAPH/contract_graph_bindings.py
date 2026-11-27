@@ -15,9 +15,6 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import
     render_subject as _subject_render_subject,
 )
 
-Record = dict[str, Any]
-
-
 import re
 from collections import defaultdict
 from dataclasses import replace
@@ -25,6 +22,8 @@ from dataclasses import replace
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import matches_named_value
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.current_subject_common import _has_selection, namespace_local_expression
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.contract_graph_targets import _target
+
+Record = dict[str, Any]
 
 Candidate = tuple[Record, Mapping[str, Any], str | None, _subject_Path | _subject_RelationChain | None]
 _SCOPE_UNIT_DECLARATION_FORM = "Scope Unit Declaration"

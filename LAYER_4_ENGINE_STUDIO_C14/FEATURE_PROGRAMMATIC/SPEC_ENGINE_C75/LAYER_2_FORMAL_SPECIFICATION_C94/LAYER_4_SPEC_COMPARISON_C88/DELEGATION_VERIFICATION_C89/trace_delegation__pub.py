@@ -23,9 +23,9 @@ from .._package__shared import (
 from .manifest_delegation import (
     CLI_INPUT_FIELDS,
     compare_manifest_call,
-    derive_atom_ref,
     load_manifest_call,
 )
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.atom_reference__pub import derive_atom_ref
 from .sibling_delegation__pub import _load_sibling_caller, _offered_bindings, _require_sibling
 
 _TRACE_BINDING = {'interface', 'transport', 'entry', 'route', 'operation'}

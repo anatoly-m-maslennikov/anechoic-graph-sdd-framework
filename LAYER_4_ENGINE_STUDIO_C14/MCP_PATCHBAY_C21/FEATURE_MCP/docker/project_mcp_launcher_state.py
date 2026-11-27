@@ -8,12 +8,25 @@ from pathlib import Path
 import time
 from typing import Any, Iterator, Mapping
 
-from MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_launcher_common import LaunchError, _FINGERPRINT, _selection_root
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_launcher_common import (
+    LaunchError,
+    _FINGERPRINT,
+    _selection_root,
+)
 
 _LOCK_RETRY_SECONDS = 0.01
 _SAFE_RESULT_KEYS = (
-    "disposition", "condition", "project_root", "control_root", "project_id",
-    "image_id", "fingerprint", "container_id", "service", "port", "readiness",
+    "disposition",
+    "condition",
+    "project_root",
+    "control_root",
+    "project_id",
+    "image_id",
+    "fingerprint",
+    "container_id",
+    "service",
+    "port",
+    "readiness",
 )
 
 
@@ -22,9 +35,14 @@ def _state_root(selection: object) -> Path:
     value = getattr(selection, "launcher_state", None)
     if value is None:
         instance = getattr(selection, "instance_id", "")
-        if not isinstance(instance, str) or _FINGERPRINT.fullmatch(instance) is None:
+        if (
+            not isinstance(instance, str)
+            or _FINGERPRINT.fullmatch(instance) is None
+        ):
             raise LaunchError("PROJECT_SELECTION_REFUSED")
-        value = root / ".anechoic_runtime" / "runtime" / "project_mcp" / instance
+        value = (
+            root / ".anechoic_runtime" / "runtime" / "project_mcp" / instance
+        )
     try:
         state = Path(value)
         relative = state.relative_to(root)
@@ -91,8 +109,12 @@ class _LegacyProcessFence:
         root = getattr(admission, "project_root", None)
         instance = getattr(admission, "project_instance_id", None)
         remaining = deadline - time.monotonic()
-        if (selection is None or getattr(selection, "root", None) != root
-                or getattr(selection, "instance_id", None) != instance or remaining <= 0):
+        if (
+            selection is None
+            or getattr(selection, "root", None) != root
+            or getattr(selection, "instance_id", None) != instance
+            or remaining <= 0
+        ):
             raise LaunchError("PROJECT_SELECTION_REFUSED")
         self._admission = admission
         self._lock = _project_lock(selection, min(30.0, remaining))
@@ -102,7 +124,10 @@ class _LegacyProcessFence:
     def snapshot(self, deadline: float):
         if self._closed or time.monotonic() >= deadline:
             return {"outcome": "unavailable", "records": []}
-        from MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_backend import collect_legacy_processes
+        from MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_backend import (
+            collect_legacy_processes,
+        )
+
         return collect_legacy_processes(self._admission, deadline)
 
     def close(self) -> None:
@@ -111,32 +136,44 @@ class _LegacyProcessFence:
             self._lock.__exit__(None, None, None)
 
 
-def open_legacy_process_fence(admission: object, deadline: float) -> _LegacyProcessFence:
+def open_legacy_process_fence(
+    admission: object, deadline: float
+) -> _LegacyProcessFence:
     """Acquire the same Project-MCP writer fence used by launch/start."""
     return _LegacyProcessFence(admission, deadline)
 
 
-
-def _atomic_metadata(state: Path, name: str, payload: Mapping[str, Any]) -> None:
+def _atomic_metadata(
+    state: Path, name: str, payload: Mapping[str, Any]
+) -> None:
     """Replace a fixed, Project-local metadata file without following links."""
     target = state / name
     temporary = state / ("." + name + "." + str(os.getpid()) + ".tmp")
     descriptor = None
     try:
-        if os.path.lexists(target) and (target.is_symlink() or not target.is_file()):
+        if os.path.lexists(target) and (
+            target.is_symlink() or not target.is_file()
+        ):
             return
         flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
         if hasattr(os, "O_NOFOLLOW"):
             flags |= os.O_NOFOLLOW
         descriptor = os.open(temporary, flags, 0o600)
-        encoded = (json.dumps(dict(payload), sort_keys=True, separators=(",", ":"),
-                              ensure_ascii=True) + "\n").encode("utf-8")
+        encoded = (
+            json.dumps(
+                dict(payload),
+                sort_keys=True,
+                separators=(",", ":"),
+                ensure_ascii=True,
+            )
+            + "\n"
+        ).encode("utf-8")
         os.write(descriptor, encoded)
         os.fsync(descriptor)
         os.close(descriptor)
         descriptor = None
         os.replace(temporary, target)
-    except (OSError, TypeError, ValueError):
+    except OSError, TypeError, ValueError:
         if descriptor is not None:
             os.close(descriptor)
         try:
@@ -145,7 +182,9 @@ def _atomic_metadata(state: Path, name: str, payload: Mapping[str, Any]) -> None
             pass
 
 
-def _record_safe_metadata(selection: object, result: Mapping[str, Any]) -> None:
+def _record_safe_metadata(
+    selection: object, result: Mapping[str, Any]
+) -> None:
     """Persist only attributable lifecycle metadata; credentials and URL stay out."""
     try:
         state = _state_root(selection)
@@ -153,6 +192,5 @@ def _record_safe_metadata(selection: object, result: Mapping[str, Any]) -> None:
         _atomic_metadata(state, "last_launch.json", metadata)
         if result.get("readiness") is True:
             _atomic_metadata(state, "ready.json", metadata)
-    except (LaunchError, OSError, TypeError, ValueError):
+    except LaunchError, OSError, TypeError, ValueError:
         pass
-

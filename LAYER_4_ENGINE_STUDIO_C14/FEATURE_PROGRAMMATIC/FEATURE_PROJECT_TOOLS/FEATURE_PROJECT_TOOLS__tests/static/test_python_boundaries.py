@@ -33,7 +33,10 @@ class PythonBoundaryTests(unittest.TestCase):
 
     def test_qualified_and_sibling_local_imports_are_reported(self):
         self.write(f"{self.release}/ship.py", "VALUE = 1\n")
-        self.write(f"{self.engine}/app.py", f"import {self.release_module}.ship\nfrom ship import VALUE\n")
+        self.write(
+            f"{self.engine}/app.py",
+            f"import {self.release_module}.ship\nfrom ship import VALUE\n",
+        )
         count, output = self.run_check()
         self.assertEqual(count, 2)
         self.assertIn(f"{self.engine}/app.py:1", output)
@@ -42,11 +45,17 @@ class PythonBoundaryTests(unittest.TestCase):
     def test_own_module_wins_and_cli_text_is_not_an_import(self):
         self.write(f"{self.release}/ship.py", "")
         self.write(f"{self.engine}/ship.py", "")
-        self.write(f"{self.engine}/app.py", "import ship\ncommand = ['python', 'ship.py']\n")
+        self.write(
+            f"{self.engine}/app.py",
+            "import ship\ncommand = ['python', 'ship.py']\n",
+        )
         self.assertEqual(self.run_check()[0], 0)
 
     def test_dynamic_literals_and_relative_cross_child(self):
-        self.write(f"{self.engine}/app.py", f"import importlib\nimportlib.import_module('{self.setup}.run')\nfrom ..{self.release_module} import ship\n")
+        self.write(
+            f"{self.engine}/app.py",
+            f"import importlib\nimportlib.import_module('{self.setup}.run')\nfrom ..{self.release_module} import ship\n",
+        )
         count, output = self.run_check()
         self.assertEqual(count, 2)
         self.assertIn("app.py:2", output)

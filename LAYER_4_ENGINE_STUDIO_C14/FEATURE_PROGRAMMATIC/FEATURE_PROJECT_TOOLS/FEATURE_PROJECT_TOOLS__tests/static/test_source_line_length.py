@@ -108,6 +108,23 @@ class SourceLineLengthTests(unittest.TestCase):
             with patch.object(lint, "checker_findings", side_effect=ValueError("broken")):
                 self.assertEqual(lint.check(root), 2)
 
+    def test_real_checker_counts_characters(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / ".editorconfig").write_text(
+                "root = true\n\n[*.py]\nmax_line_length = 79\n",
+            )
+            (root / "example.py").write_text(
+                "\n".join(["x" * 79, "x" * 80, "é" * 79, "é" * 80])
+                + "\n",
+                encoding="utf-8",
+            )
+            results = lint.checker_findings(root, ["example.py"])
+            self.assertEqual(
+                [2, 4],
+                [item["location"]["lines"]["begin"] for item in results],
+            )
+
     def test_line_endings_do_not_create_changed_lines(self):
         self.assertEqual(
             {2}, lint.new_lines(b"old\r\nkeep\r\n", b"keep\nnew\n"),

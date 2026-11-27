@@ -88,6 +88,26 @@ def _release_spec_header(path):
         raise ValueError(f"{path}: invalid Spec header") from error
 
 
+def _active_release_spec(path: Path, metadata: dict, component: str | None) -> bool:
+    context = metadata.get("context", {})
+    if component == "C00" and isinstance(context, dict) and context.get("template") in {
+        "project_manifest", "project_goal", "component_manifest", "component_seed_manifest", "project_contract"
+    }:
+        return False
+    if metadata.get("atom_family") != "SPEC":
+        raise ValueError(f"{path}: invalid Spec family")
+    if component is not None:
+        container = metadata.get("container", {})
+        if not isinstance(container, dict) or container.get("component") != component:
+            return False
+    state = metadata.get("state")
+    if not isinstance(state, dict) or not isinstance(state.get("status"), str):
+        raise ValueError(f"{path}: missing Spec status")
+    if state["status"] != "active":
+        return False
+    return True
+
+
 def _native_release_sources(selection) -> dict[Path, Path]:
     root, control = selection.root, selection.control_root
     selected, identities = {}, set()
@@ -101,21 +121,7 @@ def _native_release_sources(selection) -> dict[Path, Path]:
             if path.suffix != ".md" or not path.name.startswith(prefix):
                 continue
             metadata = _release_spec_header(path)
-            context = metadata.get("context", {})
-            if component == "C00" and isinstance(context, dict) and context.get("template") in {
-                "project_manifest", "project_goal", "component_manifest", "component_seed_manifest", "project_contract"
-            }:
-                continue
-            if metadata.get("atom_family") != "SPEC":
-                raise ValueError(f"{path}: invalid Spec family")
-            if component is not None:
-                container = metadata.get("container", {})
-                if not isinstance(container, dict) or container.get("component") != component:
-                    continue
-            state = metadata.get("state")
-            if not isinstance(state, dict) or not isinstance(state.get("status"), str):
-                raise ValueError(f"{path}: missing Spec status")
-            if state["status"] != "active":
+            if not _active_release_spec(path, metadata, component):
                 continue
             atom_id = metadata.get("atom_id")
             if (not isinstance(atom_id, str) or not re.fullmatch(rf"{re.escape(prefix)}[0-9]+", atom_id)

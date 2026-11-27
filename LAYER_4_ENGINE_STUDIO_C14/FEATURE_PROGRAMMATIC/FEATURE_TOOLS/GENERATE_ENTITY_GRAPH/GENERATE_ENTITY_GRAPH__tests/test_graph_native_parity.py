@@ -95,17 +95,27 @@ declare_entity(entity_class=Project, entity_name="Project", instance_property_co
     def test_model_inverse_alias_keeps_derived_reverse_view(self):
         c=carrier('CA-R-2965','CFEL <+ Relation//AFTER','''from anechoic.formal_claims import declare_relation, Cardinality
 declare_relation(relation_name="AFTER", source_endpoint={"level": "model_entities", "entity_paths": ("Host",)}, target_endpoint={"level": "model_entities", "entity_paths": ("Target",)}, inverse_alias="BEFORE", targets_per_source=Cardinality(minimum=0, maximum=1), sources_per_target=Cardinality(minimum=0, maximum=2))''','python','Relation Declaration')
-        clauses,diag=extract_claim_constraints(c);self.assertFalse(diag)
+        clauses,diag=extract_claim_constraints(c)
+        self.assertFalse(diag)
         inverse=next(x for x in clauses if x.get('relation')=='IS_INVERSE_ALIAS_FOR')
         self.assertEqual((inverse['source_selector'],inverse['target_selector']),('Relation//BEFORE','Relation//AFTER'))
         self.assertIsNone(inverse['source_cardinality'])
         self.assertIsNone(inverse['target_cardinality'])
         self.assertEqual(inverse['written_direction'], 'forward')
         self.assertFalse(any(x.get('relation')=='HAS_INVERSE' for x in clauses))
-        graph=compose_contract_graph([c]);self.assertEqual([r['target'] for r in graph['relations']],['AFTER'])
-        alias=graph['relations'][0]['derived_aliases'][0];self.assertEqual((alias['name'],alias['classification'],alias['direct_relation']),('BEFORE','Derived','AFTER'))
-        endpoint=alias['endpoints'][0];self.assertEqual(endpoint['host']['entity_paths'],('Target',));self.assertEqual(endpoint['target']['entity_paths'],('Host',));self.assertEqual(endpoint['targets_per_source'],{'minimum':0,'maximum':2});self.assertEqual(endpoint['sources_per_target'],{'minimum':0,'maximum':1})
-        rendered=render_contract_graph(graph); self.assertIn('Derived Relation `((BEFORE))`',rendered); self.assertIn('IS_INVERSE_ALIAS_FOR bindings',rendered); self.assertNotIn('HAS_INVERSE bindings',rendered)
+        graph=compose_contract_graph([c])
+        self.assertEqual([r['target'] for r in graph['relations']],['AFTER'])
+        alias=graph['relations'][0]['derived_aliases'][0]
+        self.assertEqual((alias['name'],alias['classification'],alias['direct_relation']),('BEFORE','Derived','AFTER'))
+        endpoint=alias['endpoints'][0]
+        self.assertEqual(endpoint['host']['entity_paths'],('Target',))
+        self.assertEqual(endpoint['target']['entity_paths'],('Host',))
+        self.assertEqual(endpoint['targets_per_source'],{'minimum':0,'maximum':2})
+        self.assertEqual(endpoint['sources_per_target'],{'minimum':0,'maximum':1})
+        rendered=render_contract_graph(graph)
+        self.assertIn('Derived Relation `((BEFORE))`',rendered)
+        self.assertIn('IS_INVERSE_ALIAS_FOR bindings',rendered)
+        self.assertNotIn('HAS_INVERSE bindings',rendered)
         aliases = build_subject_projection_data([c])['relation_declarations']
         self.assertTrue(any(r['name'] == 'BEFORE' and r['derivation'] == 'Derived' and
                             r['direct_relations'] == ['AFTER'] for r in aliases))
@@ -149,4 +159,5 @@ declare_relation(
         self.assertTrue(all('targets per source=1' in line for line in pair_lines))
 
 
-if __name__=='__main__':unittest.main()
+if __name__=='__main__':
+    unittest.main()

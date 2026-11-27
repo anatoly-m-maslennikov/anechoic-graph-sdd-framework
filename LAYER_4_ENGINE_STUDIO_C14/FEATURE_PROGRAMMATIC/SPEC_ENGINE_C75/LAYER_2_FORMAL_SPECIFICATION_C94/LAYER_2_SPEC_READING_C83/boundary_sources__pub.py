@@ -1,7 +1,7 @@
 """Interpret formal boundary source claims and links."""
 import ast
 
-from ...LAYER_1_SOURCE_ADAPTERS_C95._package__shared import SourceError, read_source as read_source
+from ...LAYER_1_SOURCE_ADAPTERS_C95._package__shared import SourceError
 
 
 def require_link(carrier, relation, target, role=None, source=None):

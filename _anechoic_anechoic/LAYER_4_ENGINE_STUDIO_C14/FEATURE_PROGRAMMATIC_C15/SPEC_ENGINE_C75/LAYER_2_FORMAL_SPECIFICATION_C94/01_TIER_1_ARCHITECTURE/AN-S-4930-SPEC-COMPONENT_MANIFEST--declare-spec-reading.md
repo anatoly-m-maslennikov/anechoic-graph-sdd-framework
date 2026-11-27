@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 1
-  updated_at: '2026-11-25T20:39:08.202192+00:00'
+  version: 2
+  updated_at: '2026-11-27T13:09:58.959794+00:00'
 ---
 ## Summary
 
@@ -52,11 +52,11 @@ declare_entity(
                          '_package__shared.load_formal_claim': {'shared': ['C85',
                                                                            'C89',
                                                                            'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/SPEC_ENGINE_C75__tests/functional']},
-                         '_package__shared.load_manifest': {'shared': ['C85',
+                         '_package__shared.load_manifest': {'shared': ['C85', 'C88',
                                                                        'C89',
                                                                        'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/SPEC_ENGINE_C75__tests/functional']},
                          '_package__shared.recognized_claim': {'shared': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/SPEC_ENGINE_C75__tests/functional']}},
-             'imports': ['C30', 'C95']},
+             'imports': ['C30', 'C95', 'atom_reference__pub.derive_atom_ref']},
             'io': {'server': {'load_boundary_model': {'outcomes': {
                 'loaded': {'must_effect': [('C83.pinned_sources', 'loaded')]},
             }}}},
@@ -65,12 +65,17 @@ declare_entity(
 
 ## Component Contract
 
-Load the exact pinned Manifest, Contract, and Solution. Check their Component, declared roles, and required links. Preserve claim sources and report unsupported claims.
+Load the exact pinned Manifest, Contract, and Solution. Check their Component, declared roles, and required links. Preserve each source record supplied by C95, including its observed
+carrier SHA-256. Return the same source records with the loaded roles.
+Report unsupported claims with their source.
 
 ```python trace
 declare_trace_contract(
     action='load_boundary_model',
     output='loaded',
     must_effect=(('C83.pinned_sources', 'loaded'),),
+    same_values=((('C83.pinned_sources', 'source_pins'),
+                  ('result_returned', 'source_pins')),),
+    value_types={('C83.pinned_sources', 'source_pins'): 'object'},
 )
 ```

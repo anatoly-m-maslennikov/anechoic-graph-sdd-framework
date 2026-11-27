@@ -336,18 +336,3 @@ def _legacy_gate_evidence(data):
     digest = recorded if isinstance(recorded, str) else sha256(json.dumps(recorded).encode()).hexdigest()
     return {"recorded_inputs_sha256": digest, "source_sha": data["accepted_source_sha"],
             "combined_gate_log": data["logs"].get("image"), "canary_endpoint": data.get("canary")}
-
-
-def completed_result(self):
-    return {'outcome': 'completed_with_cleanup_pending' if self.cleanup_pending else 'completed',
-                'failed_step': None,
-                'report_path': None,
-                'receipt_path': self.receipt_path,
-                'test_log_path': self.test_log_path,
-                'test_log_paths': self.test_log_paths,
-                'endpoint': self.endpoint,
-                'canary_endpoint': self.canary_endpoint,
-                'test_scope': self.test_scope,
-                'test_modules': self.selected_test_modules,
-                'image_mode': self.image_mode,
-                'evidence': self.journal.data['evidence']}

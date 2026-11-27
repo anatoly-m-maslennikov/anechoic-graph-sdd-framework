@@ -181,36 +181,46 @@ def _finding(source, action, case, result, *, graph_mode):
             status == "deadEnd", json.dumps(events), json.dumps(violations), detail)
 
 
-def analyze_state(root, sources, ownership=None, *, read_source=None, code_units=None, calls=()):
+def analyze_state(root, sources, ownership=None, *, read_source=None,
+                  code_units=None, calls=(), require_lean=False):
     """Return checkable state evidence for the existing captured Module nodes."""
     selected = {path: source for path, source in sources.items() if source.language in _LANGUAGES}
     if not selected:
         return []
-    lean = shutil.which("lean")
+    lean = shutil.which(os.getenv("LEAN_BIN") or "lean")
     if lean is None:
         detail = "Lean executable unavailable on PATH"
+        if require_lean:
+            raise RuntimeError(detail)
         _diagnostic(detail)
         return [_unresolved(path, source, detail) for path, source in selected.items()]
     if read_source is None:
         root = Path(root).resolve()
-        read_source = lambda path: _read(root, path, selected[path])
+
+        def read_source(path):
+            return _read(root, path, selected[path])
     paths, policies, problems = _inputs(selected, ownership, read_source, _call_sites(code_units, calls))
+    if require_lean and problems:
+        raise RuntimeError("State inputs could not be analyzed; see stderr")
     units = {(module.removeprefix('module:'), line, column): key
              for key, module, kind, _, line, column in code_units or () if kind != 'class'}
-    actions, cases = [], []
-    for path, items in paths.items():
-        for case in items:
-            actions.append(case["action"])
-            cases.append(_lean_case(path, case, policies[path], units))
+    actions = [
+        (case["action"], _lean_case(path, case, policies[path], units))
+        for path, items in paths.items()
+        for case in items
+    ]
+    cases = [case for _, case in actions]
     try:
         verified = _check(lean, cases) if cases else []
     except (OSError, subprocess.SubprocessError, ValueError) as error:
         detail = getattr(error, "stderr", None) or str(error)
+        if require_lean:
+            raise RuntimeError(f"Lean check failed: {detail}") from error
         _diagnostic(f"Lean check failed: {detail}")
         return [_unresolved(path, source, "Lean check failed") for path, source in selected.items()]
     return [
         *(_unresolved(path, selected[path], detail) for path, detail in problems.items()),
-        *(finding for action, case, result in zip(actions, cases, verified, strict=True)
+        *(finding for (action, case), result in zip(actions, verified, strict=True)
           if (finding := _finding(selected[case["sourcePath"]], action, case, result,
                                   graph_mode=code_units is not None)) is not None),
     ]

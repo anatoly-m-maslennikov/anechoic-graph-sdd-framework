@@ -11,14 +11,14 @@ import sys
 import tempfile
 import time
 import unittest
-from types import SimpleNamespace
+from unittest.mock import NonCallableMock
 from unittest.mock import MagicMock, patch
 
 
+import selectors
 APP = Path(__file__).resolve().parents[1]
 import MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared as images  # noqa: E402
 import MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared as image_inputs  # noqa: E402
-import selectors
 from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import ProjectMcpBackend  # noqa: E402
 
 
@@ -137,7 +137,9 @@ class ImageOutputSafetyTests(unittest.TestCase):
                     self.assertNotIn(proxy, start.call_args.args[0])
 
     def test_backend_environments_preserve_present_proxy_routing_without_ambient_credentials(self):
-        selection = SimpleNamespace(root=APP.parents[2], control_relative=Path(".anechoic_fixture"),
+        selection = NonCallableMock(
+            spec_set=['root', 'control_relative', 'instance_id'],
+            root=APP.parents[2], control_relative=Path(".anechoic_fixture"),
                                     instance_id="c" * 64)
         caller = dict(PROXY_ROUTING, PATH="/synthetic-bin",
                       ANECHOIC_LOG_LEVEL="WARNING",

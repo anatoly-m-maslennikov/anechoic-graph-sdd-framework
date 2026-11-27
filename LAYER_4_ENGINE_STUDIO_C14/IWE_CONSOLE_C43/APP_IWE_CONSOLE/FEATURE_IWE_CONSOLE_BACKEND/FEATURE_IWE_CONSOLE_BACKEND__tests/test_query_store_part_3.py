@@ -6,11 +6,11 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-
-APP_ROOT = Path(__file__).resolve().parents[3]
-
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import QueryStore  # noqa: E402
 from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.FEATURE_IWE_CONSOLE_BACKEND__tests.query_store_test_support import QueryStoreFixture, extension_directory
+
+
+APP_ROOT = Path(__file__).resolve().parents[3]
 
 
 class QueryStoreTest(QueryStoreFixture, unittest.TestCase):

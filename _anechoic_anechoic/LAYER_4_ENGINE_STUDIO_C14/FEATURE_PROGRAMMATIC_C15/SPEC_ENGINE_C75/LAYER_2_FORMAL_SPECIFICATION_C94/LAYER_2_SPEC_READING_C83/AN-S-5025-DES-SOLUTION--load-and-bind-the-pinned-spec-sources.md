@@ -9,11 +9,11 @@ context:
   lens: DES
 relations:
   ANSWERS:
-  - AN-S-4930@1
+  - AN-S-4930@2
 state:
   status: active
-  version: 1
-  updated_at: '2026-11-26T00:00:00Z'
+  version: 2
+  updated_at: '2026-11-27T11:37:27.939414+00:00'
 ---
 
 ## Summary
@@ -23,6 +23,8 @@ Load and bind the pinned Spec sources.
 ## Approach
 
 Read each exact source pin. Check the Manifest and carrier roles, Component IDs, and required links. Collect unsupported claim issues before returning the bound sources.
+Pass through the source record read by C95 for every bound role.
+Retain the observed carrier SHA-256 alongside the source identity.
 
 ## Claim
 
@@ -42,11 +44,14 @@ component_workflow(
             }},
             'working': {'on': {
                 'effect_recorded': {'target': 'returning', 'guard': {'type': 'matchesTrace',
-                    'params': {'kind': 'effect', 'target': 'C83.pinned_sources', 'outcome': 'loaded'}}},
+                    'params': {'kind': 'effect', 'target': 'C83.pinned_sources',
+                               'outcome': 'loaded',
+                               'bind': {'read_pins': 'source_pins'}}}},
             }},
             'returning': {'on': {
                 'result_returned': {'target': 'done', 'guard': {'type': 'matchesTrace',
-                    'params': {'kind': 'output', 'outcome': 'loaded'}}},
+                    'params': {'kind': 'output', 'outcome': 'loaded',
+                               'same_as': {'source_pins': 'read_pins'}}}},
             }},
             'done': {'type': 'final'},
         },

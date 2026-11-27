@@ -11,9 +11,10 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-TOOLS = Path(__file__).resolve().parents[1]
 
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS import test_suite__shared as full
+
+TOOLS = Path(__file__).resolve().parents[1]
 
 
 PASSING = (

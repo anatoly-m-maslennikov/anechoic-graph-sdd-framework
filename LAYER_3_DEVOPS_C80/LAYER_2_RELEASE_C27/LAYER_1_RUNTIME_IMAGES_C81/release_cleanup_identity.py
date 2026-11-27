@@ -1,6 +1,5 @@
 """Strict Docker observations and immutable runtime-image identity checks."""
 
-
 from collections.abc import Callable
 from dataclasses import field
 from pathlib import Path
@@ -78,17 +77,25 @@ def run_docker(root: Path, runner: Runner | None, *arguments: str) -> str:
     return result.stdout
 
 
-def image_labels(root: Path, runner: Runner | None, image: str) -> dict[str, str]:
+def image_labels(
+    root: Path, runner: Runner | None, image: str
+) -> dict[str, str]:
     return image_metadata(root, runner, image).Config.Labels
 
 
-def image_metadata(root: Path, runner: Runner | None, image: str) -> ImageMetadata:
+def image_metadata(
+    root: Path, runner: Runner | None, image: str
+) -> ImageMetadata:
     if not isinstance(image, str) or IMAGE.fullmatch(image) is None:
         raise ValueError("Image identity is invalid")
-    projection = ('{"Id":{{json .Id}},"Config":{"Labels":{{json .Config.Labels}}},'
-                  '"RepoTags":{{json .RepoTags}}}')
+    projection = (
+        '{"Id":{{json .Id}},"Config":{"Labels":{{json .Config.Labels}}},'
+        '"RepoTags":{{json .RepoTags}}}'
+    )
     row = ImageMetadata.model_validate_json(
-        run_docker(root, runner, "image", "inspect", "--format", projection, image)
+        run_docker(
+            root, runner, "image", "inspect", "--format", projection, image
+        )
     )
     labels = row.Config.Labels
     if (

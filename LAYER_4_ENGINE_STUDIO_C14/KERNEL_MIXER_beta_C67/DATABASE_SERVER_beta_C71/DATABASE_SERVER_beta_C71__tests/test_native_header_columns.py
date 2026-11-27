@@ -17,16 +17,36 @@ class NativeHeaderColumnsTest(unittest.TestCase):
         atom = data["snapshot"]["atoms"][0]
         atom.update(container_component="C00", tier=2, template="TASK")
         data["receipt"]["snapshot_sha256"] = _digest(data["snapshot"])
-        sql = 'SELECT reference, "header.container.component", "header.tier", "header.context.template" FROM mrt_atoms ORDER BY reference'
+        sql = (
+            'SELECT reference, "header.container.component", "header.tier", '
+            '"header.context.template" FROM mrt_atoms ORDER BY reference'
+        )
         with _server() as client:
             admitted = client.put("/generation", json=data)
             self.assertEqual(200, admitted.status_code, admitted.text)
-            self.assertEqual([["AN-T-1", "C00", 2, "TASK"], ["AN-T-1@1", None, None, None]],
-                             _query(client, sql).json()["result"]["rows"])
-            atom = atom | {"container_component": None, "tier": None, "template": "UPDATED"}
+            self.assertEqual(
+                [["AN-T-1", "C00", 2, "TASK"], ["AN-T-1@1", None, None, None]],
+                _query(client, sql).json()["result"]["rows"],
+            )
+            atom = atom | {
+                "container_component": None,
+                "tier": None,
+                "template": "UPDATED",
+            }
             path = [atom["relative_path"], atom["filename"]]
-            self.send(client, delta(admitted.json()["result"]["generation"], [path], [atom], edges(atom["reference"])))
-            self.assertEqual([["AN-T-1", None, None, "UPDATED"], ["AN-T-1@1", None, None, None]],
-                             _query(client, sql).json()["result"]["rows"])
-
-
+            self.send(
+                client,
+                delta(
+                    admitted.json()["result"]["generation"],
+                    [path],
+                    [atom],
+                    edges(atom["reference"]),
+                ),
+            )
+            self.assertEqual(
+                [
+                    ["AN-T-1", None, None, "UPDATED"],
+                    ["AN-T-1@1", None, None, None],
+                ],
+                _query(client, sql).json()["result"]["rows"],
+            )

@@ -1,5 +1,4 @@
-
-"""Generate the deterministic relation-registry asset from one Project capture."""
+"Generate the deterministic relation-registry asset from one Project capture."
 
 from __future__ import annotations
 
@@ -11,8 +10,13 @@ import sys
 from typing import Any
 
 if __package__:
-    from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import RegistryCompilation, compile_registry, is_registry_declaration
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import canonical
+    from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (
+        RegistryCompilation,
+        compile_registry,
+        is_registry_declaration,
+    )
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
+        import canonical  # fmt: skip
     from .source_reader import SourceReader
 else:  # pragma: no cover - direct build-hook invocation
     sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
@@ -21,14 +25,19 @@ else:  # pragma: no cover - direct build-hook invocation
         compile_registry,
         is_registry_declaration,
     )
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import canonical
-    from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.source_reader import SourceReader
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
+        import canonical  # fmt: skip
+    from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.\
+        source_reader \
+        import SourceReader  # fmt: skip
 
 
 def _source_pin(row: dict[str, Any]) -> dict[str, Any]:
     body = row.get("_content_bytes")
     if not isinstance(body, bytes):
-        raise ValueError(f"{row.get('source_path')}: captured Markdown is unavailable")
+        raise ValueError(
+            f"{row.get('source_path')}: captured Markdown is unavailable"
+        )
     source = row.get("source_path")
     atom_id = row.get("id")
     version = row.get("version")
@@ -37,7 +46,9 @@ def _source_pin(row: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(atom_id, str) or not atom_id:
         raise ValueError(f"{source}: registry source pin needs an Atom ID")
     if type(version) is not int or version <= 0:
-        raise ValueError(f"{source}: registry source pin needs a positive integer Version")
+        raise ValueError(
+            f"{source}: registry source pin needs a positive integer Version"
+        )
     return {
         "atom_id": atom_id,
         "version": version,
@@ -54,9 +65,10 @@ def _source_pin(row: dict[str, Any]) -> dict[str, Any]:
 
 
 def registry_asset(
-    atoms: list[dict[str, Any]], compilation: RegistryCompilation | None = None,
+    atoms: list[dict[str, Any]],
+    compilation: RegistryCompilation | None = None,
 ) -> bytes:
-    """Serialize the captured registry compiler output without retaining source bytes."""
+    "Serialize the captured registry compiler output without retaining source bytes."
     compiled = compile_registry(atoms) if compilation is None else compilation
     registry = compiled.registry
     sources = sorted(
@@ -76,15 +88,24 @@ def registry_asset(
         ],
         "sources": sources,
     }
-    payload["input_digest"] = hashlib.sha256(canonical(payload).encode("utf-8")).hexdigest()
+    payload["input_digest"] = hashlib.sha256(
+        canonical(payload).encode("utf-8")
+    ).hexdigest()
     return (
-        json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n"
+        json.dumps(
+            payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+        )
+        + "\n"
     ).encode("utf-8")
 
 
 def compile_project_registry(project_root: Path) -> bytes:
-    """Capture one Project and compile its current relation registry as JSON bytes."""
-    reader = SourceReader(Path(project_root), include_archived=False, include_installed_framework=True)
+    "Capture one Project and compile its current relation registry as JSON bytes."
+    reader = SourceReader(
+        Path(project_root),
+        include_archived=False,
+        include_installed_framework=True,
+    )
     atoms, _scopes = reader.capture()
     return registry_asset(reader.model_rows(atoms, is_registry_declaration))
 

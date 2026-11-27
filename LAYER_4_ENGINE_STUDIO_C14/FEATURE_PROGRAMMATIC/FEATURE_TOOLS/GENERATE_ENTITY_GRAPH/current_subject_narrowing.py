@@ -1,7 +1,11 @@
 """Compose the declared-only Current narrowing graph."""
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.current_subject_narrowing_collect import NarrowingCollection
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.current_subject_narrowing_resolve import NarrowingResolution
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.\
+    current_subject_narrowing_collect \
+    import NarrowingCollection  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.\
+    current_subject_narrowing_resolve \
+    import NarrowingResolution  # fmt: skip
 
 
 class _Narrowing(NarrowingCollection, NarrowingResolution):

@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 6
-  updated_at: '2026-11-27T07:54:51.072499+00:00'
+  version: 7
+  updated_at: '2026-11-27T13:15:51.443862+00:00'
 ---
 
 ## Summary
@@ -39,6 +39,11 @@ ComponentManifest(
 ```python
 {'code': {
     'imports': [
+        'LAYER_2_PROJECT_STRUCTURE_C93__shared._validation_fields',
+        'LAYER_2_PROJECT_STRUCTURE_C93__shared.compile_structure',
+        'LAYER_2_PROJECT_STRUCTURE_C93__rows.StructureAdmissionError',
+        'LAYER_2_PROJECT_STRUCTURE_C93__rows.compile_structure_rows',
+        'model_capture.model_inputs',
         'ADAPTERS_C30__shared.CEILINGS', 'ADAPTERS_C30__shared.CarrierError',
         'ADAPTERS_C30__shared.LimitReached', 'ADAPTERS_C30__shared.ReadContext',
         'ADAPTERS_C30__shared.open_regular', 'ADAPTERS_C30__shared.native_header_view',
@@ -52,8 +57,13 @@ ComponentManifest(
         'component_seed_manifest__pub.read_component_seed_manifest',
         'source_row__pub.json_value',
     ],
-    'exports': {'LAYER_2_PROJECT_STRUCTURE_C93__shared.compile_structure': {'shared': ['C75']},
-                'LAYER_2_PROJECT_STRUCTURE_C93__rows.compile_structure_rows': {'shared': ['C75']}},
+    'exports': {'LAYER_2_PROJECT_STRUCTURE_C93__shared._validation_fields': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/LAYER_2_PROJECT_STRUCTURE_C93/LAYER_2_PROJECT_STRUCTURE_C93__tests']},
+                'LAYER_2_PROJECT_STRUCTURE_C93__rows.StructureAdmissionError': {'shared': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/LAYER_2_PROJECT_STRUCTURE_C93/LAYER_2_PROJECT_STRUCTURE_C93__tests',
+                                                                                           'C75']},
+                'LAYER_2_PROJECT_STRUCTURE_C93__shared.compile_structure': {'shared': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/LAYER_2_PROJECT_STRUCTURE_C93/LAYER_2_PROJECT_STRUCTURE_C93__tests',
+                                                                                       'C75']},
+                'LAYER_2_PROJECT_STRUCTURE_C93__rows.compile_structure_rows': {'shared': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/LAYER_2_PROJECT_STRUCTURE_C93/LAYER_2_PROJECT_STRUCTURE_C93__tests',
+                                                                                          'C75']}},
 }, 'io': {'server': {'compile_project_structure': {
     'transport': 'in_process', 'entry': 'LAYER_2_PROJECT_STRUCTURE_C93__shared.compile_structure',
 }, 'compile_pinned_structure': {
@@ -86,7 +96,8 @@ declare_trace_contract(
 
 Consume the supplied snapshot rows and selected Manifest pin. Validate
 containment against the supplied Model. Return the Structure with its
-Model fingerprint, Project Manifest digest, and carrier pins.
+Model fingerprint, Project Manifest digest, and carrier pins. The Model
+fingerprint must be the same at `requested`, the ready effect, and `returned`.
 
 For this action, `carrier_pins` maps each selected Component and Seed
 Manifest's Project-relative source path to its SHA-256 digest. At
@@ -103,6 +114,8 @@ declare_trace_contract(action='compile_pinned_structure', interface='compile_pin
         'succeeded': {
             'must_effect': (('C93.structure_snapshot', 'ready'),),
             'same_values': (
+                (('requested', 'model_sha256'), ('C93.structure_snapshot', 'model_sha256')),
+                (('C93.structure_snapshot', 'model_sha256'), ('returned', 'model_sha256')),
                 (('requested', 'carrier_pins'), ('C93.structure_snapshot', 'carrier_pins')),
                 (('C93.structure_snapshot', 'carrier_pins'), ('returned', 'carrier_pins')),
             ),

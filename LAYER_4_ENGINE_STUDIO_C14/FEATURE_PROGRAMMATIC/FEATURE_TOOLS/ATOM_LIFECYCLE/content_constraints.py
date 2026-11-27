@@ -185,7 +185,7 @@ class ContentConstraints:
         by_path = records_by_path(parsed)
         lines = content_lines(body) if isinstance(body, str) else None
         ordering = {}
-        for kind, path, roles, forms, low, high, children, source in applicable:
+        for kind, path, _roles, _forms, low, high, children, source in applicable:
             if kind == 'order':
                 ordering.setdefault((path, source), []).append(children)
             elif kind == 'children':

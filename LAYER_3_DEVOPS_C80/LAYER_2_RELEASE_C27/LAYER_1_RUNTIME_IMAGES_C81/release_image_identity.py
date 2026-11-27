@@ -103,12 +103,57 @@ class ImageIdentity:
     stack: str
 
 
+def _engine_files(root, stack, beta_components, fail):
+    engine = root / ENGINE
+    paths = []
+    for current, directories, names in os.walk(engine, followlinks=False, onerror=fail):
+        directory = Path(current)
+        directories[:] = sorted(name for name in directories
+                                if _include_engine_directory(directory / name, engine, stack, beta_components))
+        if any(name == ".runtime" or name.startswith(".env") for name in directories):
+            raise ValueError("unsafe image input")
+        for name in directories:
+            path = directory / name
+            if path.is_symlink() or not path.is_dir():
+                raise ValueError("unsafe image input")
+        for name in sorted(names):
+            if _excluded(name):
+                continue
+            if name == ".runtime" or name.startswith(".env"):
+                raise ValueError("unsafe image input")
+            path = directory / name
+            if path.is_symlink() or not path.is_file():
+                raise ValueError("unsafe image input")
+            if path.relative_to(root).as_posix() not in RETIRED_ASSETS:
+                paths.append(path)
+    return paths
+
+
+def _local_delivery_sources(root, fail):
+    source_map = {}
+    for layer in SOURCE_LAYERS:
+        directory = root / layer
+        if directory.is_symlink() or not directory.is_dir():
+            raise ValueError("image delivery sources unavailable")
+        for current, directories, names in os.walk(directory, followlinks=False, onerror=fail):
+            for name in directories:
+                if (Path(current) / name).is_symlink():
+                    raise ValueError("unsafe image delivery source")
+            for name in names:
+                if _excluded(name):
+                    continue
+                path = Path(current) / name
+                if path.is_symlink() or not path.is_file() or path.suffix != ".md":
+                    raise ValueError("unsafe image delivery source")
+                source_map[path.relative_to(root)] = path
+    return source_map
+
+
 class ImageInputIdentity:
     def _files(self):
         root = self.source_root
         if root.is_symlink() or not root.is_dir() or root.resolve() != root:
             raise ValueError("image source unavailable")
-        paths = []
         selector, stack, selector_digest = _stack_selector(root)
         beta_components, stack_required = (_BETA_ROOTS, _BETA_REQUIRED) if stack == "beta_next" else (frozenset(), ())
         required = _REQUIRED[:-1] + stack_required if beta_components else _REQUIRED
@@ -116,29 +161,11 @@ class ImageInputIdentity:
             path = root / relative
             if any((root / Path(*Path(relative).parts[:i])).is_symlink() for i in range(1, len(Path(relative).parts) + 1)) or not path.is_file():
                 raise ValueError(f"image input unavailable: {relative}")
-        engine = root / ENGINE
+
         def fail(error):
             raise error
-        for current, directories, names in os.walk(engine, followlinks=False, onerror=fail):
-            directory = Path(current)
-            directories[:] = sorted(name for name in directories
-                                    if _include_engine_directory(directory / name, engine, stack, beta_components))
-            if any(name == ".runtime" or name.startswith(".env") for name in directories):
-                raise ValueError("unsafe image input")
-            for name in directories:
-                path = directory / name
-                if path.is_symlink() or not path.is_dir():
-                    raise ValueError("unsafe image input")
-            for name in sorted(names):
-                if _excluded(name):
-                    continue
-                if name == ".runtime" or name.startswith(".env"):
-                    raise ValueError("unsafe image input")
-                path = directory / name
-                if path.is_symlink() or not path.is_file():
-                    raise ValueError("unsafe image input")
-                if path.relative_to(root).as_posix() not in RETIRED_ASSETS:
-                    paths.append(path)
+
+        paths = _engine_files(root, stack, beta_components, fail)
         source_map = self._delivery_sources(root, fail)
         self._source_map = source_map
         files = sorted(set(paths) | {root / relative for relative in required} | ({selector} if selector else set()),
@@ -147,22 +174,7 @@ class ImageInputIdentity:
 
     def _delivery_sources(self, root, fail):
         if self.source_provider is None:
-            source_map = {}
-            for layer in SOURCE_LAYERS:
-                directory = root / layer
-                if directory.is_symlink() or not directory.is_dir():
-                    raise ValueError("image delivery sources unavailable")
-                for current, directories, names in os.walk(directory, followlinks=False, onerror=fail):
-                    for name in directories:
-                        if (Path(current) / name).is_symlink():
-                            raise ValueError("unsafe image delivery source")
-                    for name in names:
-                        if _excluded(name):
-                            continue
-                        path = Path(current) / name
-                        if path.is_symlink() or not path.is_file() or path.suffix != ".md":
-                            raise ValueError("unsafe image delivery source")
-                        source_map[path.relative_to(root)] = path
+            source_map = _local_delivery_sources(root, fail)
         else:
             source_map = self.source_provider()
         if (not isinstance(source_map, dict) or any(not isinstance(k, Path) or not isinstance(v, Path)

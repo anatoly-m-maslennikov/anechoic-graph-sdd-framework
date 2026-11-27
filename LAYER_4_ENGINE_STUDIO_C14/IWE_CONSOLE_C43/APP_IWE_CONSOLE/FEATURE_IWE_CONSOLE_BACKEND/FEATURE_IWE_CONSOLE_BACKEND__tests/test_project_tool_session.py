@@ -5,15 +5,16 @@ import json
 from pathlib import Path
 import subprocess
 from tempfile import TemporaryDirectory
-from types import SimpleNamespace
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import httpx2
-from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.FEATURE_IWE_CONSOLE_BACKEND__shared import (
-    create_shared_app,
-    load_host_runtime_config,
-)
+from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.\
+    FEATURE_IWE_CONSOLE_BACKEND__shared \
+    import (
+        create_shared_app,
+        load_host_runtime_config,
+    )  # fmt: skip
 
 
 _NAME = "atom_lifecycle_update"
@@ -55,54 +56,98 @@ class ChildHTTP:
         socket = command[command.index("--socket") + 1]
         self.bindings[socket] = {
             key: command[command.index(flag) + 1]
-            for key, flag in (("instance_id", "--instance-id"), ("manifest_sha256", "--manifest-sha256"))
+            for key, flag in (
+                ("instance_id", "--instance-id"),
+                ("manifest_sha256", "--manifest-sha256"),
+            )
         }
-        return SimpleNamespace(pid=123, poll=lambda: None, stdin=None, wait=lambda timeout: 0)
+        return Mock(
+            spec_set=["pid", "poll", "stdin", "wait"],
+            pid=123,
+            stdin=None,
+            poll=Mock(return_value=None),
+            wait=Mock(return_value=0),
+        )
 
     def transport(self, *, uds):
         async def request_message(request):
             match request.method, request.url.path:
                 case "GET", "/health":
-                    value = {"ready": True, "pid": 123, "kernel_pid": 124, **self.bindings[uds]}
+                    value = {
+                        "ready": True,
+                        "pid": 123,
+                        "kernel_pid": 124,
+                        **self.bindings[uds],
+                    }
                 case "GET", "/tools":
-                    value = {"result": {"tools": [{"name": _NAME, "inputSchema": {"type": "object"}}],
-                                        "blacklist": []}}
+                    value = {
+                        "result": {
+                            "tools": [
+                                {
+                                    "name": _NAME,
+                                    "inputSchema": {"type": "object"},
+                                }
+                            ],
+                            "blacklist": [],
+                        }
+                    }
                 case "POST", "/tools":
                     self.posted.append(json.loads(request.content))
                     self.started.set()
                     await self.finish.wait()
                     value = {"result": {"value": {}, "text": None}}
                 case _:
-                    raise AssertionError(f"Unexpected child request {request.method} {request.url.path}")
+                    raise AssertionError(
+                        f"Unexpected child request {request.method} {request.url.path}"
+                    )
             return httpx2.Response(200, json=value)
 
         return httpx2.MockTransport(request_message)
 
 
 class ProjectToolSessionTests(unittest.IsolatedAsyncioTestCase):
-    async def test_cancellation_holds_lease_until_dispatched_tool_finishes_without_replay(self):
+    async def test_cancellation_holds_lease_until_dispatched_tool_finishes_without_replay(
+        self,
+    ):
         root = Path(self.enterContext(TemporaryDirectory())).resolve()
         projects = root / "projects"
         alpha, beta = (_project(projects, name) for name in ("alpha", "beta"))
         settings = root / "host.toml"
-        settings.write_text(f'schema_version=1\n[shared_mcp]\nprojects_root="{projects}"\n'
-                            'http_port=8092\nmax_loaded_projects=1\n', encoding="utf-8")
+        settings.write_text(
+            f'schema_version=1\n[shared_mcp]\nprojects_root="{projects}"\n'
+            "http_port=8092\nmax_loaded_projects=1\n",
+            encoding="utf-8",
+        )
         app = create_shared_app(load_host_runtime_config(settings))
         child = ChildHTTP()
-        with patch.object(subprocess, "Popen", child.start), patch.object(httpx2, "AsyncHTTPTransport", child.transport):
+        with (
+            patch.object(subprocess, "Popen", child.start),
+            patch.object(httpx2, "AsyncHTTPTransport", child.transport),
+        ):
             async with app.router.lifespan_context(app):
-                async with httpx2.AsyncClient(transport=httpx2.ASGITransport(app=app),
-                                              base_url="http://shared") as client:
-                    await self._assert_cancelled_write(client, child, alpha, beta)
+                async with httpx2.AsyncClient(
+                    transport=httpx2.ASGITransport(app=app),
+                    base_url="http://shared",
+                ) as client:
+                    await self._assert_cancelled_write(
+                        client, child, alpha, beta
+                    )
 
     def _invoke(self, client, root):
-        return client.post("/tools", json={
-            "name": _NAME, "arguments": {"project_root": str(root)},
-            "session_id": "operator", "public_base_url": None,
-        })
+        return client.post(
+            "/tools",
+            json={
+                "name": _NAME,
+                "arguments": {"project_root": str(root)},
+                "session_id": "operator",
+                "public_base_url": None,
+            },
+        )
 
     async def _assert_cancelled_write(self, client, child, alpha, beta):
-        selected = await client.post("/selection", json={"project_root": str(alpha)})
+        selected = await client.post(
+            "/selection", json={"project_root": str(alpha)}
+        )
         instance_id = selected.json()["result"]["instance_id"]
         call = asyncio.create_task(self._invoke(client, alpha))
         try:
@@ -111,14 +156,27 @@ class ProjectToolSessionTests(unittest.IsolatedAsyncioTestCase):
             await asyncio.sleep(0)
             self.assertFalse(call.done())
             busy = await asyncio.wait_for(self._invoke(client, beta), 5)
-            self.assertEqual("project_gateway_busy", busy.json()["error"]["code"])
+            self.assertEqual(
+                "project_gateway_busy", busy.json()["error"]["code"]
+            )
         finally:
             child.finish.set()
-            outcome, = await asyncio.wait_for(asyncio.gather(call, return_exceptions=True), 5)
+            (outcome,) = await asyncio.wait_for(
+                asyncio.gather(call, return_exceptions=True), 5
+            )
         self.assertIsInstance(outcome, asyncio.CancelledError)
-        self.assertEqual([{
-            "name": _NAME, "arguments": {}, "instance_id": instance_id,
-            "session_id": "operator", "public_base_url": None, "asserted_project_root": str(alpha),
-        }], child.posted)
+        self.assertEqual(
+            [
+                {
+                    "name": _NAME,
+                    "arguments": {},
+                    "instance_id": instance_id,
+                    "session_id": "operator",
+                    "public_base_url": None,
+                    "asserted_project_root": str(alpha),
+                }
+            ],
+            child.posted,
+        )
         ready = await self._invoke(client, beta)
         self.assertEqual({"value": {}, "text": None}, ready.json()["result"])

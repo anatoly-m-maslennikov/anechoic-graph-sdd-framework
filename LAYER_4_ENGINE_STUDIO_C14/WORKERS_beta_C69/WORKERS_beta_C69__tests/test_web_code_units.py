@@ -13,7 +13,10 @@ from .WORKERS_beta_C69__tests__shared import command_with_fixture
 SCRIPT = Path(__file__).resolve().parents[1] / "web_code_units.ts"
 
 
-FRONTEND = SCRIPT.parents[1] / "IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_FRONTEND"
+FRONTEND = (
+    SCRIPT.parents[1]
+    / "IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_FRONTEND"
+)
 
 
 class ScannerDeadlineTests(unittest.TestCase):
@@ -33,7 +36,10 @@ class ScannerDeadlineTests(unittest.TestCase):
                 return result
             return original_run(command, *args, **options)
 
-        with patch.dict(os.environ), patch("subprocess.run", side_effect=launch):
+        with (
+            patch.dict(os.environ),
+            patch("subprocess.run", side_effect=launch),
+        ):
             os.environ.pop(switch, None)
             for setting, expected in ((None, 60), ("1", 60), ("0", None)):
                 if setting is not None:
@@ -42,32 +48,51 @@ class ScannerDeadlineTests(unittest.TestCase):
                     response = command_with_fixture(module, request)
                     self.assertEqual(0, response.returncode, response.stderr)
                     graph = json.loads(response.stdout)
-                    self.assertEqual(([], []), (graph["code_units"], graph["code_unit_calls"]))
+                    self.assertEqual(
+                        ([], []),
+                        (graph["code_units"], graph["code_unit_calls"]),
+                    )
                     self.assertEqual(expected, timeouts[-1])
             result = subprocess.CompletedProcess([], 2, stderr="bad graph")
             response = command_with_fixture(module, request)
             self.assertEqual(1, response.returncode)
-            self.assertIn("Code Unit scanner failed: bad graph", response.stderr)
+            self.assertIn(
+                "Code Unit scanner failed: bad graph", response.stderr
+            )
         self.assertEqual([60, 60, None, None], timeouts)
 
 
-@unittest.skipUnless(shutil.which("node") and (FRONTEND / "node_modules/typescript").is_dir(),
-                     "Framework web parser is unavailable")
+@unittest.skipUnless(
+    shutil.which("node") and (FRONTEND / "node_modules/typescript").is_dir(),
+    "Framework web parser is unavailable",
+)
 class WebCodeUnitTests(unittest.TestCase):
     def test_imports_methods_shadowing_and_ambiguous_imports(self):
         data = {
             "sources": {
                 "a.ts": "export const f = () => 1; export class C { static m() {} }",
-                "b.ts": "import * as x from './a'; function g(f: () => void) { f(); x.f(); x.C.m(); new x.C(); } x.f();",
+                "b.ts": (
+                    "import * as x from './a'; function g(f: () => void) { "
+                    "f(); x.f(); x.C.m(); new x.C(); } x.f();"
+                ),
                 "c.ts": "import { f } from './ambiguous'; f();",
                 "other.ts": "export function f() {}",
             },
             "imports": {
                 "b.ts": [[1, "./a", "a.ts"]],
-                "c.ts": [[1, "./ambiguous", "a.ts"], [1, "./ambiguous", "other.ts"]],
+                "c.ts": [
+                    [1, "./ambiguous", "a.ts"],
+                    [1, "./ambiguous", "other.ts"],
+                ],
             },
         }
-        result = subprocess.run(["node", str(SCRIPT)], input=json.dumps(data), text=True, capture_output=True, check=True)
+        result = subprocess.run(
+            ["node", str(SCRIPT)],
+            input=json.dumps(data),
+            text=True,
+            capture_output=True,
+            check=True,
+        )
         units, calls = json.loads(result.stdout)
         by_name = {(unit[1], unit[3]): unit[0] for unit in units}
         assert {(source, target) for source, target, _, _ in calls} == {

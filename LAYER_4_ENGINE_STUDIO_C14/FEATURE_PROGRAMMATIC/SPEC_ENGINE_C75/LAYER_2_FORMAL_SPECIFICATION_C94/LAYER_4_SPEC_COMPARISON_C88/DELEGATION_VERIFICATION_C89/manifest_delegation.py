@@ -1,6 +1,6 @@
 """Resolve a black-box child call from the caller Solution and the child Manifest."""
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.atom_reference__pub import (
     derive_atom_ref,
 )
 

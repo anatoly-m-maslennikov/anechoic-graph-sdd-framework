@@ -158,6 +158,14 @@ def _manifest(metadata: dict, body: str, name: str, relative: Path | None, diges
                             f"{identity}@{version}", digest, parameters)
 
 
+def _manifest_status(metadata: dict, name: str) -> tuple[bool, bool]:
+    context = metadata.get("context")
+    if isinstance(context, dict) and context.get("template") == "project_manifest":
+        state = metadata.get("state")
+        return True, isinstance(state, dict) and state.get("status") == "active"
+    return "atom_family" not in metadata and "PROJECT_MANIFEST" in name, False
+
+
 def _scan_control(root_fd: int, control: str, root: Path, total_bytes: int,
                   controls: tuple[str, ...] = (), explicit: Path | None = None):
     selection = None
@@ -185,14 +193,11 @@ def _scan_control(root_fd: int, control: str, root: Path, total_bytes: int,
                         or (control == "." and "PROJECT_MANIFEST" in name)):
                     raise
                 continue
-            context = metadata.get("context")
-            if isinstance(context, dict) and context.get("template") == "project_manifest":
-                has_manifest = True
-                if isinstance(metadata.get("state"), dict) and metadata["state"].get("status") == "active":
-                    candidates.append(_manifest(metadata, body, name, None if control == "." else Path(control),
-                                                digest, root, controls, explicit))
-            elif "atom_family" not in metadata and "PROJECT_MANIFEST" in name:
-                has_manifest = True
+            is_manifest, active = _manifest_status(metadata, name)
+            has_manifest |= is_manifest
+            if active:
+                candidates.append(_manifest(metadata, body, name, None if control == "." else Path(control),
+                                            digest, root, controls, explicit))
         if has_manifest:
             if len(candidates) != 1:
                 raise ValueError("Expected one Active Project Manifest")

@@ -31,25 +31,37 @@ def _state_path(root: Path) -> Path:
 def _read_state(path: Path) -> dict[str, Any]:
     try:
         value = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, ValueError, TypeError):
+    except OSError, ValueError, TypeError:
         return {}
     return value if isinstance(value, dict) else {}
 
 
-def _owned_bridge(state: dict[str, Any], root: Path, server: Path) -> int | None:
-    """Return a PID only when its state and command prove this Project owns it."""
+def _owned_bridge(
+    state: dict[str, Any], root: Path, server: Path
+) -> int | None:
+    "Return a PID only when its state and command prove this Project owns it."
     pid = state.get("pid")
-    if state.get("project_root") != str(root) or not isinstance(pid, int) or pid <= 0:
+    if (
+        state.get("project_root") != str(root)
+        or not isinstance(pid, int)
+        or pid <= 0
+    ):
         return None
     try:
         probe = subprocess.run(
-            ("ps", "-p", str(pid), "-o", "command="), text=True,
-            capture_output=True, check=False,
+            ("ps", "-p", str(pid), "-o", "command="),
+            text=True,
+            capture_output=True,
+            check=False,
         )
     except OSError:
         return None
     command = probe.stdout.strip() if probe.returncode == 0 else ""
-    if str(server) not in command or "--project-root" not in command or str(root) not in command:
+    if (
+        str(server) not in command
+        or "--project-root" not in command
+        or str(root) not in command
+    ):
         return None
     return pid
 
@@ -83,7 +95,11 @@ def _valid_bridge_url(value: object) -> str | None:
     if not isinstance(value, str):
         return None
     parsed = urlsplit(value)
-    if parsed.scheme != "http" or parsed.hostname != "127.0.0.1" or parsed.port is None:
+    if (
+        parsed.scheme != "http"
+        or parsed.hostname != "127.0.0.1"
+        or parsed.port is None
+    ):
         return None
     return value.rstrip("/")
 
@@ -92,7 +108,11 @@ def _wait_until_ready(path: Path, root: Path, pid: int) -> str:
     deadline = time.monotonic() + _STARTUP_TIMEOUT_SECONDS
     while time.monotonic() < deadline:
         state = _read_state(path)
-        if state.get("project_root") == str(root) and state.get("pid") == pid and state.get("ready") is True:
+        if (
+            state.get("project_root") == str(root)
+            and state.get("pid") == pid
+            and state.get("ready") is True
+        ):
             url = _valid_bridge_url(state.get("url"))
             if url is not None:
                 try:
@@ -118,7 +138,15 @@ def main(argv: list[str] | None = None) -> int:
         raise RuntimeError("Existing Workbench Codex bridge did not stop")
 
     process = subprocess.Popen(
-        (sys.executable, "-B", str(server), "--project-root", str(root), "--mcp-url", args.mcp_url),
+        (
+            sys.executable,
+            "-B",
+            str(server),
+            "--project-root",
+            str(root),
+            "--mcp-url",
+            args.mcp_url,
+        ),
         cwd=root,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,

@@ -1,6 +1,6 @@
 from dataclasses import replace
 from pathlib import Path
-from types import SimpleNamespace
+from unittest.mock import NonCallableMock
 import sys
 import unittest
 
@@ -163,7 +163,10 @@ class ComponentContractLifecycleTests(fixtures.ComponentContractLifecycleTests, 
 
     def test_reader_ignores_inactive_and_non_contract(self):
         from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.component_contract__pub import read_component_contract
-        carrier = SimpleNamespace(metadata={'context': {'template': 'component_contract'}, 'state': {'status': 'draft'}}, body='')
+        carrier = NonCallableMock(
+            spec_set=['metadata', 'body'],
+            metadata={'context': {'template': 'component_contract'}, 'state': {'status': 'draft'}},
+            body='')
         self.assertIsNone(read_component_contract(Path('x'), carrier, 'C9', 'AN'))
         carrier.metadata = {'context': {}, 'state': {'status': 'active'}}
         self.assertIsNone(read_component_contract(Path('x'), carrier, 'C9', 'AN'))

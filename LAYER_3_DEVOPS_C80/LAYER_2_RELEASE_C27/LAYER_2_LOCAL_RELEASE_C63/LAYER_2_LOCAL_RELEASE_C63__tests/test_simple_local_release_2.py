@@ -308,6 +308,8 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
                 engine = project.parents[2] / "LAYER_4_ENGINE_STUDIO_C14"
             self.assertEqual(str(engine / ".venv-dev"), env["UV_PROJECT_ENVIRONMENT"])
             self.assertEqual(str(engine), env["PYTHONPATH"])
+            self.assertEqual(str(engine / ".venv-dev/bin"),
+                             env["PATH"].split(os.pathsep)[0])
             self.assertNotIn("PYTHONHOME", env)
             self.assertNotIn("VIRTUAL_ENV", env)
             self.assertIn("-P", argv)

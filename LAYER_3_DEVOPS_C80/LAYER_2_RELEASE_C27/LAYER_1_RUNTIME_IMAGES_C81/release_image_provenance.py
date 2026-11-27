@@ -1,5 +1,4 @@
-"""Observe build provenance from the owning Project, never the copied package."""
-
+"Observe build provenance from the owning Project, never the copied package."
 
 from collections.abc import Mapping
 from pathlib import Path
@@ -45,7 +44,10 @@ def release_image_provenance(
         )
     )
     head = result.stdout.strip()
-    if result.returncode != 0 or re.fullmatch(r"(?:[0-9a-f]{40}|[0-9a-f]{64})", head) is None:
+    if (
+        result.returncode != 0
+        or re.fullmatch(r"(?:[0-9a-f]{40}|[0-9a-f]{64})", head) is None
+    ):
         raise ValueError("local-release-head-commit-unavailable")
     return {
         "project_id": selection.instance_id,

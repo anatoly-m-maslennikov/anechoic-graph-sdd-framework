@@ -7,7 +7,9 @@ from pydantic import ConfigDict
 from pydantic.dataclasses import dataclass
 
 
-@dataclass(frozen=True, slots=True, config=ConfigDict(strict=True, extra="forbid"))
+@dataclass(
+    frozen=True, slots=True, config=ConfigDict(strict=True, extra="forbid")
+)
 class RuntimeRequestContext:
     session_id: str | None = None
 
@@ -24,7 +26,9 @@ _REQUEST_CONTEXT: ContextVar[RuntimeRequestContext | None] = ContextVar(
 
 
 @contextmanager
-def bind_request_context(context: RuntimeRequestContext) -> Iterator[RuntimeRequestContext]:
+def bind_request_context(
+    context: RuntimeRequestContext,
+) -> Iterator[RuntimeRequestContext]:
     if not isinstance(context, RuntimeRequestContext):
         raise TypeError("context must be a RuntimeRequestContext")
     token = _REQUEST_CONTEXT.set(context)

@@ -15,7 +15,9 @@ if str(TOOL) not in sys.path:
     sys.path.insert(0, str(TOOL))
 
 sys.path.insert(0, str(HERE.parent.parent))
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_carrier  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (  # noqa: E402
+    parse_carrier,
+)
 
 
 FIXTURES = HERE / "assets" / "fixtures"
@@ -39,7 +41,10 @@ GROUP_FOLDERS = {
 @lru_cache(maxsize=1)
 def manifest() -> dict[str, Any]:
     value = json.loads(MANIFEST.read_text(encoding="utf-8"))
-    if set(value) != {"schema_version", "groups"} or value["schema_version"] != 1:
+    if (
+        set(value) != {"schema_version", "groups"}
+        or value["schema_version"] != 1
+    ):
         raise AssertionError("frozen authority manifest is malformed")
     if set(value["groups"]) != set(DEFAULT_GROUPS):
         raise AssertionError("frozen authority manifest groups are incomplete")
@@ -53,9 +58,19 @@ def entries(group: str) -> dict[str, dict[str, Any]]:
     return rows
 
 
-def _entry(identifier: str, *, graph: bool = False) -> tuple[str, dict[str, Any]]:
-    groups = ("graph_authority",) if graph else (
-        "registry", "context_authority", "structure_authority", "schema_authority", "graph_authority",
+def _entry(
+    identifier: str, *, graph: bool = False
+) -> tuple[str, dict[str, Any]]:
+    groups = (
+        ("graph_authority",)
+        if graph
+        else (
+            "registry",
+            "context_authority",
+            "structure_authority",
+            "schema_authority",
+            "graph_authority",
+        )
     )
     for group in groups:
         row = entries(group).get(identifier)
@@ -77,17 +92,26 @@ def frozen_entry(identifier: str, *, graph: bool = False) -> dict[str, Any]:
     }
 
 
-def _frozen_source(identifier: str, group: str, row: dict[str, Any]) -> dict[str, Any]:
+def _frozen_source(
+    identifier: str, group: str, row: dict[str, Any]
+) -> dict[str, Any]:
     fixture = FIXTURES / row["fixture"]
     expected_folder = GROUP_FOLDERS[group]
     if fixture.parent != FIXTURES / expected_folder:
         raise AssertionError("frozen authority fixture is outside its group")
     raw = fixture.read_bytes()
     if hashlib.sha256(raw).hexdigest() != row["sha256"]:
-        raise AssertionError("frozen authority fixture hash changed: " + identifier)
+        raise AssertionError(
+            "frozen authority fixture hash changed: " + identifier
+        )
     parsed = parse_carrier(raw, fixture)
-    if parsed.metadata.get("atom_id") != identifier or parsed.metadata.get("version") != row["version"]:
-        raise AssertionError("frozen authority fixture identity changed: " + identifier)
+    if (
+        parsed.metadata.get("atom_id") != identifier
+        or parsed.metadata.get("version") != row["version"]
+    ):
+        raise AssertionError(
+            "frozen authority fixture identity changed: " + identifier
+        )
     return {
         "binding": {
             "atom_id": identifier,
@@ -106,7 +130,9 @@ def frozen_source(identifier: str, *, graph: bool = False) -> dict[str, Any]:
 
 
 def frozen_sources(
-    groups: tuple[str, ...] = DEFAULT_GROUPS, *, retain_first: bool = True,
+    groups: tuple[str, ...] = DEFAULT_GROUPS,
+    *,
+    retain_first: bool = True,
 ) -> list[dict[str, Any]]:
     """Load the checked-in corpus; production manifests are deliberately not consulted."""
     selected: dict[str, tuple[str, dict[str, Any]]] = {}
@@ -118,27 +144,43 @@ def frozen_sources(
                 selected[identifier] = (group, row)
             else:
                 selected.setdefault(identifier, (group, row))
-    return [_frozen_source(identifier, group, row) for identifier, (group, row) in selected.items()]
+    return [
+        _frozen_source(identifier, group, row)
+        for identifier, (group, row) in selected.items()
+    ]
 
 
-def frozen_authority_fixture_bytes(identifier: str, *, graph: bool = False) -> bytes:
+def frozen_authority_fixture_bytes(
+    identifier: str, *, graph: bool = False
+) -> bytes:
     group, row = _entry(identifier, graph=graph)
     raw = (FIXTURES / row["fixture"]).read_bytes()
     if hashlib.sha256(raw).hexdigest() != row["sha256"]:
-        raise AssertionError("frozen authority fixture hash changed: " + identifier)
+        raise AssertionError(
+            "frozen authority fixture hash changed: " + identifier
+        )
     return raw
 
 
 def write_frozen_authority(
-    root: Path, control: Path, identifiers: tuple[str, ...], *,
+    root: Path,
+    control: Path,
+    identifiers: tuple[str, ...],
+    *,
     graph_only_identifiers: frozenset[str] = frozenset(),
 ) -> None:
     """Place the static corpus at its static fake-selected-Project locators."""
     for identifier in dict.fromkeys(identifiers):
-        variants = (True,) if identifier in graph_only_identifiers else (False,)
+        variants = (
+            (True,) if identifier in graph_only_identifiers else (False,)
+        )
         for graph in variants:
             entry = frozen_entry(identifier, graph=graph)
             relative = Path(entry["source_path"])
-            destination = root / control / relative.relative_to(".anechoic_anechoic")
+            destination = (
+                root / control / relative.relative_to(".anechoic_anechoic")
+            )
             destination.parent.mkdir(parents=True, exist_ok=True)
-            destination.write_bytes(frozen_authority_fixture_bytes(identifier, graph=graph))
+            destination.write_bytes(
+                frozen_authority_fixture_bytes(identifier, graph=graph)
+            )

@@ -6,8 +6,11 @@ import duckdb
 
 
 def connect(database):
-    config = {"memory_limit": "256MB",
-              "autoinstall_known_extensions": False, "autoload_known_extensions": False}
+    config = {
+        "memory_limit": "256MB",
+        "autoinstall_known_extensions": False,
+        "autoload_known_extensions": False,
+    }
     if database == ":memory:":
         config["temp_directory"] = ""
     else:

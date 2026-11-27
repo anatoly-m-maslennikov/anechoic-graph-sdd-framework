@@ -1,4 +1,3 @@
-
 """Map parsed Atom and Scope Unit sources to raw Workbench rows."""
 
 from __future__ import annotations
@@ -7,8 +6,9 @@ from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import Any
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.source_row__pub import canonical_row
-
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.source_row__pub import (
+    canonical_row,
+)
 
 
 def scope(item: Any, root: Path) -> dict[str, Any]:
@@ -30,9 +30,13 @@ def _same_types(before: Any, after: Any) -> bool:
     if type(before) is not type(after):
         return False
     if isinstance(before, dict):
-        return before.keys() == after.keys() and all(_same_types(value, after[key]) for key, value in before.items())
+        return before.keys() == after.keys() and all(
+            _same_types(value, after[key]) for key, value in before.items()
+        )
     if isinstance(before, (list, tuple)):
-        return len(before) == len(after) and all(_same_types(left, right) for left, right in zip(before, after))
+        return len(before) == len(after) and all(
+            _same_types(left, right) for left, right in zip(before, after)
+        )
     return True
 
 
@@ -62,7 +66,10 @@ class ReferenceIndex:
         return self.paths.get(reference, set())
 
     def paths_by_reference(self, references: set[str]) -> dict[str, set[Path]]:
-        return {reference: self.paths.get(reference, set()) for reference in references}
+        return {
+            reference: self.paths.get(reference, set())
+            for reference in references
+        }
 
     def accepted_paths(self, paths: set[Path] | None = None) -> set[Path]:
         return set(self.accepted) if paths is None else self.accepted & paths
@@ -73,19 +80,25 @@ class ReferenceIndex:
             if (reference := _reference(row)) is not None:
                 self.paths.setdefault(reference, set()).add(path)
         self.accepted = {
-            path for path, row in rows.items()
-            if (reference := _reference(row)) is None or path == min(self.paths[reference], key=_path_rank)
+            path
+            for path, row in rows.items()
+            if (reference := _reference(row)) is None
+            or path == min(self.paths[reference], key=_path_rank)
         }
 
     def update(
-        self, before: Mapping[Path, Mapping[str, Any] | None],
-        after: Callable[[Path], Mapping[str, Any] | None], affected: set[Path],
+        self,
+        before: Mapping[Path, Mapping[str, Any] | None],
+        after: Callable[[Path], Mapping[str, Any] | None],
+        affected: set[Path],
     ) -> set[Path]:
         impacted = set(affected)
         references = {
             reference
-            for lookup in (before.get, after) for path in affected
-            if (row := lookup(path)) is not None and (reference := _reference(row)) is not None
+            for lookup in (before.get, after)
+            for path in affected
+            if (row := lookup(path)) is not None
+            and (reference := _reference(row)) is not None
         }
         for reference in references:
             old = set(self.paths.get(reference, ()))
@@ -101,7 +114,10 @@ class ReferenceIndex:
         for path in impacted:
             row = after(path)
             reference = _reference(row)
-            if row is not None and (reference is None or path == min(self.paths[reference], key=_path_rank)):
+            if row is not None and (
+                reference is None
+                or path == min(self.paths[reference], key=_path_rank)
+            ):
                 self.accepted.add(path)
             else:
                 self.accepted.discard(path)
@@ -120,6 +136,12 @@ def _path_rank(path: Path) -> tuple[bool, Path]:
 def file_signature(path: Path) -> tuple[int, ...] | None:
     try:
         item = path.stat()
-        return item.st_mode, item.st_ino, item.st_size, item.st_mtime_ns, item.st_ctime_ns
+        return (
+            item.st_mode,
+            item.st_ino,
+            item.st_size,
+            item.st_mtime_ns,
+            item.st_ctime_ns,
+        )
     except OSError:
         return None

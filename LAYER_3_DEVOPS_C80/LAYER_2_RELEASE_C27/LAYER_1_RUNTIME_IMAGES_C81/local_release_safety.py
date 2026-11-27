@@ -25,17 +25,7 @@ def _git_head(root: Path, runner: Callable) -> str:
     return head.strip()
 
 
-def _git_checkpoint(root: Path, runner: Callable, phase: str, paths: tuple[str, ...], head: str | None) -> str:
-    if head is not None and _git_head(root, runner) != head:
-        raise LocalReleaseError("local-release-head-commit-changed")
-    sensitive = runner((
-        "git", "diff", "--cached", "--name-only", "--", ":(glob)**/.env*", ":(glob)**/*.env",
-    ), root)
-    if (getattr(sensitive, "returncode", 1) != 0 or not isinstance(getattr(sensitive, "stdout", None), str)
-            or sensitive.stdout.strip()):
-        raise LocalReleaseError("local-release-staged-environment-file-or-check-unavailable")
-    if head is not None and runner(("git", "diff", "--cached", "--quiet"), root).returncode != 0:
-        raise LocalReleaseError("local-release-index-changed")
+def _stage_checkpoint(root: Path, runner: Callable, phase: str, paths: tuple[str, ...]) -> bool:
     committed = False
     if paths:
         result = runner((
@@ -51,6 +41,21 @@ def _git_checkpoint(root: Path, runner: Callable, phase: str, paths: tuple[str, 
             committed = True
         elif staged.returncode != 0:
             raise LocalReleaseError("local-release-git-failed")
+    return committed
+
+
+def _git_checkpoint(root: Path, runner: Callable, phase: str, paths: tuple[str, ...], head: str | None) -> str:
+    if head is not None and _git_head(root, runner) != head:
+        raise LocalReleaseError("local-release-head-commit-changed")
+    sensitive = runner((
+        "git", "diff", "--cached", "--name-only", "--", ":(glob)**/.env*", ":(glob)**/*.env",
+    ), root)
+    if (getattr(sensitive, "returncode", 1) != 0 or not isinstance(getattr(sensitive, "stdout", None), str)
+            or sensitive.stdout.strip()):
+        raise LocalReleaseError("local-release-staged-environment-file-or-check-unavailable")
+    if head is not None and runner(("git", "diff", "--cached", "--quiet"), root).returncode != 0:
+        raise LocalReleaseError("local-release-index-changed")
+    committed = _stage_checkpoint(root, runner, phase, paths)
     result = runner(("git", "status", "--porcelain", "--untracked-files=all"), root)
     if (result.returncode != 0 or not isinstance(getattr(result, "stdout", None), str) or result.stdout.strip()):
         raise LocalReleaseError("local-release-worktree-not-clean")

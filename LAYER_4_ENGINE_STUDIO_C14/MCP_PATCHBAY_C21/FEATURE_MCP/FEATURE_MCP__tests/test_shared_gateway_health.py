@@ -13,14 +13,20 @@ MCP = Path(__file__).resolve().parents[1]
 TOOLS = MCP.parents[1] / "FEATURE_PROGRAMMATIC" / "FEATURE_TOOLS"
 
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import render_health_page  # noqa: E402
-from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.FEATURE_IWE_CONSOLE_BACKEND__shared import load_host_runtime_config  # noqa: E402
+from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.FEATURE_IWE_CONSOLE_BACKEND__shared import (  # noqa: E402
+    load_host_runtime_config,
+)
 from mcp import types  # noqa: E402
 from .test_native_startup import RuntimeSelectionTests  # noqa: E402
 from .shared_backend_fixture import backend_gateway  # noqa: E402
 
 
 def _tool():
-    return types.Tool(name="echo", inputSchema={"type": "object"}, outputSchema={"type": "object"})
+    return types.Tool(
+        name="echo",
+        inputSchema={"type": "object"},
+        outputSchema={"type": "object"},
+    )
 
 
 class _Gateway:
@@ -42,7 +48,15 @@ class _Gateway:
     async def ensure_current(self):
         return None
 
-    async def call_tool(self, _name, _arguments, *, session_id, public_base_url, asserted_project_root):
+    async def call_tool(
+        self,
+        _name,
+        _arguments,
+        *,
+        session_id,
+        public_base_url,
+        asserted_project_root,
+    ):
         if self.started is not None:
             self.started.set()
         if self.hold is not None:
@@ -63,12 +77,18 @@ class SharedGatewayHealthTests(unittest.IsolatedAsyncioTestCase):
         root = self.projects / name
         control = root / f".anechoic_{name}"
         RuntimeSelectionTests.manifest(
-            self, control, name=root.name, prefix="".join(c for c in root.name.upper() if c.isalpha()), component="C00",
+            self,
+            control,
+            name=root.name,
+            prefix="".join(c for c in root.name.upper() if c.isalpha()),
+            component="C00",
         )
         return root
 
     def _config(self, max_loaded=2):
-        self.config_path = self.base / "MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime.toml"
+        self.config_path = (
+            self.base / "MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime.toml"
+        )
         self.config_path.write_text(
             "schema_version=1\n[shared_mcp]\n"
             f'projects_root="{self.projects}"\nhttp_port=8092\nmax_loaded_projects={max_loaded}\n'
@@ -78,12 +98,17 @@ class SharedGatewayHealthTests(unittest.IsolatedAsyncioTestCase):
 
     async def _gateway(self):
         return await self.enterAsyncContext(
-            backend_gateway(load_host_runtime_config(self.config_path), _Gateway)
+            backend_gateway(
+                load_host_runtime_config(self.config_path), _Gateway
+            )
         )
 
     def _params(self, root=None):
         return types.CallToolRequestParams(
-            name="echo", arguments={"project_root": str(self.root if root is None else root)}
+            name="echo",
+            arguments={
+                "project_root": str(self.root if root is None else root)
+            },
         )
 
     async def test_status_and_html_contain_attributable_observations(self):
@@ -98,10 +123,16 @@ class SharedGatewayHealthTests(unittest.IsolatedAsyncioTestCase):
         html = render_health_page(status, state="ready", gateway=gateway)
         self.assertIn("Known Project contexts", html)
         self.assertIn(status["calls"][0]["project_instance_id"], html)
-        projects = html.split('<section aria-labelledby="projects">')[1].split("</section>")[0]
-        self.assertIn("ALPHA / " + status["calls"][0]["project_instance_id"], projects)
+        projects = html.split('<section aria-labelledby="projects">')[1].split(
+            "</section>"
+        )[0]
+        self.assertIn(
+            "ALPHA / " + status["calls"][0]["project_instance_id"], projects
+        )
 
-    async def test_observer_failure_warns_without_replacing_native_success(self):
+    async def test_observer_failure_warns_without_replacing_native_success(
+        self,
+    ):
         class BrokenObserver:
             def record(self, *_args, **_kwargs):
                 raise RuntimeError("SECRET_OBSERVER_FAILURE")
@@ -109,12 +140,16 @@ class SharedGatewayHealthTests(unittest.IsolatedAsyncioTestCase):
         self._config()
         gateway = await self._gateway()
         gateway.health_observations = BrokenObserver()
-        with patch("MCP_PATCHBAY_C21.FEATURE_MCP.shared_gateway_support.warning") as reported:
+        with patch(
+            "MCP_PATCHBAY_C21.FEATURE_MCP.shared_gateway_support.warning"
+        ) as reported:
             response = await gateway.call(None, self._params())
         self.assertFalse(response.is_error)
         reported.assert_called_once_with("health_observation_failed")
 
-    async def test_async_and_future_cancellation_are_not_adapted_to_success(self):
+    async def test_async_and_future_cancellation_are_not_adapted_to_success(
+        self,
+    ):
         self._config()
         gateway = await self._gateway()
         wait = asyncio.Event()
@@ -126,14 +161,20 @@ class SharedGatewayHealthTests(unittest.IsolatedAsyncioTestCase):
         with self.assertRaises(asyncio.CancelledError):
             await pending
         missing_root = types.CallToolRequestParams(name="echo", arguments={})
-        with patch("MCP_PATCHBAY_C21.FEATURE_MCP.shared_gateway_support.warning", return_value="technical diagnostic emission failed"):
+        with patch(
+            "MCP_PATCHBAY_C21.FEATURE_MCP.shared_gateway_support.warning",
+            return_value="technical diagnostic emission failed",
+        ):
             refusal_result = await gateway.call(None, missing_root)
         self.assertTrue(refusal_result.is_error)
         self.assertEqual(
             ["missing_project_root", "technical_diagnostics_unavailable"],
             refusal_result.structured_content["diagnostics"],
         )
-        with patch("MCP_PATCHBAY_C21.FEATURE_MCP.shared_gateway_support.warning", side_effect=FutureCancelledError()):
+        with patch(
+            "MCP_PATCHBAY_C21.FEATURE_MCP.shared_gateway_support.warning",
+            side_effect=FutureCancelledError(),
+        ):
             with self.assertRaises(FutureCancelledError):
                 await gateway.call(None, missing_root)
 
@@ -157,7 +198,9 @@ class SharedGatewayHealthTests(unittest.IsolatedAsyncioTestCase):
         await asyncio.wait_for(_Gateway.started.wait(), 10)
         refused = await gateway.call(
             None,
-            types.CallToolRequestParams(name="echo", arguments={"project_root": str(self.other)}),
+            types.CallToolRequestParams(
+                name="echo", arguments={"project_root": str(self.other)}
+            ),
         )
         self.assertTrue(refused.is_error)
         _Gateway.hold.set()

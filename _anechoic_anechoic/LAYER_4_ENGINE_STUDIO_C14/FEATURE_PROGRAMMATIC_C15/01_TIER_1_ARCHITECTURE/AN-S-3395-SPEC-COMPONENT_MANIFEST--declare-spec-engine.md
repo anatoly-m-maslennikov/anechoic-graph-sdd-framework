@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 5
-  updated_at: "2026-11-27T05:32:01.968684+00:00"
+  version: 6
+  updated_at: '2026-11-27T13:15:51.444941+00:00'
 ---
 ## Summary
 
@@ -35,7 +35,8 @@ ComponentManifest(
 ## Component Boundaries
 
 ```python
-{'code': {'exports': {'_package__shared.export_openapi': {'shared': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/SPEC_ENGINE_C75__tests/functional']},
+{'code': {'exports': {'formal_chain__pub': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/SPEC_ENGINE_C75__tests/functional']},
+                      'compile_project__pub': {'private': ['LAYER_4_ENGINE_STUDIO_C14/WORKERS_beta_C69/WORKERS_beta_C69__tests']}, '_package__shared.export_openapi': {'shared': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/SPEC_ENGINE_C75__tests/functional']},
                       '_package__shared.generate_framing_cases': {'shared': ['LAYER_4_ENGINE_STUDIO_C14/ARCHITECTURE_ANALYSIS_C73/IMPLEMENTATION_VERIFICATION_C74/IMPLEMENTATION_VERIFICATION_C74__tests/functional']},
                       '_package__shared.compare_trace_values': {'shared': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/SPEC_ENGINE_C75__tests/functional']},
                       '_package__shared.compile_workflow': {'shared': ['C61',
@@ -46,7 +47,9 @@ ComponentManifest(
                                                                           'LAYER_4_ENGINE_STUDIO_C14/ARCHITECTURE_ANALYSIS_C73/IMPLEMENTATION_VERIFICATION_C74/IMPLEMENTATION_VERIFICATION_C74__tests/functional',
                                                                           'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/LAYER_2_FORMAL_SPECIFICATION_C94/LAYER_4_TRANSLATION_VALIDATOR_C86/LAYER_4_TRANSLATION_VALIDATOR_C86__tests/functional',
                                                                           'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/SPEC_ENGINE_C75__tests/functional']}},
-          'imports': ['C30',
+          'imports': ['formal_chain__pub',
+                      'LAYER_2_PROJECT_STRUCTURE_C93__rows.StructureAdmissionError',
+                      'C30',
                       'FEATURE_TOOLS__shared.resolve_native_project',
                       'FEATURE_FORMAL_MODEL_GENERATOR__shared.load_native_model',
                       'FEATURE_MODEL_VALIDATION__shared.open_admitted_model',
@@ -78,7 +81,12 @@ ComponentManifest(
 
 Select a receipt-bound Model asset or the bundled Model and report the
 fallback. Use one ingested snapshot for the Model and Structure builds.
-Return the candidate after both are ready. Runtime admission publishes it.
+Return the candidate after both are ready. Use the Model admitted
+from the descriptor selected by C50 for Structure. This selected
+Model can be reused, compiled, or restored as a fallback. The
+bootstrap Model may differ. Preserve the selected Model fingerprint
+and descriptor digest in the returned candidate. Runtime admission
+publishes it.
 
 ```python trace
 declare_trace_contract(action='prepare_spec_engine', cases={
@@ -92,11 +100,18 @@ declare_trace_contract(action='prepare_spec_engine', cases={
                          (('C75.structure_inputs', 'admitted'), ('C93.structure_snapshot', 'ready')),
                          (('C93.structure_snapshot', 'ready'), ('C75.compiled_candidate', 'ready'))),
         'same_values': ((('C95.source_snapshot', 'snapshot_id'), ('C75.model_inputs', 'snapshot_id')),
-                        (('C95.source_snapshot', 'snapshot_id'), ('C75.structure_inputs', 'snapshot_id'))),
+                        (('C95.source_snapshot', 'snapshot_id'), ('C75.structure_inputs', 'snapshot_id')),
+                        (('C95.source_snapshot', 'snapshot_id'), ('result', 'snapshot_id')),
+                        (('C75.structure_inputs', 'model_sha256'), ('C93.structure_snapshot', 'model_sha256')),
+                        (('C93.structure_snapshot', 'model_sha256'), ('result', 'model_sha256')),
+                        (('C75.structure_inputs', 'model_descriptor_sha256'),
+                         ('result', 'model_descriptor_sha256'))),
         'value_types': {
             ('C95.source_snapshot', 'snapshot_id'): 'nonempty_string',
             ('C75.model_inputs', 'snapshot_id'): 'nonempty_string',
             ('C75.structure_inputs', 'snapshot_id'): 'nonempty_string',
+            ('C75.structure_inputs', 'model_sha256'): 'nonempty_string',
+            ('C75.structure_inputs', 'model_descriptor_sha256'): 'nonempty_string',
         },
     },
     'failed': {'forbid_effect': ('C75.compiled_candidate',)},
@@ -145,5 +160,31 @@ Raise a source or declaration error when the pinned chain cannot produce cases.
 declare_trace_contract(action='generate_framing_cases', cases={
     'generated': {'must_effect': (('C94.generated_cases', 'ready'),)},
     'invalid': {'forbid_effect': ('C94.generated_cases',)},
+})
+```
+
+### Compile a workflow
+
+Normalize the workflow and render its Mermaid diagram from that same Model.
+Return the Model and diagram together. Raise a validation error for invalid
+input.
+
+```python trace
+declare_trace_contract(action='compile_workflow', cases={
+    'compiled': {
+        'must_effect': (('C75.workflow_model', 'normalized'),
+                        ('C75.workflow_diagram', 'rendered')),
+        'must_precede': ((('C75.workflow_model', 'normalized'),
+                          ('C75.workflow_diagram', 'rendered')),),
+        'same_values': (
+            (('C75.workflow_model', 'model'), ('C75.workflow_diagram', 'model')),
+            (('C75.workflow_model', 'model'), ('result', 'model')),
+        ),
+        'value_types': {
+            ('C75.workflow_model', 'model'): 'object',
+            ('result', 'mermaid'): 'nonempty_string',
+        },
+    },
+    'invalid': {'forbid_effect': ('C75.workflow_diagram',)},
 })
 ```

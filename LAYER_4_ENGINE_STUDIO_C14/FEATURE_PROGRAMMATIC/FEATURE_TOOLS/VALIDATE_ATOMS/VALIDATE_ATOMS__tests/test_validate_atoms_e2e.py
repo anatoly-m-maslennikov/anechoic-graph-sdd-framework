@@ -6,11 +6,15 @@ import hashlib
 from pathlib import Path
 import unittest
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.VALIDATE_ATOMS.VALIDATE_ATOMS__tests.golden_fixtures import (
-    fixture_path,
-    read_json,
-)
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.VALIDATE_ATOMS.VALIDATE_ATOMS__tests.golden_support import assert_report_contract
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.VALIDATE_ATOMS.\
+    VALIDATE_ATOMS__tests.golden_fixtures \
+    import (
+        fixture_path,
+        read_json,
+    )  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.VALIDATE_ATOMS.\
+    VALIDATE_ATOMS__tests.golden_support \
+    import assert_report_contract  # fmt: skip
 
 HERE = Path(__file__).resolve().parent
 MANIFEST = read_json(HERE / "assets" / "cases.json")
@@ -50,15 +54,21 @@ class GoldenCorpus(unittest.TestCase):
                 assert_report_contract(self, expected)
                 self.assertEqual(
                     case["expected_exit_code"],
-                    {"valid": 0, "invalid": 1, "incomplete": 2, "error": 3}[expected["result"]],
+                    {"valid": 0, "invalid": 1, "incomplete": 2, "error": 3}[
+                        expected["result"]
+                    ],
                 )
 
     def test_authority_copies_are_exact(self) -> None:
         for item in read_json(HERE / "assets" / "source_bindings.json"):
             with self.subTest(authority=item["atom_id"]):
-                actual = hashlib.sha256(fixture_path(item["fixture_path"]).read_bytes()).hexdigest()
+                actual = hashlib.sha256(
+                    fixture_path(item["fixture_path"]).read_bytes()
+                ).hexdigest()
                 self.assertEqual(
-                    actual, item["sha256"], "fixture bytes diverged from reviewed source binding"
+                    actual,
+                    item["sha256"],
+                    "fixture bytes diverged from reviewed source binding",
                 )
 
 

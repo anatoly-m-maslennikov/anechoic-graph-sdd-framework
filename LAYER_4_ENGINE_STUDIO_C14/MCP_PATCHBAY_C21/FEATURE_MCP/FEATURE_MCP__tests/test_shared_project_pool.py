@@ -14,7 +14,12 @@ MCP = Path(__file__).resolve().parents[1]
 TOOLS = MCP.parents[1] / "FEATURE_PROGRAMMATIC" / "FEATURE_TOOLS"
 FIXTURES = Path(__file__).resolve().parent
 
-shared_project_pool = import_module("IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.shared_project_pool")
+shared_project_pool = import_module(
+    (
+        "IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.shared_pr"
+        "oject_pool"
+    )
+)
 shared_pool_fixtures = import_module(".shared_pool_fixtures", __package__)
 ProjectCapacityError = shared_project_pool.ProjectCapacityError
 SharedProjectPool = shared_project_pool.SharedProjectPool
@@ -39,7 +44,10 @@ class SharedProjectPoolTests(unittest.IsolatedAsyncioTestCase):
         release = asyncio.Event()
         factory = _Factory(
             {
-                "/projects/alpha": {"initialize_started": started, "initialize_release": release},
+                "/projects/alpha": {
+                    "initialize_started": started,
+                    "initialize_release": release,
+                },
             }
         )
         pool = SharedProjectPool(1, factory)
@@ -56,7 +64,10 @@ class SharedProjectPoolTests(unittest.IsolatedAsyncioTestCase):
         release = asyncio.Event()
         factory = _Factory(
             {
-                "/projects/alpha": {"initialize_started": started, "initialize_release": release},
+                "/projects/alpha": {
+                    "initialize_started": started,
+                    "initialize_release": release,
+                },
             }
         )
         pool = SharedProjectPool(1, factory)
@@ -69,7 +80,9 @@ class SharedProjectPoolTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(0, pool.status()["loaded_projects"])
         self.assertFalse(pool._pending)
 
-    async def test_initializer_finishing_after_shutdown_is_closed_and_not_published(self):
+    async def test_initializer_finishing_after_shutdown_is_closed_and_not_published(
+        self,
+    ):
         started = asyncio.Event()
         release = asyncio.Event()
         factory = _Factory(
@@ -93,11 +106,15 @@ class SharedProjectPoolTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(1, factory.gates["/projects/alpha"].closed)
         self.assertFalse(pool._pending)
 
-    async def test_initializer_failure_closes_gateway_and_reports_diagnostic(self):
+    async def test_initializer_failure_closes_gateway_and_reports_diagnostic(
+        self,
+    ):
         error = RuntimeError("init failed")
         factory = _Factory({"/projects/alpha": {"initialize_error": error}})
         pool = SharedProjectPool(1, factory)
-        with patch.object(shared_project_pool, "report_failure", return_value=(None, None)) as report:
+        with patch.object(
+            shared_project_pool, "report_failure", return_value=(None, None)
+        ) as report:
             with self.assertRaisesRegex(RuntimeError, "init failed"):
                 await pool.acquire(_selection("alpha"))
         self.assertEqual(1, factory.gates["/projects/alpha"].closed)
@@ -108,27 +125,41 @@ class SharedProjectPoolTests(unittest.IsolatedAsyncioTestCase):
     async def test_secondary_diagnostic_is_written_as_fixed_safe_stderr(self):
         factory = _Factory(
             {
-                "/projects/alpha": {"initialize_error": RuntimeError("private detail")},
+                "/projects/alpha": {
+                    "initialize_error": RuntimeError("private detail")
+                },
             }
         )
         pool = SharedProjectPool(1, factory)
         stream = io.StringIO()
-        with patch.object(shared_project_pool, "report_failure", return_value=(None, "sink failed")):
+        with patch.object(
+            shared_project_pool,
+            "report_failure",
+            return_value=(None, "sink failed"),
+        ):
             with patch.object(shared_project_pool.sys, "stderr", stream):
                 with self.assertRaisesRegex(RuntimeError, "private detail"):
                     await pool.acquire(_selection("alpha"))
-        self.assertEqual("anechoic: technical diagnostics unavailable\n", stream.getvalue())
+        self.assertEqual(
+            "anechoic: technical diagnostics unavailable\n", stream.getvalue()
+        )
 
-    async def test_eviction_close_failure_warns_and_does_not_leak_reservation(self):
+    async def test_eviction_close_failure_warns_and_does_not_leak_reservation(
+        self,
+    ):
         factory = _Factory(
             {
-                "/projects/alpha": {"close_error": RuntimeError("eviction failed")},
+                "/projects/alpha": {
+                    "close_error": RuntimeError("eviction failed")
+                },
             }
         )
         pool = SharedProjectPool(1, factory)
         first = await pool.acquire(_selection("alpha"))
         await pool.release(first)
-        with patch.object(shared_project_pool, "report_failure", return_value=(None, None)) as report:
+        with patch.object(
+            shared_project_pool, "report_failure", return_value=(None, None)
+        ) as report:
             second = await pool.acquire(_selection("beta"))
         self.assertEqual(1, factory.gates["/projects/alpha"].closed)
         self.assertIsNone(report.call_args.args[0])
@@ -138,7 +169,9 @@ class SharedProjectPoolTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_pending_and_busy_admissions_refuse_without_replay(self):
         started = asyncio.Event()
-        factory = _Factory({"/projects/alpha": {"initialize_started": started}})
+        factory = _Factory(
+            {"/projects/alpha": {"initialize_started": started}}
+        )
         pool = SharedProjectPool(1, factory)
         pending = asyncio.create_task(pool.acquire(_selection("alpha")))
         await started.wait()
@@ -148,11 +181,17 @@ class SharedProjectPoolTests(unittest.IsolatedAsyncioTestCase):
         await pool.close()
         await asyncio.gather(pending, return_exceptions=True)
 
-    async def test_close_reports_gateway_failure_and_release_keeps_pool_empty(self):
-        factory = _Factory({"/projects/alpha": {"close_error": RuntimeError("close failed")}})
+    async def test_close_reports_gateway_failure_and_release_keeps_pool_empty(
+        self,
+    ):
+        factory = _Factory(
+            {"/projects/alpha": {"close_error": RuntimeError("close failed")}}
+        )
         pool = SharedProjectPool(1, factory)
         entry = await pool.acquire(_selection("alpha"))
-        with patch.object(shared_project_pool, "report_failure", return_value=(None, None)) as report:
+        with patch.object(
+            shared_project_pool, "report_failure", return_value=(None, None)
+        ) as report:
             await pool.close()
         await pool.release(entry)
         self.assertEqual(0, pool.status()["loaded_projects"])

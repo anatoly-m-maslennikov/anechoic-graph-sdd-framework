@@ -1,4 +1,5 @@
 """Validate Worker generation envelopes before contextual admission checks."""
+
 import json
 from pathlib import PurePosixPath
 from typing import Any, Literal
@@ -123,12 +124,22 @@ class _CompilerRefresh(BaseModel):
 
 def _compiler_refresh(result, reuse, paths, foreground):
     message = "Worker returned an invalid compiler refresh"
-    if not foreground or paths is not None or reuse is None or "carrier_hashes" not in reuse:
+    if (
+        not foreground
+        or paths is not None
+        or reuse is None
+        or "carrier_hashes" not in reuse
+    ):
         raise ValueError(message)
     reply = _validate(_CompilerRefresh, result, message)
     if reply.base_generation != reuse["base_generation"]:
-        raise ValueError("Worker returned an unexpected compiler generation base")
-    if "delta" in result and (reply.delta is None or checkpoint_paths(reply.delta.paths) != reply.delta.paths):
+        raise ValueError(
+            "Worker returned an unexpected compiler generation base"
+        )
+    if "delta" in result and (
+        reply.delta is None
+        or checkpoint_paths(reply.delta.paths) != reply.delta.paths
+    ):
         raise ValueError("Worker returned invalid compiler delta paths")
     return reply.model_dump(exclude_unset=True)
 
@@ -147,7 +158,11 @@ def _shallow(model, raw):
 def _deferred(result, fields, foreground):
     if not foreground or "deferred_archive" not in fields:
         return None
-    value = _validate(_Deferred, result["deferred_archive"], "Worker returned invalid deferred archive input")
+    value = _validate(
+        _Deferred,
+        result["deferred_archive"],
+        "Worker returned invalid deferred archive input",
+    )
     fields.remove("deferred_archive")
     return value
 
@@ -159,7 +174,9 @@ def _native(result, fields, reuse, paths, structure, checkpoint):
     if fields == GRAPH_FIELDS:
         if structure is None:
             raise ValueError("Worker returned invalid graph refresh")
-        witness = _validate(_Reuse, result["reuse"], "Worker returned invalid graph refresh")
+        witness = _validate(
+            _Reuse, result["reuse"], "Worker returned invalid graph refresh"
+        )
     if fields == DELTA_FIELDS:
         relatives = sorted(map(PurePosixPath, paths or ()))
         expected = [[path.parent.as_posix(), path.name] for path in relatives]
@@ -167,31 +184,58 @@ def _native(result, fields, reuse, paths, structure, checkpoint):
             expected = checkpoint_paths(result["paths"])
         if not expected or result["paths"] != expected:
             raise ValueError("Worker returned unexpected Ticket delta paths")
-    model = _Graph if fields == GRAPH_FIELDS else _Delta if fields == DELTA_FIELDS else _Native
+    model = (
+        _Graph
+        if fields == GRAPH_FIELDS
+        else _Delta
+        if fields == DELTA_FIELDS
+        else _Native
+    )
     return model.model_validate(result), witness
 
 
 def _select(result, fields, reuse, paths, structure, foreground):
-    checkpoint = reuse is not None and "carrier_hashes" in reuse and paths is None
+    checkpoint = (
+        reuse is not None and "carrier_hashes" in reuse and paths is None
+    )
     if fields == {"base_generation", "unchanged"}:
-        if not checkpoint or result.get("unchanged") is not True or result["base_generation"] != reuse["base_generation"] or "carrier_hashes" in result:
+        if (
+            not checkpoint
+            or result.get("unchanged") is not True
+            or result["base_generation"] != reuse["base_generation"]
+            or "carrier_hashes" in result
+        ):
             raise ValueError("Worker returned invalid unchanged generation")
         return _Unchanged.model_validate(result), None
     if fields in (NATIVE_FIELDS, DELTA_FIELDS, GRAPH_FIELDS):
         return _native(result, fields, reuse, paths, structure, checkpoint)
-    if fields not in (FULL_FIELDS, BATCH_FIELDS) or (foreground and "deferred_archive" not in result):
+    if fields not in (FULL_FIELDS, BATCH_FIELDS) or (
+        foreground and "deferred_archive" not in result
+    ):
         raise ValueError("Worker returned invalid generation")
     if fields == BATCH_FIELDS and "carrier_hashes" in result:
         raise ValueError("Worker returned invalid generation")
     raw = result["reuse"]
-    witness = None if raw is None else _validate(_Reuse, raw, "Worker returned invalid generation reuse witness")
+    witness = (
+        None
+        if raw is None
+        else _validate(
+            _Reuse, raw, "Worker returned invalid generation reuse witness"
+        )
+    )
     model = _BatchedFull if fields == BATCH_FIELDS else _Full
-    return _validate(model, result, "Worker returned invalid generation"), witness
+    return _validate(
+        model, result, "Worker returned invalid generation"
+    ), witness
 
 
 def parse_archive_result(stdout):
     result = json.loads(stdout)
-    model = _BatchedArchive if isinstance(result, dict) and "batch_artifact" in result else _Archive
+    model = (
+        _BatchedArchive
+        if isinstance(result, dict) and "batch_artifact" in result
+        else _Archive
+    )
     reply = _validate(model, result, "Worker returned invalid Archive result")
     output = _shallow(reply, result)
     if "batch_artifact" in output:
@@ -203,16 +247,27 @@ def parse_graph_result(stdout, base):
     result = json.loads(stdout)
     if not isinstance(result, dict) or result.get("base_generation") != base:
         raise ValueError("Worker returned an unexpected graph base")
-    if set(result) == {"base_generation", "unchanged"} and result["unchanged"] is True:
+    if (
+        set(result) == {"base_generation", "unchanged"}
+        and result["unchanged"] is True
+    ):
         return result
-    return _validate(_GraphOnly, result, "Worker returned an invalid startup graph").model_dump()
+    return _validate(
+        _GraphOnly, result, "Worker returned an invalid startup graph"
+    ).model_dump()
 
 
-def parse_worker_result(stdout, reuse, paths, structure=None, *, foreground=False):
-    return parse_worker_data(json.loads(stdout), reuse, paths, structure, foreground=foreground)
+def parse_worker_result(
+    stdout, reuse, paths, structure=None, *, foreground=False
+):
+    return parse_worker_data(
+        json.loads(stdout), reuse, paths, structure, foreground=foreground
+    )
 
 
-def parse_worker_data(result, reuse, paths, structure=None, *, foreground=False):
+def parse_worker_data(
+    result, reuse, paths, structure=None, *, foreground=False
+):
     if not isinstance(result, dict):
         raise TypeError("Worker returned invalid generation")
     if "compiler" in result:
@@ -221,14 +276,20 @@ def parse_worker_data(result, reuse, paths, structure=None, *, foreground=False)
     deferred = _deferred(result, fields, foreground)
     if "model_diagnostics" in fields:
         fields.remove("model_diagnostics")
-        if fields not in (FULL_FIELDS, BATCH_FIELDS) or not isinstance(result["model_diagnostics"], list):
+        if fields not in (FULL_FIELDS, BATCH_FIELDS) or not isinstance(
+            result["model_diagnostics"], list
+        ):
             raise ValueError("Worker returned invalid Model diagnostics")
-    reply, witness = _select(result, fields, reuse, paths, structure, foreground)
+    reply, witness = _select(
+        result, fields, reuse, paths, structure, foreground
+    )
     output = _shallow(reply, result)
     if "batch_artifact" in output:
         output["batch_artifact"] = output["batch_artifact"].model_dump()
     if deferred is not None:
-        output["deferred_archive"] = _shallow(deferred, result["deferred_archive"])
+        output["deferred_archive"] = _shallow(
+            deferred, result["deferred_archive"]
+        )
     if witness is not None:
         output["reuse"] = _shallow(witness, result["reuse"])
     return output

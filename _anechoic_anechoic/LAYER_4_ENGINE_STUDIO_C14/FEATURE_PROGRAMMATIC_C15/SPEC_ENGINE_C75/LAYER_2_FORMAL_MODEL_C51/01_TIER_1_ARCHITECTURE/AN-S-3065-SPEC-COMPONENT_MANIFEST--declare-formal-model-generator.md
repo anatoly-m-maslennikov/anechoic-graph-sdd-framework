@@ -9,13 +9,17 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 38
-  updated_at: '2026-11-27T01:04:20.461163+00:00'
+  version: 39
+  updated_at: '2026-11-27T11:43:54.041100+00:00'
 ---
 
 ## Summary
 
 Declare FORMAL_MODEL_GENERATOR
+
+## Purpose
+
+Compile and stage a Project Model and validate its Structure for callers.
 
 ## Component Identity
 
@@ -210,7 +214,8 @@ ComponentManifest(
                                            'module': 'FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.FEATURE_FORMAL_MODEL_GENERATOR.manifest_compiler_CS1.image_model_compile'}},
         'client': [{'component': 'C45',
                     'interface': 'previous_image_model_claim_selection'},
-                   {'component': 'C93', 'interface': 'compile_project_structure'}]},
+                   {'component': 'C93', 'interface': 'compile_project_structure'},
+                   {'component': 'C53', 'interface': 'admitted_model'}]},
  'state': {'reads': ['selected Project Manifest and its admission pin',
                      'pinned Model rows and the accepted compiled Model',
                      'previous-image claim selection'],
@@ -242,6 +247,21 @@ Compile permitted Project Config templates, statuses, allowed values,
 and defaults with the Model rows. Stage a usable fallback with diagnostics
 if candidate compilation or admission fails.
 
+The bootstrap Model used to ingest inputs has a separate role from the
+selected reused, compiled, or fallback Model. They may have the same
+fingerprint. Open the selected staged descriptor
+with C53 and compile Structure with that Model using the supplied compiler.
+For pinned snapshot rows, the compiler is C93 `compile_pinned_structure`
+under AN-S-5018@7. Return the selected Model fingerprint and staged
+descriptor digest with the Structure.
+
+For comparison, observe `model_sha256` and `descriptor_sha256` at each
+branch's selected Model and its C53 opening. Observe `model_sha256` at C93
+Structure and in the returned Structure, as `structure.model_sha256`. At opening,
+read the yielded Model fingerprint and the digest of the verified descriptor
+bytes. Compare the staged digest with returned `model_descriptor_sha256`.
+Missing independent observations leave identity unresolved.
+
 ```python trace
 declare_trace_contract(
     action='manifest_compile',
@@ -252,21 +272,49 @@ declare_trace_contract(
         'compile': ('C50.model_generation', 'staged'),
         'fallback': ('C50.model_generation', 'restored'),
         'diagnostics': ('C50.model_diagnostics', 'recorded'),
+        'open': ('C53', 'opened'),
         'structure': ('C93.structure_snapshot', 'ready'),
     },
     cases={
         'reused': {
-            'must_effect': ('reuse', 'structure'),
-            'must_precede': (('reuse', 'structure'),),
+            'must_effect': ('reuse', 'open', 'structure'),
+            'must_precede': (('reuse', 'open'), ('open', 'structure')),
+            'same_values': (
+                (('asset_validated', 'model_sha256'), ('reuse_model_opened', 'model_sha256')),
+                (('reuse_model_opened', 'model_sha256'), ('structure_ready', 'model_sha256')),
+                (('structure_ready', 'model_sha256'), ('returned', 'model_sha256')),
+                (('asset_validated', 'descriptor_sha256'), ('reuse_model_opened', 'descriptor_sha256')),
+                (('reuse_model_opened', 'descriptor_sha256'), ('returned', 'model_descriptor_sha256')),
+            ),
+            'value_types': {('asset_validated', 'model_sha256'): 'nonempty_string',
+                            ('asset_validated', 'descriptor_sha256'): 'nonempty_string'},
             'forbid_effect': ('C50.model_generation',),
         },
         'compiled': {
-            'must_effect': ('compile', 'structure'),
-            'must_precede': (('compile', 'structure'),),
+            'must_effect': ('compile', 'open', 'structure'),
+            'must_precede': (('compile', 'open'), ('open', 'structure')),
+            'same_values': (
+                (('candidate_staged', 'model_sha256'), ('compiled_model_opened', 'model_sha256')),
+                (('compiled_model_opened', 'model_sha256'), ('structure_ready', 'model_sha256')),
+                (('structure_ready', 'model_sha256'), ('returned', 'model_sha256')),
+                (('candidate_staged', 'descriptor_sha256'), ('compiled_model_opened', 'descriptor_sha256')),
+                (('compiled_model_opened', 'descriptor_sha256'), ('returned', 'model_descriptor_sha256')),
+            ),
+            'value_types': {('candidate_staged', 'model_sha256'): 'nonempty_string',
+                            ('candidate_staged', 'descriptor_sha256'): 'nonempty_string'},
         },
         'fallback': {
-            'must_effect': ('diagnostics', 'fallback', 'structure'),
-            'must_precede': (('diagnostics', 'fallback'), ('fallback', 'structure')),
+            'must_effect': ('diagnostics', 'fallback', 'open', 'structure'),
+            'must_precede': (('diagnostics', 'fallback'), ('fallback', 'open'), ('open', 'structure')),
+            'same_values': (
+                (('fallback_selected', 'model_sha256'), ('fallback_model_opened', 'model_sha256')),
+                (('fallback_model_opened', 'model_sha256'), ('structure_ready', 'model_sha256')),
+                (('structure_ready', 'model_sha256'), ('returned', 'model_sha256')),
+                (('fallback_selected', 'descriptor_sha256'), ('fallback_model_opened', 'descriptor_sha256')),
+                (('fallback_model_opened', 'descriptor_sha256'), ('returned', 'model_descriptor_sha256')),
+            ),
+            'value_types': {('fallback_selected', 'model_sha256'): 'nonempty_string',
+                            ('fallback_selected', 'descriptor_sha256'): 'nonempty_string'},
         },
         'failed': {},
     },

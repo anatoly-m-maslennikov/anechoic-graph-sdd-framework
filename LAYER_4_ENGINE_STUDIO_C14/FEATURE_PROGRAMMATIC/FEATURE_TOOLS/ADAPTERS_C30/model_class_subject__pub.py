@@ -15,9 +15,8 @@ def model_class_target(subject, entity_name, *, require_namespace=True):
         return "ANECHOIC_MODEL" if entity_name.casefold() == "model" else None
     root = expression.endpoints[0] if isinstance(expression, notation.RelationChain) else expression
     root_name = root.head.value if isinstance(root.head, notation.Name) else None
-    if root_name in {"ANECHOIC_STRUCTURE", "ANECHOIC"}:
-        if root_name != "ANECHOIC" or not isinstance(expression, notation.RelationChain) or len(expression.endpoints) < 2 or not isinstance(expression.endpoints[1].head, notation.Name) or expression.endpoints[1].head.value != "MODEL":
-            return None
+    if not _valid_model_root(expression, root_name):
+        return None
     local = notation.namespace_local_expression(expression)
     if local is None:
         if require_namespace or root_name == "ANECHOIC_MODEL":
@@ -34,6 +33,21 @@ def model_class_target(subject, entity_name, *, require_namespace=True):
             or local.value_format is not None or local.value_cardinality is not None
             or any(step.operator not in {"/", "//"} or not isinstance(step.operand, (notation.Name, notation.Qualification)) for step in local.steps)):
         return None
+    return _matching_model_class(local, entity_name)
+
+
+
+def _valid_model_root(expression, root_name):
+    if root_name not in {"ANECHOIC_STRUCTURE", "ANECHOIC"}:
+        return True
+    return (root_name == "ANECHOIC"
+            and isinstance(expression, notation.RelationChain)
+            and len(expression.endpoints) >= 2
+            and isinstance(expression.endpoints[1].head, notation.Name)
+            and expression.endpoints[1].head.value == "MODEL")
+
+
+def _matching_model_class(local, entity_name):
     terminal = local.steps[-1].operand if local.steps else local.head
     if isinstance(terminal, notation.Qualification):
         steps = terminal.relative_path.steps
@@ -42,7 +56,8 @@ def model_class_target(subject, entity_name, *, require_namespace=True):
         terminal = steps[-1].operand
     if not isinstance(terminal, (notation.Name, notation.ValueLiteral)):
         return None
-    norm = lambda value: re.sub(r"[^a-z0-9]", "", value.casefold())
+    def norm(value):
+        return re.sub(r"[^a-z0-9]", "", value.casefold())
     if norm(terminal.value) != norm(entity_name):
         return None
     return notation.render_subject(local)

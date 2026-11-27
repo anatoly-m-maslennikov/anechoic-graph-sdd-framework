@@ -15,7 +15,9 @@ import toon_format
 
 from .result_values import result_value
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import validate_directory_components  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    validate_directory_components,
+)  # noqa: E402
 
 
 _RELATIVE_DIRECTORY = Path(".anechoic_tmp/workbench/query_results")
@@ -43,14 +45,22 @@ def _directory_fd(root: Path) -> Iterator[int]:
         os.close(descriptor)
 
 
-def _encoded_rows(rows: Iterable[Sequence[Any]], width: int) -> Iterator[list[Any]]:
+def _encoded_rows(
+    rows: Iterable[Sequence[Any]], width: int
+) -> Iterator[list[Any]]:
     for row in rows:
-        if not isinstance(row, Sequence) or isinstance(row, (str, bytes)) or len(row) != width:
+        if (
+            not isinstance(row, Sequence)
+            or isinstance(row, (str, bytes))
+            or len(row) != width
+        ):
             raise ValueError("result row width does not match column count")
         yield [result_value(value) for value in row]
 
 
-def _write_json(stream: TextIO, columns: list[str], rows: Iterator[list[Any]]) -> int:
+def _write_json(
+    stream: TextIO, columns: list[str], rows: Iterator[list[Any]]
+) -> int:
     stream.write('{"columns":')
     json.dump(columns, stream, ensure_ascii=False, separators=(",", ":"))
     stream.write(',"rows":[')
@@ -58,14 +68,24 @@ def _write_json(stream: TextIO, columns: list[str], rows: Iterator[list[Any]]) -
     for row in rows:
         if count:
             stream.write(",")
-        json.dump(row, stream, ensure_ascii=False, separators=(",", ":"), allow_nan=False)
+        json.dump(
+            row,
+            stream,
+            ensure_ascii=False,
+            separators=(",", ":"),
+            allow_nan=False,
+        )
         count += 1
     stream.write("]}")
     return count
 
 
-def _write_csv(stream: TextIO, columns: list[str], rows: Iterator[list[Any]]) -> int:
-    writer = csv.writer(stream, quoting=csv.QUOTE_NOTNULL, lineterminator="\r\n")
+def _write_csv(
+    stream: TextIO, columns: list[str], rows: Iterator[list[Any]]
+) -> int:
+    writer = csv.writer(
+        stream, quoting=csv.QUOTE_NOTNULL, lineterminator="\r\n"
+    )
     writer.writerow(columns)
     count = 0
     for row in rows:
@@ -86,7 +106,9 @@ def _write_file(root, filename, rows, names, result_format):
         flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW
         file_descriptor = os.open(filename, flags, 0o644, dir_fd=directory)
         try:
-            with os.fdopen(file_descriptor, "w", encoding="utf-8", newline="") as stream:
+            with os.fdopen(
+                file_descriptor, "w", encoding="utf-8", newline=""
+            ) as stream:
                 encoded_rows = _encoded_rows(rows, len(names))
                 if result_format == "json_matrix":
                     count = _write_json(stream, names, encoded_rows)
@@ -94,7 +116,9 @@ def _write_file(root, filename, rows, names, result_format):
                     count = _write_csv(stream, names, encoded_rows)
                 else:
                     matrix = list(encoded_rows)
-                    stream.write(toon_format.dumps({"columns": names, "rows": matrix}))
+                    stream.write(
+                        toon_format.dumps({"columns": names, "rows": matrix})
+                    )
                     count = len(matrix)
         except BaseException:
             os.unlink(filename, dir_fd=directory)

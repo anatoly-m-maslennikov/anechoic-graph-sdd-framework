@@ -1,9 +1,41 @@
 import { execFileSync } from 'node:child_process';
 import { resolve } from 'node:path';
+import { isDeepStrictEqual } from 'node:util';
 import { expect } from '@playwright/test';
 
 type Field = [event: string, field: string];
-export type CorrelatedCase = { name: string; same_values: [Field, Field][] };
+export type Effect = [target: string, outcome: string, detail?: Record<string, unknown>];
+export type EffectCase = { name: string; must_effect: Effect[]; forbid_effect: string[]; must_precede: [Effect, Effect][] };
+export type CorrelatedCase = EffectCase & { same_values: [Field, Field][] };
+
+function matchesDetail(actual: unknown, required: unknown) {
+  if (isDeepStrictEqual(actual, required)) return true;
+  return typeof actual === 'number' && Number.isSafeInteger(actual) && actual >= 0
+    && required !== null && typeof required === 'object' && Object.keys(required).length === 1
+    && 'at_most' in required && typeof required.at_most === 'number' && actual <= required.at_most;
+}
+
+function matchesEffect([target, outcome, detail = {}]: Effect, required: Effect) {
+  return target === required[0] && outcome === required[1]
+    && Object.entries(required[2] ?? {}).every(([field, value]) => matchesDetail(detail[field], value));
+}
+
+export function checkObservedEffects(scenario: EffectCase, observations: Effect[]) {
+  const first = (effect: Effect) => observations.findIndex(observed => matchesEffect(observed, effect));
+  for (const required of scenario.must_effect) {
+    expect(first(required), `${scenario.name}: missing effect ${JSON.stringify(required)}`).toBeGreaterThanOrEqual(0);
+  }
+  for (const target of scenario.forbid_effect) {
+    expect(observations.some(effect => effect[0] === target), `${scenario.name}: forbidden effect ${target}`).toBe(false);
+  }
+  for (const [before, after] of scenario.must_precede) {
+    const next = first(after);
+    if (next < 0) continue;
+    const earlier = first(before);
+    expect(earlier >= 0 && earlier < next,
+      `${scenario.name}: ${JSON.stringify(before)} must precede ${JSON.stringify(after)}`).toBe(true);
+  }
+}
 
 export function checkObservedValues(scenario: CorrelatedCase, events: Record<string, Record<string, unknown>>) {
   for (const [[left, from], [right, to]] of scenario.same_values) {

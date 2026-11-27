@@ -82,12 +82,13 @@ def _dictionary_record(node, bindings):
     return heterogeneous and _named_fields(_dictionary_fields(node.value, bindings))
 
 
-def _namespace_exemptions(source):
-    if NAMESPACE_EXEMPTION not in source:
+def _exemptions(source, pragma):
+    if pragma not in source:
         return set()
     return {token.start[0] for token in tokenize.generate_tokens(StringIO(source).readline)
-            if token.type == tokenize.COMMENT and token.string.startswith(NAMESPACE_EXEMPTION)
-            and token.string.removeprefix(NAMESPACE_EXEMPTION).strip()}
+            if token.type == tokenize.COMMENT
+            and token.string.startswith(pragma)
+            and token.string.removeprefix(pragma).strip()}
 
 
 def _literal_tags(node, bindings):
@@ -117,7 +118,7 @@ class _ModelVisitor(ast.NodeVisitor):
         self.path = path
         self.bindings = {}
         self.findings = []
-        self.namespace_exemptions = _namespace_exemptions(source)
+        self.namespace_exemptions = _exemptions(source, NAMESPACE_EXEMPTION)
         self.dictionary_literals = {}
         self.model_tags = {}
         self.in_loop = False

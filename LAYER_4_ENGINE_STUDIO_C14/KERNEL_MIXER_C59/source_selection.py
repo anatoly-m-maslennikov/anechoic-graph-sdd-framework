@@ -12,8 +12,11 @@ def first_reference_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     for row in rows:
         reference = row.get("ref")
         if reference is not None and reference in seen:
-            print(f"Workbench: {row.get('source_path')}: duplicate reference {reference}; "
-                  f"already loaded from {seen[reference]}; skipped", file=sys.stderr)
+            print(
+                f"Workbench: {row.get('source_path')}: duplicate reference {reference}; "
+                f"already loaded from {seen[reference]}; skipped",
+                file=sys.stderr,
+            )
             continue
         selected.append(row)
         if reference is not None:

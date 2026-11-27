@@ -13,6 +13,7 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import native_carrier_path
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import NativeProjectSelection
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import LIFECYCLE_TOOLS, execute_native_lifecycle
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__tests.lifecycle_route_support import LifecycleRouteSupport
 
 
 LIFECYCLE_TEMPLATES = {
@@ -54,9 +55,6 @@ def lifecycle_transition_cases():
                       'situation': 'current', 'contained': False,
                       'source_status': 'in_queue', 'target_status': 'complete'})
     return cases
-
-
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__tests.lifecycle_route_support import LifecycleRouteSupport
 
 
 class LifecycleRouteMatrix(LifecycleRouteSupport, unittest.TestCase):
@@ -133,7 +131,8 @@ declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Te
             manifest_path=manifest, manifest_ref='AN-S-1@1',
             manifest_sha256=sha256(manifest.read_bytes()).hexdigest(),
         )
-        component = control / 'UNIT_C9'; component.mkdir()
+        component = control / 'UNIT_C9'
+        component.mkdir()
         declaration = control / 'AN-S-2-SPEC--component.md'
         declaration.write_text('---\n' + yaml.safe_dump({'identity': {'atom_id': 'AN-S-2'},
             'context': {'container': {'component': 'C00'}, 'lens': 'SPEC'},
@@ -141,13 +140,19 @@ declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Te
         snapshot = parse_structure(json.dumps({'model_sha256': 'model', 'project': {'ref': 'AN-S-1@1', 'sha256': sha256(manifest.read_bytes()).hexdigest()},
             'components': {'C9': {'parent': 'C00', 'ref': 'AN-S-2@1', 'sha256': sha256(declaration.read_bytes()).hexdigest(),
                 'fields': {'name': 'Unit', 'lens_whitelist': None}, 'source_path': declaration.relative_to(control).as_posix()}}, 'packages': {}}).encode())
+        owner_dir = self._grid_owner(project)
+        return project, component, snapshot, owner_dir
+
+    def _grid_owner(self, project):
+        control = project.control_root
         owner_header = canonical_native_header({'identity': {'atom_id': 'AN-T-1'},
             'context': {'container': {'component': 'C00'}, 'template': 'task'},
             'state': {'status': 'in_queue', 'version': 1, 'updated_at': '2026-01-01'}})
         owner_path = native_carrier_path(owner_header, 'Owner', project_root=control, owner_directory=control)
-        owner_path.parent.mkdir(parents=True, exist_ok=True); owner_path.write_text(
+        owner_path.parent.mkdir(parents=True, exist_ok=True)
+        owner_path.write_text(
             '---\n' + yaml.safe_dump(owner_header, sort_keys=False) + '---\n\n## Summary\n\nOwner\n')
-        owner_dir = owner_path.with_suffix(''); return project, component, snapshot, owner_dir
+        return owner_path.with_suffix('')
 
     def _grid_carrier(self, case, project, component, owner_dir, container, body):
         family, template, situation, contained, route = (case[k] for k in ('family', 'template', 'situation', 'contained', 'route'))
@@ -174,14 +179,16 @@ declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Te
                     previous = canonical_native_header({'identity': {'atom_id': atom_id}, 'context': context,
                         'state': {'status': 'active', 'version': 1, 'updated_at': '2026-01-01'}})
                     previous_path = native_carrier_path(previous, 'Example', project_root=control, owner_directory=control)
-                    previous_path.parent.mkdir(parents=True, exist_ok=True); previous_path.write_text(
+                    previous_path.parent.mkdir(parents=True, exist_ok=True)
+                    previous_path.write_text(
                         '---\n' + yaml.safe_dump(previous, sort_keys=False) + '---\n' + body)
                 header = canonical_native_header({'identity': {'atom_id': atom_id}, 'context': context,
                     'state': {'status': status, 'version': version, 'updated_at': '2026-01-01'}})
                 path = native_carrier_path(header, 'Example', project_root=control,
                     owner_directory=owner_dir if contained else component if family == 'SPEC' and container == {'component': 'C9'} else control,
                     owner_template='task' if contained else None)
-                path.parent.mkdir(parents=True, exist_ok=True); path.write_text(
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(
                     '---\n' + yaml.safe_dump(header, sort_keys=False) + '---\n' + body)
         return atom_id
 
@@ -209,45 +216,6 @@ declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Te
         else:
             args = {'target': target}
         return args, status
-
-    def _grid_expected(self, case, assets, project_specs):
-        family, template, situation, contained, route = (case[k] for k in
-            ('family', 'template', 'situation', 'contained', 'route'))
-        return (
-            route == 'create_draft' and situation == 'new' and
-                ((family == 'TKT' and template in {'task', 'epic'}) or
-                 (family == 'SPEC' and not contained and template in project_specs)) or
-            route in {'create_draft', 'update'} and situation == 'current' and
-                ((family == 'TKT' and template in {'task', 'epic'}) or
-                 (family == 'PROJECT_CONFIG' and template is not None and not contained) or
-                 (family == 'SPEC' and template not in {'project_manifest', 'component_contract'} and not contained)) or
-            route == 'create_asset' and situation == 'new' and family == 'TKT' and template in assets or
-            route == 'direct_update' and situation in {'current', 'draft'} and family == 'TKT' and template in assets or
-            route == 'promote_draft' and situation == 'draft' and
-                ((family == 'TKT' and template in {'task', 'epic'}) or
-                 (family == 'SPEC' and not contained and template in {None} | project_specs) or
-                 (family == 'PROJECT_CONFIG' and template is not None and not contained)) or
-            route == 'change_status' and situation == 'current' and
-                (family == 'TKT' and self._grid_ticket_transition_supported(case) or
-                 family == 'SPEC' and not contained and template not in {'project_manifest', 'component_contract'}) or
-            route == 'archive' and family == 'SPEC' and not contained and
-                (situation == 'draft' or situation == 'current' and template != 'project_manifest')
-        )
-
-    def _grid_ticket_transition_supported(self, case):
-        template = case['template']
-        source = case.get('source_status', 'in_queue')
-        target = case.get('target_status', 'resolved' if template in {'problem', 'question', 'code_spec_mismatch', 'opportunity'} else 'done')
-        if template in {'task', 'epic'}:
-            return (source == 'backlog' and target == 'in_queue' or
-                    source in {'in_queue', 'active'} and target in {'done', 'canceled'} or
-                    source == 'active' and target == 'in_queue')
-        if template in {'problem', 'question', 'code_spec_mismatch', 'opportunity'}:
-            return (source == 'backlog' and target == 'in_queue' or
-                    source in {'in_queue', 'active'} and target in {'resolved', 'canceled'} or
-                    source == 'active' and target == 'in_queue')
-        return (template in {'analysis_report', 'work_report', 'work_log', 'spec_proposal'}
-                and (target == 'done' or not case['contained'] and source == 'in_queue' and target == 'complete'))
 
     def _run_grid_case(self, case, directory, body, changed, assets, project_specs):
         family, template, contained, route = (case[k] for k in ('family', 'template', 'contained', 'route'))
@@ -282,22 +250,27 @@ declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Te
                            before, atom_id, status, project_specs, expected):
         family, template, situation, contained, route = (case[k] for k in
             ('family', 'template', 'situation', 'contained', 'route'))
-        root, control = project.root, project.control_root
-        self.assertTrue(expected, result); self.assertEqual('completed', result['outcome'], result)
-        self.assertTrue(result['effects'], result); saved = result.get('savedDraft') or result['artifact']
+        root = project.root
+        self.assertTrue(expected, result)
+        self.assertEqual('completed', result['outcome'], result)
+        self.assertTrue(result['effects'], result)
+        saved = result.get('savedDraft') or result['artifact']
         saved_path = root / saved['path']
         self.assertTrue(saved_path.is_file())
         expected_version = 2 if (situation == 'current' and route in {'create_draft', 'update'} or family == 'PROJECT_CONFIG' and situation == 'draft' and template is not None and not contained) else 1
-        self.assertEqual(atom_id, saved['atom_id']); self.assertEqual(expected_version, saved['version'])
+        self.assertEqual(atom_id, saved['atom_id'])
+        self.assertEqual(expected_version, saved['version'])
         expected_status = ('draft' if route in {'create_draft', 'update'} else
             'in_queue' if route == 'create_asset' else
             {'TKT': 'backlog', 'SPEC': 'ready', 'PROJECT_CONFIG': 'active'}[family] if route == 'promote_draft' else
             status if route == 'change_status' else 'archived' if route == 'archive' else
             'draft' if situation == 'draft' else 'in_queue')
-        self.assertEqual(expected_status, saved['status'].lower()); expected_ref = (
+        self.assertEqual(expected_status, saved['status'].lower())
+        expected_ref = (
             f"{saved['atom_id']}@{expected_version}-draft" if expected_status == 'draft' else
                         f"{saved['atom_id']}@{expected_version}" if expected_status == 'archived' else saved['atom_id'])
-        self.assertEqual(expected_ref, saved['ref_id']); operations = [
+        self.assertEqual(expected_ref, saved['ref_id'])
+        operations = [
             effect['operation'] for effect in result['effects'] if effect.get('evidence') != 'directory']
         expected_operations = (['create'] if route in {'create_draft', 'update', 'create_asset'} else
             ['modify'] if route == 'direct_update' else
@@ -305,6 +278,17 @@ declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Te
             ['create', 'remove'])
         self.assertEqual(expected_operations, operations)
         self.assertTrue(any(effect['target'] == saved['path'] for effect in result['effects']))
+        self._check_grid_carrier(case, saved, saved_path, expected_ref, expected_version,
+                                 expected_status, project, component, owner_dir,
+                                 container, body, changed, before, project_specs)
+
+    def _check_grid_carrier(self, case, saved, saved_path, expected_ref, expected_version,
+                            expected_status, project, component, owner_dir,
+                            container, body, changed, before, project_specs):
+        family, template, situation, route = (case[k] for k in
+            ('family', 'template', 'situation', 'route'))
+        contained = case['contained']
+        control = project.control_root
         after = capture_native(project)
         self.assertFalse(after.errors, after.errors)
         exact_ref = expected_ref if '@' in expected_ref else f'{expected_ref}@{expected_version}'

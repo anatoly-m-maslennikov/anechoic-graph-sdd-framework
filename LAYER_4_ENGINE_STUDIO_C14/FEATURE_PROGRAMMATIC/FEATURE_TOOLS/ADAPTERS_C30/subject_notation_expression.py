@@ -6,7 +6,7 @@ from types import MappingProxyType
 from .subject_notation_legacy import parse_subject, _parse_selector_literal, _skip_whitespace, _SELECTOR_KEYWORD
 from .subject_notation_profiles import get_profile
 from .subject_notation_types import (
-    Cardinality, DeclaredReference, FormatReference, InitialAtomSelector, Name, ParsedSubject, Path,
+    Cardinality, DeclaredReference, FormatReference, InitialAtomSelector, MembershipPredicate, Name, ParsedSubject, Path,
     PathStep, Qualification, RelationChain, RelationLink, SelectionGroup, SelectionSuffix, Span,
     SubjectNotationError, ValueLiteral,
 )
@@ -15,6 +15,7 @@ from .subject_notation_types import (
 _RESERVED = frozenset('\\/.:@()[]{}+<>|*&?,="\'')
 _RELATION_OPERATORS = ("+>", "<+", ">|", "|<", "<-->", "<((", "((")
 _PATH_OPERATORS = ("//", "/", ".", ":=", ":")
+_MEMBERSHIP_GROUP = re.compile(r"\s+in\s*\(")
 
 
 class _ExpressionParser:
@@ -34,7 +35,13 @@ class _ExpressionParser:
         position = self.position if start is None else start
         raise SubjectNotationError(code, message, Span(position, min(len(self.source), position + 1)))
 
-    def name(self, node_type: type = Name) -> Name | ValueLiteral | FormatReference:
+    def close_group(self, message: str, start: int | None = None) -> None:
+        self.whitespace()
+        if not self.at(")"):
+            self.fail(message, start)
+        self.position += 1
+
+    def name(self, node_type: type = Name, *, stop_membership: bool = False) -> Name | ValueLiteral | FormatReference:
         self.whitespace()
         start = self.position
         characters: list[str] = []
@@ -42,6 +49,8 @@ class _ExpressionParser:
         last_end = start
         while self.position < len(self.source):
             character = self.source[self.position]
+            if stop_membership and character.isspace() and _MEMBERSHIP_GROUP.match(self.source, self.position):
+                break
             escaped = character == "\\"
             if escaped:
                 self.position += 1
@@ -111,11 +120,10 @@ class _ExpressionParser:
             entity = self.path()
         else:
             entity = self.name()
-        self.whitespace()
         if grouped:
-            if not self.at(")"):
-                self.fail("declared reference requires one complete Entity path")
-            self.position += 1
+            self.close_group("declared reference requires one complete Entity path")
+        else:
+            self.whitespace()
         return DeclaredReference(entity, Span(start, self.position))
 
     def head(self, *, initial: bool) -> Name | InitialAtomSelector | DeclaredReference | Path | RelationChain | SelectionGroup:
@@ -124,22 +132,7 @@ class _ExpressionParser:
         if self.at("@"):
             return self.reference()
         if self.at("("):
-            if self.depth >= 64:
-                self.fail("Subject grouping exceeds the depth limit", start, "subject-limit")
-            self.position += 1
-            self.depth += 1
-            members = [self.expression(initial=False)]
-            self.whitespace()
-            while self.at(","):
-                self.position += 1
-                members.append(self.expression(initial=False))
-                self.whitespace()
-            self.depth -= 1
-            self.whitespace()
-            if not self.at(")"):
-                self.fail("unterminated logical group", start)
-            self.position += 1
-            return members[0] if len(members) == 1 else SelectionGroup(tuple(members), Span(start, self.position))
+            return self.group(start)
         if self.at("atom("):
             if not initial:
                 self.fail("atom selector may occur only as the initial component", start, "subject-selector-position")
@@ -157,6 +150,21 @@ class _ExpressionParser:
         if initial and name.value == _SELECTOR_KEYWORD:
             self.fail("bare atom is not a Subject selector", start, "subject-selector-invalid")
         return name
+
+    def group(self, start):
+        if self.depth >= 64:
+            self.fail("Subject grouping exceeds the depth limit", start, "subject-limit")
+        self.position += 1
+        self.depth += 1
+        members = [self.expression(initial=False)]
+        self.whitespace()
+        while self.at(","):
+            self.position += 1
+            members.append(self.expression(initial=False))
+            self.whitespace()
+        self.depth -= 1
+        self.close_group("unterminated logical group", start)
+        return members[0] if len(members) == 1 else SelectionGroup(tuple(members), Span(start, self.position))
 
     def path(self, *, initial: bool = False, relative: bool = False) -> Path:
         self.whitespace()
@@ -191,6 +199,37 @@ class _ExpressionParser:
             end -= 1
         return Path(head, steps, value_format, value_cardinality, Span(start, end))
 
+    def membership(self) -> MembershipPredicate:
+        start = self.position
+        self.position += 2
+        property_name = self.name(stop_membership=True)
+        match = _MEMBERSHIP_GROUP.match(self.source, self.position)
+        if match is None:
+            self.fail("membership requires in and a value group", start)
+        self.position = match.end()
+        values = [self.value_literal()]
+        self.whitespace()
+        while self.at(","):
+            self.position += 1
+            values.append(self.value_literal())
+            self.whitespace()
+        if len({value.value for value in values}) != len(values):
+            self.fail("membership values must be unique", start)
+        self.close_group("unterminated membership value group", start)
+        self.close_group("unterminated membership predicate", start)
+        return MembershipPredicate(property_name, tuple(values), Span(start, self.position))
+
+    def qualification(self):
+        start = self.position
+        if not self.source.startswith(".", _skip_whitespace(self.source, start + 1)):
+            return self.head(initial=False)
+        self.position += 1
+        relative = self.path(relative=True)
+        if not isinstance(relative.head, Name) or not any(step.operator in {":", ":="} for step in relative.steps):
+            self.fail("qualification requires a relative Property and its allowed value", start)
+        self.close_group("unterminated relative qualification", start)
+        return Qualification(relative, Span(start, self.position))
+
     def _path_steps(self) -> tuple[PathStep, ...]:
         steps: list[PathStep] = []
         while True:
@@ -201,29 +240,16 @@ class _ExpressionParser:
                 break
             self.position += len(operator)
             self.whitespace()
-            if operator == "//" and (self.position == len(self.source) or self.at(")") or self.at(",")
+            if operator == "//" and self.concern_path and self.at("(."):
+                operand = self.membership()
+            elif operator == "//" and (self.position == len(self.source) or self.at(")") or self.at(",")
                                     or (self.concern_path and self.at("."))):
                 operand = SelectionSuffix("", Span(self.position, self.position))
             elif operator == "." and self.at("**"):
                 operand = SelectionSuffix("**", Span(self.position, self.position + 2))
                 self.position += 2
             elif operator == "/" and self.at("(") and not self.at("(("):
-                after_open = _skip_whitespace(self.source, self.position + 1)
-                if self.source.startswith(".", after_open):
-                    qualification_start = self.position
-                    self.position += 1
-                    operand_path = self.path(relative=True)
-                    if not isinstance(operand_path.head, Name) or not any(
-                        step.operator in {":", ":="} for step in operand_path.steps
-                    ):
-                        self.fail("qualification requires a relative Property and its allowed value", qualification_start)
-                    self.whitespace()
-                    if not self.at(")"):
-                        self.fail("unterminated relative qualification", qualification_start)
-                    self.position += 1
-                    operand = Qualification(operand_path, Span(qualification_start, self.position))
-                else:
-                    operand = self.head(initial=False)
+                operand = self.qualification()
             elif operator in {":", ":="}:
                 operand = self.value_literal()
             else:

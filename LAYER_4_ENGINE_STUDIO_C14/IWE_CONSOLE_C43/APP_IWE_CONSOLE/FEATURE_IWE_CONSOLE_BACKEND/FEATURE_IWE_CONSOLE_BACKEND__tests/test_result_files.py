@@ -45,9 +45,20 @@ class ResultFileTests(unittest.TestCase):
                 date(2026, 11, 11),
                 b"\x00\xff",
             ],
-            ["null", "NULL", 2**53, True, "second\nline", [], Decimal("2"), date(2026, 1, 1), b""],
+            [
+                "null",
+                "NULL",
+                2**53,
+                True,
+                "second\nline",
+                [],
+                Decimal("2"),
+                date(2026, 1, 1),
+                b"",
+            ],
         ]
         self._set_expected()
+
     def _set_expected(self):
         self.expected = {
             "columns": self.columns,
@@ -77,7 +88,6 @@ class ResultFileTests(unittest.TestCase):
             ],
         }
 
-
     def read(self, descriptor: dict, result_format: str) -> object:
         path = self.root / descriptor["path"]
         if result_format == "json_matrix":
@@ -87,7 +97,9 @@ class ResultFileTests(unittest.TestCase):
         with path.open(encoding="utf-8", newline="") as stream:
             return list(csv.reader(stream, quoting=csv.QUOTE_NOTNULL))
 
-    def test_json_and_official_toon_round_trip_matrix_types_and_duplicate_names(self) -> None:
+    def test_json_and_official_toon_round_trip_matrix_types_and_duplicate_names(
+        self,
+    ) -> None:
         paths = set()
         for result_format in ("json_matrix", "toon"):
             with self.subTest(result_format=result_format):
@@ -99,7 +111,9 @@ class ResultFileTests(unittest.TestCase):
                     offset=4,
                     has_more=True,
                 )
-                self.assertEqual(self.expected, self.read(descriptor, result_format))
+                self.assertEqual(
+                    self.expected, self.read(descriptor, result_format)
+                )
                 self.assertEqual(
                     (2, len(self.columns), 4, True),
                     (
@@ -111,12 +125,16 @@ class ResultFileTests(unittest.TestCase):
                 )
                 self.assertEqual(result_format, descriptor["format"])
                 self.assertTrue(
-                    descriptor["path"].startswith(".anechoic_tmp/workbench/query_results/")
+                    descriptor["path"].startswith(
+                        ".anechoic_tmp/workbench/query_results/"
+                    )
                 )
                 self.assertNotIn(descriptor["path"], paths)
                 paths.add(descriptor["path"])
 
-    def test_csv_distinguishes_null_and_empty_and_preserves_multiline_data(self) -> None:
+    def test_csv_distinguishes_null_and_empty_and_preserves_multiline_data(
+        self,
+    ) -> None:
         descriptor = write_result_file(
             self.root, self.columns, iter(self.rows), result_format="csv"
         )
@@ -136,16 +154,25 @@ class ResultFileTests(unittest.TestCase):
     def test_zero_rows_keep_headers_and_default_is_json_matrix(self) -> None:
         default = write_result_file(self.root, ["x", "x"], [])
         self.assertEqual("json_matrix", default["format"])
-        self.assertEqual({"columns": ["x", "x"], "rows": []}, self.read(default, "json_matrix"))
+        self.assertEqual(
+            {"columns": ["x", "x"], "rows": []},
+            self.read(default, "json_matrix"),
+        )
         for result_format in ("csv", "toon"):
-            descriptor = write_result_file(self.root, ["x", "x"], [], result_format=result_format)
+            descriptor = write_result_file(
+                self.root, ["x", "x"], [], result_format=result_format
+            )
             expected = (
-                [["x", "x"]] if result_format == "csv" else {"columns": ["x", "x"], "rows": []}
+                [["x", "x"]]
+                if result_format == "csv"
+                else {"columns": ["x", "x"], "rows": []}
             )
             self.assertEqual(expected, self.read(descriptor, result_format))
             self.assertEqual(0, descriptor["row_count"])
 
-    def test_failed_stream_or_unsupported_value_leaves_no_partial_file(self) -> None:
+    def test_failed_stream_or_unsupported_value_leaves_no_partial_file(
+        self,
+    ) -> None:
         def broken():
             yield ["first"]
             raise RuntimeError("stream failed")
@@ -153,21 +180,40 @@ class ResultFileTests(unittest.TestCase):
         for result_format in ("json_matrix", "csv", "toon"):
             with self.subTest(result_format=result_format):
                 with self.assertRaisesRegex(RuntimeError, "stream failed"):
-                    write_result_file(self.root, ["x"], broken(), result_format=result_format)
-                with self.assertRaisesRegex(ValueError, "unsupported query result value"):
-                    write_result_file(self.root, ["x"], [[object()]], result_format=result_format)
+                    write_result_file(
+                        self.root, ["x"], broken(), result_format=result_format
+                    )
+                with self.assertRaisesRegex(
+                    ValueError, "unsupported query result value"
+                ):
+                    write_result_file(
+                        self.root,
+                        ["x"],
+                        [[object()]],
+                        result_format=result_format,
+                    )
                 with self.assertRaisesRegex(ValueError, "row width"):
-                    write_result_file(self.root, ["x"], [["a", "b"]], result_format=result_format)
+                    write_result_file(
+                        self.root,
+                        ["x"],
+                        [["a", "b"]],
+                        result_format=result_format,
+                    )
                 directory = self.root / ".anechoic_tmp/workbench/query_results"
                 self.assertEqual([], list(directory.iterdir()))
 
-    def test_symlinked_destination_components_do_not_write_outside_project(self) -> None:
+    def test_symlinked_destination_components_do_not_write_outside_project(
+        self,
+    ) -> None:
         for relative in (
             ".anechoic_tmp",
             ".anechoic_tmp/workbench",
             ".anechoic_tmp/workbench/query_results",
         ):
-            with self.subTest(component=relative), tempfile.TemporaryDirectory() as directory:
+            with (
+                self.subTest(component=relative),
+                tempfile.TemporaryDirectory() as directory,
+            ):
                 root = Path(directory).resolve()
                 outside = root / "outside"
                 outside.mkdir()
@@ -178,7 +224,9 @@ class ResultFileTests(unittest.TestCase):
                     write_result_file(root, ["x"], [[1]])
                 self.assertEqual([], list(outside.iterdir()))
 
-    def test_existing_result_filename_is_not_followed_or_overwritten(self) -> None:
+    def test_existing_result_filename_is_not_followed_or_overwritten(
+        self,
+    ) -> None:
         directory = self.root / ".anechoic_tmp/workbench/query_results"
         directory.mkdir(parents=True)
         outside = self.root / "outside.txt"
@@ -193,13 +241,22 @@ class ResultFileTests(unittest.TestCase):
         self.assertEqual("keep", outside.read_text(encoding="utf-8"))
         self.assertTrue((directory / "test-identifier.json").is_symlink())
 
-    def test_invalid_metadata_fails_before_creating_any_directory(self) -> None:
-        for kwargs in ({"result_format": "bad"}, {"offset": -1}, {"offset": True}, {"has_more": 1}):
+    def test_invalid_metadata_fails_before_creating_any_directory(
+        self,
+    ) -> None:
+        for kwargs in (
+            {"result_format": "bad"},
+            {"offset": -1},
+            {"offset": True},
+            {"has_more": 1},
+        ):
             with self.subTest(kwargs=kwargs), self.assertRaises(ValueError):
                 write_result_file(self.root, ["x"], [], **kwargs)
         self.assertFalse((self.root / ".anechoic_tmp").exists())
 
-    def test_relative_root_never_falls_back_to_the_current_directory(self) -> None:
+    def test_relative_root_never_falls_back_to_the_current_directory(
+        self,
+    ) -> None:
         with self.assertRaisesRegex(ValueError, "absolute selected path"):
             write_result_file(".", ["x"], [[1]])
 

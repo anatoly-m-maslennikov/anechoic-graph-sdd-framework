@@ -10,7 +10,7 @@ context:
 state:
   status: active
   version: 1
-  updated_at: '2026-11-25T20:39:08.202192+00:00'
+  updated_at: '2026-11-27T13:09:58.960455+00:00'
 ---
 ## Summary
 
@@ -37,7 +37,7 @@ declare_entity(entity_name='Component Manifest', instance=ComponentManifest(comp
                       '_package__shared.check_cli_child_dispatch': {'shared': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/SPEC_ENGINE_C75__tests/functional']},
                       '_package__shared.check_sibling_binding': {'shared': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/SPEC_ENGINE_C75__tests/functional']},
                       '_package__shared.check_sibling_outcome': {'shared': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/SPEC_ENGINE_C75__tests/functional']}},
-          'imports': ['ADAPTERS_C30__shared.derive_atom_ref']},
+          'imports': ['atom_reference__pub.derive_atom_ref']},
  'io': {'server': {'check_child_outcome': {'outcomes': {'compared': {'must_effect': [('C89.child_outcome_comparison',
                                                                                       'reported')]}}},
                    'check_sibling_outcome': {'outcomes': {'compared': {'must_effect': [('C89.sibling_outcome_comparison',

@@ -12,9 +12,12 @@ from time import monotonic
 
 @contextmanager
 def suite_report(root, arguments):
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import owned_temporary_root
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
+        import owned_temporary_root  # fmt: skip
 
-    if arguments.phase == "functional" and os.environ.get("ANECHOIC_FUNCTIONAL_HISTORY_ROOT"):
+    if arguments.phase == "functional" and os.environ.get(
+        "ANECHOIC_FUNCTIONAL_HISTORY_ROOT"
+    ):
         from .functional_history import history_roots
 
         root = history_roots(root)[-1]
@@ -51,20 +54,31 @@ def record_module(modules, path, result):
     print(stdout, end="", flush=True)
     print(stderr, end="", file=sys.stderr, flush=True)
     if diagnostic is not None:
-        print(f"Test module failed: {path}: {diagnostic}", file=sys.stderr, flush=True)
+        print(
+            f"Test module failed: {path}: {diagnostic}",
+            file=sys.stderr,
+            flush=True,
+        )
     print(f"Module time: {path}: {elapsed:.3f}s", flush=True)
     entry = {
-        "path": path, "status": "passed" if successful else "failed",
-        "tests_run": count, "skipped": skips, "elapsed_seconds": round(elapsed, 3),
+        "path": path,
+        "status": "passed" if successful else "failed",
+        "tests_run": count,
+        "skipped": skips,
+        "elapsed_seconds": round(elapsed, 3),
     }
     marker = "ANECHOIC_TEST_METRICS "
     for line in stdout.splitlines():
         if line.startswith(marker):
             try:
-                metrics = json.loads(line[len(marker):])
+                metrics = json.loads(line[len(marker) :])
             except json.JSONDecodeError as error:
                 entry["metrics_error"] = str(error)
-                print(f"Invalid test metrics: {path}: {error}", file=sys.stderr, flush=True)
+                print(
+                    f"Invalid test metrics: {path}: {error}",
+                    file=sys.stderr,
+                    flush=True,
+                )
             else:
                 entry.setdefault("metrics", []).append(metrics)
     if not successful:
@@ -76,12 +90,22 @@ def _write_report(directory, started, clock, report):
     modules = report["modules"]
     report["tests_run"] = sum(module["tests_run"] for module in modules)
     report["skipped"] = sum(module["skipped"] for module in modules)
-    report["failed_modules"] = sum(module["status"] == "failed" for module in modules)
+    report["failed_modules"] = sum(
+        module["status"] == "failed" for module in modules
+    )
     report["elapsed_seconds"] = round(monotonic() - clock, 3)
-    report["status"] = {0: "passed", 130: "interrupted"}.get(report["exit_code"], "failed")
-    prefix = f'{started:%Y-%m-%d_%H-%M-%SZ}-{report["phase"]}-'
-    with NamedTemporaryFile(mode="w", encoding="utf-8", dir=directory,
-                            prefix=prefix, suffix=".tmp", delete=False) as output:
+    report["status"] = {0: "passed", 130: "interrupted"}.get(
+        report["exit_code"], "failed"
+    )
+    prefix = f"{started:%Y-%m-%d_%H-%M-%SZ}-{report['phase']}-"
+    with NamedTemporaryFile(
+        mode="w",
+        encoding="utf-8",
+        dir=directory,
+        prefix=prefix,
+        suffix=".tmp",
+        delete=False,
+    ) as output:
         json.dump(report, output, indent=2)
         output.write("\n")
     path = Path(output.name).with_suffix(".json")

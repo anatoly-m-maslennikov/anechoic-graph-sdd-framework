@@ -4,17 +4,25 @@ from __future__ import annotations
 
 from typing import Any
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
-    Name as _subject_Name,
-    Path as _subject_Path,
-    RelationChain as _subject_RelationChain,
-    render_subject as _subject_render_subject,
-)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
+    import (
+        Name as _subject_Name,
+        Path as _subject_Path,
+        RelationChain as _subject_RelationChain,
+        render_subject as _subject_render_subject,
+    )  # fmt: skip
+
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.\
+    current_subject_common \
+    import (
+        _has_selection,
+        _model_target,
+        _relation_definition_target,
+        _target_kind,
+        namespace_local_expression,
+    )  # fmt: skip
 
 Record = dict[str, Any]
-
-
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.current_subject_common import _has_selection, _model_target, _relation_definition_target, _target_kind, namespace_local_expression
 
 _COMPONENT_ROOTS = {"CFEL", "Carrier", "Term"}
 
@@ -38,15 +46,18 @@ def _component_target(
     if isinstance(expression, _subject_Path):
         return (
             ("component", _subject_render_subject(expression))
-            if isinstance(expression.head, _subject_Name) and expression.head.value in _COMPONENT_ROOTS
+            if isinstance(expression.head, _subject_Name)
+            and expression.head.value in _COMPONENT_ROOTS
             else None
         )
     first = expression.endpoints[0]
     if (
         isinstance(first.head, _subject_Name)
         and first.head.value == "CFEL"
-        and len(expression.endpoints) == 2 and len(expression.links) == 1
-        and expression.links[0].operator == "<+" and expression.links[0].relation_type is None
+        and len(expression.endpoints) == 2
+        and len(expression.links) == 1
+        and expression.links[0].operator == "<+"
+        and expression.links[0].relation_type is None
         and isinstance(expression.endpoints[1], _subject_Path)
     ):
         right = expression.endpoints[1]
@@ -58,11 +69,17 @@ def _component_target(
     return None
 
 
-def _target(expression: _subject_Path | _subject_RelationChain) -> tuple[str, str] | None:
-    """Map an exact active Subject to one already-declarable target category."""
+def _target(
+    expression: _subject_Path | _subject_RelationChain,
+) -> tuple[str, str] | None:
+    "Map an exact active Subject to one already-declarable target category."
 
-    if (isinstance(expression, _subject_Path) and isinstance(expression.head, _subject_Name)
-            and expression.head.value == "ANECHOIC_MODEL" and not expression.steps):
+    if (
+        isinstance(expression, _subject_Path)
+        and isinstance(expression.head, _subject_Name)
+        and expression.head.value == "ANECHOIC_MODEL"
+        and not expression.steps
+    ):
         return "namespace", expression.head.value
     expression = namespace_local_expression(expression) or expression
     if _has_selection(expression):
@@ -81,5 +98,3 @@ def _target(expression: _subject_Path | _subject_RelationChain) -> tuple[str, st
         if kind == "relation":
             return "relation", _relation_name(_model_target(expression))
     return None
-
-

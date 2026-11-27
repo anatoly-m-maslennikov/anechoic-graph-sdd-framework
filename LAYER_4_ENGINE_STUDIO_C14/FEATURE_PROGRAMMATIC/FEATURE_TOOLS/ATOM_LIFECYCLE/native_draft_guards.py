@@ -77,32 +77,45 @@ def _validate_c9_typed_manifest(header, body):
             raise ValueError('Invalid typed Python fence')
         if continuant:
             validate_continuant_variant(header.get('concern'), template, tokens[0].content)
-        tree = ast.parse(tokens[0].content)
-        if template == 'manifest_node' and len(tree.body) == 1 and isinstance(tree.body[0], ast.Expr):
-            parse_typed_manifest_node(tokens[0].content)
-            return
-        classes = [node for node in tree.body if isinstance(node, ast.ClassDef)]
-        bases = {'manifest_property': {'Property'}, 'manifest_relation': {'Relation'}}
-        if len(classes) != 1 or classes[0].decorator_list or classes[0].keywords or any(
-                not isinstance(base, ast.Name) for base in classes[0].bases):
-            raise ValueError('Invalid typed class')
-        class_bases = {base.id for base in classes[0].bases}
-        if (any(not isinstance(node, (ast.ImportFrom, ast.ClassDef))
-                and not (template == 'manifest_node' and class_bases == {'NodeConstraints'} and isinstance(node, ast.FunctionDef))
-                for node in tree.body)
-                or (template == 'manifest_node' and class_bases & {'Property', 'Relation'})
-                or (template != 'manifest_node' and (class_bases != bases[template] or len(classes[0].bases) != 1))):
-            raise ValueError('Template and typed class differ')
-        if not scopes and not continuant:
-            from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.FEATURE_FORMAL_MODEL_GENERATOR.manifest_compiler_CS1.typed_property_relation_lowering import (
-                _field_assignments,
-            )
-
-            fields, _ = _field_assignments(classes[0], 'Property')
-            if 'bearer' not in fields or 'axis' in fields:
-                raise ValueError('An unscoped Property requires a bearer and cannot declare an axis')
+        _validate_typed_declaration(
+            tokens[0].content,
+            template,
+            unscoped=not scopes and not continuant,
+        )
     except (ValueError, TypeError, KeyError, SyntaxError, IndexError) as error:
         raise common.InputError('target', 'Invalid typed Model scope, Concern, or Formal Manifest.') from error
+
+
+def _validate_typed_declaration(source, template, *, unscoped):
+    tree = ast.parse(source)
+    is_node = template == 'manifest_node'
+    if is_node and len(tree.body) == 1 and isinstance(tree.body[0], ast.Expr):
+        parse_typed_manifest_node(source)
+        return
+    classes = [node for node in tree.body if isinstance(node, ast.ClassDef)]
+    bases = {'manifest_property': {'Property'}, 'manifest_relation': {'Relation'}}
+    if len(classes) != 1 or classes[0].decorator_list or classes[0].keywords or any(
+            not isinstance(base, ast.Name) for base in classes[0].bases):
+        raise ValueError('Invalid typed class')
+    class_bases = {base.id for base in classes[0].bases}
+    allowed = (ast.ImportFrom, ast.ClassDef)
+    if is_node and class_bases == {'NodeConstraints'}:
+        allowed += (ast.FunctionDef,)
+    if (any(not isinstance(node, allowed) for node in tree.body)
+            or (is_node and class_bases & {'Property', 'Relation'})
+            or (not is_node and (class_bases != bases[template]
+                                 or len(classes[0].bases) != 1))):
+        raise ValueError('Template and typed class differ')
+    if unscoped:
+        from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.FEATURE_FORMAL_MODEL_GENERATOR.manifest_compiler_CS1.typed_property_relation_lowering import (
+            _field_assignments,
+        )
+
+        fields, _ = _field_assignments(classes[0], 'Property')
+        if 'bearer' not in fields or 'axis' in fields:
+            raise ValueError(
+                'An unscoped Property requires a bearer and '
+                'cannot declare an axis')
 
 
 def _summary(body):

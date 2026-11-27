@@ -1,6 +1,5 @@
 import unittest
 
-from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_3_LEAN_TRANSLATOR_C84._package__shared import lean_string
 from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_2_SPEC_READING_C83.SPECIFICATION_MODEL_C85._package__shared import parse_cli_contract, parse_contract, parse_trace_contract
 
 
@@ -16,8 +15,6 @@ class ContractModelTests(unittest.TestCase):
             ('success', 200, 'result'), ('invalid_input', 400, 'typed_error'),
             ('internal_error', 500, 'typed_error')], 'facts': [
             ('input_format.fields', ['a', 'z']), ('interface.protocol', ['http'])]})
-        self.assertEqual(lean_string('a\nb'),
-                         '(String.ofList [Char.ofNat 97, Char.ofNat 10, Char.ofNat 98])')
 
     def test_unsupported_claims_are_rejected(self):
         for source in (CLAIM.replace('POST /tools', 'GET /tools'),

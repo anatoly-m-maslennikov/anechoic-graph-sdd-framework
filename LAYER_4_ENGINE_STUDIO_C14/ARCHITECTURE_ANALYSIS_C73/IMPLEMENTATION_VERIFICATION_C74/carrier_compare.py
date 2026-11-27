@@ -222,6 +222,10 @@ def _compare_pinned(root, path, lean, component):
     )
 
     digests = request['implementation_sha256']
+    if component == 'C88':
+        from .c88_compare import compare_c88
+
+        return compare_c88(root, request, verify_formal_chain, lean)
     if component == 'C87':
         from .renderer_compare import RENDERER_SOURCE_NAMES, compare_renderer
 
@@ -250,7 +254,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--root', required=True)
     parser.add_argument('--lean', default='lean')
-    parser.add_argument('--component', choices=('C30', 'C87', 'C90'), default='C30')
+    parser.add_argument('--component', choices=('C30', 'C87', 'C88', 'C90'),
+                        default='C30')
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument('--formal-only', action='store_true')
     mode.add_argument('--pins', type=Path, help='JSON file with manifest, solution, and implementation_sha256')

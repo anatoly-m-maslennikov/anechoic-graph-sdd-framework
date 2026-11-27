@@ -1,5 +1,4 @@
-
-"""Column visibility over the complete stored result, independent of pagination."""
+"Column visibility over the complete stored result, independent of pagination."
 
 from .graph_store import quote_identifier
 
@@ -19,16 +18,26 @@ def _has_value(name: str, kind: str) -> str:
 
 
 def result_columns(
-    connection, table: str, columns: list[dict], *, private_ordinal: bool = False,
+    connection,
+    table: str,
+    columns: list[dict],
+    *,
+    private_ordinal: bool = False,
 ) -> tuple[list[dict], int]:
-    stored_names = connection.sql(f"SELECT * FROM workbench_results.{table}").columns
+    stored_names = connection.sql(
+        f"SELECT * FROM workbench_results.{table}"
+    ).columns
     if private_ordinal:
         stored_names = stored_names[1:]
-    counts = ", ".join(_has_value(name, column["type"])
-                       for name, column in zip(stored_names, columns, strict=True))
+    counts = ", ".join(
+        _has_value(name, column["type"])
+        for name, column in zip(stored_names, columns, strict=True)
+    )
     result = connection.execute(
         f"SELECT count(*), {counts} FROM workbench_results.{table}"
     ).fetchone()
     row_count, *has_values = result
-    return [dict(column, has_values=row_count == 0 or present)
-            for column, present in zip(columns, has_values, strict=True)], row_count
+    return [
+        dict(column, has_values=row_count == 0 or present)
+        for column, present in zip(columns, has_values, strict=True)
+    ], row_count

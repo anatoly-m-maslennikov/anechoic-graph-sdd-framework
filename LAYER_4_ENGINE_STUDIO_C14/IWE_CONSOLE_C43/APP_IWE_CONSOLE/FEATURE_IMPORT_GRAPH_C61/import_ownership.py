@@ -5,7 +5,9 @@ from collections import defaultdict
 from pathlib import Path, PurePosixPath
 import sys
 
-from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.FEATURE_MODEL_VALIDATION.FEATURE_MODEL_VALIDATION__shared import check_code_access
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.\
+    FEATURE_MODEL_VALIDATION.FEATURE_MODEL_VALIDATION__shared \
+    import check_code_access  # fmt: skip
 
 from .code_access_occurrences import code_access_occurrences
 from .source import capture
@@ -34,7 +36,11 @@ def _forwarding(sources, statements):
         for exported, imported, line, column in source.forwarded:
             candidates = statements[path, line, column]
             if source.language == "python":
-                candidates = [site for site in candidates if site.written.endswith(f" import {imported}")]
+                candidates = [
+                    site
+                    for site in candidates
+                    if site.written.endswith(f" import {imported}")
+                ]
             if len(candidates) != 1:
                 continue
             site = candidates[0]
@@ -71,10 +77,18 @@ def check(sources, sites):
         provider = _provider(site, sources)
         if provider is None:
             continue
-        names = (site.unit,) if site.unit is not None else named_web_uses[site.source_path, site.line, site.column]
+        names = (
+            (site.unit,)
+            if site.unit is not None
+            else named_web_uses[site.source_path, site.line, site.column]
+        )
         for name in sorted(names):
             owner = _owner((provider, name), links)
-            if owner is not None and PurePosixPath(owner[0]).parent != PurePosixPath(provider).parent:
+            if (
+                owner is not None
+                and PurePosixPath(owner[0]).parent
+                != PurePosixPath(provider).parent
+            ):
                 yield site, name, owner
 
 
@@ -89,19 +103,34 @@ def main():
     except (OSError, ValueError, RuntimeError) as error:
         print(f"import ownership: {error}", file=sys.stderr)
         return 1
-    failed = any(source.language in _WEB and source.status == "unsupported" for source in sources.values())
+    failed = any(
+        source.language in _WEB and source.status == "unsupported"
+        for source in sources.values()
+    )
     if failed:
-        print("import ownership: use the framework-local Node, TypeScript and Svelte parsers to check web imports",
-              file=sys.stderr)
-    for problem in check_code_access(None, sources, (), include_entry_bypasses=True):
+        print(
+            (
+                "import ownership: use the framework-local Node, TypeScript "
+                "and Svelte parsers to check web imports"
+            ),
+            file=sys.stderr,
+        )
+    for problem in check_code_access(
+        None, sources, (), include_entry_bypasses=True
+    ):
         failed = True
         print(problem.reason, file=sys.stderr)
     for site, name, (owner, original) in check(sources, sites):
         failed = True
         package = PurePosixPath(owner).parent.as_posix()
-        symbol = original if original is not None else PurePosixPath(owner).stem
-        print(f"{site.source_path}:{site.line}:{site.column + 1}: {name} passes through {site.target_path}. "
-              f"Import {symbol} from the defining Package's entry ({package}).", file=sys.stderr)
+        symbol = (
+            original if original is not None else PurePosixPath(owner).stem
+        )
+        print(
+            f"{site.source_path}:{site.line}:{site.column + 1}: {name} passes through {site.target_path}. "
+            f"Import {symbol} from the defining Package's entry ({package}).",
+            file=sys.stderr,
+        )
     return int(failed)
 
 

@@ -136,6 +136,21 @@ def _target(root: Path, relative: Path, *, label: str) -> Path:
     return target
 
 
+def _copy_regular_file(entry: Path, source: Path, destination: Path) -> None:
+    try:
+        mode = entry.lstat().st_mode
+    except OSError as error:
+        raise LocalReleaseError("local-release-copy-unsafe") from error
+    if stat.S_ISLNK(mode) or not stat.S_ISREG(mode):
+        raise LocalReleaseError("local-release-copy-unsafe")
+    relative = entry.relative_to(source)
+    target = destination / relative
+    target.parent.mkdir(parents=True, exist_ok=True)
+    if target.exists() and target.is_symlink():
+        raise LocalReleaseError("local-release-copy-unsafe")
+    shutil.copy2(entry, target)
+
+
 def _copy_tree(source: Path, destination: Path, *, preserve: frozenset[str]) -> None:
     if source.is_symlink() or not source.is_dir() or destination.is_symlink() or not destination.is_dir():
         raise LocalReleaseError("local-release-copy-unsafe")
@@ -160,18 +175,7 @@ def _copy_tree(source: Path, destination: Path, *, preserve: frozenset[str]) -> 
             entry = base / name
             if entry.relative_to(source).parts[0] in preserve:
                 continue
-            try:
-                mode = entry.lstat().st_mode
-            except OSError as error:
-                raise LocalReleaseError("local-release-copy-unsafe") from error
-            if stat.S_ISLNK(mode) or not stat.S_ISREG(mode):
-                raise LocalReleaseError("local-release-copy-unsafe")
-            relative = entry.relative_to(source)
-            target = destination / relative
-            target.parent.mkdir(parents=True, exist_ok=True)
-            if target.exists() and target.is_symlink():
-                raise LocalReleaseError("local-release-copy-unsafe")
-            shutil.copy2(entry, target)
+            _copy_regular_file(entry, source, destination)
 
 
 def _file_identity(path: Path) -> tuple[str, int]:

@@ -3,7 +3,7 @@
 from hashlib import sha256
 from pathlib import Path
 import tempfile
-from types import SimpleNamespace
+from unittest.mock import NonCallableMock
 import unittest
 
 from LAYER_1_RUNTIME_IMAGES_C81.LAYER_1_RUNTIME_IMAGES_C81__shared import LocalReleaseError, _native_release_sources
@@ -17,8 +17,13 @@ class NativeReleaseSourcesTests(unittest.TestCase):
         manifest = self.control / "manifest.md"
         manifest.parent.mkdir()
         manifest.write_bytes(b"manifest")
-        self.selection = SimpleNamespace(root=self.root, control_root=self.control, manifest_path=manifest,
-                                         manifest_sha256=sha256(b"manifest").hexdigest(), project_prefix="AN")
+        self.selection = NonCallableMock(
+            spec_set=["root", "control_root", "manifest_path",
+                      "manifest_sha256", "project_prefix", "parameters"],
+            root=self.root, control_root=self.control, manifest_path=manifest,
+            manifest_sha256=sha256(b"manifest").hexdigest(),
+            project_prefix="AN", parameters=None,
+        )
         self.source = self.ontology / "__DES/__DOM/AN-S-1-DOM--current.md"
         self.carrier(self.source)
 

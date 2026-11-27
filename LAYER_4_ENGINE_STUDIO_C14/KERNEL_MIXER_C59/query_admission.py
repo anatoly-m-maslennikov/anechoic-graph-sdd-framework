@@ -1,4 +1,3 @@
-
 """Admit one native read-only Workbench query without changing it."""
 
 from __future__ import annotations
@@ -7,7 +6,7 @@ from .statements import token_spans
 
 
 def is_duckdb_internal(error: Exception) -> bool:
-    """Classify the native fatal boundary by exception type, never its message."""
+    "Classify the native fatal boundary by exception type, never its message."
     import duckdb
 
     return isinstance(error, duckdb.InternalException)
@@ -21,7 +20,8 @@ def is_one_tokenized_read_query(sql: str) -> bool:
     except Exception:
         return False
     words = [
-        value.decode("utf-8").strip() for value, token_type in spans
+        value.decode("utf-8").strip()
+        for value, token_type in spans
         if token_type != duckdb.token_type.comment
     ]
     if not words:

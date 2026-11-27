@@ -4,12 +4,31 @@ from collections import defaultdict
 import os
 from pathlib import Path
 import re
-from types import SimpleNamespace
+from typing import Any
+
+from pydantic import BaseModel, ConfigDict
+
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.\
+    ADAPTERS_C30__shared import (  # fmt: skip
+        manifest_inputs, native_header_view, spec_folder_layout,
+    )
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.\
+    atom_reference__pub import derive_atom_ref  # fmt: skip
 
 from .LAYER_2_PROJECT_STRUCTURE_C93__shared import (
     _COMPONENT_DIR, _finish_structure, _record_carrier, _validation_fields,
-    derive_atom_ref, manifest_inputs, native_header_view, spec_folder_layout,
 )
+
+
+class _Carrier(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    metadata: dict[str, Any]
+    body: str
+
+
+class _Reader(BaseModel):
+    fingerprints: dict[str, str]
 
 
 def _row_inputs(project_root, control_root_name, rows):
@@ -31,7 +50,8 @@ def _row_inputs(project_root, control_root_name, rows):
         path = root / source
         if path in carriers:
             raise ValueError('Duplicate structure source path')
-        carrier = SimpleNamespace(metadata=row['metadata'], body=row['body'])
+        carrier = _Carrier.model_construct(metadata=row['metadata'],
+                                           body=row['body'])
         header = native_header_view(carrier.metadata)
         identity, state = header.get('identity'), header.get('state')
         if (not isinstance(identity, dict) or not isinstance(state, dict)
@@ -39,7 +59,9 @@ def _row_inputs(project_root, control_root_name, rows):
                     identity.get('atom_id'), state.get('version'), state.get('status'))):
             raise ValueError('Invalid structure row reference')
         carriers[path], fingerprints[str(path)] = carrier, digest
-    return root, control, carriers, SimpleNamespace(fingerprints=fingerprints)
+    return root, control, carriers, _Reader.model_construct(
+        fingerprints=fingerprints,
+    )
 
 
 def _row_manifest(root, control, carriers, reader, manifest_sha256, manifest_path, model):

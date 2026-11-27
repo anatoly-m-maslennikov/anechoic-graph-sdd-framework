@@ -136,7 +136,7 @@ def duplicate_dependencies(connection, snapshot, paths):
 
 def rows(connection):
     values = connection.execute("SELECT source, relative_path, code, message, atom_ref, related_paths FROM main.ops_ingestion_issues ORDER BY source, relative_path NULLS FIRST, code, message LIMIT 1000").fetchall()
-    return [dict(zip(('source', *FIELDS), row)) for row in values]
+    return [dict(zip(('source', *FIELDS), row, strict=False)) for row in values]
 
 
 def route(connection, instance_id, lock, read_object, error_response):

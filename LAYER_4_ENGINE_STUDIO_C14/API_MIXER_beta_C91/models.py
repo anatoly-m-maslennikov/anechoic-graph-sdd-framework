@@ -3,7 +3,14 @@
 from pathlib import PurePosixPath
 from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, StrictBool, TypeAdapter, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    StrictBool,
+    TypeAdapter,
+    model_validator,
+)
 
 
 class StrictModel(BaseModel):
@@ -26,8 +33,14 @@ class ToolRequest(StrictModel):
 
     @model_validator(mode="after")
     def nonblank_context(self):
-        if any(value is not None and not value.strip() for value in
-               (self.session_id, self.public_base_url, self.asserted_project_root)):
+        if any(
+            value is not None and not value.strip()
+            for value in (
+                self.session_id,
+                self.public_base_url,
+                self.asserted_project_root,
+            )
+        ):
             raise ValueError("Invalid Tool request envelope")
         return self
 
@@ -42,7 +55,7 @@ class Sql(StrictModel):
         if self.cursor_position is not None:
             if self.cursor_position > len(encoded) // 2:
                 raise ValueError("cursor_position is outside SQL")
-            encoded[:self.cursor_position * 2].decode("utf-16-le")
+            encoded[: self.cursor_position * 2].decode("utf-16-le")
         return self
 
 
@@ -63,9 +76,13 @@ class Query(Sql):
         return self
 
     def kernel_fields(self):
-        fields = {"sql": self.sql, "page_size": self.page_size or
-                  (1000 if self.result_delivery == "auto" else 100),
-                  "result_delivery": self.result_delivery, "result_format": self.result_format}
+        fields = {
+            "sql": self.sql,
+            "page_size": self.page_size
+            or (1000 if self.result_delivery == "auto" else 100),
+            "result_delivery": self.result_delivery,
+            "result_format": self.result_format,
+        }
         if self.preview is not None:
             fields["preview"] = self.preview
         for key in ("save", "name"):
@@ -127,8 +144,15 @@ class Page(BaseModel):
 
     @model_validator(mode="after")
     def one_payload(self):
-        count = sum(value is not None for value in (self.rows, self.csv, self.result_file))
-        if count != 1 and not (count == 0 and self.outcome == "partial" and self.export_error is not None):
+        count = sum(
+            value is not None
+            for value in (self.rows, self.csv, self.result_file)
+        )
+        if count != 1 and not (
+            count == 0
+            and self.outcome == "partial"
+            and self.export_error is not None
+        ):
             raise ValueError("Invalid Kernel page")
         return self
 
@@ -205,4 +229,8 @@ class Unavailable(StrictModel):
     error: UnavailableError = Field(default=None)
 
 
-ReadinessState = TypeAdapter(Annotated[Ready | Pending | Degraded | Unavailable, Field(discriminator="state")])
+ReadinessState = TypeAdapter(
+    Annotated[
+        Ready | Pending | Degraded | Unavailable, Field(discriminator="state")
+    ]
+)

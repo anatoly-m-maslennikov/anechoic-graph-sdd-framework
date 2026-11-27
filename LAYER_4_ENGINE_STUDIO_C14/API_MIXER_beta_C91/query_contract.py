@@ -8,7 +8,10 @@ from .models import Query
 
 ROOT = Path(__file__).resolve().parents[2]
 SCHEMA_PATH = Path(__file__).with_name("query_run.schema.json")
-TYPE_PATH = ROOT / "LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_FRONTEND/src/lib/query_run.generated.ts"
+TYPE_PATH = ROOT / (
+    "LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE"
+    "_CONSOLE_FRONTEND/src/lib/query_run.generated.ts"
+)
 
 
 def query_schema():
@@ -50,7 +53,10 @@ def main():
     parser = ArgumentParser(description=__doc__)
     parser.add_argument("--check", action="store_true")
     args = parser.parse_args()
-    for path, generated in ((SCHEMA_PATH, schema_text()), (TYPE_PATH, typescript_text())):
+    for path, generated in (
+        (SCHEMA_PATH, schema_text()),
+        (TYPE_PATH, typescript_text()),
+    ):
         if args.check:
             if path.read_text(encoding="utf-8") != generated:
                 parser.error(f"Generated query contract is stale: {path}")

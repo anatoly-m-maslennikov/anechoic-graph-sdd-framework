@@ -94,6 +94,13 @@ class Qualification:
 
 
 @dataclass(frozen=True, config=_STRICT)
+class MembershipPredicate:
+    property: Name
+    values: tuple[ValueLiteral, ...]
+    span: Span
+
+
+@dataclass(frozen=True, config=_STRICT)
 class DeclaredReference:
     entity: Name | Path
     span: Span
@@ -114,7 +121,7 @@ class SelectionSuffix:
 @dataclass(frozen=True, config=_STRICT)
 class PathStep:
     operator: str
-    operand: Name | ValueLiteral | Qualification | DeclaredReference | Path | RelationChain | SelectionGroup | SelectionSuffix
+    operand: Name | ValueLiteral | MembershipPredicate | Qualification | DeclaredReference | Path | RelationChain | SelectionGroup | SelectionSuffix
     span: Span
 
 

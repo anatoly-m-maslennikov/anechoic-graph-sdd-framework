@@ -1,34 +1,55 @@
 """Bind the Work Report Task Relation from the selected native Declarations."""
 
-from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.FEATURE_GENERATED_MODEL_C52.FEATURE_GENERATED_MODEL_C52__shared import (
-    Plan, PlanForm, WorkReport,
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.\
+    FEATURE_GENERATED_MODEL_C52.FEATURE_GENERATED_MODEL_C52__shared \
+    import (
+        Plan,
+        PlanForm,
+        WorkReport,
+    )  # fmt: skip
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.\
+    FEATURE_MODEL_VALIDATION.model_declaration_bindings \
+    import bind_model_declarations  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.cardinality__pub import (
+    cardinality_bounds,
 )
-from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.FEATURE_MODEL_VALIDATION.model_declaration_bindings import bind_model_declarations
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.cardinality__pub import cardinality_bounds
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import header_value
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
+    import header_value  # fmt: skip
 
 RELATION = "IS_WORK_REPORT_FOR"
 TASK_PATH = "Atom/(.Header.Context.Role:=Plan)/(.Header.Context.Form:=Plan)"
 
 
 def compile_work_report_target(rows):
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import iter_formal_claims
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_native_model_claim
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
+        import iter_formal_claims  # fmt: skip
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
+        import parse_native_model_claim  # fmt: skip
 
     declarations = []
     for row in rows:
         for code in iter_formal_claims(row["_content_bytes"].decode("utf-8")):
             claim = parse_native_model_claim(code)
-            if claim and claim["arguments"].get("entity_class") in {"PlanForm", "WorkReport"}:
-                _, subject = header_value(row["header_json"], "topics.main_subject")
+            if claim and claim["arguments"].get("entity_class") in {
+                "PlanForm",
+                "WorkReport",
+            }:
+                _, subject = header_value(
+                    row["header_json"], "topics.main_subject"
+                )
                 declarations.append((subject, claim))
-    if not any(claim["arguments"]["entity_class"] == "WorkReport" for _, claim in declarations):
+    if not any(
+        claim["arguments"]["entity_class"] == "WorkReport"
+        for _, claim in declarations
+    ):
         return None
     classes = {kind.__name__: kind for kind in (Plan, PlanForm, WorkReport)}
     relations, types, _ = bind_model_declarations(declarations, classes)
     constraint = relations[WorkReport].get(RELATION)
     if not constraint:
-        raise ValueError(f"Work Report Declaration requires a {RELATION} constraint")
+        raise ValueError(
+            f"Work Report Declaration requires a {RELATION} constraint"
+        )
     verify_work_report_target(constraint)
     paths = constraint["target_entity_paths"]
     if any(types[path] is not PlanForm for path in paths):
@@ -37,7 +58,12 @@ def compile_work_report_target(rows):
 
 
 def verify_work_report_target(constraint):
-    if (not isinstance(constraint, dict) or set(constraint) != {"targets_per_source", "target_entity_paths"}
-            or constraint["target_entity_paths"] not in ([TASK_PATH], (TASK_PATH,))
-            or cardinality_bounds(constraint["targets_per_source"]) != (1, 1)):
-        raise ValueError(f"{RELATION} must select exactly one Plan Form target")
+    if (
+        not isinstance(constraint, dict)
+        or set(constraint) != {"targets_per_source", "target_entity_paths"}
+        or constraint["target_entity_paths"] not in ([TASK_PATH], (TASK_PATH,))
+        or cardinality_bounds(constraint["targets_per_source"]) != (1, 1)
+    ):
+        raise ValueError(
+            f"{RELATION} must select exactly one Plan Form target"
+        )

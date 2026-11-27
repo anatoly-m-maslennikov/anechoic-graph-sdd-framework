@@ -5,7 +5,9 @@ import json
 from pathlib import Path
 import sys
 
-from LAYER_1_RUNTIME_IMAGES_C81.LAYER_1_RUNTIME_IMAGES_C81__shared import ImageManager
+from LAYER_1_RUNTIME_IMAGES_C81.LAYER_1_RUNTIME_IMAGES_C81__shared import (
+    ImageManager,
+)
 
 
 def main() -> int:
@@ -18,7 +20,14 @@ def main() -> int:
     except ValueError as error:
         print(error, file=sys.stderr)
         return 1
-    print(json.dumps({"fingerprint": identity.fingerprint, "manifest": identity.manifest}))
+    print(
+        json.dumps(
+            {
+                "fingerprint": identity.fingerprint,
+                "manifest": identity.manifest,
+            }
+        )
+    )
     return 0
 
 

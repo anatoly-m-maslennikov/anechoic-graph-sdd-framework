@@ -6,14 +6,22 @@ from pydantic import ConfigDict
 from pydantic.dataclasses import dataclass
 from pathlib import Path
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import SETTINGS_PATH
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import (
+    SETTINGS_PATH,
+)
 
 
 DEFAULT_CONTROL_ROOT = SETTINGS_PATH.parent
-FRAMEWORK_APPLICABLE_RELATIVE = Path("000_ANECHOIC_framework/00_APPLICABLE_METHODOLOGY")
+FRAMEWORK_APPLICABLE_RELATIVE = Path(
+    "000_ANECHOIC_framework/00_APPLICABLE_METHODOLOGY"
+)
 OUTPUT_RELATIVE = DEFAULT_CONTROL_ROOT / FRAMEWORK_APPLICABLE_RELATIVE
 
-@dataclass(config=ConfigDict(strict=True, extra="forbid", hide_input_in_errors=True), frozen=True)
+
+@dataclass(
+    config=ConfigDict(strict=True, extra="forbid", hide_input_in_errors=True),
+    frozen=True,
+)
 class Candidate:
     layer: str
     layer_order: int
@@ -46,8 +54,14 @@ class Candidate:
             "source_carrier_path": self.source_path,
             "source_carrier_sha256": self.source_sha256,
             "original_relations_sha256": self.original_relations_sha256,
-            **({"extension_id": self.extension_id, "extension_revision": self.extension_revision}
-               if self.extension_id is not None else {}),
+            **(
+                {
+                    "extension_id": self.extension_id,
+                    "extension_revision": self.extension_revision,
+                }
+                if self.extension_id is not None
+                else {}
+            ),
         }
 
     def report_record(self) -> dict[str, object]:
@@ -59,7 +73,8 @@ class Candidate:
         if self.definition_term is not None:
             record["definition_term"] = (
                 f"{self.definition_namespace} <+ Term//{self.definition_term}"
-                if self.definition_namespace else self.definition_term
+                if self.definition_namespace
+                else self.definition_term
             )
             record["definition_namespace"] = self.definition_namespace
             record["definition_term_name"] = self.definition_term

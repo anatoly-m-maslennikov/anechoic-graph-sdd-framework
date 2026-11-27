@@ -7,13 +7,28 @@ import subprocess
 import sys
 import tokenize
 
-from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.suite_config import load_suite_config
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.suite_config import (
+    load_suite_config,
+)
 
-from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS import source_comments as sources
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS import (
+    source_comments as sources,
+)
 
 MODULE_LIMIT = 300
 FUNCTION_LIMIT = 45
-WEB_FUNCTIONS = {".js", ".mjs", ".cjs", ".ts", ".cts", ".jsx", ".tsx", ".mts", ".svelte"}
+PROGRAMMATIC_ROOT = f"{sources.CODE_ROOTS[0]}/FEATURE_PROGRAMMATIC"
+WEB_FUNCTIONS = {
+    ".js",
+    ".mjs",
+    ".cjs",
+    ".ts",
+    ".cts",
+    ".jsx",
+    ".tsx",
+    ".mts",
+    ".svelte",
+}
 
 
 def nonblank_lines(lines):
@@ -33,10 +48,10 @@ def python_functions(path, source):
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
             decorators = [item.lineno for item in node.decorator_list]
             start = min([node.lineno, *decorators])
-            size = nonblank_lines(lines[start - 1:node.end_lineno])
+            size = nonblank_lines(lines[start - 1 : node.end_lineno])
             yield start, node.name, size
         elif isinstance(node, ast.Lambda):
-            size = nonblank_lines(lines[node.lineno - 1:node.end_lineno])
+            size = nonblank_lines(lines[node.lineno - 1 : node.end_lineno])
             yield node.lineno, "<lambda>", size
 
 
@@ -44,8 +59,11 @@ def web_functions(root, files):
     script = sources.FRONTEND / "scripts/source-function-sizes.ts"
     result = subprocess.run(
         ["node", str(root / script)],
-        input=json.dumps(files), encoding="utf-8",
-        stdout=subprocess.PIPE, check=True, timeout=60,
+        input=json.dumps(files),
+        encoding="utf-8",
+        stdout=subprocess.PIPE,
+        check=True,
+        timeout=60,
     )
     return json.loads(result.stdout)
 
@@ -53,26 +71,32 @@ def web_functions(root, files):
 def check_functions(path, functions):
     return [
         f"{path}:{line}: {name} has {size} lines (maximum {FUNCTION_LIMIT})"
-        for line, name, size in sorted(functions) if size > FUNCTION_LIMIT
+        for line, name, size in sorted(functions)
+        if size > FUNCTION_LIMIT
     ]
 
 
-
-def source_size_findings(root: Path) -> list[str]:
-    """Measure the tracked and nonignored source files under the suite roots."""
+def source_size_findings(
+    root: Path,
+    *,
+    roots: tuple[str, ...] = sources.CODE_ROOTS,
+) -> list[str]:
+    "Measure the tracked and nonignored source files under the suite roots."
     findings, web = [], []
-    for relative in sources.source_paths(root, WEB_FUNCTIONS | {".py"}):
-        if relative.suffix not in WEB_FUNCTIONS | {".py"}:
-            continue
+    for relative in sources.source_paths(root, WEB_FUNCTIONS | {".py"}, roots):
         path = root / relative
         if path.resolve() != path:
-            raise ValueError(f"{relative}: source path traverses a symbolic link")
+            raise ValueError(
+                f"{relative}: source path traverses a symbolic link"
+            )
         if not path.is_file():
             continue
         if relative.suffix == ".py":
             with tokenize.open(path) as file:
                 source = file.read()
-            findings.extend(check_functions(relative, python_functions(relative, source)))
+            findings.extend(
+                check_functions(relative, python_functions(relative, source))
+            )
         else:
             source = path.read_text(encoding="utf-8")
             web.append({"path": relative.as_posix(), "source": source})
@@ -97,11 +121,20 @@ def _enabled(root: Path) -> bool:
 
 def check(root: Path) -> int:
     try:
-        if not _enabled(root):
+        if _enabled(root):
+            roots = sources.CODE_ROOTS
+        elif (root / PROGRAMMATIC_ROOT).is_dir():
+            roots = (PROGRAMMATIC_ROOT,)
+        else:
             return 0
         print("Static check: source size", flush=True)
-        findings = source_size_findings(root)
-    except (OSError, ValueError, SyntaxError, subprocess.SubprocessError) as error:
+        findings = source_size_findings(root, roots=roots)
+    except (
+        OSError,
+        ValueError,
+        SyntaxError,
+        subprocess.SubprocessError,
+    ) as error:
         print(f"Static source size check failed: {error}", file=sys.stderr)
         return 1
     if findings:

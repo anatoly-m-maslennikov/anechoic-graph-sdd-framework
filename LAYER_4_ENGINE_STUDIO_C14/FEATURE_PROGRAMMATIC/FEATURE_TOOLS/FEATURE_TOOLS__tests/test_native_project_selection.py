@@ -4,7 +4,7 @@ import ast
 from datetime import date, datetime
 from hashlib import sha256
 from pathlib import Path
-from types import SimpleNamespace
+from unittest.mock import NonCallableMock
 import sys
 import tempfile
 import unittest
@@ -208,21 +208,26 @@ class NativeProjectSelectionTests(unittest.TestCase):
         self.carrier(parameters={"paths": {"control_root": ".anechoic_anechoic"}, "values": [1, False]})
         validated = {"effective": {"list": [1, False]}}
 
+        def result(**fields):
+            mock = NonCallableMock(spec_set=["name", *fields], **fields)
+            mock.name = "Anechoic"
+            return mock
+
         def check(fields, component_id):
             self.assertEqual([1, False], fields["parameters"]["values"])
             validate_manifest(fields, component_id)
-            return SimpleNamespace(name="Anechoic", prefix="AN", parameters=validated)
+            return result(prefix="AN", parameters=validated)
 
         selected = resolve_native_project(self.root, self.native.name, validate_manifest=check)
         validated["effective"]["list"].append(2)
         self.assertEqual({"effective": {"list": [1, False]}}, selected.parameters)
         legacy = resolve_native_project(self.root, self.native.name,
-                                        validate_manifest=lambda fields, component: SimpleNamespace(name="Anechoic", prefix="AN"))
+                                        validate_manifest=lambda fields, component: result(prefix="AN"))
         self.assertEqual({"paths": {"control_root": ".anechoic_anechoic"}, "values": [1, False]},
                          legacy.parameters)
         with self.assertRaisesRegex(ProjectSelectionError, "parameters must be a mapping"):
             resolve_native_project(self.root, self.native.name,
-                                   validate_manifest=lambda fields, component: SimpleNamespace(name="Anechoic", prefix="AN", parameters=None))
+                                   validate_manifest=lambda fields, component: result(prefix="AN", parameters=None))
 
     def test_root_prefix_and_legacy_control_root_bind_selection(self):
         for spelling, prefix in ((".anechoic_anechoic", "dot"), ("_anechoic_anechoic", "underscore")):

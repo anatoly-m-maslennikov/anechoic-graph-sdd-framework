@@ -2,14 +2,15 @@
 
 import io
 from hashlib import sha256
+from functools import partial
 import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.test_suite__shared import _release_canary as release_canary
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.canary_test_support import retry_run
 
 
 SETTINGS = b"[workbench]\nresult_ttl_seconds = 120\n"
@@ -74,24 +75,11 @@ class CanaryRetryTests(unittest.TestCase):
         for ready, deadline_mode in ((False, "1"), (True, "0")):
             with self.subTest(ready=ready):
                 calls = []
-                def run(argv, **kwargs):
-                    calls.append(argv)
-                    if argv[1] == "run":
-                        cidfile = Path(argv[argv.index("--cidfile") + 1])
-                        self.assertEqual(0o700, cidfile.parent.stat().st_mode & 0o777)
-                        copied = cidfile.parent / "canary-project"
-                        self.assertTrue((copied / "candidate").is_file())
-                        self.assertTrue((copied / selection["manifest_path"]).is_file())
-                        self.assertEqual(SETTINGS, (copied / release_canary._RUNTIME_SETTINGS).read_bytes())
-                        cidfile.write_text("b" * 64)
-                        return SimpleNamespace(stdout="")
-                    if argv[1] == "logs":
-                        return SimpleNamespace(stdout="", stderr="")
-                    return SimpleNamespace(stdout="127.0.0.1:54321\n")
                 health = io.BytesIO(b'{"state": "ready"}')
                 image = "sha256:" + "c" * 64
                 with patch.dict(release_canary.os.environ, {"ANECHOIC_TEST_IMAGE_DEADLINES": deadline_mode}), \
-                     patch.object(release_canary.subprocess, "run", side_effect=run), \
+                     patch.object(release_canary.subprocess, "run",
+                                  side_effect=partial(retry_run, self, calls, selection, SETTINGS)), \
                      patch.object(release_canary._HTTP, "open", return_value=health), \
                      patch.object(release_canary, "_mcp_ready", return_value=ready) as probe:
                     if ready:

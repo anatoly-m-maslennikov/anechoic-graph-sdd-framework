@@ -2,6 +2,7 @@ import os
 import shutil
 import tempfile
 import unittest
+from importlib import import_module
 from pathlib import Path
 from unittest.mock import patch
 
@@ -77,6 +78,24 @@ class DirectFramingChainTests(unittest.TestCase):
         self.assertTrue(any(case['manifest']['bounds'] is None and case['solution']['bounds'] for case in mismatches))
         self.assertTrue(any(case['manifest']['body'] == [0, 255] and case['solution']['body'] == [10, 0, 255]
                             for case in mismatches))
+
+    def test_rejects_a_changed_validated_framing_result(self):
+        chain = import_module(verify_formal_chain.__module__)
+        original = chain.validate_translation
+
+        def changed(*args, **kwargs):
+            result = original(*args, **kwargs)
+            result['framing_comparison']['cases'] = []
+            return result
+
+        with tempfile.TemporaryDirectory() as directory, patch.object(
+                chain, 'validate_translation', side_effect=changed):
+            root = Path(directory)
+            result = verify_formal_chain(root, 'C15', *framing_pins(root),
+                                         action='framing', lean=self.lean)
+        self.assertEqual('incomplete', result['outcome'])
+        self.assertIn('Framing comparison identity',
+                      result['diagnostics'][0]['message'])
 
     def test_rejects_malformed_framing_observations_even_when_roles_agree(self):
         entry = (

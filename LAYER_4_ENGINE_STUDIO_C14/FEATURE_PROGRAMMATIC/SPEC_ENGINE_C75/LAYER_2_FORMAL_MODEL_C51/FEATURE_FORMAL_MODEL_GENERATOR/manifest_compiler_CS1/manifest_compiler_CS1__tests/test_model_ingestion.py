@@ -6,7 +6,7 @@ from pathlib import Path
 import subprocess
 import sys
 from tempfile import TemporaryDirectory
-from types import SimpleNamespace
+from unittest.mock import NonCallableMock
 import unittest
 from unittest.mock import patch
 
@@ -56,8 +56,17 @@ class ModelIngestionTests(unittest.TestCase):
             accepted = json.loads((first / 'model.json').read_text())
             stage = (Path(tmp) / 'second').resolve()
             stage.mkdir()
-            args = SimpleNamespace(generation=stage, project_root=root, control_root='_anechoic_anechoic',
-                                   project_manifest_sha256=digest)
+            args = NonCallableMock(
+                spec_set=[
+                    'generation',
+                    'project_root',
+                    'control_root',
+                    'project_manifest_sha256',
+                ],
+                generation=stage,
+                project_root=root,
+                control_root='_anechoic_anechoic',
+                project_manifest_sha256=digest)
             open_model = model_ingestion.open_admitted_model
             calls = 0
 
@@ -95,8 +104,17 @@ class ModelIngestionTests(unittest.TestCase):
             self.assertIn('model_inputs_sha256', accepted)
             stage = (Path(tmp) / 'second').resolve()
             stage.mkdir()
-            args = SimpleNamespace(generation=stage, project_root=root, control_root='_anechoic_anechoic',
-                                   project_manifest_sha256=digest)
+            args = NonCallableMock(
+                spec_set=[
+                    'generation',
+                    'project_root',
+                    'control_root',
+                    'project_manifest_sha256',
+                ],
+                generation=stage,
+                project_root=root,
+                control_root='_anechoic_anechoic',
+                project_manifest_sha256=digest)
             with patch.object(model_ingestion, 'write_model_records', wraps=model_ingestion.write_model_records) as compile_records:
                 outcome = model_ingestion.compile_ingested(args, {**inputs, 'accepted_model': accepted}, compile_structure)
                 self.assertNotIn('error', outcome)

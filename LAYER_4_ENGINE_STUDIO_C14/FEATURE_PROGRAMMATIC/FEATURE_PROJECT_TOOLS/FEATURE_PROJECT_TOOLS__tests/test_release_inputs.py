@@ -7,27 +7,48 @@ import sys
 from tempfile import TemporaryDirectory
 import unittest
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import capture_native
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import discover_native_project
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.native_workflow_definition import bind_status_specifications
-from KERNEL_MIXER_C59.MANIFEST_RUNTIME_C62.model_host_CS2.model_host_CS2__shared import reviewed_native_model
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
+    import capture_native  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import (
+    discover_native_project,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.native_workflow_definition import (
+    bind_status_specifications,
+)
+from KERNEL_MIXER_C59.MANIFEST_RUNTIME_C62.model_host_CS2.\
+    model_host_CS2__shared \
+    import reviewed_native_model  # fmt: skip
 
 
 class ReleaseInputsTests(unittest.TestCase):
     def test_selected_project_is_admitted(self):
         selection = discover_native_project(
-            Path.cwd(), manifest_validator=lambda: reviewed_native_model().validate_manifest,
+            Path.cwd(),
+            manifest_validator=lambda: (
+                reviewed_native_model().validate_manifest
+            ),
         )
-        module = (
-            "FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.compile_project__pub"
-        )
-        with TemporaryDirectory(prefix="anechoic-release-inputs-") as generation:
+        module = "FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.compile_project__pub"
+        with TemporaryDirectory(
+            prefix="anechoic-release-inputs-"
+        ) as generation:
             result = subprocess.run(
-                [sys.executable, "-B", "-P", "-m", module, str(selection.root),
-                 selection.control_relative.as_posix(), selection.manifest_sha256,
-                 generation, "--build-model"],
+                [
+                    sys.executable,
+                    "-B",
+                    "-P",
+                    "-m",
+                    module,
+                    str(selection.root),
+                    selection.control_relative.as_posix(),
+                    selection.manifest_sha256,
+                    generation,
+                    "--build-model",
+                ],
                 env={**os.environ, "PYTHONPATH": os.pathsep.join(sys.path)},
-                capture_output=True, text=True, timeout=30,
+                capture_output=True,
+                text=True,
+                timeout=30,
             )
             self.assertEqual(0, result.returncode, result.stderr)
         capture = capture_native(selection)

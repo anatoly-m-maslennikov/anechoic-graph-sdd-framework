@@ -37,7 +37,7 @@ def compile_role_form(rows):
                 records.add(('form', form, '', source))
                 records.update(('constraint', form, roles.get(role, role), source)
                                for role in args.get('form_roles', ()))
-    return [dict(zip(('kind', 'value', 'role', 'source'), item)) for item in sorted(records)]
+    return [dict(zip(('kind', 'value', 'role', 'source'), item, strict=False)) for item in sorted(records)]
 
 
 def _role_classes(declarations):

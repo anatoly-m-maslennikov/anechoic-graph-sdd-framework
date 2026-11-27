@@ -1,4 +1,3 @@
-
 """Compile literal Current Relation declarations without evaluating CFEL."""
 
 from __future__ import annotations
@@ -11,13 +10,15 @@ from collections.abc import Mapping
 import sys
 from typing import Annotated, Any
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import source_markdown
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
+    import source_markdown  # fmt: skip
 from .relation_declarations import RegistryContribution, relation_declaration
 from .source_selection import first_reference_rows
 
 
-
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import matches_named_value  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    matches_named_value,
+)  # noqa: E402
 
 
 def _retain_mapping(value, handler):
@@ -36,11 +37,17 @@ class RelationRegistry:
 @dataclass(config=ConfigDict(strict=True, extra="forbid"), frozen=True)
 class RegistryCompilation:
     registry: RelationRegistry
-    contributions: Annotated[dict[str, RegistryContribution], WrapValidator(_retain_mapping)]
-    declaration_rows: tuple[Annotated[dict[str, Any], WrapValidator(_retain_mapping)], ...]
+    contributions: Annotated[
+        dict[str, RegistryContribution], WrapValidator(_retain_mapping)
+    ]
+    declaration_rows: tuple[
+        Annotated[dict[str, Any], WrapValidator(_retain_mapping)], ...
+    ]
 
 
-def _declaration_identity(row: Mapping[str, Any]) -> tuple[str, str, int] | None:
+def _declaration_identity(
+    row: Mapping[str, Any],
+) -> tuple[str, str, int] | None:
     source = row.get("source_path")
     atom_id = row.get("id")
     version = row.get("version")
@@ -61,19 +68,24 @@ def _declaration_identity(row: Mapping[str, Any]) -> tuple[str, str, int] | None
 
 
 def is_registry_declaration(row: Mapping[str, Any]) -> bool:
-    return (row.get("status_group") == "Current"
+    return (
+        row.get("status_group") == "Current"
         and matches_named_value(row.get("role"), "Requirement")
-        and any(matches_named_value(row.get("form"), form) for form in {
-        "Declaration",
-        "Definition",
-        "Entity Definition",
-        "Relation Declaration",
-        "Relation Definition",
-    }))
+        and any(
+            matches_named_value(row.get("form"), form)
+            for form in {
+                "Declaration",
+                "Definition",
+                "Entity Definition",
+                "Relation Declaration",
+                "Relation Definition",
+            }
+        )
+    )
 
 
 def registry_contribution(row: Mapping[str, Any]) -> RegistryContribution:
-    """Return one valid source's literal registry input without evaluating CFEL."""
+    "Return one valid source's literal registry input without evaluating CFEL."
     if not is_registry_declaration(row):
         return RegistryContribution(frozenset(), (), ())
     identity = _declaration_identity(row)
@@ -163,7 +175,9 @@ def _unambiguous_aliases(
             sources[alias].add(source)
     aliases: Annotated[dict[str, str], WrapValidator(_retain_mapping)] = {}
     for alias, direct in sorted(
-        (name, next(iter(values))) for name, values in targets.items() if len(values) == 1
+        (name, next(iter(values)))
+        for name, values in targets.items()
+        if len(values) == 1
     ):
         if alias in registered:
             print(
@@ -186,12 +200,16 @@ def _unambiguous_aliases(
     return aliases
 
 
-def _case_collisions(registered: set[str], origins: Mapping[str, set[str]]) -> set[str]:
+def _case_collisions(
+    registered: set[str], origins: Mapping[str, set[str]]
+) -> set[str]:
     names_by_case: dict[str, set[str]] = defaultdict(set)
     for name in registered:
         names_by_case[name.casefold()].add(name)
     collisions = set()
-    for names in sorted(names_by_case.values(), key=lambda value: sorted(value)):
+    for names in sorted(
+        names_by_case.values(), key=lambda value: sorted(value)
+    ):
         if len(names) < 2:
             continue
         collisions.update(names)
@@ -230,7 +248,7 @@ def _warn_colliding_uses(
 
 
 def compile_registry(atoms: list[dict[str, Any]]) -> RegistryCompilation:
-    """Compile one captured inventory and retain its declared source rows once."""
+    "Compile one captured inventory and retain its declared source rows once."
     contributions = {}
     declaration_rows = {}
     for row in first_reference_rows(atoms):
@@ -240,12 +258,18 @@ def compile_registry(atoms: list[dict[str, Any]]) -> RegistryCompilation:
             contributions[source] = contribution
             if contribution.names:
                 declaration_rows[source] = row
-    registered, inverse, collisions = registry_from_contributions(contributions)
+    registered, inverse, collisions = registry_from_contributions(
+        contributions
+    )
     aliases = _unambiguous_aliases(contributions, registered)
-    registry = RelationRegistry(frozenset(registered), inverse, aliases, frozenset(collisions))
-    return RegistryCompilation(registry, contributions, tuple(declaration_rows.values()))
+    registry = RelationRegistry(
+        frozenset(registered), inverse, aliases, frozenset(collisions)
+    )
+    return RegistryCompilation(
+        registry, contributions, tuple(declaration_rows.values())
+    )
 
 
 def compile_relation_registry(atoms: list[dict[str, Any]]) -> RelationRegistry:
-    """Compile the declared literal relation registry from one captured inventory."""
+    "Compile the declared literal relation registry from one captured inventory."
     return compile_registry(atoms).registry

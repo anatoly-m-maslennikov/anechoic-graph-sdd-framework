@@ -38,7 +38,10 @@ def _gate_command(root, suite_phase, engine, source_bound):
 def _test_environment(engine):
     env = {key: value for key, value in os.environ.items()
            if key not in {"PYTHONHOME", "VIRTUAL_ENV", "PYTHONPATH"}}
-    env.update(PYTHONPATH=str(engine), UV_PROJECT_ENVIRONMENT=str(engine / ".venv-dev"))
+    venv = engine / ".venv-dev"
+    env.update(PYTHONPATH=str(engine), UV_PROJECT_ENVIRONMENT=str(venv))
+    env["PATH"] = os.pathsep.join((str(venv / "bin"),
+                                  env.get("PATH", os.defpath)))
     env.setdefault("ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY", str(engine.parent / ".anechoic_tmp/workbench/extensions"))
     return env
 

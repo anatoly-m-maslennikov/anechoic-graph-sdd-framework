@@ -52,6 +52,7 @@ _SUFFIX_LANGUAGES = {
     ".zsh": "script",
 }
 
+
 def _suffix_language(path: Path) -> str | None:
     return _SUFFIX_LANGUAGES.get(path.suffix.casefold())
 
@@ -79,9 +80,9 @@ def _file_language(path: Path) -> str | None:
     if language is not None:
         return language
     try:
-        executable = path.stat().st_mode & (stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+        executable = path.stat().st_mode & (
+            stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
+        )
     except OSError:
         return None
     return "executable" if executable else None
-
-

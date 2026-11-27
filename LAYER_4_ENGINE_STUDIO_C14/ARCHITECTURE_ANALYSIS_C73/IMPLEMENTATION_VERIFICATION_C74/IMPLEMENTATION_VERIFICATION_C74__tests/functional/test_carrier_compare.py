@@ -7,7 +7,6 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
-from types import SimpleNamespace
 from unittest.mock import patch
 
 from ARCHITECTURE_ANALYSIS_C73.IMPLEMENTATION_VERIFICATION_C74.carrier_compare import (
@@ -208,7 +207,9 @@ class CarrierModelTests(unittest.TestCase):
                 generate(tmp)
 
     def test_extra_lean_output_is_unresolved(self):
-        result = SimpleNamespace(returncode=0, stdout='notice true\n[true]', stderr='')
+        result = subprocess.CompletedProcess(
+            [], 0, stdout='notice true\n[true]', stderr=''
+        )
         with (patch('shutil.which', return_value='lean'), patch('subprocess.run', return_value=result),
               patch('ARCHITECTURE_ANALYSIS_C73.IMPLEMENTATION_VERIFICATION_C74.carrier_compare.formal_inputs',
                     return_value=([SPEC, SPEC], {}))):

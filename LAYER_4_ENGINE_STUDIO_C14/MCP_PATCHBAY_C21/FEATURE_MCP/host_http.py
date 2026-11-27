@@ -25,9 +25,17 @@ def _serve(args):
         raise ValueError("Host HTTP requires ANECHOIC_RUNTIME_STACK=beta_next")
     selection = startup_selection(args.project_root)
     with native_runtime_gateway(selection) as gateway:
-        app = create_app(args.project_root, selection=selection, runtime_gateway=gateway)
-        uvicorn.run(app, host="127.0.0.1", port=args.port, log_level=runtime_log_level().lower(),
-                    access_log=False, log_config=http_log_config())
+        app = create_app(
+            args.project_root, selection=selection, runtime_gateway=gateway
+        )
+        uvicorn.run(
+            app,
+            host="127.0.0.1",
+            port=args.port,
+            log_level=runtime_log_level().lower(),
+            access_log=False,
+            log_config=http_log_config(),
+        )
 
 
 def main(argv=None):

@@ -1,4 +1,4 @@
-"""Independent CA-D-493@3 assertions; deliberately imports no validator code."""
+"Independent CA-D-493@3 assertions; deliberately imports no validator code."
 
 from __future__ import annotations
 
@@ -20,7 +20,9 @@ def _integer(test: unittest.TestCase, value: Any, minimum: int = 0) -> None:
     test.assertGreaterEqual(value, minimum)
 
 
-def _binding(test: unittest.TestCase, value: JsonObject, atom: bool = False) -> None:
+def _binding(
+    test: unittest.TestCase, value: JsonObject, atom: bool = False
+) -> None:
     test.assertIsInstance(value, dict)
     if atom:
         _keys(test, value, "atom_id version sha256 path")
@@ -36,7 +38,11 @@ def _binding(test: unittest.TestCase, value: JsonObject, atom: bool = False) -> 
 
 
 def _diagnostic(test: unittest.TestCase, value: JsonObject) -> None:
-    _keys(test, value, "code severity path span property authority reason evidence")
+    _keys(
+        test,
+        value,
+        "code severity path span property authority reason evidence",
+    )
     for name in ("code", "reason"):
         test.assertIsInstance(value[name], str)
         test.assertTrue(value[name])
@@ -53,7 +59,8 @@ def _diagnostic(test: unittest.TestCase, value: JsonObject) -> None:
         for part in span.values():
             _integer(test, part, 1)
         test.assertLessEqual(
-            (span["start_line"], span["start_column"]), (span["end_line"], span["end_column"])
+            (span["start_line"], span["start_column"]),
+            (span["end_line"], span["end_column"]),
         )
 
 
@@ -89,25 +96,41 @@ def _coverage(test: unittest.TestCase, value: JsonObject) -> None:
         for count in value[name].values():
             _integer(test, count)
     test.assertEqual(
-        value["rules"]["required"], value["rules"]["supported"] + value["rules"]["unsupported"]
+        value["rules"]["required"],
+        value["rules"]["supported"] + value["rules"]["unsupported"],
     )
 
 
 def _diagnostic_groups(test: unittest.TestCase, report: JsonObject) -> None:
-    groups = (report["findings"], report["coverage"]["gaps"], report["execution"]["diagnostics"])
+    groups = (
+        report["findings"],
+        report["coverage"]["gaps"],
+        report["execution"]["diagnostics"],
+    )
     for group in groups:
         for item in group:
             _diagnostic(test, item)
-        test.assertEqual(len(group), len({json.dumps(item, sort_keys=True) for item in group}))
+        test.assertEqual(
+            len(group),
+            len({json.dumps(item, sort_keys=True) for item in group}),
+        )
 
 
 def _carrier_outcomes(test: unittest.TestCase, report: JsonObject) -> None:
     counts = {name: 0 for name in report["coverage"]["outcomes"]}
     for carrier in report["carriers"]:
-        _keys(test, carrier, "path atom_id version sha256 representation source_path outcomes")
-        test.assertIn(carrier["representation"], ("source", "projected", "unresolved"))
+        _keys(
+            test,
+            carrier,
+            "path atom_id version sha256 representation source_path outcomes",
+        )
+        test.assertIn(
+            carrier["representation"], ("source", "projected", "unresolved")
+        )
         for outcome in carrier["outcomes"]:
-            _keys(test, outcome, "code outcome authority reason finding_indexes")
+            _keys(
+                test, outcome, "code outcome authority reason finding_indexes"
+            )
             counts[outcome["outcome"]] += 1
             for item in outcome["authority"]:
                 _binding(test, item, atom=True)
@@ -128,16 +151,28 @@ def _target_counts(test: unittest.TestCase, report: JsonObject) -> None:
     targets = report["coverage"]["targets"]
     for name in ("selected", "excluded", "unresolved"):
         test.assertEqual(targets[name], len(report["selection"][name]))
-    test.assertEqual(targets["assessed"], sum(bool(c["outcomes"]) for c in report["carriers"]))
+    test.assertEqual(
+        targets["assessed"],
+        sum(bool(c["outcomes"]) for c in report["carriers"]),
+    )
 
 
 def _execution(test: unittest.TestCase, report: JsonObject) -> None:
     _keys(test, report["currentness"], "state affected_inputs")
-    test.assertIn(report["currentness"]["state"], ("unchanged", "changed", "unverified"))
+    test.assertIn(
+        report["currentness"]["state"], ("unchanged", "changed", "unverified")
+    )
     for item in report["currentness"]["affected_inputs"]:
         _binding(test, item)
-    _keys(test, report["execution"], "limits limit_sources stopped_by diagnostics run_context")
-    test.assertEqual(set(report["execution"]["limits"]), set(report["execution"]["limit_sources"]))
+    _keys(
+        test,
+        report["execution"],
+        "limits limit_sources stopped_by diagnostics run_context",
+    )
+    test.assertEqual(
+        set(report["execution"]["limits"]),
+        set(report["execution"]["limit_sources"]),
+    )
 
 
 def _valid_result(test: unittest.TestCase, report: JsonObject) -> None:
@@ -153,16 +188,23 @@ def _valid_result(test: unittest.TestCase, report: JsonObject) -> None:
     test.assertEqual(report["currentness"]["state"], "unchanged")
 
 
-def assert_report_contract(test: unittest.TestCase, report: JsonObject) -> None:
-    """Check the full independent golden contract without runtime model reuse."""
+def assert_report_contract(
+    test: unittest.TestCase, report: JsonObject
+) -> None:
+    "Check the full independent golden contract without runtime model reuse."
     _keys(
         test,
         report,
-        "schema_version result bindings selection coverage carriers findings currentness execution",
+        (
+            "schema_version result bindings selection coverage carriers "
+            "findings currentness execution"
+        ),
     )
     test.assertIs(type(report["schema_version"]), int)
     test.assertEqual(report["schema_version"], 1)
-    test.assertIn(report["result"], ("valid", "invalid", "incomplete", "error"))
+    test.assertIn(
+        report["result"], ("valid", "invalid", "incomplete", "error")
+    )
     _bindings(test, report["bindings"])
     _selection(test, report["selection"])
     _coverage(test, report["coverage"])

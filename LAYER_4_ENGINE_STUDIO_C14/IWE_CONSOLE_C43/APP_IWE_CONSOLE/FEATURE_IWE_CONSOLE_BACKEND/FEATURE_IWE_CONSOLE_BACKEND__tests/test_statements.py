@@ -10,13 +10,15 @@ from KERNEL_MIXER_C59.statements import select_statement  # noqa: E402
 
 
 def _utf16_position(value: str, text: str) -> int:
-    return len(value[:value.index(text)].encode("utf-16-le")) // 2
+    return len(value[: value.index(text)].encode("utf-16-le")) // 2
 
 
 class StatementTests(unittest.TestCase):
     def test_cursor_is_metadata_and_the_complete_script_is_preserved(self):
         sql = "select '😀;'; -- ;\n  select $$;$$ as value; /* ; */"
-        self.assertEqual(sql, select_statement(sql, _utf16_position(sql, "value")))
+        self.assertEqual(
+            sql, select_statement(sql, _utf16_position(sql, "value"))
+        )
 
     def test_multiple_statements_remain_visible_for_native_admission(self):
         sql = "select '😀';  select 2"

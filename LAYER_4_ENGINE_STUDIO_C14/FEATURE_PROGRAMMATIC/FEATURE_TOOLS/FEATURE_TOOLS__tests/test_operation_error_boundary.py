@@ -22,7 +22,9 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import (  # noqa: 
     emit_failure_diagnostic,
     operation_error_boundary,
 )
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import TechnicalDiagnosticLogger  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import (  # noqa: E402
+    TechnicalDiagnosticLogger,
+)
 
 
 class _DomainFailure(Exception):
@@ -41,17 +43,24 @@ class OperationErrorBoundaryTests(unittest.TestCase):
     def setUp(self) -> None:
         self.root = Path.cwd()
 
-    def test_sync_domain_failure_is_warning_and_preserves_metadata(self) -> None:
+    def test_sync_domain_failure_is_warning_and_preserves_metadata(
+        self,
+    ) -> None:
         stream = io.StringIO()
 
         def on_error(error: Exception) -> dict[str, object]:
             failure = classify_failure(error)
             secondary = emit_failure_diagnostic(
-                logger, failure, operation="test_lookup", relative_path="atoms/a.md"
+                logger,
+                failure,
+                operation="test_lookup",
+                relative_path="atoms/a.md",
             )
             return {"failure": failure, "secondary": secondary}
 
-        logger = TechnicalDiagnosticLogger("TEST", self.root, "test", stream, "host")
+        logger = TechnicalDiagnosticLogger(
+            "TEST", self.root, "test", stream, "host"
+        )
 
         @operation_error_boundary(on_error=on_error)
         def lookup(value: str) -> dict[str, object]:
@@ -72,26 +81,40 @@ class OperationErrorBoundaryTests(unittest.TestCase):
     def test_unknown_runtime_error_is_warning(self) -> None:
         failure = classify_failure(RuntimeError("unexpected"))
         self.assertEqual(
-            FailureRecord("WARNING", "internal_failure", "operation failure",
-                          exception_class="RuntimeError"),
+            FailureRecord(
+                "WARNING",
+                "internal_failure",
+                "operation failure",
+                exception_class="RuntimeError",
+            ),
             failure,
         )
         self.assertEqual("RuntimeError", failure.exception_class)
 
         stream = io.StringIO()
-        logger = TechnicalDiagnosticLogger("TEST", self.root, "test", stream, "host")
-        self.assertIsNone(emit_failure_diagnostic(logger, failure, operation="test_lookup"))
-        self.assertEqual("RuntimeError", json.loads(stream.getvalue())["exception_class"])
+        logger = TechnicalDiagnosticLogger(
+            "TEST", self.root, "test", stream, "host"
+        )
+        self.assertIsNone(
+            emit_failure_diagnostic(logger, failure, operation="test_lookup")
+        )
+        self.assertEqual(
+            "RuntimeError", json.loads(stream.getvalue())["exception_class"]
+        )
         stream.truncate(0)
         stream.seek(0)
         refusal = FailureRecord("WARNING", "input_invalid", "request refused")
-        self.assertIsNone(emit_failure_diagnostic(logger, refusal, operation="test_lookup"))
+        self.assertIsNone(
+            emit_failure_diagnostic(logger, refusal, operation="test_lookup")
+        )
         record = json.loads(stream.getvalue())
         self.assertEqual("Operation failed: input_invalid", record["reason"])
         self.assertNotIn("exception_class", record)
 
     def test_explicit_blocking_failure_is_error(self) -> None:
-        error = ExplicitBlockingRuntimeFailure("worker-unavailable", "worker unavailable")
+        error = ExplicitBlockingRuntimeFailure(
+            "worker-unavailable", "worker unavailable"
+        )
         self.assertNotIsInstance(error, RuntimeError)
         failure = classify_failure(error)
         self.assertEqual("ERROR", failure.severity)
@@ -100,20 +123,28 @@ class OperationErrorBoundaryTests(unittest.TestCase):
     def test_explicit_classifier_can_classify_domain_failure(self) -> None:
         failure = classify_failure(
             _DomainFailure("invalid project"),
-            classifier=lambda _error: FailureRecord("WARNING", "project_invalid", "project artifact"),
+            classifier=lambda _error: FailureRecord(
+                "WARNING", "project_invalid", "project artifact"
+            ),
         )
         self.assertEqual("project_invalid", failure.code)
         self.assertEqual("WARNING", failure.severity)
 
-    def test_custom_classifier_cannot_elevate_nonblocking_failure(self) -> None:
+    def test_custom_classifier_cannot_elevate_nonblocking_failure(
+        self,
+    ) -> None:
         failure = classify_failure(
             RuntimeError("unexpected"),
-            classifier=lambda _error: FailureRecord("ERROR", "claimed_blocking", "not enough"),
+            classifier=lambda _error: FailureRecord(
+                "ERROR", "claimed_blocking", "not enough"
+            ),
         )
         self.assertEqual("WARNING", failure.severity)
         self.assertEqual("claimed_blocking", failure.code)
 
-    def test_async_boundary_preserves_success_and_propagates_cancellation(self) -> None:
+    def test_async_boundary_preserves_success_and_propagates_cancellation(
+        self,
+    ) -> None:
         seen: list[Exception] = []
 
         @operation_error_boundary(on_error=seen.append)
@@ -142,32 +173,48 @@ class OperationErrorBoundaryTests(unittest.TestCase):
             cancelled()
         self.assertEqual([], seen)
 
-    def test_diagnostic_sink_failure_is_returned_as_secondary_failure(self) -> None:
-        logger = TechnicalDiagnosticLogger("TEST", self.root, "test", _FailingStream(), "host")
+    def test_diagnostic_sink_failure_is_returned_as_secondary_failure(
+        self,
+    ) -> None:
+        logger = TechnicalDiagnosticLogger(
+            "TEST", self.root, "test", _FailingStream(), "host"
+        )
         failure = classify_failure(RuntimeError("unexpected"))
-        secondary = emit_failure_diagnostic(logger, failure, operation="test_lookup")
+        secondary = emit_failure_diagnostic(
+            logger, failure, operation="test_lookup"
+        )
         self.assertEqual("technical diagnostic emission failed", secondary)
         self.assertEqual(
             "diagnostic logger unavailable",
             emit_failure_diagnostic(None, failure, operation="test_lookup"),
         )
 
-    def test_diagnostic_failure_does_not_expose_sink_exception_text(self) -> None:
+    def test_diagnostic_failure_does_not_expose_sink_exception_text(
+        self,
+    ) -> None:
         class SecretStream(_FailingStream):
             def write(self, _value: str) -> int:
                 raise OSError("password=super-secret")
 
-        logger = TechnicalDiagnosticLogger("TEST", self.root, "test", SecretStream(), "host")
+        logger = TechnicalDiagnosticLogger(
+            "TEST", self.root, "test", SecretStream(), "host"
+        )
         failure = classify_failure(RuntimeError("unexpected"))
-        secondary = emit_failure_diagnostic(logger, failure, operation="test_lookup")
+        secondary = emit_failure_diagnostic(
+            logger, failure, operation="test_lookup"
+        )
         self.assertEqual("technical diagnostic emission failed", secondary)
 
     def test_invalid_severity_is_a_bounded_diagnostic_failure(self) -> None:
         stream = io.StringIO()
-        logger = TechnicalDiagnosticLogger("TEST", self.root, "test", stream, "host")
+        logger = TechnicalDiagnosticLogger(
+            "TEST", self.root, "test", stream, "host"
+        )
         self.assertEqual(
             "invalid diagnostic severity",
-            logger.emit(code="bad", relative_path="", reason="safe", severity="TRACE"),
+            logger.emit(
+                code="bad", relative_path="", reason="safe", severity="TRACE"
+            ),
         )
         self.assertEqual("", stream.getvalue())
 

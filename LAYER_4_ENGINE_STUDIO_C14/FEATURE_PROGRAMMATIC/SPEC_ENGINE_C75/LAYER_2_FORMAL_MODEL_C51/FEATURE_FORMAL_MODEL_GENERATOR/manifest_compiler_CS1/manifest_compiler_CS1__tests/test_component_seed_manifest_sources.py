@@ -1,7 +1,7 @@
 import copy
 from itertools import combinations
 from pathlib import Path
-from types import SimpleNamespace
+from unittest.mock import NonCallableMock
 import unittest
 
 ROOT = Path(__file__).resolve().parents[7]
@@ -33,7 +33,10 @@ Test solution.
 
 class ComponentSeedManifestTests(unittest.TestCase):
     def read(self, body=BODY, metadata=None, parent='C62'):
-        return read_component_seed_manifest(PATH, SimpleNamespace(metadata=metadata or copy.deepcopy(HEADER), body=body), parent, 'AN')
+        return read_component_seed_manifest(PATH, NonCallableMock(
+            spec_set=['metadata', 'body'],
+            metadata=metadata or copy.deepcopy(HEADER),
+            body=body), parent, 'AN')
 
     def test_valid_manifest(self):
         fields = self.read()

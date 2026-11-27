@@ -1,4 +1,3 @@
-
 """Attach the native Codex session and its folder to a ANECHOIC MCP call."""
 
 from __future__ import annotations
@@ -36,7 +35,7 @@ def project_root(cwd: str) -> str | None:
             if stat.S_ISDIR(mode) or stat.S_ISREG(mode):
                 return str(candidate)
             return None
-    except (OSError, RuntimeError, ValueError):
+    except OSError, RuntimeError, ValueError:
         return None
     return None
 
@@ -55,12 +54,18 @@ def pre_tool_use(event: object) -> dict[str, Any]:
         return deny("ANECHOIC tool arguments must be an object")
     cwd = event.get("cwd")
     if not isinstance(cwd, str) or not isabs(cwd) or "\x00" in cwd:
-        return deny("ANECHOIC hook event requires an absolute Codex session folder")
+        return deny(
+            "ANECHOIC hook event requires an absolute Codex session folder"
+        )
     root = project_root(cwd)
     if root is None:
         return deny("ANECHOIC hook event requires a safe Git worktree root")
     if arguments.get("project_root", root) != root:
         return deny("ANECHOIC Project root differs from the Git worktree root")
+    return _updated_input(arguments, root, session_id)
+
+
+def _updated_input(arguments, root, session_id):
     if not isinstance(session_id, str) or not session_id.strip():
         return deny("ANECHOIC hook event requires a session ID")
     context = arguments.get("caller_context", {})
@@ -89,7 +94,9 @@ def main() -> int:
         result = pre_tool_use(event)
         output = json.dumps(result)
     except ValueError, UnicodeError, RecursionError:
-        output = json.dumps(deny("ANECHOIC hook input is invalid or exceeds its size limit"))
+        output = json.dumps(
+            deny("ANECHOIC hook input is invalid or exceeds its size limit")
+        )
     sys.stdout.write(output)
     return 0
 

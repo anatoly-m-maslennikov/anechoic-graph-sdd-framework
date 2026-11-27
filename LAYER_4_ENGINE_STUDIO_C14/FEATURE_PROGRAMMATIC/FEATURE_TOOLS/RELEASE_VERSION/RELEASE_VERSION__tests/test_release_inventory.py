@@ -28,8 +28,14 @@ class ReleaseInventoryTests(unittest.TestCase):
         return path
 
     def test_ordinary_persisted_files_are_ordered_without_atom_metadata(self):
-        files = [self.file("z/tool.py"), self.file("a/note.md"), self.file("data.json")]
-        self.assertEqual(sorted(files), persistent_regular_files(self.root, self.source))
+        files = [
+            self.file("z/tool.py"),
+            self.file("a/note.md"),
+            self.file("data.json"),
+        ]
+        self.assertEqual(
+            sorted(files), persistent_regular_files(self.root, self.source)
+        )
 
     def test_transient_state_is_not_exported(self):
         ordinary = self.file("tool.py")
@@ -42,11 +48,21 @@ class ReleaseInventoryTests(unittest.TestCase):
             "standalone.pyc",
         ):
             self.file(name)
-        self.assertEqual([ordinary], persistent_regular_files(self.root, self.source))
+        self.assertEqual(
+            [ordinary], persistent_regular_files(self.root, self.source)
+        )
 
     def test_secret_shaped_names_are_refused_before_content_read(self):
-        for name in (".env", ".env.production", "credentials.env", "nested/.env/value"):
-            with self.subTest(name=name), self.assertRaises(ReleaseInventoryError):
+        for name in (
+            ".env",
+            ".env.production",
+            "credentials.env",
+            "nested/.env/value",
+        ):
+            with (
+                self.subTest(name=name),
+                self.assertRaises(ReleaseInventoryError),
+            ):
                 refuse_secret_path(name)
         self.file(".env", b"never export\n")
         with self.assertRaisesRegex(ReleaseInventoryError, "secret-shaped"):

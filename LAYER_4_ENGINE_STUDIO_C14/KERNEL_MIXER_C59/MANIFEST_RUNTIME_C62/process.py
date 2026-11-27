@@ -26,8 +26,16 @@ def compile_reviewed_model(generation: Path) -> bytes:
     """Compile the reviewed Model in a child and return its attestation."""
     timeout = None if os.getenv("ANECHOIC_TEST_IMAGE_DEADLINES") == "0" else 15
     result = subprocess.run(
-        (*_command(f"{_BUILDER_PACKAGE}.image_model_compile"), str(generation), "--attest-model"),
-        cwd=_CODE_ROOT, env=_environment(), stdin=subprocess.DEVNULL,
-        stdout=subprocess.PIPE, timeout=timeout, check=True,
+        (
+            *_command(f"{_BUILDER_PACKAGE}.image_model_compile"),
+            str(generation),
+            "--attest-model",
+        ),
+        cwd=_CODE_ROOT,
+        env=_environment(),
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
+        timeout=timeout,
+        check=True,
     )
     return result.stdout

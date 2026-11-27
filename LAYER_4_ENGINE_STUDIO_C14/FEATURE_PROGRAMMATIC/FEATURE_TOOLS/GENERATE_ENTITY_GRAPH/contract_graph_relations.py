@@ -4,11 +4,11 @@ from __future__ import annotations
 
 from typing import Any
 
-Record = dict[str, Any]
-
-
 import re
 from collections import defaultdict
+
+Record = dict[str, Any]
+
 
 def _token(value: object) -> str | None:
     """Return a declared Relation name from an exact Relation reference only."""

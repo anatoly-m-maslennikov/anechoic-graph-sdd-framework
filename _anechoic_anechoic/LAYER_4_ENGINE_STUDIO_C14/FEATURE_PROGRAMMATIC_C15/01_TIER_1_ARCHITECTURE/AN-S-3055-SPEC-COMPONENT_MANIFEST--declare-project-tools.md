@@ -10,7 +10,7 @@ context:
 state:
   status: "active"
   version: 27
-  updated_at: "2026-11-26T15:52:29.127205+00:00"
+  updated_at: '2026-11-27T13:06:47.329688+00:00'
 ---
 
 ## Summary
@@ -32,7 +32,11 @@ ComponentManifest(
 ## Component Boundaries
 
 ```python
-{'code': {'imports': ['test_suite__shared.source_comments',
+{'code': {'imports': ['source_sizes',
+                      'functional_history.select_fast',
+                      'suite_cli.run_phase',
+                      'suite_report.suite_report',
+                      'test_suite__shared.source_comments',
                       'test_suite__shared._test_phase',
                       'test_suite__shared.suite_preflight',
                       'FEATURE_MCP__tests__shared.packaged_identity_reader',
@@ -71,7 +75,11 @@ ComponentManifest(
                       'ADAPTERS_C30__shared.TICKET_DIRECTORY',
                       'ADAPTERS_C30__shared.native_ticket_asset',
                       'ADAPTERS_C30__shared.spec_lens_directories'],
-          'exports': {'test_suite__shared.source_comments': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/static']},
+          'exports': {'source_sizes': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/static']},
+                      'functional_history.select_fast': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests']},
+                      'suite_cli.run_phase': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests']},
+                      'suite_report.suite_report': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests']},
+                      'test_suite__shared.source_comments': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/static']},
                       'test_suite__shared._test_phase': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests']},
                       'test_suite__shared.suite_preflight': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/unit']},
                       'FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared.ANALYSIS': {'shared': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_FORMAL_MODEL_ENGINE/FEATURE_FORMAL_MODEL_ENGINE__tests',

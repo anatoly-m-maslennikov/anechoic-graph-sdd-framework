@@ -20,6 +20,14 @@ _STARTUP_SECONDS = 180
 _DEV_LOCAL_STARTUP_SECONDS = 420
 
 
+def _validate_kernel_readiness(observed):
+    kernel = observed.get("kernel_pid")
+    generation = observed.get("generation")
+    if (type(kernel) is not int or kernel <= 1
+            or not isinstance(generation, str) or not generation):
+        raise RuntimeError("Invalid managed Kernel readiness")
+
+
 class ToolProtocolError(RuntimeError):
     def __init__(self, code, message, tool_result=None):
         self.code = code
@@ -63,6 +71,19 @@ class BackendClient:
         except (httpx2.HTTPError, ValueError, RuntimeError):
             return "unavailable"
 
+    def _managed_state(self, response, observed):
+        pid = observed.get("pid")
+        if type(pid) is not int or pid <= 1:
+            raise RuntimeError("Invalid managed Backend identity")
+        if (response.status_code == 200
+                and observed.get("state") in ("pending", "degraded")):
+            self.backend_pid = pid
+            return observed["state"]
+        if response.status_code == 503:
+            return "unavailable"
+        _validate_kernel_readiness(observed)
+        return None
+
     def _probe_state(self):
         response = self._http.get("/health", timeout=0.5)
         observed = response.json()
@@ -72,27 +93,16 @@ class BackendClient:
         pid = observed.get("pid")
         state = observed.get("state")
         if self._process is None:
-            if type(pid) is not int or pid <= 1:
-                raise RuntimeError("Invalid managed Backend identity")
-            if response.status_code == 200 and state in ("pending", "degraded"):
-                self.backend_pid = pid
-                return state
-            if response.status_code == 503:
-                return "unavailable"
-            kernel = observed.get("kernel_pid")
-            generation = observed.get("generation")
-            if type(kernel) is not int or kernel <= 1 or not isinstance(generation, str) or not generation:
-                raise RuntimeError("Invalid managed Kernel readiness")
+            managed_state = self._managed_state(response, observed)
+            if managed_state is not None:
+                return managed_state
         elif pid != self.backend_pid:
             raise RuntimeError("Workbench Backend reported a different Project binding")
         elif runtime_stack() == "beta_next" and response.status_code == 200:
             if state in ("pending", "degraded"):
                 return state
-            if (state == "ready" and (type(observed.get("kernel_pid")) is not int
-                                      or observed["kernel_pid"] <= 1
-                                      or not isinstance(observed.get("generation"), str)
-                                      or not observed["generation"])):
-                raise RuntimeError("Invalid managed Kernel readiness")
+            if state == "ready":
+                _validate_kernel_readiness(observed)
         elif state is None and runtime_stack() == "current" and observed.get("ready") is True:
             state = "ready"
         if response.status_code != 200 or state != "ready":

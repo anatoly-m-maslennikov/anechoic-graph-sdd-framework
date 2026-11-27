@@ -24,6 +24,24 @@ def docker_client_environment(*, buildx_config=None):
     return environment
 
 
+def _read_stdout(selector, max_output, remaining):
+    output = bytearray()
+    while selector.get_map():
+        for key, _events in selector.select(remaining()):
+            chunk = os.read(
+                key.fileobj.fileno(), min(65536, max_output + 1 - len(output))
+            )
+            if not chunk:
+                selector.unregister(key.fileobj)
+                continue
+            output.extend(chunk)
+            if len(output) > max_output:
+                raise ValueError(
+                    "Docker image stdout exceeded its bounded read"
+                )
+    return output
+
+
 def bounded_run(argv, *, cwd, timeout, capture_stdout=True, max_output=MAX_OUTPUT,
                 buildx_config=None, report_stderr=False):
     """Read a finite stdout prefix without retaining stderr or build logs."""
@@ -47,15 +65,7 @@ def bounded_run(argv, *, cwd, timeout, capture_stdout=True, max_output=MAX_OUTPU
         if capture_stdout:
             selector = selectors.DefaultSelector()
             selector.register(process.stdout, selectors.EVENT_READ)
-            while selector.get_map():
-                for key, _events in selector.select(remaining()):
-                    chunk = os.read(key.fileobj.fileno(), min(65536, max_output + 1 - len(output)))
-                    if not chunk:
-                        selector.unregister(key.fileobj)
-                        continue
-                    output.extend(chunk)
-                    if len(output) > max_output:
-                        raise ValueError("Docker image stdout exceeded its bounded read")
+            output = _read_stdout(selector, max_output, remaining)
         returncode = process.wait(timeout=remaining())
         return subprocess.CompletedProcess(argv, returncode, output.decode("utf-8"), "")
     finally:

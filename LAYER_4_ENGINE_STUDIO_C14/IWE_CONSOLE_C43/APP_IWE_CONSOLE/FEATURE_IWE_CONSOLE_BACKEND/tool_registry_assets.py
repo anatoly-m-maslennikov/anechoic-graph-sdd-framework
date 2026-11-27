@@ -1,4 +1,3 @@
-
 """Strict asset formats for generated MCP tool registration."""
 
 from __future__ import annotations
@@ -14,13 +13,20 @@ from typing import Any
 
 
 SCHEMA_VERSION = 1
-FEATURE_RELATIVE = Path("LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_BACKEND")
+FEATURE_RELATIVE = Path(
+    (
+        "LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE"
+        "_CONSOLE_BACKEND"
+    )
+)
 INVENTORY_NAME = "tool_providers.json"
 REGISTRY_NAME = "tool_registry.json"
 _TOOL_NAME = re.compile(r"[A-Za-z][A-Za-z0-9_.-]*\Z")
 _IDENTIFIER = re.compile(r"[A-Za-z_][A-Za-z0-9_]*\Z")
 _INVENTORY_KEYS = frozenset({"schema_version", "mcp_blacklist", "providers"})
-_PROVIDER_KEYS = frozenset({"provider_id", "module", "factory", "descriptor_factory"})
+_PROVIDER_KEYS = frozenset(
+    {"provider_id", "module", "factory", "descriptor_factory"}
+)
 
 
 class ToolRegistryAssetError(ValueError):
@@ -60,9 +66,18 @@ def read_json(path: Path, label: str) -> dict[str, Any]:
         return value
 
     try:
-        value = json.loads(path.read_text(encoding="utf-8"), object_pairs_hook=unique_object)
-    except (OSError, UnicodeDecodeError, json.JSONDecodeError, ToolRegistryAssetError) as error:
-        raise ToolRegistryAssetError(f"{label}-unavailable-or-invalid") from error
+        value = json.loads(
+            path.read_text(encoding="utf-8"), object_pairs_hook=unique_object
+        )
+    except (
+        OSError,
+        UnicodeDecodeError,
+        json.JSONDecodeError,
+        ToolRegistryAssetError,
+    ) as error:
+        raise ToolRegistryAssetError(
+            f"{label}-unavailable-or-invalid"
+        ) from error
     if not isinstance(value, dict):
         raise ToolRegistryAssetError(f"{label}-must-be-an-object")
     return value
@@ -75,7 +90,9 @@ def inventory_digest(path: Path) -> str:
         raise ToolRegistryAssetError("tool-inventory-unavailable") from error
 
 
-def _text(value: Any, label: str, *, pattern: re.Pattern[str] = _IDENTIFIER) -> str:
+def _text(
+    value: Any, label: str, *, pattern: re.Pattern[str] = _IDENTIFIER
+) -> str:
     if not isinstance(value, str) or pattern.fullmatch(value) is None:
         raise ToolRegistryAssetError(f"{label}-invalid")
     return value
@@ -110,8 +127,11 @@ def read_inventory(asset_root: Path) -> ToolInventory:
     path = asset_root / INVENTORY_NAME
     value = read_json(path, "tool-inventory")
     version = value.get("schema_version")
-    if (set(value) != _INVENTORY_KEYS or type(version) is not int
-            or version != SCHEMA_VERSION):
+    if (
+        set(value) != _INVENTORY_KEYS
+        or type(version) is not int
+        or version != SCHEMA_VERSION
+    ):
         raise ToolRegistryAssetError("tool-inventory-schema-invalid")
     blacklist = _names(value["mcp_blacklist"], "mcp-blacklist")
     providers_value = value["providers"]
@@ -133,7 +153,9 @@ def provider_fields(entry: ProviderInventory) -> dict[str, str]:
 
 
 def stable_json(value: Any) -> str:
-    return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    return json.dumps(
+        value, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    )
 
 
 __all__ = [

@@ -19,13 +19,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out the protected merge commit
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        # v7.0.0
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         with:
           ref: ${{ github.sha }}
           fetch-depth: 0
 
       - name: Set up Python
-        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        # v6.3.0
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
         with:
           python-version: "3.14"
 
@@ -39,25 +41,35 @@ jobs:
         run: |
           test "$GITHUB_REF" = "$EXPECTED_REF"
           test "$(git rev-parse HEAD)" = "$MERGE_SHA"
-          python -B -m dset_toolchain release check . --format json > "$RUNNER_TEMP/release-plan.json"
-          if git show "$MERGE_SHA^1:version.toml" > "$RUNNER_TEMP/prior-version.toml"; then
+          python -B -m dset_toolchain release check . --format json \
+            > "$RUNNER_TEMP/release-plan.json"
+          if git show "$MERGE_SHA^1:version.toml" \
+            > "$RUNNER_TEMP/prior-version.toml"; then
             prior="$RUNNER_TEMP/prior-version.toml"
           else
             prior=""
           fi
-          python -B - "$RUNNER_TEMP/release-plan.json" "$GITHUB_OUTPUT" "$prior" <<'PY'
+          python -B - "$RUNNER_TEMP/release-plan.json" "$GITHUB_OUTPUT" \
+            "$prior" <<'PY'
           import json
           import pathlib
           import sys
           import tomllib
 
-          plan = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))
-          if plan["publisher"] != "github" or plan["protected_branch"] != "main":
-              raise SystemExit("release publisher or protected branch mismatch")
+          plan = json.loads(
+              pathlib.Path(sys.argv[1]).read_text(encoding="utf-8")
+          )
+          if (plan["publisher"] != "github"
+                  or plan["protected_branch"] != "main"):
+              raise SystemExit(
+                  "release publisher or protected branch mismatch"
+              )
           version = plan["target"]
           prior_version = None
           if sys.argv[3]:
-              prior = tomllib.loads(pathlib.Path(sys.argv[3]).read_text(encoding="utf-8"))
+              prior = tomllib.loads(
+                  pathlib.Path(sys.argv[3]).read_text(encoding="utf-8")
+              )
               prior_version = prior.get("framework", {}).get("version")
           values = {
               "tag": plan["tag"],
@@ -79,7 +91,8 @@ jobs:
           RUNNER_TEMP: ${{ runner.temp }}
         shell: bash
         run: |
-          gh api "repos/$GITHUB_REPOSITORY/git/matching-refs/tags/$TAG" > "$RUNNER_TEMP/tags.json"
+          gh api "repos/$GITHUB_REPOSITORY/git/matching-refs/tags/$TAG" \
+            > "$RUNNER_TEMP/tags.json"
           read -r count object_type object_sha < <(
             python -B - "$RUNNER_TEMP/tags.json" "$TAG" <<'PY'
           import json
@@ -87,11 +100,19 @@ jobs:
           import sys
 
           expected = f"refs/tags/{sys.argv[2]}"
-          matches = [item for item in json.loads(pathlib.Path(sys.argv[1]).read_text()) if item["ref"] == expected]
+          matches = [
+              item for item in json.loads(
+                  pathlib.Path(sys.argv[1]).read_text()
+              )
+              if item["ref"] == expected
+          ]
           if not matches:
               print("0 missing missing")
           elif len(matches) == 1:
-              print("1", matches[0]["object"]["type"], matches[0]["object"]["sha"])
+              print(
+                  "1", matches[0]["object"]["type"],
+                  matches[0]["object"]["sha"],
+              )
           else:
               print(len(matches), "ambiguous", "ambiguous")
           PY
@@ -102,7 +123,8 @@ jobs:
           else
             test "$count" = "1"
             if [ "$object_type" = "tag" ]; then
-              gh api "repos/$GITHUB_REPOSITORY/git/tags/$object_sha" > "$RUNNER_TEMP/tag-object.json"
+              gh api "repos/$GITHUB_REPOSITORY/git/tags/$object_sha" \
+                > "$RUNNER_TEMP/tag-object.json"
               read -r object_type object_sha < <(
                 python -B - "$RUNNER_TEMP/tag-object.json" <<'PY'
           import json
@@ -129,18 +151,27 @@ jobs:
           RUNNER_TEMP: ${{ runner.temp }}
         shell: bash
         run: |
-          gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100" > "$RUNNER_TEMP/releases.json"
+          gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100" \
+            > "$RUNNER_TEMP/releases.json"
           read -r count draft prerelease < <(
             python -B - "$RUNNER_TEMP/releases.json" "$TAG" <<'PY'
           import json
           import pathlib
           import sys
 
-          matches = [item for item in json.loads(pathlib.Path(sys.argv[1]).read_text()) if item["tag_name"] == sys.argv[2]]
+          matches = [
+              item for item in json.loads(
+                  pathlib.Path(sys.argv[1]).read_text()
+              )
+              if item["tag_name"] == sys.argv[2]
+          ]
           if not matches:
               print("0 false false")
           elif len(matches) == 1:
-              print("1", str(matches[0]["draft"]).lower(), str(matches[0]["prerelease"]).lower())
+              print(
+                  "1", str(matches[0]["draft"]).lower(),
+                  str(matches[0]["prerelease"]).lower(),
+              )
           else:
               print(len(matches), "ambiguous", "ambiguous")
           PY

@@ -84,6 +84,12 @@ class CodeToLeanTests(unittest.TestCase):
         self.folder = Path(directory.name)
         self.env, self.log = _tools(self.folder)
 
+    def _source(self, name, content='def f():\n    return 1\n'):
+        source = self.folder / name
+        source.parent.mkdir(exist_ok=True, parents=True)
+        source.write_text(content)
+        return source
+
     def test_default_uses_autoform(self):
         for suffix, frontend in [('.py', 'PYTHONSRC'), ('.js', 'JAVASCRIPT'), ('.ts', 'JAVASCRIPT')]:
             with self.subTest(suffix=suffix):
@@ -109,14 +115,49 @@ class CodeToLeanTests(unittest.TestCase):
             'provider/extra.py': 'unused = 2\n',
         }
         for file, content in sources.items():
-            path = self.folder / file
-            path.parent.mkdir(exist_ok=True)
-            path.write_text(content)
+            self._source(file, content)
         wanted = {key: sources[key] for key in ('consumer/spec.py', 'provider/source.py')}
         result, output = _translate(self.folder, self.env, [self.folder / key for key in wanted])
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(_calls(self.log)[0], wanted)
         self.assertEqual(output.read_text().strip(), '-- autoform result')
+
+    def test_autoform_rejects_relative_import_aliases_before_translation(self):
+        cases = (
+            ('spec.py', '.child._package__shared', 'child/_package__shared',
+             '_package__shared.py'),
+            ('pkg/spec.py', '.child.shared', 'pkg/child/shared',
+             'child/shared/__init__.py'),
+            ('pkg/sub/spec.py', '.', 'pkg/sub', 'sub/__init__.py'),
+            ('pkg/spec.py', '...shared', '../shared', 'shared.py'),
+        )
+        for importer, written, requested, candidate in cases:
+            with self.subTest(importer=importer, written=written):
+                sources = [self._source(importer, f'from {written} import f as g\n'),
+                           self._source(candidate)]
+                result, output = _translate(self.folder, self.env, sources)
+                self.assertEqual(result.returncode, 1, result.stderr)
+                self.assertIn(f'{importer}:1:', result.stderr)
+                self.assertIn(f"relative import {written!r}", result.stderr)
+                self.assertIn(f"requests {requested!r} but would bind to {candidate!r}",
+                              result.stderr)
+                self.assertFalse(output.exists())
+                self.assertFalse(_calls(self.log))
+
+    def test_autoform_allows_exact_and_unresolved_relative_imports(self):
+        importer = self._source('spec.py',
+                                'from .child.shared import f\n'
+                                'from .child.package import f\n'
+                                'from .missing.unknown import f\n'
+                                'from ..missing.unknown import f\n'
+                                'from . import unknown\n'
+                                'from missing.shared import f\n')
+        candidates = ('child/shared.py', 'child/package/__init__.py', 'shared.py',
+                      'package/__init__.py', '__init__.py')
+        sources = [importer, *(self._source(path) for path in candidates)]
+        result, output = _translate(self.folder, self.env, sources)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(output.read_text(), '-- autoform result\n')
 
     def test_autoform_sidecar_uses_the_engine_python_by_default(self):
         _tool(Path(self.env['JOERN_HOME']) / 'joern',

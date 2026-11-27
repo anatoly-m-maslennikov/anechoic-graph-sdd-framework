@@ -64,6 +64,15 @@ class TraceValuesTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'distinct named event fields'):
             parse_trace_contract(RULE.replace("('display', 'query_id')", "('reply', 'query_id')"))
 
+    def test_malformed_event_does_not_complete_an_observation(self):
+        case, = parse_trace_contract(RULE)['cases']
+        report = compare_trace_values(case, [
+            {'event': 'reply', 'detail': {'query_id': 'A'}},
+            None,
+            {'event': 'display', 'detail': {'query_id': 'A'}},
+        ])
+        self.assertEqual('unresolved', report['status'], report)
+
     def test_equal_fields_still_need_the_required_type(self):
         rule = RULE.replace("'succeeded': {", "'succeeded': {'value_types': {('display', 'query_id'): 'string'}, ")
         case, = parse_trace_contract(rule)['cases']

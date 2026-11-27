@@ -1,8 +1,17 @@
 """Apply Current Declaration ordering to serialized Atom Headers."""
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import bind_ordering_declarations, order_properties
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import canonical_role_name, matches_named_value
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import header_value
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
+    import (
+        bind_ordering_declarations,
+        order_properties,
+    )  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
+    import (
+        canonical_role_name,
+        matches_named_value,
+    )  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
+    import header_value  # fmt: skip
 
 
 def compile_header_ordering(rows):
@@ -13,25 +22,45 @@ def compile_header_ordering(rows):
     for _, subject, claim in _claim_rows(rows):
         args = claim.get("arguments", {})
         base = args.get("base_path", "")
-        if base == "Atom" and args.get("entity_name") == "Header" or base.startswith("Atom.Header"):
+        if (
+            base == "Atom"
+            and args.get("entity_name") == "Header"
+            or base.startswith("Atom.Header")
+        ):
             declarations.append((subject, claim))
     bindings = bind_ordering_declarations(declarations)
-    return [{"bearer": path, "roles": list(roles), "pairs": [list(pair) for pair in pairs]}
-            for (path, roles), pairs in bindings.items()]
+    return [
+        {
+            "bearer": path,
+            "roles": list(roles),
+            "pairs": [list(pair) for pair in pairs],
+        }
+        for (path, roles), pairs in bindings.items()
+    ]
 
 
 def load_header_ordering(records):
-    """Validate the compiled asset without requiring a live Declaration lookup."""
+    "Validate the compiled asset without requiring a live Declaration lookup."
     if not isinstance(records, (list, tuple)):
         raise ValueError("Invalid Header ordering asset")
     seen = set()
     for record in records:
-        if not isinstance(record, dict) or set(record) != {"bearer", "roles", "pairs"}:
+        if not isinstance(record, dict) or set(record) != {
+            "bearer",
+            "roles",
+            "pairs",
+        }:
             raise ValueError("Invalid Header ordering rule")
-        bearer, roles, pairs = record["bearer"], record["roles"], record["pairs"]
+        bearer, roles, pairs = (
+            record["bearer"],
+            record["roles"],
+            record["pairs"],
+        )
         if not isinstance(bearer, str) or not bearer.startswith("Atom.Header"):
             raise ValueError("Invalid Header ordering bearer")
-        if not isinstance(roles, list) or any(not isinstance(role, str) or not role for role in roles):
+        if not isinstance(roles, list) or any(
+            not isinstance(role, str) or not role for role in roles
+        ):
             raise ValueError("Invalid Header ordering Roles")
         if not isinstance(pairs, list):
             raise ValueError("Invalid Header ordering pairs")
@@ -57,7 +86,9 @@ def order_header(metadata, records):
     by_bearer = {}
     for record in records:
         roles = record["roles"]
-        if roles and not any(matches_named_value(role, item) for item in roles):
+        if roles and not any(
+            matches_named_value(role, item) for item in roles
+        ):
             continue
         existing = by_bearer.get(record["bearer"])
         if existing and existing["roles"] and roles:
@@ -68,10 +99,17 @@ def order_header(metadata, records):
         current = metadata
         for part in bearer.removeprefix("Atom.Header").strip(".").split("."):
             if part:
-                current = current.get(_key(part, current)) if isinstance(current, dict) else None
+                current = (
+                    current.get(_key(part, current))
+                    if isinstance(current, dict)
+                    else None
+                )
         if not isinstance(current, dict):
             continue
-        pairs = [(_key(first, current), _key(second, current)) for first, second in record["pairs"]]
+        pairs = [
+            (_key(first, current), _key(second, current))
+            for first, second in record["pairs"]
+        ]
         ordered = order_properties(current, pairs)
         values = {key: current[key] for key in ordered}
         current.clear()

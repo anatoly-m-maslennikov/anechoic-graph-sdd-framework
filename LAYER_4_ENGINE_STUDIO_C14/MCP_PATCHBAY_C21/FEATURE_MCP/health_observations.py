@@ -22,7 +22,9 @@ _TOOL_OUTCOMES = frozenset(
 
 def _timestamp(value: Any = None) -> str:
     if isinstance(value, datetime):
-        return value.astimezone(timezone.utc).isoformat(timespec="milliseconds")
+        return value.astimezone(timezone.utc).isoformat(
+            timespec="milliseconds"
+        )
     if (
         isinstance(value, str)
         and value
@@ -34,13 +36,21 @@ def _timestamp(value: Any = None) -> str:
 
 
 def _safe(value: Any, pattern: re.Pattern[str]) -> str:
-    return value if isinstance(value, str) and pattern.fullmatch(value) else "unknown"
+    return (
+        value
+        if isinstance(value, str) and pattern.fullmatch(value)
+        else "unknown"
+    )
 
 
-def _project_fields(row: dict[str, str], prefix: Any, instance_id: Any) -> None:
+def _project_fields(
+    row: dict[str, str], prefix: Any, instance_id: Any
+) -> None:
     if isinstance(prefix, str) and _PROJECT_PREFIX.fullmatch(prefix):
         row["project_prefix"] = prefix
-    if isinstance(instance_id, str) and _PROJECT_INSTANCE.fullmatch(instance_id):
+    if isinstance(instance_id, str) and _PROJECT_INSTANCE.fullmatch(
+        instance_id
+    ):
         row["project_instance_id"] = instance_id
 
 
@@ -50,10 +60,16 @@ def _known(value: Any, allowed: frozenset[str]) -> str:
 
 def _payload(response: Any) -> tuple[Mapping[str, Any], bool]:
     if isinstance(response, Mapping):
-        return response, bool(response.get("is_error", response.get("isError", False)))
+        return response, bool(
+            response.get("is_error", response.get("isError", False))
+        )
     value = getattr(response, "structured_content", None)
     returned_error = bool(getattr(response, "is_error", False))
-    return (value, returned_error) if isinstance(value, Mapping) else ({}, returned_error)
+    return (
+        (value, returned_error)
+        if isinstance(value, Mapping)
+        else ({}, returned_error)
+    )
 
 
 def _error_category(
@@ -64,10 +80,18 @@ def _error_category(
     if error is not None:
         if isinstance(error, TimeoutError):
             return "timeout"
-        if isinstance(error, (ConnectionError, BrokenPipeError, ConnectionResetError)):
+        if isinstance(
+            error, (ConnectionError, BrokenPipeError, ConnectionResetError)
+        ):
             return "connection"
         return "uncertain"
-    return "uncertain" if uncertain_outcome else "returned-error" if returned_error else None
+    return (
+        "uncertain"
+        if uncertain_outcome
+        else "returned-error"
+        if returned_error
+        else None
+    )
 
 
 def _tool_row(
@@ -87,7 +111,13 @@ def _tool_row(
         "name": _safe(name, _TOOL_NAME),
         "outcome": returned
         if returned != "unknown"
-        else ("uncertain" if has_error else "failed" if category == "returned-error" else "returned"),
+        else (
+            "uncertain"
+            if has_error
+            else "failed"
+            if category == "returned-error"
+            else "returned"
+        ),
         "returned_outcome": returned,
     }
     if category is not None:
@@ -115,10 +145,17 @@ class HealthObservations:
         del arguments
         payload, returned_error = _payload(response)
         observed_at = _timestamp(started_at)
-        category = _error_category(error, returned_error, payload.get("outcome") == "uncertain")
+        category = _error_category(
+            error, returned_error, payload.get("outcome") == "uncertain"
+        )
         row = _tool_row(
-            observed_at, name, payload, category, error is not None,
-            project_prefix, project_instance_id,
+            observed_at,
+            name,
+            payload,
+            category,
+            error is not None,
+            project_prefix,
+            project_instance_id,
         )
         with self._lock:
             self._calls.append(row)

@@ -201,9 +201,9 @@ def _compile_placement_records(folders, rules, sources, requirement_rows, requir
                 raise ValueError(f"{entry['role']}: Current Status domain is missing")
             statuses.remove('*')
             statuses.update(expected - {'draft', 'archived'})
-        if required_statuses is not None and '*' not in statuses:
-            if not expected or not expected.issubset(statuses):
-                raise ValueError(f"{entry['role']}: incomplete Status placement declarations")
+        if (required_statuses is not None and '*' not in statuses
+                and (not expected or not expected.issubset(statuses))):
+            raise ValueError(f"{entry['role']}: incomplete Status placement declarations")
         for status in sorted(statuses):
             binding = rules.get((role, status), rules.get((None, status)))
             if binding is None and status not in {'draft', 'archived'}:

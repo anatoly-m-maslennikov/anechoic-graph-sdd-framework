@@ -12,10 +12,30 @@ def main():
     env["UV_PROJECT_ENVIRONMENT"] = str(engine / ".venv-dev")
     env["PYTHONPATH"] = str(engine)
     command = [
-        "uv", "run", "--project", str(engine.parent / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine"), "--locked", "--no-env-file",
-        "--python", "3.14", "--managed-python", "--group", "dev", "python",
-        "-X", f"pycache_prefix={engine.parent}/.anechoic_tmp/python/bytecode", "-P", "-m",
-        "FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.migrate_native_atom_headers", *sys.argv[1:],
+        "uv",
+        "run",
+        "--project",
+        str(
+            engine.parent
+            / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine"
+        ),
+        "--locked",
+        "--no-env-file",
+        "--python",
+        "3.14",
+        "--managed-python",
+        "--group",
+        "dev",
+        "python",
+        "-X",
+        f"pycache_prefix={engine.parent}/.anechoic_tmp/python/bytecode",
+        "-P",
+        "-m",
+        (
+            "FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.migrate_native_atom_he"
+            "aders"
+        ),
+        *sys.argv[1:],
     ]
     os.execvpe(command[0], command, env)
 

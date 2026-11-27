@@ -1,4 +1,5 @@
-"""Admit lifecycle Worker requests while retaining their existing wire shapes."""
+"Admit lifecycle Worker requests while retaining their existing wire shapes."
+
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
@@ -66,9 +67,8 @@ def admit_request(value):
         if {"indexed_task", "lifecycle_context"} <= result.model_fields_set:
             raise ValueError
         return result
-    except (ValidationError, ValueError):
+    except ValidationError, ValueError:
         raise ValueError("Invalid lifecycle request") from None
-
 
 
 def admit_cold_binding(value):
@@ -79,16 +79,25 @@ def admit_cold_binding(value):
             raise ValueError("Invalid binding identity or path") from None
         raise ValueError("Invalid binding fields") from None
 
+
 def admit_indexed(request):
-    key = "indexed_task" if "indexed_task" in request.model_fields_set else "lifecycle_context"
+    key = (
+        "indexed_task"
+        if "indexed_task" in request.model_fields_set
+        else "lifecycle_context"
+    )
     if key not in request.model_fields_set:
         raise ValueError("Invalid indexed lifecycle request")
     raw = getattr(request, key)
     try:
         binding = _Binding.model_validate(request.binding)
-        if not request.name or not isinstance(raw, dict) or not isinstance(raw.get("endpoints"), dict):
+        if (
+            not request.name
+            or not isinstance(raw, dict)
+            or not isinstance(raw.get("endpoints"), dict)
+        ):
             raise ValueError
-    except (ValidationError, ValueError):
+    except ValidationError, ValueError:
         raise ValueError("Invalid indexed lifecycle request") from None
     try:
         if key == "indexed_task":
@@ -97,8 +106,19 @@ def admit_indexed(request):
             indexed = _IndexedTask.model_validate(raw)
         else:
             indexed = _LifecycleContext.model_validate(raw)
-    except (ValidationError, ValueError):
-        message = "Invalid indexed task request" if key == "indexed_task" else "Invalid lifecycle context"
+    except ValidationError, ValueError:
+        message = (
+            "Invalid indexed task request"
+            if key == "indexed_task"
+            else "Invalid lifecycle context"
+        )
         raise ValueError(message) from None
-    return IndexedRequest.model_construct(binding=binding, name=request.name, arguments=request.arguments,
-        base_generation=request.base_generation, structure_sha256=request.structure_sha256, key=key, indexed=indexed)
+    return IndexedRequest.model_construct(
+        binding=binding,
+        name=request.name,
+        arguments=request.arguments,
+        base_generation=request.base_generation,
+        structure_sha256=request.structure_sha256,
+        key=key,
+        indexed=indexed,
+    )

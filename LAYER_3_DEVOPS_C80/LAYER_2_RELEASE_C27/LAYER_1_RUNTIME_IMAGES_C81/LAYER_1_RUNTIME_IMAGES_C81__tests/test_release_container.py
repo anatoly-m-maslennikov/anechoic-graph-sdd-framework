@@ -6,9 +6,8 @@ import os
 from pathlib import Path
 import subprocess
 from tempfile import TemporaryDirectory
-from types import SimpleNamespace
 import unittest
-from unittest.mock import patch
+from unittest.mock import NonCallableMock, patch
 
 from LAYER_1_RUNTIME_IMAGES_C81.LAYER_1_RUNTIME_IMAGES_C81__shared import verify_release_container
 from LAYER_1_RUNTIME_IMAGES_C81.release_container import start_container
@@ -18,7 +17,11 @@ from LAYER_1_RUNTIME_IMAGES_C81.release_assets import LocalReleaseError
 class ContainerTests(unittest.TestCase):
     def setUp(self):
         self.root = Path(self.enterContext(TemporaryDirectory())).resolve()
-        self.selection = SimpleNamespace(root=self.root, control_relative=Path('.anechoic'), instance_id='a' * 64)
+        self.selection = NonCallableMock(
+            spec_set=["root", "control_relative", "instance_id"],
+            root=self.root, control_relative=Path(".anechoic"),
+            instance_id="a" * 64,
+        )
         self.image = 'sha256:' + 'b' * 64
         self.fingerprint = 'c' * 64
         self.identifier = 'd' * 64

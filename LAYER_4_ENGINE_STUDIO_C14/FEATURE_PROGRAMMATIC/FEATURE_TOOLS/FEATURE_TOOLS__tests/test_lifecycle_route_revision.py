@@ -33,7 +33,8 @@ class NonTicketRevisionMatrix(unittest.TestCase):
                 else:
                     path = self.write('002_PROJECT_CONFIG/AN-P-4-ACTION--example.md', 'AN-P-4', template='action')
                     atom_id, status = 'AN-P-4', 'active'
-                rows = lambda: capture_native(self.selection).atoms
+                def rows():
+                    return capture_native(self.selection).atoms
                 original = path.read_bytes()
                 revision = create_draft(self.selection, {'sourceCurrent': {'ref_id': atom_id, 'version': 1}},
                                         current_rows=rows())

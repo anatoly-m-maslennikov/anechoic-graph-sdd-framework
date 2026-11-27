@@ -89,7 +89,7 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
         return bind_native_workflow(self.selection, **(binding | changes))
 
     def _status_binding(self):
-        methodology = Path("ONTOLOGY_SCORE_C91") / "OCCURRENT_METRONOME_C58"
+        methodology = Path("ONTOLOGY_SCORE_C82") / "OCCURRENT_METRONOME_C58"
         source = STUDIO.parent / "_anechoic_anechoic" / methodology
         rows = []
         for atom_id in ("AN-S-1928", "AN-S-1834", "AN-S-1831"):

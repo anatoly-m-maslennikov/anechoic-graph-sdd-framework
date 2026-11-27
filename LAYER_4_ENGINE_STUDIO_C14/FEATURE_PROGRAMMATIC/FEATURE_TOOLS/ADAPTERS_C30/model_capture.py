@@ -2,12 +2,21 @@
 from pathlib import PurePosixPath
 import re
 from types import MappingProxyType
-from types import SimpleNamespace
+from typing import Any
+
+from pydantic import BaseModel, ConfigDict
 
 from .atom_reference__pub import COMPONENT_MANIFEST_FILENAME
 from .model_ontology_path__pub import find_ontology_component, is_ontology_model_source
 from .native_carrier_placement__pub import component_manifest_parent, spec_folder_layout
 from .project_manifest__pub import manifest_inputs
+
+
+class _Carrier(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    metadata: dict[str, Any]
+    body: str
 
 
 def _model_path(selection, path):
@@ -62,8 +71,10 @@ def _spec_inputs(selection, capture, issues):
     manifest_row = next((row for row in capture.atoms if row['source_path'] == manifest), None)
     parameters = None
     if manifest_row is not None:
-        carrier = SimpleNamespace(metadata=manifest_row['header_json'],
-                                  body=manifest_row['_content_bytes'].decode('utf-8'))
+        carrier = _Carrier.model_construct(
+            metadata=manifest_row['header_json'],
+            body=manifest_row['_content_bytes'].decode('utf-8'),
+        )
         parameters = manifest_inputs(selection.manifest_path, carrier)[0].get('parameters')
     structural, aliases = [], []
     templates = getattr(capture, 'classified_templates', {})

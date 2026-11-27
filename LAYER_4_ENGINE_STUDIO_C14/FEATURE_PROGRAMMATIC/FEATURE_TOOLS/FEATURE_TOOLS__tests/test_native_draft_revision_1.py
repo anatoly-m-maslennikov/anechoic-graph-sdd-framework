@@ -104,7 +104,8 @@ class NativeRevisionCarrierTests(FirstSpecRevisionCases, fixtures.NativeRevision
                 metadata['context']['tier'] = tier
                 metadata = canonical_native_header(metadata)
                 source.write_text('---\n' + yaml.safe_dump(metadata) + '---\n' + body)
-                rows = lambda: capture_native(self.selection).atoms
+                def rows():
+                    return capture_native(self.selection).atoms
                 draft = create_draft(self.selection, {
                     'sourceCurrent': {'ref_id': atom_id, 'version': 1},
                     'changes': {'body': body.replace('Old', 'New')},
@@ -129,7 +130,8 @@ class NativeRevisionCarrierTests(FirstSpecRevisionCases, fixtures.NativeRevision
         header['relations'] = {'REFERENCES': ['AN-S-1@1']}
         path.write_text('---\n' + yaml.safe_dump(header, sort_keys=False) + '---' + body)
         original = path.read_bytes()
-        rows = lambda: capture_native(self.selection).atoms
+        def rows():
+            return capture_native(self.selection).atoms
         output = create_draft(self.selection, {'sourceCurrent': {'ref_id': 'AN-P-4', 'version': 1}}, current_rows=rows())
         draft = self.root / output['savedDraft']['path']
         _, draft_text, draft_body = draft.read_text().split('---', 2)
@@ -213,7 +215,7 @@ class NativeRevisionCarrierTests(FirstSpecRevisionCases, fixtures.NativeRevision
             (self.spec('UNIT_C9/DES/AN-S-10-DES--example.md', 'AN-S-10'), 'AN-S-10'),
             (self.write('_PMETA/nested/AN-P-9-ACTION--example.md', 'AN-P-9'), 'AN-P-9'),
         ]
-        for path, atom_id in cases:
+        for _path, atom_id in cases:
             with self.subTest(atom_id=atom_id):
                 with self.assertRaises(InputError):
                     create_draft(self.selection, {'sourceCurrent': {'ref_id': atom_id, 'version': 1}},

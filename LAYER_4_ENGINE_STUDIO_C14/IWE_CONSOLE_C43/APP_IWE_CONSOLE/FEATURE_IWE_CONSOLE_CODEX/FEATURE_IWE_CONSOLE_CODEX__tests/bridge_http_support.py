@@ -1,4 +1,3 @@
-
 """Real HTTP/SSE coverage for the one-Project Workbench Codex bridge.
 
 The app-server is an external executable fixture on ``PATH``.  The bridge,
@@ -46,7 +45,6 @@ FORBIDDEN_OVERRIDE_KEYS = {
 }
 
 
-
 def _bridge_server() -> Path | None:
     configured = os.environ.get("ANECHOIC_CODEX_BRIDGE_SERVER")
     path = Path(configured) if configured else CODEX_ROOT / "bridge_server.py"
@@ -58,7 +56,7 @@ def _write_codex_path_fixture(directory: Path) -> None:
     executable = directory / "codex"
     executable.write_text(
         "#!/bin/sh\n"
-        f"exec {shlex.quote(sys.executable)} -B {shlex.quote(str(FIXTURE))} \"$@\"\n",
+        f'exec {shlex.quote(sys.executable)} -B {shlex.quote(str(FIXTURE))} "$@"\n',
         encoding="utf-8",
     )
     executable.chmod(0o755)
@@ -82,7 +80,9 @@ class BridgeHTTPFixture(unittest.TestCase):
         _write_codex_path_fixture(fake_bin)
         cls.audit = Path(cls.temp.name) / "fake-codex.jsonl"
         environment = os.environ.copy()
-        environment["PATH"] = f"{fake_bin}{os.pathsep}{environment.get('PATH', '')}"
+        environment["PATH"] = (
+            f"{fake_bin}{os.pathsep}{environment.get('PATH', '')}"
+        )
         environment["FAKE_CODEX_AUDIT"] = str(cls.audit)
         cls.process = subprocess.Popen(
             [
@@ -109,14 +109,22 @@ class BridgeHTTPFixture(unittest.TestCase):
         deadline = time.monotonic() + 15
         while time.monotonic() < deadline:
             if cls.process.poll() is not None:
-                stdout = cls.process.stdout.read() if cls.process.stdout else ""
-                stderr = cls.process.stderr.read() if cls.process.stderr else ""
-                raise AssertionError(f"Codex bridge exited\nstdout:\n{stdout}\nstderr:\n{stderr}")
+                stdout = (
+                    cls.process.stdout.read() if cls.process.stdout else ""
+                )
+                stderr = (
+                    cls.process.stderr.read() if cls.process.stderr else ""
+                )
+                raise AssertionError(
+                    f"Codex bridge exited\nstdout:\n{stdout}\nstderr:\n{stderr}"
+                )
             try:
                 value = json.loads(state.read_text(encoding="utf-8"))
-                if value.get("ready") is True and isinstance(value.get("url"), str):
+                if value.get("ready") is True and isinstance(
+                    value.get("url"), str
+                ):
                     return value["url"].rstrip("/")
-            except (OSError, ValueError):
+            except OSError, ValueError:
                 pass
             time.sleep(0.05)
         raise AssertionError("Codex bridge did not publish ready bridge.json")
@@ -150,7 +158,11 @@ class BridgeHTTPFixture(unittest.TestCase):
     ) -> tuple[int, dict[str, str], bytes]:
         host, port, request_path = self._endpoint(self.base_url, path)
         connection = http.client.HTTPConnection(host, port, timeout=10)
-        body = json.dumps(payload).encode("utf-8") if payload is not None else None
+        body = (
+            json.dumps(payload).encode("utf-8")
+            if payload is not None
+            else None
+        )
         headers = {"Accept": "application/json"}
         if body is not None:
             headers["Content-Type"] = "application/json"
@@ -158,7 +170,11 @@ class BridgeHTTPFixture(unittest.TestCase):
             headers["Origin"] = origin
         connection.request(method, request_path, body=body, headers=headers)
         response = connection.getresponse()
-        result = (response.status, dict(response.getheaders()), response.read())
+        result = (
+            response.status,
+            dict(response.getheaders()),
+            response.read(),
+        )
         connection.close()
         return result
 
@@ -173,7 +189,9 @@ class BridgeHTTPFixture(unittest.TestCase):
         status, _, body = self.request(method, path, payload, origin=origin)
         return status, json.loads(body or b"{}")
 
-    def open_turn(self, message: str) -> tuple[http.client.HTTPConnection, http.client.HTTPResponse]:
+    def open_turn(
+        self, message: str
+    ) -> tuple[http.client.HTTPConnection, http.client.HTTPResponse]:
         host, port, path = self._endpoint(self.base_url, "/turn")
         connection = http.client.HTTPConnection(host, port, timeout=20)
         connection.request(
@@ -238,4 +256,3 @@ class BridgeHTTPFixture(unittest.TestCase):
         thread = threading.Thread(target=collect, daemon=True)
         thread.start()
         return thread
-

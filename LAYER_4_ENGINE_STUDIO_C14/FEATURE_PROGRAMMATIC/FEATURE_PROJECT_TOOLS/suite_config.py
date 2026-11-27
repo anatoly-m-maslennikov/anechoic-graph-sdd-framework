@@ -5,7 +5,10 @@ import tomllib
 
 
 def load_suite_config(root: Path) -> dict:
-    engine = root / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/pyproject.toml"
+    engine = (
+        root
+        / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/pyproject.toml"
+    )
     try:
         with engine.open("rb") as file:
             config = tomllib.load(file)

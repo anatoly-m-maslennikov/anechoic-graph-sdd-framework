@@ -38,17 +38,7 @@ def _publish_custom_replacement(selection, draft, current_rows, previous_capture
                     or parse_carrier(raw, path).metadata != header or reader.currentness()['state'] != 'unchanged'):
                 raise common.SourceChanged('Draft source changed after selection.')
             body = raw[bounds[2]:].decode('utf-8')
-            content = parse_content(body)
-            if header.get('concern') is not None:
-                continuant_model_subject(header['concern'])
-                if any(section['property_path'] == ['claim_scope'] for section in content):
-                    raise common.InputError('target', 'Concern and Claim scope cannot be combined.')
-            sections = [section for section in content if section['property_path'] == ['formal_manifest']]
-            tokens = MarkdownIt('commonmark').parse(sections[0]['direct_markdown'] or '') if len(sections) == 1 else []
-            if len(tokens) != 1 or tokens[0].type != 'fence' or tokens[0].info.strip() != 'python anechoic-edsl':
-                raise common.InputError('target', 'A typed node manifest is required.')
-            parse_typed_manifest_node(tokens[0].content)
-            validate_continuant_variant(header.get('concern'), header.get('context', {}).get('template'), tokens[0].content)
+            _validate_custom_manifest(header, body)
             config_root = selection.control_root / '__PROJECT_CONFIG'
             projected = native_carrier_path(header, _summary(body), project_root=selection.control_root, owner_directory=None)
             if path != config_root / 'CUSTOM_MODEL' / projected.relative_to(config_root):
@@ -66,6 +56,28 @@ def _publish_custom_replacement(selection, draft, current_rows, previous_capture
         except (OSError, RuntimeError, TypeError, ValueError) as error:
             raise common.SourceChanged('Native Custom Model Draft is unavailable or changed.') from error
         return _commit_custom_replacement(selection, draft, path, digest, destination, promoted, plans)
+
+
+def _validate_custom_manifest(header, body):
+    content = parse_content(body)
+    if header.get('concern') is not None:
+        continuant_model_subject(header['concern'])
+        if any(section['property_path'] == ['claim_scope'] for section in content):
+            raise common.InputError(
+                'target', 'Concern and Claim scope cannot be combined.')
+    sections = [section for section in content
+                if section['property_path'] == ['formal_manifest']]
+    tokens = []
+    if len(sections) == 1:
+        markdown = sections[0]['direct_markdown'] or ''
+        tokens = MarkdownIt('commonmark').parse(markdown)
+    if (len(tokens) != 1 or tokens[0].type != 'fence'
+            or tokens[0].info.strip() != 'python anechoic-edsl'):
+        raise common.InputError('target', 'A typed node manifest is required.')
+    source = tokens[0].content
+    parse_typed_manifest_node(source)
+    template = header.get('context', {}).get('template')
+    validate_continuant_variant(header.get('concern'), template, source)
 
 
 def _commit_custom_replacement(selection, draft, path, digest, destination, promoted, plans):

@@ -1,6 +1,6 @@
 """Pin and revalidate Project declaration boundaries."""
 from collections.abc import Iterable, Mapping
-from dataclasses import dataclass, field
+from dataclasses import field
 import hashlib
 from pathlib import Path
 from types import MappingProxyType

@@ -1,4 +1,3 @@
-
 """Resolve the Project boundary for operations that receive an input path."""
 
 from __future__ import annotations
@@ -7,7 +6,8 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from pathlib import Path
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import TemporaryBoundaryError
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
+    import TemporaryBoundaryError  # fmt: skip
 
 
 _NATIVE_ROOT = ContextVar("native_temporary_project_root", default=None)
@@ -15,11 +15,15 @@ _NATIVE_ROOT = ContextVar("native_temporary_project_root", default=None)
 
 @contextmanager
 def bind_native_runtime(selection):
-    """Use an explicitly selected native Project for shared filesystem effects."""
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.native_project_selection import NativeProjectSelection
+    "Use an explicitly selected native Project for shared filesystem effects."
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.native_project_selection import (
+        NativeProjectSelection,
+    )
 
     if not isinstance(selection, NativeProjectSelection):
-        raise TemporaryBoundaryError("A validated native Project selection is required")
+        raise TemporaryBoundaryError(
+            "A validated native Project selection is required"
+        )
     token = _NATIVE_ROOT.set(selection.root)
     try:
         yield
@@ -38,10 +42,13 @@ def repository_root(reference: Path | str) -> Path:
     candidate = Path(reference).expanduser().resolve()
     if not candidate.is_dir():
         candidate = candidate.parent
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import bound_selection
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
+        import bound_selection  # fmt: skip
 
     selection = bound_selection()
-    if candidate == _NATIVE_ROOT.get() or (selection is not None and candidate == selection.root):
+    if candidate == _NATIVE_ROOT.get() or (
+        selection is not None and candidate == selection.root
+    ):
         return candidate
     for root in (candidate, *candidate.parents):
         if (root / ".git").exists():
@@ -53,11 +60,17 @@ def repository_root(reference: Path | str) -> Path:
             if not marker.is_file() or marker.is_symlink():
                 continue
             try:
-                from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.project_selection import resolve_project
-                from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import ProjectSelectionError
+                from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.project_selection \
+                    import resolve_project  # fmt: skip
+                from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.\
+                    ADAPTERS_C30__shared \
+                    import ProjectSelectionError  # fmt: skip
+
                 resolve_project(root, control.name)
-            except (ImportError, ProjectSelectionError):
+            except ImportError, ProjectSelectionError:
                 continue
             else:
                 return root
-    raise TemporaryBoundaryError(f"cannot resolve Project root from {candidate}")
+    raise TemporaryBoundaryError(
+        f"cannot resolve Project root from {candidate}"
+    )

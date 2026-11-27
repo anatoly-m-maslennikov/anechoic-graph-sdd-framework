@@ -1,7 +1,8 @@
 """Normalize and validate admitted Python formal declarations."""
 
 from ...LAYER_1_DIAGNOSTICS_C90._package__shared import finding
-from .._package__shared import SourceError, load_formal_claim, load_manifest
+from ....LAYER_1_SOURCE_ADAPTERS_C95._package__shared import SourceError
+from .._package__shared import load_formal_claim, load_manifest
 from .carrier_framing__pub import parse_framing
 from .contract_model__pub import (
     _HTTP_TRACE_BINDING,

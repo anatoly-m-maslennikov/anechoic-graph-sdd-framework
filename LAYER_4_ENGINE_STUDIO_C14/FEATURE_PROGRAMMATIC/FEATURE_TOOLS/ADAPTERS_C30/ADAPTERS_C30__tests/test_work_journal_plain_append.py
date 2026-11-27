@@ -131,9 +131,10 @@ class PlainJournalTests(unittest.TestCase):
                 raise OSError("failed")
             return publish(source, destination, **kwargs)
 
-        with patch.object(os, "rename", side_effect=fail_second_publish):
+        with patch.object(os, "rename", side_effect=fail_second_publish) as rename:
             with self.assertRaises(OSError) as caught:
-                append_sealed_events(self.root, [1, 2], **self.partition, storage="duckdb")
+                append_sealed_events(self.root, [1, 2, 3], **self.partition, storage="duckdb")
+        self.assertEqual(2, rename.call_count)
         self.assertEqual("journal-append-incomplete", caught.exception.code)
         self.assertEqual(1, len(caught.exception.completed_receipts))
         self.assertEqual(1, caught.exception.uncertain_event_index)

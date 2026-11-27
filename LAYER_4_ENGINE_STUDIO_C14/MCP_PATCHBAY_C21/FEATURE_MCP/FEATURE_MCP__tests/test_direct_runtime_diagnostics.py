@@ -8,7 +8,7 @@ import time
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory, TemporaryFile
-from types import SimpleNamespace
+from unittest.mock import NonCallableMock
 from unittest.mock import Mock, patch
 
 import httpx2
@@ -106,7 +106,9 @@ class DirectRuntimeDiagnosticsTests(unittest.IsolatedAsyncioTestCase):
                           ((200, {"state": "pending"}), (200, {"error": "project_build_pending"}))], observed)
 
     def test_managed_backend_attaches_before_advertising_projection_readiness(self):
-        selection = SimpleNamespace(instance_id="project", manifest_sha256="digest")
+        selection = NonCallableMock(
+            spec_set=['instance_id', 'manifest_sha256'],
+            instance_id="project", manifest_sha256="digest")
         binding = {"instance_id": "project", "manifest_sha256": "digest", "pid": 21}
         pending = httpx2.Response(200, json={**binding, "state": "pending"})
         degraded = httpx2.Response(200, json={
@@ -126,7 +128,9 @@ class DirectRuntimeDiagnosticsTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_public_health_distinguishes_pending_startup_from_unavailability(self):
         directory = Path(self.enterContext(TemporaryDirectory())).resolve()
-        gateway = SimpleNamespace(health_state=Mock(side_effect=["pending", "degraded", "unavailable"]),
+        gateway = NonCallableMock(
+            spec_set=['health_state', 'build_server'],
+            health_state=Mock(side_effect=["pending", "degraded", "unavailable"]),
                                   build_server=lambda: Server("health-test"))
         app = create_http_app(directory, runtime_gateway=gateway, direct_gate=directory / "api.draining")
         client = await self.enterAsyncContext(httpx2.AsyncClient(

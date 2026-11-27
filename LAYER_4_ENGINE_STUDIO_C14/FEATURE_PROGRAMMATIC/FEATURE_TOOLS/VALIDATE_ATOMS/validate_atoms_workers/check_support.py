@@ -7,7 +7,10 @@ from .authority import AuthorityContext, Obligation, Record
 
 class Check:
     def __init__(
-        self, obligation: Obligation, context: AuthorityContext, inputs: Record | None = None
+        self,
+        obligation: Obligation,
+        context: AuthorityContext,
+        inputs: Record | None = None,
     ) -> None:
         self.obligation = obligation
         self.context = context
@@ -15,11 +18,20 @@ class Check:
         self.findings: list[Record] = []
         self.gaps: list[Record] = []
 
-    def _record(self, records: list[Record], code: str, field: str, reason: str) -> None:
+    def _record(
+        self, records: list[Record], code: str, field: str, reason: str
+    ) -> None:
         records.append(
-            {"code": code, "severity": "error", "path": None, "span": None,
-             "property": field, "authority": self.obligation.authority,
-             "reason": reason, "evidence": None}
+            {
+                "code": code,
+                "severity": "error",
+                "path": None,
+                "span": None,
+                "property": field,
+                "authority": self.obligation.authority,
+                "reason": reason,
+                "evidence": None,
+            }
         )
 
     def fail(self, code: str, field: str, reason: str) -> None:

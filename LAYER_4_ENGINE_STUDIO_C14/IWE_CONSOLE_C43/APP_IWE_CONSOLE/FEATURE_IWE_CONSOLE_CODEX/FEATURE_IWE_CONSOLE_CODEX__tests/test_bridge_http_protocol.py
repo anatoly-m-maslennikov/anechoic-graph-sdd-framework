@@ -14,6 +14,8 @@ import time
 import unittest
 from typing import Any
 
+from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_CODEX.FEATURE_IWE_CONSOLE_CODEX__tests.bridge_http_support import BridgeHTTPFixture
+
 
 CODEX_ROOT = Path(__file__).resolve().parents[1]
 REPOSITORY = CODEX_ROOT.parents[3]
@@ -36,8 +38,6 @@ FORBIDDEN_OVERRIDE_KEYS = {
     "auth",
     "credentials",
 }
-
-from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_CODEX.FEATURE_IWE_CONSOLE_CODEX__tests.bridge_http_support import BridgeHTTPFixture
 
 
 class BridgeHTTPTests(BridgeHTTPFixture):

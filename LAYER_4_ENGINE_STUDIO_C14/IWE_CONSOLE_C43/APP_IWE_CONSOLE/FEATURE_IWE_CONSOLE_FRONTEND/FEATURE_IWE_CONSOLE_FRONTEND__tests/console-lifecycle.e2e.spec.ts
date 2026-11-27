@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
-import { checkObservedValues, formalCases, type CorrelatedCase } from './console-formal-cases';
+import { checkObservedEffects, checkObservedValues, formalCases, type CorrelatedCase } from './console-formal-cases';
+import { lifecycleFixture, observeLifecycle, watchAppearance, watchDraft } from './console-lifecycle-fixture';
 
 type Detail = { operation?: string; family?: string; template?: string; tier?: number; lens?: string;
   target_status?: string; autosave_seconds?: number; removed_type?: string; removed_ref?: string; authored_only?: boolean;
@@ -7,89 +8,6 @@ type Detail = { operation?: string; family?: string; template?: string; tier?: n
   current_body?: string; ticket_statuses?: string[] };
 type Case = CorrelatedCase & { input: Detail; effect: [string, string, Detail] };
 const cases = formalCases<Case>('observe_atom_lifecycle', 'guard_draft_editor');
-const authoredRelation = { type: 'IS_SOLUTION_FOR', ref_id: 'AN-S-1' };
-const readOnlyRelations = [
-  { type: 'CONTAINED_BY', ref_id: 'C00', direction: 'outgoing', derived: false },
-  { type: 'DERIVED', ref_id: 'AN-S-2', direction: 'outgoing', derived: true },
-  { type: 'INCOMING', ref_id: 'AN-S-3', direction: 'incoming', derived: false },
-];
-
-function lifecycleTable(ref: string, inline?: boolean) {
-  const run = { query_id: 'current', revision: 1, status: 'success' };
-  const active = { id: 'view', name: 'Active View', sql: 'SELECT reference FROM atoms' + (inline ? ' VIEW DOCUMENT' : ''),
-    revision: 1, cursor_position: 0, result: run };
-  const other = { id: 'other', name: 'Other View', sql: 'SELECT 2', revision: 1, cursor_position: 0 };
-  const workspace = { workspace_id: 'test', project_name: 'Test', active_view_id: active.id, views: inline ? [active, other] : [active] };
-  const result = { query_id: run.query_id, columns: [{ name: 'reference', type: 'VARCHAR' }],
-    rows: [[ref]], row_count: 1, offset: 0, page_size: 100, has_more: false };
-  return { workspace, result, other };
-}
-
-function lifecycleDocuments(family: string, hasDraft: boolean, highest: number, ticketStatuses?: string[]) {
-  const stable = `AN-${family}-1`;
-  const draftVersion = hasDraft ? 1 : highest + 1;
-  const exact = `${stable}@${draftVersion}-draft`;
-  const publishStatus = family === 'S' ? 'ready' : 'backlog';
-  let body = '## Summary\n\nCreated\n'; let stamp = 'one'; let removed = false; let currentStatus = publishStatus;
-  const history = [
-    { ref_id: stable, version: 1, status: publishStatus, filename: 'current.md' },
-    ...(highest > 1 ? [{ ref_id: `${stable}@${highest}`, version: highest, status: 'archived', filename: 'archived.md' }] : []),
-    { ref_id: exact, version: draftVersion, status: 'draft', filename: 'draft.md' },
-  ].filter((revision) => hasDraft || revision.status !== 'draft');
-  const document = (ref: string) => ({ ref_id: stable, exact_ref: ref === exact ? exact : stable,
-    version: ref === exact ? draftVersion : 1, status: ref === exact ? 'draft' : currentStatus, filename: ref === exact ? 'draft.md' : 'current.md',
-    ...(ticketStatuses && ref !== exact ? { ticket_statuses: ticketStatuses } : {}),
-    authored_relations: ref === exact && !removed ? [authoredRelation] : [],
-    body, updated_at: stamp, template: family === 'S' ? 'axiom' : 'task', history, contained: [],
-    relations: removed ? readOnlyRelations : [
-      { ...authoredRelation, direction: 'outgoing', derived: false }, ...readOnlyRelations,
-    ] });
-  function save(changes: { body?: string; removeRelations?: unknown[] }, refuse?: boolean) {
-    if (refuse) {
-      body = '## Summary\n\nCreated\n\nChanged on server\n'; stamp = 'newer';
-      return { status: 'failed', errors: [{ code: 'source_changed', message: 'Draft updated_at does not match the expected timestamp.' }] };
-    }
-    if (changes.body) body = changes.body;
-    if (changes.removeRelations) removed = true;
-    stamp = 'two'; return { status: 'completed', artifact: { ref_id: exact, updated_at: stamp } };
-  }
-  return { stable, exact, draftVersion, publishStatus, document, save,
-    changeStatus(status: string) { currentStatus = status; } };
-}
-
-async function lifecycleFixture(page: Page, family = 'T', hasDraft = true, ticketStatuses?: string[],
-  options: { inline?: boolean; refuseSave?: boolean; refuseCreate?: boolean; highestVersion?: number } = {}) {
-  const calls: { operation: string; arguments: any; reply: any }[] = [];
-  const docs = lifecycleDocuments(family, hasDraft, options.highestVersion ?? 1, ticketStatuses);
-  const { stable, exact, draftVersion, publishStatus } = docs;
-  const table = lifecycleTable(options.inline ? exact : stable, options.inline);
-  await page.route('**/*', async (route) => {
-    const request = route.request();
-    if (request.method() !== 'POST') return route.continue();
-    const path = new URL(request.url()).pathname;
-    if (!path.endsWith('/interface')) {
-      return route.fulfill({ json: path.endsWith('/schema') ? { tables: {} } : path.endsWith('/status') ? { mode: 'unavailable' } : { items: [] } });
-    }
-    const input = request.postDataJSON();
-    const args = input.arguments;
-    let result: unknown = {};
-    switch (input.operation) {
-      case 'workspace_open': case 'workspace_get': result = table.workspace; break;
-      case 'view_rename': table.other.name = args.name; result = { ...table.other }; break;
-      case 'view_fetch': result = table.result; break;
-      case 'iwe_console_atom_document': result = docs.document(args.ref_id); break;
-      case 'atom_lifecycle_create_draft': result = options.refuseCreate ? { status: 'failed', errors: [{ message: 'fixture stop' }] }
-        : { status: 'completed', savedDraft: { ref_id: exact, version: draftVersion } }; break;
-      case 'atom_lifecycle_update': result = docs.save(args.changes, options.refuseSave); break;
-      case 'atom_lifecycle_promote_draft': expect(args.targetStatus).toBe(publishStatus); result = { status: 'completed', artifact: { ref_id: stable } }; break;
-      case 'atom_lifecycle_change_status': expect(args.targetStatus).toBe(ticketStatuses ? ticketStatuses[1] : family === 'S' ? 'active' : 'in_queue'); docs.changeStatus(args.targetStatus); result = { status: 'completed', artifact: { ref_id: stable } }; break;
-      case 'query_log_list': result = { items: [] }; break;
-    }
-    calls.push({ ...input, reply: result });
-    return route.fulfill({ json: result });
-  });
-  return { calls, stable, exact };
-}
 
 async function taskEdit(page: Page, input: Detail, expected: Detail) {
   const { calls, exact } = await lifecycleFixture(page, input.family);
@@ -171,8 +89,14 @@ async function currentDraft(page: Page, scenario: Case, highestVersion: number) 
   await page.goto(process.env.WORKBENCH_E2E_URL!);
   await page.getByRole('grid').getByRole('button', { name: stable, exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Atom document' });
-  await dialog.getByRole('button', { name: 'Edit Draft' }).click();
+  const edit = dialog.getByRole('button', { name: 'Edit Draft' });
+  await expect(edit).toBeVisible();
+  const effects = await observeLifecycle(page);
+  await watchAppearance(page, 'dialog[aria-label="Atom document"] .atom-document textarea',
+    ['C46.lifecycle_observation', 'observed']);
+  await edit.click();
   await expect(dialog.getByRole('button', { name: 'Promote Draft' })).toBeVisible();
+  checkObservedEffects(scenario, await effects());
   const relevant = calls.filter(call => ['iwe_console_atom_document', 'atom_lifecycle_create_draft'].includes(call.operation));
   expect(relevant.map(call => call.operation)).toEqual(['iwe_console_atom_document', 'atom_lifecycle_create_draft', 'iwe_console_atom_document']);
   const [source, create, opened] = relevant;
@@ -216,18 +140,22 @@ async function dirtyDraft(page: Page, refuseSave: boolean) {
     const title = await page.getByRole('tab', { selected: true }).innerText();
     return source.views.find((view: { name: string }) => view.name === title)?.id;
   };
-  return { page, article, ref, body, other, initial, dirty, source, activeId, calls, fixture };
+  const effects = await observeLifecycle(page);
+  await watchDraft(body);
+  return { page, article, ref, body, other, initial, dirty, source, activeId, calls, fixture, effects };
 }
 type DirtyDraft = Awaited<ReturnType<typeof dirtyDraft>>;
 
-async function renameInactive(scenario: Case, { page, article, body, other, dirty, source, activeId, calls }: DirtyDraft) {
+async function renameInactive(scenario: Case, { page, article, body, other, dirty, source, activeId, calls, effects }: DirtyDraft) {
   const original = { view_id: source.views.find((view: { name: string }) => view.name === 'Other View').id,
     name: 'Renamed View', active_view_id: await activeId() };
+  await watchAppearance(page, '[role="tab"]', ['C46.view', 'shown'], original.name);
   await other.click({ button: 'right' });
   await page.getByRole('menuitem', { name: 'Rename', exact: true }).click();
   const field = page.getByRole('dialog', { name: 'View name' }).getByRole('textbox');
   await field.fill(original.name); await field.press('Enter');
   await expect(page.getByRole('tab', { name: original.name, exact: true })).toBeVisible();
+  checkObservedEffects(scenario, await effects());
   const [rename] = calls('view_rename');
   checkObservedValues(scenario, {
     rename_inactive: original, rename_requested: rename.arguments, rename_returned: rename.reply,
@@ -240,22 +168,24 @@ async function renameInactive(scenario: Case, { page, article, body, other, dirt
   expect(calls('atom_lifecycle_update')[0].arguments).toMatchObject({ target: { ref_id: dirty.draft_ref }, changes: dirty.changes });
 }
 
-async function discardEdits(scenario: Case, { article, ref, body, other, initial, dirty, calls }: DirtyDraft) {
+async function discardEdits(scenario: Case, { article, ref, body, other, initial, dirty, calls, effects }: DirtyDraft) {
   const confirmed = { draft_ref: await ref.innerText(), changes: { body: await body.inputValue() } };
   await article.getByRole('button', { name: 'Discard changes and reload' }).click();
   await expect(body).toHaveValue(initial);
   const reloaded = calls('iwe_console_atom_document').at(-1)!.arguments.ref_id;
   await other.click();
   await expect(body).toHaveCount(0);
+  checkObservedEffects(scenario, await effects());
   expect(calls('atom_lifecycle_update')).toHaveLength(0);
   checkObservedValues(scenario, { leave_dirty: dirty, discard_confirmed: confirmed, editor_unmounted: { draft_ref: reloaded } });
 }
 
-async function saveEdits(scenario: Case, { ref, body, other, dirty, calls, fixture }: DirtyDraft) {
+async function saveEdits(scenario: Case, { ref, body, other, dirty, calls, fixture, effects }: DirtyDraft) {
   const departing = await ref.innerText();
   await other.click();
   await expect(other).toHaveAttribute('aria-selected', 'true');
   await expect(body).toHaveCount(0);
+  checkObservedEffects(scenario, await effects());
   const [save] = calls('atom_lifecycle_update');
   const relevant = fixture.calls.filter(call => ['atom_lifecycle_update', 'view_focus'].includes(call.operation));
   expect(relevant.map(call => call.operation)).toEqual(['atom_lifecycle_update', 'view_focus']);
@@ -265,9 +195,10 @@ async function saveEdits(scenario: Case, { ref, body, other, dirty, calls, fixtu
   });
 }
 
-async function refuseEdits(scenario: Case, { article, ref, body, other, initial, dirty, calls }: DirtyDraft) {
+async function refuseEdits(scenario: Case, { article, ref, body, other, initial, dirty, calls, effects }: DirtyDraft) {
   await other.click();
   await expect(article.getByRole('alert')).toHaveText('Draft updated_at does not match the expected timestamp.');
+  checkObservedEffects(scenario, await effects());
   const [save] = calls('atom_lifecycle_update');
   checkObservedValues(scenario, {
     leave_dirty: dirty, save_requested: { ...save.arguments.target, changes: save.arguments.changes },

@@ -61,7 +61,8 @@ class WorkflowCompilerTests(unittest.TestCase):
                          {'kind': 'output', 'outcome': 'success'})
         self.assertTrue(states[1]['final'])
         for text in ('stateDiagram', 'NEXT / output / outcome=#quot;success#quot;',
-                     'NEXT / effect / outcome=#quot;retry#quot;', 'done --> [*]'):
+                     'NEXT / effect / outcome=#quot;retry#quot;',
+                     'state "done" as S1', 'S1 --> [*]'):
             self.assertIn(text, result['mermaid'])
 
     def test_cli_selects_one_action_in_multi_action_solution(self):

@@ -32,50 +32,85 @@ def _matrix(columns, rows):
 
 def _csv(matrix):
     stream = StringIO(newline="")
-    writer = csv.writer(stream, quoting=csv.QUOTE_NOTNULL, lineterminator="\r\n")
+    writer = csv.writer(
+        stream, quoting=csv.QUOTE_NOTNULL, lineterminator="\r\n"
+    )
     writer.writerow(matrix["columns"])
     for row in matrix["rows"]:
-        writer.writerow([json.dumps(value, ensure_ascii=False, separators=(",", ":"))
-                         if isinstance(value, (list, dict)) else value for value in row])
+        writer.writerow(
+            [
+                json.dumps(value, ensure_ascii=False, separators=(",", ":"))
+                if isinstance(value, (list, dict))
+                else value
+                for value in row
+            ]
+        )
     return stream.getvalue()
 
 
 def _encode(matrix, result_format):
     if result_format == "json_matrix":
-        return json.dumps(matrix, ensure_ascii=False, separators=(",", ":"), allow_nan=False)
+        return json.dumps(
+            matrix, ensure_ascii=False, separators=(",", ":"), allow_nan=False
+        )
     if result_format == "csv":
         return _csv(matrix)
     return toon_format.dumps(matrix)
 
 
 def _write(root, matrix, result_format, offset, has_more):
-    directory = _open_directory(Path(root), _DIRECTORY.parts, create=True, same_device=True)
+    directory = _open_directory(
+        Path(root), _DIRECTORY.parts, create=True, same_device=True
+    )
     name = f"{uuid.uuid7()}.{_EXTENSIONS[result_format]}"
     try:
-        descriptor = os.open(name, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600, dir_fd=directory)
+        descriptor = os.open(
+            name,
+            os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+            0o600,
+            dir_fd=directory,
+        )
         try:
-            with os.fdopen(descriptor, "w", encoding="utf-8", newline="") as stream:
+            with os.fdopen(
+                descriptor, "w", encoding="utf-8", newline=""
+            ) as stream:
                 stream.write(_encode(matrix, result_format))
         except BaseException:
             os.unlink(name, dir_fd=directory)
             raise
     finally:
         os.close(directory)
-    return {"path": (_DIRECTORY / name).as_posix(), "format": result_format,
-            "row_count": len(matrix["rows"]), "column_count": len(matrix["columns"]),
-            "offset": offset, "has_more": has_more}
+    return {
+        "path": (_DIRECTORY / name).as_posix(),
+        "format": result_format,
+        "row_count": len(matrix["rows"]),
+        "column_count": len(matrix["columns"]),
+        "offset": offset,
+        "has_more": has_more,
+    }
 
 
-def deliver(queries, root, page, delivery, result_format, *, full=False, grid=None):
+def deliver(
+    queries, root, page, delivery, result_format, *, full=False, grid=None
+):
     """Deliver a result using the caller’s admitted formats and options."""
     page.pop("sql", None)
     if delivery == "inline" and result_format != "csv":
         return page
-    matrix = _matrix([column["name"] for column in page["columns"]], page["rows"])
-    inline_candidate = delivery == "inline" or delivery == "auto" and (not full or not page["has_more"])
+    matrix = _matrix(
+        [column["name"] for column in page["columns"]], page["rows"]
+    )
+    inline_candidate = (
+        delivery == "inline"
+        or delivery == "auto"
+        and (not full or not page["has_more"])
+    )
     if inline_candidate and result_format == "csv":
         content = _csv(matrix)
-        if delivery == "inline" or len(content.encode("utf-8")) <= _INLINE_BYTES:
+        if (
+            delivery == "inline"
+            or len(content.encode("utf-8")) <= _INLINE_BYTES
+        ):
             page.pop("rows")
             page["csv"] = content
             return page
@@ -85,10 +120,15 @@ def deliver(queries, root, page, delivery, result_format, *, full=False, grid=No
     try:
         if full:
             complete = queries.page(page["query_id"], 0, 1000, grid)
-            matrix = _matrix([column["name"] for column in complete["columns"]], complete["rows"])
+            matrix = _matrix(
+                [column["name"] for column in complete["columns"]],
+                complete["rows"],
+            )
             artifact = _write(root, matrix, result_format, 0, False)
         else:
-            artifact = _write(root, matrix, result_format, page["offset"], page["has_more"])
+            artifact = _write(
+                root, matrix, result_format, page["offset"], page["has_more"]
+            )
         page.pop("rows", None)
         page["result_file"] = artifact
     except Exception as error:

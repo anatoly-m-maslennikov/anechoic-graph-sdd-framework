@@ -1,3 +1,4 @@
+import json
 import os
 import shutil
 import subprocess
@@ -5,7 +6,10 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_3_LEAN_TRANSLATOR_C84._package__shared import compile_lean
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_3_LEAN_TRANSLATOR_C84._package__shared import (
+    compile_lean,
+    lean_string,
+)
 
 
 CONTRACT = 'declare_framing_contract(delimiter=[45,45,45], line_endings=[[10],[13,10]])'
@@ -35,6 +39,73 @@ def model(solution):
 
 
 class LeanTranslationTests(unittest.TestCase):
+    def test_long_normalized_declaration_preserves_unicode(self):
+        lean = (
+            os.environ.get('ANECHOIC_TEST_LEAN')
+            or os.environ.get('LEAN_BIN')
+            or shutil.which('lean')
+        )
+        self.assertTrue(lean, 'Set ANECHOIC_TEST_LEAN or LEAN_BIN')
+        value = 'a' * 8192 + '\u200d' + 'b' * 8192
+        boundary = model(SOLUTION)
+        boundary['contract']['claims'] = [('python trace', (
+            'declare_trace_contract(action="run", output="done", '
+            f'must_effect=(("store", "saved", {{"detail": {value!r}}}),))'
+        ))]
+        boundary['solution']['claims'] = []
+        compiled = compile_lean(boundary)
+        self.assertIn('contract', compiled['compiled_roles'])
+        oracle = '''
+def expectedDetail : String := String.ofList (
+  List.replicate 8192 'a' ++ [Char.ofNat 8205] ++ List.replicate 8192 'b')
+def actualDetail : Except String Lean.Json := do
+  let contract ← AnechoicSpec.contract
+  let claim ← contract.getObjVal? "claim"
+  let effects ← claim.getObjVal? "must_effect"
+  let effect ← effects.getArrVal? 0
+  let fields ← effect.getArrVal? 2
+  fields.getObjVal? "detail"
+#eval match actualDetail with
+  | .ok value => value == Lean.Json.str expectedDetail
+  | .error _ => false
+'''
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / 'LongDeclaration.lean'
+            path.write_text(compiled['lean'] + oracle, encoding='utf-8')
+            checked = subprocess.run(
+                [lean, str(path)], capture_output=True, text=True, timeout=45,
+            )
+        self.assertEqual(
+            0, checked.returncode, checked.stdout + checked.stderr,
+        )
+        self.assertEqual('true', checked.stdout.strip())
+
+    def test_lean_string_round_trips_controls_and_escaped_sequences(self):
+        lean = (
+            os.environ.get('ANECHOIC_TEST_LEAN')
+            or os.environ.get('LEAN_BIN')
+            or shutil.which('lean')
+        )
+        self.assertTrue(lean, 'Set ANECHOIC_TEST_LEAN or LEAN_BIN')
+        controls = ''.join(map(chr, (*range(32), *range(127, 160))))
+        value = controls + r'a\x00\u200d\n\r\t\0\\' + '"λ\u200d\U0001f600'
+        source = f'#eval ({lean_string(value)} : String).toList.map Char.toNat'
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / 'StringRoundTrip.lean'
+            path.write_text(source, encoding='utf-8')
+            checked = subprocess.run(
+                [lean, str(path)], capture_output=True, text=True, timeout=45,
+            )
+        self.assertEqual(
+            0, checked.returncode, checked.stdout + checked.stderr,
+        )
+        self.assertEqual(list(map(ord, value)), json.loads(checked.stdout))
+
+    def test_lean_string_rejects_surrogates(self):
+        for surrogate in ('\ud800', '\udfff'):
+            with self.assertRaisesRegex(ValueError, 'Unicode scalar values'):
+                lean_string('a' + surrogate + 'b')
+
     def test_framing_semantics_and_negative_control(self):
         lean = os.environ.get('ANECHOIC_TEST_LEAN') or os.environ.get('LEAN_BIN') or shutil.which('lean')
         self.assertTrue(lean, 'Set ANECHOIC_TEST_LEAN or LEAN_BIN, or put lean on PATH to run functional tests')

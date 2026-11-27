@@ -92,6 +92,20 @@ class RuntimeFailureDiagnosticsTests(unittest.TestCase):
         self.assertEqual("project binding unavailable", secondary)
         self.assertEqual("unbound", json.loads(stream.getvalue())["project_binding"])
 
+    def test_record_preserves_optional_fields_and_elapsed_number(self) -> None:
+        for elapsed, expected in ((1, '"elapsed_ms":1'), (1.5, '"elapsed_ms":1.5')):
+            stream = io.StringIO()
+            logger = self._logger(stream)
+            self.assertIsNone(logger.emit(
+                code="test", relative_path="", reason="token=secret", elapsed_ms=elapsed,
+            ))
+            line = stream.getvalue()
+            self.assertIn(expected, line)
+            self.assertNotIn("correlation_id", line)
+            self.assertNotIn("exception_class", line)
+            self.assertNotIn("project_binding", line)
+            self.assertNotIn("token=secret", line)
+
     def test_sink_failure_is_secondary_and_sanitized(self) -> None:
         logger = self._logger(_FailingStream())
         with (

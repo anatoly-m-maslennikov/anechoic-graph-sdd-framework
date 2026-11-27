@@ -1,6 +1,5 @@
 """Foreground services with immutable code and explicit runtime-only state."""
 
-
 from concurrent.futures import CancelledError
 import json
 import os
@@ -11,8 +10,12 @@ PROJECT_ROOT = Path("/project")
 ENGINE = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ENGINE))
 
-from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import ExplicitStartupFailure  # noqa: E402
-from MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_log_level import direct_log_level  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import (  # noqa: E402
+    ExplicitStartupFailure,
+)
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_log_level import (  # noqa: E402
+    direct_log_level,
+)
 
 RUNTIME_MODES = frozenset({"mcp", "mcp-http", "shared-mcp"})
 
@@ -25,7 +28,12 @@ def _process_failure(mode, error):
     else:
         code, severity = "internal_failure", "WARNING"
     try:
-        print(json.dumps({"error": code, "severity": severity}, separators=(",", ":")), file=sys.stderr)
+        print(
+            json.dumps(
+                {"error": code, "severity": severity}, separators=(",", ":")
+            ),
+            file=sys.stderr,
+        )
     except Exception:
         pass
     return 1
@@ -37,15 +45,25 @@ def _shared_mcp_command():
         raise ExplicitStartupFailure("shared_host_settings_unavailable")
     return [
         sys.executable,
-        "-B", "-P", "-m", "MCP_PATCHBAY_C21.FEATURE_MCP.shared_http_server",
+        "-B",
+        "-P",
+        "-m",
+        "MCP_PATCHBAY_C21.FEATURE_MCP.shared_http_server",
         "--host-settings",
         settings,
     ]
 
 
 def _project_mcp_command(mode):
-    command = [sys.executable, "-B", "-P", "-m", "MCP_PATCHBAY_C21.FEATURE_MCP.server",
-               "--project-root", str(PROJECT_ROOT)]
+    command = [
+        sys.executable,
+        "-B",
+        "-P",
+        "-m",
+        "MCP_PATCHBAY_C21.FEATURE_MCP.server",
+        "--project-root",
+        str(PROJECT_ROOT),
+    ]
     if mode == "mcp-http":
         command += ["--transport", "streamable-http"]
     for flag, key in (
@@ -62,17 +80,32 @@ def _exec_service(mode):
     if mode not in RUNTIME_MODES:
         raise ValueError("unsupported runtime mode")
     stack = os.environ.get("ANECHOIC_RUNTIME_STACK")
-    command = _shared_mcp_command() if mode == "shared-mcp" else _project_mcp_command(mode)
-    environment = {**{k: v for k, v in os.environ.items() if k != "PYTHONHOME"}, "PYTHONPATH": str(ENGINE)}
+    command = (
+        _shared_mcp_command()
+        if mode == "shared-mcp"
+        else _project_mcp_command(mode)
+    )
+    environment = {
+        **{k: v for k, v in os.environ.items() if k != "PYTHONHOME"},
+        "PYTHONPATH": str(ENGINE),
+    }
     try:
         environment["ANECHOIC_LOG_LEVEL"] = direct_log_level()
     except ValueError as error:
         raise ExplicitStartupFailure("invalid_log_level") from error
     if mode == "shared-mcp" and stack == "beta_next":
-        from MCP_PATCHBAY_C21.FEATURE_MCP.docker.shared_supervisor import supervise
-        return supervise(command, environment, environment["ANECHOIC_HOST_SETTINGS"])
+        from MCP_PATCHBAY_C21.FEATURE_MCP.docker.shared_supervisor import (
+            supervise,
+        )
+
+        return supervise(
+            command, environment, environment["ANECHOIC_HOST_SETTINGS"]
+        )
     if mode == "mcp-http" and stack == "beta_next":
-        from MCP_PATCHBAY_C21.FEATURE_MCP.docker.shared_supervisor import supervise_project
+        from MCP_PATCHBAY_C21.FEATURE_MCP.docker.shared_supervisor import (
+            supervise_project,
+        )
+
         return supervise_project(command, environment, PROJECT_ROOT)
     try:
         os.execve(sys.executable, command, environment)

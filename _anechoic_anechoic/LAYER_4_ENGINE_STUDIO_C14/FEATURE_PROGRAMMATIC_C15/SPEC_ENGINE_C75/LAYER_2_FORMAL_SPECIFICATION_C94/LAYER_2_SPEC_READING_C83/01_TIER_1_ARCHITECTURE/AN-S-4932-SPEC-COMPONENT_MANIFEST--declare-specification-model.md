@@ -10,7 +10,7 @@ context:
 state:
   status: active
   version: 2
-  updated_at: '2026-11-27T04:19:32Z'
+  updated_at: '2026-11-27T13:09:58.958763+00:00'
 ---
 ## Summary
 
@@ -41,7 +41,7 @@ declare_entity(
 
 ```python
 {
-            'code': {'exports': {'_package__shared.select_formal_claims': {'shared': ['C75', 'C88', 'C89']},
+            'code': {'imports': ['code_access_rules__pub.parse_code_access'], 'exports': {'_package__shared.select_formal_claims': {'shared': ['C75', 'C88', 'C89']},
                          '_package__shared.HTTP_BINDING_INPUTS': {'shared': ['C89']},
                          '_package__shared.HTTP_CHECKS': {'shared': ['C88']},
                          '_package__shared.http_binding': {'shared': ['C88', 'C89']},
@@ -53,14 +53,14 @@ declare_entity(
                          '_package__shared._validate': {'shared': ['C84', 'C87']},
                          '_package__shared.exit_code': {'shared': ['C88']},
                          '_package__shared.exit_status_class': {'shared': ['C88']},
-                         '_package__shared.http_routes': {'shared': ['C88', 'C89',
+                         '_package__shared.http_routes': {'shared': ['C75', 'C88', 'C89',
                              'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/SPEC_ENGINE_C75__tests/functional']},
                          '_package__shared.is_http_route': {'shared': ['C88', 'C89']},
                          '_package__shared.json_equal': {'shared': ['C86', 'C89',
                                                                     'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/LAYER_2_FORMAL_SPECIFICATION_C94/LAYER_4_TRANSLATION_VALIDATOR_C86/LAYER_4_TRANSLATION_VALIDATOR_C86__tests/functional']},
                          '_package__shared.manifest_shape': {'shared': ['C88',
                              'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/SPEC_ENGINE_C75__tests/functional']},
-                         '_package__shared.normalize_claim': {'shared': ['C89',
+                         '_package__shared.normalize_claim': {'shared': ['C75', 'C89',
                                                                          'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/SPEC_ENGINE_C75__tests/functional']},
                          '_package__shared.normalize_spec': {'shared': ['C84', 'C86', 'C92']},
                          '_package__shared.normalize_workflow': {'shared': ['C75',

@@ -45,7 +45,7 @@ def _promote_new(selection, target, status, draft, current_rows, previous_captur
         capture, destination, promoted = _preflight_new(
             selection, target, status, draft, current_rows, previous_capture, path, root, digest, atom_id)
         if status in ('active', 'in_queue', 'backlog'):
-            from .native_update import promote_ticket_tree
+            from .native_update_promotion import promote_ticket_tree
             return promote_ticket_tree(selection, draft, destination, status, current_rows, capture, lambda: None)
         plans = _plan_replacements(selection, draft, current_rows, None, capture)
         if path.with_suffix('').exists() or path.with_suffix('').is_symlink():
@@ -233,14 +233,17 @@ def _preflight_cleanup(selection, target, status, draft, current, current_rows,
                     'header_json', '_content_bytes', '_source_sha256')):
                 raise common.SourceChanged('Draft or published carrier changed after selection.')
         reader = ReadContext(roots=[str(selection.control_root)], limits=dict(CEILINGS))
-        for row, path in zip((draft, current), paths):
+        for row, path in zip((draft, current), paths, strict=False):
             raw = reader.read(path)
             bounds = frontmatter_bounds(raw)
             if (bounds is None or sha256(raw).hexdigest() != row['_source_sha256']
                     or raw[bounds[2]:] != row.get('_content_bytes')
                     or parse_carrier(raw, path).metadata != row.get('header_json')):
                 raise common.SourceChanged('Draft or published carrier changed after selection.')
-        if reader.currentness()['state'] != 'unchanged': raise common.SourceChanged('Draft or published carrier changed after selection.')
+        if reader.currentness()['state'] != 'unchanged':
+            raise common.SourceChanged(
+                'Draft or published carrier changed after selection.'
+            )
         draft_header, current_header = draft['header_json'], current['header_json']
         if '-T-' in atom_id:
             owner = _check_owner(selection, native_header_view(current_header)['context'].get('container'), current_rows, capture)

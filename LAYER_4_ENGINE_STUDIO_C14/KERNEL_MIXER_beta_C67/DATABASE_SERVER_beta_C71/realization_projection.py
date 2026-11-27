@@ -110,13 +110,13 @@ def _validate_units(graph, nodes):
 
 
 def _validate_findings(graph, nodes):
-    for source, path, line, column, written, status, reason in graph['code_access_findings']:
+    for source, path, line, column, _written, status, _reason in graph['code_access_findings']:
         node = nodes.get(source)
         if (node is None or node[1] != 'module' or source != 'module:' + path or node[3] != path
                 or (line is not None and line < 1) or (column is not None and column < 0)
                 or status not in ('denied', 'uncertain', 'declared_bypass', 'undeclared_bypass')):
             raise ValueError('Invalid code access finding endpoint or value')
-    for path, line, column, rule, status, detail in graph['antipattern_findings']:
+    for path, line, column, rule, status, _detail in graph['antipattern_findings']:
         node = nodes.get('module:' + path)
         if (node is None or node[1] != 'module' or node[3] != path or line < 1 or column < 0
                 or rule not in ('python_import_order', 'python_context_restoration', 'web_module_evaluation',
@@ -134,32 +134,18 @@ def _validate_findings(graph, nodes):
         _state_json(inputs, events, violations, status, nodes)
 
 
-def validate(graph, components):
-    if graph is None:
-        return None
-    required = set(_TABLES) - {"state_effect_findings", "code_access_findings", "code_units", "code_unit_calls", "antipattern_findings"}
-    if (not isinstance(graph, dict) or not required <= set(graph)
-            or set(graph) - set(_TABLES) - _ANALYSIS
-            or (set(graph) & _ANALYSIS and not _ANALYSIS <= set(graph))
-            or (("code_units" in graph) != ("code_unit_calls" in graph))):
-        raise ValueError("Invalid graph fields")
-    graph = {key: graph.get(key, []) for key in _TABLES} | {
-        key: graph[key] for key in _ANALYSIS & graph.keys()
-    }
+def _validate_rows(graph):
     for key, (_, types) in _TABLES.items():
         if not isinstance(graph[key], list):
             raise ValueError("Invalid graph rows")
         for row in graph[key]:
             if (not isinstance(row, list) or len(row) != len(types)
                     or any(type(value) not in (allowed if isinstance(allowed, tuple) else (allowed,))
-                           for value, allowed in zip(row, types))):
+                           for value, allowed in zip(row, types, strict=False))):
                 raise ValueError("Invalid graph row type")
-    if len({row[0] for row in graph["read_issues"]}) != len(graph["read_issues"]):
-        raise ValueError("Duplicate graph read issue path")
-    nodes = {row[0]: row for row in graph['nodes']}
-    occurrences = {row[0]: row for row in graph['occurrences']}
-    if len(nodes) != len(graph['nodes']) or len(occurrences) != len(graph['occurrences']):
-        raise ValueError("Duplicate graph identity")
+
+
+def _validate_endpoints(graph, nodes, occurrences, components):
     for node in nodes.values():
         if not node[0] or node[6] not in (None, 'Test Package') or (node[6] and node[1] != 'package'):
             raise ValueError("Invalid graph node")
@@ -175,6 +161,28 @@ def validate(graph, components):
         if (source not in nodes or nodes[source][1] != "package"
                 or (target not in components and (target not in nodes or nodes[target][1] != "package"))):
             raise ValueError("Missing test edge endpoint")
+
+
+def validate(graph, components):
+    if graph is None:
+        return None
+    required = set(_TABLES) - {"state_effect_findings", "code_access_findings", "code_units", "code_unit_calls", "antipattern_findings"}
+    if (not isinstance(graph, dict) or not required <= set(graph)
+            or set(graph) - set(_TABLES) - _ANALYSIS
+            or (set(graph) & _ANALYSIS and not _ANALYSIS <= set(graph))
+            or (("code_units" in graph) != ("code_unit_calls" in graph))):
+        raise ValueError("Invalid graph fields")
+    graph = {key: graph.get(key, []) for key in _TABLES} | {
+        key: graph[key] for key in _ANALYSIS & graph.keys()
+    }
+    _validate_rows(graph)
+    if len({row[0] for row in graph["read_issues"]}) != len(graph["read_issues"]):
+        raise ValueError("Duplicate graph read issue path")
+    nodes = {row[0]: row for row in graph['nodes']}
+    occurrences = {row[0]: row for row in graph['occurrences']}
+    if len(nodes) != len(graph['nodes']) or len(occurrences) != len(graph['occurrences']):
+        raise ValueError("Duplicate graph identity")
+    _validate_endpoints(graph, nodes, occurrences, components)
     _validate_units(graph, nodes)
     _validate_findings(graph, nodes)
     return graph
@@ -228,7 +236,7 @@ def replace(connection, graph, components):
         rows = graph[key]
         if rows:
             connection.execute(f"INSERT INTO {table} SELECT " + ", ".join("unnest(?)" for _ in types),
-                               [list(column) for column in zip(*rows)])
+                               [list(column) for column in zip(*rows, strict=False)])
     connection.execute("DELETE FROM mrt_real_graph_tested_by_edges")
     connection.execute("INSERT INTO mrt_real_graph_tested_by_edges SELECT target_key, source_key FROM mrt_real_graph_test_edges")
     _replace_test_projection(connection, components)

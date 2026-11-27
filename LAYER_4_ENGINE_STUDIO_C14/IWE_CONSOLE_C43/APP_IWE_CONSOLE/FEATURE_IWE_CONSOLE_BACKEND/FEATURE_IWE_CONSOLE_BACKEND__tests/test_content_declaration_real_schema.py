@@ -4,13 +4,6 @@ import json
 from pathlib import Path
 import unittest
 
-
-
-APP_ROOT = Path(__file__).resolve().parents[3]
-ASSETS = Path(__file__).resolve().parent / "assets" / "content_declaration_schema"
-SEALED_MODEL = APP_ROOT.parent / "FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FEATURE_TOOLS__tests/assets/lifecycle_schema_declarations/04_requirement"
-
-
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import content_columns  # noqa: E402
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (  # noqa: E402
     compile_content_schema,
@@ -18,10 +11,14 @@ from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (  # noqa: E402
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_content  # noqa: E402
 from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.FEATURE_IWE_CONSOLE_BACKEND__tests._source_reader_fixture import SourceReaderFixture  # noqa: E402
 
-
 from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.FEATURE_IWE_CONSOLE_BACKEND__tests.content_schema_fixture import (
     ContentSchemaFixture, RMED_CLAIM, SUMMARY_CLAIM, python_claim_body,
 )
+
+
+APP_ROOT = Path(__file__).resolve().parents[3]
+ASSETS = Path(__file__).resolve().parent / "assets" / "content_declaration_schema"
+SEALED_MODEL = APP_ROOT.parent / "FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FEATURE_TOOLS__tests/assets/lifecycle_schema_declarations/04_requirement"
 
 
 class ContentDeclarationSchemaTests(ContentSchemaFixture, SourceReaderFixture):

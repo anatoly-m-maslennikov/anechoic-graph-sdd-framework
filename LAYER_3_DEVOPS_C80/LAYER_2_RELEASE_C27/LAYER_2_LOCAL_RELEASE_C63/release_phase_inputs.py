@@ -17,17 +17,24 @@ from .snapshot_inputs import _COMMIT, _git
 
 _ENGINE = Path("LAYER_4_ENGINE_STUDIO_C14")
 _PROJECT_TOOLS = _ENGINE / "FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS"
-_CANARY = frozenset({
-    _PROJECT_TOOLS / "_release_canary.py",
-    _PROJECT_TOOLS / "FEATURE_PROJECT_TOOLS__tests/test_release_canary.py",
-    _PROJECT_TOOLS / "FEATURE_PROJECT_TOOLS__tests/test_release_canary_retry.py",
-})
-_IMAGE_TESTS = _ENGINE / "MCP_PATCHBAY_C21/FEATURE_MCP/FEATURE_MCP__tests/image"
+_CANARY = frozenset(
+    {
+        _PROJECT_TOOLS / "_release_canary.py",
+        _PROJECT_TOOLS / "FEATURE_PROJECT_TOOLS__tests/test_release_canary.py",
+        _PROJECT_TOOLS
+        / "FEATURE_PROJECT_TOOLS__tests/test_release_canary_retry.py",
+    }
+)
+_IMAGE_TESTS = (
+    _ENGINE / "MCP_PATCHBAY_C21/FEATURE_MCP/FEATURE_MCP__tests/image"
+)
 _VERSION = Path("version.toml")
 _DOMAINS = ("runtime", "image", "canary", "environment")
 
 
-def phase_inputs(root, runner_root, *, revision=None, external=True, cache=None):
+def phase_inputs(
+    root, runner_root, *, revision=None, external=True, cache=None
+):
     """Fingerprint the phase inputs, with an optional cache for one direct release invocation."""
     digests = {domain: sha256() for domain in _DOMAINS}
     for domain, digest in digests.items():
@@ -38,7 +45,9 @@ def phase_inputs(root, runner_root, *, revision=None, external=True, cache=None)
         rows = _worktree_rows(root, cache, seen, skip_version=True)
         _add_tree(digests, root, "worktree", rows, local=True)
     else:
-        _add_tree(digests, root, "git-tree", _commit_rows(root, revision), local=True)
+        _add_tree(
+            digests, root, "git-tree", _commit_rows(root, revision), local=True
+        )
     if external and runner_root != root:
         rows = _worktree_rows(runner_root, cache, seen)
         _add_tree(digests, runner_root, "runner", rows, local=False)
@@ -72,7 +81,11 @@ def _domain(relative):
 
 def _worktree_rows(root, cache, seen, *, skip_version=False):
     root_layers = frozenset(name.casefold() for name in _LAYER_NAMES)
-    for path in _walk_regular_files(root, excluded_directories=_EXCLUDED, excluded_root_directories=root_layers):
+    for path in _walk_regular_files(
+        root,
+        excluded_directories=_EXCLUDED,
+        excluded_root_directories=root_layers,
+    ):
         relative = path.relative_to(root)
         if skip_version and relative == _VERSION:
             continue
@@ -84,7 +97,14 @@ def _worktree_rows(root, cache, seen, *, skip_version=False):
 
 
 def _witness(info):
-    return info.st_dev, info.st_ino, info.st_mode, info.st_size, info.st_mtime_ns, info.st_ctime_ns
+    return (
+        info.st_dev,
+        info.st_ino,
+        info.st_mode,
+        info.st_size,
+        info.st_mtime_ns,
+        info.st_ctime_ns,
+    )
 
 
 def _worktree_identity(path, cache):
@@ -109,7 +129,10 @@ def _hash_file(path, observed):
         if _witness(os.fstat(fd)) != observed:
             raise LocalReleaseError("local-release-source-changed")
         digest = file_digest(stream, "sha256").hexdigest()
-        if _witness(os.fstat(fd)) != observed or _witness(path.lstat()) != observed:
+        if (
+            _witness(os.fstat(fd)) != observed
+            or _witness(path.lstat()) != observed
+        ):
             raise LocalReleaseError("local-release-source-changed")
     return digest
 

@@ -1,9 +1,12 @@
 """Decode content-record paths and source spans."""
+
 from collections.abc import Mapping
 from typing import Any
 
 
-def records_by_path(records: object) -> dict[tuple[str, ...], list[Mapping[str, Any]]]:
+def records_by_path(
+    records: object,
+) -> dict[tuple[str, ...], list[Mapping[str, Any]]]:
     result: dict[tuple[str, ...], list[Mapping[str, Any]]] = {}
     if not isinstance(records, list):
         return result
@@ -11,15 +14,19 @@ def records_by_path(records: object) -> dict[tuple[str, ...], list[Mapping[str, 
         if not isinstance(record, Mapping):
             continue
         raw_path = record.get("property_path")
-        if not isinstance(raw_path, list) or not all(isinstance(part, str) for part in raw_path):
+        if not isinstance(raw_path, list) or not all(
+            isinstance(part, str) for part in raw_path
+        ):
             continue
         result.setdefault(tuple(raw_path), []).append(record)
     return result
 
 
 def value_excluding_declared_children(
-    record: Mapping[str, Any], records: Mapping[tuple[str, ...], list[Mapping[str, Any]]],
-    declared_children: frozenset[tuple[str, ...]], lines: list[str] | None,
+    record: Mapping[str, Any],
+    records: Mapping[tuple[str, ...], list[Mapping[str, Any]]],
+    declared_children: frozenset[tuple[str, ...]],
+    lines: list[str] | None,
 ) -> tuple[bool, str | None]:
     """Keep presentation headings, subtracting only declared child spans."""
     span = content_record_span(record)
@@ -46,7 +53,9 @@ def value_excluding_declared_children(
     return True, value.strip() or None
 
 
-def content_record_span(record: Mapping[str, Any]) -> tuple[int, int, int] | None:
+def content_record_span(
+    record: Mapping[str, Any],
+) -> tuple[int, int, int] | None:
     start = record.get("_start_line")
     body_start = record.get("_body_start_line")
     end = record.get("_end_line")

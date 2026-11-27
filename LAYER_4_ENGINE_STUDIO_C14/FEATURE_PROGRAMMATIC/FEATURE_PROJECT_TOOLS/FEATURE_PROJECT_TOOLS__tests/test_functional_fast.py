@@ -11,7 +11,7 @@ from unittest.mock import patch
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.functional_history import select_fast
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.suite_cli import run_phase
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.suite_report import suite_report
-from types import SimpleNamespace
+from unittest.mock import NonCallableMock
 
 
 class FastSelectionTests(unittest.TestCase):
@@ -26,7 +26,9 @@ class FastSelectionTests(unittest.TestCase):
                 record = {"started_at": (now - timedelta(days=age)).isoformat(),
                           "phase": "functional", "modules": entries, **extra}
                 (reports / name).write_text(json.dumps(record))
-            failed = lambda i: [{"path": modules[i * 2].relative_to(root).as_posix(), "status": "failed"}]
+            def failed(i):
+                return [{"path": modules[i * 2].relative_to(root).as_posix(),
+                         "status": "failed"}]
             write("recent.json", 6, failed(0))
             write("stale.json", 8, failed(1))
             with patch.dict(os.environ, {"ANECHOIC_FUNCTIONAL_SAMPLE_SEED": "run-a"}, clear=True):
@@ -35,7 +37,13 @@ class FastSelectionTests(unittest.TestCase):
                 choice = report["functional_selection"]
                 self.assertEqual(["C0/C0__tests"], choice["hot_packages"])
                 self.assertEqual(2, len(choice["sample_packages"]))
-                self.assertEqual(6, len(selected))
+                packages = set(choice["hot_packages"] + choice["sample_packages"])
+                self.assertEqual(3, len(packages))
+                expected = [module for module in modules
+                            if module.parent.parent.relative_to(root).as_posix() in packages]
+                self.assertCountEqual(expected, selected)
+                self.assertCountEqual([path.relative_to(root).as_posix() for path in expected],
+                                      choice["selected_paths"])
                 sample_index = int(choice["sample_packages"][0].split('/')[0][1:])
                 write("replay.json", 0, [], functional_selection=choice)
                 write("failure.json", 0, failed(sample_index))
@@ -50,8 +58,19 @@ class FastSelectionTests(unittest.TestCase):
 
     def test_target_report_is_reused_as_history(self):
         with TemporaryDirectory() as source, TemporaryDirectory() as target:
-            args = SimpleNamespace(phase="functional", test_modules=None, required=False,
-                                   candidate_image=None, run_id=None)
+            args = NonCallableMock(
+                spec_set=[
+                    'phase',
+                    'test_modules',
+                    'required',
+                    'candidate_image',
+                    'run_id',
+                ],
+                phase="functional",
+                test_modules=None,
+                required=False,
+                candidate_image=None,
+                run_id=None)
             module = Path(source) / "C/C__tests/test_failure.py"
             with patch.dict(os.environ, {"ANECHOIC_FUNCTIONAL_HISTORY_ROOT": target}, clear=True):
                 with suite_report(Path(source), args) as report:
@@ -63,7 +82,10 @@ class FastSelectionTests(unittest.TestCase):
                 self.assertEqual(1, len(list((Path(target) / ".anechoic_tmp/test_reports").glob("*.json"))))
 
     def test_fast_rejected_for_nonfunctional_phase(self):
-        args = SimpleNamespace(phase="unit", functional_suite="fast")
+        args = NonCallableMock(
+            spec_set=['phase', 'functional_suite'],
+            phase="unit",
+            functional_suite="fast")
         self.assertEqual(1, run_phase(Path.cwd(), args, {}, lambda *args, **kwargs: 0))
 
 

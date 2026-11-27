@@ -1,11 +1,22 @@
 """Pure, best-effort carrier placement expectations from cached source rows."""
+
 from pathlib import Path, PurePosixPath
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import content_lines, direct_markdown, source_markdown
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
+    import (
+        content_lines,
+        direct_markdown,
+        source_markdown,
+    )  # fmt: skip
 
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import carrier_read_view  # noqa: E402
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import admitted_parent, derive_filename  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    carrier_read_view,
+)  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    admitted_parent,
+    derive_filename,
+)  # noqa: E402
 
 
 def expected_carrier(row, scopes, get_current, placement):
@@ -20,13 +31,13 @@ def expected_carrier(row, scopes, get_current, placement):
 
 def _scope_of(row, scopes, parents, seen):
     while True:
-        container = carrier_read_view(row['header_json']).get('container')
+        container = carrier_read_view(row["header_json"]).get("container")
         if not isinstance(container, dict):
             return None
-        scope = scopes.get(container.get('scope_unit'))
+        scope = scopes.get(container.get("scope_unit"))
         if scope is not None:
             return scope
-        ref = container.get('atom')
+        ref = container.get("atom")
         if not isinstance(ref, str) or ref in seen:
             return None
         row = parents(ref)
@@ -36,47 +47,64 @@ def _scope_of(row, scopes, parents, seen):
 
 
 def _parent_context(container, role, form, scopes, parents, placement, seen):
-    scope = scopes.get(container.get('scope_unit'))
+    scope = scopes.get(container.get("scope_unit"))
     if scope is not None:
         return scope, None, None
-    ref = container.get('atom')
+    ref = container.get("atom")
     if not isinstance(ref, str) or ref in seen:
         return None, None, None
     parent = parents(ref)
     if parent is None:
         return None, None, None
-    view = carrier_read_view(parent['header_json'])
-    view['role'] = parent.get('role') or view.get('role')
-    view['form'] = parent.get('form') or view.get('form')
-    if not admitted_parent(role, form, view, parent.get('status', '')):
+    view = carrier_read_view(parent["header_json"])
+    view["role"] = parent.get("role") or view.get("role")
+    view["form"] = parent.get("form") or view.get("form")
+    if not admitted_parent(role, form, view, parent.get("status", "")):
         return None, None, None
     name, path = _expected(parent, scopes, parents, placement, seen | {ref})
     if name is None or path is None:
         return None, None, None
-    return _scope_of(parent, scopes, parents, seen | {ref}), PurePosixPath(path) / Path(name).stem, parent
+    return (
+        _scope_of(parent, scopes, parents, seen | {ref}),
+        PurePosixPath(path) / Path(name).stem,
+        parent,
+    )
 
 
 def _expected_name(row, view, scope, status, role, form):
-    special = str(form).casefold().replace('_', ' ') in {'scope unit declaration', 'scope delegation'}
-    if str(status).casefold() == 'archived' or special:
+    special = str(form).casefold().replace("_", " ") in {
+        "scope unit declaration",
+        "scope delegation",
+    }
+    if str(status).casefold() == "archived" or special:
         return None
-    records = row.get('content_properties_json') or []
-    summary = next((r for r in records if r.get('property_path') == ['summary']), None)
+    records = row.get("content_properties_json") or []
+    summary = next(
+        (r for r in records if r.get("property_path") == ["summary"]), None
+    )
     if summary is None:
         return None
     body = source_markdown(row)
-    text = direct_markdown(summary, records, content_lines(body) if body is not None else None)
+    text = direct_markdown(
+        summary, records, content_lines(body) if body is not None else None
+    )
     if not isinstance(text, str):
         return None
     try:
         return derive_filename(
-            atom_id=row.get('id') or view.get('atom_id'),
-            version=row.get('version') or view.get('version'), status=status, role=role,
-            summary=text.strip(), row=scope, form=form, label=view.get('label'),
-            tier=row.get('tier'), target_scope=row.get('claim_target_scope_unit'),
-            work_sequence=view.get('work_sequence_number'),
+            atom_id=row.get("id") or view.get("atom_id"),
+            version=row.get("version") or view.get("version"),
+            status=status,
+            role=role,
+            summary=text.strip(),
+            row=scope,
+            form=form,
+            label=view.get("label"),
+            tier=row.get("tier"),
+            target_scope=row.get("claim_target_scope_unit"),
+            work_sequence=view.get("work_sequence_number"),
         )
-    except (KeyError, TypeError, ValueError):
+    except KeyError, TypeError, ValueError:
         return None
 
 
@@ -84,27 +112,42 @@ def _expected(row, scopes, parents, placement, seen):
     if "_project_root_header" in row:
         return None, PurePosixPath(row["source_path"]).parent.as_posix()
     try:
-        view = carrier_read_view(row['header_json'])
-        role = row.get('role') or view.get('role')
-        role = {'plan': 'Plan', 'operations': 'Operations'}.get(str(role).casefold(), role)
-        status = row.get('status') or view.get('status')
-        if row.get('status_group') in ('Draft', 'Archived'):
-            status = row['status_group']
-        form = row.get('form') or view.get('form')
-        container = view.get('container')
+        view = carrier_read_view(row["header_json"])
+        role = row.get("role") or view.get("role")
+        role = {"plan": "Plan", "operations": "Operations"}.get(
+            str(role).casefold(), role
+        )
+        status = row.get("status") or view.get("status")
+        if row.get("status_group") in ("Draft", "Archived"):
+            status = row["status_group"]
+        form = row.get("form") or view.get("form")
+        container = view.get("container")
         if not isinstance(container, dict):
             return None, None
-        scope, parent_dir, parent = _parent_context(container, role, form, scopes, parents, placement, seen)
+        scope, parent_dir, parent = _parent_context(
+            container, role, form, scopes, parents, placement, seen
+        )
         if scope is None:
             return None, None
-        root = PurePosixPath(scope['authority_path']) / placement.role_folder(role)
+        root = PurePosixPath(scope["authority_path"]) / placement.role_folder(
+            role
+        )
         base, folder = placement.placement(role, status)
-        directory = (root if base == 'role' or parent_dir is None else parent_dir) / folder
-        if (role == 'Plan' and str(status).casefold() == 'backlog' and base == 'role'
-                and parent_dir is not None and str(parent.get('status', '')).casefold() == 'backlog'):
+        directory = (
+            root if base == "role" or parent_dir is None else parent_dir
+        ) / folder
+        if (
+            role == "Plan"
+            and str(status).casefold() == "backlog"
+            and base == "role"
+            and parent_dir is not None
+            and str(parent.get("status", "")).casefold() == "backlog"
+        ):
             directory = parent_dir
-        return _expected_name(row, view, scope, status, role, form), directory.as_posix()
-    except (KeyError, TypeError, ValueError):
+        return _expected_name(
+            row, view, scope, status, role, form
+        ), directory.as_posix()
+    except KeyError, TypeError, ValueError:
         return None, None
 
 
@@ -127,10 +170,13 @@ def _state_descendants(state, changed):
     pending = []
     for path in changed:
         row = state.raw_by_path.get(path)
-        if row and isinstance(ref := row.get('ref'), str):
-            pending.append(('Atom', ref))
-    pending.extend(('Scope Unit', name) for name, row in state.scope_rows.items()
-                   if row.get('declaration_source_path') in changed)
+        if row and isinstance(ref := row.get("ref"), str):
+            pending.append(("Atom", ref))
+    pending.extend(
+        ("Scope Unit", name)
+        for name, row in state.scope_rows.items()
+        if row.get("declaration_source_path") in changed
+    )
     result, visited = set(), set()
     while pending:
         endpoint = pending.pop()
@@ -138,11 +184,11 @@ def _state_descendants(state, changed):
             continue
         visited.add(endpoint)
         for edge in state.outgoing.get(endpoint, ()):
-            if edge[2] != 'CONTAINS':
+            if edge[2] != "CONTAINS":
                 continue
             child = (edge[3], edge[4])
             pending.append(child)
-            if child[0] == 'Atom':
+            if child[0] == "Atom":
                 path = state.refs.get(child[1])
                 if path is not None:
                     result.add(path)

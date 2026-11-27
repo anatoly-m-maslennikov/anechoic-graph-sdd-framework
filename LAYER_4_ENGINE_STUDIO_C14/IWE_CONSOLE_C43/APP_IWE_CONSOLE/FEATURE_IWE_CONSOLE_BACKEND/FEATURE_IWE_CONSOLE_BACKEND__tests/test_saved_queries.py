@@ -39,15 +39,21 @@ class SavedQueryTests(unittest.TestCase):
         historical = self.store.save_query("SELECT 'file'")
         native = {
             "saved_query_id": "01940000-0002-7000-8000-000000000003",
-            "kind": "worksheet", "sql": "SELECT 'disk'", "saved_at": "9999",
+            "kind": "worksheet",
+            "sql": "SELECT 'disk'",
+            "saved_at": "9999",
         }
         reader = Mock(return_value=[native, {"invalid": True}])
-        store = SavedQueryStore(self.root, journal_mode="duckdb", read_journal_events=reader)
+        store = SavedQueryStore(
+            self.root, journal_mode="duckdb", read_journal_events=reader
+        )
         with redirect_stderr(StringIO()) as errors:
             listed = store.list()["items"]
             loaded = store.load(native["saved_query_id"])
-        self.assertEqual([native["saved_query_id"], historical["saved_query_id"]],
-                         [item["saved_query_id"] for item in listed])
+        self.assertEqual(
+            [native["saved_query_id"], historical["saved_query_id"]],
+            [item["saved_query_id"] for item in listed],
+        )
         self.assertEqual("view", loaded["kind"])
         self.assertIn("saved query skipped", errors.getvalue())
         reader.assert_called_with("workbench-saved-items")
@@ -58,15 +64,23 @@ class SavedQueryTests(unittest.TestCase):
         reader.assert_called_once_with("workbench-saved-items")
 
     def test_storage_keyword_only_passed_for_disk(self):
-        with patch("KERNEL_MIXER_C59.saved_queries.append_sealed_events") as append:
+        with patch(
+            "KERNEL_MIXER_C59.saved_queries.append_sealed_events"
+        ) as append:
             self.store.save_query("SELECT 1")
             self.assertNotIn("storage", append.call_args.kwargs)
-            SavedQueryStore(self.root, journal_mode="duckdb").save_query("SELECT 2")
+            SavedQueryStore(self.root, journal_mode="duckdb").save_query(
+                "SELECT 2"
+            )
             self.assertEqual("duckdb", append.call_args.kwargs["storage"])
 
     def test_invalid_journal_row_does_not_hide_valid_saved_items(self):
         query = self.store.save_query("SELECT 1")
-        journal = next((self.control / "_journal").glob("workbench-saved-items-*-part-1.ndjson"))
+        journal = next(
+            (self.control / "_journal").glob(
+                "workbench-saved-items-*-part-1.ndjson"
+            )
+        )
         with journal.open("a", encoding="utf-8") as target:
             target.write(
                 '{"saved_query_id":"01940000-0002-7000-8000-000000000003",'
@@ -76,33 +90,47 @@ class SavedQueryTests(unittest.TestCase):
         with redirect_stderr(StringIO()) as errors:
             listed = self.store.list()
 
-        self.assertEqual([query["saved_query_id"]], [item["saved_query_id"] for item in listed["items"]])
+        self.assertEqual(
+            [query["saved_query_id"]],
+            [item["saved_query_id"] for item in listed["items"]],
+        )
         self.assertIn("saved query skipped", errors.getvalue())
         with self.assertRaisesRegex(ValueError, "name"):
             self.store.save_query("SELECT 1", 1)
         with self.assertRaisesRegex(ValueError, "limit"):
             self.store.list(0)
 
-    def test_views_write_new_kind_and_historical_worksheets_read_as_views(self):
+    def test_views_write_new_kind_and_historical_worksheets_read_as_views(
+        self,
+    ):
         created = self.store.save_view("SELECT 'new view'", "New view")
         self.assertEqual("view", created["kind"])
-        journal = next((self.control / "_journal").glob("workbench-saved-items-*-part-1.ndjson"))
+        journal = next(
+            (self.control / "_journal").glob(
+                "workbench-saved-items-*-part-1.ndjson"
+            )
+        )
         before = journal.read_bytes()
         historical_id = "01940000-0002-7000-8000-000000000003"
         with journal.open("a", encoding="utf-8") as target:
             target.write(
-                json.dumps({
-                    "saved_query_id": historical_id,
-                    "kind": "worksheet",
-                    "sql": "SELECT 'historical worksheet'",
-                    "saved_at": "2026-11-05T00:00:00+00:00",
-                    "name": "Historical worksheet",
-                }) + "\n"
+                json.dumps(
+                    {
+                        "saved_query_id": historical_id,
+                        "kind": "worksheet",
+                        "sql": "SELECT 'historical worksheet'",
+                        "saved_at": "2026-11-05T00:00:00+00:00",
+                        "name": "Historical worksheet",
+                    }
+                )
+                + "\n"
             )
         historical_bytes = journal.read_bytes()
 
         loaded = self.store.load(historical_id)
-        listed = {item["saved_query_id"]: item for item in self.store.list()["items"]}
+        listed = {
+            item["saved_query_id"]: item for item in self.store.list()["items"]
+        }
 
         self.assertEqual("view", loaded["kind"])
         self.assertEqual("SELECT 'historical worksheet'", loaded["sql"])
@@ -118,7 +146,16 @@ class SavedQueryTests(unittest.TestCase):
         path.write_text('{"sql":"SELECT \'legacy view\'"}', encoding="utf-8")
 
         loaded = self.store.load(legacy_id)
-        listed = {item["saved_query_id"]: item for item in self.store.list()["items"]}
+        listed = {
+            item["saved_query_id"]: item for item in self.store.list()["items"]
+        }
 
-        self.assertEqual({"saved_query_id": legacy_id, "kind": "view", "sql": "SELECT 'legacy view'"}, loaded)
+        self.assertEqual(
+            {
+                "saved_query_id": legacy_id,
+                "kind": "view",
+                "sql": "SELECT 'legacy view'",
+            },
+            loaded,
+        )
         self.assertEqual("view", listed[legacy_id]["kind"])

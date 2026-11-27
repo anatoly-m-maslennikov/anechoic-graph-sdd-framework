@@ -1,9 +1,9 @@
 """Cover import-table publication, graph edges, and transaction rollback."""
+from unittest.mock import NonCallableMock
 
 import os
 from pathlib import Path
 import unittest
-from types import SimpleNamespace
 
 from KERNEL_MIXER_C59.graph_store import build_graph  # noqa: E402
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import remove_imports, replace_imports  # noqa: E402
@@ -28,7 +28,11 @@ class ImportTableTests(unittest.TestCase):
                  (test, "package", "python", "pkg/pkg__tests", None, parent)]
         connection.execute("BEGIN")
         replace_imports(connection, graph, nodes, [], [], [(test, parent)],
-                        {"pkg/a.py": SimpleNamespace(status="read_error", error_message="denied")})
+                        {"pkg/a.py": NonCallableMock(
+                            spec_set=[
+                                'status', 'error_message'
+                            ],
+                            status="read_error", error_message="denied")})
         connection.execute("COMMIT")
         self.assertEqual([("pkg/a.py", "denied")],
                          connection.execute("SELECT * FROM import_read_issues").fetchall())

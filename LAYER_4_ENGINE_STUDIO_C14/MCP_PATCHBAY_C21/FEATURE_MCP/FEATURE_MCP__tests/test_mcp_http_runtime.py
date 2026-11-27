@@ -3,9 +3,10 @@ import os
 from pathlib import Path
 import re
 import tempfile
-from types import SimpleNamespace
 import unittest
-from unittest.mock import patch
+
+import httpx2
+from unittest.mock import Mock, patch
 
 APP = Path(__file__).resolve().parents[1]
 from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import Runtime  # noqa: E402
@@ -23,7 +24,7 @@ class BackendStartupBudgetTests(unittest.TestCase):
             with self.subTest(code=code):
                 failure = {"outcome": "failed", "diagnostics": [code]}
                 fault = {"error": {"code": code, "message": code, "tool_result": failure}}
-                response = SimpleNamespace(is_success=False, json=lambda: fault)
+                response = httpx2.Response(400, json=fault)
                 with self.assertRaises(ToolProtocolError) as caught:
                     client._tool_response(response)
                 self.assertEqual(code, caught.exception.code)
@@ -39,7 +40,7 @@ class BackendStartupBudgetTests(unittest.TestCase):
         )
         for profile, managed, elapsed, ready in cases:
             with self.subTest(profile=profile, managed=managed, elapsed=elapsed):
-                process = SimpleNamespace(pid=42, poll=lambda: None) if managed else None
+                process = Mock(spec_set=["pid", "poll"], pid=42, poll=lambda: None) if managed else None
                 client = BackendClient(None, process, None)
                 with (patch.dict(os.environ, {"ANECHOIC_RUNTIME_PROFILE": profile}, clear=True),
                       patch("MCP_PATCHBAY_C21.FEATURE_MCP.backend_client.monotonic",

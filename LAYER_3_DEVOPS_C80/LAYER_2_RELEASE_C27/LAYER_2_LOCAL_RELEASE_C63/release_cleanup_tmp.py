@@ -23,6 +23,19 @@ _KEEP = {
 }
 
 
+def _remove_empty(directory, name, info):
+    current = os.stat(name, dir_fd=directory, follow_symlinks=False)
+    if not os.path.samestat(info, current):
+        return 0
+    try:
+        os.rmdir(name, dir_fd=directory)
+    except OSError as error:
+        if error.errno != errno.ENOTEMPTY:
+            raise
+        return 0
+    return 1
+
+
 def _prune(directory: int, relative: Path, cutoff: int, device: int, blocked: list[str], keep) -> int:
     removed = 0
     for name in os.listdir(directory):
@@ -44,13 +57,8 @@ def _prune(directory: int, relative: Path, cutoff: int, device: int, blocked: li
                     removed += _prune(nested, child, cutoff, device, blocked, keep)
                 finally:
                     os.close(nested)
-                if old and os.path.samestat(info, os.stat(name, dir_fd=directory, follow_symlinks=False)):
-                    try:
-                        os.rmdir(name, dir_fd=directory)
-                        removed += 1
-                    except OSError as error:
-                        if error.errno != errno.ENOTEMPTY:
-                            raise
+                if old:
+                    removed += _remove_empty(directory, name, info)
             elif old and (stat.S_ISREG(info.st_mode) or stat.S_ISLNK(info.st_mode)):
                 os.unlink(name, dir_fd=directory)
                 removed += 1

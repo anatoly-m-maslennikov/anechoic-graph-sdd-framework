@@ -56,10 +56,18 @@ def _own_project(path, args, binding):
     Thread(target=_watch_parent, args=(stop,), daemon=True).start()
     try:
         with open_warm_worker(stop=stop.is_set) as worker:
-            with open_project_peers(path.parent, args.instance_id, binding, stop,
-                                    watch_code=args.watch_code, storage=args.workbench_storage,
-                                    journal_storage=args.journal_storage, journal_relative=args.journal_relative,
-                                    result_ttl_seconds=args.result_ttl_seconds, warm_worker=worker) as peers:
+            with open_project_peers(
+                path.parent,
+                args.instance_id,
+                binding,
+                stop,
+                watch_code=args.watch_code,
+                storage=args.workbench_storage,
+                journal_storage=args.journal_storage,
+                journal_relative=args.journal_relative,
+                result_ttl_seconds=args.result_ttl_seconds,
+                warm_worker=worker,
+            ) as peers:
                 if not stop.is_set():
                     _publish_ready(path.parent / "peers.ready", peers, stop)
     except RuntimeError:
@@ -69,20 +77,41 @@ def _own_project(path, args, binding):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    for name in ("socket", "instance-id", "project-root", "control-root", "manifest-path",
-                 "manifest-sha256", "project-prefix"):
+    for name in (
+        "socket",
+        "instance-id",
+        "project-root",
+        "control-root",
+        "manifest-path",
+        "manifest-sha256",
+        "project-prefix",
+    ):
         parser.add_argument("--" + name, required=True)
-    for name in ("host-root", "project-name", "workbench-public-url", "journal-relative"):
+    for name in (
+        "host-root",
+        "project-name",
+        "workbench-public-url",
+        "journal-relative",
+    ):
         parser.add_argument("--" + name)
     parser.add_argument("--blacklist", action="append", default=[])
     parser.add_argument("--watch-code", action="store_true")
-    parser.add_argument("--workbench-storage", choices=("disk", "memory"), default="disk")
-    parser.add_argument("--journal-storage", choices=("files", "duckdb"), default="files")
+    parser.add_argument(
+        "--workbench-storage", choices=("disk", "memory"), default="disk"
+    )
+    parser.add_argument(
+        "--journal-storage", choices=("files", "duckdb"), default="files"
+    )
     parser.add_argument("--result-ttl-seconds", type=int)
     args = _Options.model_validate(vars(parser.parse_args()))
     path = socket_path(args.socket)
-    binding = ProjectBinding(root=args.project_root, control_root=args.control_root, manifest_path=args.manifest_path,
-                             manifest_sha256=args.manifest_sha256, project_prefix=args.project_prefix)
+    binding = ProjectBinding(
+        root=args.project_root,
+        control_root=args.control_root,
+        manifest_path=args.manifest_path,
+        manifest_sha256=args.manifest_sha256,
+        project_prefix=args.project_prefix,
+    )
     os.umask(0o077)
     _own_project(path, args, binding)
 

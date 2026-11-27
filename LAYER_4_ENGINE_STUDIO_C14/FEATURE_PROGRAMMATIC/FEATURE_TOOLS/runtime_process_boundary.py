@@ -1,4 +1,3 @@
-
 """One thin failure boundary for directly executed Project Tools."""
 
 from __future__ import annotations
@@ -9,9 +8,16 @@ from pathlib import Path
 import sys
 from typing import Any
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.operation_error_boundary import FailureRecord, operation_error_boundary
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import bound_selection
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.runtime_failure_diagnostics import diagnostic_sequence, report_failure
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.operation_error_boundary import (
+    FailureRecord,
+    operation_error_boundary,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
+    import bound_selection  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.runtime_failure_diagnostics import (
+    diagnostic_sequence,
+    report_failure,
+)
 
 
 _COMPONENT = "TOOL_PROCESS"
@@ -25,15 +31,22 @@ def _explicit_cli_root() -> tuple[bool, Path | None]:
     index = 0
     while index < len(arguments):
         argument = arguments[index]
-        matched = next((flag for flag in _ROOT_FLAGS if argument == flag), None)
+        matched = next(
+            (flag for flag in _ROOT_FLAGS if argument == flag), None
+        )
         if matched is not None:
             seen = True
-            if index + 1 >= len(arguments) or arguments[index + 1].startswith("-"):
+            if index + 1 >= len(arguments) or arguments[index + 1].startswith(
+                "-"
+            ):
                 return True, None
             values.append(arguments[index + 1])
             index += 2
             continue
-        matched = next((flag for flag in _ROOT_FLAGS if argument.startswith(flag + "=")), None)
+        matched = next(
+            (flag for flag in _ROOT_FLAGS if argument.startswith(flag + "=")),
+            None,
+        )
         if matched is not None:
             seen = True
             value = argument[len(matched) + 1 :]
@@ -68,7 +81,9 @@ def _report(
     root: Path | None, error: Exception | FailureRecord, operation: str
 ) -> tuple[FailureRecord | None, str | None]:
     try:
-        return report_failure(root, error, component=_COMPONENT, operation=operation)
+        return report_failure(
+            root, error, component=_COMPONENT, operation=operation
+        )
     except FutureCancelledError:
         raise
     except Exception:
@@ -93,7 +108,9 @@ def _failure_text(failure: FailureRecord | None, secondary: str | None) -> str:
     return text
 
 
-def _handle_exception(root: Path | None, error: Exception, operation: str) -> int:
+def _handle_exception(
+    root: Path | None, error: Exception, operation: str
+) -> int:
     failure, secondary = _report(root, error, operation)
     _stderr(_failure_text(failure, secondary))
     return 2
@@ -126,7 +143,7 @@ def _nonzero_status(status: object) -> bool:
 def run_process(
     callback: Callable[[], object], *, operation: str, root: Path | None = None
 ) -> object:
-    """Run one direct entrypoint without changing its stdout or result contract."""
+    "Run one direct entrypoint without changing its stdout or result contract."
     diagnostic_root = _diagnostic_root(root)
     callback_failed = False
     sequence_before = diagnostic_sequence()
@@ -142,7 +159,10 @@ def run_process(
     except FutureCancelledError:
         raise
     except SystemExit as error:
-        if _nonzero_status(error.code) and diagnostic_sequence() == sequence_before:
+        if (
+            _nonzero_status(error.code)
+            and diagnostic_sequence() == sequence_before
+        ):
             _handle_exit(diagnostic_root, error.code, operation)
         raise
 
@@ -153,7 +173,9 @@ def run_process(
         and result != 0
         and diagnostic_sequence() == sequence_before
     ):
-        failure, secondary = _report(diagnostic_root, _synthetic_exit(result), operation)
+        failure, secondary = _report(
+            diagnostic_root, _synthetic_exit(result), operation
+        )
         if secondary is not None:
             _stderr("anechoic: technical diagnostics unavailable\n")
         elif failure is None:

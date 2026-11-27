@@ -75,7 +75,7 @@ class NativeDirectUpdateTests(NativeUpdateSupport, unittest.TestCase):
         destination = epic.parent / 'done' / epic.name
         self.assertTrue(destination.is_file())
         self.assertFalse(epic.exists())
-        for path, raw in zip((child, nested, draft), before):
+        for path, raw in zip((child, nested, draft), before, strict=False):
             self.assertEqual(raw, (destination.with_suffix('') / path.relative_to(epic.with_suffix(''))).read_bytes())
         self.assertFalse(epic.with_suffix('').exists())
 
@@ -165,8 +165,8 @@ class NativeDirectUpdateTests(NativeUpdateSupport, unittest.TestCase):
         child = self.write('001_TICKETS/TASKS/AN-T-2-EPIC--owner/done/AN-T-3-TASK--child.md', 'AN-T-3', {'atom': 'AN-T-2'})
         child.write_bytes(child.read_bytes().replace(b'context:\n', b'context:\n  template: task\n').replace(b'status: active', b'status: done'))
         rows = capture_native(self.selection).atoms
-        def capture_then_change(selection):
-            captured = capture_native(selection)
+        def capture_then_change(selection, *, domains=None):
+            captured = capture_native(selection, domains=domains)
             child.write_bytes(child.read_bytes() + b'concurrent change')
             return captured
         with patch('FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.native_update.capture_native', side_effect=capture_then_change):

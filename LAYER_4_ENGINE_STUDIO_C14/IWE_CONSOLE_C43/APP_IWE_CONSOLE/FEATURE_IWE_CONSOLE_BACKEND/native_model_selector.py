@@ -33,8 +33,34 @@ def _workbench_types():
     return compile_content_schema, HeaderColumn, HeaderSchema, QueryStore
 
 
-def select_claims(component: Path) -> list[list[str]]:
+def _claim_subject(header, body):
     from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.markdown_content__pub import parse_content
+
+    context = header.get("context", {})
+    lens, template = context.get("lens"), context.get("template")
+    scopes = [
+        section["direct_markdown"] for section in
+        parse_content(body, tolerate_duplicate_siblings=True)
+        if section["property_path"] == ["claim_scope"]
+    ]
+    subject = next((scope for scope in scopes if isinstance(scope, str)
+                    and "MODEL//ANECHOIC" in scope), None)
+    if lens == "DOM/CONT" and template in {
+        "manifest_node", "manifest_property", "manifest_relation",
+    }:
+        concern = header.get("concern")
+        if (isinstance(concern, dict)
+                and set(concern) == {"subject", "path", "relation"}
+                and all(isinstance(value, str) and value.strip()
+                        for value in concern.values())):
+            return "Continuant Concern"
+        return None
+    if template == "manifest_property" and lens in {"SPEC", "DES"}:
+        return subject or "typed Property"
+    return subject if lens == "SPEC" else None
+
+
+def select_claims(component: Path) -> list[list[str]]:
     from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.source_row__pub import atom
     from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_carrier_header__pub import native_header_view
     from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_read__pub import parse_carrier
@@ -53,23 +79,11 @@ def select_claims(component: Path) -> list[list[str]]:
         context, state = header.get("context", {}), header.get("state", {})
         if context.get("container") != {"component": "C9"}:
             continue
-        scopes = [section["direct_markdown"] for section in
-                  parse_content(carrier.body, tolerate_duplicate_siblings=True)
-                  if section["property_path"] == ["claim_scope"]]
-        subject = next((scope for scope in scopes if isinstance(scope, str)
-                        and "MODEL//ANECHOIC" in scope), None)
-        lens, template = context.get("lens"), context.get("template")
-        if lens == "DOM/CONT" and template in {"manifest_node", "manifest_property", "manifest_relation"}:
-            subject = None
-            concern = header.get("concern")
-            if (isinstance(concern, dict) and set(concern) == {"subject", "path", "relation"}
-                    and all(isinstance(value, str) and value.strip() for value in concern.values())):
-                subject = "Continuant Concern"
-        elif template == "manifest_property" and lens in {"SPEC", "DES"}:
-            subject = subject or "typed Property"
-        elif lens != "SPEC":
-            subject = None
-        metadata = {"lens": lens, "status": state.get("status"), "subject": subject}
+        metadata = {
+            "lens": context.get("lens"),
+            "status": state.get("status"),
+            "subject": _claim_subject(header, carrier.body),
+        }
         row = atom(path, component, metadata, {"atom_id": path.name, "version": 1}, b"", "Current")
         rows.append(row)
         hashes[path.name] = sha256(raw).hexdigest()
@@ -94,7 +108,7 @@ def select_claims(component: Path) -> list[list[str]]:
 
 
 def _beta_selected(rows, hashes):
-    from KERNEL_MIXER_beta_C67.DATABASE_SERVER_beta_C71.query_engine import connect
+    from KERNEL_MIXER_beta_C67.DATABASE_SERVER_beta_C71.DATABASE_SERVER_beta_C71__shared import connect
 
     connection = connect(":memory:")
     try:

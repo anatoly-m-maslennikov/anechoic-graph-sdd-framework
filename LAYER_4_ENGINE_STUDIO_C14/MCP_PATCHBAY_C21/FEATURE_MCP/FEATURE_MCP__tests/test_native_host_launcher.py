@@ -9,13 +9,13 @@ from unittest.mock import patch
 
 import yaml
 
-MCP = Path(__file__).resolve().parents[1]
-PROGRAMMATIC = MCP.parents[1] / "FEATURE_PROGRAMMATIC"
-
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import ProjectAdmissionError, select_runtime_project
 from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import Launcher, ProjectMcpBackend
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import native_arguments
 from .launcher_startup_test_support import Backend, healthy_row
+MCP = Path(__file__).resolve().parents[1]
+PROGRAMMATIC = MCP.parents[1] / "FEATURE_PROGRAMMATIC"
+
 
 
 class NativeHostLauncherTests(unittest.TestCase):

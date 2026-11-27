@@ -187,7 +187,8 @@ class SpecTraceTests(unittest.TestCase):
         store = SpecTraceStore(conn, tmp_path)
         store.initialize()
         store.refresh()
-        rel = lambda p: p.relative_to(tmp_path).as_posix()
+        def rel(p):
+            return p.relative_to(tmp_path).as_posix()
         assert conn.execute('SELECT atom_id, version FROM implementation_rmedo ORDER BY atom_id').fetchall() == [
             ('AN-S-123', 4), ('AN-S-8', 3), ('AN-S-9', 2)]
         assert conn.execute('SELECT path FROM implementation_objects WHERE path = ?', [rel(excluded)]).fetchall() == []

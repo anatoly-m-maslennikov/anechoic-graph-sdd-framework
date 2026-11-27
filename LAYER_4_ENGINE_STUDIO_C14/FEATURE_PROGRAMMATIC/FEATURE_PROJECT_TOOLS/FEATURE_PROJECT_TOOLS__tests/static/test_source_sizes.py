@@ -20,28 +20,43 @@ ROOT = Path(__file__).resolve().parents[5]
 
 
 class SourceSizeTests(unittest.TestCase):
-    @patch("FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.static_checks._python_quality", return_value=())
-    def test_static_phase_applies_only_the_configured_size_limits(self, _quality):
+    @patch("FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.static_checks._run", return_value=0)
+    def test_static_phase_checks_programmatic_and_honors_optional_scope(self, _run):
         with TemporaryDirectory() as directory:
             root = Path(directory).resolve()
             subprocess.run(("git", "init", "--quiet", str(root)), check=True)
-            for folder in ("LAYER_4_ENGINE_STUDIO_C14", "LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27", "LAYER_5_USER_SETUP_C65"):
+            studio = "LAYER_4_ENGINE_STUDIO_C14"
+            release = "LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27"
+            setup = "LAYER_5_USER_SETUP_C65"
+            for folder in (studio, release, setup):
                 (root / folder).mkdir(parents=True, exist_ok=True)
-            engine_config = root / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/pyproject.toml"
-            engine_config.parent.mkdir(parents=True)
-            engine_config.write_text("[tool.ruff]\n")
-            path = root / "LAYER_5_USER_SETUP_C65/example__shared.py"
-            path.write_text("def run():\n" + "    pass\n" * 45 + "value = 1\n" * 255)
-            config = engine_config
-            config.write_text("[tool.anechoic.test_suite]\nenforce_source_size = false\n")
+            test_dir = root / studio / "FEATURE_PROGRAMMATIC/example/example__tests"
+            test_dir.mkdir(parents=True)
+            programmatic = test_dir / "test_example.py"
+            other = root / setup / "example__shared.py"
+            oversized = "def run():\n" + "    pass\n" * 45 + "value = 1\n" * 255
+            programmatic.write_text(oversized)
+            other.write_text(oversized)
+            config = root / "pyproject.toml"
+            for setting in ("", "[tool.anechoic.test_suite]\nenforce_source_size = false\n"):
+                with self.subTest(setting=setting):
+                    if setting:
+                        config.write_text(setting)
+                    errors = StringIO()
+                    with redirect_stderr(errors):
+                        self.assertEqual(run_full_suite(root, phase="static"), 1)
+                    self.assertIn("test_example.py: module has 301 lines", errors.getvalue())
+                    self.assertIn("test_example.py:1: run has 46 lines", errors.getvalue())
+                    self.assertNotIn("example__shared.py:", errors.getvalue())
+            programmatic.write_text("value = 1\n")
             self.assertEqual(run_full_suite(root, phase="static"), 0)
             config.write_text("[tool.anechoic.test_suite]\nenforce_source_size = true\n")
             errors = StringIO()
             with redirect_stderr(errors):
                 self.assertEqual(run_full_suite(root, phase="static"), 1)
-            self.assertIn("module has 301 lines (maximum 300)", errors.getvalue())
-            self.assertIn("run has 46 lines (maximum 45)", errors.getvalue())
-            path.write_text(f"value = {'x' * 100!r}\n")
+            self.assertIn("example__shared.py: module has 301 lines", errors.getvalue())
+            self.assertIn("example__shared.py:1: run has 46 lines", errors.getvalue())
+            other.write_text("value = 1\n")
             self.assertEqual(run_full_suite(root, phase="static"), 0)
 
     def test_module_ignores_blank_lines(self):
@@ -93,11 +108,20 @@ class SourceSizeTests(unittest.TestCase):
     def test_javascript_and_typescript_function_limit(self):
         arrow = "const run = () => {\n" + "  void 0;\n\n  \n" * 43 + "};"
         longer = arrow.replace("};", "  void 0;\n};")
+        component = (
+            '<script lang="ts" module>\n' + arrow + '\n</script>\n'
+            '<script lang="ts">\n' + longer.replace('run', 'slow') + '\n</script>'
+        )
         files = [
             {"path": "exact.ts", "source": arrow},
             {"path": "over.js", "source": longer},
+            {"path": "Both.svelte", "source": component},
         ]
-        exact, over = web_functions(ROOT, files)
+        exact, over, blocks = web_functions(ROOT, files)
+        self.assertCountEqual([("run", 45), ("slow", 46)], [
+            (name, size) for _, name, size in blocks
+        ])
+        self.assertEqual([[1, "run", 45]], exact)
         self.assertEqual([], check_functions("exact.ts", exact))
         self.assertEqual(
             ["over.js:1: run has 46 lines (maximum 45)"],

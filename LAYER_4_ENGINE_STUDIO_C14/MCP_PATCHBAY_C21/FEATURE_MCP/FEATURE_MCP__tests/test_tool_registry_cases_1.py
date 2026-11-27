@@ -14,13 +14,13 @@ from mcp.client._memory import InMemoryTransport
 from mcp.client.session import ClientSession
 
 
+from .tool_registry_test_support import ToolRegistryFixture, _provider_source, _mixed_descriptor_provider_source, _schema_provider_source, _native_gateway
 MCP = Path(__file__).resolve().parents[1]
 from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.generate_tool_registry import generate  # noqa: E402
 from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.tool_registry_assets import ToolRegistryAssetError  # noqa: E402
 
 
 
-from .tool_registry_test_support import ToolRegistryFixture, _provider_source, _mixed_descriptor_provider_source, _schema_provider_source, _native_gateway
 
 
 class ToolRegistryTests(ToolRegistryFixture, unittest.IsolatedAsyncioTestCase):

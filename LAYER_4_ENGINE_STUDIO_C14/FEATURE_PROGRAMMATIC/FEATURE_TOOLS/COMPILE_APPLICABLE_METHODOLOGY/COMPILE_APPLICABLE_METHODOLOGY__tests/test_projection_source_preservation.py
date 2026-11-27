@@ -7,8 +7,12 @@ from pathlib import Path
 from unittest import mock
 
 
-TOOL = Path(__file__).resolve().parents[1] / "compile_applicable_methodology.py"
-SPEC = importlib.util.spec_from_file_location("compile_applicable_methodology_projection", TOOL)
+TOOL = (
+    Path(__file__).resolve().parents[1] / "compile_applicable_methodology.py"
+)
+SPEC = importlib.util.spec_from_file_location(
+    "compile_applicable_methodology_projection", TOOL
+)
 assert SPEC and SPEC.loader
 compiler = importlib.util.module_from_spec(SPEC)
 sys.modules[SPEC.name] = compiler
@@ -44,35 +48,70 @@ class ProjectionSourcePreservationTest(unittest.TestCase):
             b"# Claim\n\n"
             b"Original body.\n"
         )
-        self.relative = "../../000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/04_requirement/CA-R-001.md"
+        self.relative = (
+            "../../000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/04_requirem"
+            "ent/CA-R-001.md"
+        )
 
-    def test_metadata_formatter_preserves_projection_bytes_exactly(self) -> None:
-        expected = compiler.projection_bytes(self.source, self.relative, self.candidate)
-        metadata = compiler.projection_metadata_bytes(self.relative, self.candidate)
+    def test_metadata_formatter_preserves_projection_bytes_exactly(
+        self,
+    ) -> None:
+        expected = compiler.projection_bytes(
+            self.source, self.relative, self.candidate
+        )
+        metadata = compiler.projection_metadata_bytes(
+            self.relative, self.candidate
+        )
 
-        self.assertEqual(self.source.replace(b"\n---\n", metadata + b"\n---\n", 1), expected)
-        compiler.validate_projection_source_preservation(self.source, expected, self.relative, self.candidate)
+        self.assertEqual(
+            self.source.replace(b"\n---\n", metadata + b"\n---\n", 1), expected
+        )
+        compiler.validate_projection_source_preservation(
+            self.source, expected, self.relative, self.candidate
+        )
 
-        with mock.patch.object(compiler, "projection_bytes", side_effect=AssertionError("renderer must not run")):
-            compiler.validate_projection_source_preservation(self.source, expected, self.relative, self.candidate)
+        with mock.patch.object(
+            compiler,
+            "projection_bytes",
+            side_effect=AssertionError("renderer must not run"),
+        ):
+            compiler.validate_projection_source_preservation(
+                self.source, expected, self.relative, self.candidate
+            )
 
     def test_rejects_any_metadata_or_source_byte_change(self) -> None:
-        projected = compiler.projection_bytes(self.source, self.relative, self.candidate)
-        changed_metadata = projected.replace(b"source_atom_revision: 2", b"source_atom_revision: 3")
+        projected = compiler.projection_bytes(
+            self.source, self.relative, self.candidate
+        )
+        changed_metadata = projected.replace(
+            b"source_atom_revision: 2", b"source_atom_revision: 3"
+        )
         changed_body = projected.replace(b"Original body.", b"Changed body.")
 
         for changed in (changed_metadata, changed_body):
             with self.assertRaises(compiler.CompileError) as raised:
-                compiler.validate_projection_source_preservation(self.source, changed, self.relative, self.candidate)
-            self.assertEqual("projection-source-preservation-invalid", raised.exception.code)
+                compiler.validate_projection_source_preservation(
+                    self.source, changed, self.relative, self.candidate
+                )
+            self.assertEqual(
+                "projection-source-preservation-invalid", raised.exception.code
+            )
 
-    def test_rejects_source_that_already_declares_projection_metadata(self) -> None:
-        source = self.source.replace(b"relations: {}\n", b"relations: {}\nprojection:\n")
+    def test_rejects_source_that_already_declares_projection_metadata(
+        self,
+    ) -> None:
+        source = self.source.replace(
+            b"relations: {}\n", b"relations: {}\nprojection:\n"
+        )
 
         with self.assertRaises(compiler.CompileError) as raised:
-            compiler.validate_projection_source_preservation(source, source, self.relative, self.candidate)
+            compiler.validate_projection_source_preservation(
+                source, source, self.relative, self.candidate
+            )
 
-        self.assertEqual("source-projection-metadata-present", raised.exception.code)
+        self.assertEqual(
+            "source-projection-metadata-present", raised.exception.code
+        )
 
 
 if __name__ == "__main__":

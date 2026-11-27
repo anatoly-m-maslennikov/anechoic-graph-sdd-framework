@@ -56,27 +56,7 @@ def _validate_dependencies(arguments, declaration, function, classes, functions,
         if (function != "declare_entity" or arguments.get("relation_name") != "IS_PROPERTY_OF"
                 or not isinstance(dependencies, (tuple, list)) or not dependencies):
             _fail(declaration, "population functional dependencies require a Property declaration")
-        seen = set()
-        for dependency in dependencies:
-            if (not isinstance(dependency, dict) or not {"keys", "dependents"} <= set(dependency)
-                    or set(dependency) - {"keys", "dependents", "status_groups"}):
-                _fail(declaration, "functional dependency requires keys and dependents")
-            if "status_groups" in dependency:
-                groups = dependency["status_groups"]
-                if (population != "Atom" or not isinstance(groups, (tuple, list)) or not groups
-                        or any(not isinstance(group, str) or group not in {"Current", "Backlog", "Archived", "Draft"} for group in groups)
-                        or len(groups) != len(set(groups))):
-                    _fail(declaration, "status_groups requires distinct admitted Atom Status Groups")
-            for part in (dependency["keys"], dependency["dependents"]):
-                if (not isinstance(part, (tuple, list)) or not part
-                        or any(not isinstance(path, str) or not re.fullmatch(r"[A-Za-z_][A-Za-z_0-9 -]*(?:\.[A-Za-z_][A-Za-z_0-9 -]*)*", path)
-                               or path != path.strip() or any(segment != segment.strip() for segment in path.split(".")) for path in part)
-                        or len(part) != len(set(part))):
-                    _fail(declaration, "functional dependency paths must be distinct nonempty relative Property paths")
-            signature = (tuple(dependency["keys"]), tuple(dependency["dependents"]), tuple(dependency.get("status_groups", ())))
-            if signature in seen:
-                _fail(declaration, "duplicate functional dependency")
-            seen.add(signature)
+        _validate_dependency_rules(dependencies, population, declaration)
 
 
 def _validate_ordered(arguments, declaration, function, classes, functions, imports, property_manifest):
@@ -88,6 +68,41 @@ def _validate_ordered(arguments, declaration, function, classes, functions, impo
         if ("recursive_dependent_property_name_format" in arguments
                 and "recursive_dependent_property_cardinality" not in arguments):
             _fail(declaration, "recursive dependent Property name format requires cardinality")
+    _validate_ordered_pairs(arguments, declaration, function)
+    if "ordered_dependent_property_roles" in arguments:
+        roles = arguments["ordered_dependent_property_roles"]
+        if ("ordered_dependent_property_pairs" not in arguments or not isinstance(roles, (tuple, list))
+                or not roles or any(not isinstance(role, str) or not role.strip() for role in roles)):
+            _fail(declaration, "ordered dependent Property roles require ordering pairs and nonempty Roles")
+
+
+
+
+def _validate_dependency_rules(dependencies, population, declaration):
+    seen = set()
+    for dependency in dependencies:
+        if (not isinstance(dependency, dict) or not {"keys", "dependents"} <= set(dependency)
+                or set(dependency) - {"keys", "dependents", "status_groups"}):
+            _fail(declaration, "functional dependency requires keys and dependents")
+        if "status_groups" in dependency:
+            groups = dependency["status_groups"]
+            if (population != "Atom" or not isinstance(groups, (tuple, list)) or not groups
+                    or any(not isinstance(group, str) or group not in {"Current", "Backlog", "Archived", "Draft"} for group in groups)
+                    or len(groups) != len(set(groups))):
+                _fail(declaration, "status_groups requires distinct admitted Atom Status Groups")
+        for part in (dependency["keys"], dependency["dependents"]):
+            if (not isinstance(part, (tuple, list)) or not part
+                    or any(not isinstance(path, str) or not re.fullmatch(r"[A-Za-z_][A-Za-z_0-9 -]*(?:\.[A-Za-z_][A-Za-z_0-9 -]*)*", path)
+                           or path != path.strip() or any(segment != segment.strip() for segment in path.split(".")) for path in part)
+                    or len(part) != len(set(part))):
+                _fail(declaration, "functional dependency paths must be distinct nonempty relative Property paths")
+        signature = (tuple(dependency["keys"]), tuple(dependency["dependents"]), tuple(dependency.get("status_groups", ())))
+        if signature in seen:
+            _fail(declaration, "duplicate functional dependency")
+        seen.add(signature)
+
+
+def _validate_ordered_pairs(arguments, declaration, function):
     if "ordered_dependent_property_pairs" in arguments:
         pairs = arguments["ordered_dependent_property_pairs"]
         names = arguments.get("allowed_dependent_property_names")
@@ -112,10 +127,3 @@ def _validate_ordered(arguments, declaration, function, classes, functions, impo
                     _fail(declaration, "ordered dependent Property pairs must be acyclic")
                 seen.add(current)
                 current = following[current]
-    if "ordered_dependent_property_roles" in arguments:
-        roles = arguments["ordered_dependent_property_roles"]
-        if ("ordered_dependent_property_pairs" not in arguments or not isinstance(roles, (tuple, list))
-                or not roles or any(not isinstance(role, str) or not role.strip() for role in roles)):
-            _fail(declaration, "ordered dependent Property roles require ordering pairs and nonempty Roles")
-
-

@@ -1,10 +1,10 @@
 """Test-only JSON-lines bridge to the production ASGI Tool callback."""
+from unittest.mock import NonCallableMock
 import asyncio
 import json
 import sys
 from contextlib import asynccontextmanager
 from pathlib import Path
-from types import SimpleNamespace
 from unittest.mock import patch
 
 import duckdb
@@ -54,7 +54,15 @@ async def pilot_app(state):
     async def call(name, arguments):
         return operations.call(name, arguments)
 
-    gateway = SimpleNamespace(selection=api._selection, workbench=SimpleNamespace(call=call))
+    gateway = NonCallableMock(
+        spec_set=[
+            'selection', 'workbench'
+        ],
+        selection=api._selection, workbench=NonCallableMock(
+        spec_set=[
+            'call'
+        ],
+        call=call))
     binding = ProviderBinding(factory=create_provider, root=Path("/test"), gateway=gateway)
     tool = RegisteredTool(binding=binding,
                           input_validator=Draft202012Validator(schema),
@@ -71,7 +79,11 @@ async def pilot_app(state):
 
 @asynccontextmanager
 async def provider_app(root, state):
-    selection = SimpleNamespace(
+    selection = NonCallableMock(
+        spec_set=[
+            'root', 'host_root', 'instance_id', 'parameters',
+            'control_relative'
+        ],
         root=root, host_root=None, instance_id="test", parameters={},
         control_relative=Path("_anechoic_test"),
     )

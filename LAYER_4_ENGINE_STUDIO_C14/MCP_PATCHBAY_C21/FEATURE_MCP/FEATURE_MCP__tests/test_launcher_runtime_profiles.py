@@ -9,7 +9,7 @@ import subprocess
 import sys
 from tempfile import TemporaryDirectory
 from threading import Event
-from types import SimpleNamespace
+from unittest.mock import NonCallableMock
 import unittest
 from unittest.mock import Mock, patch
 
@@ -36,7 +36,11 @@ class LauncherRuntimeProfileTests(unittest.TestCase):
         self.addCleanup(runtime_stack.cache_clear)
 
     def test_manifest_console_settings_take_precedence_and_legacy_falls_back(self):
-        selection = SimpleNamespace(
+        selection = NonCallableMock(
+            spec_set=['root', 'control_relative', 'instance_id', 'manifest_sha256',
+                'manifest_path', 'project_prefix', 'project_name', 'host_root',
+                'tool_blacklist', 'parameters'],
+
             root=self.root, control_relative=Path("_anechoic_anechoic"),
             instance_id="id", manifest_sha256="hash", manifest_path=self.manifest,
             project_prefix="AN", project_name="Anechoic", host_root=None,

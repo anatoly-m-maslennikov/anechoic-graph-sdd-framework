@@ -10,7 +10,7 @@ context:
 state:
   status: active
   version: 35
-  updated_at: '2026-11-27T01:04:20.461163+00:00'
+  updated_at: '2026-11-27T13:09:34.995824+00:00'
 ---
 ## Summary
 
@@ -36,7 +36,17 @@ ComponentManifest(
 ## Component Boundaries
 
 ```python
-{'code': {'imports': {'only': ['ADAPTERS_C30__shared.status_domains',
+{'code': {'imports': {'only': ['generation_batches._capture_archive',
+                               'managed_request._ArchiveCapture',
+                               'WORKERS_beta_C69__shared',
+                               'spec_staging._stage_spec_rows',
+                               'WORKERS_beta_C69__shared._compile_ingested',
+                               'manifest_build_CS4__shared._COMPILER_SOURCE_DIRECTORIES',
+                               'manifest_build_CS4__shared._REVIEWED_CLAIMS',
+                               'manifest_build_CS4__shared._compiler_sha256',
+                               'manifest_build_CS4__shared.compile_generation',
+                               'compile_project__pub',
+                               'ADAPTERS_C30__shared.status_domains',
                                'metrics__shared.code_rows',
                                'ADAPTERS_C30__shared.capture_carrier_delta',
                                'ADAPTERS_C30__shared.UnrepresentableCarrierDelta',
@@ -53,7 +63,12 @@ ComponentManifest(
                                'WORKERS_beta_C69__shared.python_context_restoration',
                                'WORKERS_beta_C69__shared.python_import_order',
                                'WORKERS_beta_C69__shared.python_code_units']},
-          'exports': {'WORKERS_beta_C69__shared.python_context_restoration': {'private': ['LAYER_4_ENGINE_STUDIO_C14/WORKERS_beta_C69/WORKERS_beta_C69__tests']},
+          'exports': {'generation_batches._capture_archive': {'private': ['LAYER_4_ENGINE_STUDIO_C14/WORKERS_beta_C69/WORKERS_beta_C69__tests']},
+                      'managed_request._ArchiveCapture': {'private': ['LAYER_4_ENGINE_STUDIO_C14/WORKERS_beta_C69/WORKERS_beta_C69__tests']},
+                      'WORKERS_beta_C69__shared': {'private': ['LAYER_4_ENGINE_STUDIO_C14/WORKERS_beta_C69/WORKERS_beta_C69__tests']},
+                      'spec_staging._stage_spec_rows': {'private': ['LAYER_4_ENGINE_STUDIO_C14/WORKERS_beta_C69/WORKERS_beta_C69__tests']},
+                      'WORKERS_beta_C69__shared._compile_ingested': {'private': ['LAYER_4_ENGINE_STUDIO_C14/WORKERS_beta_C69/WORKERS_beta_C69__tests']},
+                      'WORKERS_beta_C69__shared.python_context_restoration': {'private': ['LAYER_4_ENGINE_STUDIO_C14/WORKERS_beta_C69/WORKERS_beta_C69__tests']},
                       'WORKERS_beta_C69__shared.python_import_order': {'private': ['LAYER_4_ENGINE_STUDIO_C14/WORKERS_beta_C69/WORKERS_beta_C69__tests']},
                       'WORKERS_beta_C69__shared.python_code_units': {'private': ['LAYER_4_ENGINE_STUDIO_C14/WORKERS_beta_C69/WORKERS_beta_C69__tests',
                                                                                  'C74']}}},

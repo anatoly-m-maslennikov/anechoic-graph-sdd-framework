@@ -110,7 +110,7 @@ class WatcherTests(unittest.TestCase):
     def _assert_stage(self, jobs, kernel, previous, kind, generation, routes):
         latest_run = jobs.status()['latest'] or {}
         actual_routes = [(path, payload.get('base_generation'))
-                         for path, payload in zip(kernel.paths[previous:], kernel.payloads[previous:])]
+                         for path, payload in zip(kernel.paths[previous:], kernel.payloads[previous:], strict=False)]
         detail = f'latest={latest_run!r}, Kernel routes={kernel.paths!r}'
         expected_state = 'succeeded' if generation is not None else 'failed'
         self.assertEqual((expected_state, kind, generation),

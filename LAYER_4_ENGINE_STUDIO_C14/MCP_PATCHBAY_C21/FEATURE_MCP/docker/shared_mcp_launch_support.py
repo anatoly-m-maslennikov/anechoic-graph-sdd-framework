@@ -1,4 +1,4 @@
-"""Validation, preparation, and bounded readback for the shared MCP launcher."""
+"Validation, preparation, and bounded readback for the shared MCP launcher."
 
 from __future__ import annotations
 
@@ -28,7 +28,10 @@ class SharedLaunchError(ValueError):
 
 
 def _image(value):
-    if not isinstance(value, str) or re.fullmatch(r"sha256:[0-9a-f]{64}\Z", value) is None:
+    if (
+        not isinstance(value, str)
+        or re.fullmatch(r"sha256:[0-9a-f]{64}\Z", value) is None
+    ):
         raise SharedLaunchError("explicit_immutable_image_required")
     return value
 
@@ -42,7 +45,9 @@ def _path(value):
 
 def _environment(config, image):
     return {
-        **{name: os.environ[name] for name in DOCKER_ENV if name in os.environ},
+        **{
+            name: os.environ[name] for name in DOCKER_ENV if name in os.environ
+        },
         "ANECHOIC_IMAGE": image,
         "ANECHOIC_HOST_SETTINGS": str(config.source_path),
         "ANECHOIC_PROJECTS_ROOT": str(config.projects_root),
@@ -50,8 +55,12 @@ def _environment(config, image):
         "ANECHOIC_MAX_LOADED_PROJECTS": str(config.max_loaded_projects),
         "ANECHOIC_SHARED_RUNTIME_ID": config.shared_runtime_id,
         "ANECHOIC_LOG_LEVEL": config.log_level,
-        "ANECHOIC_WORKBENCH_STORAGE": os.environ.get("ANECHOIC_WORKBENCH_STORAGE", config.workbench_storage),
-        "ANECHOIC_JOURNAL_STORAGE": os.environ.get("ANECHOIC_JOURNAL_STORAGE", config.journal_storage),
+        "ANECHOIC_WORKBENCH_STORAGE": os.environ.get(
+            "ANECHOIC_WORKBENCH_STORAGE", config.workbench_storage
+        ),
+        "ANECHOIC_JOURNAL_STORAGE": os.environ.get(
+            "ANECHOIC_JOURNAL_STORAGE", config.journal_storage
+        ),
     }
 
 
@@ -71,7 +80,9 @@ def _prefix(compose, project):
     ]
 
 
-def prepare_config(settings_path=None, image=None, *, compose_file=None, timeout=420):
+def prepare_config(
+    settings_path=None, image=None, *, compose_file=None, timeout=420
+):
     try:
         config = load_host_runtime_settings(settings_path, base=ROOT)
     except (OSError, RuntimeError, ValueError, TypeError) as error:
@@ -92,7 +103,8 @@ def prepare_config(settings_path=None, image=None, *, compose_file=None, timeout
         "max_loaded_projects": config.max_loaded_projects,
         "shared_runtime_id": config.shared_runtime_id,
         "compose_file": str(compose),
-        "command": prefix + ["up", "-d", "--wait", "--wait-timeout", str(timeout), "shared-mcp"],
+        "command": prefix
+        + ["up", "-d", "--wait", "--wait-timeout", str(timeout), "shared-mcp"],
         "environment": environment,
         "compose_prefix": prefix,
         "config": config,
@@ -103,9 +115,15 @@ def _mounts_match(row, config):
     mounts = row.get("Mounts")
     if not isinstance(mounts, list):
         return False
-    volumes = [m for m in mounts if isinstance(m, Mapping) and m.get("Type") == "volume"
-               and m.get("Name") == "anechoic-framework-db"
-               and m.get("Destination") == "/var/lib/anechoic" and m.get("RW") is True]
+    volumes = [
+        m
+        for m in mounts
+        if isinstance(m, Mapping)
+        and m.get("Type") == "volume"
+        and m.get("Name") == "anechoic-framework-db"
+        and m.get("Destination") == "/var/lib/anechoic"
+        and m.get("RW") is True
+    ]
     if len(volumes) != 1 or len(mounts) != 3:
         return False
     binds = []
@@ -128,10 +146,20 @@ def _ports_match(row, port):
     network = row.get("NetworkSettings")
     ports = network.get("Ports") if isinstance(network, Mapping) else None
     rows = ports.get("8092/tcp") if isinstance(ports, Mapping) else None
-    if isinstance(rows, list) and len(rows) == 1 and isinstance(rows[0], Mapping):
-        return rows[0].get("HostIp") == "127.0.0.1" and rows[0].get("HostPort") == str(port)
+    if (
+        isinstance(rows, list)
+        and len(rows) == 1
+        and isinstance(rows[0], Mapping)
+    ):
+        return rows[0].get("HostIp") == "127.0.0.1" and rows[0].get(
+            "HostPort"
+        ) == str(port)
     publishers = row.get("Publishers")
-    if isinstance(publishers, list) and len(publishers) == 1 and isinstance(publishers[0], Mapping):
+    if (
+        isinstance(publishers, list)
+        and len(publishers) == 1
+        and isinstance(publishers[0], Mapping)
+    ):
         value = publishers[0]
         return (
             value.get("Protocol") == "tcp"
@@ -153,7 +181,9 @@ def _runtime_match(row, prepared):
     )
 
 
-def inspect_runtime(docker: Callable[..., Any], prepared, deadline, clock: Callable[[], float]):
+def inspect_runtime(
+    docker: Callable[..., Any], prepared, deadline, clock: Callable[[], float]
+):
     prefix = prepared["compose_prefix"]
     remaining = deadline - clock()
     if remaining <= 0:
@@ -164,13 +194,24 @@ def inspect_runtime(docker: Callable[..., Any], prepared, deadline, clock: Calla
         min(30, remaining),
     )
     identifiers = str(getattr(listed, "stdout", "") or "").split()
-    if listed is None or getattr(listed, "returncode", 1) != 0 or len(identifiers) != 1:
+    if (
+        listed is None
+        or getattr(listed, "returncode", 1) != 0
+        or len(identifiers) != 1
+    ):
         return None
     remaining = deadline - clock()
     if remaining <= 0:
         return None
     inspected = docker(
-        ["docker", "container", "inspect", "--format", "{{json .}}", identifiers[0]],
+        [
+            "docker",
+            "container",
+            "inspect",
+            "--format",
+            "{{json .}}",
+            identifiers[0],
+        ],
         prepared["environment"],
         min(30, remaining),
     )
@@ -192,7 +233,9 @@ def health_ready(opener, port, deadline, clock: Callable[[], float]):
     if remaining <= 0:
         return False
     try:
-        response = opener(f"http://127.0.0.1:{port}{HEALTH_PATH}", timeout=min(2, remaining))
+        response = opener(
+            f"http://127.0.0.1:{port}{HEALTH_PATH}", timeout=min(2, remaining)
+        )
         try:
             return json.load(response).get("state") == "ready"
         finally:

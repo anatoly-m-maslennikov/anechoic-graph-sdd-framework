@@ -72,30 +72,36 @@ class SharedBackendGateway:
                 )
                 deadline = _operation_timeout(self.startup_timeout)
                 async with asyncio.timeout(deadline):
-                    while True:
-                        process = self._process
-                        if process is not None and process.returncode is not None:
-                            raise RuntimeError("Shared Backend exited during startup")
-                        try:
-                            health = await self._request("GET", "/health", timeout=0.5)
-                            pid = health.get("pid")
-                            valid_pid = (type(pid) is int
-                                         and (process is None or pid == process.pid))
-                            initialized = health.get("initialized")
-                            if (deadline is None
-                                    and (not valid_pid or type(initialized) is not bool)):
-                                raise RuntimeError("Invalid Shared Backend readiness")
-                            if initialized is True and valid_pid:
-                                break
-                        except ToolProtocolError as error:
-                            if (deadline is None and not isinstance(
-                                    error.__cause__, httpx2.TransportError)):
-                                raise
-                        await asyncio.sleep(0.05)
+                    await self._wait_for_backend(deadline)
                     await self._load_catalog()
             except BaseException:
                 await self.close()
                 raise
+
+    async def _wait_for_backend(self, deadline):
+        while True:
+            process = self._process
+            if process is not None and process.returncode is not None:
+                raise RuntimeError("Shared Backend exited during startup")
+            try:
+                health = await self._request("GET", "/health", timeout=0.5)
+                pid = health.get("pid")
+                valid_pid = type(pid) is int and (
+                    process is None or pid == process.pid
+                )
+                initialized = health.get("initialized")
+                if deadline is None and (
+                    not valid_pid or type(initialized) is not bool
+                ):
+                    raise RuntimeError("Invalid Shared Backend readiness")
+                if initialized is True and valid_pid:
+                    return
+            except ToolProtocolError as error:
+                if deadline is None and not isinstance(
+                    error.__cause__, httpx2.TransportError
+                ):
+                    raise
+            await asyncio.sleep(0.05)
 
     async def _start_backend(self):
         self._directory = TemporaryDirectory(prefix="anechoic-shared-", dir="/tmp")

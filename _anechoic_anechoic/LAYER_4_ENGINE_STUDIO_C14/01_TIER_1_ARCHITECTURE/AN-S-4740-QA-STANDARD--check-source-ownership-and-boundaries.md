@@ -9,8 +9,8 @@ context:
   lens: QA
 state:
   status: active
-  version: 1
-  updated_at: '2026-11-26T16:36:43.721904+00:00'
+  version: 2
+  updated_at: '2026-11-27T11:11:44.727957+00:00'
 
 ---
 
@@ -21,6 +21,10 @@ Check source ownership and boundaries
 ## Claim
 
 ### Prose Claim
+
+Static checks Manifest import and export boundaries across Engine Studio.
+Require Lean for state analysis. Fail when Lean is missing or execution
+fails, and report unresolved state cases separately.
 
 #### Ownership and boundaries
 

@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 import asyncio
@@ -14,9 +13,13 @@ from mcp import types
 MCP = Path(__file__).resolve().parents[1]
 TOOLS = MCP.parents[1] / "FEATURE_PROGRAMMATIC" / "FEATURE_TOOLS"
 
-from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.FEATURE_IWE_CONSOLE_BACKEND__shared import load_host_runtime_config  # noqa: E402
+from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.FEATURE_IWE_CONSOLE_BACKEND__shared import (  # noqa: E402
+    load_host_runtime_config,
+)
 from .test_native_startup import RuntimeSelectionTests  # noqa: E402
-from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.FEATURE_IWE_CONSOLE_BACKEND__shared import shared_project_catalog as catalog  # noqa: E402
+from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.FEATURE_IWE_CONSOLE_BACKEND__shared import (  # noqa: E402
+    shared_project_catalog as catalog,
+)
 from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.FEATURE_IWE_CONSOLE_BACKEND__shared import (  # noqa: E402
     SharedToolFrontier,
     _candidate_paths,
@@ -74,7 +77,9 @@ class SharedProjectCatalogTests(unittest.IsolatedAsyncioTestCase):
         self.projects = self.base / "My_Repos"
         self.projects.mkdir()
         self.roots = [self._project(name) for name in ("alpha", "beta")]
-        self.config_path = self.base / "MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime.toml"
+        self.config_path = (
+            self.base / "MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime.toml"
+        )
         self.config_path.write_text(
             "schema_version = 1\n[shared_mcp]\n"
             f'projects_root = "{self.projects}"\nhttp_port = 8092\n',
@@ -87,7 +92,9 @@ class SharedProjectCatalogTests(unittest.IsolatedAsyncioTestCase):
     def _project(self, name):
         root = self.projects / name
         control = root / f".anechoic_{name}"
-        RuntimeSelectionTests.manifest(self, control, name=name, prefix=name.upper(), component="C00")
+        RuntimeSelectionTests.manifest(
+            self, control, name=name, prefix=name.upper(), component="C00"
+        )
         return root
 
     def test_public_schema_keeps_nested_defs_and_is_valid(self):
@@ -113,16 +120,28 @@ class SharedProjectCatalogTests(unittest.IsolatedAsyncioTestCase):
         Draft202012Validator(public.input_schema).validate(
             {"payload": {"value": "ok"}, "project_root": str(self.roots[0])}
         )
-        self.assertEqual("#/$defs/Payload", public.input_schema["properties"]["payload"]["$ref"])
+        self.assertEqual(
+            "#/$defs/Payload",
+            public.input_schema["properties"]["payload"]["$ref"],
+        )
 
     def test_warning_keeps_secondary_diagnostic_failure_visible(self):
         frontier = SharedToolFrontier()
-        with patch.object(catalog, "report_failure", return_value=(None, "sink failed")):
+        with patch.object(
+            catalog, "report_failure", return_value=(None, "sink failed")
+        ):
             frontier.warning("PROJECT_CATALOG_READ_FAILED", self.roots[0])
-        self.assertEqual("sink failed", frontier.warnings[0]["diagnostic_error"])
+        self.assertEqual(
+            "sink failed", frontier.warnings[0]["diagnostic_error"]
+        )
 
-    async def test_unadaptable_root_schemas_are_rejected_and_not_advertised(self):
-        for key, value in (("$ref", "#/$defs/Args"), ("allOf", [{"type": "object"}])):
+    async def test_unadaptable_root_schemas_are_rejected_and_not_advertised(
+        self,
+    ):
+        for key, value in (
+            ("$ref", "#/$defs/Args"),
+            ("allOf", [{"type": "object"}]),
+        ):
             with self.subTest(key=key), self.assertRaises(ValueError):
                 public_tool(_tool(key, {key: value}))
 
@@ -136,49 +155,82 @@ class SharedProjectCatalogTests(unittest.IsolatedAsyncioTestCase):
         self.assertNotIn("root_all_of", frontier.tools)
         self.assertEqual(
             2 * len(self.roots),
-            sum(row["code"] == "PROJECT_TOOL_CONTRACT_INVALID" for row in frontier.warnings),
+            sum(
+                row["code"] == "PROJECT_TOOL_CONTRACT_INVALID"
+                for row in frontier.warnings
+            ),
         )
 
-    async def test_discovery_publishes_adapted_tool_and_quarantines_conflicting_contracts(self):
+    async def test_discovery_publishes_adapted_tool_and_quarantines_conflicting_contracts(
+        self,
+    ):
         expected = _tool()
         frontier = await discover_frontier(self.config, _Gateway)
         self.assertEqual(public_tool(expected), frontier.tools["echo"].tool)
-        self.assertNotIn("project_root", expected["inputSchema"].get("properties", {}))
+        self.assertNotIn(
+            "project_root", expected["inputSchema"].get("properties", {})
+        )
         self.assertEqual(2, len(frontier.project_contracts))
-        self.assertTrue(all(instance.closed for instance in _Gateway.instances))
+        self.assertTrue(
+            all(instance.closed for instance in _Gateway.instances)
+        )
 
         class ConflictingGateway(_Gateway):
             def __init__(self, root, *, selection):
                 super().__init__(root, selection=selection)
                 if root.name == "beta":
-                    self.tools = [_tool(schema={"type": "object", "properties": {"other": {"type": "string"}}})]
+                    self.tools = [
+                        _tool(
+                            schema={
+                                "type": "object",
+                                "properties": {"other": {"type": "string"}},
+                            }
+                        )
+                    ]
 
         frontier = await discover_frontier(self.config, ConflictingGateway)
         self.assertIn("echo", frontier.quarantined)
         self.assertNotIn("echo", frontier.tools)
-        self.assertIn("PROJECT_TOOL_CONTRACT_CONFLICT", [row["code"] for row in frontier.warnings])
+        self.assertIn(
+            "PROJECT_TOOL_CONTRACT_CONFLICT",
+            [row["code"] for row in frontier.warnings],
+        )
 
-    async def test_initialize_failure_closes_gateway_and_cancellation_rethrows(self):
+    async def test_initialize_failure_closes_gateway_and_cancellation_rethrows(
+        self,
+    ):
         _Gateway.behavior = "error"
         failed = await discover_frontier(self.config, _Gateway)
-        self.assertTrue(all(instance.closed for instance in _Gateway.instances))
-        self.assertIn("PROJECT_CANDIDATE_INVALID", [row["code"] for row in failed.warnings])
+        self.assertTrue(
+            all(instance.closed for instance in _Gateway.instances)
+        )
+        self.assertIn(
+            "PROJECT_CANDIDATE_INVALID",
+            [row["code"] for row in failed.warnings],
+        )
 
         _Gateway.instances = []
         _Gateway.behavior = "cancel"
         with self.assertRaises(asyncio.CancelledError):
             await discover_frontier(self.config, _Gateway)
-        self.assertTrue(all(instance.closed for instance in _Gateway.instances))
+        self.assertTrue(
+            all(instance.closed for instance in _Gateway.instances)
+        )
 
     async def test_close_failure_is_visible_as_warning(self):
         _Gateway.close_error = True
         frontier = await discover_frontier(self.config, _Gateway)
-        self.assertIn("PROJECT_CANDIDATE_CLOSE_FAILED", [row["code"] for row in frontier.warnings])
+        self.assertIn(
+            "PROJECT_CANDIDATE_CLOSE_FAILED",
+            [row["code"] for row in frontier.warnings],
+        )
 
     def test_catalog_discovers_visible_control_root(self):
         root = self.roots[0]
         (root / ".anechoic_alpha").rename(root / "_anechoic_alpha")
-        self.assertIn(root, _candidate_paths(self.config, SharedToolFrontier()))
+        self.assertIn(
+            root, _candidate_paths(self.config, SharedToolFrontier())
+        )
 
     def test_scan_bound_counts_direct_candidate_dirs_not_valid_projects(self):
         scan_root = self.base / "scan-root"
@@ -190,9 +242,12 @@ class SharedProjectCatalogTests(unittest.IsolatedAsyncioTestCase):
         (late / ".anechoic_late").mkdir()
         bounded_config = replace(self.config, projects_root=scan_root)
         frontier = SharedToolFrontier()
-        self.assertLessEqual(len(_candidate_paths(bounded_config, frontier)), 1)
+        self.assertLessEqual(
+            len(_candidate_paths(bounded_config, frontier)), 1
+        )
         self.assertIn(
-            "PROJECT_CATALOG_SCAN_BOUND_REACHED", [row["code"] for row in frontier.warnings]
+            "PROJECT_CATALOG_SCAN_BOUND_REACHED",
+            [row["code"] for row in frontier.warnings],
         )
 
 

@@ -1,6 +1,7 @@
 import unittest
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.typed_manifest_node import parse_typed_manifest_node
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.\
+    ADAPTERS_C30__shared import parse_typed_manifest_node  # fmt: skip
 
 
 AXIOM = '''from anechoic.formal_claims import value

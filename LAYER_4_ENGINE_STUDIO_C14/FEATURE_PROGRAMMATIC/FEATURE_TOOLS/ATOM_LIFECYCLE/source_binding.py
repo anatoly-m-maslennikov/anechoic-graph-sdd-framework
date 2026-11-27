@@ -1,4 +1,5 @@
 """Lifecycle source selection errors and bound query reader."""
+
 from contextlib import contextmanager
 from contextvars import ContextVar
 
@@ -11,7 +12,7 @@ class ArchiveNotLoadedError(SourceSelectionError):
     """The requested historical carrier has not been loaded into Workbench."""
 
 
-_QUERY_READER = ContextVar('lifecycle_query_reader', default=None)
+_QUERY_READER = ContextVar("lifecycle_query_reader", default=None)
 
 
 @contextmanager

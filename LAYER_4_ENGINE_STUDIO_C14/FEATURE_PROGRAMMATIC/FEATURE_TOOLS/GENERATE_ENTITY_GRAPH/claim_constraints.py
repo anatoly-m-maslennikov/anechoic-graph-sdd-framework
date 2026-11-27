@@ -65,6 +65,8 @@ def constraints_for(carriers: Iterable[Mapping[str, Any]]) -> tuple[list[Record]
         selected, unresolved = extract_claim_constraints(carrier)
         records.extend(selected)
         diagnostics.extend(unresolved)
-    key = lambda row: (str(row.get("kind", "")), str(row.get("expression", "")), str(row.get("source", {})))
+    def key(row):
+        return (str(row.get("kind", "")), str(row.get("expression", "")),
+                str(row.get("source", {})))
     return sorted(records, key=key), sorted(diagnostics, key=key)
 

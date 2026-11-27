@@ -1,4 +1,3 @@
-
 """Generate the installed MCP Tool registry from one provider inventory."""
 
 from __future__ import annotations
@@ -12,16 +11,20 @@ from typing import Any
 from jsonschema import Draft202012Validator, SchemaError
 from mcp import types
 
-from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.tool_registry_assets import (
-    REGISTRY_NAME,
-    SCHEMA_VERSION,
-    ToolRegistryAssetError,
-    feature_root,
-    provider_fields,
-    read_inventory,
-    stable_json,
-)
-from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.tool_registry_imports import provider_symbol
+from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.\
+    tool_registry_assets \
+    import (
+        REGISTRY_NAME,
+        SCHEMA_VERSION,
+        ToolRegistryAssetError,
+        feature_root,
+        provider_fields,
+        read_inventory,
+        stable_json,
+    )  # fmt: skip
+from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.\
+    tool_registry_imports \
+    import provider_symbol  # fmt: skip
 
 
 def _schema(value: Any, label: str) -> None:
@@ -56,30 +59,43 @@ def _tool_payloads(value: Any) -> tuple[list[dict[str, Any]], list[str]]:
             _schema(valid.output_schema, "output")
         except ToolRegistryAssetError as error:
             logging.getLogger(__name__).warning(
-                json.dumps({
-                    "severity": "WARNING", "event": "TOOL_DESCRIPTOR_INVALID",
-                    "tool": valid.name, "reason": str(error),
-                }, sort_keys=True)
+                json.dumps(
+                    {
+                        "severity": "WARNING",
+                        "event": "TOOL_DESCRIPTOR_INVALID",
+                        "tool": valid.name,
+                        "reason": str(error),
+                    },
+                    sort_keys=True,
+                )
             )
             continue
         payloads.append(payload)
     return payloads, names
 
 
-def _provider_payload(asset_root: Path, entry: Any) -> tuple[dict[str, Any], list[str]]:
-    descriptor_factory = provider_symbol(asset_root, entry, "descriptor_factory")
+def _provider_payload(
+    asset_root: Path, entry: Any
+) -> tuple[dict[str, Any], list[str]]:
+    descriptor_factory = provider_symbol(
+        asset_root, entry, "descriptor_factory"
+    )
     provider_symbol(asset_root, entry, "factory")
     try:
         tools, names = _tool_payloads(descriptor_factory())
     except ToolRegistryAssetError:
         raise
     except Exception as error:
-        raise ToolRegistryAssetError("tool-descriptor-factory-failed") from error
+        raise ToolRegistryAssetError(
+            "tool-descriptor-factory-failed"
+        ) from error
     return {**provider_fields(entry), "tools": tools}, names
 
 
 def _names(providers: list[dict[str, Any]]) -> list[str]:
-    names = [tool["name"] for provider in providers for tool in provider["tools"]]
+    names = [
+        tool["name"] for provider in providers for tool in provider["tools"]
+    ]
     if len(names) != len(set(names)):
         raise ToolRegistryAssetError("tool-descriptor-name-duplicates")
     return names
@@ -88,7 +104,9 @@ def _names(providers: list[dict[str, Any]]) -> list[str]:
 def generate(package_root: Path | str) -> Path:
     root = feature_root(package_root)
     inventory = read_inventory(root)
-    provider_results = [_provider_payload(root, entry) for entry in inventory.providers]
+    provider_results = [
+        _provider_payload(root, entry) for entry in inventory.providers
+    ]
     all_names = [name for _, names in provider_results for name in names]
     if len(all_names) != len(set(all_names)):
         raise ToolRegistryAssetError("tool-descriptor-name-duplicates")
@@ -101,13 +119,17 @@ def generate(package_root: Path | str) -> Path:
         "inventory_sha256": inventory.digest,
         "mcp_blacklist": list(inventory.blacklist),
         "providers": providers,
-        "public_tools": [name for name in names if name not in inventory.blacklist],
+        "public_tools": [
+            name for name in names if name not in inventory.blacklist
+        ],
     }
     destination = root / REGISTRY_NAME
     try:
         destination.write_text(stable_json(payload) + "\n", encoding="utf-8")
     except OSError as error:
-        raise ToolRegistryAssetError("generated-tool-registry-write-failed") from error
+        raise ToolRegistryAssetError(
+            "generated-tool-registry-write-failed"
+        ) from error
     return destination
 
 

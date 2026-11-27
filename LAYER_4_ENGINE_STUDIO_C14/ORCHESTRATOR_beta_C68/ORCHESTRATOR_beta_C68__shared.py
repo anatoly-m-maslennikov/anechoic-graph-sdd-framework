@@ -288,7 +288,7 @@ class GenerationJobs(ArchiveJobs, StartupGraphJobs, GenerationWorker, AbortJobs,
             return self._attempt_generation(target, witness, reconciliation=True)
         except ForegroundCoverageLost:
             if self.stopping.is_set():
-                raise WorkerAborted("Worker aborted")
+                raise WorkerAborted("Worker aborted") from None
             raise
 
     def _record_ingestion_failure(self, error):

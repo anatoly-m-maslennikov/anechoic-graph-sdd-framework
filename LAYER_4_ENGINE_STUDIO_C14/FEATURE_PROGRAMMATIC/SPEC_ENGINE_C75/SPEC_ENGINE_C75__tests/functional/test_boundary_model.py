@@ -4,11 +4,18 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_read__pub import parse_carrier
-from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_1_SOURCE_ADAPTERS_C95._package__shared import (
-    SourceError, SpecSnapshot,
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_read__pub import (
+    parse_carrier,
 )
-from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_2_SPEC_READING_C83._package__shared import load_boundary_model, load_manifest
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_1_SOURCE_ADAPTERS_C95._package__shared import (
+    SourceError,
+    SpecSnapshot,
+    read_source,
+)
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_2_SPEC_READING_C83._package__shared import (
+    load_boundary_model,
+    load_manifest,
+)
 
 
 def _inputs(tmp_path):
@@ -31,7 +38,7 @@ def _inputs(tmp_path):
                  '## Claim\n\n### Formal Claim\n\n```python\ncomponent_workflow()\n```\n'))
         (tmp_path / pin['path']).write_text(
             f"---\natom_family: SPEC\natom_id: AN-S-{index}\ncontainer: {{component: C7}}\n"
-            f"tier: {dict(manifest=4, contract=0, solution=1)[role]}\n"
+            f"tier: { {'manifest': 4, 'contract': 0, 'solution': 1}[role]}\n"
             f"context: {{template: {template}}}\nrelations:\n{relation or '  OTHER: []' + chr(10)}"
             f"state: {{status: active, version: 1}}\n---\n{body}")
         pins.append(pin)
@@ -87,6 +94,26 @@ class BoundaryModelTests(unittest.TestCase):
                         load_boundary_model(source, 'C7', pin, contract, solution)
                     self.assertEqual('path', error.exception.field)
                     self.assertEqual(pin, error.exception.source)
+
+    def test_rejects_symlink_aliases_for_exact_source_path(self):
+        manifest = self.pins[0]
+        target = self.root / manifest['path']
+        (self.root / 'alias.md').symlink_to(target)
+        (self.root / 'real').mkdir()
+        (self.root / 'real' / 'manifest.md').write_bytes(target.read_bytes())
+        (self.root / 'alias').symlink_to('real', target_is_directory=True)
+        c, source = read_source(self.root, manifest, 'manifest')
+        digest = hashlib.sha256(target.read_bytes()).hexdigest()
+        self.assertEqual(source['sha256'], digest)
+        row = {'source_path': manifest['path'], 'exact_ref': 'AN-S-1@1',
+               'metadata': c.metadata, 'body': c.body, 'sha256': digest}
+        for path in ('alias.md', 'alias/manifest.md'):
+            pin = {**manifest, 'path': path}
+            for root in (self.root, SpecSnapshot([row])):
+                with self.subTest(path=path, source=type(root).__name__):
+                    with self.assertRaises(SourceError) as error:
+                        read_source(root, pin, 'manifest')
+                    self.assertEqual(error.exception.field, 'path')
 
     def test_contract_and_solution_require_their_tiers(self):
         for role, expected, invalid in (('contract', 0, 'false'), ('solution', 1, '2')):

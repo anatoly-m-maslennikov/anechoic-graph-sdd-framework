@@ -10,7 +10,7 @@ context:
 state:
   status: "active"
   version: 30
-  updated_at: "2026-11-26T15:52:27.070800+00:00"
+  updated_at: '2026-11-27T13:08:42.401628+00:00'
 ---
 ## Summary
 
@@ -31,7 +31,11 @@ ComponentManifest(
 ## Component Boundaries
 
 ```python
-{'code': {'imports': ['ADAPTERS_C30__shared.MAX_DATABASE_EVENT_BYTES',
+{'code': {'imports': ['ADAPTERS_C30__shared.component_contract_fences',
+                      'native_projection._write_components',
+                      'package_audit._audit_rows',
+                      'package_audit._contract_candidates',
+                      'ADAPTERS_C30__shared.MAX_DATABASE_EVENT_BYTES',
                       'ADAPTERS_C30__shared.NativeCapture',
                       'ADAPTERS_C30__shared.NativeManifestChanged',
                       'ADAPTERS_C30__shared.SourceWatcher',
@@ -149,7 +153,10 @@ ComponentManifest(
                       'work_journal__pub.canonical_json_bytes',
                       'work_journal__pub.journal_inbox',
                       'work_journal__pub.pending_database_journal'],
-          'exports': {'KERNEL_MIXER_C59__shared.NativeQueryRebuild': {'private': ['LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_C59/KERNEL_MIXER_C59__tests']},
+          'exports': {'native_projection._write_components': {'private': ['LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_C59/KERNEL_MIXER_C59__tests']},
+                      'package_audit._audit_rows': {'private': ['LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_C59/KERNEL_MIXER_C59__tests']},
+                      'package_audit._contract_candidates': {'private': ['LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_C59/KERNEL_MIXER_C59__tests']},
+                      'KERNEL_MIXER_C59__shared.NativeQueryRebuild': {'private': ['LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_C59/KERNEL_MIXER_C59__tests']},
                       'KERNEL_MIXER_C59__shared._report': {'private': ['LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_C59/KERNEL_MIXER_C59__tests']},
                       'KERNEL_MIXER_C59__shared.prepare_boundaries': {'private': ['LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_C59/KERNEL_MIXER_C59__tests']},
                       'KERNEL_MIXER_C59__shared.public_schema': {'private': ['LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_C59/KERNEL_MIXER_C59__tests']},
@@ -266,8 +273,10 @@ ComponentManifest(
                       'native_projection.project_native': {'private': ['LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_BACKEND/FEATURE_IWE_CONSOLE_BACKEND__tests']},
                       'native_projection.project_native_delta': {'private': ['LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_BACKEND/FEATURE_IWE_CONSOLE_BACKEND__tests']},
                       'native_projection.replace_component_metrics': {'private': ['LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_BACKEND/FEATURE_IWE_CONSOLE_BACKEND__tests']},
-                      'KERNEL_MIXER_C59__shared.NativeQueryInputs': {'private': ['LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/FEATURE_MCP__tests']},
-                      'KERNEL_MIXER_C59__shared.NativeQueryOwner': {'private': ['LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/FEATURE_MCP__tests']},
+                      'KERNEL_MIXER_C59__shared.NativeQueryInputs': {'private': ['LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_BACKEND/FEATURE_IWE_CONSOLE_BACKEND__tests',
+                                                                                 'LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/FEATURE_MCP__tests']},
+                      'KERNEL_MIXER_C59__shared.NativeQueryOwner': {'private': ['LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_BACKEND/FEATURE_IWE_CONSOLE_BACKEND__tests',
+                                                                                'LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/FEATURE_MCP__tests']},
                       'package_audit': {'private': ['LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_BACKEND/FEATURE_IWE_CONSOLE_BACKEND__tests']},
                       'projection_delta.apply': {'private': ['LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_BACKEND/FEATURE_IWE_CONSOLE_BACKEND__tests']},
                       'projection_delta.snapshot': {'private': ['LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_BACKEND/FEATURE_IWE_CONSOLE_BACKEND__tests']},

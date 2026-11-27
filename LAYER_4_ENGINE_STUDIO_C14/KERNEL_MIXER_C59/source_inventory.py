@@ -7,8 +7,15 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 
-from .source_roles import ARCHIVE_PARTS, CANONICAL_ROLE_MARKERS, FILENAME_MARKER, HEADER_MARKER, ROLE_MARKERS
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import frontmatter_bounds
+from .source_roles import (
+    ARCHIVE_PARTS,
+    CANONICAL_ROLE_MARKERS,
+    FILENAME_MARKER,
+    HEADER_MARKER,
+    ROLE_MARKERS,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
+    import frontmatter_bounds  # fmt: skip
 
 
 def filename_candidate(path: Path) -> bool:
@@ -16,7 +23,9 @@ def filename_candidate(path: Path) -> bool:
 
 
 def canonical_filename_candidate(path: Path, role_folders=None) -> bool:
-    return filename_role_matches(path, role_folders) and filename_candidate(path)
+    return filename_role_matches(path, role_folders) and filename_candidate(
+        path
+    )
 
 
 def filename_marker(path: Path) -> str | None:
@@ -28,10 +37,17 @@ def filename_role_matches(path: Path, role_folders=None) -> bool:
     marker = filename_marker(path)
     if marker is None:
         return True
-    markers = ROLE_MARKERS if role_folders is None else {
-        folder: CANONICAL_ROLE_MARKERS.get(role, {role[0].upper()}) for role, folder in role_folders
-    }
-    role = next((part for part in reversed(path.parts[:-1]) if part in markers), None)
+    markers = (
+        ROLE_MARKERS
+        if role_folders is None
+        else {
+            folder: CANONICAL_ROLE_MARKERS.get(role, {role[0].upper()})
+            for role, folder in role_folders
+        }
+    )
+    role = next(
+        (part for part in reversed(path.parts[:-1]) if part in markers), None
+    )
     return role is None or marker in markers[role]
 
 
@@ -44,11 +60,18 @@ def header_candidate(raw: bytes) -> bool:
 
 
 def candidate(path: Path, raw: bytes, role_folders=None) -> bool:
-    return filename_role_matches(path, role_folders) and (filename_candidate(path) or header_candidate(raw))
+    return filename_role_matches(path, role_folders) and (
+        filename_candidate(path) or header_candidate(raw)
+    )
 
 
 def group(path: Path, header: dict[str, Any], status_groups=()) -> str | None:
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import carrier_status_folder, matches_named_value
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
+        import (
+            carrier_status_folder,
+            matches_named_value,
+        )  # fmt: skip
+
     parts = {carrier_status_folder(item) for item in path.parts}
     status = header.get("status")
     status = status.casefold() if isinstance(status, str) else status
@@ -57,17 +80,30 @@ def group(path: Path, header: dict[str, Any], status_groups=()) -> str | None:
     if "draft" in parts or status == "draft":
         return "Draft"
     for role, value, status_group in status_groups:
-        if matches_named_value(header.get("role"), role) and matches_named_value(header.get("status"), value):
+        if matches_named_value(
+            header.get("role"), role
+        ) and matches_named_value(header.get("status"), value):
             return status_group
     return "Current"
 
 
 def archived(parts: tuple[str, ...]) -> bool:
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import carrier_status_folder
-    return any(part.casefold() in ARCHIVE_PARTS or carrier_status_folder(part) == "archived" for part in parts)
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
+        import carrier_status_folder  # fmt: skip
+
+    return any(
+        part.casefold() in ARCHIVE_PARTS
+        or carrier_status_folder(part) == "archived"
+        for part in parts
+    )
 
 
-def markdown_paths(root: Path, *, include_archived: bool = True, excluded_directories: frozenset[Path] = frozenset()) -> Iterator[Path]:
+def markdown_paths(
+    root: Path,
+    *,
+    include_archived: bool = True,
+    excluded_directories: frozenset[Path] = frozenset(),
+) -> Iterator[Path]:
     pending = [root]
     while pending:
         directory = pending.pop()
@@ -82,7 +118,11 @@ def markdown_paths(root: Path, *, include_archived: bool = True, excluded_direct
                         is_directory = entry.is_dir(follow_symlinks=False)
                     except OSError:
                         is_directory = False
-                    if is_directory and not include_archived and archived((entry.name,)):
+                    if (
+                        is_directory
+                        and not include_archived
+                        and archived((entry.name,))
+                    ):
                         continue
                     if not is_directory and not entry.name.endswith(".md"):
                         continue
@@ -97,14 +137,27 @@ def markdown_paths(root: Path, *, include_archived: bool = True, excluded_direct
             continue
 
 
-def rejected_diagnostic(path: Path, raw: bytes, root: Path, parse: Any, read_view: Any, role_folders=None) -> str | None:
+def rejected_diagnostic(
+    path: Path,
+    raw: bytes,
+    root: Path,
+    parse: Any,
+    read_view: Any,
+    role_folders=None,
+) -> str | None:
     """Report valid Atom carriers excluded by a mismatched role directory."""
-    if filename_role_matches(path, role_folders) or not filename_candidate(path) or not header_candidate(raw):
+    if (
+        filename_role_matches(path, role_folders)
+        or not filename_candidate(path)
+        or not header_candidate(raw)
+    ):
         return None
     try:
         view = read_view(parse(raw, path).metadata)
-        if isinstance(view.get("atom_id"), str) and group(path.relative_to(root), view):
+        if isinstance(view.get("atom_id"), str) and group(
+            path.relative_to(root), view
+        ):
             return "Atom filename role conflicts with its role directory."
-    except (OSError, RuntimeError, TypeError, ValueError):
+    except OSError, RuntimeError, TypeError, ValueError:
         pass
     return None

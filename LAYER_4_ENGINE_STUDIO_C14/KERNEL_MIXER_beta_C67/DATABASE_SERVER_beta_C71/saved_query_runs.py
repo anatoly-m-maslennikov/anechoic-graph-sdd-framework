@@ -1,4 +1,4 @@
-"""Validate save options and keep a completed run pageable after save failure."""
+"Validate save options and keep a completed run pageable after save failure."
 
 import duckdb
 
@@ -30,5 +30,8 @@ def save_run_fields(saved_queries, sql, name):
     try:
         record = save_sql(saved_queries, sql, "query", name)
     except (OSError, RuntimeError, ValueError, duckdb.Error) as error:
-        return {"outcome": "partial", "save_error": str(error) or "Saved SQL storage is unavailable"}
+        return {
+            "outcome": "partial",
+            "save_error": str(error) or "Saved SQL storage is unavailable",
+        }
     return {"saved_query_id": record["saved_query_id"]}

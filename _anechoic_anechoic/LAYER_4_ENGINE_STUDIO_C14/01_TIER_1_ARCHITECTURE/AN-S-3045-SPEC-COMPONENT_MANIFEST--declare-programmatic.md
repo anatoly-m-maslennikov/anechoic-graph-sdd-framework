@@ -10,7 +10,7 @@ context:
 state:
   status: "active"
   version: 28
-  updated_at: "2026-11-26T15:52:26.475572+00:00"
+  updated_at: '2026-11-27T13:07:19.246612+00:00'
 ---
 
 ## Summary
@@ -32,7 +32,9 @@ ComponentManifest(
 ## Component Boundaries
 
 ```python
-{'code': {'imports': ['FEATURE_FORMAL_MODEL_ENGINE.FEATURE_FORMAL_MODEL_ENGINE__shared.lint_python_model_claim',
+{'code': {'imports': ['ADAPTERS_C30__shared.parse_typed_manifest_node',
+                      'typed_node_constraints.lower_node_constraints',
+                      'FEATURE_FORMAL_MODEL_ENGINE.FEATURE_FORMAL_MODEL_ENGINE__shared.lint_python_model_claim',
                       'FEATURE_FORMAL_MODEL_ENGINE.FEATURE_FORMAL_MODEL_ENGINE__shared.compile_python_model_claim',
                       'FEATURE_FORMAL_MODEL_ENGINE.FEATURE_FORMAL_MODEL_ENGINE__shared.compile_atom_dependencies_with_check',
                       'FEATURE_FORMAL_MODEL_ENGINE.FEATURE_FORMAL_MODEL_ENGINE__shared.ScopeUnit',

@@ -1,4 +1,4 @@
-"""Check line length on new and edited lines in executable source."""
+"""Check line length in authored source."""
 
 import argparse
 from difflib import SequenceMatcher
@@ -8,20 +8,50 @@ from pathlib import Path
 from subprocess import CalledProcessError, TimeoutExpired, check_output, run
 import sys
 
-from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.suite_config import load_suite_config
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.suite_config import (
+    load_suite_config,
+)
 
-from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS import source_comments as sources
-from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.source_comments import CODE_ROOTS, ROOT
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS import (
+    source_comments as sources,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.source_comments import (
+    CODE_ROOTS,
+    ROOT,
+)
 
 SOURCE_ROOTS = (*CODE_ROOTS, ".github/workflows")
-STATIC_ROOTS = ("LAYER_3_DEVOPS_C80", "LAYER_4_ENGINE_STUDIO_C14",
-                "LAYER_5_USER_SETUP_C65", ".github/workflows")
+STATIC_ROOTS = (
+    "LAYER_3_DEVOPS_C80",
+    "LAYER_4_ENGINE_STUDIO_C14",
+    "LAYER_5_USER_SETUP_C65",
+    ".github/workflows",
+)
 STATIC_SUFFIXES = {
-    ".py", ".pyi", ".js", ".mjs", ".cjs", ".jsx", ".ts", ".mts",
-    ".cts", ".tsx", ".svelte", ".html", ".css", ".lean", ".sh",
-    ".bash", ".zsh", ".fish", ".ps1", ".bat", ".cmd", ".sql",
+    ".py",
+    ".pyi",
+    ".js",
+    ".mjs",
+    ".cjs",
+    ".jsx",
+    ".ts",
+    ".mts",
+    ".cts",
+    ".tsx",
+    ".svelte",
+    ".html",
+    ".css",
+    ".lean",
+    ".sh",
+    ".bash",
+    ".zsh",
+    ".fish",
+    ".ps1",
+    ".bat",
+    ".cmd",
+    ".sql",
 }
-NEXT_LINE_DIRECTIVE = b"editorconfig-checker-disable-" b"next-line"
+NEXT_LINE_DIRECTIVE = b"editorconfig-checker-disable-next-line"
 
 
 def git(root, *args):
@@ -30,8 +60,16 @@ def git(root, *args):
 
 def changed_files(root, base):
     changes = git(
-        root, "diff", "--no-ext-diff", "--name-status", "-z",
-        "--find-renames", "--diff-filter=AMRT", base, "--", *SOURCE_ROOTS,
+        root,
+        "diff",
+        "--no-ext-diff",
+        "--name-status",
+        "-z",
+        "--find-renames",
+        "--diff-filter=AMRT",
+        base,
+        "--",
+        *SOURCE_ROOTS,
     )
     fields = iter(changes.decode().split("\0")[:-1])
     files = {}
@@ -40,8 +78,13 @@ def changed_files(root, base):
         current = next(fields) if status.startswith("R") else previous
         files[current] = None if status == "A" else previous
     untracked = git(
-        root, "ls-files", "--others", "--exclude-standard", "-z",
-        "--", *SOURCE_ROOTS,
+        root,
+        "ls-files",
+        "--others",
+        "--exclude-standard",
+        "-z",
+        "--",
+        *SOURCE_ROOTS,
     )
     for path in untracked.decode().split("\0")[:-1]:
         files.setdefault(path, None)
@@ -50,18 +93,26 @@ def changed_files(root, base):
 
 def new_lines(before, after):
     matcher = SequenceMatcher(
-        None, before.splitlines(), after.splitlines(), autojunk=False,
+        None,
+        before.splitlines(),
+        after.splitlines(),
+        autojunk=False,
     )
     return {
-        line for tag, _, _, start, end in matcher.get_opcodes()
-        if tag in {"insert", "replace"} for line in range(start + 1, end + 1)
+        line
+        for tag, _, _, start, end in matcher.get_opcodes()
+        if tag in {"insert", "replace"}
+        for line in range(start + 1, end + 1)
     }
 
 
 def checker_findings(root, paths):
     result = run(
         ("ec", "-no-color", "-format", "codeclimate", *paths),
-        cwd=root, capture_output=True, text=True, timeout=60,
+        cwd=root,
+        capture_output=True,
+        text=True,
+        timeout=60,
     )
     if result.returncode == 0:
         return []
@@ -74,16 +125,47 @@ def checker_findings(root, paths):
         raise ValueError(result.stdout.strip()) from error
     if not findings or result.stderr.strip():
         raise ValueError(message)
-    return findings
+    contents = {}
+    filtered = []
+    for item in findings:
+        path = item["location"]["path"]
+        description = item["description"]
+        if description.startswith("Line too long"):
+            limit = int(description.removesuffix(")").rsplit(" ", 1)[1])
+            if path not in contents:
+                contents[path] = (
+                    (root / path)
+                    .read_text(
+                        encoding="utf-8",
+                    )
+                    .split("\n")
+                )
+            number = item["location"]["lines"]["begin"]
+            length = len(contents[path][number - 1])
+            if length <= limit:
+                continue
+            item["description"] = (
+                f"Line too long ({length} instead of {limit})"
+            )
+        filtered.append(item)
+    return filtered
 
 
 def line_length_findings(root, base_ref):
-    base = git(
-        root, "rev-parse", "--verify", "--end-of-options",
-        f"{base_ref}^{{commit}}",
-    ).decode().strip()
+    base = (
+        git(
+            root,
+            "rev-parse",
+            "--verify",
+            "--end-of-options",
+            f"{base_ref}^{{commit}}",
+        )
+        .decode()
+        .strip()
+    )
     files = {
-        path: previous for path, previous in changed_files(root, base).items()
+        path: previous
+        for path, previous in changed_files(root, base).items()
         if (root / path).is_file() and not (root / path).is_symlink()
     }
     if not files:
@@ -98,7 +180,8 @@ def line_length_findings(root, base_ref):
         (path, number, "Next-line suppression is disabled")
         for path in files
         for number, line in enumerate(
-            (root / path).read_bytes().splitlines(), 1,
+            (root / path).read_bytes().splitlines(),
+            1,
         )
         if NEXT_LINE_DIRECTIVE in line
     ]
@@ -120,7 +203,8 @@ def enabled(root):
         return False
     settings = config.get("tool", {}).get("anechoic", {})
     value = settings.get("test_suite", {}).get(
-        "enforce_source_line_length", False,
+        "enforce_source_line_length",
+        False,
     )
     if type(value) is not bool:
         raise ValueError("enforce_source_line_length must be a boolean")
@@ -132,27 +216,36 @@ def static_findings(root):
         raise FileNotFoundError(root / ".editorconfig")
     paths = set(sources.source_paths(root, STATIC_SUFFIXES, STATIC_ROOTS))
     paths.update(
-        path for path in sources.source_paths(root, roots=STATIC_ROOTS)
+        path
+        for path in sources.source_paths(root, roots=STATIC_ROOTS)
         if path.name == "Dockerfile"
     )
-    paths.update(sources.source_paths(root, {".yml", ".yaml"}, (".github/workflows",)))
+    paths.update(
+        sources.source_paths(root, {".yml", ".yaml"}, (".github/workflows",))
+    )
     for path in paths:
         if (root / path).resolve() != root / path:
             raise ValueError(f"{path}: source path traverses a symbolic link")
-    files = sorted(path.as_posix() for path in paths if (root / path).is_file())
+    files = sorted(
+        path.as_posix() for path in paths if (root / path).is_file()
+    )
     findings = [
         (path, number, "Next-line suppression is disabled")
         for path in files
-        for number, line in enumerate((root / path).read_bytes().splitlines(), 1)
+        for number, line in enumerate(
+            (root / path).read_bytes().splitlines(), 1
+        )
         if NEXT_LINE_DIRECTIVE in line
     ]
     for offset in range(0, len(files), 200):
-        for item in checker_findings(root, files[offset:offset + 200]):
+        for item in checker_findings(root, files[offset : offset + 200]):
             location = item["location"]
             start = location["lines"]["begin"]
             end = start + location["lines"]["end"]
-            findings.extend((location["path"], line, item["description"])
-                            for line in range(start, end + 1))
+            findings.extend(
+                (location["path"], line, item["description"])
+                for line in range(start, end + 1)
+            )
     return sorted(findings)
 
 
@@ -161,20 +254,32 @@ def report(root, base=None):
         if not enabled(root):
             print("Source line length check is disabled")
             return 0
-        findings = (static_findings(root) if base is None
-                    else line_length_findings(root, base))
+        findings = (
+            static_findings(root)
+            if base is None
+            else line_length_findings(root, base)
+        )
     except FileNotFoundError as error:
         if error.filename == "ec":
             print(
                 "Install the checker with "
-                "uv tool install editorconfig-checker==3.11.1",
+                "uv sync --project "
+                "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine",
                 file=sys.stderr,
             )
         else:
             print(f"Line length check failed: {error}", file=sys.stderr)
         return 2
-    except (OSError, CalledProcessError, TimeoutExpired, ValueError,
-            KeyError, TypeError, AttributeError) as error:
+    except (
+        OSError,
+        CalledProcessError,
+        TimeoutExpired,
+        ValueError,
+        IndexError,
+        KeyError,
+        TypeError,
+        AttributeError,
+    ) as error:
         print(f"Line length check failed: {error}", file=sys.stderr)
         return 2
     for path, line, description in findings:
@@ -190,7 +295,9 @@ def check(root: Path) -> int:
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--base", default="HEAD", help="Git base (default HEAD)",
+        "--base",
+        default="HEAD",
+        help="Git base (default HEAD)",
     )
     parser.add_argument("--project-root", type=Path, default=ROOT)
     args = parser.parse_args()

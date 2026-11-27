@@ -10,7 +10,7 @@ context:
 state:
   status: "active"
   version: 28
-  updated_at: "2026-11-26T15:52:27.709987+00:00"
+  updated_at: '2026-11-27T13:09:34.994060+00:00'
 ---
 ## Summary
 
@@ -31,8 +31,18 @@ ComponentManifest(
 ## Component Boundaries
 
 ```python
-{'code': {'imports': {'only': ['metrics__shared.is_measurement_input',
+{'code': {'imports': {'only': ['archive_jobs',
+                               'metrics__shared.is_measurement_input',
                                'ADAPTERS_C30__shared.console_state_path',
+                               'ADAPTERS_C30__shared.CEILINGS',
+                               'ADAPTERS_C30__shared.ReadContext',
+                               'ADAPTERS_C30__shared.native_carrier_path',
+                               'ADAPTERS_C30__shared.native_header_view',
+                               'ADAPTERS_C30__shared.parse_carrier',
+                               'ADAPTERS_C30__shared.source_body',
+                               'ADAPTERS_C30__shared.is_ontology_model_source',
+                               'ADAPTERS_C30__shared.ontology_component_path',
+                               'ATOM_LIFECYCLE__shared.ticket_status_options',
                                'ADAPTERS_C30__shared.mark_startup_timing',
                                'ORCHESTRATOR_beta_C68__shared',
                                'ORCHESTRATOR_beta_C68__shared.Flow',
@@ -44,7 +54,8 @@ ComponentManifest(
                                'ORCHESTRATOR_beta_C68__shared.DeltaRequiresReconciliation',
                                'ORCHESTRATOR_beta_C68__shared.PollComplete',
                                'ORCHESTRATOR_beta_C68__shared.WorkerIngestionFailure']},
-          'exports': {'ORCHESTRATOR_beta_C68__shared.ArchiveCoverageLost': {'private': ['LAYER_4_ENGINE_STUDIO_C14/ORCHESTRATOR_beta_C68/ORCHESTRATOR_beta_C68__tests']},
+          'exports': {'archive_jobs': {'private': ['LAYER_4_ENGINE_STUDIO_C14/ORCHESTRATOR_beta_C68/ORCHESTRATOR_beta_C68__tests']},
+                      'ORCHESTRATOR_beta_C68__shared.ArchiveCoverageLost': {'private': ['LAYER_4_ENGINE_STUDIO_C14/ORCHESTRATOR_beta_C68/ORCHESTRATOR_beta_C68__tests']},
                       'ORCHESTRATOR_beta_C68__shared.ArchiveInputsChanged': {'private': ['LAYER_4_ENGINE_STUDIO_C14/ORCHESTRATOR_beta_C68/ORCHESTRATOR_beta_C68__tests']},
                       'ORCHESTRATOR_beta_C68__shared.DeltaRequiresReconciliation': {'private': ['LAYER_4_ENGINE_STUDIO_C14/ORCHESTRATOR_beta_C68/ORCHESTRATOR_beta_C68__tests']},
                       'ORCHESTRATOR_beta_C68__shared.PollComplete': {'private': ['LAYER_4_ENGINE_STUDIO_C14/ORCHESTRATOR_beta_C68/ORCHESTRATOR_beta_C68__tests']},

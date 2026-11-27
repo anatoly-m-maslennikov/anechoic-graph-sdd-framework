@@ -39,8 +39,14 @@ def result(identifier: int | str, value: dict[str, Any]) -> None:
     send({"jsonrpc": "2.0", "id": identifier, "result": value})
 
 
-def emit(method: str, params: dict[str, Any], identifier: int | str | None = None) -> None:
-    packet: dict[str, Any] = {"jsonrpc": "2.0", "method": method, "params": params}
+def emit(
+    method: str, params: dict[str, Any], identifier: int | str | None = None
+) -> None:
+    packet: dict[str, Any] = {
+        "jsonrpc": "2.0",
+        "method": method,
+        "params": params,
+    }
     if identifier is not None:
         packet["id"] = identifier
     send(packet)
@@ -90,85 +96,116 @@ def complete_turn(turn_id: str, status: str) -> None:
 
 def _turn_approval(turn_id):
     request_id = "native-approval-request"
-    emit("item/commandExecution/requestApproval", {
-        "threadId": THREAD_ID,
-        "turnId": turn_id,
-        "itemId": "command-approval-item",
-        "reason": "fixture approval",
-    }, request_id)
+    emit(
+        "item/commandExecution/requestApproval",
+        {
+            "threadId": THREAD_ID,
+            "turnId": turn_id,
+            "itemId": "command-approval-item",
+            "reason": "fixture approval",
+        },
+        request_id,
+    )
     response = wait_for_native_request(request_id)
     if response and response.get("interrupted"):
         complete_turn(turn_id, "interrupted")
     else:
-        emit("item/commandExecution/requestApproval/accepted", {
-            "threadId": THREAD_ID,
-            "turnId": turn_id,
-            "itemId": "command-approval-item",
-            "result": response.get("result") if response else None,
-        })
+        emit(
+            "item/commandExecution/requestApproval/accepted",
+            {
+                "threadId": THREAD_ID,
+                "turnId": turn_id,
+                "itemId": "command-approval-item",
+                "result": response.get("result") if response else None,
+            },
+        )
         complete_turn(turn_id, "completed")
 
 
 def _turn_user_input(turn_id):
     request_id = "native-user-input-request"
-    emit("item/tool/requestUserInput", {
-        "threadId": THREAD_ID,
-        "turnId": turn_id,
-        "itemId": "user-input-item",
-        "questions": [{
-            "id": "answer",
-            "header": "Answer",
-            "question": "fixture question",
-            "options": [{"label": "Yes", "description": "accept fixture input"}],
-        }],
-    }, request_id)
+    emit(
+        "item/tool/requestUserInput",
+        {
+            "threadId": THREAD_ID,
+            "turnId": turn_id,
+            "itemId": "user-input-item",
+            "questions": [
+                {
+                    "id": "answer",
+                    "header": "Answer",
+                    "question": "fixture question",
+                    "options": [
+                        {"label": "Yes", "description": "accept fixture input"}
+                    ],
+                }
+            ],
+        },
+        request_id,
+    )
     response = wait_for_native_request(request_id)
     if response and response.get("interrupted"):
         complete_turn(turn_id, "interrupted")
     else:
-        emit("item/tool/requestUserInput/accepted", {
-            "threadId": THREAD_ID,
-            "turnId": turn_id,
-            "itemId": "user-input-item",
-            "result": response.get("result") if response else None,
-        })
+        emit(
+            "item/tool/requestUserInput/accepted",
+            {
+                "threadId": THREAD_ID,
+                "turnId": turn_id,
+                "itemId": "user-input-item",
+                "result": response.get("result") if response else None,
+            },
+        )
         complete_turn(turn_id, "completed")
 
 
 def _turn_elicitation(turn_id):
     request_id = "native-elicitation-request"
-    emit("mcpServer/elicitation/request", {
-        "threadId": THREAD_ID,
-        "turnId": turn_id,
-        "serverName": "fixture-mcp",
-        "message": "fixture elicitation",
-        "requestedSchema": {
-            "type": "object",
-            "properties": {"value": {"type": "string"}},
-            "required": ["value"],
+    emit(
+        "mcpServer/elicitation/request",
+        {
+            "threadId": THREAD_ID,
+            "turnId": turn_id,
+            "serverName": "fixture-mcp",
+            "message": "fixture elicitation",
+            "requestedSchema": {
+                "type": "object",
+                "properties": {"value": {"type": "string"}},
+                "required": ["value"],
+            },
         },
-    }, request_id)
+        request_id,
+    )
     response = wait_for_native_request(request_id)
     if response and response.get("interrupted"):
         complete_turn(turn_id, "interrupted")
     else:
-        emit("mcpServer/elicitation/accepted", {
-            "threadId": THREAD_ID,
-            "turnId": turn_id,
-            "result": response.get("result") if response else None,
-        })
+        emit(
+            "mcpServer/elicitation/accepted",
+            {
+                "threadId": THREAD_ID,
+                "turnId": turn_id,
+                "result": response.get("result") if response else None,
+            },
+        )
         complete_turn(turn_id, "completed")
 
 
 def _turn_event_burst(turn_id):
     for sequence in range(100):
-        emit("item/burst", {"threadId": THREAD_ID, "turnId": turn_id, "sequence": sequence})
+        emit(
+            "item/burst",
+            {"threadId": THREAD_ID, "turnId": turn_id, "sequence": sequence},
+        )
     complete_turn(turn_id, "completed")
 
 
 def _turn_interrupt(turn_id):
     packet = wait_for_native_request("never-issued")
-    complete_turn(turn_id, "interrupted" if packet and packet.get("interrupted") else "completed")
+    complete_turn(
+        turn_id,
+        "interrupted" if packet and packet.get("interrupted") else "completed",
+    )
 
 
 def start_turn(identifier: int | str, params: dict[str, Any]) -> None:
@@ -177,23 +214,28 @@ def start_turn(identifier: int | str, params: dict[str, Any]) -> None:
     turn_id = f"native-turn-{turn_number}"
     result(identifier, {"turn": {"id": turn_id, "status": "inProgress"}})
     time.sleep(0.2)
-    emit("turn/started", {"thread": {"id": THREAD_ID}, "turn": {"id": turn_id}})
+    emit(
+        "turn/started", {"thread": {"id": THREAD_ID}, "turn": {"id": turn_id}}
+    )
     items = params.get("input")
     text = ""
     if isinstance(items, list) and items and isinstance(items[0], dict):
         text = str(items[0].get("text", ""))
     handlers = {
-        'approval': _turn_approval,
-        'user-input': _turn_user_input,
-        'elicitation': _turn_elicitation,
-        'interrupt': _turn_interrupt,
-        'event-burst': _turn_event_burst,
+        "approval": _turn_approval,
+        "user-input": _turn_user_input,
+        "elicitation": _turn_elicitation,
+        "interrupt": _turn_interrupt,
+        "event-burst": _turn_event_burst,
     }
     handler = handlers.get(text)
     if handler is not None:
         handler(turn_id)
     else:
-        emit("item/agentMessage", {"turn_id": turn_id, "text": "fixture response"})
+        emit(
+            "item/agentMessage",
+            {"turn_id": turn_id, "text": "fixture response"},
+        )
         complete_turn(turn_id, "completed")
 
 
@@ -207,7 +249,10 @@ def main() -> int:
         identifier = packet.get("id")
         params = packet.get("params")
         if method == "initialize":
-            result(identifier, {"serverInfo": {"name": "fake-codex", "version": "test"}})
+            result(
+                identifier,
+                {"serverInfo": {"name": "fake-codex", "version": "test"}},
+            )
         elif method == "initialized":
             continue
         elif method == "thread/start":

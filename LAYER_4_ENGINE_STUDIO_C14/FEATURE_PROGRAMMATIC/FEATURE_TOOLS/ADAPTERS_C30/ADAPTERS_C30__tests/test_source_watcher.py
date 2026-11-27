@@ -1,7 +1,7 @@
 """Watcher callback translation is deterministic before service batch handling."""
 
 from pathlib import Path
-from types import SimpleNamespace
+from unittest.mock import NonCallableMock
 import sys
 import tempfile
 import threading
@@ -62,8 +62,10 @@ class SourceWatcherTests(unittest.TestCase):
         self.watcher.start()
 
     def event(self, source: Path, *, destination: Path | None = None, directory: bool = False):
-        return SimpleNamespace(
-            src_path=str(source), dest_path=str(destination) if destination is not None else None,
+        return NonCallableMock(
+            spec_set=['src_path', 'dest_path', 'is_directory'],
+            src_path=str(source),
+            dest_path=str(destination) if destination is not None else None,
             is_directory=directory,
         )
 

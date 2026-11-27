@@ -13,19 +13,27 @@ from mcp.server.lowlevel import Server
 
 from MCP_PATCHBAY_C21.FEATURE_MCP.caller_context import take_caller_context
 from MCP_PATCHBAY_C21.FEATURE_MCP.mcp_startup_boundary import warning
-from MCP_PATCHBAY_C21.FEATURE_MCP.runtime_request_context import bind_request_context
+from MCP_PATCHBAY_C21.FEATURE_MCP.runtime_request_context import (
+    bind_request_context,
+)
 
 
 def make_server(catalog, call):
     async def list_tools(_context, _params):
         return types.ListToolsResult(tools=catalog())
 
-    return Server("ANECHOIC", version="0.2.0", on_list_tools=list_tools, on_call_tool=call)
+    return Server(
+        "ANECHOIC",
+        version="0.2.0",
+        on_list_tools=list_tools,
+        on_call_tool=call,
+    )
 
 
 def valid_tool_response(response):
     return (
-        isinstance(response, dict) and set(response) == {"value", "text"}
+        isinstance(response, dict)
+        and set(response) == {"value", "text"}
         and isinstance(response["value"], dict)
         and (response["text"] is None or isinstance(response["text"], str))
     )
@@ -36,14 +44,21 @@ async def call_mcp(call_tool, context, name, arguments, **routing):
     with bind_request_context(caller) if caller else nullcontext():
         base = getattr(getattr(context, "request", None), "base_url", None)
         response = await call_tool(
-            name, arguments, public_base_url=str(base) if base is not None else None, **routing,
+            name,
+            arguments,
+            public_base_url=str(base) if base is not None else None,
+            **routing,
         )
     return result(response["value"], text=response["text"])
 
 
 def result(value, error=False, *, text=None):
     return types.CallToolResult(
-        content=[types.TextContent(type="text", text=json.dumps(value) if text is None else text)],
+        content=[
+            types.TextContent(
+                type="text", text=json.dumps(value) if text is None else text
+            )
+        ],
         structured_content=value,
         is_error=error,
     )
@@ -65,7 +80,9 @@ def unexpected_failure(code="internal_failure", message="operation failure"):
 
 def tool_failure(error):
     if error.tool_result is None:
-        return unexpected_failure("tool_runtime_failure", "Backend unavailable")
+        return unexpected_failure(
+            "tool_runtime_failure", "Backend unavailable"
+        )
     return result(error.tool_result, True)
 
 

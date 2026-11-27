@@ -4,11 +4,11 @@ from pathlib import Path
 
 
 class TemporaryBoundaryError(RuntimeError):
-    """A disposable Carrier cannot be placed in the required Project Temporary State."""
+    "A disposable Carrier cannot be placed in the required Project Temporary State."
 
 
 def validate_directory_components(root: Path, directory: Path) -> None:
-    """Reject existing symlink or non-directory components below a Project root."""
+    "Reject existing symlink or non-directory components below a Project root."
 
     try:
         relative = directory.relative_to(root)
@@ -24,5 +24,6 @@ def validate_directory_components(root: Path, directory: Path) -> None:
                 f"temporary state path contains symlinked directory: {current}"
             )
         if current.exists() and not current.is_dir():
-            raise TemporaryBoundaryError(f"temporary state path is not a directory: {current}")
-
+            raise TemporaryBoundaryError(
+                f"temporary state path is not a directory: {current}"
+            )

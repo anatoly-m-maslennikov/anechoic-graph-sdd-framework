@@ -6,11 +6,7 @@ from markdown_it import MarkdownIt
 import yaml
 
 
-def read_atom_header(text: str) -> tuple[dict, str]:
-    text = text.replace("\r\n", "\n")
-    if not text.startswith("---\n") or "\n---\n" not in text[4:]:
-        raise ValueError("Missing YAML frontmatter")
-    front, body = text[4:].split("\n---\n", 1)
+def _validate_yaml(front: str) -> None:
     depth = 0
     for count, event in enumerate(yaml.parse(front, Loader=yaml.SafeLoader), 1):
         if isinstance(event, yaml.events.AliasEvent):
@@ -33,6 +29,14 @@ def read_atom_header(text: str) -> tuple[dict, str]:
             pending.extend(child for pair in current.value for child in pair)
         elif isinstance(current, yaml.SequenceNode):
             pending.extend(current.value)
+
+
+def read_atom_header(text: str) -> tuple[dict, str]:
+    text = text.replace("\r\n", "\n")
+    if not text.startswith("---\n") or "\n---\n" not in text[4:]:
+        raise ValueError("Missing YAML frontmatter")
+    front, body = text[4:].split("\n---\n", 1)
+    _validate_yaml(front)
     metadata = yaml.safe_load(front)
     if not isinstance(metadata, dict):
         raise ValueError("Atom header must be a mapping")
@@ -48,7 +52,7 @@ def _literal(node: ast.AST):
     return ast.literal_eval(node)
 
 
-def _claim(body: str) -> dict:
+def _formal_claim(body: str) -> str:
     headings, claims = [], []
     tokens = MarkdownIt("commonmark").parse(body)
     for index, token in enumerate(tokens):
@@ -61,13 +65,17 @@ def _claim(body: str) -> dict:
             claims.append(token.content)
     if len(claims) != 1:
         raise ValueError("Expected one Python Formal Claim")
-    tree = ast.parse(claims[0])
+    return claims[0]
+
+
+def _claim(body: str) -> dict:
+    tree = ast.parse(_formal_claim(body))
     imports = (("anechoic.formal_claims", "declare_entity"), ("anechoic.model", "ProjectManifest"))
     statements = tree.body
     if len(statements) != 3 or any(
         not isinstance(stmt, ast.ImportFrom) or stmt.level or stmt.module != module
         or len(stmt.names) != 1 or stmt.names[0].name != name or stmt.names[0].asname is not None
-        for stmt, (module, name) in zip(statements[:2], imports)
+        for stmt, (module, name) in zip(statements[:2], imports, strict=True)
     ):
         raise ValueError("Unsupported Project Manifest claim")
     expression = statements[2]

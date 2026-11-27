@@ -1,10 +1,10 @@
 from __future__ import annotations
+from unittest.mock import NonCallableMock
 
 import json
 from hashlib import sha256
 from pathlib import Path
 import tempfile
-from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
@@ -120,7 +120,13 @@ class JournalTableTest(unittest.TestCase):
                 "state:\n  status: active\n  version: 1\n  updated_at: '2026-11-19T00:00:00Z'\n"
                 "---\n\n## Summary\n\nExample\n"
             )
-            selection = SimpleNamespace(root=root, control_root=control, manifest_path=manifest, project_prefix="AN",
+            selection = NonCallableMock(
+                spec_set=[
+                    'root', 'control_root', 'manifest_path', 'project_prefix',
+                    'manifest_sha256'
+                ],
+                root=root, control_root=control, manifest_path=manifest,
+                project_prefix="AN",
                                         manifest_sha256=sha256(manifest.read_bytes()).hexdigest())
             capture = capture_native(selection)
             bindings = dict(relation_types={"CONTAINED_BY", "CONTAINS"}, inverses={"CONTAINED_BY": "CONTAINS"})
@@ -136,23 +142,26 @@ class JournalTableTest(unittest.TestCase):
                 disk.close()
             memory = QueryStore(**options)
             try:
-                self.assertFalse(memory._initialized)
-                self.assertEqual({}, read_import_sources(memory._connection))
-                project_native(memory, capture, use_retained=True, **bindings)
-                columns = memory.schema()["tables"]["atoms"]
-                self.assertEqual(len(columns), len({column["name"] for column in columns}))
-                self.assertNotIn("import_nodes", memory.schema()["tables"])
-                with self.assertRaises(QueryExecutionError):
-                    memory.run("SELECT * FROM main.import_nodes")
-                publish_imports(memory, [("memory", "package", "python", "memory", "ok", None)], [], [])
-                replace_import_sources(memory._connection, {"memory.py": Source("python", "ok", "memory")})
-                self.assertEqual([["memory"]], memory.run("SELECT node_key FROM main.import_nodes")["rows"])
-                self.assertEqual([("disk",)], memory._connection.execute(
-                    "SELECT node_key FROM journal_store.main.import_nodes").fetchall())
-                self.assertEqual([("disk.py",)], memory._connection.execute(
-                    "SELECT path FROM journal_store._anechoic_import_cache.sources").fetchall())
+                self._assert_memory_projection(memory, capture, bindings)
             finally:
                 memory.close()
+
+    def _assert_memory_projection(self, memory, capture, bindings):
+        self.assertFalse(memory._initialized)
+        self.assertEqual({}, read_import_sources(memory._connection))
+        project_native(memory, capture, use_retained=True, **bindings)
+        columns = memory.schema()["tables"]["atoms"]
+        self.assertEqual(len(columns), len({column["name"] for column in columns}))
+        self.assertNotIn("import_nodes", memory.schema()["tables"])
+        with self.assertRaises(QueryExecutionError):
+            memory.run("SELECT * FROM main.import_nodes")
+        publish_imports(memory, [("memory", "package", "python", "memory", "ok", None)], [], [])
+        replace_import_sources(memory._connection, {"memory.py": Source("python", "ok", "memory")})
+        self.assertEqual([["memory"]], memory.run("SELECT node_key FROM main.import_nodes")["rows"])
+        self.assertEqual([("disk",)], memory._connection.execute(
+            "SELECT node_key FROM journal_store.main.import_nodes").fetchall())
+        self.assertEqual([("disk.py",)], memory._connection.execute(
+            "SELECT path FROM journal_store._anechoic_import_cache.sources").fetchall())
 
 
 if __name__ == "__main__":

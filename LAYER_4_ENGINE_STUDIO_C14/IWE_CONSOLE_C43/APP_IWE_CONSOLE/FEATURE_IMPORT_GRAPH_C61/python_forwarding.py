@@ -29,14 +29,22 @@ class _Bindings(ast.NodeVisitor):
         for child in ast.walk(node):
             if isinstance(child, ast.Global):
                 self.names.update(child.names)
-        for expression in (*node.decorator_list, *node.args.defaults, *filter(None, node.args.kw_defaults)):
+        for expression in (
+            *node.decorator_list,
+            *node.args.defaults,
+            *filter(None, node.args.kw_defaults),
+        ):
             self.visit(expression)
 
     visit_AsyncFunctionDef = visit_FunctionDef
 
     def visit_ClassDef(self, node):
         self.names[node.name] += 1
-        for expression in (*node.decorator_list, *node.bases, *(item.value for item in node.keywords)):
+        for expression in (
+            *node.decorator_list,
+            *node.bases,
+            *(item.value for item in node.keywords),
+        ):
             self.visit(expression)
 
     def visit_ExceptHandler(self, node):
@@ -67,7 +75,9 @@ def python_forwarded(tree):
         return ()
     return tuple(
         (alias.asname or alias.name, alias.name, node.lineno, node.col_offset)
-        for node in tree.body if isinstance(node, ast.ImportFrom)
+        for node in tree.body
+        if isinstance(node, ast.ImportFrom)
         for alias in node.names
-        if alias.name != "*" and bindings.names[alias.asname or alias.name] == 1
+        if alias.name != "*"
+        and bindings.names[alias.asname or alias.name] == 1
     )

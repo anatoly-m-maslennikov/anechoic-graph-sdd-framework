@@ -1,4 +1,3 @@
-
 """Validate caret metadata while DuckDB admits one complete query."""
 
 from __future__ import annotations
@@ -16,7 +15,9 @@ def _utf8(sql: str) -> bytes:
 
 
 def _utf8_offset(sql: str, cursor_position: int) -> int:
-    if isinstance(cursor_position, bool) or not isinstance(cursor_position, int):
+    if isinstance(cursor_position, bool) or not isinstance(
+        cursor_position, int
+    ):
         raise ValueError("cursor_position must be a UTF-16 integer")
     if cursor_position < 0:
         raise ValueError("cursor_position must be a UTF-16 integer")
@@ -42,7 +43,14 @@ def token_spans(sql: str) -> list[tuple[bytes, Any]]:
     raw = _utf8(sql)
     tokens = duckdb.tokenize(sql)
     return [
-        (raw[position:tokens[index + 1][0] if index + 1 < len(tokens) else len(raw)], token_type)
+        (
+            raw[
+                position : tokens[index + 1][0]
+                if index + 1 < len(tokens)
+                else len(raw)
+            ],
+            token_type,
+        )
         for index, (position, token_type) in enumerate(tokens)
     ]
 

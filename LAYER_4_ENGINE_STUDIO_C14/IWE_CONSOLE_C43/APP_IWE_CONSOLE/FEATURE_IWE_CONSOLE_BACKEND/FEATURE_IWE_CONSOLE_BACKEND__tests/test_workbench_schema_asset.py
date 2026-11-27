@@ -6,9 +6,6 @@ import json
 from pathlib import Path
 import unittest
 
-
-APP_ROOT = Path(__file__).resolve().parents[3]
-
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (DeclarationSource)  # noqa: E402
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import HeaderRule, compile_header_rules  # noqa: E402
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import WorkbenchUnavailableError  # noqa: E402
@@ -20,8 +17,10 @@ from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.FEATURE_IWE_CON
 from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.FEATURE_IWE_CONSOLE_BACKEND__tests._source_reader_fixture import SourceReaderFixture  # noqa: E402
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import extension_directory  # noqa: E402
 
-
 from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.FEATURE_IWE_CONSOLE_BACKEND__tests.workbench_schema_fixture import WorkbenchSchemaFixture, atom
+
+
+APP_ROOT = Path(__file__).resolve().parents[3]
 
 
 class WorkbenchSchemaAssetTests(WorkbenchSchemaFixture, SourceReaderFixture):

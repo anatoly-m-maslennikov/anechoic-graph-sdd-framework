@@ -1,4 +1,3 @@
-
 """Shared host Streamable HTTP transport for multiple Project gateways."""
 
 from __future__ import annotations
@@ -14,14 +13,24 @@ from starlette.requests import Request
 from starlette.responses import HTMLResponse, JSONResponse
 
 from MCP_PATCHBAY_C21.FEATURE_MCP.health_page import render_health_page
-from MCP_PATCHBAY_C21.FEATURE_MCP.http_server import PORT, _accepts_html, streamable_app
-from MCP_PATCHBAY_C21.FEATURE_MCP.mcp_startup_boundary import http_log_config, run_startup, runtime_log_level, warning
+from MCP_PATCHBAY_C21.FEATURE_MCP.http_server import (
+    PORT,
+    _accepts_html,
+    streamable_app,
+)
+from MCP_PATCHBAY_C21.FEATURE_MCP.mcp_startup_boundary import (
+    http_log_config,
+    run_startup,
+    runtime_log_level,
+    warning,
+)
 
 from MCP_PATCHBAY_C21.FEATURE_MCP.shared_backend import SharedBackendGateway
 
 
 def _snapshot_failure() -> None:
     warning("shared_health_snapshot_unavailable")
+
 
 async def _snapshot(gateway: Any) -> Mapping[str, Any]:
     """Read the already-published host frontier without probing a Project."""
@@ -46,7 +55,9 @@ async def _snapshot(gateway: Any) -> Mapping[str, Any]:
 
 def _state(snapshot: Mapping[str, Any]) -> str:
     initialized = snapshot.get("initialized")
-    if type(initialized) is not bool or not isinstance(snapshot.get("advertised_tools"), list):
+    if type(initialized) is not bool or not isinstance(
+        snapshot.get("advertised_tools"), list
+    ):
         return "unavailable"
     return "ready" if initialized else "pending"
 
@@ -65,8 +76,10 @@ async def health(request: Request, gateway: Any):
     )
 
 
-def create_app(config: Any, *, gateway_factory: Callable[..., Any] = SharedBackendGateway):
-    """Create one guarded host app; Project selection stays inside the router."""
+def create_app(
+    config: Any, *, gateway_factory: Callable[..., Any] = SharedBackendGateway
+):
+    "Create one guarded host app; Project selection stays inside the router."
     gateway = gateway_factory(config)
 
     async def health_endpoint(request: Request):
@@ -79,8 +92,14 @@ def _serve(args: argparse.Namespace) -> Any:
     import uvicorn
 
     app = create_app(args.host_settings)
-    uvicorn.run(app, host="0.0.0.0", port=PORT, log_level=runtime_log_level().lower(), access_log=False,
-                log_config=http_log_config())
+    uvicorn.run(
+        app,
+        host="0.0.0.0",
+        port=PORT,
+        log_level=runtime_log_level().lower(),
+        access_log=False,
+        log_config=http_log_config(),
+    )
 
 
 def main(argv: list[str] | None = None) -> Any:
@@ -88,7 +107,8 @@ def main(argv: list[str] | None = None) -> Any:
     parser.add_argument("--host-settings", type=Path)
     args = parser.parse_args(argv)
     return run_startup(
-        lambda: _serve(args), operation="mcp_shared_http_startup",
+        lambda: _serve(args),
+        operation="mcp_shared_http_startup",
     )
 
 

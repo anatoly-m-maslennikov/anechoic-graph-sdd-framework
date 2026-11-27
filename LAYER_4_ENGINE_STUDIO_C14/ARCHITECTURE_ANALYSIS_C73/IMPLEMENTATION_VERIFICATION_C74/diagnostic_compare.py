@@ -1,8 +1,9 @@
-"""Compare the C90 finding trace against freshly translated implementation Lean."""
+"""Compare C90's finding and verdict Specs with translated implementation Lean."""
 
 import json
 import subprocess
 import sys
+from hashlib import sha256
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -13,6 +14,15 @@ _SOURCE = Path(
     'LAYER_2_FORMAL_SPECIFICATION_C94/LAYER_1_DIAGNOSTICS_C90/diagnostics__pub.py'
 )
 _TRANSLATOR = 'ARCHITECTURE_ANALYSIS_C73.IMPLEMENTATION_VERIFICATION_C74.code_to_lean'
+_VERDICT_STATEMENT = '''
+example (xs : List String) : ∃ output : String,
+    (declaredVerdict (decide ("conflicting" ∈ xs))
+      (xs.isEmpty || ("unresolved" ∈ xs : Bool))).toOption = some output ∧
+    (solutionVerdict (decide ("conflicting" ∈ xs))
+      (xs.isEmpty || ("unresolved" ∈ xs : Bool))).toOption = some output ∧
+    invokePublicVerdict xs = .val (.str output) :=
+  publicVerdictMatchesContract xs
+'''
 _CHECK = '''
 open Autoform.Core Autoform.Generated.Implementation
 
@@ -117,9 +127,15 @@ def formationCheck (contract : Lean.Json) (path : Except String (Lean.Json × Le
     return if inputs.size == 3 && outputs.size == 3 then "matched" else "unresolved"
   checked.toOption.getD "unresolved"
 
+def findingClaim (declaration : Lean.Json) : Except String Lean.Json := do
+  let claim ← declaration.getObjVal? "claim"
+  match claim.getObjVal? "operations" with
+  | .ok operations => operations.getObjVal? "finding"
+  | .error _ => pure claim
+
 def compareFinding : Except String (List Lean.Json × String) := do
-  let contract ← (← AnechoicSpec.contract).getObjVal? "claim"
-  let solution ← (← AnechoicSpec.solution).getObjVal? "claim"
+  let contract ← findingClaim (← AnechoicSpec.contract)
+  let solution ← findingClaim (← AnechoicSpec.solution)
   let obligations ← contract.getObjValAs? (List Obligation) "same_values"
   if obligations.isEmpty then throw "C90 finding declares no equality obligations"
   let path := findingPath solution (← contract.getObjValAs? String "output")
@@ -131,54 +147,6 @@ def compareFinding : Except String (List Lean.Json × String) := do
   return (facts, formationCheck contract path)
 
 #eval IO.println (Lean.toJson compareFinding.toOption).compress
-'''
-_FINDING_PROOF = '''
-private theorem getFresh (heap : Heap) (item : Obj) :
-    Heap.get (heap ++ [item]) heap.length = some item := by
-  simp [Heap.get]
-
-private theorem setFresh (heap : Heap) (item : Obj) (payload : Payload) :
-    Heap.setPayload (heap ++ [item]) heap.length payload =
-      heap ++ [{item with payload := payload, version := item.version + 1}] := by
-  unfold Heap.setPayload
-  rw [List.mapIdx_append]
-  have unchanged : List.mapIdx
-      (fun i (o : Obj) => if i = heap.length then {o with payload := payload, version := o.version + 1} else o)
-      heap = heap := by
-    apply List.ext_getElem
-    · simp
-    · intro n hleft hright
-      simp [List.getElem_mapIdx, Nat.ne_of_lt hright]
-  simp [unchanged]
-
-set_option maxHeartbeats 1200000
-set_option pp.deepTerms false
-set_option linter.unusedSimpArgs false
-
-def returnedField (result : Heap × EResult) (name : String) : Option Val :=
-  match result with
-  | (heap, .val (.ref address)) =>
-    match heap.payload address with
-    | .dict fields => (fields.find? (fun pair => pair.1 == .str name)).map Prod.snd
-    | _ => none
-  | _ => none
-
-theorem findingPreservesValues (heap : Heap) (globals : Ref) (source field message : Val) :
-    let result := invokeFinding "diagnostics__pub.py:<module>.finding" heap globals [source, field, message]
-    result.2 = .val (.ref heap.length) ∧ heap.length < result.1.length ∧
-      returnedField result "source" = some source ∧
-      returnedField result "field" = some field ∧
-      returnedField result "message" = some message := by
-  have resolved : (findingContext globals).resolve "diagnostics__pub.py:<module>.finding" =
-      some f_diagnostics__pub_py__module__finding := rfl
-  have boxed : (findingContext globals).dialect.boxesContainers = true := rfl
-  simp only [invokeFinding, resolved]
-  simp (config := {decide := true}) [returnedField, applyFunc,
-        f_diagnostics__pub_py__module__finding, Func.posParams, Func.keywordParams,
-        kwargsRejected, posRejected, signatureRejected, seedClassAttrDefaults,
-        selfEnv, boxKwargs, bindParams, Env.get, Env.set, execStmt, evalExpr, evalPairs, Func.literalDefaults,
-        boxed, Lit.toVal, Heap.alloc, Heap.payload, getFresh, setFresh, Stdlib.dictOfPairs, Stdlib.dictSet,
-        Val.beq, Val.truthy]
 '''
 
 
@@ -196,9 +164,10 @@ def _prove_finding(program, facts, lean):
             or {(tuple(row['left']), tuple(row['right'])) for row in facts
                 if row['solution'] == row['implementation'] == 'matched'} != expected):
         return {'status': 'unresolved', 'reason': 'Finding proof requires all three matching identity bindings.'}
-    with program.open('a', encoding='utf-8') as file:
-        file.write(_FINDING_PROOF)
     try:
+        proof = Path(__file__).with_name('diagnostic_finding_proof.lean')
+        with program.open('a', encoding='utf-8') as file:
+            file.write('\n' + proof.read_text(encoding='utf-8'))
         _execute([lean, '-DwarningAsError=true', str(program)], 120)
     except (OSError, ValueError, subprocess.TimeoutExpired) as error:
         return {'status': 'unresolved', 'reason': str(error)}
@@ -206,7 +175,43 @@ def _prove_finding(program, facts, lean):
             'quantified_over': ['heap', 'globals', 'source', 'field', 'message']}
 
 
-def _observe(root, digest, export, authored, lean):
+def _verdict_spec(root, pins, formal_verifier, lean):
+    report = formal_verifier(root, 'C90', **pins, action='verdict', lean=lean)
+    evidence = report.get('evidence', {})
+    findings = evidence.get('coverage', ())
+    if (report.get('sources') == pins
+            and report['translation']['status'] == 'matched'
+            and report['status'] != 'conflicting'
+            and not report['issues'] and not report['uncovered_outcomes']
+            and evidence.get('action') == 'verdict'
+            and findings
+            and all(row['status'] == 'matched' for row in findings)):
+        return report['lean']
+    return None
+
+
+def _prove_verdict(file, translated, provider, authored, lean):
+    if authored is None:
+        return {'status': 'unresolved',
+                'reason': 'Verdict Contract and Solution are unverified.'}
+    result = {'status': 'proved', 'theorem': 'publicVerdictMatchesContract',
+              'scope': 'Pinned verdict Contract for heap-backed string lists.',
+              'authored_lean_sha256': sha256(authored.encode()).hexdigest()}
+    try:
+        proof_path = Path(__file__).with_name('diagnostic_verdict_proof.lean')
+        proof = proof_path.read_bytes()
+        result['sha256'] = sha256(proof).hexdigest()
+        file.write_text(translated + authored.removeprefix('import Lean\n')
+                        + export_check('verdict', provider)
+                        + proof.decode('utf-8') + _VERDICT_STATEMENT,
+                        encoding='utf-8')
+        _execute([lean, '-DwarningAsError=true', str(file)], 120)
+    except (OSError, ValueError, subprocess.TimeoutExpired) as error:
+        result.update(status='unresolved', reason=str(error))
+    return result
+
+
+def _observe(root, digest, export, finding, verdict_spec, lean):
     path = root / _SOURCE
     if path.resolve(strict=True) != path:
         raise ValueError('Diagnostics source must be a regular file at its Project path')
@@ -215,16 +220,20 @@ def _observe(root, digest, export, authored, lean):
         _execute([sys.executable, '-B', '-m', _TRANSLATOR, str(path), str(root / export['path']),
                   '--sha256', digest, '--sha256', export['sha256'], '--output', str(model)], 1800)
         program = Path(folder) / 'Comparison.lean'
-        program.write_text('import Lean\n' + model.read_text(encoding='utf-8') + '\n'
-                           + authored.removeprefix('import Lean\n')
-                           + export_check('finding', path.name) + _CHECK, encoding='utf-8')
+        translated = 'import Lean\n' + model.read_text(encoding='utf-8') + '\n'
+        finding_program = translated + finding.removeprefix('import Lean\n')
+        program.write_text(finding_program + export_check('finding', path.name)
+                           + _CHECK, encoding='utf-8')
         facts, formation = json.loads(_execute([lean, str(program)], 120))
         if formation not in ('matched', 'conflicting', 'unresolved'):
             raise ValueError('Lean returned an invalid finding effect check')
         proof = _prove_finding(program, facts, lean)
         if formation == 'matched':
             formation = proof['status']
-        return facts, proof, {'target': 'C90.source_diagnostic', 'outcome': 'formed', 'status': formation}
+        effect = {'target': 'C90.source_diagnostic', 'outcome': 'formed', 'status': formation}
+        verdict = _prove_verdict(Path(folder) / 'Verdict.lean', translated,
+                                 path.name, verdict_spec, lean)
+        return facts, proof, effect, verdict
 
 
 def _checked_finding_obligation(fact):
@@ -247,22 +256,25 @@ def _finding_verdict(report, facts, proof, effect):
         raise ValueError('Lean returned unknown comparison status')
     if any(fact['solution'] == 'unresolved' for fact in facts):
         report['unresolved'].append('C90 Solution binding is outside the supported finding path.')
+    verdict_proved = report['verdict_proof']['status'] == 'proved'
+    if not verdict_proved:
+        report['unresolved'].append('C90 verdict policy remains unproved.')
     if 'conflicting' in states or effect['status'] == 'conflicting':
         return 'mismatch'
     if effect['status'] != 'proved':
         report['unresolved'].append('C90 finding value preservation remains unproved.'
                                     if proof['status'] != 'proved' else 'C90 diagnostic formation remains unresolved.')
-    elif not report['unresolved_obligations']:
+    elif verdict_proved and not report['unresolved_obligations']:
         return 'no_mismatch_in_cases'
     return 'unresolved'
 
 
 def compare_diagnostic(root, request, formal_verifier, lean):
-    """Check the finding witness and prove the three declared identity bindings."""
+    """Check finding identity bindings and the shared verdict policy."""
     pins = {role: request[role] for role in ('manifest', 'solution')}
     formal = formal_verifier(root, 'C90', **pins, action='finding', lean=lean)
     report = {'status': 'unresolved', 'facts': [], 'formal': formal,
-              'unresolved': ['C90 verdict and unobserved effects require separate evidence.']}
+              'unresolved': ['Unobserved C90 effects require separate evidence.']}
     if formal.get('outcome') != 'compared' or formal.get('translation', {}).get('status') != 'matched':
         return report
     if formal.get('sources') != pins:
@@ -284,7 +296,9 @@ def compare_diagnostic(root, request, formal_verifier, lean):
     try:
         root = Path(root).resolve(strict=True)
         export = report['public_export'] = export_pin(root / _SOURCE.parent, 'finding', root, request.get('export_sha256'))
-        facts, proof, effect = _observe(root, digest, export, formal['lean'], lean)
+        verdict_spec = _verdict_spec(root, pins, formal_verifier, lean)
+        facts, proof, effect, report['verdict_proof'] = _observe(
+            root, digest, export, formal['lean'], verdict_spec, lean)
         if not isinstance(facts, list) or [(row['left'], row['right']) for row in facts] != expected:
             raise ValueError('Lean result did not account for the declared equality obligations')
         status = _finding_verdict(report, facts, proof, effect)

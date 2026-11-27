@@ -13,7 +13,7 @@ class Recorder:
         self.gaps.append((field, reason))
 
 
-CARDINALITY = '''# Summary
+CARDINALITY = """# Summary
 Check dependency counts.
 
 ```yaml
@@ -28,4 +28,4 @@ condition:
   minimum: 1
   maximum: 1
 ```
-'''
+"""

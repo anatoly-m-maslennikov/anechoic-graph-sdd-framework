@@ -1,5 +1,4 @@
-
-"""Generate the deterministic Workbench schema asset from one Project capture."""
+"Generate the deterministic Workbench schema asset from one Project capture."
 
 from __future__ import annotations
 
@@ -8,36 +7,84 @@ from pathlib import Path
 import sys
 
 if __package__:
-    from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import _source, content_schema_from_statements, declaration_statements
+    from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (
+        _source,
+        content_schema_from_statements,
+        declaration_statements,
+    )
     from .declared_axes import compile_status_groups
-    from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import header_rules_from_statements
-    from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import declared_header_schema
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import formal_claim_fences, source_markdown
+    from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (
+        header_rules_from_statements,
+    )
+    from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (
+        declared_header_schema,
+    )
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
+        import (
+            formal_claim_fences,
+            source_markdown,
+        )  # fmt: skip
     from .source_reader import SourceReader
     from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import first_reference_rows
     from .workbench_schema_asset import compile_schema, schema_asset
 else:  # pragma: no cover - direct image-build invocation
     sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
-    from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import _source, content_schema_from_statements, declaration_statements
-    from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.declared_axes import compile_status_groups
-    from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import header_rules_from_statements
-    from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import declared_header_schema
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import formal_claim_fences, source_markdown
-    from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.source_reader import SourceReader
+    from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (
+        _source,
+        content_schema_from_statements,
+        declaration_statements,
+    )
+    from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.\
+        declared_axes \
+        import compile_status_groups  # fmt: skip
+    from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (
+        header_rules_from_statements,
+    )
+    from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (
+        declared_header_schema,
+    )
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
+        import (
+            formal_claim_fences,
+            source_markdown,
+        )  # fmt: skip
+    from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.\
+        source_reader \
+        import SourceReader  # fmt: skip
     from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import first_reference_rows
-    from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.workbench_schema_asset import compile_schema, schema_asset
+    from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.\
+        workbench_schema_asset \
+        import (
+            compile_schema,
+            schema_asset,
+        )  # fmt: skip
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import is_current_requirement_declaration
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import compile_role_folders
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
+    import is_current_requirement_declaration  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
+    import compile_role_folders  # fmt: skip
 
 
-def compile_project_schema(project_root: Path, *, model_class_bindings=None) -> bytes:
+def compile_project_schema(
+    project_root: Path, *, model_class_bindings=None
+) -> bytes:
     """Capture one Project and compile both admitted Workbench schema modes."""
-    reader = SourceReader(Path(project_root), include_archived=False, include_installed_framework=True)
+    reader = SourceReader(
+        Path(project_root),
+        include_archived=False,
+        include_installed_framework=True,
+    )
     atoms, _scopes = reader.capture()
-    selected = list(first_reference_rows(reader.model_rows(atoms, is_current_requirement_declaration)))
+    selected = list(
+        first_reference_rows(
+            reader.model_rows(atoms, is_current_requirement_declaration)
+        )
+    )
     if model_class_bindings is None:
-        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import bindings_from_workbench_rows
+        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.\
+            ADAPTERS_C30__shared \
+            import bindings_from_workbench_rows  # fmt: skip
+
         model_class_bindings = bindings_from_workbench_rows(selected)
     pins = {}
     statements = []
@@ -50,14 +97,27 @@ def compile_project_schema(project_root: Path, *, model_class_bindings=None) -> 
     content = content_schema_from_statements(statements)
     header = declared_header_schema(header_rules_from_statements(statements))
     folders = compile_role_folders(statements)
-    role_folders = tuple(sorted((role, folder) for role, (folder, _source) in folders.items())) if folders else None
+    role_folders = (
+        tuple(
+            sorted(
+                (role, folder) for role, (folder, _source) in folders.items()
+            )
+        )
+        if folders
+        else None
+    )
     status_groups = compile_status_groups(_python_declarations(selected))
-    return schema_asset(list(pins.values()), compile_schema(atoms, content, header, status_groups, role_folders))
+    return schema_asset(
+        list(pins.values()),
+        compile_schema(atoms, content, header, status_groups, role_folders),
+    )
 
 
 def _python_declarations(rows):
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_native_model_claim
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_structured_python_model_claim
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
+        import parse_native_model_claim  # fmt: skip
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
+        import parse_structured_python_model_claim  # fmt: skip
 
     for row in rows:
         if not is_current_requirement_declaration(row):

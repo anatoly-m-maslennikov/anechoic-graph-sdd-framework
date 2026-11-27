@@ -77,6 +77,21 @@ def _endpoint(kind, ref):
             kind == "Component" and bool(re.fullmatch(r"C[0-9]+", ref)))
 
 
+def _validate_atom_identity(row, domains):
+    exact, group, status = row.exact_ref, row.status_group, row.status
+    identity = exact.split("@", 1)[0]
+    if not _ATOM.fullmatch(identity):
+        raise ValueError("Invalid native Atom identity")
+    family = identity.split("-")[1]
+    if status not in domains[family]:
+        raise ValueError(f"Invalid native Atom Status {status} for {family}")
+    expected_group = status.title() if status in {"draft", "archived"} else "Current"
+    expected_exact = f'{identity}@{row.version}' + ("-draft" if status == "draft" else "")
+    expected_ref = identity if group == "Current" else expected_exact
+    if group != expected_group or exact != expected_exact or row.reference != expected_ref:
+        raise ValueError("Native Atom identity, version or status disagrees")
+
+
 def _atom_references(atoms, domains):
     exacts, references, paths = set(), set(), set()
     records = []
@@ -94,18 +109,8 @@ def _atom_references(atoms, domains):
                 or row.tier is not None and not -(2**63) <= row.tier < 2**63):
             raise ValueError("Invalid native Atom fields")
         records.append(row)
-        exact, group, status = row.exact_ref, row.status_group, row.status
-        identity = exact.split("@", 1)[0]
-        if not _ATOM.fullmatch(identity):
-            raise ValueError("Invalid native Atom identity")
-        family = identity.split("-")[1]
-        if status not in domains[family]:
-            raise ValueError(f"Invalid native Atom Status {status} for {family}")
-        expected_group = status.title() if status in {"draft", "archived"} else "Current"
-        expected_exact = f'{identity}@{row.version}' + ("-draft" if status == "draft" else "")
-        expected_ref = identity if group == "Current" else expected_exact
-        if group != expected_group or exact != expected_exact or row.reference != expected_ref:
-            raise ValueError("Native Atom identity, version or status disagrees")
+        _validate_atom_identity(row, domains)
+        exact = row.exact_ref
         path, filename = row.relative_path, row.filename
         parts = PurePosixPath(path).parts
         if (path.startswith("/") or "\\" in path or any(part in {"..", "."} for part in parts)

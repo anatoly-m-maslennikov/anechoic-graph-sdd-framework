@@ -1,4 +1,3 @@
-
 """Native Tool contract validation and the shared public schema adapter."""
 
 from __future__ import annotations
@@ -33,12 +32,21 @@ _UNADAPTABLE_ROOT_KEYS = frozenset(
 
 def _native_presence(predicate, fields):
     """Match predicates whose truth is unchanged by adding envelope properties."""
-    if not isinstance(predicate, dict) or predicate.keys() - {"required", "anyOf", "not"}:
+    if not isinstance(predicate, dict) or predicate.keys() - {
+        "required",
+        "anyOf",
+        "not",
+    }:
         return False
     return (
         set(predicate.get("required", ())) <= fields
-        and all(_native_presence(arm, fields) for arm in predicate.get("anyOf", ()))
-        and ("not" not in predicate or _native_presence(predicate["not"], fields))
+        and all(
+            _native_presence(arm, fields) for arm in predicate.get("anyOf", ())
+        )
+        and (
+            "not" not in predicate
+            or _native_presence(predicate["not"], fields)
+        )
     )
 
 
@@ -52,24 +60,36 @@ def public_tool(tool: types.Tool, *, required: bool = True) -> types.Tool:
     except SchemaError as error:
         raise ValueError("Native Tool input schema is invalid") from error
     properties = dict(schema.get("properties", {}))
-    if (_UNADAPTABLE_ROOT_KEYS.intersection(schema)
-            or any(not _native_presence(arm, properties.keys()) for arm in schema.get("oneOf", ()))):
-        raise ValueError("Native Tool input schema cannot safely add project_root at its root")
+    if _UNADAPTABLE_ROOT_KEYS.intersection(schema) or any(
+        not _native_presence(arm, properties.keys())
+        for arm in schema.get("oneOf", ())
+    ):
+        raise ValueError(
+            "Native Tool input schema cannot safely add project_root at its root"
+        )
     if {"project_root", "caller_context"} & properties.keys():
-        raise ValueError("Native Tool cannot use a reserved MCP envelope field")
+        raise ValueError(
+            "Native Tool cannot use a reserved MCP envelope field"
+        )
     if schema.get("type") not in (None, "object"):
         raise ValueError("Native Tool input is not a root object")
     properties["project_root"] = {"type": "string", "minLength": 1}
     properties["caller_context"] = {
         "type": "object",
-        "properties": {"session_id": {"type": "string", "minLength": 1, "pattern": "\\S"}},
+        "properties": {
+            "session_id": {"type": "string", "minLength": 1, "pattern": "\\S"}
+        },
         "required": ["session_id"],
         "additionalProperties": False,
     }
     required_fields = list(schema.get("required", []))
     if required and "project_root" not in required_fields:
         required_fields.append("project_root")
-    schema["type"], schema["properties"], schema["required"] = "object", properties, required_fields
+    schema["type"], schema["properties"], schema["required"] = (
+        "object",
+        properties,
+        required_fields,
+    )
     try:
         Draft202012Validator.check_schema(schema)
     except SchemaError as error:

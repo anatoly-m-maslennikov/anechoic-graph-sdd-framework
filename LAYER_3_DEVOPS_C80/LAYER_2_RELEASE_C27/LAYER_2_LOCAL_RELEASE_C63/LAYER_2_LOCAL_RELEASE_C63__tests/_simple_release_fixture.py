@@ -6,8 +6,7 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
-from types import SimpleNamespace
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, NonCallableMock, patch
 
 from LAYER_2_LOCAL_RELEASE_C63 import local_release_runner
 from LAYER_2_LOCAL_RELEASE_C63.LAYER_2_LOCAL_RELEASE_C63__shared import run_local_release
@@ -99,9 +98,15 @@ class SimpleReleaseFixture:
                                 return_value=False))
         self.enterContext(patch("LAYER_2_LOCAL_RELEASE_C63.local_release_progress.check_locked_engine"))
         self.image_id = "sha256:" + "a" * 64
-        self.image = SimpleNamespace(resolve=Mock(return_value=self.image_id),
-                                     identity=Mock(return_value=SimpleNamespace(fingerprint="b" * 64)),
-                                     mark_production_image=Mock(), prune_build_cache=Mock())
+        self.image = NonCallableMock(
+            spec_set=["resolve", "identity", "mark_production_image",
+                      "prune_build_cache"],
+            resolve=Mock(return_value=self.image_id),
+            identity=Mock(return_value=NonCallableMock(
+                spec_set=["fingerprint"], fingerprint="b" * 64,
+            )),
+            mark_production_image=Mock(), prune_build_cache=Mock(),
+        )
         original_launcher_image = local_release_runner._launcher_image
 
         def scoped_launcher_image(selection):

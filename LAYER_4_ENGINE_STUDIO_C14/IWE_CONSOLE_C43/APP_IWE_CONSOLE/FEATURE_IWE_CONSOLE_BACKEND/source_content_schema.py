@@ -1,4 +1,3 @@
-
 """Retain the compiled Content schema used to validate changed source Atoms."""
 
 from __future__ import annotations
@@ -6,11 +5,16 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from typing import Any
 
-from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import ContentSchema, FormalStatement, content_schema_from_statements, declaration_statements
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (
+    ContentSchema,
+    FormalStatement,
+    content_schema_from_statements,
+    declaration_statements,
+)
 
 
 class SourceContentSchema:
-    """Keep Content declarations in memory; source files remain authoritative."""
+    "Keep Content declarations in memory; source files remain authoritative."
 
     def __init__(self, schema: ContentSchema | None = None) -> None:
         self.schema = schema
@@ -24,29 +28,46 @@ class SourceContentSchema:
         self._rows.clear()
         self._bindings.clear()
 
-    def rebuild(self, rows: Iterable[Mapping[str, Any]]) -> dict[str, ValueError]:
-        """Compile valid rows, excluding only rows with duplicate declared headings."""
+    def rebuild(
+        self, rows: Iterable[Mapping[str, Any]]
+    ) -> dict[str, ValueError]:
+        "Compile valid rows, excluding only rows with duplicate declared headings."
         remaining = list(rows)
         errors: dict[str, ValueError] = {}
         while True:
-            from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import bindings_from_workbench_rows
+            from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.\
+                ADAPTERS_C30__shared \
+                import bindings_from_workbench_rows  # fmt: skip
+
             bindings = bindings_from_workbench_rows(remaining)
-            contributions = declaration_contributions({**row, "_model_class_bindings": bindings} for row in remaining)
+            contributions = declaration_contributions(
+                {**row, "_model_class_bindings": bindings} for row in remaining
+            )
             schema = content_schema_from_statements(
-                statement for statements in contributions.values() for statement in statements
+                statement
+                for statements in contributions.values()
+                for statement in statements
             )
             invalid = self.validation_errors(remaining, schema)
             if not invalid:
                 self.schema = schema
                 self._contributions = contributions
-                self._rows = {path: row for row in remaining if (path := source_path(row)) is not None}
+                self._rows = {
+                    path: row
+                    for row in remaining
+                    if (path := source_path(row)) is not None
+                }
                 self._bindings = bindings
                 return errors
             errors.update(invalid)
-            remaining = [row for row in remaining if source_path(row) not in invalid]
+            remaining = [
+                row for row in remaining if source_path(row) not in invalid
+            ]
 
-    def changes_schema(self, rows: Mapping[str, Mapping[str, Any] | None]) -> bool:
-        """Compare only changed declaration rules, not declaration provenance."""
+    def changes_schema(
+        self, rows: Mapping[str, Mapping[str, Any] | None]
+    ) -> bool:
+        "Compare only changed declaration rules, not declaration provenance."
         if self.schema is None:
             return True
         try:
@@ -56,7 +77,7 @@ class SourceContentSchema:
         return schema.shape != self.schema.shape
 
     def update(self, rows: Mapping[str, Mapping[str, Any] | None]) -> bool:
-        """Commit changed declaration provenance unless its schema shape changed."""
+        "Commit changed declaration provenance unless its schema shape changed."
         if self.schema is None:
             return True
         try:
@@ -72,15 +93,22 @@ class SourceContentSchema:
                 self._rows.pop(path, None)
             else:
                 self._rows[path] = row
-        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import bindings_from_workbench_rows
+        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.\
+            ADAPTERS_C30__shared \
+            import bindings_from_workbench_rows  # fmt: skip
+
         self._bindings = bindings_from_workbench_rows(self._rows.values())
         return False
 
     def _candidate(
-        self, rows: Mapping[str, Mapping[str, Any] | None],
+        self,
+        rows: Mapping[str, Mapping[str, Any] | None],
     ) -> tuple[ContentSchema, dict[str, tuple[FormalStatement, ...]]]:
         assert self.schema is not None
-        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import bindings_from_workbench_rows
+        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.\
+            ADAPTERS_C30__shared \
+            import bindings_from_workbench_rows  # fmt: skip
+
         combined = dict(self._rows)
         for path, row in rows.items():
             if row is None:
@@ -89,19 +117,40 @@ class SourceContentSchema:
                 combined[path] = row
         bindings = bindings_from_workbench_rows(combined.values())
         if bindings != self._bindings:
-            contributions = declaration_contributions({**row, "_model_class_bindings": bindings} for row in combined.values())
-            schema = content_schema_from_statements(statement for items in contributions.values() for statement in items)
+            contributions = declaration_contributions(
+                {**row, "_model_class_bindings": bindings}
+                for row in combined.values()
+            )
+            schema = content_schema_from_statements(
+                statement
+                for items in contributions.values()
+                for statement in items
+            )
             return schema, contributions
-        contributions = updated_declarations(self._contributions, {path: ({**row, "_model_class_bindings": bindings} if row is not None else None) for path, row in rows.items()})
+        contributions = updated_declarations(
+            self._contributions,
+            {
+                path: (
+                    {**row, "_model_class_bindings": bindings}
+                    if row is not None
+                    else None
+                )
+                for path, row in rows.items()
+            },
+        )
         if contributions is self._contributions:
             return self.schema, contributions
         schema = content_schema_from_statements(
-            statement for statements in contributions.values() for statement in statements
+            statement
+            for statements in contributions.values()
+            for statement in statements
         )
         return schema, contributions
 
     def validation_errors(
-        self, rows: Iterable[Mapping[str, Any]], schema: ContentSchema | None = None,
+        self,
+        rows: Iterable[Mapping[str, Any]],
+        schema: ContentSchema | None = None,
     ) -> dict[str, ValueError]:
         active_schema = schema or self.schema
         if active_schema is None:
@@ -129,7 +178,8 @@ def declaration_contributions(
     return {
         path: statements
         for row in rows
-        if (path := source_path(row)) is not None and (statements := declaration_statements(row))
+        if (path := source_path(row)) is not None
+        and (statements := declaration_statements(row))
     }
 
 

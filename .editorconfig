@@ -8,3 +8,6 @@ max_line_length = 79
 
 [.github/workflows/**.{yml,yaml}]
 max_line_length = 79
+
+[LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_FORMAL_MODEL_ENGINE/assets/scope_level_check.py]
+max_line_length = unset

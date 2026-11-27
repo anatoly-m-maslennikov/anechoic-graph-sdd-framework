@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 import shutil
 import tempfile
-from types import SimpleNamespace
+from unittest.mock import NonCallableMock
 import unittest
 from unittest.mock import patch
 
@@ -14,9 +14,9 @@ from ..LAYER_2_PROJECT_STRUCTURE_C93__rows import StructureAdmissionError, compi
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import CarrierError, LimitReached, ReadContext, canonical_native_header, native_header_view, read_structure
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_read__pub import parse_carrier
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.project_manifest__pub import manifest_summary_fields
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_source_rows__pub import capture_native
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import capture_native
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model_capture import model_inputs
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.native_project_selection import resolve_native_project
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import resolve_native_project
 
 ROOT = Path(__file__).resolve().parents[5]
 CONTROL = ROOT / '_anechoic_anechoic'
@@ -76,8 +76,17 @@ def selection(control, project=None):
     raw = project.read_bytes()
     meta = native_header_view(parse_carrier(raw, project).metadata)
     ref = f"{meta['identity']['atom_id']}@{meta['state']['version']}"
-    return SimpleNamespace(control_root=control, manifest_path=project, manifest_ref=ref,
-                           manifest_sha256=hashlib.sha256(raw).hexdigest())
+    return NonCallableMock(
+        spec_set=[
+            'control_root',
+            'manifest_path',
+            'manifest_ref',
+            'manifest_sha256',
+        ],
+        control_root=control,
+        manifest_path=project,
+        manifest_ref=ref,
+        manifest_sha256=hashlib.sha256(raw).hexdigest())
 
 
 class Model:
@@ -96,37 +105,69 @@ class Model:
 
 class StructureTests(unittest.TestCase):
     def test_project_summary_follows_model_declaration(self):
-        from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.FEATURE_FORMAL_MODEL_GENERATOR.native_manifest_model import load_native_model
-        model = load_native_model()
+        model = Model()
+        summaries = []
+
         def validate(fields, parent):
-            self.assertEqual('Declare Anechoic', fields.pop('summary'))
-            return model.validate_manifest(fields, parent)
-        resolve_native_project(ROOT, CONTROL.name, validate_manifest=validate, require_manifest_summary=True)
-        resolve_native_project(ROOT, CONTROL.name, validate_manifest=model.validate_manifest)
-        self.assertEqual({}, manifest_summary_fields(SimpleNamespace(body='## Claim\n\nText\n')))
+            summaries.append(fields.get('summary'))
+            model.validate_manifest(fields, parent)
+            manifest = NonCallableMock(
+                spec_set=['name', 'prefix'], prefix=fields['prefix'],
+            )
+            manifest.name = fields['name']
+            return manifest
+
+        resolve_native_project(
+            ROOT, CONTROL.name, validate_manifest=validate,
+            require_manifest_summary=True,
+        )
+        resolve_native_project(ROOT, CONTROL.name, validate_manifest=validate)
+        self.assertEqual(['Declare Anechoic', None], summaries)
+        self.assertEqual({}, manifest_summary_fields(NonCallableMock(
+            spec_set=['body'],
+            body='## Claim\n\nText\n')))
         with self.assertRaisesRegex(ValueError, 'duplicate Summary'):
-            manifest_summary_fields(SimpleNamespace(body='## Summary\n\nOne\n\n## Summary\n\nTwo\n'))
+            manifest_summary_fields(NonCallableMock(
+                spec_set=['body'],
+                body='## Summary\n\nOne\n\n## Summary\n\nTwo\n'))
 
     def test_component_and_seed_summary_follows_model_declaration(self):
-        carrier = SimpleNamespace(body='## Summary\n\nAuthored summary.\n', metadata={})
-        model = SimpleNamespace(requires_atom_state=False, declares_summary=lambda name: name == 'Component Manifest')
+        carrier = NonCallableMock(
+            spec_set=['body', 'metadata'],
+            body='## Summary\n\nAuthored summary.\n',
+            metadata={})
+        model = NonCallableMock(
+            spec_set=['requires_atom_state', 'declares_summary'],
+            requires_atom_state=False,
+            declares_summary=lambda name: name == 'Component Manifest')
         self.assertEqual({'summary': 'Authored summary.'}, _validation_fields({}, carrier, model, 'Component Manifest'))
         self.assertEqual({}, _validation_fields({}, carrier, model, 'Component Seed Manifest'))
         self.assertEqual({}, _validation_fields({}, carrier, Model(), 'Component Manifest'))
         model.declares_summary = lambda _: True
-        seed = SimpleNamespace(body='# Manifest Build\n\n## Purpose\n\nBuild.\n', metadata={})
+        seed = NonCallableMock(
+            spec_set=['body', 'metadata'],
+            body='# Manifest Build\n\n## Purpose\n\nBuild.\n',
+            metadata={})
         self.assertEqual({'summary': 'Manifest Build'}, _validation_fields({}, seed, model, 'Component Seed Manifest'))
         for body in ('## Purpose\n\nBuild.\n', '# One\n\n# Two\n'):
             with self.assertRaisesRegex(ValueError, 'requires one title'):
-                _validation_fields({}, SimpleNamespace(body=body, metadata={}), model, 'Component Seed Manifest')
+                _validation_fields({}, NonCallableMock(
+                    spec_set=['body', 'metadata'],
+                    body=body,
+                    metadata={}), model, 'Component Seed Manifest')
 
     def test_component_template_comes_from_header_when_model_declares_it(self):
         carrier = parse_carrier(LEGACY_COMPONENT.encode(), COMPONENT)
-        model = SimpleNamespace(requires_atom_state=False,
-                                declares_property=lambda name, prop: name == 'Component Manifest' and prop == 'template')
+        model = NonCallableMock(
+            spec_set=['requires_atom_state', 'declares_property'],
+            requires_atom_state=False,
+            declares_property=lambda name, prop: name == 'Component Manifest' and prop == 'template')
         self.assertEqual({'template': 'component_manifest'},
                          _validation_fields({}, carrier, model, 'Component Manifest'))
-        changed = SimpleNamespace(body=carrier.body, metadata={**carrier.metadata,
+        changed = NonCallableMock(
+            spec_set=['body', 'metadata'],
+            body=carrier.body,
+            metadata={**carrier.metadata,
             'context': {**carrier.metadata['context'], 'template': 'other'}})
         self.assertEqual({'template': 'other'}, _validation_fields({}, changed, model, 'Component Manifest'))
         self.assertEqual({}, _validation_fields({}, changed, Model(), 'Component Manifest'))
@@ -375,9 +416,19 @@ Contract text.
 
     def test_failed_alias_and_off_path_issue_match_offline_admission(self):
         control, selected = self._standalone_project()
-        native = SimpleNamespace(root=control.parent, control_root=control,
-                                 manifest_path=selected.manifest_path, manifest_sha256=selected.manifest_sha256,
-                                 project_prefix='AN')
+        native = NonCallableMock(
+            spec_set=[
+                'root',
+                'control_root',
+                'manifest_path',
+                'manifest_sha256',
+                'project_prefix',
+            ],
+            root=control.parent,
+            control_root=control,
+            manifest_path=selected.manifest_path,
+            manifest_sha256=selected.manifest_sha256,
+            project_prefix='AN')
         alias = control / '_SPEC/AN-S-3039-SPEC-OTHER--engine.md'
         alias.write_text(LEGACY_COMPONENT)
         off_path = control / '_QA/AN-S-3333-SPEC-COMPONENT_MANIFEST--invalid.md'
@@ -399,9 +450,19 @@ Contract text.
 
     def test_failed_custom_alias_is_classified_by_admitted_model(self):
         control, selected = self._standalone_project()
-        native = SimpleNamespace(root=control.parent, control_root=control,
-                                 manifest_path=selected.manifest_path, manifest_sha256=selected.manifest_sha256,
-                                 project_prefix='AN')
+        native = NonCallableMock(
+            spec_set=[
+                'root',
+                'control_root',
+                'manifest_path',
+                'manifest_sha256',
+                'project_prefix',
+            ],
+            root=control.parent,
+            control_root=control,
+            manifest_path=selected.manifest_path,
+            manifest_sha256=selected.manifest_sha256,
+            project_prefix='AN')
         alias = control / '_SPEC/AN-S-3039-SPEC-OTHER--engine.md'
         alias.write_text(LEGACY_COMPONENT.replace('template: component_manifest', 'template: new_component')
                          .replace('version: 4', 'version: 0'))

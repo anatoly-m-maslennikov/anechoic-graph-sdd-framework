@@ -23,7 +23,9 @@ class _Health(BaseModel):
 
 
 def process_environment():
-    environment = {key: value for key, value in os.environ.items() if key != "PYTHONHOME"}
+    environment = {
+        key: value for key, value in os.environ.items() if key != "PYTHONHOME"
+    }
     environment["PYTHONPATH"] = str(ENGINE)
     return environment
 
@@ -71,7 +73,9 @@ def _ready(worker, path, started, stop):
     startup_limit = operation_timeout(15)
     while worker.poll() is None and (stop is None or not stop()):
         now = monotonic()
-        deadline = now + 0.5 if startup_limit is None else started + startup_limit
+        deadline = (
+            now + 0.5 if startup_limit is None else started + startup_limit
+        )
         if now >= deadline:
             break
         health = _healthy(path, worker.pid, deadline)
@@ -96,16 +100,30 @@ def open_warm_worker(*, stop=None):
         try:
             try:
                 worker = subprocess.Popen(
-                    [sys.executable, "-B", "-P", "-m", "WORKERS_beta_C69.warm_worker", "--socket", str(path)],
-                    cwd=ENGINE, env=process_environment(), stdin=subprocess.DEVNULL,
-                    stdout=sys.stderr, start_new_session=True,
+                    [
+                        sys.executable,
+                        "-B",
+                        "-P",
+                        "-m",
+                        "WORKERS_beta_C69.warm_worker",
+                        "--socket",
+                        str(path),
+                    ],
+                    cwd=ENGINE,
+                    env=process_environment(),
+                    stdin=subprocess.DEVNULL,
+                    stdout=sys.stderr,
+                    start_new_session=True,
                 )
                 ready = _ready(worker, path, started, stop)
             except OSError:
                 pass
             if not ready:
                 if stop is None or not stop():
-                    print("Beta warm worker unavailable; using cold worker startup", file=sys.stderr)
+                    print(
+                        "Beta warm worker unavailable; using cold worker startup",
+                        file=sys.stderr,
+                    )
                 if worker is not None:
                     stop_process(worker)
                     worker = None

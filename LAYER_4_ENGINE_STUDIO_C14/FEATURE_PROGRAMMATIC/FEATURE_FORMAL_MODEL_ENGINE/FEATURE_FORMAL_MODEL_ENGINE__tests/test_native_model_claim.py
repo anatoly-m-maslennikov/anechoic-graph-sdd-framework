@@ -221,26 +221,6 @@ declare_entity(
         self.assertEqual({"default_factory": "list"}, result["classes"][0]["fields"][1]["field"])
         self.assertEqual({"kw_only": True}, result["classes"][0]["dataclass"])
 
-    def test_root_class_and_nested_dataclass_records(self):
-        claim = '''
-from dataclasses import dataclass
-from anechoic.formal_claims import declare_entity
-
-@dataclass(kw_only=True)
-class AtomHeader:
-    label: str | None = None
-
-@dataclass(kw_only=True)
-class Atom:
-    header: AtomHeader
-
-declare_entity(entity_class=Atom, entity_name="Atom")
-'''
-        result = parse_native_model_claim(claim)
-        self.assertEqual((), result["classes"][0]["bases"])
-        self.assertEqual((), result["classes"][1]["bases"])
-        self.assertEqual("AtomHeader", result["classes"][1]["fields"][0]["annotation"])
-
     def test_relation_endpoint_flags_and_model_scopes(self):
         claim = '''
 from anechoic.formal_claims import declare_relation

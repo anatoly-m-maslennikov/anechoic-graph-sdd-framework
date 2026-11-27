@@ -122,7 +122,7 @@ def compile_header_constraints(rows):
         for block in iter_formal_claims(row['_content_bytes'].decode('utf-8')):
             records.update(_native_header_records(block, row['id']))
     keys = ('kind', 'path', 'selector', 'selected', 'value', 'source')
-    return [dict(zip(keys, item)) for item in sorted(records, key=repr)]
+    return [dict(zip(keys, item, strict=False)) for item in sorted(records, key=repr)]
 
 
 @dataclass(frozen=True, config=ConfigDict(strict=True, extra="forbid"))

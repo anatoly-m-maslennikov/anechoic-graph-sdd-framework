@@ -1,7 +1,7 @@
+from unittest.mock import NonCallableMock
 from hashlib import sha256
 import os
 from pathlib import Path, PurePosixPath
-from types import SimpleNamespace
 from unittest.mock import patch
 import tempfile
 import unittest
@@ -25,7 +25,12 @@ class NativeProjectionTests(unittest.TestCase):
         self.control = self.root / ".anechoic_test"
         self.control.mkdir()
         self.manifest = self.write("AN-S-001-PROJECT_MANIFEST--manifest.md", "AN-S-001", "active", 1)
-        self.selection = SimpleNamespace(root=self.root, control_root=self.control,
+        self.selection = NonCallableMock(
+            spec_set=[
+                'root', 'control_root', 'manifest_path', 'project_prefix',
+                'manifest_sha256'
+            ],
+            root=self.root, control_root=self.control,
                                          manifest_path=self.manifest, project_prefix="AN",
                                          manifest_sha256=sha256(self.manifest.read_bytes()).hexdigest())
 

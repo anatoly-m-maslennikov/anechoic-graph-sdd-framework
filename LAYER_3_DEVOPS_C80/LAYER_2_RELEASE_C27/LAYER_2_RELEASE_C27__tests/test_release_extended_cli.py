@@ -120,7 +120,7 @@ class ExtendedReleaseCliTests(ReleaseCliFixture, unittest.TestCase):
         )
         for platform, arguments, expected in cases:
             with self.subTest(arguments=arguments), patch.object(release.sys, "platform", platform):
-                def invoke(_arguments):
+                def invoke(_arguments, expected=expected):
                     self.assertEqual(os.environ.get("DOCKER_CONTEXT"), expected)
                     self.assertNotIn("DOCKER_HOST", os.environ)
                     return {"outcome": "completed"}

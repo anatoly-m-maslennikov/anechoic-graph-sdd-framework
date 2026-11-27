@@ -140,12 +140,7 @@ def _validate_endpoint(value: Any, label: str, node: ast.AST) -> None:
                 or any(not isinstance(path, str) or not path.strip() or path != path.strip()
                        for path in paths)):
             _fail(node, f"{label} entity_paths must be nonempty paths")
-    for key in ("reference_form", "dependency", "address_form"):
-        if key in value and (not isinstance(value[key], str) or not value[key].strip()):
-            _fail(node, f"{label} {key} must be a nonempty string")
-    for key in ("axis", "ephemeral"):
-        if key in value and type(value[key]) is not bool:
-            _fail(node, f"{label} {key} must be a boolean")
+    _validate_endpoint_flags(value, label, node)
 
 
 def _value(node: ast.AST, names: set[str]) -> Any:  # noqa: C901
@@ -238,3 +233,12 @@ def _validate_manifest_arguments(arguments, node):
             _fail(node, "constraints_for requires a separate class constraint declaration")
 
 
+
+
+def _validate_endpoint_flags(value, label, node):
+    for key in ("reference_form", "dependency", "address_form"):
+        if key in value and (not isinstance(value[key], str) or not value[key].strip()):
+            _fail(node, f"{label} {key} must be a nonempty string")
+    for key in ("axis", "ephemeral"):
+        if key in value and type(value[key]) is not bool:
+            _fail(node, f"{label} {key} must be a boolean")

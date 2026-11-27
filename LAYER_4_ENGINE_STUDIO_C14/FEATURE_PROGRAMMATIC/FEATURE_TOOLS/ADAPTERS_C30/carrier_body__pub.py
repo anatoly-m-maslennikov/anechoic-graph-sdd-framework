@@ -1,4 +1,5 @@
 """Extract the body of a frontmatter carrier."""
+
 from pathlib import Path
 import re
 
@@ -14,11 +15,15 @@ def frontmatter_bounds(raw: bytes) -> tuple[int, int, int] | None:
     else:
         return None
     closing = _CLOSING_DELIMITER.search(raw, pos=opening_end - 1)
-    return None if closing is None else (opening_end, closing.start(), closing.end())
+    return (
+        None
+        if closing is None
+        else (opening_end, closing.start(), closing.end())
+    )
 
 
 def source_body(raw: bytes, path: Path) -> bytes:
     bounds = frontmatter_bounds(raw)
     if bounds is None:
         raise ValueError(f"{path}: unsupported frontmatter delimiter")
-    return raw[bounds[2]:]
+    return raw[bounds[2] :]

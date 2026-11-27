@@ -6,6 +6,9 @@ import re
 import subprocess
 import sys
 import tempfile
+from typing import Any
+
+from pydantic import BaseModel, ConfigDict, Field
 
 if not __package__:
     directory = Path(__file__).resolve().parent
@@ -20,8 +23,15 @@ def git(*args, cwd=None):
     return subprocess.run(["git", *args], cwd=cwd, text=True, capture_output=True, check=True, timeout=300).stdout.strip()
 
 
+class _CaseCollection(BaseModel):
+    model_config = ConfigDict(strict=True, extra="forbid")
+
+    cases: list[dict[str, Any]] = Field(default_factory=list)
+    gaps: list[dict[str, Any]] = Field(default_factory=list)
+
+
 def collect_cases(case_id):
-    result = {"cases": [], "gaps": []}
+    result = _CaseCollection()
     for case in sorted(path for path in CORPUS.iterdir() if path.is_dir()):
         if case_id and case.name != case_id:
             continue
@@ -30,18 +40,18 @@ def collect_cases(case_id):
             if not isinstance(metadata, dict):
                 raise ValueError("Case metadata must be an object")
             if not metadata.get("analyzer"):
-                result["gaps"].append({"case": case.name, "detail": "No checkout analyzer declared"})
+                result.gaps.append({"case": case.name, "detail": "No checkout analyzer declared"})
                 continue
             revisions = {side: metadata[side]["revision"] for side in ("before", "fixed")}
             if not all(isinstance(rev, str) and re.fullmatch(r"[0-9a-f]{40}", rev) for rev in revisions.values()):
                 raise ValueError("Both revisions must be exact 40-character Git hashes")
-            result["cases"].append({"case": case.name, "revisions": revisions})
+            result.cases.append({"case": case.name, "revisions": revisions})
         except (OSError, ValueError, KeyError, TypeError) as exc:
-            result["gaps"].append({"case": case.name, "detail": str(exc)})
-    if case_id and not result["cases"] and not result["gaps"]:
+            result.gaps.append({"case": case.name, "detail": str(exc)})
+    if case_id and not result.cases and not result.gaps:
         raise ValueError("Unknown case ID")
 
-    return result
+    return result.model_dump()
 
 
 def main():

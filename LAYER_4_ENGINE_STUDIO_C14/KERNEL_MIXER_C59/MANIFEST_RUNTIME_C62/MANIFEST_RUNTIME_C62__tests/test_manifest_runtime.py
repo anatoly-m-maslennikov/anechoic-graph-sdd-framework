@@ -1,4 +1,5 @@
 """Exercise the Kernel with the real compiler and source watcher."""
+from unittest.mock import NonCallableMock
 
 import hashlib
 import json
@@ -11,7 +12,6 @@ import sys
 import tempfile
 from threading import Event
 import time
-from types import SimpleNamespace
 import unittest
 from unittest.mock import Mock, patch
 
@@ -93,10 +93,21 @@ class ManifestRuntimeTests(unittest.TestCase):
             root = Path(temporary).resolve()
             control = root / "_anechoic"
             control.mkdir()
-            selection = SimpleNamespace(root=root, control_root=control, control_relative=Path("_anechoic"),
-                                        manifest_sha256="a" * 64)
+            selection = NonCallableMock(
+                spec_set=[
+                    'root', 'control_root', 'control_relative',
+                    'manifest_sha256'
+                ],
+                root=root, control_root=control,
+                control_relative=Path("_anechoic"),
+                manifest_sha256="a" * 64,
+            )
             result = subprocess.CompletedProcess([], 1, stdout=b"", stderr=b"compiler failed")
-            orchestrator = SimpleNamespace(run_worker=Mock(return_value=result))
+            orchestrator = NonCallableMock(
+                spec_set=[
+                    'run_worker'
+                ],
+                run_worker=Mock(return_value=result))
             os.environ.pop(switch, None)
             for setting, expected in ((None, 15), ("1", 15), ("0", None)):
                 if setting is not None:
@@ -209,25 +220,26 @@ assert not any('FEATURE_FORMAL_MODEL_GENERATOR' in name for name in sys.modules)
                 generations = []
                 real_popen = subprocess.Popen
 
-                def record_process(*args, **kwargs):
-                    process = real_popen(*args, **kwargs)
+                def record_process(*args, _popen=real_popen, _generations=generations,
+                                   _target=target, **kwargs):
+                    process = _popen(*args, **kwargs)
                     command = args[0]
                     if "--build-model" not in command:
                         return process
                     generation = Path(command[command.index("--build-model") - 1])
-                    generations.append(generation)
+                    _generations.append(generation)
                     communicate = process.communicate
 
-                    def tamper(*args, **kwargs):
+                    def tamper(*args, bound_target=_target, **kwargs):
                         stdout, stderr = communicate(*args, **kwargs)
-                        if target in {"structure", "fingerprint"}:
+                        if bound_target in {"structure", "fingerprint"}:
                             result = json.loads(stdout)
-                            if target == "structure":
+                            if bound_target == "structure":
                                 result["structure"]["components"] = []
                             else:
                                 result["structure"]["model_sha256"] = "b" * 64
                             return json.dumps(result).encode(), stderr
-                        path = (generation / "model.json" if target == "descriptor" else
+                        path = (generation / "model.json" if bound_target == "descriptor" else
                                 generation / "anechoic_runtime_model/component_manifest.py")
                         path.write_bytes(path.read_bytes() + b"\n")
                         return stdout, stderr

@@ -1,5 +1,4 @@
-"""Explicit build provenance, separate from source and immutable image identity."""
-
+"Explicit build provenance, separate from source and immutable image identity."
 
 from pathlib import PurePosixPath
 import re
@@ -29,7 +28,8 @@ class ImageBuildProvenance:
                 )
             )
             or re.fullmatch(r"[0-9a-f]{64}", self.project_id) is None
-            or re.fullmatch(r"(?:[0-9a-f]{40}|[0-9a-f]{64})", self.head_commit) is None
+            or re.fullmatch(r"(?:[0-9a-f]{40}|[0-9a-f]{64})", self.head_commit)
+            is None
             or not self.project_name.strip()
             or not PurePosixPath(self.project_root).is_absolute()
             or ".." in PurePosixPath(self.project_root).parts
@@ -49,7 +49,9 @@ class ImageBuildProvenance:
         }
 
 
-def label_arguments(provenance: ImageBuildProvenance | None) -> tuple[str, ...]:
+def label_arguments(
+    provenance: ImageBuildProvenance | None,
+) -> tuple[str, ...]:
     return tuple(
         argument
         for key, value in (provenance.labels().items() if provenance else ())

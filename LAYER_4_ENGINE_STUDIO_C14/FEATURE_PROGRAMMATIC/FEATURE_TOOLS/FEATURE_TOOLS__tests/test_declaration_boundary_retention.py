@@ -5,12 +5,16 @@ import sys
 import tempfile
 import unittest
 
-TOOLS = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(TOOLS))
+sys.path.insert(0, str(TOOLS := Path(__file__).resolve().parents[1]))
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import resolve_project
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import ProjectSelectionError
-from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import write_scope_unit_declarations
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import (
+    resolve_project,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
+    import ProjectSelectionError  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.\
+    FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared \
+    import write_scope_unit_declarations  # fmt: skip
 
 
 class DeclarationBoundaryRetentionTests(unittest.TestCase):
@@ -29,12 +33,14 @@ class DeclarationBoundaryRetentionTests(unittest.TestCase):
         )
         self.declarations = write_scope_unit_declarations(
             self.root,
-            ({
-                "scope_unit_name": "PARENT",
-                "parent": "PROJECT",
-                "scope_unit_type": "Unordered",
-                "scope_unit_label": "FEATURE",
-            },),
+            (
+                {
+                    "scope_unit_name": "PARENT",
+                    "parent": "PROJECT",
+                    "scope_unit_type": "Unordered",
+                    "scope_unit_label": "FEATURE",
+                },
+            ),
             control_root=self.control,
         )
 
@@ -45,11 +51,15 @@ class DeclarationBoundaryRetentionTests(unittest.TestCase):
             '[project]\nname="anechoic"\n[paths]\ncontrol_root=".anechoic_empty"\n'
         )
 
-    def test_selection_recheck_gets_fresh_budget_but_keeps_original_absence(self):
+    def test_selection_recheck_gets_fresh_budget_but_keeps_original_absence(
+        self,
+    ):
         selected = resolve_project(self.root)
         proof = selected._boundary_proof
         captured = dict(proof.marker_pins)
-        proof._reader.started -= max(61, proof._reader.limits["timeout_seconds"] + 1)
+        proof._reader.started -= max(
+            61, proof._reader.limits["timeout_seconds"] + 1
+        )
         selected._revalidate_boundary()
         self.foreign_marker()
         with self.assertRaises(ProjectSelectionError):

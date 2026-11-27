@@ -10,7 +10,10 @@ import sys
 import unittest
 
 _ENGINE = Path(__file__).resolve().parents[2]
-_MODULES = ("WORKERS_beta_C69.WORKERS_beta_C69__shared", "WORKERS_beta_C69.lifecycle_worker")
+_MODULES = (
+    "WORKERS_beta_C69.WORKERS_beta_C69__shared",
+    "WORKERS_beta_C69.lifecycle_worker",
+)
 _KEY = "ANECHOIC_BETA_WORKER_PARENT_PID"
 _PARENT = """
 import os
@@ -61,13 +64,29 @@ class ManagedWorkerParentTests(unittest.TestCase):
         pids = {}
         stopped = False
         try:
-            with subprocess.Popen([sys.executable, "-B", "-P", "-c", _PARENT, _WORKER, module, str(reader)],
-                                  env=_env(), stdout=subprocess.PIPE, pass_fds=(reader,), bufsize=0) as parent:
+            with subprocess.Popen(
+                [
+                    sys.executable,
+                    "-B",
+                    "-P",
+                    "-c",
+                    _PARENT,
+                    _WORKER,
+                    module,
+                    str(reader),
+                ],
+                env=_env(),
+                stdout=subprocess.PIPE,
+                pass_fds=(reader,),
+                bufsize=0,
+            ) as parent:
                 try:
                     for _ in range(2):
                         name, pid = _line(parent.stdout).decode().split()
                         pids[name] = int(pid)
-                    self.assertEqual(pids["worker"], os.getpgid(pids["descendant"]))
+                    self.assertEqual(
+                        pids["worker"], os.getpgid(pids["descendant"])
+                    )
                     parent.kill()
                     self.assertEqual(-signal.SIGKILL, parent.wait(timeout=5))
                     self.assertEqual(b"", _line(parent.stdout))
@@ -90,10 +109,19 @@ class ManagedWorkerParentTests(unittest.TestCase):
     def test_managed_entry_requires_its_actual_parent_and_isolated_group(self):
         for module in _MODULES:
             command = [sys.executable, "-B", "-P", "-m", module]
-            for isolated, parent, message in ((False, os.getpid(), "requires an isolated process group"),
-                                              (True, 2**31, "exited before Worker startup")):
+            for isolated, parent, message in (
+                (False, os.getpid(), "requires an isolated process group"),
+                (True, 2**31, "exited before Worker startup"),
+            ):
                 with self.subTest(module=module, isolated=isolated):
-                    reply = subprocess.run(command, env=_env() | {_KEY: str(parent)}, start_new_session=isolated,
-                                           text=True, input="{}", capture_output=True, timeout=10)
+                    reply = subprocess.run(
+                        command,
+                        env=_env() | {_KEY: str(parent)},
+                        start_new_session=isolated,
+                        text=True,
+                        input="{}",
+                        capture_output=True,
+                        timeout=10,
+                    )
                     self.assertEqual(1, reply.returncode)
                     self.assertIn(message, reply.stderr)

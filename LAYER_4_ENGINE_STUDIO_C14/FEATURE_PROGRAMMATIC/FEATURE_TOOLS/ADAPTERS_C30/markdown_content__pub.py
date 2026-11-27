@@ -1,4 +1,3 @@
-
 """CommonMark heading sections for the Workbench in-memory projection."""
 
 from __future__ import annotations
@@ -9,7 +8,8 @@ from typing import Any, Iterable, Iterator, Mapping
 
 from markdown_it import MarkdownIt
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.content_records__pub import content_record_span
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.content_records__pub \
+    import content_record_span  # fmt: skip
 
 
 _MARKDOWN_HEADINGS = MarkdownIt("commonmark").disable("inline")
@@ -28,7 +28,11 @@ def _unfenced_lines(body: str) -> list[tuple[int, str]]:
             token = marker[1]
             if fence is None:
                 fence = (token[0], len(token))
-            elif token[0] == fence[0] and len(token) >= fence[1] and not marker[2].strip():
+            elif (
+                token[0] == fence[0]
+                and len(token) >= fence[1]
+                and not marker[2].strip()
+            ):
                 fence = None
             continue
         if fence is None:
@@ -37,7 +41,7 @@ def _unfenced_lines(body: str) -> list[tuple[int, str]]:
 
 
 def unfenced_atx_headings(body: str) -> list[tuple[int, str, int]]:
-    """Return levels, literal titles, and line indexes for carrier ATX headings."""
+    "Return levels, literal titles, and line indexes for carrier ATX headings."
     headings = []
     for index, line in _unfenced_lines(body):
         heading = re.match(r"^(#{1,6}) (.+)$", line)
@@ -58,12 +62,18 @@ def formal_claim_fences(body: str) -> Iterator[tuple[str, str]]:
             while headings and headings[-1][0] >= level:
                 headings.pop()
             headings.append((level, content_key(tokens[index + 1].content)))
-        elif token.type == "fence" and tuple(name for _, name in headings) == ("claim", "formal_claim"):
+        elif token.type == "fence" and tuple(name for _, name in headings) == (
+            "claim",
+            "formal_claim",
+        ):
             yield token.info.strip().casefold(), token.content
 
 
 def parse_content(
-    body: str, *, tolerate_duplicate_siblings: bool = False, include_spans: bool | None = None,
+    body: str,
+    *,
+    tolerate_duplicate_siblings: bool = False,
+    include_spans: bool | None = None,
     compact: bool = False,
 ) -> list[dict[str, Any]]:
     """Return Content Properties in CommonMark heading order."""
@@ -100,8 +110,14 @@ def summary_title(body: bytes) -> str:
             if content_key(heading["heading"]) == "summary":
                 lines = content_lines(text)
                 end = _section_end(heading, headings, len(lines))
-                return next((line.strip() for line in lines[heading["body_start"]:end]
-                             if line.strip()), "")
+                return next(
+                    (
+                        line.strip()
+                        for line in lines[heading["body_start"] : end]
+                        if line.strip()
+                    ),
+                    "",
+                )
     return ""
 
 
@@ -113,8 +129,10 @@ def source_markdown(row: Mapping[str, Any]) -> str | None:
     return value if isinstance(value, str) else None
 
 
-def section_markdown(record: Mapping[str, Any], lines: list[str] | None) -> str | None:
-    """Rebuild a compact record's section, preserving source newline semantics."""
+def section_markdown(
+    record: Mapping[str, Any], lines: list[str] | None
+) -> str | None:
+    "Rebuild a compact record's section, preserving source newline semantics."
     start, end = record.get("_start_line"), record.get("_end_line")
     if lines is not None and type(start) is int and type(end) is int:
         return "".join(lines[start:end])
@@ -123,12 +141,19 @@ def section_markdown(record: Mapping[str, Any], lines: list[str] | None) -> str 
 
 
 def direct_markdown(
-    record: Mapping[str, Any], records: Iterable[Mapping[str, Any]], lines: list[str] | None,
+    record: Mapping[str, Any],
+    records: Iterable[Mapping[str, Any]],
+    lines: list[str] | None,
 ) -> str | None:
-    """Rebuild a compact record's direct Markdown from its immediate children."""
+    "Rebuild a compact record's direct Markdown from its immediate children."
     span = content_record_span(record)
     path = record.get("property_path")
-    if span is not None and isinstance(path, list) and all(isinstance(part, str) for part in path) and lines is not None:
+    if (
+        span is not None
+        and isinstance(path, list)
+        and all(isinstance(part, str) for part in path)
+        and lines is not None
+    ):
         _start, body_start, end = span
         children = sorted(
             (
@@ -170,11 +195,16 @@ def _headings(tokens: list[Any]) -> list[dict[str, Any]]:
     return headings
 
 
-def _records(headings: list[dict[str, Any]], lines: list[str]) -> list[dict[str, Any]]:
+def _records(
+    headings: list[dict[str, Any]], lines: list[str]
+) -> list[dict[str, Any]]:
     records: list[dict[str, Any]] = []
     ancestors: list[dict[str, Any]] = []
     for position, heading in enumerate(headings, start=1):
-        while ancestors and ancestors[-1]["heading_level"] >= heading["heading_level"]:
+        while (
+            ancestors
+            and ancestors[-1]["heading_level"] >= heading["heading_level"]
+        ):
             ancestors.pop()
         key = content_key(heading["heading"])
         path = [*(ancestors[-1]["property_path"] if ancestors else []), key]
@@ -191,16 +221,22 @@ def _records(headings: list[dict[str, Any]], lines: list[str]) -> list[dict[str,
 
 
 def content_key(heading: str) -> str:
-    """Use one carrier-independent spelling for Markdown and Declaration keys."""
+    "Use one carrier-independent spelling for Markdown and Declaration keys."
     separated = re.sub(r"[\s-]+", "_", heading.casefold())
-    key = "".join(character for character in separated if character.isalnum() or character == "_")
+    key = "".join(
+        character
+        for character in separated
+        if character.isalnum() or character == "_"
+    )
     key = re.sub(r"_+", "_", key).strip("_")
     if not key:
         raise ValueError("heading normalizes to an empty property key")
     return key
 
 
-def _section_end(heading: dict[str, Any], headings: list[dict[str, Any]], line_count: int) -> int:
+def _section_end(
+    heading: dict[str, Any], headings: list[dict[str, Any]], line_count: int
+) -> int:
     start = headings.index(heading) + 1
     for later in headings[start:]:
         if later["heading_level"] <= heading["heading_level"]:
@@ -219,7 +255,10 @@ def _reject_duplicate_siblings(records: list[dict[str, Any]]) -> None:
 
 
 def _public_record(
-    record: dict[str, Any], records: list[dict[str, Any]], lines: list[str], include_spans: bool,
+    record: dict[str, Any],
+    records: list[dict[str, Any]],
+    lines: list[str],
+    include_spans: bool,
     compact: bool,
 ) -> dict[str, Any]:
     public = {
@@ -229,16 +268,24 @@ def _public_record(
         "position": record["position"],
     }
     if not compact:
-        children = [child for child in records if child["property_path"][:-1] == record["property_path"]]
+        children = [
+            child
+            for child in records
+            if child["property_path"][:-1] == record["property_path"]
+        ]
         direct = _direct_markdown(record, children, lines)
         public["direct_markdown"] = direct if direct.strip() else None
-        public["section_markdown"] = "".join(lines[record["start"] : record["end"]])
+        public["section_markdown"] = "".join(
+            lines[record["start"] : record["end"]]
+        )
     if include_spans:
-        public.update({
-            "_start_line": record["start"],
-            "_body_start_line": record["body_start"],
-            "_end_line": record["end"],
-        })
+        public.update(
+            {
+                "_start_line": record["start"],
+                "_body_start_line": record["body_start"],
+                "_end_line": record["end"],
+            }
+        )
     return public
 
 

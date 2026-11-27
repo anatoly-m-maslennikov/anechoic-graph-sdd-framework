@@ -1,27 +1,48 @@
-
 """Resolve the effective Container of the selected root Project Declaration."""
+
 from hashlib import sha256
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import header_value, project_root_container_view
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import ScopeDeclarationError
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import ScopeUnitDeclaration, parse_scope_unit_declaration
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
+    import (
+        header_value,
+        project_root_container_view,
+    )  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
+    import ScopeDeclarationError  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
+    import (
+        ScopeUnitDeclaration,
+        parse_scope_unit_declaration,
+    )  # fmt: skip
 
 
 def effective_root_container_header(
-    metadata, *, path, raw, root_declaration_path, root_declaration_pin,
+    metadata,
+    *,
+    path,
+    raw,
+    root_declaration_path,
+    root_declaration_pin,
 ):
-    """Return a validation Header without changing the stored carrier metadata."""
-    if path != root_declaration_path or root_declaration_pin is None or header_value(metadata, 'container')[0]:
+    "Return a validation Header without changing the stored carrier metadata."
+    if (
+        path != root_declaration_path
+        or root_declaration_pin is None
+        or header_value(metadata, "container")[0]
+    ):
         return metadata
-    if sha256(raw).hexdigest() != root_declaration_pin['sha256']:
+    if sha256(raw).hexdigest() != root_declaration_pin["sha256"]:
         return metadata
     try:
         declaration = parse_scope_unit_declaration(raw, path)
     except ScopeDeclarationError:
         return metadata
-    if (not isinstance(declaration, ScopeUnitDeclaration) or not declaration.is_root
-            or declaration.atom_id != root_declaration_pin['atom_id']
-            or declaration.version != root_declaration_pin['version']):
+    if (
+        not isinstance(declaration, ScopeUnitDeclaration)
+        or not declaration.is_root
+        or declaration.atom_id != root_declaration_pin["atom_id"]
+        or declaration.version != root_declaration_pin["version"]
+    ):
         return metadata
 
     return project_root_container_view(metadata)

@@ -4,9 +4,9 @@ from pathlib import Path
 import sys
 import unittest
 
-TOOL = Path(__file__).resolve().parents[1]
-PROGRAMMATIC = TOOL.parents[1]
-sys.path[:0] = [str(PROGRAMMATIC), str(TOOL.parent), str(TOOL)]
+sys.path.insert(0, str(TOOL := Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(TOOL.parent))
+sys.path.insert(0, str(PROGRAMMATIC := TOOL.parents[1]))
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_native_model_claim
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import (
     ANALYSIS,
