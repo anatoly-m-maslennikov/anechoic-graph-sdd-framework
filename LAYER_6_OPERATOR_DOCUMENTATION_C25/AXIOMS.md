@@ -2,6 +2,12 @@
 
 Each number also appears in its linked source Atom. The Atoms contain the authoritative Claims.
 
+## Contents
+
+- [Information and complexity](#information-and-complexity)
+- [Delegation and control](#delegation-and-control)
+- [Reuse automation and maintenance](#reuse-automation-and-maintenance)
+
 ## Design Foundations
 
 ### Information and complexity
@@ -36,6 +42,8 @@ A system can be complex inside without being equally complex to use. Good bounda
 
 More structure, discipline, and checking are not always better. Their value depends on what the Project needs now.
 
+---
+
 ### Delegation and control
 
 #### 2.1 Directing specialist work does not require mastering the craft
@@ -55,6 +63,8 @@ When AI Agents decide on the Operator’s behalf, the Operator spends less effor
 [AN-S-1435](../_anechoic_anechoic/AN-S-1435-SPEC-AXIOM--transparency-supports-informed-control.md)
 
 A system is easier to understand and control when we can see what is happening, what decisions and actions rely on, and how the current state came about.
+
+---
 
 ### Reuse automation and maintenance
 

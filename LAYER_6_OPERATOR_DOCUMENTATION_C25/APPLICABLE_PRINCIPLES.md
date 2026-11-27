@@ -4,6 +4,17 @@ Each number also appears in its linked source Atom. The Atoms contain the author
 
 Each Principle shows its authored support relations and the Axioms it applies. The [Tier 1 design](../_anechoic_anechoic/__TICKETS/TASKS/AN-T-2932-TASK--admit-project-axioms-project-contracts-and-applicable-principles.md) says Tier 1 Principles serve the Project Goal.
 
+## Contents
+
+- [Operator authority and delegation](#operator-authority-and-delegation)
+- [Project structure and scope](#project-structure-and-scope)
+- [Project information and context](#project-information-and-context)
+- [Specification language](#specification-language)
+- [Decision evidence and oversight](#decision-evidence-and-oversight)
+- [Verification and rework](#verification-and-rework)
+- [Reuse and efficiency](#reuse-and-efficiency)
+- [Framework configuration and evolution](#framework-configuration-and-evolution)
+
 ## Project Practice
 
 ### Operator authority and delegation
@@ -53,6 +64,8 @@ Save the Operator’s time and attention for decisions where their judgment matt
 **Supports** [AN-S-1233 — Project Goal](../AN-S-1233-SPEC-PROJECT_GOAL--create-and-evolve-a-working-anechoic-framework.md) through `SERVES`.
 
 **Applies** [2.2 — Delegating judgment to AI Agents saves Operator effort but makes results less predictable](../_anechoic_anechoic/AN-S-1473-SPEC-AXIOM--delegating-judgment-to-ai-agents-saves-operator-effort-but-makes-results-less-predictable.md).
+
+---
 
 ### Project structure and scope
 
@@ -106,6 +119,8 @@ Prefer a hierarchical Project graph with typed nodes and relations. Minimize the
 **Tier 1 purpose** [AN-S-1233 — Project Goal](../AN-S-1233-SPEC-PROJECT_GOAL--create-and-evolve-a-working-anechoic-framework.md). This Atom has no authored direct support relation.
 
 **Applies** [1.3 — Clear structure and ownership make information easier to maintain](../_anechoic_anechoic/AN-S-1432-SPEC-AXIOM--clear-structure-and-ownership-make-information-easier-to-maintain.md).
+
+---
 
 ### Project information and context
 
@@ -165,6 +180,8 @@ Keep only the reusable information needed to understand, govern, operate, and ch
 
 **Supports** [Principle 3.5 — Show what is needed; keep the rest](../_anechoic_anechoic/01_TIER_1_ARCHITECTURE/AN-S-1486-SWD-APPLICABLE_PRINCIPLE--show-what-is-needed-keep-the-rest.md) through `CONTRIBUTES_TO`.
 
+---
+
 ### Specification language
 
 #### 4.1 Use familiar concepts with their usual meanings
@@ -192,6 +209,8 @@ Name the exact thing or relationship you mean. If a keyword can mean several dif
 Do not choose a term that already means too many different things. Choose a name that tells readers what something is or how it relates to other things, without making them look up what the word means here.
 
 **Supports** [AN-S-1233 — Project Goal](../AN-S-1233-SPEC-PROJECT_GOAL--create-and-evolve-a-working-anechoic-framework.md) through `SERVES`.
+
+---
 
 ### Decision evidence and oversight
 
@@ -243,6 +262,8 @@ Give the Operator access to relevant framework execution evidence and known limi
 
 **Supports** [Principle 5.2 — Make Project state and ongoing work visible](../_anechoic_anechoic/01_TIER_1_ARCHITECTURE/AN-S-1443-SWD-APPLICABLE_PRINCIPLE--make-project-state-and-ongoing-work-visible.md) through `CONTRIBUTES_TO`.
 
+---
+
 ### Verification and rework
 
 #### 6.1 Require usable inputs for reliance
@@ -279,6 +300,8 @@ Before relying on a work commitment or result, establish a usable way to check i
 
 **Supports** [Principle 5.1 — Keep decisions, work, and outcomes traceable](../_anechoic_anechoic/01_TIER_1_ARCHITECTURE/AN-S-1440-SWD-APPLICABLE_PRINCIPLE--keep-decisions-work-and-outcomes-traceable.md) through `CONTRIBUTES_TO`.
 
+---
+
 ### Reuse and efficiency
 
 #### 7.1 DRY — Don’t Repeat Yourself
@@ -308,6 +331,8 @@ Prefer technologies and interfaces that AI Agents already know. Use custom ones 
 **Supports** [AN-S-1233 — Project Goal](../AN-S-1233-SPEC-PROJECT_GOAL--create-and-evolve-a-working-anechoic-framework.md) through `SERVES`.
 
 **Applies** [3.2 — Figure out what wheel you need then adopt the best one that fits](../_anechoic_anechoic/AN-S-2810-SPEC-AXIOM--figure-out-what-wheel-you-need-then-adopt-the-best-one-that-fits.md).
+
+---
 
 ### Framework configuration and evolution
 
