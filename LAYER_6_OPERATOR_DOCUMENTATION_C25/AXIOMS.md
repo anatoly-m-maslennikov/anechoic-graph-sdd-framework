@@ -125,7 +125,16 @@ Each number also appears in its linked source Atom. The Atoms contain the author
 
 
 
-## 3.4 Repeated work becomes more efficient through automation
+## 3.4 It is better to formalize everything that can be formalized efficiently
+
+
+[AN-S-5074](../_anechoic_anechoic/AN-S-5074-SPEC-AXIOM--it-is-better-to-formalize-everything-that-can-be-formalized-efficiently.md)
+
+> Formalization makes rules, assumptions, and constraints explicit so they can be checked, reused, or automated. Formalization is worthwhile when those benefits justify the effort to create and maintain the formal representation.
+
+
+
+## 3.5 Repeated work becomes more efficient through automation
 
 
 [AN-S-1436](../_anechoic_anechoic/AN-S-1436-SPEC-AXIOM--repeated-work-becomes-more-efficient-through-automation.md)
@@ -134,7 +143,7 @@ Each number also appears in its linked source Atom. The Atoms contain the author
 
 
 
-## 3.5 Shift Left: Problems cost less when addressed before they spread
+## 3.6 Shift Left: Problems cost less when addressed before they spread
 
 
 [AN-S-1434](../_anechoic_anechoic/AN-S-1434-SPEC-AXIOM--shift-left-problems-cost-less-when-addressed-before-they-spread.md)
@@ -143,18 +152,9 @@ Each number also appears in its linked source Atom. The Atoms contain the author
 
 
 
-## 3.6 Maintaining the whole system pays off, especially in the long run
+## 3.7 Maintaining the whole system pays off, especially in the long run
 
 
 [AN-S-1431](../_anechoic_anechoic/AN-S-1431-SPEC-AXIOM--maintaining-the-whole-system-pays-off-especially-in-the-long-run.md)
 
 > Keeping a system’s parts consistent and working together reduces the time, effort, and money needed to keep it running over its life.
-
-
-
-## 3.7 It is better to formalize everything that can be formalized efficiently
-
-
-[AN-S-5074](../_anechoic_anechoic/AN-S-5074-SPEC-AXIOM--it-is-better-to-formalize-everything-that-can-be-formalized-efficiently.md)
-
-> Formalization makes rules, assumptions, and constraints explicit so they can be checked, reused, or automated. Formalization is worthwhile when those benefits justify the effort to create and maintain the formal representation.

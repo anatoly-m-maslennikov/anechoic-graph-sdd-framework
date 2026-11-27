@@ -13,11 +13,11 @@ context:
   template: axiom
 state:
   status: "active"
-  version: 6
-  updated_at: "2026-11-27T12:46:31.249293+00:00"
+  version: 7
+  updated_at: "2026-11-27T17:10:27.219580+00:00"
 ---
 
-**3.5**
+**3.6**
 
 ## Summary
 

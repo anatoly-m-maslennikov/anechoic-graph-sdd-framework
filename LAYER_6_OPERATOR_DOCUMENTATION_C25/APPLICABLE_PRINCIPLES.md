@@ -367,7 +367,7 @@ Each Principle shows its authored support relations and the Axioms it applies. T
 
 **Supports** [AN-S-1233 — Project Goal](../AN-S-1233-SPEC-PROJECT_GOAL--create-and-evolve-a-working-anechoic-framework.md) through `SERVES`.
 
-**Applies** [3.5 — Shift Left: Problems cost less when addressed before they spread](../_anechoic_anechoic/AN-S-1434-SPEC-AXIOM--shift-left-problems-cost-less-when-addressed-before-they-spread.md).
+**Applies** [3.6 — Shift Left: Problems cost less when addressed before they spread](../_anechoic_anechoic/AN-S-1434-SPEC-AXIOM--shift-left-problems-cost-less-when-addressed-before-they-spread.md).
 
 
 
@@ -418,7 +418,7 @@ Each Principle shows its authored support relations and the Axioms it applies. T
 
 **Supports** [AN-S-1233 — Project Goal](../AN-S-1233-SPEC-PROJECT_GOAL--create-and-evolve-a-working-anechoic-framework.md) through `SERVES`.
 
-**Applies** [3.4 — Repeated work becomes more efficient through automation](../_anechoic_anechoic/AN-S-1436-SPEC-AXIOM--repeated-work-becomes-more-efficient-through-automation.md).
+**Applies** [3.5 — Repeated work becomes more efficient through automation](../_anechoic_anechoic/AN-S-1436-SPEC-AXIOM--repeated-work-becomes-more-efficient-through-automation.md).
 
 
 
