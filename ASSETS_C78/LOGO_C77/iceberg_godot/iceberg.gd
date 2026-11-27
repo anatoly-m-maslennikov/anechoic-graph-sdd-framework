@@ -7,21 +7,9 @@ const SECTION_RESOLUTION := 500
 const SIDES := 15
 const ICE_WIDTH := 0.876
 const FIGURE_HEAD := Vector3(0.016, 0.35, 0)
-const PASSAGE := [
-	Vector3(-0.37, 1.79, 0.05),
-	Vector3(-0.18, 1.45, 0.17),
-	Vector3(0.48, 1.05, 0.31),
-	Vector3(0.49, 0.78, 0.27),
-	Vector3(-0.62, 0.32, 0.52),
-	Vector3(-0.78, 0.00, 0.44),
-	Vector3(-0.35, -0.33, 0.57),
-	Vector3(0.85, -0.78, 0.35),
-	Vector3(1.00, -1.06, 0.29),
-	Vector3(0.42, -1.40, 0.61),
-	Vector3(-0.78, -1.86, 0.37),
-	Vector3(-0.83, -2.12, 0.21),
-	Vector3(-0.59, -2.51, 0.14),
-]
+const ROUTE_TOP := 1.79
+const ROUTE_BOTTOM := -2.62
+const ROUTE_TURNS := 1.58
 const PRISM := [
 	Color("#6654af"), Color("#3e6abb"), Color("#3baebf"), Color("#8ed8bb"),
 	Color("#b3d98e"), Color("#dce27d"), Color("#f9d863"), Color("#f9c848"),
@@ -148,54 +136,62 @@ func _build_clear_flow() -> void:
 	_mesh("ClearFlowInsideIce", flow, Color("#fffcdf"))
 
 func _build_path() -> ImageTexture:
-	var air := PackedVector3Array()
-	var water := PackedVector3Array()
-	for index in range(PASSAGE.size() - 1):
-		var from: Vector3 = PASSAGE[index]
-		var to: Vector3 = PASSAGE[index + 1]
-		var before: Vector3 = PASSAGE[maxi(index - 1, 0)]
-		var after: Vector3 = PASSAGE[mini(index + 2, PASSAGE.size() - 1)]
-		var samples := air if from.y > 0.0 else water
-		for step in range(16):
-			samples.append(from.cubic_interpolate(to, before, after, float(step) / 16.0))
-	air.append(water[0])
-	water.append(PASSAGE[-1])
-	assert(is_zero_approx(air[-1].y) and air[-1].is_equal_approx(water[0]))
-	var above := _build_path_section(air, false)
-	var underwater := _build_path_section(water, true)
+	var above := _route_sections(ROUTE_TOP, 0.0, 90)
+	var underwater := _route_sections(0.0, ROUTE_BOTTOM, 130)
+	assert(above[-1] == underwater[0])
+	_build_path_section(above, false)
+	_build_path_section(underwater, true)
 	_build_oceanarium(underwater)
 	var mask := Image.create_empty(SECTION_RESOLUTION, SECTION_RESOLUTION, false, Image.FORMAT_R8)
 	_cut_passage(mask, above, 0.24)
 	_cut_passage(mask, underwater, 0.32)
 	return ImageTexture.create_from_image(mask)
 
-func _build_path_section(samples: PackedVector3Array, submerged: bool) -> Array[PackedVector3Array]:
+# Follow the smaller shell section at either floor or ceiling height.
+func _route_sections(top: float, bottom: float, steps: int) -> Array[PackedVector3Array]:
+	var sections: Array[PackedVector3Array] = []
+	for index in range(steps + 1):
+		var y := lerpf(top, bottom, float(index) / steps)
+		var phase := -0.1 + inverse_lerp(ROUTE_TOP, ROUTE_BOTTOM, y) * TAU * ROUTE_TURNS
+		var headroom := lerpf(0.23, 0.31, smoothstep(0.0, 0.25, -y))
+		var ceiling := minf(PROFILE[0].x - 0.021, y + headroom)
+		var floor_rim := _wall_point(y, phase)
+		var roof_rim := _wall_point(ceiling, phase)
+		var floor_spoke := (floor_rim - _wall_point(y, phase + PI)) * 0.5
+		var roof_spoke := (roof_rim - _wall_point(ceiling, phase + PI)) * 0.5
+		var rim := floor_rim
+		var spoke := floor_spoke
+		if roof_spoke.length_squared() < floor_spoke.length_squared():
+			rim = Vector3(roof_rim.x, y, roof_rim.z)
+			spoke = roof_spoke
+		var direction := spoke.normalized()
+		var outer := rim - direction * minf(0.12, spoke.length() * 0.30)
+		var inner := outer - direction * minf(0.22, spoke.length() * 0.48)
+		var guard := outer + Vector3.UP * minf(0.16, ceiling - y)
+		sections.append(PackedVector3Array([inner, outer, guard]))
+	return sections
+
+func _build_path_section(sections: Array[PackedVector3Array], submerged: bool) -> void:
 	var track := SurfaceTool.new()
 	var rim := SurfaceTool.new()
 	var rails := SurfaceTool.new()
 	var posts := SurfaceTool.new()
 	for surface: SurfaceTool in [track, rim, rails, posts]:
 		surface.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var sections: Array[PackedVector3Array] = []
 	var distance_since_post := 1.0
-	for index in range(samples.size()):
-		var point := samples[index]
-		var width := minf(0.23, PROFILE[0].x - point.y + 0.04)
-		var inner := point - Vector3(0.058, 0, width * 0.5)
-		var outer := point + Vector3(0.058, 0, width * 0.5)
-		var rail_height := minf(0.16, PROFILE[0].x - point.y - 0.021)
-		var guard := outer + Vector3.UP * rail_height
-		var current := PackedVector3Array([inner, outer, guard])
+	for index in range(sections.size()):
+		var inner := sections[index][0]
+		var outer := sections[index][1]
+		var guard := sections[index][2]
 		if index > 0:
-			var previous := sections.back() as PackedVector3Array
+			var previous := sections[index - 1]
 			_quad(track, previous[0], previous[1], outer, inner)
 			_quad(rim, previous[1], previous[1] + Vector3.DOWN * 0.042, outer + Vector3.DOWN * 0.042, outer)
 			_bar(rails, previous[2], guard, 0.012)
 			distance_since_post += outer.distance_to(previous[1])
-		if distance_since_post >= 0.29 or index == samples.size() - 1:
+		if distance_since_post >= 0.29 or index == sections.size() - 1:
 			_bar(posts, outer, guard, 0.010)
 			distance_since_post = 0.0
-		sections.append(current)
 	if submerged:
 		_mesh("OceanariumWalkway", track, Color("#8cb8bc"))
 		_mesh("OceanariumWalkwayEdge", rim, Color("#b9e5da"))
@@ -206,7 +202,6 @@ func _build_path_section(samples: PackedVector3Array, submerged: bool) -> Array[
 		_mesh("WalkwayTimberEdge", rim, Color("#e9be77"))
 		_mesh("Guardrail", rails, Color("#f6dc97"))
 		_mesh("GuardrailPosts", posts, Color("#dcc48f"))
-	return sections
 
 # A single profile cut follows the floor and ceiling of the interior route.
 func _cut_passage(mask: Image, sections: Array[PackedVector3Array], roof: float) -> void:
@@ -216,7 +211,7 @@ func _cut_passage(mask: Image, sections: Array[PackedVector3Array], roof: float)
 		var outer := sections[index][1]
 		var slice := PackedVector2Array()
 		var ceiling := minf(roof, PROFILE[0].x - outer.y - 0.023)
-		for x: float in [inner.x - 0.023, outer.x + 0.023]:
+		for x: float in [minf(inner.x, outer.x) - 0.023, maxf(inner.x, outer.x) + 0.023]:
 			for dy: float in [-0.065, ceiling]:
 				var point := Vector2(x, -outer.y - dy) / VIEW_SIZE + Vector2(0.5, 0.5)
 				slice.append(point * SECTION_RESOLUTION)

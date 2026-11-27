@@ -29,7 +29,9 @@ vec3 windy_sky(vec2 p) {
 	tint = mix(tint, vec3(0.97, 0.98, 0.90), clamp(drift * 0.46, 0.0, 1.0));
 	float wind = gust(p, wind_origin + vec2(0.018, -0.004), 1.02, 0.060, 0.15, 0.0057)
 		+ gust(p, wind_origin + vec2(0.13, 0.031), 1.10, 0.060, 0.10, 0.0038)
-		+ gust(p, wind_origin + vec2(0.07, -0.025), 0.93, 0.037, 0.11, 0.0035);
+		+ gust(p, wind_origin + vec2(0.07, -0.025), 0.93, 0.037, 0.11, 0.0035)
+		+ gust(p, wind_origin + vec2(-0.020, 0.003), -0.12, 0.014, 0.12, 0.0050)
+		+ gust(p, wind_origin + vec2(-0.112, 0.037), -0.075, 0.022, 0.14, 0.0037);
 	return mix(tint, vec3(0.66, 0.77, 0.71), clamp(wind * 0.61, 0.0, 1.0));
 }
 
@@ -39,8 +41,10 @@ float surface_flecks(vec2 pixel) {
 	vec2 size = mix(vec2(0.14, 0.13), vec2(0.75, 0.49), vec2(grain(cell + 8.0), grain(cell - 12.0)));
 	vec2 offset = (1.0 - size) * vec2(grain(cell - 4.0), grain(cell + 31.0));
 	vec2 corner = step(offset, fract(grid)) * (1.0 - step(offset + size, fract(grid)));
-	float current = 0.5 + 0.5 * sin(pixel.x * 0.065 + pixel.y * 0.22);
-	return corner.x * corner.y * smoothstep(0.44, 0.96, grain(cell)) * mix(0.24, 1.0, current);
+	float drift = 13.0 * sin(pixel.x * 0.017 + 0.36) + 4.0 * sin(pixel.x * 0.033);
+	float cross_current = abs(mod(pixel.y - drift - 257.0, 27.0) - 13.5);
+	float current = 1.0 - smoothstep(2.0, 12.0, cross_current);
+	return corner.x * corner.y * smoothstep(0.35, 0.94, grain(cell)) * mix(0.23, 1.0, current);
 }
 
 float application_signals(vec2 pixel) {
@@ -82,37 +86,42 @@ float chip(vec2 p, vec2 half_size) {
 }
 
 vec3 circuitry(vec2 pixel, vec3 water) {
-	float wiring = trace(pixel, vec2(22.0, 382.0), vec2(53.0, 382.0), 1.3)
-		+ trace(pixel, vec2(53.0, 382.0), vec2(68.0, 397.0), 1.3)
-		+ trace(pixel, vec2(76.0, 434.0), vec2(96.0, 454.0), 1.3)
-		+ trace(pixel, vec2(96.0, 454.0), vec2(155.0, 454.0), 1.3)
-		+ trace(pixel, vec2(370.0, 419.0), vec2(387.0, 402.0), 1.3)
-		+ trace(pixel, vec2(387.0, 402.0), vec2(406.0, 402.0), 1.3)
-		+ trace(pixel, vec2(454.0, 403.0), vec2(490.0, 403.0), 1.3)
-		+ trace(pixel, vec2(430.0, 412.0), vec2(430.0, 438.0), 1.3);
-	float circuits = max(chip(pixel - vec2(72.0, 416.0), vec2(15.0)),
-		chip(pixel - vec2(430.0, 402.0), vec2(24.0, 11.0)));
-	water = mix(water, vec3(0.33, 0.62, 0.59), clamp(circuits + 0.42 * wiring, 0.0, 1.0));
-	float row_top = 350.0;
-	for (int index = 0; index < 7; index++) {
+	float wiring = trace(pixel, vec2(24.0, 340.0), vec2(49.0, 340.0), 1.3)
+		+ trace(pixel, vec2(49.0, 340.0), vec2(67.0, 358.0), 1.3)
+		+ trace(pixel, vec2(75.0, 392.0), vec2(88.0, 405.0), 1.3)
+		+ trace(pixel, vec2(88.0, 405.0), vec2(148.0, 405.0), 1.3)
+		+ trace(pixel, vec2(397.0, 387.0), vec2(408.0, 376.0), 1.3)
+		+ trace(pixel, vec2(408.0, 376.0), vec2(419.0, 376.0), 1.3)
+		+ trace(pixel, vec2(461.0, 376.0), vec2(485.0, 376.0), 1.3)
+		+ trace(pixel, vec2(439.0, 388.0), vec2(439.0, 409.0), 1.3);
+	float pads = box(pixel - vec2(24.0, 340.0), vec2(2.0))
+		+ box(pixel - vec2(148.0, 405.0), vec2(2.0))
+		+ box(pixel - vec2(485.0, 376.0), vec2(2.0))
+		+ box(pixel - vec2(439.0, 409.0), vec2(2.0));
+	float circuits = max(chip(pixel - vec2(70.0, 375.0), vec2(14.0)),
+		chip(pixel - vec2(440.0, 376.0), vec2(21.0, 10.0)));
+	return mix(water, vec3(0.39, 0.66, 0.62), clamp(circuits + 0.48 * wiring + 0.44 * pads, 0.0, 1.0));
+}
+
+vec3 packed_pixels(vec2 pixel, vec3 water) {
+	float row_top = 422.0;
+	for (int index = 0; index < 5; index++) {
 		float row = float(index);
-		float size = floor(5.5 + row * 1.25);
-		float stride = size + 5.0;
-		float bank = step(250.0, pixel.x);
-		float origin = mix(27.0 + mod(row, 3.0) * 9.0, 391.0 - mod(row + 1.0, 3.0) * 12.0, bank);
-		float x = pixel.x - origin;
-		float column = floor(x / stride);
-		float cell_x = mod(x, stride);
+		float size = floor(11.5 + row * 1.4);
+		float stride = size + 2.0;
+		float bank_width = stride * 5.0 + 3.0;
+		float x = pixel.x + 7.0;
+		float bank = floor(x / bank_width);
+		float local_x = mod(x, bank_width);
+		float column = floor(local_x / stride);
+		float cell_x = mod(local_x, stride);
 		float gap = pixel.y - row_top;
-		if (gap >= 0.0 && gap < size && cell_x < size && column >= 0.0 && column < 6.0) {
-			vec2 center = vec2(origin + column * stride + size * 0.5, row_top + size * 0.5);
-			vec2 clearance = abs(center - mix(vec2(72.0, 416.0), vec2(430.0, 402.0), bank));
-			float around_chip = step(35.0, clearance.x) + step(29.0, clearance.y);
+		if (gap >= 0.0 && gap < size && cell_x < size && column < 5.0) {
 			float signal = grain(vec2(row + bank * 10.0, column + 18.0));
-			vec3 metal = mix(vec3(0.30, 0.62, 0.62), vec3(0.75, 0.63, 0.40), step(0.94, signal));
-			return mix(water, metal, step(1.0, around_chip) * smoothstep(0.33, 1.0, signal) * 0.55);
+			vec3 ink = mix(vec3(0.16, 0.37, 0.42), vec3(0.40, 0.64, 0.61), step(0.65, signal));
+			return mix(water, ink, mix(0.32, 0.58, signal));
 		}
-		row_top += size + 11.0;
+		row_top += size + 2.0;
 	}
 	return water;
 }
@@ -126,13 +135,14 @@ void fragment() {
 		float depth = (p.y - 0.5) * 2.0;
 		tint = mix(vec3(0.236, 0.455, 0.47), vec3(0.057, 0.162, 0.206), smoothstep(0.0, 0.98, depth));
 		vec2 pixel = p * 500.0;
-		float near_surface = 1.0 - smoothstep(0.10, 0.33, depth);
+		float near_surface = 1.0 - smoothstep(0.19, 0.34, depth);
 		float flecks = surface_flecks(pixel);
 		vec3 signal = mix(vec3(0.35, 0.77, 0.73), vec3(0.94, 0.72, 0.44),
-			step(0.97, grain(floor(pixel / 5.0) + 21.0)));
-		tint = mix(tint, signal, 0.64 * flecks * near_surface);
+			step(0.97, grain(floor(pixel / 6.0) + 21.0)));
+		tint = mix(tint, signal, 0.75 * flecks * near_surface);
 		tint = mix(tint, vec3(0.59, 0.79, 0.73), 0.48 * application_signals(pixel));
 		tint = circuitry(pixel, tint);
+		tint = packed_pixels(pixel, tint);
 	}
 	float surface = 1.0 - smoothstep(0.0007, 0.004, abs(p.y - 0.5));
 	ALBEDO = mix(tint, vec3(0.867, 0.974, 0.914), surface * 0.90);
