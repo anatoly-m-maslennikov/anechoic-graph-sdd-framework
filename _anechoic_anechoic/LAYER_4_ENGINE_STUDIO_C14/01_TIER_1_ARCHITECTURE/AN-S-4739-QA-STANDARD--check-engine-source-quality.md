@@ -9,8 +9,8 @@ context:
   lens: QA
 state:
   status: active
-  version: 1
-  updated_at: '2026-11-26T16:36:43.711775+00:00'
+  version: 2
+  updated_at: '2026-11-27T10:14:59.835668+00:00'
 
 ---
 
@@ -21,6 +21,11 @@ Check Engine source quality
 ## Claim
 
 ### Prose Claim
+
+#### PROGRAMMATIC Standards
+
+For PROGRAMMATIC source, check the C15 Standards for Module and function
+size, line length, Python records, and authored web source.
 
 #### Analyzer profile
 
@@ -40,9 +45,9 @@ under AN-S-3355.
 
 #### Source size
 
-Where `enforce_source_size` is enabled, limit Python, JavaScript and
-TypeScript modules to 300 nonblank lines and functions to 45. Use the
-locked frontend parser for web functions under AN-S-3287.
+Outside PROGRAMMATIC, where `enforce_source_size` is enabled, limit Python,
+JavaScript and TypeScript modules to 300 nonblank lines and functions to 45.
+Use the locked frontend parser to measure web functions.
 
 #### Prose comments
 

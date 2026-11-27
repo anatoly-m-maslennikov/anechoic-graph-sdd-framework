@@ -12,9 +12,9 @@ context:
   template: manifest_property
   lens: DOM/CONT
 state:
-  status: draft
+  status: active
   version: 1
-  updated_at: '2026-11-27T09:44:56+00:00'
+  updated_at: '2026-11-27T10:14:59.835668+00:00'
 ---
 
 ## Summary

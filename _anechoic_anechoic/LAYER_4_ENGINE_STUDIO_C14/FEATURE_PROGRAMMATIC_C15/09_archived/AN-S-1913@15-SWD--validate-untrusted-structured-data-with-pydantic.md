@@ -7,9 +7,9 @@ tier: 4
 context:
   lens: SWD
 state:
-  status: active
+  status: archived
   version: 15
-  updated_at: '2026-11-24T18:58:19.252479+00:00'
+  updated_at: '2026-11-27T10:14:59.835668+00:00'
 ---
 
 ## Summary

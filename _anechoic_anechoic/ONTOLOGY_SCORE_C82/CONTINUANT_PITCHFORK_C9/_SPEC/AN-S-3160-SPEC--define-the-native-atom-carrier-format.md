@@ -8,8 +8,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 38
-  updated_at: '2026-11-26T18:34:31.644797+00:00'
+  version: 39
+  updated_at: '2026-11-27T10:14:59.835668+00:00'
 ---
 
 ## Summary
@@ -111,6 +111,7 @@ in `project.folder_layout.active_spec_by_tier`. Tier 1 uses the declared
 folder in the owning root. The default is `01_TIER_1_ARCHITECTURE/`.
 This Tier contains Applicable Principles at Project scope. At Component
 scope it contains Manifests for child Components, Standards, and Policies.
+PROGRAMMATIC (C15) code Standards use Tier 0 in the owning root.
 The Manifest Header identifies the declaring parent. Component Identity is
 the only required Component Manifest section. Purpose, Component Boundaries,
 and Component Contract are optional.

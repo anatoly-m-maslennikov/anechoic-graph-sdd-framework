@@ -1,5 +1,4 @@
-applies:
-  - AN-S-4739@1
-
 implements:
   - AN-S-3055@27
+  - AN-S-5046@1
+  - AN-S-5047@1
