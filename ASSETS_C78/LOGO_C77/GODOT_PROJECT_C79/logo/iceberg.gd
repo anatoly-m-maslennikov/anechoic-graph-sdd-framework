@@ -7,8 +7,7 @@ const SECTION_RESOLUTION := 1000
 const SIDES := 15
 const ICE_WIDTH := 0.876
 const FIGURE_HEAD := Vector3(0, 0.35, 0)
-# The top edge of the icon's A in the 500 px design viewport.
-const ICON_APEX := 44.0 / 500.0
+const ICON_FIGURE_SCALE := 2.0
 const ROUTE_TOP := 1.79
 const ROUTE_BOTTOM := -2.62
 const ROUTE_TURNS := 1.58
@@ -36,14 +35,12 @@ var rings: Array[PackedVector3Array] = []
 func _ready() -> void:
 	var arguments := OS.get_cmdline_user_args()
 	var icon := arguments.has("--icon")
-	var figure_origin := _summit()
-	if icon:
-		figure_origin.y = VIEW_SIZE * (0.5 - ICON_APEX)
-	_build_view(figure_origin)
+	var figure_scale := ICON_FIGURE_SCALE if icon else 1.0
+	_build_view(figure_scale)
 	var ice := _build_ice()
 	_build_clear_flow()
 	ice.set_shader_parameter("opening_mask", _build_path())
-	_build_summit_figure(figure_origin, icon)
+	_build_summit_figure(figure_scale, icon)
 	_build_title(icon)
 	var export_index := arguments.find("--render")
 	if export_index >= 0:
@@ -53,7 +50,7 @@ func _ready() -> void:
 		else:
 			_save_png(arguments[export_index + 1])
 
-func _build_view(figure_origin: Vector3) -> void:
+func _build_view(figure_scale: float) -> void:
 	var camera := Camera3D.new()
 	camera.name = "ProfileCamera"
 	camera.projection = Camera3D.PROJECTION_ORTHOGONAL
@@ -67,7 +64,7 @@ func _build_view(figure_origin: Vector3) -> void:
 	background.size = Vector2.ONE * (VIEW_SIZE + 0.02)
 	var shader := ShaderMaterial.new()
 	shader.shader = BACKDROP
-	var figure_head := figure_origin + FIGURE_HEAD
+	var figure_head := _summit() + FIGURE_HEAD * figure_scale
 	var wind_origin := Vector2(figure_head.x, -figure_head.y) / VIEW_SIZE + Vector2(0.5, 0.5)
 	shader.set_shader_parameter("wind_origin", wind_origin)
 	var panel := MeshInstance3D.new()
@@ -341,7 +338,13 @@ func _route_tube(surface: SurfaceTool, points: PackedVector3Array, radius: float
 func _summit() -> Vector3:
 	return Vector3(PROFILE[0].w * ICE_WIDTH, PROFILE[0].x, 0.0)
 
-func _build_summit_figure(origin: Vector3, icon: bool) -> void:
+func _build_summit_figure(figure_scale: float, icon: bool) -> void:
+	var figure := Node3D.new()
+	figure.name = "SummitFigure"
+	figure.position = _summit()
+	figure.scale = Vector3.ONE * figure_scale
+	add_child(figure)
+
 	var outline := SurfaceTool.new()
 	var boots := SurfaceTool.new()
 	var jacket := SurfaceTool.new()
@@ -349,14 +352,20 @@ func _build_summit_figure(origin: Vector3, icon: bool) -> void:
 		surface.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var stroke := 0.021 if icon else 0.010
 	var outline_color := Color("#365954") if icon else Color("#5b7779")
-	_figure_bar(boots, outline, origin, Vector3(-0.060, 0.018, 0.02), Vector3(-0.041, 0.137, 0.02), 0.024, stroke)
-	_figure_bar(boots, outline, origin, Vector3(0.060, 0.018, -0.02), Vector3(0.041, 0.137, -0.02), 0.024, stroke)
-	_figure_bar(jacket, outline, origin, Vector3(0, 0.137, 0), Vector3(0, 0.286, 0), 0.06, stroke)
-	_figure_bar(jacket, outline, origin, Vector3(-0.060, 0.264, 0.014), Vector3(-0.106, 0.157, 0.038), 0.019, stroke)
-	_figure_bar(jacket, outline, origin, Vector3(0.060, 0.264, 0.012), Vector3(0.106, 0.181, 0.049), 0.019, stroke)
-	_mesh("SummitFigureOutline", outline, outline_color)
-	_mesh("SummitFigureLegs", boots, Color("#e3eded"))
-	_mesh("SummitFigureJacket", jacket, Color("#fffefa"))
+	var sole := 0.009 if icon else 0.018
+	_figure_bar(boots, outline,
+		Vector3(-0.060, sole, 0.02), Vector3(-0.041, 0.137, 0.02), 0.024, stroke)
+	_figure_bar(boots, outline,
+		Vector3(0.060, sole, -0.02), Vector3(0.041, 0.137, -0.02), 0.024, stroke)
+	_figure_bar(jacket, outline,
+		Vector3(0, 0.137, 0), Vector3(0, 0.286, 0), 0.06, stroke)
+	_figure_bar(jacket, outline,
+		Vector3(-0.060, 0.264, 0.014), Vector3(-0.106, 0.157, 0.038), 0.019, stroke)
+	_figure_bar(jacket, outline,
+		Vector3(0.060, 0.264, 0.012), Vector3(0.106, 0.181, 0.049), 0.019, stroke)
+	_mesh("SummitFigureOutline", outline, outline_color).reparent(figure, false)
+	_mesh("SummitFigureLegs", boots, Color("#e3eded")).reparent(figure, false)
+	_mesh("SummitFigureJacket", jacket, Color("#fffefa")).reparent(figure, false)
 
 	var head := SphereMesh.new()
 	head.radius = 0.061
@@ -365,16 +374,18 @@ func _build_summit_figure(origin: Vector3, icon: bool) -> void:
 	head.rings = 4
 	var face := SurfaceTool.new()
 	face.create_from(head, 0)
-	var head_center := origin + FIGURE_HEAD
-	_mesh("SummitFigureHead", face, Color("#ffffff")).position = head_center
+	var face_mesh := _mesh("SummitFigureHead", face, Color.WHITE)
+	face_mesh.reparent(figure, false)
+	face_mesh.position = FIGURE_HEAD
 	var head_outline := _mesh("SummitFigureHeadOutline", face, outline_color)
-	head_outline.position = head_center - Vector3(0, 0, 0.15)
+	head_outline.reparent(figure, false)
+	head_outline.position = FIGURE_HEAD - Vector3(0, 0, 0.15)
 	head_outline.scale = Vector3.ONE * (1.34 if icon else 1.18)
 
-func _figure_bar(surface: SurfaceTool, outline: SurfaceTool, origin: Vector3,
+func _figure_bar(surface: SurfaceTool, outline: SurfaceTool,
 		start: Vector3, finish: Vector3, radius: float, stroke: float) -> void:
-	_bar(surface, origin + start, origin + finish, radius)
-	var behind := origin - Vector3(0, 0, 0.15)
+	_bar(surface, start, finish, radius)
+	var behind := Vector3(0, 0, -0.15)
 	var pad := (finish - start).normalized() * 0.009
 	_bar(outline, behind + start - pad, behind + finish + pad, radius + stroke)
 
@@ -437,13 +448,14 @@ func _build_title(icon: bool) -> void:
 	var title := Label.new()
 	title.text = "A" if icon else "Anechoic"
 	title.anchor_right = 1.0
-	title.offset_top = -172.0 if icon else 13.0
-	title.offset_bottom = 744.0 if icon else 76.0
+	# The icon glyph starts at the summit in the 500 px viewport.
+	title.offset_top = -147.0 if icon else 13.0
+	title.offset_bottom = 769.0 if icon else 76.0
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	title.add_theme_font_override("font", font)
-	title.add_theme_font_size_override("font_size", 608 if icon else 46)
+	title.add_theme_font_size_override("font_size", 530 if icon else 46)
 	title.add_theme_color_override("font_color", Color(0.96, 0.98, 0.90, 0.51) if icon else Color("#173d34"))
 	if icon:
 		title.add_theme_color_override("font_outline_color", Color(0.13, 0.29, 0.28, 0.66))
