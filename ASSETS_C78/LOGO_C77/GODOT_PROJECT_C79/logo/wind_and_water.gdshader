@@ -3,10 +3,6 @@ render_mode unshaded, cull_disabled, fog_disabled;
 
 uniform vec2 wind_origin;
 
-float grain(vec2 cell) {
-	return fract(sin(dot(cell, vec2(127.1, 311.7))) * 43758.5453);
-}
-
 float gust(vec2 p, vec2 start, float end, float rise, float bow, float width) {
 	float t = clamp((p.x - start.x) / (end - start.x), 0.0, 1.0);
 	float y = start.y - rise * t + bow * t * (1.0 - t);
@@ -95,34 +91,45 @@ vec3 circuitry(vec2 pixel, vec3 water) {
 }
 
 float atom_orbit(vec2 point) {
-	float ring = abs(length(point / vec2(10.0, 4.0)) - 1.0);
-	return 1.0 - smoothstep(0.07, 0.21, ring);
+	float ring = abs(length(point / vec2(6.3, 2.6)) - 1.0);
+	return 1.0 - smoothstep(0.06, 0.23, ring);
 }
 
-vec3 atoms(vec2 pixel, vec3 water) {
-	vec2 grid = (pixel - vec2(0.0, 454.0)) / vec2(34.0, 23.0);
+vec3 atoms_and_molecules(vec2 pixel, vec3 water) {
+	vec2 pitch = vec2(24.0, 16.0);
+	vec2 grid = (pixel - vec2(0.0, 452.0)) / pitch;
 	float row = floor(grid.y);
-	if (row < 0.0 || row >= 2.0) {
+	if (row < 0.0 || row >= 3.0) {
 		return water;
 	}
 	grid.x += mod(row, 2.0) * 0.5;
-	vec2 point = (fract(grid) - 0.5) * vec2(34.0, 23.0);
-	float orbits = max(atom_orbit(point), max(
-		atom_orbit(mat2(vec2(0.5, 0.866), vec2(-0.866, 0.5)) * point),
-		atom_orbit(mat2(vec2(0.5, -0.866), vec2(0.866, 0.5)) * point)));
-	float nucleus = 1.0 - smoothstep(1.5, 2.5, length(point));
-	float brightness = mix(0.46, 0.79, grain(floor(grid)));
-	water = mix(water, vec3(0.34, 0.63, 0.63), orbits * brightness);
-	return mix(water, vec3(0.98, 0.77, 0.46), nucleus * brightness);
+	vec2 point = (fract(grid) - 0.5) * pitch;
+	float center = 1.0 - smoothstep(0.95, 1.75, length(point));
+	vec3 line_ink = vec3(0.43, 0.72, 0.70);
+	if (mod(floor(grid.x) + row, 2.0) == 0.0) {
+		float orbits = max(atom_orbit(vec2(point.x + point.y, point.y - point.x) * 0.7071),
+			atom_orbit(vec2(point.x - point.y, point.x + point.y) * 0.7071));
+		water = mix(water, line_ink, 0.66 * orbits);
+	} else {
+		vec2 left = vec2(-5.2, -2.5);
+		vec2 right = vec2(4.5, -3.5);
+		float bonds = max(trace(point, vec2(0.0), left, 1.0), trace(point, vec2(0.0), right, 1.0));
+		float ends = 1.0 - smoothstep(1.3, 2.3, min(length(point - left), length(point - right)));
+		water = mix(water, line_ink, max(0.56 * bonds, 0.85 * ends));
+	}
+	return mix(water, vec3(0.97, 0.76, 0.49), 0.85 * center);
 }
 
 vec3 electricity(vec2 pixel, vec3 water) {
-	float wave = 6.0 * sin(pixel.x * 0.085);
-	float distance = abs(pixel.y - 438.0 - wave);
-	float glow = (1.0 - smoothstep(1.0, 5.0, distance)) * 0.24;
-	float current = 1.0 - smoothstep(0.55, 1.65, distance);
-	water = mix(water, vec3(0.19, 0.77, 0.72), glow);
-	return mix(water, vec3(0.49, 0.94, 0.85), current * 0.75);
+	for (int index = 0; index < 3; index++) {
+		float row = float(index);
+		float wave = 2.6 * sin(pixel.x * (0.17 + row * 0.018) + row * 1.4);
+		float distance = abs(pixel.y - 425.0 - row * 9.0 - wave);
+		float glow = (1.0 - smoothstep(0.6, 3.1, distance)) * 0.15;
+		float current = 1.0 - smoothstep(0.3, 1.25, distance);
+		water = mix(water, vec3(0.34, 0.84, 0.77), glow + 0.66 * current);
+	}
+	return water;
 }
 
 void fragment() {
@@ -137,7 +144,7 @@ void fragment() {
 		water = surface_water(pixel, swell, depth_below_swell, water);
 		water = circuitry(pixel, water);
 		water = electricity(pixel, water);
-		water = atoms(pixel, water);
+		water = atoms_and_molecules(pixel, water);
 		tint = mix(tint, water, smoothstep(-1.0, 1.0, depth_below_swell));
 	}
 	ALBEDO = tint;

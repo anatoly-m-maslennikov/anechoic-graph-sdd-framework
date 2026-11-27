@@ -75,12 +75,12 @@ func _build_water_text() -> void:
 	var font := SystemFont.new()
 	font.font_names = PackedStringArray(["Menlo", "DejaVu Sans Mono", "monospace"])
 	var letters := "aWdeIrTpsNoMtyAVeLcgUkn"
-	for index in range(62):
-		var x := 5.0 + index * 8.0
+	for index in range(50):
+		var x := 5.0 + index * 10.0
 		var crest := _surface_swell(x)
 		var y := 251.0 + crest
 		var slope := (_surface_swell(x + 1.0) - _surface_swell(x - 1.0)) * 0.5
-		var size := roundi(lerpf(13.0, 10.0, smoothstep(-11.0, 1.0, crest)))
+		var size := roundi(lerpf(17.0, 14.0, smoothstep(-11.0, 1.0, crest)))
 		var letter := _water_label(font, letters[index % letters.length()], Vector2(x, y), size, Color("#e1f6e9"))
 		letter.rotation.z = -atan(slope)
 		letter.outline_size = 2
