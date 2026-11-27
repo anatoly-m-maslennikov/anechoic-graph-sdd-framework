@@ -10,7 +10,6 @@ const FIGURE_HEAD := Vector3(0, 0.35, 0)
 const ICON_FIGURE_SCALE := 2.0
 const ROUTE_TOP := 1.79
 const ROUTE_BOTTOM := -2.62
-const ROUTE_TURNS := 1.58
 const ARCH_SEGMENTS := 20
 const PRISM := [
 	Color("#6654af"), Color("#3e6abb"), Color("#3baebf"), Color("#8ed8bb"),
@@ -81,10 +80,10 @@ func _build_water_text() -> void:
 	var letters := "awdeirtpsnomtyave"
 	for index in range(letters.length()):
 		var x := 9.0 + index * 30.0 + 7.0 * sin(index * 2.4)
-		var y := 269.0 + _surface_swell(x) + 4.0 * sin(index * 4.1)
+		var y := 261.0 + _surface_swell(x) + 2.0 * sin(index * 4.1)
 		var slope := (_surface_swell(x + 1.0) - _surface_swell(x - 1.0)) * 0.5
 		var letter := _water_label(font, letters[index], Vector2(x, y), 11, Color("#a1e3d3"))
-		letter.rotation.z = -atan(slope)
+		letter.rotation.z = -atan(slope) * 0.65
 
 	_water_label(font, "def build():\n    return 1", Vector2(59, 305), 12, Color("#b4e3ce"))
 	_water_label(font, "let n: number\n    = 1;", Vector2(443, 305), 12, Color("#a9daed"))
@@ -93,7 +92,9 @@ func _build_water_text() -> void:
 
 func _surface_swell(x: float) -> float:
 	# Match the crest in wind_and_water.gdshader.
-	return 5.0 * sin(x * 0.066) + 2.8 * sin(x * 0.16 + 0.8) + 1.5 * sin(x * 0.33)
+	var phase := x * 0.078 + 0.73 * sin(x * 0.027)
+	var height := 10.0 + 3.8 * sin(x * 0.041 + 1.1)
+	return height * sin(phase) + 3.5 * cos(phase * 2.0 + 0.95) + 1.0 * sin(x * 0.29)
 
 func _water_label(font: Font, copy: String, pixel: Vector2, size: int, ink: Color) -> Label3D:
 	var label := Label3D.new()
@@ -185,15 +186,24 @@ func _build_path() -> ImageTexture:
 	_cut_passage(mask, underwater)
 	return ImageTexture.create_from_image(mask)
 
-# Use eased ellipses inside the faceted shell to keep the spiral smooth.
+# Three straight runs in profile, with eased turns inside the shell.
+func _ramp_x(progress: float) -> float:
+	if progress < 0.43:
+		return lerpf(0.0, -1.12, progress / 0.43)
+	if progress < 0.69:
+		return lerpf(-1.12, 1.18, (progress - 0.43) / 0.26)
+	return lerpf(1.18, -0.57, (progress - 0.69) / 0.31)
+
 func _route_sections(top: float, bottom: float, steps: int) -> Array[PackedVector3Array]:
 	var sections: Array[PackedVector3Array] = []
 	for index in range(steps + 1):
 		var y := lerpf(top, bottom, float(index) / steps)
-		var phase := -0.1 + inverse_lerp(ROUTE_TOP, ROUTE_BOTTOM, y) * TAU * ROUTE_TURNS
+		var progress := inverse_lerp(ROUTE_TOP, ROUTE_BOTTOM, y)
+		var target_x := (_ramp_x(progress - 0.032) + _ramp_x(progress + 0.032)) * 0.5
 		var headroom := _route_headroom(y)
 		var floor_profile := _ellipse_at(y)
 		var roof_profile := _ellipse_at(y + headroom)
+		var phase := asin(clampf((target_x - floor_profile.z) / floor_profile.x, -0.91, 0.91))
 		var heading := Vector3(sin(phase), 0, cos(phase))
 		var floor_spoke := heading * Vector3(floor_profile.x, 0, floor_profile.y)
 		var roof_spoke := heading * Vector3(roof_profile.x, 0, roof_profile.y)
@@ -203,7 +213,7 @@ func _route_sections(top: float, bottom: float, steps: int) -> Array[PackedVecto
 		var center := Vector3(lerpf(floor_profile.z, roof_profile.z, roof_weight), y, 0)
 		var direction := spoke.normalized()
 		var outer := center + spoke - direction * minf(0.15, spoke.length() * 0.33)
-		var inner := outer - direction * minf(0.21, spoke.length() * 0.47)
+		var inner := outer - direction * minf(0.27, spoke.length() * 0.47)
 		var guard := outer + Vector3.UP * minf(0.15, headroom)
 		sections.append(PackedVector3Array([inner, outer, guard]))
 	return sections
@@ -248,22 +258,22 @@ func _build_path_section(sections: Array[PackedVector3Array], submerged: bool) -
 		if index > 0:
 			var previous := sections[index - 1]
 			_quad(track, previous[0], previous[1], outer, inner)
-			_quad(rim, previous[1], previous[1] + Vector3.DOWN * 0.042, outer + Vector3.DOWN * 0.042, outer)
+			_quad(rim, previous[1], previous[1] + Vector3.DOWN * 0.057, outer + Vector3.DOWN * 0.057, outer)
 			distance_since_post += outer.distance_to(previous[1])
 		handrail.append(guard)
-		if distance_since_post >= 0.29 or index == sections.size() - 1:
-			_route_tube(posts, PackedVector3Array([outer, guard]), 0.008)
+		if distance_since_post >= 0.34 or index == sections.size() - 1:
+			_route_tube(posts, PackedVector3Array([outer, guard]), 0.011)
 			distance_since_post = 0.0
-	_route_tube(rails, handrail, 0.011)
+	_route_tube(rails, handrail, 0.018)
 	if submerged:
-		_mesh("OceanariumWalkway", track, Color("#8cb8bc"))
-		_mesh("OceanariumWalkwayEdge", rim, Color("#b9e5da"))
-		_mesh("OceanariumGuardrail", rails, Color("#b0d8d3"))
+		_mesh("OceanariumWalkway", track, Color("#5f9598"))
+		_mesh("OceanariumWalkwayEdge", rim, Color("#dcf3e1"))
+		_mesh("OceanariumGuardrail", rails, Color("#d5efe7"))
 		_mesh("OceanariumGuardrailPosts", posts, Color("#8bafbe"))
 	else:
-		_mesh("SpiralWalkway", track, Color("#b59f6e"))
-		_mesh("WalkwayTimberEdge", rim, Color("#e9be77"))
-		_mesh("Guardrail", rails, Color("#f6dc97"))
+		_mesh("Walkway", track, Color("#a78a55"))
+		_mesh("WalkwayTimberEdge", rim, Color("#f9dba1"))
+		_mesh("Guardrail", rails, Color("#fff1c5"))
 		_mesh("GuardrailPosts", posts, Color("#dcc48f"))
 
 # A single profile cut follows the floor and ceiling of the interior route.
@@ -332,12 +342,12 @@ func _build_oceanarium(sections: Array[PackedVector3Array]) -> void:
 			for point in range(ARCH_SEGMENTS):
 				_quad(glass, previous[point], previous[point + 1], arch[point + 1], arch[point])
 			rib_spacing += arch[0].distance_to(previous[0])
-		if rib_spacing >= 0.41 or index == sections.size() - 1:
+		if rib_spacing >= 0.48 or index == sections.size() - 1:
 			_route_tube(frame, arch, 0.009)
 			rib_spacing = 0.0
 		previous = arch
 	_route_tube(seam, roofline, 0.008)
-	var canopy := _mesh("OceanariumGlass", glass, Color(0.60, 0.88, 0.94, 0.29))
+	var canopy := _mesh("OceanariumGlass", glass, Color(0.60, 0.88, 0.94, 0.21))
 	var material := canopy.material_override as StandardMaterial3D
 	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	material.cull_mode = BaseMaterial3D.CULL_BACK

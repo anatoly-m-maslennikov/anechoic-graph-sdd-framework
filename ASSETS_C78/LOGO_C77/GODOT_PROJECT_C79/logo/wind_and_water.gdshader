@@ -35,16 +35,25 @@ vec3 windy_sky(vec2 p) {
 	return mix(tint, vec3(0.66, 0.77, 0.71), clamp(wind * 0.61, 0.0, 1.0));
 }
 
-float surface_waves(vec2 pixel) {
-	// The floating letters follow the same swell in iceberg.gd.
-	float x = pixel.x;
-	float swell = 5.0 * sin(x * 0.066) + 2.8 * sin(x * 0.16 + 0.8) + 1.5 * sin(x * 0.33);
-	float backwash = 3.7 * sin(x * 0.096 + 1.7) - 2.6 * sin(x * 0.22);
-	float crest = 1.0 - smoothstep(0.45, 1.65, abs(pixel.y - 265.0 - swell));
-	float wake = 1.0 - smoothstep(0.35, 1.45, abs(pixel.y - 277.0 - backwash));
-	float tail = 1.0 - smoothstep(0.3, 1.25, abs(pixel.y - 284.0 - swell * 0.55));
-	float gaps = smoothstep(-0.5, 0.7, sin(x * 0.19) + 0.6 * sin(x * 0.41));
-	return clamp(0.55 * crest + 0.49 * wake + 0.42 * gaps * tail, 0.0, 1.0);
+float surface_swell(float x) {
+	// The floating letters follow this profile in iceberg.gd.
+	float phase = x * 0.078 + 0.73 * sin(x * 0.027);
+	float height = 10.0 + 3.8 * sin(x * 0.041 + 1.1);
+	return height * sin(phase) + 3.5 * cos(phase * 2.0 + 0.95) + 1.0 * sin(x * 0.29);
+}
+
+vec3 surface_water(vec2 pixel, float swell, float depth, vec3 water) {
+	float crest = 1.0 - smoothstep(-13.0, -3.0, swell);
+	float transmission = 1.0 - smoothstep(0.0, 23.0, depth);
+	water = mix(water, vec3(0.26, 0.67, 0.64), transmission * (0.24 + crest * 0.35));
+
+	float foam_edge = 1.0 - smoothstep(0.45, 1.3 + 2.7 * crest, abs(depth));
+	float patches = smoothstep(-0.25, 0.78, sin(pixel.x * 0.16) + 0.6 * sin(pixel.x * 0.39));
+	float whitecap = (1.0 - smoothstep(0.9, 5.5, depth)) * smoothstep(0.45, 0.9, crest + 0.24 * patches);
+	float trail = 6.7 + 1.4 * sin(pixel.x * 0.38);
+	float broken_foam = 1.0 - smoothstep(0.2, 1.55, abs(depth - trail));
+	float foam = foam_edge * (0.26 + 0.68 * crest) + 0.52 * whitecap + broken_foam * patches * crest * 0.6;
+	return mix(water, vec3(0.91, 0.99, 0.94), clamp(foam, 0.0, 1.0));
 }
 
 float trace(vec2 pixel, vec2 a, vec2 b, float width) {
@@ -114,18 +123,18 @@ vec3 electricity(vec2 pixel, vec3 water) {
 
 void fragment() {
 	vec2 p = UV;
-	vec3 tint;
-	if (p.y < 0.5) {
-		tint = windy_sky(p);
-	} else {
+	vec2 pixel = p * 500.0;
+	float swell = surface_swell(pixel.x);
+	float depth_below_swell = pixel.y - 250.0 - swell;
+	vec3 tint = windy_sky(p);
+	if (depth_below_swell > -1.0) {
 		float depth = (p.y - 0.5) * 2.0;
-		tint = mix(vec3(0.236, 0.455, 0.47), vec3(0.057, 0.162, 0.206), smoothstep(0.0, 0.98, depth));
-		vec2 pixel = p * 500.0;
-		tint = mix(tint, vec3(0.47, 0.74, 0.70), surface_waves(pixel));
-		tint = circuitry(pixel, tint);
-		tint = building_blocks(pixel, tint);
-		tint = electricity(pixel, tint);
+		vec3 water = mix(vec3(0.236, 0.455, 0.47), vec3(0.057, 0.162, 0.206), smoothstep(0.0, 0.98, depth));
+		water = surface_water(pixel, swell, depth_below_swell, water);
+		water = circuitry(pixel, water);
+		water = building_blocks(pixel, water);
+		water = electricity(pixel, water);
+		tint = mix(tint, water, smoothstep(-1.0, 1.0, depth_below_swell));
 	}
-	float surface = 1.0 - smoothstep(0.0007, 0.004, abs(p.y - 0.5));
-	ALBEDO = mix(tint, vec3(0.867, 0.974, 0.914), surface * 0.90);
+	ALBEDO = tint;
 }
