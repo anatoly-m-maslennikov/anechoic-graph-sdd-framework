@@ -113,17 +113,18 @@ declare_trace_contract(
 #### Guarantee
 
 Read the admitted Project instance from the `anechoic-project-instance`
-meta element. Send Tool calls to same-origin `POST /tools` with
+meta element. Require 64 lowercase hexadecimal characters before sending
+a request. Send Tool calls to same-origin `POST /tools` with
 `X-Anechoic-Project-Instance`.
 
 Send the canonical Tool envelope with `name`, `arguments`, `session_id`,
 and `public_base_url`. Supply `arguments.project_root` when the page
 URL selects a Project root.
 
-Accept a Tool result only if its Project receipt has the page's instance.
-Preserve the Tool or Project refusal code and message for the caller.
-Keep the existing Console Run, Check, page delivery, and embedded MCP
-behavior.
+Return `result.value` only for a valid Tool result with a matching Project
+receipt. Preserve a typed refusal's code and message, including on HTTP
+200. Reject a malformed envelope. Keep the existing Console Run, Check,
+page delivery, and embedded MCP behavior.
 
 #### References
 
@@ -159,6 +160,11 @@ declare_trace_contract(
                                       {'endpoint': 'POST /tools',
                                        'instance_header': 'X-Anechoic-Project-Instance'}),),
                      'forbid_effect': ('C46.project_receipt',)},
- 'invalid_page_instance': {'forbid_effect': ('C21.tool_rest',)}},
+ 'invalid_page_instance': {'forbid_effect': ('C21.tool_rest',)},
+ 'invalid_response': {'must_effect': (('C21.tool_rest',
+                                       'requested',
+                                       {'endpoint': 'POST /tools',
+                                        'instance_header': 'X-Anechoic-Project-Instance'}),),
+                      'forbid_effect': ('C46.project_receipt',)}},
 )
 ```

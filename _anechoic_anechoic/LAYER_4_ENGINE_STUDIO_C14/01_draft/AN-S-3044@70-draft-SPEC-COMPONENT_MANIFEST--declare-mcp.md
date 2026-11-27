@@ -397,8 +397,10 @@ AN-S-1381, AN-S-1391, AN-S-3044, and AN-T-2944.
 #### Guarantee
 
 Serve `GET /tools` and `POST /tools` on the Console origin. In shared
-mode, forward both operations to the C91 shared API on its private Unix
-socket. MCP discovery and invocation use the same C91 operations.
+`beta_next` mode, forward both operations to the C91 shared API on its
+private Unix socket. MCP loads its catalog from C91 at startup and uses
+the same invocation operation. The Current stack uses its compatibility
+Backend for these public routes.
 
 C91 owns the shared catalog, Tool validation, Tool dispatch, and Project
 admission. C21 checks the HTTP transport and the returned Project receipt.
@@ -409,15 +411,22 @@ element to that Project's instance.
 Forward the canonical invocation fields `name`, `arguments`, `session_id`,
 and `public_base_url`. For public HTTP, derive `public_base_url` from the
 admitted request origin. Forward `X-Anechoic-Project-Instance` when
-present. Preserve the Backend's result or typed refusal and its HTTP status.
+present. Require same-origin requests when the browser supplies origin
+information. Accept JSON bodies up to 65,536 bytes at the HTTP boundary.
 
-In direct mode, expose the public Tool REST envelope through the Backend
-client bound to the Project. Retain the existing private Backend wire.
+For shared `GET /tools`, require a list of valid Tool descriptors. For
+shared `POST /tools`, preserve a valid Backend result or typed refusal
+and its HTTP status. Reject an invalid Project receipt with 502. Reject
+other malformed Backend envelopes with 503.
+
+In direct mode, serve the Backend-derived Tool catalog loaded at gateway
+startup. Invoke Tools through the Backend client bound to the Project.
+Keep the existing private Backend envelope.
 
 Retain the legacy named Workbench routes and the `/interface` wrapper
-for terminal clients. The wrapper checks origin, bounded request format,
-and Project admission. Pass each admitted Tool name to Backend for Tool
-eligibility.
+for terminal clients. The wrapper checks the origin, JSON media type, and
+65,536-byte body limit. It checks the Project binding and passes the Tool
+name unchanged to the Backend. The Backend decides Tool eligibility.
 
 #### References
 
@@ -433,14 +442,54 @@ declare_trace_contract(
                                         'invoke',
                                         {'endpoint': 'POST '
                                                      '/tools'}),)},
- 'direct_catalog': {'must_effect': (('bound_backend_client',
-                                     'catalog',
-                                     {'endpoint': 'GET /tools'}),)},
+ 'direct_catalog': {'must_effect': (('C21.backend_catalog_snapshot',
+                                     'read'),),
+                    'forbid_effect': ('bound_backend_client',)},
  'direct_invocation': {'must_effect': (('bound_backend_client',
                                         'invoke',
                                         {'endpoint': 'POST '
                                                      '/tools'}),)},
  'transport_refused': {'forbid_effect': ('C91.shared_api',
-                                         'bound_backend_client')}},
+                                         'bound_backend_client')},
+ 'legacy_forwarded': {'must_effect': (('Backend.tool_dispatch',
+                                       'invoke'),),
+                      'same_values': ((('legacy_interface', 'name'),
+                                       ('legacy_dispatch', 'name')),),
+                      'value_types': {('legacy_interface', 'name'): 'string',
+                                      ('legacy_dispatch', 'name'): 'string'}},
+ 'legacy_refused': {'forbid_effect': ('Backend.tool_dispatch',)},
+ 'shared_receipt_refused': {'must_effect': (('C91.shared_api',
+                                             'invoke',
+                                             {'endpoint': 'POST '
+                                                          '/tools'}),
+                                            ('C21.tool_rest_reply',
+                                             'refused',
+                                             {'status': 502})),
+                            'must_precede': ((('C91.shared_api',
+                                               'invoke'),
+                                              ('C21.tool_rest_reply',
+                                               'refused')),)},
+ 'shared_reply_invalid': {'must_effect': (('C91.shared_api',
+                                           'invoke',
+                                           {'endpoint': 'POST '
+                                                        '/tools'}),
+                                          ('C21.tool_rest_reply',
+                                           'refused',
+                                           {'status': 503})),
+                          'must_precede': ((('C91.shared_api',
+                                             'invoke'),
+                                            ('C21.tool_rest_reply',
+                                             'refused')),)},
+ 'shared_catalog_invalid': {'must_effect': (('C91.shared_api',
+                                             'catalog',
+                                             {'endpoint': 'GET '
+                                                          '/tools'}),
+                                            ('C21.tool_rest_reply',
+                                             'refused',
+                                             {'status': 503})),
+                            'must_precede': ((('C91.shared_api',
+                                               'catalog'),
+                                              ('C21.tool_rest_reply',
+                                               'refused')),)}},
 )
 ```
