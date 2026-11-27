@@ -4,9 +4,14 @@ const BACKDROP = preload("res://wind_and_water.gdshader")
 const VIEW_SIZE := 6.4
 const SIDES := 15
 const PATH_STEPS := 180
+const ICE_WIDTH := 0.73
+const PRISM := [
+	Color("#6654af"), Color("#3e6abb"), Color("#3baebf"), Color("#8ed8bb"),
+	Color("#c4df99"), Color("#f2d475"), Color("#f6a16e"), Color("#ec827b"),
+]
 # Height, horizontal radius, depth radius, and horizontal center.
 const PROFILE := [
-	Vector4(2.03, 0.045, 0.05, -0.43),
+	Vector4(1.92, 0.16, 0.12, -0.43),
 	Vector4(1.62, 0.57, 0.43, -0.31),
 	Vector4(1.11, 0.98, 0.73, -0.21),
 	Vector4(0.55, 1.37, 0.96, -0.12),
@@ -24,6 +29,7 @@ func _ready() -> void:
 	_build_view()
 	_build_ice()
 	_build_path()
+	_build_summit_figure()
 	_build_title()
 	var arguments := OS.get_cmdline_user_args()
 	var export_index := arguments.find("--render")
@@ -63,7 +69,7 @@ func _build_ice() -> void:
 		for side in range(SIDES):
 			var angle := TAU * float(side) / SIDES
 			var radial := 1.0 + rng.randf_range(-0.09, 0.09)
-			var x := profile.w + sin(angle) * profile.y * radial
+			var x := (profile.w + sin(angle) * profile.y * radial) * ICE_WIDTH
 			var z := cos(angle) * profile.z * radial
 			ring.append(Vector3(x, profile.x, z))
 		rings.append(ring)
@@ -77,6 +83,8 @@ func _build_ice() -> void:
 			var next := (side + 1) % SIDES
 			_ice_face(surface, upper[side], lower[side], upper[next], rng.randf())
 			_ice_face(surface, upper[next], lower[side], lower[next], rng.randf())
+	for side in range(SIDES):
+		_ice_face(surface, _summit(), rings[0][side], rings[0][(side + 1) % SIDES], rng.randf())
 	var ice := _mesh("FacetedIceberg", surface, Color.WHITE)
 	(ice.material_override as StandardMaterial3D).vertex_color_use_as_albedo = true
 
@@ -89,13 +97,14 @@ func _ice_face(surface: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, variati
 		c = swap
 		normal = -normal
 	var reflection := clampf(normal.dot(Vector3(-0.46, 0.63, 0.63).normalized()) * 0.55 + 0.43, 0, 1)
-	var color: Color
-	if middle.y >= 0.0:
-		color = Color("#79a8ae").lerp(Color("#f5faee"), 0.25 + reflection * 0.65)
-	else:
-		var blue := Color("#1d6675").lerp(Color("#2a8590"), smoothstep(-2.75, 0.0, middle.y))
-		color = blue.lerp(Color("#88c4c2"), reflection * 0.47)
-	color = color.lightened((variation - 0.44) * 0.19)
+	var band := clampf(inverse_lerp(-2.85, 1.92, middle.y + middle.x * 0.23), 0.0, 1.0)
+	band *= PRISM.size() - 1
+	var first := mini(int(band), PRISM.size() - 2)
+	var color: Color = PRISM[first].lerp(PRISM[first + 1], band - first)
+	var light := 0.12 + reflection * 0.46 + (variation - 0.5) * 0.24
+	if middle.y < 0.0:
+		light -= 0.20
+	color = color.lerp(Color("#f6f8ee"), light) if light >= 0.0 else color.darkened(-light)
 	for point: Vector3 in [a, b, c]:
 		surface.set_normal(normal)
 		surface.set_color(color)
@@ -112,7 +121,7 @@ func _build_path() -> void:
 	var distance_since_post := 1.0
 	for index in range(PATH_STEPS + 1):
 		var percentage := float(index) / PATH_STEPS
-		var y := lerpf(1.94, -2.65, percentage)
+		var y := lerpf(1.79, -2.65, percentage)
 		var angle := lerpf(-0.70, TAU * 2.0 + 0.90, percentage)
 		var radial := Vector3(sin(angle), 0, cos(angle))
 		var wall := _wall_point(y, angle)
@@ -133,6 +142,37 @@ func _build_path() -> void:
 	_mesh("WalkwayTimberEdge", rim, Color("#9a5433"))
 	_mesh("Guardrail", rails, Color("#f6bb58"))
 	_mesh("GuardrailPosts", posts, Color("#c36f43"))
+
+func _summit() -> Vector3:
+	return Vector3(PROFILE[0].w * ICE_WIDTH, PROFILE[0].x, 0.0)
+
+func _build_summit_figure() -> void:
+	var summit := _summit()
+	var boots := SurfaceTool.new()
+	boots.begin(Mesh.PRIMITIVE_TRIANGLES)
+	_bar(boots, summit + Vector3(-0.057, 0.018, 0.03), summit + Vector3(-0.045, 0.137, 0.03), 0.024)
+	_bar(boots, summit + Vector3(0.071, 0.018, -0.02), summit + Vector3(0.035, 0.137, -0.02), 0.024)
+	_mesh("SummitFigureLegs", boots, Color("#173d34"))
+
+	var jacket := SurfaceTool.new()
+	jacket.begin(Mesh.PRIMITIVE_TRIANGLES)
+	_bar(jacket, summit + Vector3(0, 0.137, 0), summit + Vector3(0.01, 0.286, 0), 0.06)
+	_bar(jacket, summit + Vector3(-0.055, 0.264, 0.014), summit + Vector3(-0.093, 0.157, 0.038), 0.019)
+	_bar(jacket, summit + Vector3(0.065, 0.264, 0.012), summit + Vector3(0.123, 0.181, 0.049), 0.019)
+	_mesh("SummitFigureJacket", jacket, Color("#9c432a"))
+
+	var head := SphereMesh.new()
+	head.radius = 0.061
+	head.height = 0.143
+	head.radial_segments = 8
+	head.rings = 4
+	var face := SurfaceTool.new()
+	face.create_from(head, 0)
+	var head_center := summit + Vector3(0.016, 0.35, 0)
+	_mesh("SummitFigureHead", face, Color("#ce895c")).position = head_center
+	var hair := _mesh("SummitFigureHair", face, Color("#173d34"))
+	hair.position = head_center + Vector3(-0.024, 0.019, 0.012)
+	hair.scale = Vector3(0.82, 0.76, 0.91)
 
 func _wall_point(y: float, angle: float) -> Vector3:
 	var step := fposmod(angle / TAU, 1.0) * SIDES
