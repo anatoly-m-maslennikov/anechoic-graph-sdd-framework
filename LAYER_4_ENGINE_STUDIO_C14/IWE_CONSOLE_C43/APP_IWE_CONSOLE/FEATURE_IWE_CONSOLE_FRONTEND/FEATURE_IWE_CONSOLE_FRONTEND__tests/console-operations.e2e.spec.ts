@@ -2,7 +2,8 @@ import { mockGraph } from './console-graph-mock';
 import { checkObservedEffects, checkObservedValues, formalCases,
   type CorrelatedCase, type Effect } from './console-formal-cases';
 import { expect, test, type Page, type Request, type Route } from '@playwright/test';
-import { toolReply, toolRequest } from './tool_rest_fixture';
+import { isToolCall, matchesToolPath, toolReply,
+  toolRequest } from './tool_rest_fixture';
 
 type Case = CorrelatedCase & { input: Record<string, string>;
   effect: [string, string, Record<string, string>] };
@@ -38,8 +39,7 @@ function observeBuilderDisplay() {
 async function observeBuilder(page: Page) {
   const observations: BuilderObservation[] = [];
   function record(request: Request, phase: 'request' | 'response') {
-    if (request.method() !== 'POST' || !new URL(request.url(
-      )).pathname.endsWith('/tools')) return;
+    if (!isToolCall(request)) return;
     const { name: operation } = request.postDataJSON();
     if (Object.hasOwn(builderEvents,
       operation)) observations.push({ request, operation, phase });
@@ -77,7 +77,7 @@ async function builderFixture(page: Page, fault?: 'revision' | 'query_id') {
   const workspace = { workspace_id: 'test', project_name:
     'Fixture', active_view_id: view.id, views: [view] };
   let run = { view_id: '', revision: 0, query_id: '', sql: '' };
-  await page.route('**/tools', async route => {
+  await page.route(matchesToolPath, async route => {
     if (route.request().method() !== 'POST') return route.fallback();
     const { name, arguments: args } = toolRequest(route);
     let reply: unknown;
@@ -183,7 +183,7 @@ test('diagnostics displays health and reports both rebuild outcomes', async ({ p
   const statusRequests: Record<string, unknown>[] = [];
   let unhealthy = false;
   const workspace = { workspace_id: 'test', project_name: 'Fixture', active_view_id: 'v1', views: [{ id: 'v1', name: 'View 1', sql: 'SELECT 1', cursor_position: 0, revision: 1 }] };
-  await page.route('**/tools', async (route) => {
+  await page.route(matchesToolPath, async (route) => {
     if (route.request().method() !== 'POST') return route.fallback();
     const { name, arguments: args } = toolRequest(route);
     let value: unknown;
@@ -234,7 +234,7 @@ async function mockOperations(page: import(
     input.sql ?? 'SELECT 1', cursor_position: 0, revision: 1 };
   const workspace = { workspace_id: 'test', project_name:
     'Fixture', active_view_id: 'v1', views: [view] };
-  await page.route('**/tools', async (route) => {
+  await page.route(matchesToolPath, async (route) => {
     if (route.request().method() !== 'POST') return route.fallback();
     const { name, arguments: args } = toolRequest(route);
     let value: unknown;

@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test';
-import { toolReply, toolRequest } from './tool_rest_fixture';
+import { matchesToolPath, toolReply, toolRequest } from './tool_rest_fixture';
 
 const rows = (values: unknown[][], column = 'value') => ({
   sql: '', query_id: 'q1', columns: [{ name: column, type:
@@ -53,7 +53,7 @@ export async function mockGraph(page: Page, view: string, layout =
     cursor_position: 0, revision: 1, result: run };
   const state = { project_name: 'Fixture', workspace_id:
     'graph-test', active_view_id: 'v1', views: [item] };
-  await page.route('**/tools', async route => {
+  await page.route(matchesToolPath, async route => {
     if (route.request().method() !== 'POST') return route.fallback();
     const { name, arguments: args } = toolRequest(route);
     let value: unknown;

@@ -108,7 +108,7 @@ class SharedProjectQueries(unittest.IsolatedAsyncioTestCase):
                 async with ClientSession(*streams) as client:
                     await client.initialize()
                     self.instances = {}
-                    catalog = await http.get("/tools")
+                    catalog = await http.get("/")
                     catalog.raise_for_status()
                     self.assertEqual(
                         (await client.list_tools()).tools,
@@ -213,7 +213,7 @@ class SharedProjectQueries(unittest.IsolatedAsyncioTestCase):
 
     async def tool_rest(self, http, root, name, arguments, instance):
         response = await http.post(
-            "/tools",
+            "/",
             json={
                 "name": name,
                 "arguments": {**arguments, "project_root": str(root)},

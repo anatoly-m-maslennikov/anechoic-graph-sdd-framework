@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { checkObservedEffects, formalCases, type Effect,
   type EffectCase } from './console-formal-cases';
-import { toolReply, toolRequest } from './tool_rest_fixture';
+import { matchesToolPath, toolReply, toolRequest } from './tool_rest_fixture';
 
 type RenderCase = EffectCase & { input: { transport: string; entry: string } };
 const { render_console_view: cases } =
@@ -14,7 +14,7 @@ async function mockRun(page: Page, succeeds: boolean) {
   const workspace = { project_name: 'Fixture', workspace_id:
     'test', active_view_id: view.id, views: [view] };
   const query = { query_id: 'query-render', revision: view.revision };
-  await page.route('**/tools', async route => {
+  await page.route(matchesToolPath, async route => {
     if (route.request().method() !== 'POST') return route.fallback();
     const { name } = toolRequest(route);
     let value: unknown;

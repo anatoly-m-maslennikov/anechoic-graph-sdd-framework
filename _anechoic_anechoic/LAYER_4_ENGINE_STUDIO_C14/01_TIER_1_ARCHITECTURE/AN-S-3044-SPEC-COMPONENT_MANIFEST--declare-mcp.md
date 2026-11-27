@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: "active"
-  version: 72
-  updated_at: "2026-11-27T18:48:33.355652+00:00"
+  version: 73
+  updated_at: "2026-11-27T20:33:18.295445+00:00"
 relations:
   CONTRIBUTES_TO:
   - AN-S-3329
@@ -298,8 +298,8 @@ ComponentManifest(
                                            'runner': 'uv',
                                            'path': 'LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/shared_mcp_launcher.py'},
                    'tool_rest': {'transport': 'http',
-                                 'routes': {'GET /tools': 'catalog',
-                                            'POST /tools': 'invoke'}},
+                                 'routes': {'GET /': 'catalog',
+                                            'POST /': 'invoke'}},
                    'workbench_http': {'transport': 'http',
                                       'routes': {'page': 'GET '
                                                          '/anechoic/iwe-console/{project_name}',
@@ -326,7 +326,10 @@ ComponentManifest(
                    'shared_runtime_mcp': {'transport': 'http',
                                           'path': '/anechoic/mcp',
                                           'protocol': 'mcp'}},
-        'client': [{'component': 'C45', 'interface': 'project_admission'},
+        'client': [{'component': 'C91',
+                    'interface': 'current_openapi_export',
+                    'stage': 'image build'},
+                   {'component': 'C45', 'interface': 'project_admission'},
                    {'component': 'C45', 'interface': 'tool_api'},
                    {'component': 'C45',
                     'interface': 'shared_tool_coordinator'},
@@ -372,7 +375,7 @@ AN-S-1381, AN-S-1391, AN-S-3044, and AN-T-2944.
 
 #### Guarantee
 
-Serve `GET /tools` and `POST /tools` on the Console origin. In shared
+Serve `GET /` and `POST /` on the Console origin. In shared
 mode, forward both operations to the C45 shared Tool coordinator on its
 private Unix socket. MCP loads its catalog from the coordinator at startup
 and uses the same invocation operation.
@@ -391,8 +394,8 @@ information. Limit both the incoming JSON body and the forwarded shared
 invocation to 65,536 bytes. Measure the forwarded body after inserting
 the admitted origin.
 
-For shared `GET /tools`, require a list of valid Tool descriptors. For
-shared `POST /tools`, preserve a valid Backend result or typed refusal
+For shared `GET /`, require a list of valid Tool descriptors. For
+shared `POST /`, preserve a valid Backend result or typed refusal
 and its HTTP status. Reject an invalid Project receipt with 502. Reject
 other malformed Backend envelopes with 503.
 
@@ -407,25 +410,25 @@ name unchanged to the Backend. The Backend decides Tool eligibility.
 
 #### References
 
-AN-S-3059@61 and AN-T-4085@1-draft.
+AN-S-3059@62 and AN-T-4085@1-draft.
 
 ```python trace
 declare_trace_contract(
     action='forward_tool_rest',
     cases={'shared_catalog': {'must_effect': (('C45.shared_tool_coordinator',
                                      'catalog',
-                                     {'endpoint': 'GET /tools'}),)},
+                                     {'endpoint': 'GET /'}),)},
  'shared_invocation': {'must_effect': (('C45.shared_tool_coordinator',
                                         'invoke',
                                         {'endpoint': 'POST '
-                                                     '/tools'}),)},
+                                                     '/'}),)},
  'direct_catalog': {'must_effect': (('C21.backend_catalog_snapshot',
                                      'read'),),
                     'forbid_effect': ('bound_backend_client',)},
  'direct_invocation': {'must_effect': (('bound_backend_client',
                                         'invoke',
                                         {'endpoint': 'POST '
-                                                     '/tools'}),)},
+                                                     '/'}),)},
  'transport_refused': {'forbid_effect': ('C45.shared_tool_coordinator',
                                          'bound_backend_client')},
  'legacy_forwarded': {'must_effect': (('Backend.tool_dispatch',
@@ -438,7 +441,7 @@ declare_trace_contract(
  'shared_receipt_refused': {'must_effect': (('C45.shared_tool_coordinator',
                                              'invoke',
                                              {'endpoint': 'POST '
-                                                          '/tools'}),
+                                                          '/'}),
                                             ('C21.tool_rest_reply',
                                              'refused',
                                              {'status': 502})),
@@ -449,7 +452,7 @@ declare_trace_contract(
  'shared_reply_invalid': {'must_effect': (('C45.shared_tool_coordinator',
                                            'invoke',
                                            {'endpoint': 'POST '
-                                                        '/tools'}),
+                                                        '/'}),
                                           ('C21.tool_rest_reply',
                                            'refused',
                                            {'status': 503})),
@@ -460,7 +463,7 @@ declare_trace_contract(
  'shared_catalog_invalid': {'must_effect': (('C45.shared_tool_coordinator',
                                              'catalog',
                                              {'endpoint': 'GET '
-                                                          '/tools'}),
+                                                          '/'}),
                                             ('C21.tool_rest_reply',
                                              'refused',
                                              {'status': 503})),
@@ -470,3 +473,16 @@ declare_trace_contract(
                                                'refused')),)}},
 )
 ```
+
+### Package the Current Tool OpenAPI document
+
+#### Guarantee
+
+During the image build, invoke C91's `current_openapi_export` with the
+packaged Current Tool registry and Framework Version. Install its output
+at `/usr/local/share/anechoic/openapi.json`. Treat exporter failures as
+build failures.
+
+Copy only the generated OpenAPI document from the export stage. Keep the
+C91 executable and its runtime out of the Current image. The C45 shared
+Tool coordinator supplies live discovery and invocation.

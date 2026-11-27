@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 
 from .models import Page, Query
-from ._shared_runtime_support import TOOL_REST_PATH
+from MCP_PATCHBAY_C21.FEATURE_MCP.http_paths import TOOL_REST_PATH
 
 ROOT = Path(__file__).resolve().parents[2]
 SCHEMA_PATH = Path(__file__).with_name("query_run.schema.json")

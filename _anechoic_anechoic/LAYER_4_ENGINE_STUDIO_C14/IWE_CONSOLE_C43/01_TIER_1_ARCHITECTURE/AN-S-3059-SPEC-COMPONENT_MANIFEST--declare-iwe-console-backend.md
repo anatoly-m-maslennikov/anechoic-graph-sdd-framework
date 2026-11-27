@@ -8,9 +8,9 @@ context:
   template: component_manifest
   lens: SPEC
 state:
-  status: active
-  version: 61
-  updated_at: '2026-11-27T01:04:20.461163+00:00'
+  status: "active"
+  version: 62
+  updated_at: "2026-11-27T20:33:20.990659+00:00"
 ---
 
 ## Summary
@@ -414,9 +414,9 @@ ComponentManifest(
                                                           'selection': 'POST '
                                                                        '/selection',
                                                           'catalog': 'GET '
-                                                                     '/tools',
+                                                                     '/',
                                                           'invoke': 'POST '
-                                                                    '/tools'},
+                                                                    '/'},
                                                'selection_fields': ['project_root'],
                                                'tool_failure_fields': ['code',
                                                                        'message',
@@ -428,8 +428,8 @@ ComponentManifest(
                                                                   'public_base_url']},
                    'tool_api': {'transport': 'http',
                                 'socket': 'private Unix socket',
-                                'routes': {'catalog': 'GET /tools',
-                                           'invoke': 'POST /tools'},
+                                'routes': {'catalog': 'GET /',
+                                           'invoke': 'POST /'},
                                 'catalog_binding': 'instance_id query '
                                                    'parameter',
                                 'failure_fields': ['code',
@@ -510,7 +510,7 @@ Project. Use the same registry to validate and dispatch named calls.
 Return the Tool result or a failure for a stale registry, disabled Tool,
 or invalid request.
 
-For `POST /tools`, return HTTP 200 with the result when the operation succeeds.
+For `POST /`, return HTTP 200 with the result when the operation succeeds.
 Return HTTP 400 with a typed error for invalid request input. Return HTTP 500
 with a typed, sanitized error for an internal fault that prevents handling the
 request. An accepted input can still fail during operation. Do not classify

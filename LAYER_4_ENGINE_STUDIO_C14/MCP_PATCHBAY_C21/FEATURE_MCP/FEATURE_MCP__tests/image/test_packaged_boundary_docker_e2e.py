@@ -20,7 +20,7 @@ class PackagedBoundaryDockerE2E(_CanaryProject, unittest.TestCase):
             "doc = json.loads(Path('/usr/local/share/anechoic/openapi.json')"
             ".read_text()); "
             "assert doc['openapi'] == '3.1.0'; "
-            "assert '/tools' in doc['paths']"
+            "assert set(doc['paths']) == {'/'}"
         )
         subprocess.run(
             ["docker", "exec", self.container, "python", "-B", "-c", check],

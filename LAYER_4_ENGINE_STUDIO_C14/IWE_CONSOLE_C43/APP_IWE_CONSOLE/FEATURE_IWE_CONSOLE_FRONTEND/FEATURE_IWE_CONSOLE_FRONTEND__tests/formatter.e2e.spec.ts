@@ -1,5 +1,6 @@
 
 import { expect, test, type Page } from '@playwright/test';
+import { isToolCall } from './tool_rest_fixture';
 
 const url = process.env.WORKBENCH_E2E_URL!;
 const editor = (page: Page) => page.getByRole(
@@ -21,8 +22,7 @@ async function replaceSql(page: Page, sql: string) {
 function observedOperations(page: Page) {
   const operations: string[] = [];
   page.on('request', (request) => {
-    if (request.method() === 'POST' && new URL(
-      request.url()).pathname.endsWith('/tools')) {
+    if (isToolCall(request)) {
       const payload = request.postDataJSON() as { name?: string };
       if (payload.name) operations.push(payload.name);
     }
@@ -71,8 +71,7 @@ test('formats a result-bearing current View from the button and palette without 
   await expect(page.getByRole('grid')).toBeVisible();
   const autosave = page.waitForResponse((response) => {
     const request = response.request();
-    if (request.method() !== 'POST' || !new URL(request.url(
-      )).pathname.endsWith('/tools')) return false;
+    if (!isToolCall(request)) return false;
     const payload = request.postDataJSON();
     return response.ok() && payload?.name === 'view_update'
       && payload.arguments?.workspace_id === seed.workspaceId &&

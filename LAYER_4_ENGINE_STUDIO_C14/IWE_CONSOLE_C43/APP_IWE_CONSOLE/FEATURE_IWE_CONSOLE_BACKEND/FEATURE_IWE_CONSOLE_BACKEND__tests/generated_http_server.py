@@ -118,7 +118,7 @@ async def provider_app(root, state):
             return selection
 
         api = BackendToolAPI(owner, {"workbench": call})
-        app = Starlette(routes=[Route("/tools", api.invoke, methods=["POST"])])
+        app = Starlette(routes=[Route("/", api.invoke, methods=["POST"])])
         with patch(
             f"{BackendToolAPI.__module__}.pinned_project",
             side_effect=select_project,
@@ -150,7 +150,7 @@ async def serve():
             for line in sys.stdin:
                 request = json.loads(line)
                 state["mode"] = request["mode"]
-                response = await client.post("/tools", json=request["body"])
+                response = await client.post("/", json=request["body"])
                 print(
                     json.dumps(
                         {

@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { graphQueryResponse } from './console-graph-mock';
-import { toolReply, toolRequest } from './tool_rest_fixture';
+import { matchesToolPath, toolReply, toolRequest } from './tool_rest_fixture';
 
 export async function mockDocuments(page: Page, graph = false, refs =
   ['AN-S-1', 'AN-S-1@1']) {
@@ -12,7 +12,7 @@ export async function mockDocuments(page: Page, graph = false, refs =
   const state = () => ({ project_name: 'Fixture', workspace_id: 'test', active_view_id: active, views });
   const result = () => ({ query_id: 'q1', columns: [{ name: 'ref', type: 'VARCHAR', has_values: true }],
     rows: refs.map((ref) => [ref]), row_count: refs.length, offset: 0, page_size: 100, has_more: false });
-  await page.route('**/tools', async (route) => {
+  await page.route(matchesToolPath, async (route) => {
     if (route.request().method() !== 'POST') return route.fallback();
     const { name, arguments: args } = toolRequest(route);
     let value: unknown;

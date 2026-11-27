@@ -1,6 +1,6 @@
 
 import { expect, test, type Page, type Request } from '@playwright/test';
-import { toolRequest } from './tool_rest_fixture';
+import { isToolCall, matchesToolPath, toolRequest } from './tool_rest_fixture';
 
 const url = process.env.WORKBENCH_E2E_URL!;
 const projectRoot = new URL(url).searchParams.get('project_root');
@@ -46,8 +46,7 @@ async function replaceSql(page: Page, sql: string) {
 }
 
 async function replaceAndFlushSql(page: Page, sql: string) {
-  const update = page.waitForRequest((request) => request.method() === 'POST'
-    && new URL(request.url()).pathname.endsWith('/tools')
+  const update = page.waitForRequest((request) => isToolCall(request)
     && request.postDataJSON()?.name === 'view_update'
     && request.postDataJSON()?.arguments?.sql === sql);
   await replaceSql(page, sql);
@@ -92,8 +91,7 @@ async function contextAction(page: Page, viewName: string | RegExp, action: stri
 function observedOperations(page: Page) {
   const operations: string[] = [];
   page.on('request', (request) => {
-    if (request.method() !== 'POST' || !new URL(request.url(
-      )).pathname.endsWith('/tools')) return;
+    if (!isToolCall(request)) return;
     const operation = request.postDataJSON()?.name;
     if (operation) operations.push(operation);
   });
@@ -306,7 +304,8 @@ test('keeps local View selection after a stale background refresh', async ({ pag
   const initial = await state(fixture.workspaceUrl, fixture.workspace);
   let intercepted = false;
   let interceptedRequest: Request;
-  await page.route('**/tools', async (route) => {
+  await page.route(matchesToolPath, async (route) => {
+    if (route.request().method() !== 'POST') return route.fallback();
     if (intercepted || toolRequest(route)?.name !== 'workspace_get') {
       return route.fallback();
     }
@@ -320,7 +319,7 @@ test('keeps local View selection after a stale background refresh', async ({ pag
   try {
     const oldId = await stale;
     expect(oldId).toBe(initial.active_view_id);
-    const focus = page.waitForResponse((item) => item.url().endsWith('/tools')
+    const focus = page.waitForResponse((item) => isToolCall(item.request())
       && item.request().postDataJSON()?.name === 'view_focus'
       && item.request().postDataJSON()?.arguments?.view_id === fixture.opened.views[0].id);
     await tab(page, 'View 1').click();

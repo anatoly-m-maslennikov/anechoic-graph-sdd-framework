@@ -79,14 +79,14 @@ class BackendToolApiTests(unittest.IsolatedAsyncioTestCase):
         }
         return (
             await asyncio.to_thread(
-                owner._http.post, "/tools", json=request | changes
+                owner._http.post, "/", json=request | changes
             )
         ).json()
 
     async def _assert_catalog(self, owner, selection):
         response = await asyncio.to_thread(
             owner._http.get,
-            "/tools",
+            "/",
             params={"instance_id": selection.instance_id},
         )
         catalog = response.json()["result"]
@@ -112,7 +112,7 @@ class BackendToolApiTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(sorted(excluded), catalog["blacklist"])
         self.assertEqual(expected, catalog["tools"])
         invalid = await asyncio.to_thread(
-            owner._http.get, "/tools", params={"instance_id": "wrong"}
+            owner._http.get, "/", params={"instance_id": "wrong"}
         )
         self.assertEqual("value_error", invalid.json()["error"]["code"])
 

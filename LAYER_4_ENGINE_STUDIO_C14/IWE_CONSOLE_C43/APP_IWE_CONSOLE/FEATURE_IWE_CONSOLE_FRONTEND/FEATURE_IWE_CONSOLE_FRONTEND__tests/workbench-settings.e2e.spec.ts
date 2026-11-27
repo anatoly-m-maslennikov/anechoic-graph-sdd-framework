@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { isToolCall } from './tool_rest_fixture';
 import { url, editor, projectName, replaceSql,
   runSql, sharedWorkspace, persistedAdaptiveWorkspace,
   openSharedPages, renameAndRestoreView,
@@ -20,7 +21,7 @@ test('restores local View state and opens a saved View without running it',
   const id = new URL(href!, url).searchParams.get('query');
   let executionRequests = 0;
   page.on('request', (request) => {
-    if (request.method() === 'POST' && request.url().endsWith('/tools') &&
+    if (isToolCall(request) &&
       /^(view|query)_(run|check)$/.test(request.postDataJSON()?.name)) {
       executionRequests += 1;
     }
@@ -89,8 +90,7 @@ test('shows native source indexing status and keeps settings independent',
   const page = await standalone.newPage();
   try {
     const statusResponse = page.waitForResponse((response) =>
-      response.request().method() === 'POST' &&
-      response.url().endsWith('/tools') && response.ok() &&
+      isToolCall(response.request()) && response.ok() &&
       response.request().postDataJSON()?.name === 'iwe_console_status');
     await page.goto(url);
     const envelope = await (await statusResponse).json();
@@ -154,8 +154,11 @@ test(
   'uses persisted adaptive or fixed display and global grid actions without rerunning SQL',
   async ({ browser }) => {
   const context = await browser.newContext(); const page = await context.newPage(); let runs = 0;
-  page.on('request', (request) => { if (request.method() === 'POST' && new URL(request.url(
-    )).pathname.endsWith('/tools') && request.postDataJSON()?.name === 'view_run') runs += 1; });
+  page.on('request', (request) => {
+    if (isToolCall(request) && request.postDataJSON()?.name === 'view_run') {
+      runs += 1;
+    }
+  });
   try {
     await page.goto(url);
     await replaceSql(page, "SELECT i AS ordinal, repeat('😀', 151) AS long_value FROM range(0, 220) AS t(i)");
@@ -169,8 +172,8 @@ test(
     await expect(page.getByLabel('Fixed rows per page')).toHaveCount(0);
     await page.getByRole('radio', { name: 'Fixed' }).check();
     const rows = page.getByLabel('Fixed rows per page'); await expect(rows).toHaveValue('100');
-    const fixedPage = page.waitForRequest((request) => request.method() === 'POST' &&
-      request.url().endsWith('/tools') && request.postDataJSON()?.name === 'view_fetch' &&
+    const fixedPage = page.waitForRequest((request) => isToolCall(request) &&
+      request.postDataJSON()?.name === 'view_fetch' &&
       request.postDataJSON()?.arguments?.page_size === 25);
     await rows.fill('25'); await fixedPage;
     await page.getByRole('tab', { name: /^View 1/ }).click();
@@ -190,8 +193,8 @@ test(
     const header = page.getByRole('columnheader').first(); await header.click({ button: 'right' });
     await expect(page.locator('.tabulator-menu-item')).toHaveText(['Column Sort ascending',
       'Column Sort descending', 'Group by', 'Filter', 'Clear filter']);
-    const sort = page.waitForRequest((request) => request.method() === 'POST' &&
-      request.url().endsWith('/tools') && request.postDataJSON()?.name === 'view_fetch' &&
+    const sort = page.waitForRequest((request) => isToolCall(request) &&
+      request.postDataJSON()?.name === 'view_fetch' &&
       request.postDataJSON()?.arguments?.grid?.sort?.[0]?.direction === 'desc');
     await page.getByText('Column Sort descending', { exact: true }).click(); await sort;
     expect(runs).toBe(1);
@@ -207,7 +210,7 @@ test('keeps NULL and text null group counts distinct', async ({ page }) => {
     "SELECT CASE WHEN i < 2 THEN NULL::VARCHAR ELSE 'null' END AS marker FROM range(0, 5) AS t(i)");
   await runSql(page); await expect(page.getByRole('grid')).toBeVisible();
   const grouped = page.waitForRequest((
-    request) => request.method() === 'POST' && request.url().endsWith('/tools') &&
+    request) => isToolCall(request) &&
     request.postDataJSON()?.name === 'view_fetch' &&
       request.postDataJSON()?.arguments?.grid?.group_by?.column === 0);
   await page.getByRole('columnheader').first().click({ button: 'right' });
@@ -222,8 +225,7 @@ test(
   'uses palette navigation, quoted status completion, and focus after hiding the editor',
   async ({ page }) => {
   const schemaResponse = page.waitForResponse((response) => (
-    response.request().method() === 'POST'
-    && new URL(response.url()).pathname.endsWith('/tools')
+    isToolCall(response.request())
     && response.request().postDataJSON()?.name === 'query_schema'
     && response.status() === 200
   ));

@@ -10,7 +10,7 @@ from API_MIXER_beta_C91.api import descriptors
 from API_MIXER_beta_C91.openapi import export_openapi
 from MCP_PATCHBAY_C21.FEATURE_MCP.backend_client import ToolProtocolError
 from MCP_PATCHBAY_C21.FEATURE_MCP.caller_context import take_caller_context
-from MCP_PATCHBAY_C21.FEATURE_MCP.http_paths import TOOL_REST_PATH
+from API_MIXER_beta_C91._shared_runtime_support import TOOL_REST_PATH
 from MCP_PATCHBAY_C21.FEATURE_MCP.shared_backend import (
     SharedGatewayRefusal,
     _raise_fault,
@@ -27,7 +27,9 @@ def _response_contract(operation, status):
 
 class SharedBetaContractTest(unittest.TestCase):
     def setUp(self):
-        self.operations = export_openapi("test")["paths"][TOOL_REST_PATH]
+        paths = export_openapi("test")["paths"]
+        self.assertEqual({"/tools"}, set(paths))
+        self.operations = paths[TOOL_REST_PATH]
         self.post = self.operations["post"]
         self.request_body = self.post["requestBody"]
         self.request_schema = self.request_body["content"]["application/json"][

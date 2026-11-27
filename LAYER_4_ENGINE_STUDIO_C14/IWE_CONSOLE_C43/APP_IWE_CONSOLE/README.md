@@ -77,7 +77,7 @@ needed. The browser uses the same state, so an Agent can create, update, run and
 focus a View without reading the result rows. `query_log_list` and `query_log_get`
 read retained run records.
 
-The standalone browser sends Tool calls to same-origin `POST /tools`.
+The standalone browser sends Tool calls to same-origin `POST /`.
 It sends `X-Anechoic-Project-Instance` from the admitted Console page
 with the JSON fields `name`, `arguments`, `session_id`, and
 `public_base_url`. The Project instance in a successful response must
@@ -85,7 +85,7 @@ match the instance in the page.
 
 On a shared host, open the Console URL with `?project_root=<root>`.
 The browser includes that root in `arguments.project_root`. The shared
-host forwards `GET /tools` and `POST /tools` to the same Backend API
+host forwards `GET /` and `POST /` to the same Backend API
 that MCP uses for Tool discovery and invocation.
 
 Terminal clients can still use `POST /anechoic/<project_name>/api/interface`

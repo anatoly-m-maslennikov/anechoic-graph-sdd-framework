@@ -9,11 +9,11 @@ context:
   lens: DES
 relations:
   ANSWERS:
-  - AN-S-3044@72
+  - AN-S-3044@73
 state:
   status: "active"
-  version: 2
-  updated_at: "2026-11-27T18:48:33.872493+00:00"
+  version: 3
+  updated_at: "2026-11-27T20:33:22.115885+00:00"
 ---
 
 ## Summary
@@ -62,13 +62,13 @@ component_workflow(
                                                                        'target': 'C45.shared_tool_coordinator',
                                                                        'outcome': 'catalog',
                                                                        'detail': {'endpoint': 'GET '
-                                                                                              '/tools'}}}}},
+                                                                                              '/'}}}}},
             'shared_invocation': {'on': {'backend_operation': {'to': 'shared_invocation_response',
                                                                'expect': {'kind': 'effect',
                                                                           'target': 'C45.shared_tool_coordinator',
                                                                           'outcome': 'invoke',
                                                                           'detail': {'endpoint': 'POST '
-                                                                                                 '/tools'}}}}},
+                                                                                                 '/'}}}}},
             'direct_catalog': {'on': {'read_catalog_snapshot': {'to': 'direct_catalog_response',
                                                                 'expect': {'kind': 'effect',
                                                                            'target': 'C21.backend_catalog_snapshot',
@@ -79,7 +79,7 @@ component_workflow(
                                                                           'target': 'bound_backend_client',
                                                                           'outcome': 'invoke',
                                                                           'detail': {'endpoint': 'POST '
-                                                                                                 '/tools'}}}}},
+                                                                                                 '/'}}}}},
             'shared_catalog_response': {'on': {'return_envelope': {'to': 'done',
                                                                    'expect': {'kind': 'output',
                                                                               'outcome': 'shared_catalog'}},

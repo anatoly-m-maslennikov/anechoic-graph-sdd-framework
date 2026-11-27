@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { browserTimeout } from './browser-deadlines';
-import { toolRequest } from './tool_rest_fixture';
+import { isToolCall, matchesToolPath, toolRequest } from './tool_rest_fixture';
 import { url, editor, projectName, replaceSql,
   runSql, sharedWorkspace, persistedAdaptiveWorkspace,
   openSharedPages, renameAndRestoreView,
@@ -36,7 +36,8 @@ test('binds two browser contexts to one Workspace and observes external state',
     const started = new Promise<void>((resolve) => updateStarted = resolve);
     let delayed = false;
     await test.step('hold the first foreground autosave', async () => {
-      await secondPage.route('**/tools', async (route) => {
+      await secondPage.route(matchesToolPath, async (route) => {
+        if (route.request().method() !== 'POST') return route.fallback();
         const request = toolRequest(route);
         if (!delayed && request?.name === 'view_update' && request.arguments.view_id === setup.externalId &&
           request.arguments.sql === 'SELECT 1 AS first_draft') {
@@ -71,7 +72,8 @@ test('waits for the initial Workspace binding before accepting SQL input',
   let opened!: () => void;
   const held = new Promise<void>((resolve) => releaseOpen = resolve);
   const openStarted = new Promise<void>((resolve) => opened = resolve);
-  await page.route('**/tools', async (route) => {
+  await page.route(matchesToolPath, async (route) => {
+    if (route.request().method() !== 'POST') return route.fallback();
     if (toolRequest(route)?.name === 'workspace_open') {
       const response = await route.fetch();
       opened(); await held;
@@ -90,8 +92,7 @@ test('waits for the initial Workspace binding before accepting SQL input',
     await expect(editor(page)).toBeEditable();
     await expect(editor(page)).toHaveAttribute('aria-readonly', 'false');
     await replaceSql(page, 'SELECT 31 AS bound_input');
-    const run = page.waitForRequest((request) => request.method(
-      ) === 'POST' && request.url().endsWith('/tools')
+    const run = page.waitForRequest((request) => isToolCall(request)
       && request.postDataJSON()?.name === 'view_run');
     await runSql(page); await run;
     await expect(page.getByRole('grid')).toBeVisible();
@@ -104,7 +105,7 @@ test(
     ); const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
   const fetched = page.waitForResponse((response) =>
-    response.request().method() === 'POST' && response.url().endsWith('/tools')
+    isToolCall(response.request())
     && response.request().postDataJSON(
       )?.name === 'view_fetch' && response.status() === 200);
   await page.goto(workspaceUrl); await fetched;

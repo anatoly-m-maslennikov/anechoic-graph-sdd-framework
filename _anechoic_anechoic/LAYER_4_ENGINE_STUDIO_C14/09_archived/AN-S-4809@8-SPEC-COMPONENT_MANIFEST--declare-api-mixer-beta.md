@@ -8,9 +8,9 @@ context:
   template: component_manifest
   lens: SPEC
 state:
-  status: draft
-  version: 9
-  updated_at: '2026-11-27T19:18:07.379998+00:00'
+  status: "archived"
+  version: 8
+  updated_at: "2026-11-27T18:48:34.247276+00:00"
 ---
 
 ## Summary
@@ -38,17 +38,12 @@ ComponentManifest(
 
 ```python
 {'code': {'imports': {'only': []}, 'exports': {}},
- 'io': {'server': {'current_openapi_export': {
-                           'transport': 'cli',
-                           'runner': 'managed_python',
-                           'module': 'API_MIXER_beta_C91.openapi',
-                           'arguments': ['--registry', '<packaged-tool-registry>',
-                                         '--version-file', '<framework-version-file>']},
-                   'project_api': {'transport': 'http',
+ 'io': {'server': {'project_api': {'transport': 'http',
                                    'socket': 'private Unix socket',
                                    'runner': 'managed_python',
                                    'module': 'API_MIXER_beta_C91.API_MIXER_beta_C91__shared',
                                    'process_role': 'api',
+                                   'supervisor': 'C21',
                                    'arguments': 'existing single-Project '
                                                 'API role startup '
                                                 'arguments',
@@ -60,6 +55,7 @@ ComponentManifest(
                                   'socket': 'private Unix socket',
                                   'runner': 'managed_python',
                                   'module': 'API_MIXER_beta_C91.shared_runtime',
+                                  'supervisor': 'C21',
                                   'arguments': ['--socket',
                                                 '<api-socket>',
                                                 '--peer-owner-socket',
@@ -130,23 +126,3 @@ Kernel owns queries, accepted generations, and retained results.
 Orchestrator owns refresh and Worker state. Keep API readiness
 and health state local to its instance. Keep query and session state
 out of the API.
-
-### Export the Current shared Tool API at build time
-
-#### Guarantee
-
-Read the packaged Current Tool registry and Framework Version. Emit an
-OpenAPI 3.1 document for public `GET /tools` and `POST /tools` on stdout.
-Use the same descriptor adapter as the shared Backend for the catalog example.
-
-Describe the Project-bound request and response envelopes. Use the registry
-for examples. The admitted Projects can supply additional Tool names.
-The shared Backend owns live Tool discovery and admission.
-
-```python cli
-declare_cli_contract(
-    interface='current_openapi_export',
-    action='export_current_tools',
-    outcomes={'succeeded': 'zero', 'failed': 'nonzero'},
-)
-```

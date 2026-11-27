@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: "active"
-  version: 14
-  updated_at: "2026-11-27T18:48:36.688855+00:00"
+  version: 15
+  updated_at: "2026-11-27T20:33:21.610274+00:00"
 ---
 
 ## Summary
@@ -114,7 +114,7 @@ declare_trace_contract(
 
 Read the admitted Project instance from the `anechoic-project-instance`
 meta element. Require 64 lowercase hexadecimal characters before sending
-a request. Send Tool calls to same-origin `POST /tools` with
+a request. Send Tool calls to same-origin `POST /` with
 `X-Anechoic-Project-Instance`.
 
 Send the canonical Tool envelope with `name`, `arguments`, `session_id`,
@@ -128,14 +128,14 @@ page delivery, and embedded MCP behavior.
 
 #### References
 
-AN-S-4809@6 and AN-T-4085@1-draft.
+AN-S-3044@73 and AN-T-4085@1-draft.
 
 ```python trace
 declare_trace_contract(
     action='workbench_frontend_call_tool',
     cases={'succeeded': {'must_effect': (('C21.tool_rest',
                                 'requested',
-                                {'endpoint': 'POST /tools',
+                                {'endpoint': 'POST /',
                                  'instance_header': 'X-Anechoic-Project-Instance'}),
                                ('C46.project_receipt', 'matched')),
                'same_values': ((('rest_requested', 'instance_id'),
@@ -147,7 +147,7 @@ declare_trace_contract(
                                   'matched')),)},
  'refused': {'must_effect': (('C21.tool_rest',
                               'requested',
-                              {'endpoint': 'POST /tools',
+                              {'endpoint': 'POST /',
                                'instance_header': 'X-Anechoic-Project-Instance'}),
                              ('C46.typed_refusal', 'preserved')),
              'same_values': ((('typed_refusal', 'code'),
@@ -157,13 +157,13 @@ declare_trace_contract(
              'forbid_effect': ('C46.project_receipt',)},
  'receipt_refused': {'must_effect': (('C21.tool_rest',
                                       'requested',
-                                      {'endpoint': 'POST /tools',
+                                      {'endpoint': 'POST /',
                                        'instance_header': 'X-Anechoic-Project-Instance'}),),
                      'forbid_effect': ('C46.project_receipt',)},
  'invalid_page_instance': {'forbid_effect': ('C21.tool_rest',)},
  'invalid_response': {'must_effect': (('C21.tool_rest',
                                        'requested',
-                                       {'endpoint': 'POST /tools',
+                                       {'endpoint': 'POST /',
                                         'instance_header': 'X-Anechoic-Project-Instance'}),),
                       'forbid_effect': ('C46.project_receipt',)}},
 )

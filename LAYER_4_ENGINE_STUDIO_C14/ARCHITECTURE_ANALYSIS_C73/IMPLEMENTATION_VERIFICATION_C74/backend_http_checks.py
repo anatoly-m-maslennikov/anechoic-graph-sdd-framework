@@ -33,7 +33,7 @@ def _interface(process):
     if (
         _known(app)
         and _backend_binding(process)
-        and _call(app, 'Route("/tools", tools.invoke, methods=["POST"])')
+        and _call(app, 'Route("/", tools.invoke, methods=["POST"])')
     ):
         facts["interface.protocol"] = ("http",)
     if not _main_supported(main):

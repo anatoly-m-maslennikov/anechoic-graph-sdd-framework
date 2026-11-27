@@ -1,7 +1,8 @@
 import { expect, type Locator, type Page, type Request,
   type Response } from '@playwright/test';
 import type { Effect } from './console-formal-cases';
-import { toolReply, toolRequest } from './tool_rest_fixture';
+import { isToolCall, matchesToolPath, toolReply,
+  toolRequest } from './tool_rest_fixture';
 
 const authoredRelation = { type: 'IS_SOLUTION_FOR', ref_id: 'AN-S-1' };
 const readOnlyRelations = [
@@ -82,7 +83,7 @@ export async function lifecycleFixture(page: Page,
     options.highestVersion ?? 1, ticketStatuses);
   const { stable, exact, draftVersion, publishStatus } = docs;
   const table = lifecycleTable(options.inline ? exact : stable, options.inline);
-  await page.route('**/tools', async (route) => {
+  await page.route(matchesToolPath, async (route) => {
     if (route.request().method() !== 'POST') return route.fallback();
     const { name, arguments: args } = toolRequest(route);
     let result: unknown;
@@ -122,8 +123,7 @@ export async function lifecycleFixture(page: Page,
 }
 
 function requestedTool(request: Request): string | undefined {
-  if (request.method() !== 'POST' || !new URL(request.url(
-    )).pathname.endsWith('/tools')) return;
+  if (!isToolCall(request)) return;
   return request.postDataJSON().name;
 }
 

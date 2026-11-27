@@ -122,17 +122,17 @@ class SharedHTTPTests(unittest.IsolatedAsyncioTestCase):
             key = (request.method, request.url.path)
             data = json.loads(request.content) if request.content else None
             messages.append((key, data))
-            if key == ("POST", "/tools") and "project_root" not in data["arguments"]:
+            if key == ("POST", "/") and "project_root" not in data["arguments"]:
                 fault = {"scope": "project", "code": "missing_project_root", "message": "missing_project_root"}
                 return httpx2.Response(200, json={"error": fault, "project": None})
             result = {
                 ("GET", "/health"): {"pid": 101, "initialized": True},
-                ("GET", "/tools"): {"tools": [tool.model_dump(mode="json", by_alias=True)]},
+                ("GET", "/"): {"tools": [tool.model_dump(mode="json", by_alias=True)]},
                 ("POST", "/selection"): project,
-                ("POST", "/tools"): {"value": {"rows": [[1]]}, "text": None},
+                ("POST", "/"): {"value": {"rows": [[1]]}, "text": None},
             }[key]
             envelope = {"result": result}
-            if key == ("POST", "/tools"):
+            if key == ("POST", "/"):
                 envelope["project"] = {"prefix": "MA", "instance_id": project["instance_id"]}
             return httpx2.Response(200, json=envelope)
 
@@ -154,9 +154,9 @@ class SharedHTTPTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(["missing_project_root"], refused.structured_content["diagnostics"])
         start.assert_awaited_once_with()
         transport.assert_called_once_with(uds=socket)
-        self.assertEqual([(("POST", "/selection"), {"project_root": root}), (("POST", "/tools"), {
+        self.assertEqual([(("POST", "/selection"), {"project_root": root}), (("POST", "/"), {
             "name": "query_run", "arguments": {"sql": "SELECT 1", "project_root": root}, "session_id": None, "public_base_url": None,
-        }), (("POST", "/tools"), {
+        }), (("POST", "/"), {
             "name": "query_run", "arguments": {"sql": "SELECT 1"}, "session_id": None, "public_base_url": None,
         })], messages[-3:])
 
@@ -199,7 +199,7 @@ class SharedHTTPTests(unittest.IsolatedAsyncioTestCase):
                     mcp = await session.call_tool("query_run", arguments)
                     self.assertTrue(mcp.is_error)
                     self.assertEqual(failure["tool_result"], mcp.structured_content)
-                    self.assertEqual(["/selection", "/tools", "/selection", "/tools"], calls)
+                    self.assertEqual(["/selection", "/", "/selection", "/"], calls)
             receipt = {"prefix": "MA", "instance_id": selected["instance_id"]}
             web = await client.post("/anechoic/Main/api/run", json=arguments)
             mcp = await session.call_tool("query_run", arguments)

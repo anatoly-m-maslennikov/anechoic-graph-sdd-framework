@@ -9,11 +9,11 @@ context:
   lens: DES
 relations:
   ANSWERS:
-  - AN-S-3060@14
+  - AN-S-3060@15
 state:
   status: "active"
-  version: 7
-  updated_at: "2026-11-27T18:48:36.900204+00:00"
+  version: 8
+  updated_at: "2026-11-27T20:33:22.444533+00:00"
 ---
 
 ## Summary
@@ -116,7 +116,7 @@ component_workflow(
                                                              'target': 'C21.tool_rest',
                                                              'outcome': 'requested',
                                                              'detail': {'endpoint': 'POST '
-                                                                                    '/tools',
+                                                                                    '/',
                                                                         'instance_header': 'X-Anechoic-Project-Instance'}}}}},
             'waiting': {'on': {'project_receipt': {'to': 'accepting',
                                                    'expect': {'kind': 'effect',

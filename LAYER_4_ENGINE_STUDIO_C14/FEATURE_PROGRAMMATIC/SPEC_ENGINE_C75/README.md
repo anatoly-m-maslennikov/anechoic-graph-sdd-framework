@@ -77,7 +77,7 @@ Tool API. See `test_generated_http.py` for the pinned test-only command and
 To review a new revision, update the candidate pin. Keep the baseline
 snapshot until its replacement is approved.
 
-C45's private `POST /tools` callers and provider ship in the same Studio
+C45's private `POST /` callers and provider ship in the same Studio
 image. The MCP process tests cover their interaction. Pact is reserved for
 an independently evolving caller of this wire contract.
 

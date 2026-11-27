@@ -4,11 +4,11 @@ import asyncio
 import json
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
 import httpx2
+from pydantic import BaseModel, ConfigDict
 
 from MCP_PATCHBAY_C21.FEATURE_MCP.backend_client import BackendClient
 from MCP_PATCHBAY_C21.FEATURE_MCP.backend_client import ToolProtocolError
@@ -46,6 +46,25 @@ def invocation(**changes):
         "public_base_url": "https://untrusted.example/",
         **changes,
     }
+
+
+class _TestProjectSelection(BaseModel):
+    model_config = ConfigDict(strict=True, extra="forbid")
+
+    root: Path
+    host_root: Path
+    project_prefix: str
+    project_name: str
+    instance_id: str
+
+
+class _TestProjectOwner(BaseModel):
+    model_config = ConfigDict(strict=True, extra="forbid")
+
+    selection: _TestProjectSelection
+
+    def start(self):
+        pass
 
 
 class ToolRestTests(unittest.IsolatedAsyncioTestCase):
@@ -111,16 +130,20 @@ class ToolRestTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(
             404, (await client.post("/selection", json={})).status_code
         )
-        catalog = await client.get("/tools")
+        for method in ("GET", "POST"):
+            self.assertEqual(
+                404, (await client.request(method, "/tools")).status_code
+            )
+        catalog = await client.get("/")
         self.assertEqual({"result": {"tools": [TOOL]}}, catalog.json())
         response = await client.post(
-            "/tools",
+            "/",
             json=invocation(),
             headers=BINDING | {"Origin": ORIGIN},
         )
         self.assertEqual((200, reply), (response.status_code, response.json()))
         self.assertEqual(
-            ["/selection", "/tools", "/tools"],
+            ["/selection", "/", "/"],
             [request.url.path for request in sent],
         )
         self.assertEqual(
@@ -134,7 +157,7 @@ class ToolRestTests(unittest.IsolatedAsyncioTestCase):
         reply = {"error": FAULT | {"scope": "tool"}, "project": PROJECT}
         status = 503
         response = await client.post(
-            "/tools", json=invocation(), headers=BINDING
+            "/", json=invocation(), headers=BINDING
         )
         self.assertEqual((503, reply), (response.status_code, response.json()))
 
@@ -144,7 +167,7 @@ class ToolRestTests(unittest.IsolatedAsyncioTestCase):
         }
         status = 200
         response = await client.post(
-            "/tools", json=invocation(), headers=BINDING
+            "/", json=invocation(), headers=BINDING
         )
         self.assertEqual(502, response.status_code)
         self.assertEqual(
@@ -176,7 +199,7 @@ class ToolRestTests(unittest.IsolatedAsyncioTestCase):
         ]:
             with self.subTest(headers=headers):
                 refused = await client.post(
-                    "/tools", json=invocation(), headers=headers
+                    "/", json=invocation(), headers=headers
                 )
                 self.assertEqual(status, refused.status_code)
         encoded = json.dumps(invocation()).encode()
@@ -186,7 +209,7 @@ class ToolRestTests(unittest.IsolatedAsyncioTestCase):
             yield b" " * (65_537 - len(encoded))
 
         wrong_type = await client.post(
-            "/tools",
+            "/",
             content=encoded,
             headers={"Content-Type": "text/plain"},
         )
@@ -195,7 +218,7 @@ class ToolRestTests(unittest.IsolatedAsyncioTestCase):
         )
         for body in [b"{", b"{}", oversized()]:
             refused = await client.post(
-                "/tools", content=body, headers=JSON_HEADERS
+                "/", content=body, headers=JSON_HEADERS
             )
             self.assertEqual(
                 "invalid_tool_request", refused.json()["error"]["code"]
@@ -206,7 +229,7 @@ class ToolRestTests(unittest.IsolatedAsyncioTestCase):
             return httpx2.Response(200, json={"result": {"tools": [None]}})
 
         client, gateway = await self.shared(backend)
-        response = await client.get("/tools")
+        response = await client.get("/")
         self.assertEqual(503, response.status_code)
         self.assertEqual("shared_gateway_failure", response.json()["error"]["code"])
         with self.assertRaises(ValueError):
@@ -228,7 +251,7 @@ class ToolRestTests(unittest.IsolatedAsyncioTestCase):
             ({"instance_id": INSTANCE}, 502, "project_receipt_mismatch"),
         ):
             with self.subTest(receipt=receipt):
-                response = await client.post("/tools", json=invocation(), headers=BINDING)
+                response = await client.post("/", json=invocation(), headers=BINDING)
                 self.assertEqual(expected_status, response.status_code)
                 self.assertEqual(expected_code, response.json()["error"]["code"])
                 with self.assertRaises(ToolProtocolError) as caught:
@@ -254,8 +277,8 @@ class ToolRestTests(unittest.IsolatedAsyncioTestCase):
 
         client, _ = await self.shared(backend)
         inserted = len(json.dumps(ORIGIN + "/")) - len("null")
-        good = await client.post("/tools", content=encoded(65_536 - inserted), headers=JSON_HEADERS)
-        bad = await client.post("/tools", content=encoded(65_537 - inserted), headers=JSON_HEADERS)
+        good = await client.post("/", content=encoded(65_536 - inserted), headers=JSON_HEADERS)
+        bad = await client.post("/", content=encoded(65_537 - inserted), headers=JSON_HEADERS)
         self.assertEqual(RESULT, good.json()["result"])
         self.assertEqual("invalid_tool_request", bad.json()["error"]["code"])
         self.assertEqual([65_536], sizes)
@@ -275,7 +298,7 @@ class ToolRestTests(unittest.IsolatedAsyncioTestCase):
         async with asyncio.timeout(3):
             call = asyncio.create_task(
                 client.post(
-                    "/tools",
+                    "/",
                     content=encoded,
                     headers=BINDING | JSON_HEADERS,
                 )
@@ -318,14 +341,14 @@ class ToolRestTests(unittest.IsolatedAsyncioTestCase):
             return httpx2.Response(200, json={"result": RESULT})
 
         root = Path.cwd()
-        selection = SimpleNamespace(
+        selection = _TestProjectSelection(
             root=root,
             host_root=Path(ROOT),
             project_prefix="AN",
             project_name="Project",
             instance_id=INSTANCE,
         )
-        owner = SimpleNamespace(start=lambda: None, selection=selection)
+        owner = _TestProjectOwner(selection=selection)
         private = self.enterContext(
             httpx2.Client(
                 transport=httpx2.MockTransport(backend),
@@ -349,7 +372,7 @@ class ToolRestTests(unittest.IsolatedAsyncioTestCase):
             f'<meta name="anechoic-project-instance" content="{INSTANCE}">',
             page.text,
         )
-        catalog = (await client.get("/tools")).json()["result"]["tools"]
+        catalog = (await client.get("/")).json()["result"]["tools"]
         self.assertEqual([TOOL["name"]], [entry["name"] for entry in catalog])
         self.assertNotIn("project_root", catalog[0]["inputSchema"]["required"])
         for headers, updates, code in [
@@ -366,17 +389,17 @@ class ToolRestTests(unittest.IsolatedAsyncioTestCase):
         ]:
             with self.subTest(code=code):
                 response = await client.post(
-                    "/tools", json=invocation(**updates), headers=headers
+                    "/", json=invocation(**updates), headers=headers
                 )
                 self.assertEqual(code, response.json()["error"]["code"])
         self.assertEqual([], sent)
         unknown = await client.post(
-            "/tools", json=invocation(name="unknown"), headers=BINDING
+            "/", json=invocation(name="unknown"), headers=BINDING
         )
         self.assertEqual("tool_unavailable", unknown.json()["error"]["code"])
         self.assertEqual("unknown", sent[-1]["name"])
         response = await client.post(
-            "/tools", json=invocation(), headers=BINDING
+            "/", json=invocation(), headers=BINDING
         )
         self.assertEqual(
             {"result": RESULT, "project": PROJECT}, response.json()
@@ -393,7 +416,7 @@ class ToolRestTests(unittest.IsolatedAsyncioTestCase):
             sent[-1],
         )
         response = await client.post(
-            "/tools",
+            "/",
             json=invocation(arguments={"fail": True}),
             headers=BINDING,
         )

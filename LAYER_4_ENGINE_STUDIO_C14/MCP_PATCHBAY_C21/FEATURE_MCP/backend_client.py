@@ -11,6 +11,7 @@ from time import monotonic, sleep
 
 import httpx2
 
+from MCP_PATCHBAY_C21.FEATURE_MCP.http_paths import TOOL_REST_PATH
 from MCP_PATCHBAY_C21.FEATURE_MCP.runtime_request_context import (
     current_request_context,
 )
@@ -174,7 +175,7 @@ class BackendClient:
         try:
             return self._tool_response(
                 self._http.get(
-                    "/tools",
+                    TOOL_REST_PATH,
                     params={"instance_id": self.selection.instance_id},
                 )
             )
@@ -190,7 +191,7 @@ class BackendClient:
         context = current_request_context()
         try:
             response = self._http.post(
-                "/tools",
+                TOOL_REST_PATH,
                 json={
                     "name": name,
                     "arguments": arguments,

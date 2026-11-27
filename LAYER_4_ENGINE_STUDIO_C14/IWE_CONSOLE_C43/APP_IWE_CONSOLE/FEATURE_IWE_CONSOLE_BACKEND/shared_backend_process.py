@@ -300,16 +300,18 @@ def create_app(config, gateway_factory=None):
             return _fault("invalid_tool_request")
         return await backend.dispatch(
             envelope,
-            expected_instance=request.headers.get("X-Anechoic-Project-Instance"),
+            expected_instance=request.headers.get(
+                "X-Anechoic-Project-Instance"
+            ),
         )
 
     return Starlette(
         lifespan=lifespan,
         routes=[
             Route("/health", health),
-            Route("/tools", catalog),
+            Route("/", catalog),
             Route("/selection", backend.select_project, methods=["POST"]),
-            Route("/tools", invoke, methods=["POST"]),
+            Route("/", invoke, methods=["POST"]),
         ],
     )
 

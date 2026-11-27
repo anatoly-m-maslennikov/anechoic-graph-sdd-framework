@@ -79,7 +79,7 @@ class ChildHTTP:
                         "kernel_pid": 124,
                         **self.bindings[uds],
                     }
-                case "GET", "/tools":
+                case "GET", "/":
                     value = {
                         "result": {
                             "tools": [
@@ -91,7 +91,7 @@ class ChildHTTP:
                             "blacklist": [],
                         }
                     }
-                case "POST", "/tools":
+                case "POST", "/":
                     self.posted.append(json.loads(request.content))
                     self.started.set()
                     await self.finish.wait()
@@ -140,7 +140,7 @@ class ProjectToolSessionTests(unittest.IsolatedAsyncioTestCase):
 
     def _invoke(self, client, root):
         return client.post(
-            "/tools",
+            "/",
             json={
                 "name": _NAME,
                 "arguments": {"project_root": str(root)},

@@ -1,6 +1,7 @@
 
 import { expect, test, type Page } from '@playwright/test';
-import { toolReply, toolRequest } from './tool_rest_fixture';
+import { isToolCall, matchesToolPath, toolReply,
+  toolRequest } from './tool_rest_fixture';
 
 const url = process.env.WORKBENCH_E2E_URL!;
 const editor = (page: Page) => page.getByRole('textbox', { name:
@@ -27,8 +28,7 @@ test('migrates one standalone draft without running it and keeps close protectio
       0, dirty: true, savedSql: '' }] })), { key: legacyKey });
   let runs = 0; const opened: string[] = [];
   page.on('request', (request) => {
-    if (request.method() !== 'POST' || !new URL(request.url(
-      )).pathname.endsWith('/tools')) return;
+    if (!isToolCall(request)) return;
     const payload = request.postDataJSON(); if (
       payload?.name === 'view_run') runs += 1;
     if (payload?.name === 'workspace_open') opened.push(
@@ -47,8 +47,7 @@ test('migrates one standalone draft without running it and keeps close protectio
     expect(new URL(page.url()).searchParams.get('workspace')).toBeNull(
       ); await expect.poll(() => opened).toEqual([session, session]);
 
-    const update = page.waitForRequest((request) => request.method(
-      ) === 'POST' && new URL(request.url()).pathname.endsWith('/tools') &&
+    const update = page.waitForRequest((request) => isToolCall(request) &&
       request.postDataJSON()?.name === 'view_update' &&
         request.postDataJSON(
         )?.arguments?.sql === 'SELECT 42 AS autosaved_draft');
@@ -108,7 +107,8 @@ test('resumes a partial standalone migration without overwriting existing Views 
     for (const [key, value] of entries) localStorage.setItem(key, value);
   }, { entries: [[legacyKey, legacy], [sessionKey, workspace], [progressKey, progress]] });
   let failSecond = true;
-  await page.route('**/tools', async (route) => {
+  await page.route(matchesToolPath, async (route) => {
+    if (route.request().method() !== 'POST') return route.fallback();
     const request = toolRequest(route);
     if (!failSecond || request?.name !== 'view_update' ||
       request.arguments.sql !== 'SELECT 9 AS resumed_import') return route.fallback();

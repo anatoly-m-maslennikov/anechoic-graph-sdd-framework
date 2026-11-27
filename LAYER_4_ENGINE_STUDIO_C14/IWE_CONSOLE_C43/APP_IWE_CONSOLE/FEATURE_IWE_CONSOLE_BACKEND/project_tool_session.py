@@ -175,7 +175,7 @@ class ProjectToolSession:
     async def _catalog(self):
         try:
             response = await self._http.get(
-                "/tools", params={"instance_id": self.selection.instance_id}
+                "/", params={"instance_id": self.selection.instance_id}
             )
         except httpx2.HTTPError as error:
             raise ToolProtocolError(
@@ -228,7 +228,7 @@ class ProjectToolSession:
             )
         operation = asyncio.create_task(
             self._http.post(
-                "/tools",
+                "/",
                 json={
                     "name": name,
                     "arguments": arguments,

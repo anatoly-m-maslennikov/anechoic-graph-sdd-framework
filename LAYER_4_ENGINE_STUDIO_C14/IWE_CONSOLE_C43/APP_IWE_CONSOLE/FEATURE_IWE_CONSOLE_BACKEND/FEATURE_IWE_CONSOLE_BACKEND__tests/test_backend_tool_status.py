@@ -53,7 +53,7 @@ def make_tool_app():
         selection,
         frozenset(),
     )
-    return Starlette(routes=[Route("/tools", api.invoke, methods=["POST"])])
+    return Starlette(routes=[Route("/", api.invoke, methods=["POST"])])
 
 
 def envelope(name):
@@ -134,7 +134,7 @@ class ToolStatusTests(unittest.IsolatedAsyncioTestCase):
                     ("missing", 200, "tool_unavailable"),
                 ):
                     with self.subTest(name=name):
-                        response = await client.post("/tools", json=envelope(name))
+                        response = await client.post("/", json=envelope(name))
                         self.assertEqual(response.status_code, status)
                         if code is None:
                             self.assertEqual(
@@ -152,9 +152,9 @@ class ToolStatusTests(unittest.IsolatedAsyncioTestCase):
                         self.assertEqual(
                             caught.exception.tool_result, fault["tool_result"]
                         )
-                response = await client.post("/tools", json={})
+                response = await client.post("/", json={})
                 self.assertEqual(response.status_code, 400)
                 self.assertEqual(response.json()["error"]["code"], "value_error")
-                response = await client.post("/tools", content="{")
+                response = await client.post("/", content="{")
                 self.assertEqual(response.status_code, 400)
                 self.assertEqual(response.json()["error"]["code"], "value_error")

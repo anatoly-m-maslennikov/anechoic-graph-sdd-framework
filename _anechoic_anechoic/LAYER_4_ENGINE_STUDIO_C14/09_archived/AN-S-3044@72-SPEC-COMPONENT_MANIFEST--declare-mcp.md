@@ -8,9 +8,9 @@ context:
   template: component_manifest
   lens: SPEC
 state:
-  status: draft
-  version: 73
-  updated_at: '2026-11-27T19:18:07.379998+00:00'
+  status: "archived"
+  version: 72
+  updated_at: "2026-11-27T18:48:33.355652+00:00"
 relations:
   CONTRIBUTES_TO:
   - AN-S-3329
@@ -326,10 +326,7 @@ ComponentManifest(
                    'shared_runtime_mcp': {'transport': 'http',
                                           'path': '/anechoic/mcp',
                                           'protocol': 'mcp'}},
-        'client': [{'component': 'C91',
-                    'interface': 'current_openapi_export',
-                    'stage': 'image build'},
-                   {'component': 'C45', 'interface': 'project_admission'},
+        'client': [{'component': 'C45', 'interface': 'project_admission'},
                    {'component': 'C45', 'interface': 'tool_api'},
                    {'component': 'C45',
                     'interface': 'shared_tool_coordinator'},
@@ -473,16 +470,3 @@ declare_trace_contract(
                                                'refused')),)}},
 )
 ```
-
-### Package the Current Tool OpenAPI document
-
-#### Guarantee
-
-During the image build, invoke C91's `current_openapi_export` with the
-packaged Current Tool registry and Framework Version. Install its output
-at `/usr/local/share/anechoic/openapi.json`. Treat exporter failures as
-build failures.
-
-Copy only the generated OpenAPI document from the export stage. Keep the
-C91 executable and its runtime out of the Current image. The C45 shared
-Tool coordinator supplies live discovery and invocation.

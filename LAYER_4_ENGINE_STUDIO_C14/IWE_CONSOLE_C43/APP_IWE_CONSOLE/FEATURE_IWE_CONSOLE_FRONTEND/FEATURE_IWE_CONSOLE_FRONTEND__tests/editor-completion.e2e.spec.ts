@@ -1,6 +1,6 @@
 
 import { expect, test, type Page } from '@playwright/test';
-import { toolRequest } from './tool_rest_fixture';
+import { isToolCall, matchesToolPath, toolRequest } from './tool_rest_fixture';
 
 const url = process.env.WORKBENCH_E2E_URL!;
 const editor = (page: Page) => page.getByRole(
@@ -97,11 +97,10 @@ test('completes qualified columns and escapes Status values without executing SQ
   async ({ page }) => {
   const operations: string[] = [];
   page.on('request', (request) => {
-    if (request.method() !== 'POST') return;
-    const path = new URL(request.url()).pathname;
-    if (path.endsWith('/tools')) operations.push(request.postDataJSON()?.name);
+    if (isToolCall(request)) operations.push(request.postDataJSON()?.name);
   });
-  await page.route('**/tools', async (route) => {
+  await page.route(matchesToolPath, async (route) => {
+    if (route.request().method() !== 'POST') return route.fallback();
     if (toolRequest(route)?.name !== 'query_schema') return route.fallback();
     const response = await route.fetch();
     const envelope = await response.json();
@@ -113,7 +112,7 @@ test('completes qualified columns and escapes Status values without executing SQ
     await route.fulfill({ response, json: envelope });
   });
   const schemaReady = page.waitForResponse(response =>
-    response.url().endsWith('/tools') && response.ok() &&
+    isToolCall(response.request()) && response.ok() &&
     response.request().postDataJSON()?.name === 'query_schema');
   await page.goto(url);
   await (await schemaReady).finished();

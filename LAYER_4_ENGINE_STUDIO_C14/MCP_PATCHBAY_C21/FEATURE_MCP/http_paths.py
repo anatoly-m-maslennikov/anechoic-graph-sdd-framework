@@ -2,7 +2,7 @@
 
 URL_PREFIX = "/anechoic"
 MCP_PATH = f"{URL_PREFIX}/mcp"
-TOOL_REST_PATH = "/tools"
+TOOL_REST_PATH = "/"
 HEALTH_PATH = f"{URL_PREFIX}/health"
 IWE_CONSOLE_PATH = f"{URL_PREFIX}/iwe-console"
 WORKBENCH_PATH = f"{URL_PREFIX}/workbench"

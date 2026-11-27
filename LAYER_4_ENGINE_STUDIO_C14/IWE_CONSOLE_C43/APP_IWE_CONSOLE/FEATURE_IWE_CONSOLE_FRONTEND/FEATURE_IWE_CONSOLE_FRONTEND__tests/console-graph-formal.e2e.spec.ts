@@ -1,6 +1,7 @@
 import { formalCases } from './console-formal-cases';
 import { expect, test, type Page } from '@playwright/test';
 import { mockGraph } from './console-graph-mock';
+import { isToolCall } from './tool_rest_fixture';
 
 type Detail = { view: string; depth?: number; types?
   : string; layout?: string; structure?: boolean;
@@ -70,8 +71,7 @@ for (const scenario of cases) {
     if (detail.view === 'graph') await setGraphInputs(page, detail);
     await checkVisible(page, { ...expected, view: detail.view });
     if (detail.seed) {
-      const request = page.waitForRequest(request => request.method(
-        ) === 'POST' && request.url().endsWith('/tools') &&
+      const request = page.waitForRequest(request => isToolCall(request) &&
         request.postDataJSON()?.name === 'iwe_console_atom_document');
       const graph = page.getByRole('region', { name: 'Atom Graph' });
       await graph.locator('.node').getByRole('button',

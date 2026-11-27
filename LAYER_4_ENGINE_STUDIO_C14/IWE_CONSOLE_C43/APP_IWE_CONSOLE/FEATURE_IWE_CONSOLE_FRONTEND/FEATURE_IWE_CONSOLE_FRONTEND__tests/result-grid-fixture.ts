@@ -1,5 +1,6 @@
 import { expect, type Page, type Request } from '@playwright/test';
 import { browserTimeout } from './browser-deadlines';
+import { isToolCall } from './tool_rest_fixture';
 
 const url = process.env.WORKBENCH_E2E_URL!;
 const editor = (page: Page) => page.getByRole('textbox', { name:
@@ -31,8 +32,7 @@ async function workspaceUrl(page: Page) {
 }
 
 function interfaceRequest(request: Request, name?: string) {
-  if (request.method() !== 'POST' || !new URL(request.url(
-    )).pathname.endsWith('/tools')) return false;
+  if (!isToolCall(request)) return false;
   return !name || request.postDataJSON()?.name === name;
 }
 

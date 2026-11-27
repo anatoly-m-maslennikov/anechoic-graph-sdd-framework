@@ -1,4 +1,12 @@
-import type { Route } from '@playwright/test';
+import type { Request, Route } from '@playwright/test';
+
+export function matchesToolPath(url: URL): boolean {
+  return url.pathname === '/';
+}
+
+export function isToolCall(request: Request): boolean {
+  return request.method() === 'POST' && matchesToolPath(new URL(request.url()));
+}
 
 export function toolRequest(route: Route): {
   name: string;

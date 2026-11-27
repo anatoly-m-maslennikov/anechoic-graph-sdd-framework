@@ -24,7 +24,8 @@ class CurrentOpenApiTest(unittest.TestCase):
         registry = json.loads(REGISTRY.read_text())
         document = export_openapi("test", registry)
         validate(document)
-        operations = document["paths"]["/tools"]
+        self.assertEqual({"/"}, set(document["paths"]))
+        operations = document["paths"]["/"]
         catalog = operations["get"]["responses"]["200"]["content"][
             "application/json"
         ]["example"]["result"]["tools"]

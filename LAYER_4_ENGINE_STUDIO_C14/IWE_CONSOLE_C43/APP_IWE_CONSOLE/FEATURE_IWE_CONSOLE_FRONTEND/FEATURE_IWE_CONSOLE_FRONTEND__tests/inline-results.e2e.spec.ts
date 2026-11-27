@@ -2,15 +2,15 @@
 import { expect, test } from '@playwright/test';
 import { replaceSql } from './workbench-fixture';
 import { mockGraph } from './console-graph-mock';
-import { toolReply, toolRequest } from './tool_rest_fixture';
+import { isToolCall, matchesToolPath, toolReply,
+  toolRequest } from './tool_rest_fixture';
 
 test('browser fetches inline rows while MCP defaults to files',
   async ({ page }) => {
   const url = new URL(process.env.WORKBENCH_E2E_URL!);
   const fetched: Record<string, unknown>[] = [];
   page.on('request', request => {
-    if (request.method() !== 'POST' ||
-      !request.url().endsWith('/tools')) return;
+    if (!isToolCall(request)) return;
     const input = request.postDataJSON();
     if (input?.name === 'view_fetch') fetched.push(input.arguments);
   });
@@ -29,7 +29,8 @@ test('browser fetches inline rows while MCP defaults to files',
 test('keeps the save refusal visible when the completed result is paged',
   async ({ page }) => {
   const saveError = 'Saved query storage is unavailable';
-  await page.route('**/tools', async (route) => {
+  await page.route(matchesToolPath, async (route) => {
+    if (route.request().method() !== 'POST') return route.fallback();
     const input = toolRequest(route);
     if (input?.name !== 'view_run' ||
       !input.arguments.save) return route.fallback();
@@ -76,7 +77,7 @@ for (const save of [false, true]) {
       let submitted = false;
       let fetches = 0;
       let refreshed = false;
-      await page.route('**/tools', async route => {
+      await page.route(matchesToolPath, async route => {
         if (route.request().method() !== 'POST') return route.fallback();
         const { name, arguments: args } = toolRequest(route);
         if (name === 'view_run') {

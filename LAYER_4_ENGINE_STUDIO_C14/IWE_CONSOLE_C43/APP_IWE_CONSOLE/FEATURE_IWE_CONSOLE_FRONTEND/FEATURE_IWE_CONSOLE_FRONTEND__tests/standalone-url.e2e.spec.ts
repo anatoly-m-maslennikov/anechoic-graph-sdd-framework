@@ -2,12 +2,12 @@ import { expect, test, type Page, type Request } from '@playwright/test';
 import { replaceSql } from './workbench-fixture';
 import { formalCases } from './console-formal-cases';
 import { browserTimeout } from './browser-deadlines';
-import { toolRequest } from './tool_rest_fixture';
+import { isToolCall, matchesToolPath, toolRequest } from './tool_rest_fixture';
 
 const url = process.env.WORKBENCH_E2E_URL!;
 
 function isToolRequest(request: Request, name: string) {
-  return request.method() === 'POST' && request.url().endsWith('/tools') &&
+  return isToolCall(request) &&
     request.postDataJSON()?.name === name;
 }
 
@@ -165,7 +165,8 @@ for (const method of ['getItem', 'setItem']) {
 test('uses the canonical Project name and rejects a Workspace without it',
   async ({ page }) => {
   let omitName = false;
-  await page.route('**/tools', async (route) => {
+  await page.route(matchesToolPath, async (route) => {
+    if (route.request().method() !== 'POST') return route.fallback();
     if (toolRequest(route)?.name !== 'workspace_open') return route.fallback();
     const response = await route.fetch();
     expect(response.ok(), await response.text()).toBeTruthy();

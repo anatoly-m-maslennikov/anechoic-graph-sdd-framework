@@ -1,4 +1,4 @@
-export const TOOL_REST_PATH = "/tools";
+export const TOOL_REST_PATH = "/";
 
 export type QueryRun = {
   sql: string;

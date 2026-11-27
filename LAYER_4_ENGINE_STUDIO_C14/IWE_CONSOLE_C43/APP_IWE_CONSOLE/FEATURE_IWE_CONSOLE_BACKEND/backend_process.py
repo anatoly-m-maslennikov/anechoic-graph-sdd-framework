@@ -251,8 +251,8 @@ def create_app(owner):
             _health_route(owner, instance_id),
             _workbench_route(methods, instance_id),
             _worker_runs_route(owner, instance_id),
-            Route("/tools", tools.catalog),
-            Route("/tools", tools.invoke, methods=["POST"]),
+            Route("/", tools.catalog),
+            Route("/", tools.invoke, methods=["POST"]),
         ],
     )
 

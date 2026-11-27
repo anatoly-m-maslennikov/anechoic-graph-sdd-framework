@@ -14,7 +14,7 @@ test('HTTP sends Tool names and optional Project roots to the REST API',
       const args = { sql: 'SELECT 1' };
       const value = { query_id: 'first' };
       globalThis.fetch = async (url, request) => {
-        assert.equal(url, '/tools');
+        assert.equal(url, '/');
         assert.equal(request?.method, 'POST');
         const headers = new Headers(request?.headers);
         assert.equal(headers.get('content-type'), 'application/json');
