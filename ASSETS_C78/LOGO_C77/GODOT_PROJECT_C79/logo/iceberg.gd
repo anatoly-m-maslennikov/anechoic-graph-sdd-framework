@@ -73,6 +73,40 @@ func _build_view(figure_scale: float) -> void:
 	panel.material_override = shader
 	panel.position.z = -7.0
 	add_child(panel)
+	_build_water_text()
+
+func _build_water_text() -> void:
+	var font := SystemFont.new()
+	font.font_names = PackedStringArray(["Menlo", "DejaVu Sans Mono", "monospace"])
+	var letters := "awdeirtpsnomtyave"
+	for index in range(letters.length()):
+		var x := 9.0 + index * 30.0 + 7.0 * sin(index * 2.4)
+		var y := 269.0 + _surface_swell(x) + 4.0 * sin(index * 4.1)
+		var slope := (_surface_swell(x + 1.0) - _surface_swell(x - 1.0)) * 0.5
+		var letter := _water_label(font, letters[index], Vector2(x, y), 11, Color("#a1e3d3"))
+		letter.rotation.z = -atan(slope)
+
+	_water_label(font, "def build():\n    return 1", Vector2(59, 305), 12, Color("#b4e3ce"))
+	_water_label(font, "let n: number\n    = 1;", Vector2(443, 305), 12, Color("#a9daed"))
+	_water_label(font, "MOV AX, 1\nADD AX, BX", Vector2(55, 343), 11, Color("#e1c78a"))
+	_water_label(font, "DEC CX\nJNZ .loop", Vector2(446, 343), 11, Color("#e1c78a"))
+
+func _surface_swell(x: float) -> float:
+	# Match the crest in wind_and_water.gdshader.
+	return 5.0 * sin(x * 0.066) + 2.8 * sin(x * 0.16 + 0.8) + 1.5 * sin(x * 0.33)
+
+func _water_label(font: Font, copy: String, pixel: Vector2, size: int, ink: Color) -> Label3D:
+	var label := Label3D.new()
+	label.font = font
+	label.font_size = size
+	label.outline_size = 0
+	label.pixel_size = VIEW_SIZE / 500.0
+	label.modulate = ink
+	label.text = copy
+	label.position = Vector3(pixel.x - 250.0, 250.0 - pixel.y, 0.0) * label.pixel_size
+	label.position.z = -6.9
+	add_child(label)
+	return label
 
 func _build_ice() -> ShaderMaterial:
 	var rng := RandomNumberGenerator.new()

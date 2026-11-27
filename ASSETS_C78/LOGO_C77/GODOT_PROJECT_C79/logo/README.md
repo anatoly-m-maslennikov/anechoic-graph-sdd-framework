@@ -1,10 +1,10 @@
 # Anechoic Logo
 
-This Godot 4 project renders the Anechoic logo. The iceberg represents the project. Wind carries the person's ideas through the noosphere. The digital technosphere spans interfaces and models near the waterline and microelectronics at depth.
+This Godot 4 project renders the Anechoic logo. The iceberg represents the project. Wind carries the person's ideas through the noosphere. The water represents the digital technosphere.
 
 The profile camera places the waterline halfway up the image. A continuous cutaway reveals the guardrailed route just inside the ice wall. Below the waterline, a glass canopy covers the route. A single smooth line in the ice represents an idea without echoes.
 
-The water has three layers. Loose pixel currents sit near the surface, fine circuit traces run below them, and tightly packed rows of larger pixels form the base.
+From the bottom up, the water shows electricity, building blocks, microcircuits, assembly, and Python and TypeScript. Individual letters ride the waves at the surface.
 
 Edit the iceberg profile and the spiral in `iceberg.gd`. The scene uses Avenir Next Demi Bold for the wordmark, with a system sans-serif fallback.
 
