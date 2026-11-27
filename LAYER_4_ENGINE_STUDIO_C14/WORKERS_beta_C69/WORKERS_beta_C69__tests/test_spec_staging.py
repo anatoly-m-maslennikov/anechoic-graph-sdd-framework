@@ -114,6 +114,11 @@ class SpecStagingTests(unittest.TestCase):
             compiler._compile_ingested(args)
         assert observed == [raw['rows'], 'structure']
         assert json.loads(output.getvalue())['snapshot_id'] == 'snap'
+        for snapshot_id in ('', ' ', '\u00a0\u2003'):
+            invalid = json.dumps({**raw, 'snapshot_id': snapshot_id})
+            with patch.object(sys, 'stdin', io.StringIO(invalid)), self.assertRaisesRegex(
+                    ValueError, 'Missing Spec snapshot identity'):
+                compiler._compile_ingested(args)
         raw['rows'][0]['body'] = 'tampered'
         with patch.object(sys, 'stdin', io.StringIO(json.dumps(raw))):
             with self.assertRaisesRegex(ValueError, 'does not match Spec snapshot snap'):

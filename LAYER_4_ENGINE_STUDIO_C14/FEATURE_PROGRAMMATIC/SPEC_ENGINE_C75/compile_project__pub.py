@@ -54,7 +54,7 @@ def _compile_ingested(args):
             raise ValueError("Spec snapshot identity requires rows")
         sys.stdin = StringIO(json.dumps(raw))
         return compile_ingested_cli(args, compile_structure)
-    if not isinstance(snapshot_id, str) or not snapshot_id:
+    if not isinstance(snapshot_id, str) or not snapshot_id.strip():
         raise ValueError("Missing Spec snapshot identity")
     snapshot = SpecSnapshot(raw["spec_rows"])
     for model_row in raw["rows"]:
