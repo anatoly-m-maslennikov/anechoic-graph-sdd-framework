@@ -430,18 +430,16 @@ func _build_title(icon: bool) -> void:
 	var title := Label.new()
 	title.text = "A" if icon else "Anechoic"
 	title.anchor_right = 1.0
-	title.offset_top = -9.0 if icon else 13.0
-	title.offset_bottom = 107.0 if icon else 76.0
+	title.offset_top = -181.0 if icon else 13.0
+	title.offset_bottom = 735.0 if icon else 76.0
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	title.add_theme_font_override("font", font)
-	title.add_theme_font_size_override("font_size", 86 if icon else 46)
-	title.add_theme_color_override("font_color", Color("#eaf1d9") if icon else Color("#173d34"))
+	title.add_theme_font_size_override("font_size", 624 if icon else 46)
+	title.add_theme_color_override("font_color", Color(0.96, 0.98, 0.90, 0.51) if icon else Color("#173d34"))
 	if icon:
-		title.offset_left = 18.0
-		title.offset_right = 18.0
-		title.add_theme_color_override("font_outline_color", Color("#315c55"))
+		title.add_theme_color_override("font_outline_color", Color(0.13, 0.29, 0.28, 0.66))
 		title.add_theme_constant_override("outline_size", 10)
 	overlay.add_child(title)
 
