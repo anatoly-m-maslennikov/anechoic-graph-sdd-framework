@@ -481,10 +481,10 @@ func _build_title(icon: bool) -> void:
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	title.add_theme_font_override("font", font)
 	title.add_theme_font_size_override("font_size", 530 if icon else 46)
-	title.add_theme_color_override("font_color", Color(0.96, 0.98, 0.90, 0.51) if icon else Color("#173d34"))
+	title.add_theme_color_override("font_color", Color(0.97, 0.98, 0.91, 0.63) if icon else Color("#173d34"))
 	if icon:
-		title.add_theme_color_override("font_outline_color", Color(0.13, 0.29, 0.28, 0.66))
-		title.add_theme_constant_override("outline_size", 10)
+		title.add_theme_color_override("font_outline_color", Color(0.09, 0.22, 0.21, 0.89))
+		title.add_theme_constant_override("outline_size", 13)
 	overlay.add_child(title)
 
 func _save_png(output: String) -> void:
