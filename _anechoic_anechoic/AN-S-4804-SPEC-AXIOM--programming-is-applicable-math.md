@@ -8,11 +8,13 @@ context:
   lens: SPEC
   template: axiom
 state:
-  status: active
-  version: 1
-  updated_at: '2026-11-26T16:36:43.688944+00:00'
+  status: "active"
+  version: 2
+  updated_at: "2026-11-27T11:25:48.336600+00:00"
 
 ---
+
+**A14**
 
 ## Summary
 

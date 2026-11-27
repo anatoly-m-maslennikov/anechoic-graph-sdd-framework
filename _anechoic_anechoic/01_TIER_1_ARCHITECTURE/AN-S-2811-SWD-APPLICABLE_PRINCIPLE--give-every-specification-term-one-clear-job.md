@@ -8,13 +8,15 @@ context:
   lens: SWD
   template: applicable_principle
 state:
-  status: active
-  version: 4
-  updated_at: '2026-11-22T11:34:35.965837+00:00'
+  status: "active"
+  version: 5
+  updated_at: "2026-11-27T11:25:48.276944+00:00"
 relations:
   SERVES:
   - AN-S-1233
 ---
+**P32**
+
 ## Summary
 
 Give every specification term one clear job

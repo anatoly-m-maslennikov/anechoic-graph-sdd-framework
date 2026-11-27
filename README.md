@@ -33,6 +33,10 @@ Anechoic stores project knowledge as small artifacts connected by typed links. H
 
 ## Why Anechoic works this way (chains-of-thoughts)
 
+See the [Axioms](LAYER_6_OPERATOR_DOCUMENTATION_C25/AXIOMS.md) and
+[Applicable Principles](LAYER_6_OPERATOR_DOCUMENTATION_C25/APPLICABLE_PRINCIPLES.md)
+for the premises and decision rules behind the framework.
+
 Prompts/Skills, MCP, Apps and execution Tools form the harness →\
 the project's meaning must not depend on them →\
 an explicit ontology/base model defines the core: concepts, relations and constraints.

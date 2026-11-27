@@ -8,13 +8,15 @@ context:
   lens: QA
   template: applicable_principle
 state:
-  status: active
-  version: 28
-  updated_at: '2026-11-22T11:00:54.983176+00:00'
+  status: "active"
+  version: 30
+  updated_at: "2026-11-27T11:25:47.338656+00:00"
 relations:
   CONTRIBUTES_TO:
   - AN-S-1458
 ---
+**P1**
+
 ## Summary
 Require usable inputs for reliance
 

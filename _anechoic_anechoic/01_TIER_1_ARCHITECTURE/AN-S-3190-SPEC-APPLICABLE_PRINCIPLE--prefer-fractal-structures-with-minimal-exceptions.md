@@ -11,10 +11,12 @@ relations:
   APPLIES:
   - AN-S-1432
 state:
-  status: active
-  version: 3
-  updated_at: '2026-11-22T11:00:54.983176+00:00'
+  status: "active"
+  version: 4
+  updated_at: "2026-11-27T11:25:48.306785+00:00"
 ---
+
+**P34**
 
 ## Summary
 

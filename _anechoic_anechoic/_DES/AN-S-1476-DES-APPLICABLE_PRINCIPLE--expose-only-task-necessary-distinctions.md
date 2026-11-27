@@ -8,13 +8,15 @@ context:
   lens: DES
   template: applicable_principle
 state:
-  status: active
-  version: 38
-  updated_at: '2026-11-22T11:34:35.965837+00:00'
+  status: "active"
+  version: 39
+  updated_at: "2026-11-27T11:25:47.967564+00:00"
 relations:
   CONTRIBUTES_TO:
   - AN-S-1486
 ---
+**P19**
+
 ## Summary
 Expose only task necessary distinctions
 

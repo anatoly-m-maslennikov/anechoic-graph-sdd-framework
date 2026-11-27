@@ -8,15 +8,17 @@ context:
   lens: SWD
   template: applicable_principle
 state:
-  status: active
-  version: 5
-  updated_at: '2026-11-22T11:34:35.965837+00:00'
+  status: "active"
+  version: 6
+  updated_at: "2026-11-27T11:25:48.172562+00:00"
 relations:
   APPLIES:
   - AN-S-2810
   SERVES:
   - AN-S-1233
 ---
+
+**P29**
 
 ## Summary
 

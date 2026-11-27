@@ -8,13 +8,15 @@ context:
   lens: SWD
   template: applicable_principle
 state:
-  status: active
-  version: 31
-  updated_at: '2026-11-22T11:00:54.983176+00:00'
+  status: "active"
+  version: 32
+  updated_at: "2026-11-27T11:25:48.138262+00:00"
 relations:
   CONTRIBUTES_TO:
   - AN-S-1486
 ---
+**P28**
+
 ## Summary
 
 Keep only necessary and sufficient reusable project information

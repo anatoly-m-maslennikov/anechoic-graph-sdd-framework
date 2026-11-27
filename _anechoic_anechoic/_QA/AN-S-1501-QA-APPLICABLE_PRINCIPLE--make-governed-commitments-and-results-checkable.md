@@ -8,13 +8,15 @@ context:
   lens: QA
   template: applicable_principle
 state:
-  status: active
-  version: 38
-  updated_at: '2026-11-22T11:00:54.983176+00:00'
+  status: "active"
+  version: 39
+  updated_at: "2026-11-27T11:25:48.105945+00:00"
 relations:
   CONTRIBUTES_TO:
   - AN-S-1440
 ---
+**P26**
+
 ## Summary
 
 Make governed commitments and results checkable

@@ -1,5 +1,8 @@
 # Operator Documentation
 
+- [Axioms](AXIOMS.md)
+- [Applicable Principles](APPLICABLE_PRINCIPLES.md)
+
 ## Local Release
 
 From the target checkout, run `./release__public local`. It prints the run ID.

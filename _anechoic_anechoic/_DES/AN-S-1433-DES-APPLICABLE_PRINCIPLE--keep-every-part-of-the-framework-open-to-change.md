@@ -8,13 +8,15 @@ context:
   lens: DES
   template: applicable_principle
 state:
-  status: active
-  version: 4
-  updated_at: '2026-11-22T11:34:35.965837+00:00'
+  status: "active"
+  version: 5
+  updated_at: "2026-11-27T11:25:47.446258+00:00"
 relations:
   CONTRIBUTES_TO:
   - AN-S-1438
 ---
+
+**P3**
 
 ## Summary
 
