@@ -173,6 +173,26 @@ class SharedGatewayTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(result.is_error)
         self.assertEqual(["missing_project_root"], result.structured_content["diagnostics"])
 
+    async def test_current_backend_refuses_foreign_project_before_tool_call(self):
+        gateway = await self._gateway()
+        root = str(self.roots[0])
+        foreign = await gateway.select_project(str(self.roots[1]))
+        with patch.object(_Session, "call_tool") as call:
+            status, envelope = await gateway.tool_rest(
+                "POST",
+                headers={"X-Anechoic-Project-Instance": foreign["instance_id"]},
+                json={
+                    "name": "echo",
+                    "arguments": {"project_root": root, "request": "x"},
+                    "session_id": None,
+                    "public_base_url": None,
+                },
+            )
+        self.assertEqual(200, status)
+        self.assertIsNone(envelope["project"])
+        self.assertEqual("project_declarations_stale", envelope["error"]["code"])
+        call.assert_not_called()
+
     async def test_lifecycle_reuses_selected_project_and_rejects_replaced_root(self):
         name = "atom_lifecycle_archive"
         _Gateway.tools_by_root = {

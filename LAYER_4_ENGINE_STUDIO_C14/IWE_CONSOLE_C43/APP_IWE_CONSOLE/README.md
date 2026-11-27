@@ -77,14 +77,27 @@ needed. The browser uses the same state, so an Agent can create, update, run and
 focus a View without reading the result rows. `query_log_list` and `query_log_get`
 read retained run records.
 
-The shared HTTP representation is POST `/interface` under the Project Workbench
-URL, with `{operation, arguments}` and the existing outer Project binding.
+The standalone browser sends Tool calls to same-origin `POST /tools`.
+It sends `X-Anechoic-Project-Instance` from the admitted Console page
+with the JSON fields `name`, `arguments`, `session_id`, and
+`public_base_url`. The Project instance in a successful response must
+match the instance in the page.
 
-Web POST endpoints are `/anechoic/iwe-console/<project_name>/run`, `/page`, `/check`,
-`/schema`, `/status`, `/view-save`, `/load` and `/saved-list`. Run & Save uses `/run`
-with `save=true`; there is no separate `/save` or MCP `query_save` operation.
-A mismatched Project name returns 404. Static assets stay under `/anechoic/iwe-console/assets`.
-A shared MCP server also requires `project_root`.
+On a shared host, open the Console URL with `?project_root=<root>`.
+The browser includes that root in `arguments.project_root`. The shared
+host forwards `GET /tools` and `POST /tools` to the same Backend API
+that MCP uses for Tool discovery and invocation.
+
+Terminal clients can still use `POST /anechoic/<project_name>/api/interface`
+with `{operation, arguments}` and the existing outer `project_root` binding.
+The wrapper applies same-origin and Project admission checks. The Backend
+decides which Tools are available.
+
+The legacy terminal aliases under the Project API and Console URLs are
+`/run`, `/page`, `/check`, `/schema`, `/status`, `/rebuild`, `/view-save`,
+`/load`, and `/saved-list`. Run & Save uses `/run` with `save=true`.
+A mismatched Project name returns 404. Static assets are available under
+`/anechoic/iwe-console/assets`.
 
 Default query style: uppercase `SELECT` on its own line; two-space indentation;
 one selected expression per line, with leading commas after the first;

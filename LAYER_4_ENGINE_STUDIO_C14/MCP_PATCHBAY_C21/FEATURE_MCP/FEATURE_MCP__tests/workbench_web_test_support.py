@@ -218,6 +218,10 @@ class FakeGateway:
         asserted_project_root=None,
         project_instance_id=None,
     ):
+        if name == "unknown" or name in self.tool_blacklist:
+            raise ToolProtocolError("tool_unavailable", "Unknown Tool", {
+                "outcome": "rejected", "diagnostics": ["Unknown Tool"],
+            })
         if "project_root" in arguments:
             asserted_project_root = arguments["project_root"]
             self.roots.append(asserted_project_root)

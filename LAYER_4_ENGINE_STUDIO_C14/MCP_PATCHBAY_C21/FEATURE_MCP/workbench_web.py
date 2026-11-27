@@ -30,38 +30,12 @@ from MCP_PATCHBAY_C21.FEATURE_MCP.project_tool_context import (
     valid_project_instance,
 )
 from MCP_PATCHBAY_C21.FEATURE_MCP.shared_backend import SharedGatewayRefusal
+from MCP_PATCHBAY_C21.FEATURE_MCP.tool_rest import json_body, request_origin
 
 
 class WorkbenchRequestError(ValueError):
     """An explicit refusal from the HTTP transport."""
 
-
-_INTERFACE_TOOLS = frozenset(
-    {
-        "workspace_open",
-        "workspace_list",
-        "workspace_get",
-        "view_create",
-        "view_duplicate",
-        "view_list",
-        "view_get",
-        "view_update",
-        "view_run",
-        "view_check",
-        "view_fetch",
-        "view_focus",
-        "view_rename",
-        "view_remove",
-        "query_log_list",
-        "query_log_get",
-        "view_save",
-        "iwe_console_atom_document",
-        "atom_lifecycle_create_draft",
-        "atom_lifecycle_update",
-        "atom_lifecycle_promote_draft",
-        "atom_lifecycle_change_status",
-    }
-)
 
 _FRONTEND = (
     Path(__file__).resolve().parents[2]
@@ -137,30 +111,11 @@ async def _selection(gateway: Any, project_root: Any, shared: bool) -> Any:
     return await gateway.select_project(project_root)
 
 
-async def _execute(
-    gateway: Any,
-    name: str,
-    arguments: dict[str, Any],
-    shared: bool,
-    public_base_url: str,
-    **routing: Any,
-) -> dict[str, Any]:
-    if name == "query_run":
-        arguments = {"result_delivery": "file", **arguments}
-    if not shared and name in getattr(gateway, "tool_blacklist", frozenset()):
-        raise WorkbenchRequestError("Unknown Tool")
-    return (
-        await gateway.call_tool(
-            name, arguments, public_base_url=public_base_url, **routing
-        )
-    )["value"]
-
-
 async def _interface_arguments(
     request: Request, shared: bool
 ) -> tuple[str, dict[str, Any]]:
     try:
-        value = await request.json()
+        value = json.loads(await json_body(request))
     except ValueError as error:
         raise WorkbenchRequestError(str(error)) from error
     if not isinstance(value, dict) or set(value) - {
@@ -174,10 +129,12 @@ async def _interface_arguments(
     name, arguments = value.get("operation"), value.get("arguments")
     if (
         not isinstance(name, str)
-        or name not in _INTERFACE_TOOLS
+        or not name
         or not isinstance(arguments, dict)
     ):
-        raise WorkbenchRequestError("unknown Workbench interface operation")
+        raise WorkbenchRequestError(
+            "interface body must contain operation and arguments"
+        )
     root = value.get("project_root")
     if shared:
         if not isinstance(root, str):
@@ -219,12 +176,14 @@ def _frontend_page(frontend, selection):
         else getattr(selection, "instance_id", None)
     )
     if not valid_project_instance(instance):
-        return _error(ToolProtocolError(
-            "tool_runtime_failure", "Invalid Workbench Project selection"
-        ))
+        return _error(
+            ToolProtocolError(
+                "tool_runtime_failure", "Invalid Workbench Project selection"
+            )
+        )
     try:
         html = (frontend / "index.html").read_text(encoding="utf-8")
-    except (OSError, UnicodeError):
+    except OSError, UnicodeError:
         html = ""
     if "</head>" not in html:
         return JSONResponse(
@@ -232,17 +191,29 @@ def _frontend_page(frontend, selection):
             status_code=503,
         )
     meta = f'<meta name="anechoic-project-instance" content="{instance}">'
-    return HTMLResponse(html.replace("</head>", f"{meta}</head>", 1),
-                        headers={"Cache-Control": "no-store"})
+    return HTMLResponse(
+        html.replace("</head>", f"{meta}</head>", 1),
+        headers={"Cache-Control": "no-store"},
+    )
 
 
 def _operation(gateway, shared, fixed_name=None):
     async def endpoint(request: Request) -> Response:
+        public_base_url = str(request.base_url)
+        if fixed_name is None:
+            origin = request_origin(request)
+            if origin is None:
+                return JSONResponse(
+                    {"error": "origin_rejected"}, status_code=403
+                )
+            public_base_url = origin + "/"
         try:
             if fixed_name is None:
                 name, arguments = await _interface_arguments(request, shared)
             else:
                 name, arguments = fixed_name, await _arguments(request, shared)
+                if name == "query_run":
+                    arguments = {"result_delivery": "file", **arguments}
             selection = await _selection(
                 gateway, arguments.get("project_root"), shared
             )
@@ -263,16 +234,14 @@ def _operation(gateway, shared, fixed_name=None):
                 if shared
                 else {"asserted_project_root": asserted_root}
             )
-            value = await _execute(
-                gateway,
+            response = await gateway.call_tool(
                 name,
                 arguments,
-                shared,
-                str(request.base_url),
+                public_base_url=public_base_url,
                 **routing,
             )
             return StreamingResponse(
-                _json_stream(value), media_type="application/json"
+                _json_stream(response["value"]), media_type="application/json"
             )
         except Exception as error:
             return _error(error)

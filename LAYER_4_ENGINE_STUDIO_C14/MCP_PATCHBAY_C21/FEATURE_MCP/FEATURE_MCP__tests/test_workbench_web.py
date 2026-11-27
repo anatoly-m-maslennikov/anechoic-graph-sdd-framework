@@ -240,6 +240,7 @@ class WorkbenchWebTests(unittest.TestCase):
                 "operation": "unknown", "arguments": {},
             })
             self.assertEqual(400, invalid.status_code)
+            self.assertEqual("tool_unavailable", invalid.json()["code"])
 
     def test_interface_rejects_blacklisted_bound_view_save_and_validates_single_root(self):
         gateway = FakeGateway()
@@ -249,6 +250,7 @@ class WorkbenchWebTests(unittest.TestCase):
                 "operation": "view_save", "arguments": {"workspace_id": "session-1", "view_id": "view-1"},
             })
             self.assertEqual(400, blocked.status_code)
+            self.assertEqual("tool_unavailable", blocked.json()["code"])
             self.assertEqual([], gateway.workbench.calls)
 
         gateway = FakeGateway()
@@ -265,6 +267,26 @@ class WorkbenchWebTests(unittest.TestCase):
             })
             self.assertEqual(200, correct.status_code)
             self.assertEqual([("workspace_open", {"session_id": "session-1"})], gateway.workbench.calls)
+
+    def test_generic_interface_requires_same_origin_and_bounded_json(self):
+        gateway = FakeGateway()
+        app = Starlette(routes=self.routes(gateway))
+        path = f"{PROJECT_PATH}/interface"
+        with TestClient(app, base_url="http://localhost:8092") as client:
+            denied = client.post(path, json={}, headers={"Origin": "http://localhost:8093"})
+            self.assertEqual(403, denied.status_code)
+            body = '{"operation":"query_check","arguments":{"sql":"SELECT 1"}}'
+            denied = client.post(path, content=body, headers={"Content-Type": "text/plain"})
+            self.assertEqual(400, denied.status_code)
+            refused = client.post(path, content=body.ljust(65_537), headers={"Content-Type": "application/json"})
+            self.assertEqual(400, refused.status_code)
+            self.assertEqual([], gateway.workbench.calls)
+            allowed = client.post(path, content=body, headers={
+                "Content-Type": "application/json; charset=utf-8",
+                "Origin": "http://localhost:8092",
+            })
+            self.assertEqual(200, allowed.status_code)
+            self.assertEqual([("query_check", {"sql": "SELECT 1"})], gateway.workbench.calls)
 
     def test_run_and_save_values_have_request_derived_urls_and_query_errors_do_not(self):
         with TestClient(Starlette(routes=self.routes(FakeGateway())), base_url="http://workbench.test") as client:
