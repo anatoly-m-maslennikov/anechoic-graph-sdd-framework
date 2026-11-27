@@ -81,19 +81,20 @@ func _build_water_text() -> void:
 			var seed := index + (band + 1) * 17
 			var x := 3.5 + index * 7.0 + band * 1.9 + 2.1 * sin(seed * 1.8)
 			var crest := _surface_swell(x)
-			var offset := 9.5 + 4.3 * sin(x * 0.054 + band)
-			if band > 0:
-				offset *= 1.0 - 0.55 * smoothstep(4.0, 17.0, crest)
-			var y := 251.0 + crest + band * offset + 2.1 * sin(seed * 2.1)
+			var breaking := 1.0 - smoothstep(-14.0, 0.0, crest)
+			var offset := 4.0 + breaking * (5.0 + 6.0 * sin(seed * 2.1))
+			var y := 251.0 + crest + band * offset + 1.9 * sin(seed * 3.1)
 			var slope := (_surface_swell(x + 1.0) - _surface_swell(x - 1.0)) * 0.5
 			var size := 6 + (seed * 7) % 8
 			if band == 0:
 				size = 9 + (seed * 7) % 10 + roundi(2.0 * (1.0 - smoothstep(-11.0, 1.0, crest)))
 			var glyph := letters[seed % letters.length()]
-			var letter := _water_label(font, glyph, Vector2(x, y), size, colors[band + 1])
-			letter.rotation.z = -atan(slope) + 0.18 * sin(seed * 3.7)
+			var ink: Color = colors[band + 1]
+			ink.a = lerpf(0.39, 1.0, breaking)
+			var letter := _water_label(font, glyph, Vector2(x, y), size, ink)
+			letter.rotation.z = -atan(slope) + 0.39 * sin(seed * 3.7)
 			letter.outline_size = 1 if band == 0 else 0
-			letter.outline_modulate = Color("#386460")
+			letter.outline_modulate = Color(0.22, 0.39, 0.38, ink.a * 0.6)
 
 	_water_label(font, "def idea(): ...", Vector2(59, 286), 11, Color("#c7edba"))
 	_water_label(font, "record Idea() {}", Vector2(59, 301), 11, Color("#c6e6f0"))
@@ -105,9 +106,17 @@ func _build_water_text() -> void:
 
 func _surface_swell(x: float) -> float:
 	# Match the crest in wind_and_water.gdshader.
-	var phase := x * 0.077 + sin(x * 0.026) + 0.36 * sin(x * 0.101 + 0.7)
-	var height := 11.0 + 4.6 * sin(x * 0.041 + 1.1) + 2.2 * sin(x * 0.12 - 0.5)
-	return height * sin(phase) + 3.8 * cos(phase * 2.0 + 0.95) + 1.7 * sin(x * 0.29) + 0.9 * sin(x * 0.53)
+	return (
+		7.0 + 1.5 * sin(x * 0.12)
+		- 25.0 * _rolling_crest(x - 53.0, 14.0, 34.0)
+		- 16.0 * _rolling_crest(x - 139.0, 11.0, 26.0)
+		- 29.0 * _rolling_crest(x - 412.0, 14.0, 41.0)
+		- 14.0 * _rolling_crest(x - 488.0, 9.0, 25.0)
+	)
+
+func _rolling_crest(delta: float, front: float, back: float) -> float:
+	var spread := delta / (front if delta < 0.0 else back)
+	return exp(-spread * spread)
 
 func _water_label(font: Font, copy: String, pixel: Vector2, size: int, ink: Color) -> Label3D:
 	var label := Label3D.new()
