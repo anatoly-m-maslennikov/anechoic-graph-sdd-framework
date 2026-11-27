@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1438
+concern:
+  subject: Operator authority and control
+  path: Design Foundations/Delegation and control
+  relation: is_contained_by
 container:
   component: C00
 tier: 1
@@ -9,8 +13,8 @@ context:
   template: applicable_principle
 state:
   status: "active"
-  version: 5
-  updated_at: "2026-11-27T11:25:47.540098+00:00"
+  version: 6
+  updated_at: "2026-11-27T13:00:59.788007+00:00"
 relations:
   SERVES:
   - AN-S-1233

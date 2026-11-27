@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1476
+concern:
+  subject: Task-specific distinctions
+  path: Design Foundations/Information and complexity
+  relation: is_contained_by
 container:
   component: C00
 tier: 2
@@ -9,8 +13,8 @@ context:
   template: applicable_principle
 state:
   status: "active"
-  version: 39
-  updated_at: "2026-11-27T11:25:47.967564+00:00"
+  version: 40
+  updated_at: "2026-11-27T13:00:59.929778+00:00"
 relations:
   CONTRIBUTES_TO:
   - AN-S-1486

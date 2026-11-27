@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-4802
+concern:
+  subject: Hierarchy and types of graph edges
+  path: Design Foundations/Information and complexity
+  relation: is_contained_by
 container:
   component: C00
 tier: 1
@@ -9,8 +13,8 @@ context:
   template: applicable_principle
 state:
   status: "active"
-  version: 2
-  updated_at: "2026-11-27T11:25:48.324081+00:00"
+  version: 3
+  updated_at: "2026-11-27T13:01:00.097532+00:00"
 relations:
   APPLIES:
   - AN-S-1432

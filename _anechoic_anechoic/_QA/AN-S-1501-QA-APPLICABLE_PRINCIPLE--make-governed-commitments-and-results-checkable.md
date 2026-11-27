@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1501
+concern:
+  subject: Verification of commitments and results
+  path: Design Foundations/Delegation and control
+  relation: is_contained_by
 container:
   component: C00
 tier: 2
@@ -9,8 +13,8 @@ context:
   template: applicable_principle
 state:
   status: "active"
-  version: 39
-  updated_at: "2026-11-27T11:25:48.105945+00:00"
+  version: 40
+  updated_at: "2026-11-27T13:00:59.998517+00:00"
 relations:
   CONTRIBUTES_TO:
   - AN-S-1440

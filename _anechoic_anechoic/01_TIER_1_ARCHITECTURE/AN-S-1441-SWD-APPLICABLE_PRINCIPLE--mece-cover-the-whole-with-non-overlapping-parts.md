@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1441
+concern:
+  subject: MECE partitioning
+  path: Design Foundations/Information and complexity
+  relation: is_contained_by
 container:
   component: C00
 tier: 1
@@ -9,8 +13,8 @@ context:
   template: applicable_principle
 state:
   status: "active"
-  version: 4
-  updated_at: "2026-11-27T11:25:47.602879+00:00"
+  version: 5
+  updated_at: "2026-11-27T13:00:59.817265+00:00"
 relations:
   APPLIES:
   - AN-S-1432

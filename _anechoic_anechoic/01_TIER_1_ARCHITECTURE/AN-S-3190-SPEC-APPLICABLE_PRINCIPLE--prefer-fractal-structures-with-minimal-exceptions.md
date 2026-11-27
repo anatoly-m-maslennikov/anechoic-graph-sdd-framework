@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-3190
+concern:
+  subject: Fractal structure consistency
+  path: Design Foundations/Information and complexity
+  relation: is_contained_by
 container:
   component: C00
 tier: 1
@@ -12,8 +16,8 @@ relations:
   - AN-S-1432
 state:
   status: "active"
-  version: 4
-  updated_at: "2026-11-27T11:25:48.306785+00:00"
+  version: 5
+  updated_at: "2026-11-27T13:01:00.088708+00:00"
 ---
 
 **P34**

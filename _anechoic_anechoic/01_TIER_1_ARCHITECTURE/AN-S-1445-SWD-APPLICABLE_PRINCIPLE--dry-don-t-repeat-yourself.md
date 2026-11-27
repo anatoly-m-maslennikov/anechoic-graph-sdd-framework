@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1445
+concern:
+  subject: Avoidance of duplication
+  path: Design Foundations/Reuse automation and maintenance
+  relation: is_contained_by
 container:
   component: C00
 tier: 1
@@ -9,8 +13,8 @@ context:
   template: applicable_principle
 state:
   status: "active"
-  version: 5
-  updated_at: "2026-11-27T11:25:47.797179+00:00"
+  version: 6
+  updated_at: "2026-11-27T13:00:59.856286+00:00"
 relations:
   SERVES:
   - AN-S-1233

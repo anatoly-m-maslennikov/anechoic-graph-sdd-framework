@@ -1,0 +1,35 @@
+---
+atom_family: SPEC
+atom_id: AN-S-1855
+container:
+  component: C00
+tier: 2
+context:
+  lens: DES
+  template: applicable_principle
+state:
+  status: "archived"
+  version: 5
+  updated_at: "2026-11-27T13:01:00.010854+00:00"
+relations:
+  CONTRIBUTES_TO:
+  - AN-S-1443
+---
+
+**P27**
+
+## Summary
+
+Let the Operator inspect framework execution
+
+## Claim
+
+### Prose Claim
+
+Give the Operator access to relevant framework execution evidence and known limitations.
+
+## Details
+
+### Examples
+
+An Operator inspects a Run record to see its result and any reported errors.

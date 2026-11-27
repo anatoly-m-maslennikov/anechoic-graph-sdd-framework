@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1081
+concern:
+  subject: Input validity for reliance
+  path: Design Foundations/Delegation and control
+  relation: is_contained_by
 container:
   component: C00
 tier: 2
@@ -9,8 +13,8 @@ context:
   template: applicable_principle
 state:
   status: "active"
-  version: 30
-  updated_at: "2026-11-27T11:25:47.338656+00:00"
+  version: 31
+  updated_at: "2026-11-27T13:00:59.755344+00:00"
 relations:
   CONTRIBUTES_TO:
   - AN-S-1458

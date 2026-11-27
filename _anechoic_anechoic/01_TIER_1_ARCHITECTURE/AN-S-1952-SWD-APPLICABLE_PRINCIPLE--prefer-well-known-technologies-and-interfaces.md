@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1952
+concern:
+  subject: Familiar technologies and interfaces
+  path: Design Foundations/Reuse automation and maintenance
+  relation: is_contained_by
 container:
   component: C00
 tier: 1
@@ -9,8 +13,8 @@ context:
   template: applicable_principle
 state:
   status: "active"
-  version: 6
-  updated_at: "2026-11-27T11:25:48.172562+00:00"
+  version: 7
+  updated_at: "2026-11-27T13:01:00.031906+00:00"
 relations:
   APPLIES:
   - AN-S-2810

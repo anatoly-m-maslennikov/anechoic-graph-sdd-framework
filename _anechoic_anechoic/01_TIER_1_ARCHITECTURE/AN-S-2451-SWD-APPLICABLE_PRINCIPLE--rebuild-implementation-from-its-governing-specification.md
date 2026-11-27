@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-2451
+concern:
+  subject: Implementation rebuild from Spec
+  path: Design Foundations/Reuse automation and maintenance
+  relation: is_contained_by
 container:
   component: C00
 tier: 1
@@ -9,8 +13,8 @@ context:
   template: applicable_principle
 state:
   status: "active"
-  version: 25
-  updated_at: "2026-11-27T11:25:48.250199+00:00"
+  version: 26
+  updated_at: "2026-11-27T13:01:00.057796+00:00"
 relations:
   SERVES:
   - AN-S-1233

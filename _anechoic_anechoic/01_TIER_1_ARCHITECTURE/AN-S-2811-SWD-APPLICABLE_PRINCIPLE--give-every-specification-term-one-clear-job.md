@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-2811
+concern:
+  subject: Distinct meanings for Spec terms
+  path: Design Foundations/Information and complexity
+  relation: is_contained_by
 container:
   component: C00
 tier: 1
@@ -9,8 +13,8 @@ context:
   template: applicable_principle
 state:
   status: "active"
-  version: 5
-  updated_at: "2026-11-27T11:25:48.276944+00:00"
+  version: 6
+  updated_at: "2026-11-27T13:01:00.067612+00:00"
 relations:
   SERVES:
   - AN-S-1233
