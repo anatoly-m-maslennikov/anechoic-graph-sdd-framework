@@ -2,7 +2,6 @@
 
 import asyncio
 from contextlib import ExitStack, contextmanager
-import json
 import os
 from pathlib import Path
 import subprocess
@@ -32,19 +31,6 @@ from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import (
     HEALTH_PATH,
     MCP_PATH,
 )
-
-
-_STARTUP_REUSE_RUNS = """
-    SELECT t.run_id, bool_or(e.kind = 'effect' AND e.name = 'generation_reuse_check'
-                            AND e.outcome = 'succeeded')
-    FROM flow_events t JOIN flow_events e USING (run_id)
-    WHERE t.kind = 'trigger' AND t.name = 'startup'
-      AND t.component = 'C68' AND e.sequence > t.sequence
-    GROUP BY t.run_id
-    HAVING bool_or(e.kind = 'output' AND e.name = 'generation_result')
-"""
-
-
 
 
 @contextmanager
@@ -85,50 +71,18 @@ def archive_project(case, prepare=make_project):
 
 
 class WarmProjectionRestartCase:
-    def _startup_reuse_runs(self):
-        return dict(self._rows(_STARTUP_REUSE_RUNS))
-
-    def _startup_reuse_before_restart(self):
-        environment = subprocess.check_output(
-            [
-                "docker",
-                "image",
-                "inspect",
-                "--format",
-                "{{json .Config.Env}}",
-                os.environ["ANECHOIC_IMAGE"],
-            ],
+    def _assert_warm_projection_reused(self):
+        logs = subprocess.run(
+            ["docker", "logs", self.container],
+            check=True,
+            capture_output=True,
             text=True,
             timeout=image_timeout(10),
         )
-        if bool(
-            {"ANECHOIC_RUNTIME_STACK=beta", "ANECHOIC_RUNTIME_STACK=beta_next"}
-            & set(json.loads(environment))
-        ):
-            return self._startup_reuse_runs().keys()
-        return None
-
-    def _assert_warm_projection_reused(self, previous):
-        if previous is None:
-            logs = subprocess.run(
-                ["docker", "logs", self.container],
-                check=True,
-                capture_output=True,
-                text=True,
-                timeout=image_timeout(10),
-            )
-            self.assertIn(
-                "database_edit operation=reuse table=projection",
-                logs.stdout + logs.stderr,
-            )
-            return
-        deadline = monotonic() + 10
-        observed = self._startup_reuse_runs()
-        while not observed.keys() - previous and observing(self.container, deadline):
-            sleep(.1)
-            observed = self._startup_reuse_runs()
-        self.assertTrue(any(observed[run] for run in observed.keys() - previous),
-                        f"No new Beta startup reuse run. Before: {previous}. After: {observed}.")
+        self.assertIn(
+            "database_edit operation=reuse table=projection",
+            logs.stdout + logs.stderr,
+        )
 
     def test_disk_journal_and_projection_survive_warm_restart(self):
         receipt, = append_sealed_events(
@@ -151,14 +105,13 @@ class WarmProjectionRestartCase:
         self.assertEqual([[receipt["record_id"]]], self._rows(sql))
         database = self.root / PROJECT_DATABASE
         inode = database.stat().st_ino
-        previous_reuse = self._startup_reuse_before_restart()
         subprocess.run(["docker", "container", "restart", self.container],
                        check=True, capture_output=True, timeout=image_timeout(30))
         self._wait_ready()
         self.assertEqual(inode, database.stat().st_ino)
         self.assertEqual([[receipt["record_id"]]], self._rows(sql))
         self.assertEqual("SELECT 1", self._post("/load", {"reference": saved["saved_query_id"]})["sql"])
-        self._assert_warm_projection_reused(previous_reuse)
+        self._assert_warm_projection_reused()
 
 
 class DockerBrowserAndMcpCases:
@@ -240,18 +193,6 @@ class DockerBrowserAndMcpCases:
 
 
     def test_promotion_immediately_refreshes_workbench(self):
-        environment = subprocess.check_output([
-            "docker", "image", "inspect", "--format", "{{json .Config.Env}}", os.environ["ANECHOIC_IMAGE"],
-        ], text=True, timeout=image_timeout(10))
-        beta = bool(
-            {"ANECHOIC_RUNTIME_STACK=beta", "ANECHOIC_RUNTIME_STACK=beta_next"}
-            & set(json.loads(environment))
-        )
-        witness = """SELECT count(*) FROM flow_events t JOIN flow_events e USING (run_id)
-            WHERE t.component = 'C68' AND t.kind = 'trigger' AND t.name = 'lifecycle_refresh'
-              AND e.kind = 'output' AND e.name = 'generation_result' AND e.outcome = 'succeeded'
-              AND json_extract_string(e.detail, '$.kind') = 'native_delta'"""
-
         async def exercise():
             async with (
                 image_mcp_transport(self.url + MCP_PATH) as streams,
@@ -260,10 +201,7 @@ class DockerBrowserAndMcpCases:
                 await client.initialize()
 
                 async def call(name, arguments, status="completed"):
-                    before = self._rows(witness)[0][0] if beta else 0
-                    started = monotonic()
                     result = await client.call_tool(name, arguments)
-                    elapsed = monotonic() - started
                     self.assertFalse(
                         result.is_error, result.structured_content
                     )
@@ -272,19 +210,13 @@ class DockerBrowserAndMcpCases:
                         result.structured_content["status"],
                         result.structured_content,
                     )
-                    if beta:
-                        self._wait_rows(witness, [[before + 1]])
-                        print(
-                            f"{name}: {elapsed:.3f}s (native_delta)",
-                            flush=True,
-                        )
                     return result.structured_content
 
-                await self._assert_ticket_promotion(call, beta)
+                await self._assert_ticket_promotion(call)
 
         asyncio.run(exercise())
 
-    async def _assert_ticket_promotion(self, call, beta):
+    async def _assert_ticket_promotion(self, call):
         created = await call("atom_lifecycle_create_draft", {"newAtom": {
             "template": "task", "container": {"component": "C00"},
             "body": "## Summary\n\nPromotion canary.\n",
@@ -294,14 +226,10 @@ class DockerBrowserAndMcpCases:
         sql = ('SELECT reference, "header.state.version", "header.state.status" FROM atoms '
                f"WHERE reference = '{atom}' OR reference LIKE '{atom}@%' "
                'ORDER BY "header.state.version", reference')
-        if beta:
-            self.assertEqual([[draft["ref_id"], 1, "draft"]], self._rows(sql))
         await call("atom_lifecycle_promote_draft", {
             "target": {"ref_id": draft["ref_id"], "version": draft["version"]},
             "targetStatus": "backlog",
         })
-        if beta:
-            self.assertEqual([[atom, 1, "backlog"]], self._rows(sql))
         revised = await call(
             "atom_lifecycle_update",
             {
@@ -313,17 +241,10 @@ class DockerBrowserAndMcpCases:
             status="draft_created",
         )
         revision = revised["savedDraft"]
-        if beta:
-            self.assertEqual(
-                [[atom, 1, "backlog"], [revision["ref_id"], 2, "draft"]],
-                self._rows(sql),
-            )
-        promoted = await call("atom_lifecycle_promote_draft", {
+        await call("atom_lifecycle_promote_draft", {
             "target": {"ref_id": revision["ref_id"], "version": revision["version"]},
             "targetStatus": "backlog",
         })
-        if beta:
-            self.assertEqual(2, promoted["artifact"]["version"])
         self.assertEqual(
             [[atom + "@1", 1, "archived"], [atom, 2, "backlog"]],
             self._rows(sql),

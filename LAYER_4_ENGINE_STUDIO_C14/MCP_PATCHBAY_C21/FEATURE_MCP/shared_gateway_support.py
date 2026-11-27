@@ -11,8 +11,12 @@ from typing import Any
 from mcp import types
 from mcp.server.lowlevel import Server
 
+from MCP_PATCHBAY_C21.FEATURE_MCP.backend_client import ToolProtocolError
 from MCP_PATCHBAY_C21.FEATURE_MCP.caller_context import take_caller_context
 from MCP_PATCHBAY_C21.FEATURE_MCP.mcp_startup_boundary import warning
+from MCP_PATCHBAY_C21.FEATURE_MCP.project_tool_context import (
+    valid_project_instance,
+)
 from MCP_PATCHBAY_C21.FEATURE_MCP.runtime_request_context import (
     bind_request_context,
 )
@@ -36,6 +40,38 @@ def valid_tool_response(response):
         and set(response) == {"value", "text"}
         and isinstance(response["value"], dict)
         and (response["text"] is None or isinstance(response["text"], str))
+    )
+
+
+def parse_tool_catalog(result):
+    if (
+        not isinstance(result, dict)
+        or set(result) != {"tools"}
+        or not isinstance(result["tools"], list)
+    ):
+        raise ValueError("Invalid Shared Backend catalog")
+    return [types.Tool.model_validate(tool) for tool in result["tools"]]
+
+
+def valid_project_receipt(project, expected):
+    return (
+        isinstance(project, dict)
+        and set(project) == {"prefix", "instance_id"}
+        and isinstance(project["prefix"], str)
+        and bool(project["prefix"])
+        and valid_project_instance(project["instance_id"])
+        and (expected is None or project["instance_id"] == expected)
+    )
+
+
+def project_receipt_mismatch():
+    code = "project_receipt_mismatch"
+    message = "The API receipt does not identify the selected Project."
+    return ToolProtocolError(
+        code,
+        message,
+        {"outcome": "failed", "diagnostics": [f"{code}: {message}"]},
+        status_code=502,
     )
 
 

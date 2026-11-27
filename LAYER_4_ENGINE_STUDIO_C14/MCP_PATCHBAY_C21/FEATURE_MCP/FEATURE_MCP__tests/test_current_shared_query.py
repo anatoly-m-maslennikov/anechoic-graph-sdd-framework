@@ -1,4 +1,4 @@
-"""Exercise shared beta_next Web and MCP queries for independent Projects."""
+"""Exercise shared Current Web and MCP queries for independent Projects."""
 import asyncio
 import json
 import os
@@ -13,7 +13,7 @@ import httpx2
 from mcp import ClientSession, types
 from mcp.client.streamable_http import streamable_http_client
 
-from .test_beta_next_query_comparison import project
+from .example_project import project
 
 ENGINE = Path(__file__).resolve().parents[3]
 SQL = 'SELECT reference, "content.summary" FROM atoms ORDER BY reference'
@@ -25,14 +25,10 @@ def launch(settings, port):
         "original=uvicorn.run; uvicorn.run=lambda app,**kw: original(app,**(kw | {'host':'127.0.0.1'})); "
         f"h.PORT={port}; sys.exit(h.main(['--host-settings',sys.argv[1]]))"
     )
-    supervisor = (
-        "import os,sys; from MCP_PATCHBAY_C21.FEATURE_MCP.docker.shared_supervisor import supervise; "
-        "sys.exit(supervise([sys.executable,'-B','-c',sys.argv[2],sys.argv[1]],dict(os.environ),sys.argv[1]))"
-    )
     env = {
         **os.environ,
         "PYTHONPATH": str(ENGINE),
-        "ANECHOIC_RUNTIME_STACK": "beta_next",
+        "ANECHOIC_RUNTIME_STACK": "current",
         "PYTHONDONTWRITEBYTECODE": "1",
         "ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY": os.environ.get(
             "ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY",
@@ -41,7 +37,7 @@ def launch(settings, port):
     }
     log = tempfile.TemporaryFile(mode="w+")
     proc = subprocess.Popen(
-        [sys.executable, "-B", "-c", supervisor, str(settings), child],
+        [sys.executable, "-B", "-c", child, str(settings)],
         env=env,
         stdout=subprocess.DEVNULL,
         stderr=log,
@@ -95,7 +91,7 @@ class SharedProjectQueries(unittest.IsolatedAsyncioTestCase):
         ) as http:
             async with asyncio.timeout(90):
                 while True:
-                    self.assertIsNone(proc.poll(), "shared supervisor exited")
+                    self.assertIsNone(proc.poll(), "shared Current host exited")
                     try:
                         response = await http.get("/anechoic/health")
                         if (
@@ -283,6 +279,18 @@ class SharedProjectQueries(unittest.IsolatedAsyncioTestCase):
         self.assertEqual('EX-T-1@2', after['exact_ref'])
         self.assertIn('Edited through IWE Console.', after['body'])
         self.assertIn('in_queue', after['ticket_statuses'])
+        archived = await self.console(
+            http, first, "iwe_console_atom_document", {"ref_id": "EX-T-1@1"}
+        )
+        self.assertEqual(("EX-T-1@1", "archived"), (
+            archived["exact_ref"], archived["status"],
+        ))
+        self.assertEqual(current["body"], archived["body"])
+        missing = await self.tool_rest(
+            http, first, "iwe_console_atom_document", {"ref_id": "EX-T-1@999"},
+            self.instances[first],
+        )
+        self.assertEqual("atom_not_found", missing["error"]["code"])
         other = await self.console(
             http, second, "iwe_console_atom_document", ref
         )

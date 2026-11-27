@@ -21,7 +21,7 @@ _CANARY = (
     _ENGINE / "FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/_release_canary.py"
 )
 _MCP = _ENGINE / "MCP_PATCHBAY_C21/FEATURE_MCP"
-_IMAGE = _MCP / "FEATURE_MCP__tests/image/test_staged_startup_docker_e2e.py"
+_IMAGE = _MCP / "FEATURE_MCP__tests/image/test_packaged_boundary_docker_e2e.py"
 _RUNTIME = _MCP / "docker/start_mcp.py"
 
 

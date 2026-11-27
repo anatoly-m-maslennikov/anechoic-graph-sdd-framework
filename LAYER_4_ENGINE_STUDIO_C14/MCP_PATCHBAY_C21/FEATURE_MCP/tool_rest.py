@@ -18,7 +18,10 @@ from MCP_PATCHBAY_C21.FEATURE_MCP.runtime_request_context import (
     bind_request_context,
 )
 from MCP_PATCHBAY_C21.FEATURE_MCP.shared_gateway_support import (
+    parse_tool_catalog,
+    project_receipt_mismatch,
     record_observation,
+    valid_project_receipt,
     valid_tool_response,
 )
 from MCP_PATCHBAY_C21.FEATURE_MCP.shared_tool_contract import public_tool
@@ -113,15 +116,6 @@ def _valid_fault(error):
     )
 
 
-def _valid_receipt(project, expected):
-    return (
-        isinstance(project, dict)
-        and set(project) == {"prefix", "instance_id"}
-        and _project_receipt(project["prefix"], project["instance_id"])
-        and (expected is None or project["instance_id"] == expected)
-    )
-
-
 def _observed_reply(gateway, data, status, envelope):
     project = envelope["project"] or {}
     if "result" in envelope:
@@ -146,7 +140,7 @@ def _observed_reply(gateway, data, status, envelope):
 
 def _shared_result(gateway, data, status, envelope, expected):
     project = envelope.get("project")
-    if project is not None and not _valid_receipt(project, expected):
+    if project is not None and not valid_project_receipt(project, expected):
         return _receipt_mismatch()
     if "result" in envelope and 200 <= status < 300:
         if project is None:
@@ -163,17 +157,8 @@ def _shared_result(gateway, data, status, envelope, expected):
 
 
 def _receipt_mismatch():
-    code = "project_receipt_mismatch"
-    message = "The API receipt does not identify the selected Project."
-    tool = ToolProtocolError(
-        code,
-        message,
-        {
-            "outcome": "failed",
-            "diagnostics": [f"{code}: {message}"],
-        },
-    )
-    return fault(code, status=502, tool=tool)
+    error = project_receipt_mismatch()
+    return fault(error.code, status=error.status_code, tool=error)
 
 
 async def _direct_result(gateway, data, expected):
@@ -224,13 +209,11 @@ async def _catalog(gateway, shared):
         status, envelope = await gateway.tool_rest("GET")
     except ToolProtocolError:
         return fault("shared_gateway_failure", status=503)
-    result = envelope.get("result")
-    if (
-        set(envelope) == {"result"}
-        and isinstance(result, dict)
-        and set(result) == {"tools"}
-        and isinstance(result["tools"], list)
-    ):
+    if 200 <= status < 300 and set(envelope) == {"result"}:
+        try:
+            parse_tool_catalog(envelope["result"])
+        except ValueError:
+            return fault("shared_gateway_failure", status=503)
         return JSONResponse(envelope, status_code=status)
     if set(envelope) == {"error", "project"} and _valid_fault(
         envelope["error"]
@@ -262,6 +245,8 @@ async def _invoke(request, gateway, shared):
         return fault("invalid_tool_request")
     if not shared:
         return await _direct_result(gateway, data, expected)
+    if len(content) > MAX_TOOL_REQUEST_BYTES:
+        return fault("invalid_tool_request")
     forwarded = {"Content-Type": "application/json"}
     if expected is not None:
         forwarded[INSTANCE_HEADER] = expected

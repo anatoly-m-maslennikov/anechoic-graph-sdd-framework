@@ -13,6 +13,7 @@ RUN, PAGE, CHECK, SCHEMA = (
 )
 SAVE_VIEW, LOAD, SAVED_LIST = "view_save", "query_load", "query_saved_list"
 REBUILD = "query_rebuild"
+ATOM_DOCUMENT = "iwe_console_atom_document"
 SYNC_STATUS, LEGACY_SYNC_STATUS = "iwe_console_status", "workbench_status"
 WORKSPACE_OPEN, WORKSPACE_LIST, WORKSPACE_GET = (
     "workspace_open",
@@ -60,6 +61,7 @@ NATIVE_TOOLS = (
     SYNC_STATUS,
     LEGACY_SYNC_STATUS,
     REBUILD,
+    ATOM_DOCUMENT,
 )
 
 _CURSOR = {"type": "integer", "minimum": 0}
@@ -239,6 +241,9 @@ _SAVE_VIEW_SCHEMA = {
 
 _DESCRIPTIONS = {
     RUN: "Run SQL. Automatic delivery returns small results inline and larger results as files.",
+    ATOM_DOCUMENT: (
+        "Read an admitted Atom revision and its authored Markdown body."
+    ),
     REBUILD: "Rebuild one query table or all query tables; return replacement result IDs.",
     LOAD: "Load an explicitly requested Bookmark or saved View.",
     SAVED_LIST: "List recent Bookmark and saved View metadata.",
@@ -277,6 +282,12 @@ def native_tools() -> tuple[types.Tool, ...]:
                QUERY_LOG_GET: _QUERY_LOG_GET_SCHEMA,
                SYNC_STATUS: _EMPTY_SCHEMA, LEGACY_SYNC_STATUS: _EMPTY_SCHEMA,
                REBUILD: {"type": "object", "properties": {"target": {"type": "string", "minLength": 1}}, "required": ["target"], "additionalProperties": False}}
+    schemas[ATOM_DOCUMENT] = {
+        "type": "object",
+        "properties": {"ref_id": {"type": "string"}},
+        "required": ["ref_id"],
+        "additionalProperties": False,
+    }
     writes = {
         RUN,
         SAVE_VIEW,

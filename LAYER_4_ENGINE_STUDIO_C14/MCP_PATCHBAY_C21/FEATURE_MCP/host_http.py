@@ -1,4 +1,4 @@
-"""Run local HTTP MCP with the beta runtime."""
+"""Run local HTTP MCP with the Current runtime."""
 
 import argparse
 import os
@@ -19,10 +19,8 @@ from MCP_PATCHBAY_C21.FEATURE_MCP.runtime_stack import runtime_stack
 
 
 def _serve(args):
-    os.environ.setdefault("ANECHOIC_RUNTIME_STACK", "beta_next")
+    runtime_stack()
     os.environ.setdefault("ANECHOIC_RUNTIME_PROFILE", "dev-local")
-    if runtime_stack() != "beta_next":
-        raise ValueError("Host HTTP requires ANECHOIC_RUNTIME_STACK=beta_next")
     selection = startup_selection(args.project_root)
     with native_runtime_gateway(selection) as gateway:
         app = create_app(

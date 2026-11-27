@@ -42,8 +42,13 @@ _TOOLS = {
         {"target": {}, "targetStatus": {}},
     ),
     "atom_lifecycle_update": (
-        "Create a Draft revision of a Current Atom.",
-        {"sourceCurrent": {}, "changes": {}},
+        "Create a Draft revision of a Current Atom or update an exact Draft.",
+        {
+            "sourceCurrent": {},
+            "target": {"type": "object"},
+            "changes": {},
+            "expectedUpdatedAt": {"type": "string"},
+        },
     ),
 }
 LIFECYCLE_TOOL_NAMES = frozenset(_TOOLS)

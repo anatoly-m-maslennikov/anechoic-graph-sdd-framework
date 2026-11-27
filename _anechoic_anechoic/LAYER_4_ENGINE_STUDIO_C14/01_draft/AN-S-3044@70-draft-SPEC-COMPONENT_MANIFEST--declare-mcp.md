@@ -49,7 +49,6 @@ ComponentManifest(
                                'docker.docker__shared.SharedMcpLauncher',
                                'docker.docker__shared.shared_mcp_main',
                                'docker.docker__shared.candidate_image_main',
-                               'docker.docker__shared.supervise_project',
                                'FEATURE_MCP.FEATURE_MCP__shared.BackendClient',
                                'FEATURE_MCP.FEATURE_MCP__shared.DirectGateway',
                                'FEATURE_MCP.FEATURE_MCP__shared.native_project_gateway',
@@ -137,7 +136,6 @@ ComponentManifest(
                                'FEATURE_MCP.FEATURE_MCP__shared.MCP_PATH',
                                'FEATURE_MCP.FEATURE_MCP__shared.WORKBENCH_PATH',
                                'FEATURE_MCP.FEATURE_MCP__shared.ExplicitStartupFailure',
-                               'FEATURE_MCP.FEATURE_MCP__shared.beta_runtime_arguments',
                                'FEATURE_MCP.FEATURE_MCP__shared.select_runtime_project',
                                'FEATURE_MCP.FEATURE_MCP__shared.ProjectBinding',
                                'FEATURE_MCP.FEATURE_MCP__shared.ProjectAdmissionError',
@@ -195,7 +193,6 @@ ComponentManifest(
                       'docker.docker__shared.SharedMcpLauncher': {'private': ['LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/FEATURE_MCP__tests']},
                       'docker.docker__shared.shared_mcp_main': {'private': ['LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/FEATURE_MCP__tests']},
                       'docker.docker__shared.candidate_image_main': {'private': ['LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/FEATURE_MCP__tests']},
-                      'docker.docker__shared.supervise_project': {'private': ['LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/FEATURE_MCP__tests']},
                       'FEATURE_MCP.FEATURE_MCP__shared.BackendClient': {'private': ['LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/FEATURE_MCP__tests']},
                       'FEATURE_MCP.FEATURE_MCP__shared.DirectGateway': {'private': ['LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/FEATURE_MCP__tests']},
                       'FEATURE_MCP.FEATURE_MCP__shared.native_project_gateway': {'private': ['LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/FEATURE_MCP__tests']},
@@ -239,8 +236,6 @@ ComponentManifest(
                       'FEATURE_MCP.FEATURE_MCP__tests.FEATURE_MCP__tests__shared.packaged_identity_reader': {'shared': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests']},
                       'FEATURE_MCP.FEATURE_MCP__shared.ExplicitStartupFailure': {'private': ['LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker',
                                                                                              'LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/FEATURE_MCP__tests']},
-                      'FEATURE_MCP.FEATURE_MCP__shared.beta_runtime_arguments': {'private': ['LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker',
-                                                                                              'LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/FEATURE_MCP__tests']},
                       'FEATURE_MCP.FEATURE_MCP__shared.select_runtime_project': {'private': ['LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker',
                                                                                              'LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/FEATURE_MCP__tests']},
                       'FEATURE_MCP.FEATURE_MCP__shared.ProjectBinding': {'private': ['LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker',
@@ -328,32 +323,10 @@ ComponentManifest(
                                           'path': '/anechoic/mcp',
                                           'protocol': 'mcp'}},
         'client': [{'component': 'C45', 'interface': 'project_admission'},
-                   {'component': 'C53',
-                    'interface': 'project_admission',
-                    'stack': 'beta_next'},
                    {'component': 'C45', 'interface': 'tool_api'},
                    {'component': 'C45',
                     'interface': 'shared_tool_coordinator'},
                    {'component': 'C45', 'interface': 'workbench_api'},
-                   {'component': 'C91',
-                    'interface': 'project_api',
-                    'stack': 'beta_next',
-                    'caller': 'direct runtime and packaged Project '
-                              'supervisor'},
-                   {'component': 'C91',
-                    'interface': 'shared_api',
-                    'stack': 'beta_next',
-                    'caller': 'packaged shared runtime supervisor and '
-                              'Tool REST bridge'},
-                   {'component': 'C68',
-                    'interface': 'project_peer_owner',
-                    'stack': 'beta_next',
-                    'caller': 'direct runtime and packaged Project '
-                              'supervisor'},
-                   {'component': 'C68',
-                    'interface': 'shared_peer_owner',
-                    'stack': 'beta_next',
-                    'caller': 'packaged shared runtime supervisor'},
                    {'component': 'C30', 'interface': 'guarded_read'},
                    {'component': 'C50',
                     'interface': 'image_model_stage'}]},
@@ -364,8 +337,7 @@ ComponentManifest(
            'writes': ['Project launcher lock and readiness receipts',
                       'disposable image build context and image ID',
                       'bounded transport health observations',
-                      'parent pipes for packaged Beta peer owners and API '
-                      'processes']}}
+                      'parent pipe for the shared Backend process']}}
 ```
 
 ## Component Contract
@@ -397,12 +369,11 @@ AN-S-1381, AN-S-1391, AN-S-3044, and AN-T-2944.
 #### Guarantee
 
 Serve `GET /tools` and `POST /tools` on the Console origin. In shared
-`beta_next` mode, forward both operations to the C91 shared API on its
-private Unix socket. MCP loads its catalog from C91 at startup and uses
-the same invocation operation. The Current stack uses its compatibility
-Backend for these public routes.
+mode, forward both operations to the C45 shared Tool coordinator on its
+private Unix socket. MCP loads its catalog from the coordinator at startup
+and uses the same invocation operation.
 
-C91 owns the shared catalog, Tool validation, Tool dispatch, and Project
+C45 owns the shared catalog, Tool validation, Tool dispatch, and Project
 admission. C21 checks the HTTP transport and the returned Project receipt.
 
 In each admitted Console page, set the `anechoic-project-instance` meta
@@ -412,7 +383,9 @@ Forward the canonical invocation fields `name`, `arguments`, `session_id`,
 and `public_base_url`. For public HTTP, derive `public_base_url` from the
 admitted request origin. Forward `X-Anechoic-Project-Instance` when
 present. Require same-origin requests when the browser supplies origin
-information. Accept JSON bodies up to 65,536 bytes at the HTTP boundary.
+information. Limit both the incoming JSON body and the forwarded shared
+invocation to 65,536 bytes. Measure the forwarded body after inserting
+the admitted origin.
 
 For shared `GET /tools`, require a list of valid Tool descriptors. For
 shared `POST /tools`, preserve a valid Backend result or typed refusal
@@ -430,15 +403,15 @@ name unchanged to the Backend. The Backend decides Tool eligibility.
 
 #### References
 
-AN-S-4809@6 and AN-T-4085@1-draft.
+AN-S-3059@61 and AN-T-4085@1-draft.
 
 ```python trace
 declare_trace_contract(
     action='forward_tool_rest',
-    cases={'shared_catalog': {'must_effect': (('C91.shared_api',
+    cases={'shared_catalog': {'must_effect': (('C45.shared_tool_coordinator',
                                      'catalog',
                                      {'endpoint': 'GET /tools'}),)},
- 'shared_invocation': {'must_effect': (('C91.shared_api',
+ 'shared_invocation': {'must_effect': (('C45.shared_tool_coordinator',
                                         'invoke',
                                         {'endpoint': 'POST '
                                                      '/tools'}),)},
@@ -449,7 +422,7 @@ declare_trace_contract(
                                         'invoke',
                                         {'endpoint': 'POST '
                                                      '/tools'}),)},
- 'transport_refused': {'forbid_effect': ('C91.shared_api',
+ 'transport_refused': {'forbid_effect': ('C45.shared_tool_coordinator',
                                          'bound_backend_client')},
  'legacy_forwarded': {'must_effect': (('Backend.tool_dispatch',
                                        'invoke'),),
@@ -458,36 +431,36 @@ declare_trace_contract(
                       'value_types': {('legacy_interface', 'name'): 'string',
                                       ('legacy_dispatch', 'name'): 'string'}},
  'legacy_refused': {'forbid_effect': ('Backend.tool_dispatch',)},
- 'shared_receipt_refused': {'must_effect': (('C91.shared_api',
+ 'shared_receipt_refused': {'must_effect': (('C45.shared_tool_coordinator',
                                              'invoke',
                                              {'endpoint': 'POST '
                                                           '/tools'}),
                                             ('C21.tool_rest_reply',
                                              'refused',
                                              {'status': 502})),
-                            'must_precede': ((('C91.shared_api',
+                            'must_precede': ((('C45.shared_tool_coordinator',
                                                'invoke'),
                                               ('C21.tool_rest_reply',
                                                'refused')),)},
- 'shared_reply_invalid': {'must_effect': (('C91.shared_api',
+ 'shared_reply_invalid': {'must_effect': (('C45.shared_tool_coordinator',
                                            'invoke',
                                            {'endpoint': 'POST '
                                                         '/tools'}),
                                           ('C21.tool_rest_reply',
                                            'refused',
                                            {'status': 503})),
-                          'must_precede': ((('C91.shared_api',
+                          'must_precede': ((('C45.shared_tool_coordinator',
                                              'invoke'),
                                             ('C21.tool_rest_reply',
                                              'refused')),)},
- 'shared_catalog_invalid': {'must_effect': (('C91.shared_api',
+ 'shared_catalog_invalid': {'must_effect': (('C45.shared_tool_coordinator',
                                              'catalog',
                                              {'endpoint': 'GET '
                                                           '/tools'}),
                                             ('C21.tool_rest_reply',
                                              'refused',
                                              {'status': 503})),
-                            'must_precede': ((('C91.shared_api',
+                            'must_precede': ((('C45.shared_tool_coordinator',
                                                'catalog'),
                                               ('C21.tool_rest_reply',
                                                'refused')),)}},

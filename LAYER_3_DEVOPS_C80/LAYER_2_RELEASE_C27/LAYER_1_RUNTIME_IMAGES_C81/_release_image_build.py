@@ -24,10 +24,6 @@ _PRUNE_BUILD_CACHE = (
 )
 
 
-def _candidate_role(identity: ImageIdentity) -> str:
-    return {"current": "test", "beta_next": "beta-next"}[identity.stack]
-
-
 def _remove_finder_metadata(path: Path) -> bool:
     if path.name == ".DS_Store":
         try:
@@ -102,7 +98,7 @@ class ImageBuild:
         if self.identity(use_packaged_assets=True) != identity:
             raise RuntimeError("image inputs changed")
 
-    def _run_build(self, context, buildx, iidfile, label_args, identity):
+    def _run_build(self, context, buildx, iidfile, label_args):
         self._run(
             (
                 "docker",
@@ -112,11 +108,6 @@ class ImageBuild:
                 *label_args,
                 "--platform",
                 self.platform,
-                *(
-                    ("--target", identity.stack)
-                    if identity.stack != "current"
-                    else ()
-                ),
                 "--build-arg",
                 f"RUNTIME_UID={self.uid}",
                 "--build-arg",
@@ -161,11 +152,10 @@ class ImageBuild:
                 for key, value in labels.items()
                 for arg in ("--label", f"{key}={value}")
             )
-            role = _candidate_role(identity)
             iidfile = stage / "image.id"
             self._run(_PRUNE_BUILD_CACHE, cwd=context, buildx=buildx)
             self._verify_context(context, identity)
-            self._run_build(context, buildx, iidfile, label_args, identity)
+            self._run_build(context, buildx, iidfile, label_args)
             if (
                 iidfile.is_symlink()
                 or not iidfile.is_file()
@@ -179,5 +169,5 @@ class ImageBuild:
             self._verify_context(context, identity)
             if self.identity(use_packaged_assets=True) != identity:
                 raise RuntimeError("image inputs changed")
-            self._tag(image, role)
+            self._tag(image, "test")
             return image

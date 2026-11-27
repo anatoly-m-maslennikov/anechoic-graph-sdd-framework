@@ -13,7 +13,7 @@ from uuid import uuid4
 
 import httpx2
 
-from .FEATURE_MCP__tests__shared import project
+from .example_project import project
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import MCP_PATH
 
 ENGINE = Path(__file__).resolve().parents[3]
@@ -28,15 +28,11 @@ class HttpRequestBodyLimitTests(unittest.TestCase):
             probe.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             probe.bind(("0.0.0.0", 8092))
         root = Path(cls.enterClassContext(tempfile.TemporaryDirectory())).resolve()
-        project(root)
+        task = project(root)
         marker = uuid4().hex
-        task = root / "_anechoic_anechoic/__TICKETS/TASKS/AN-T-9999999-TASK--probe.md"
-        task.parent.mkdir(parents=True, exist_ok=True)
-        task.write_text("---\natom_family: TKT\natom_id: AN-T-9999999\ncontainer: {component: C00}\n"
-                        "priority: 2\ncontext: {template: task}\nstate: {status: active, version: 1, "
-                        "updated_at: '2026-11-22T00:00:00Z'}\n---\n\n## Summary\n\n" + marker + "\n")
+        task.write_text(task.read_text().replace("Example task", marker))
         log = cls.enterClassContext(tempfile.TemporaryFile(mode="w+"))
-        environment = {**os.environ, "PYTHONPATH": str(ENGINE), "ANECHOIC_RUNTIME_STACK": "beta_next",
+        environment = {**os.environ, "PYTHONPATH": str(ENGINE), "ANECHOIC_RUNTIME_STACK": "current",
                        "PYTHONDONTWRITEBYTECODE": "1", "ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY": os.environ.get(
                            "ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY", str(ENGINE.parent / ".anechoic_tmp/workbench/extensions"))}
         cls.process = subprocess.Popen(
@@ -54,8 +50,8 @@ class HttpRequestBodyLimitTests(unittest.TestCase):
             try:
                 response = cls.client.get("/anechoic/health")
                 if response.status_code == 200 and response.json().get("state") == "ready":
-                    identity = cls.client.post("/anechoic/Anechoic/api/run", json={
-                        "sql": "SELECT \"content.summary\" FROM atoms WHERE reference='AN-T-9999999'",
+                    identity = cls.client.post("/anechoic/Example/api/run", json={
+                        "sql": "SELECT \"content.summary\" FROM atoms WHERE reference='EX-T-1'",
                         "result_delivery": "inline",
                     })
                     if (identity.status_code == 200 and identity.json().get("rows") == [[marker]]

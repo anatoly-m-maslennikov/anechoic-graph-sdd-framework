@@ -12,6 +12,7 @@ from MCP_PATCHBAY_C21.FEATURE_MCP.direct_gateway import (
     startup_selection,
 )
 from MCP_PATCHBAY_C21.FEATURE_MCP.mcp_startup_boundary import run_startup
+from MCP_PATCHBAY_C21.FEATURE_MCP.runtime_stack import runtime_stack
 
 
 def _serve_stdio(args, *, gateway_factory=None):
@@ -20,7 +21,7 @@ def _serve_stdio(args, *, gateway_factory=None):
             gateway_factory(args.project_root, args.control_root).serve()
         )
         return
-    os.environ.setdefault("ANECHOIC_RUNTIME_STACK", "beta_next")
+    runtime_stack()
     os.environ.setdefault("ANECHOIC_RUNTIME_PROFILE", "dev-local")
     selection = startup_selection(
         args.project_root,

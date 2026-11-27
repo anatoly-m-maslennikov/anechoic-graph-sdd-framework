@@ -25,31 +25,6 @@ IMAGE_ID = "sha256:" + "a" * 64
 
 
 
-BETA_NEXT_REQUIRED_FIXTURE_FILES = (
-    "FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/LAYER_2_FORMAL_MODEL_C51/FEATURE_MODEL_VALIDATION/project_admission__pub.py",
-    "FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ADAPTERS_C30/native_snapshot_cli.py",
-    "IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IMPORT_GRAPH_C61/realization_graph_cli.py",
-    "KERNEL_MIXER_beta_C67/DATABASE_SERVER_beta_C71/DATABASE_SERVER_beta_C71__shared.py",
-    "ORCHESTRATOR_beta_C68/ORCHESTRATOR_beta_C68__shared.py",
-    "ORCHESTRATOR_beta_C68/warm_worker.py",
-    "WORKERS_beta_C69/WORKERS_beta_C69__shared.py",
-    "WORKERS_beta_C69/warm_worker.py",
-    "ORCHESTRATOR_beta_C68/project_peer_owner.py",
-    "ORCHESTRATOR_beta_C68/shared_peer_owner.py",
-    "API_MIXER_beta_C91/API_MIXER_beta_C91__shared.py",
-    "API_MIXER_beta_C91/shared_runtime.py",
-)
-
-_FRONTEND = (
-    "IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_FRONTEND/index.html"
-)
-_CURRENT_ONLY = (
-    "IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_BACKEND/legacy.py",
-    "KERNEL_MIXER_C59/legacy.py",
-)
-_RETIRED_BACKEND = "WORKBENCH_BACKEND_beta_C70/query_run.json"
-
-
 class LifecycleImageAssetsTests(unittest.TestCase):
     def assert_source_layer_identity(self, root, manager, before):
         delivery = root / "LAYER_2_META_METHODOLOGY_C58/AN-S-1-source.md"
@@ -97,74 +72,27 @@ class LifecycleImageAssetsTests(unittest.TestCase):
                 "LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/project.toml",
                 {entry.path for entry in selected.manifest},
             )
-            self.assert_beta_next_closure(root, manager, selector)
-            docker.assert_not_called()
-            selector.write_text('stack = "current"\nextra = true\n')
-            with self.assertRaisesRegex(images.ImageError, "must specify"):
-                manager.identity()
-
-    def assert_beta_next_closure(self, root, manager, selector):
-        engine = root / image_inputs.ENGINE_ROOT
-        for name in (*BETA_NEXT_REQUIRED_FIXTURE_FILES, _FRONTEND, *_CURRENT_ONLY, _RETIRED_BACKEND):
-            path = engine / name
-            path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_text("fixture")
-        baseline = manager.identity(use_packaged_assets=True)
-        selector.write_text('stack = "beta"\n')
-        with self.assertRaisesRegex(images.ImageError, "must specify"):
-            manager.resolve()
-        selector.write_text('stack = "beta_next"\n')
-        with (patch.object(manager, "_refresh_model", side_effect=AssertionError),
-              patch.object(images, "_compile_tool_registry", side_effect=AssertionError)):
-            candidate = manager.identity()
-        engine_name = image_inputs.ENGINE_ROOT + "/"
-        expected = {entry.path for entry in baseline.manifest} - {
-            images.TOOL_REGISTRY,
-            *(engine_name + name for name in _CURRENT_ONLY),
-        }
-        expected.update(
-            engine_name + name for name in BETA_NEXT_REQUIRED_FIXTURE_FILES
-        )
-        self.assertEqual(
-            expected, {entry.path for entry in candidate.manifest}
-        )
-        self.assertNotEqual(baseline.fingerprint, candidate.fingerprint)
-        self.assertEqual("beta-next", manager._identity_role(candidate))
-        self.assert_beta_next_build_context(root, manager, candidate, expected)
-        retired = engine / _RETIRED_BACKEND
-        retired.write_text("excluded change")
-        self.assertEqual(candidate, manager.identity(use_packaged_assets=True))
-        retired.unlink()
-        retired.parent.rmdir()
-        self.assertEqual(candidate, manager.identity(use_packaged_assets=True))
-        for name in BETA_NEXT_REQUIRED_FIXTURE_FILES:
-            with self.subTest(required=name):
-                path = engine / name
-                path.write_text("candidate change")
-                self.assertNotEqual(candidate.fingerprint, manager.identity(use_packaged_assets=True).fingerprint)
-                path.unlink()
-                with self.assertRaises(images.ImageError):
-                    manager.identity(use_packaged_assets=True)
-                path.write_text("fixture")
-
-    def assert_beta_next_build_context(self, root, manager, candidate, paths):
-        context = root / "context-beta-next"
-        context.mkdir()
-        manager._assemble(context, candidate)
-        self.assertEqual("beta_next", manager._stack_input(context)[0])
-        self.assertEqual(paths, {p.relative_to(context).as_posix() for p in context.rglob("*") if p.is_file()})
-        with (patch.object(manager, "_build_parent", return_value=root),
-              patch.object(manager, "_current"),
-              patch.object(manager, "_run", side_effect=[None, RuntimeError("captured")]) as run):
-            with self.assertRaisesRegex(RuntimeError, "captured"):
-                manager._build(candidate, use_packaged_assets=False)
-            command = run.call_args.args[0]
+            context = root / "context"
+            context.mkdir()
+            manager._assemble(context, selected)
             self.assertEqual(
-                "beta_next", command[command.index("--target") + 1]
+                {entry.path for entry in selected.manifest},
+                {
+                    path.relative_to(context).as_posix()
+                    for path in context.rglob("*")
+                    if path.is_file()
+                },
             )
-            self.assertIn(
-                f"{images.FINGERPRINT_LABEL}={candidate.fingerprint}", command
-            )
+            for invalid_selector in (
+                'stack = "beta"\n',
+                'stack = "beta_next"\n',
+                'stack = "current"\nextra = true\n',
+            ):
+                with self.subTest(selector=invalid_selector):
+                    selector.write_text(invalid_selector)
+                    with self.assertRaisesRegex(images.ImageError, "must specify"):
+                        manager.resolve()
+            docker.assert_not_called()
 
     def test_registry_generator_stages_backend_assets_without_touching_source(
         self,

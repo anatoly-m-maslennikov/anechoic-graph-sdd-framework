@@ -27,10 +27,7 @@ from ._image_identity_constants import (
     _EXCLUDED as _EXCLUDED,
     _SECRETS as _SECRETS,
     _REQUIRED as _REQUIRED,
-    _BETA_ROOTS as _BETA_ROOTS,
-    _BETA_REQUIRED as _BETA_REQUIRED,
     _BETA_DIRECTORY as _BETA_DIRECTORY,
-    _CURRENT_ONLY as _CURRENT_ONLY,
 )
 
 
@@ -48,23 +45,10 @@ def _excluded(name: str) -> bool:
     )
 
 
-def _include_engine_directory(
-    path: Path, engine: Path, stack: str, beta_components: frozenset[str]
-) -> bool:
-    if _excluded(path.name):
-        return False
-    relative = path.relative_to(engine)
-    if stack != "current" and relative.as_posix() in _CURRENT_ONLY:
-        return False
-    if _BETA_DIRECTORY.search(path.name) is None:
-        return True
-    return stack != "current" and relative.parts[0] in beta_components
-
-
-def _stack_selector(root: Path) -> tuple[Path | None, str, str | None]:
+def _stack_selector(root: Path) -> tuple[Path | None, str | None]:
     path = root / SELECTOR
     if not os.path.lexists(path):
-        return None, "current", None
+        return None, None
     try:
         if path.parent.is_symlink() or path.is_symlink():
             raise ValueError
@@ -82,17 +66,13 @@ def _stack_selector(root: Path) -> tuple[Path | None, str, str | None]:
         if len(data) > 65536:
             raise ValueError
         document = tomllib.loads(data.decode("utf-8"))
-        if set(document) != {"stack"} or document["stack"] not in (
-            "current",
-            "beta_next",
-        ):
+        if document != {"stack": "current"}:
             raise ValueError
     except (OSError, UnicodeError, ValueError, TypeError) as error:
         raise ValueError(
-            'invalid project.toml: expected only stack = "current" '
-            'or "beta_next"'
+            'invalid project.toml: expected only stack = "current"'
         ) from error
-    return path, document["stack"], hashlib.sha256(data).hexdigest()
+    return path, hashlib.sha256(data).hexdigest()
 
 
 @dataclass(frozen=True, config=ConfigDict(strict=True, extra="forbid"))
@@ -103,7 +83,7 @@ class ImageIdentity:
     stack: str
 
 
-def _engine_files(root, stack, beta_components, fail):
+def _engine_files(root, fail):
     engine = root / ENGINE
     paths = []
     for current, directories, names in os.walk(
@@ -113,9 +93,7 @@ def _engine_files(root, stack, beta_components, fail):
         directories[:] = sorted(
             name
             for name in directories
-            if _include_engine_directory(
-                directory / name, engine, stack, beta_components
-            )
+            if not _excluded(name) and _BETA_DIRECTORY.search(name) is None
         )
         if any(
             name == ".runtime" or name.startswith(".env")
@@ -170,16 +148,8 @@ class ImageInputIdentity:
         root = self.source_root
         if root.is_symlink() or not root.is_dir() or root.resolve() != root:
             raise ValueError("image source unavailable")
-        selector, stack, selector_digest = _stack_selector(root)
-        beta_components, stack_required = (
-            (_BETA_ROOTS, _BETA_REQUIRED)
-            if stack == "beta_next"
-            else (frozenset(), ())
-        )
-        required = (
-            _REQUIRED[:-1] + stack_required if beta_components else _REQUIRED
-        )
-        for relative in required:
+        selector, selector_digest = _stack_selector(root)
+        for relative in _REQUIRED:
             path = root / relative
             if (
                 any(
@@ -193,16 +163,16 @@ class ImageInputIdentity:
         def fail(error):
             raise error
 
-        paths = _engine_files(root, stack, beta_components, fail)
+        paths = _engine_files(root, fail)
         source_map = self._delivery_sources(root, fail)
         self._source_map = source_map
         files = sorted(
             set(paths)
-            | {root / relative for relative in required}
+            | {root / relative for relative in _REQUIRED}
             | ({selector} if selector else set()),
             key=lambda p: p.relative_to(root).as_posix(),
         )
-        return files, (selector, stack, selector_digest), source_map
+        return files, (selector, selector_digest), source_map
 
     def _delivery_sources(self, root, fail):
         if self.source_provider is None:
@@ -305,11 +275,11 @@ class ImageInputIdentity:
                 raise ValueError("image delivery sources changed")
             if _stack_selector(self.source_root) != selection or (
                 selection[0] is not None
-                and (SELECTOR, selection[2])
+                and (SELECTOR, selection[1])
                 not in {(path, digest) for path, digest, _ in manifest}
             ):
                 raise ValueError("image stack selection changed")
             fingerprint = self._fingerprint(manifest)
-            return ImageIdentity(fingerprint, version, manifest, selection[1])
+            return ImageIdentity(fingerprint, version, manifest, "current")
         except (OSError, UnicodeError, KeyError, TypeError) as error:
             raise ValueError("image source unavailable") from error

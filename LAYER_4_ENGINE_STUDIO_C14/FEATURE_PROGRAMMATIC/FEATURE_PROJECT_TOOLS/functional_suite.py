@@ -16,7 +16,7 @@ MCP_TESTS = APP / (APP.name + "__tests")
 _FAST_BOUNDARY = MCP_TESTS / "image/test_packaged_boundary_docker_e2e.py"
 _FAST_IMAGE_MODULES = (
     _FAST_BOUNDARY.as_posix(),
-    (MCP_TESTS / "test_beta_project_supervision_docker_e2e.py").as_posix(),
+    (MCP_TESTS / "test_project_http_docker_e2e.py").as_posix(),
 )
 _CANARY_TEST_DIRECTORY = (
     "LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEAT"

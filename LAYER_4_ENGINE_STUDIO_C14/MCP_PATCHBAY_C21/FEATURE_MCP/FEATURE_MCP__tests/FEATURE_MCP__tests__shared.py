@@ -65,9 +65,10 @@ def project(root):
             shutil.copy2(path, dest / path.name)
     (control / "LAYER_4_ENGINE_STUDIO_C14").mkdir()
     selection = select_runtime_project(root, CONTROL)
-    for relative in selection.parameters["runtime"]["iwe_console"][
-        "import_graph"
-    ].get("python_roots", ()):
+    import_graph = selection.parameters["runtime"]["iwe_console"].get(
+        "import_graph", {}
+    )
+    for relative in import_graph.get("python_roots", ()):
         (root / relative).mkdir(parents=True, exist_ok=True)
     return selection
 

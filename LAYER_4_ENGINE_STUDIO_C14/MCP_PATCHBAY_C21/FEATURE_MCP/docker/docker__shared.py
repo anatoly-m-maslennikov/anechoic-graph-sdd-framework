@@ -33,9 +33,6 @@ from MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime import Runtime as Runtime
 from MCP_PATCHBAY_C21.FEATURE_MCP.docker.shared_mcp_launcher import (
     SharedMcpLauncher as SharedMcpLauncher,
 )
-from MCP_PATCHBAY_C21.FEATURE_MCP.docker.shared_supervisor import (
-    supervise_project as supervise_project,
-)
 
 try:
     from .project_mcp_docker_command import BackendError as BackendError
@@ -79,7 +76,7 @@ try:
         ENGINE_ROOT as ENGINE_ROOT, RETIRED_ASSETS as RETIRED_ASSETS,
         _REQUIRED as _REQUIRED, ready_predecessor as ready_predecessor,
     )
-    from .runtime_images_source import ImageSource
+    from .runtime_images_source import ImageSource, _RELEASE_SELECTOR
     from .runtime_images_build import ImageBuild
 except ImportError:
     from MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_images_common import (
@@ -89,7 +86,7 @@ except ImportError:
         ENGINE_ROOT as ENGINE_ROOT, RETIRED_ASSETS as RETIRED_ASSETS,
         _REQUIRED as _REQUIRED, ready_predecessor as ready_predecessor,
     )
-    from MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_images_source import ImageSource
+    from MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_images_source import ImageSource, _RELEASE_SELECTOR
     from MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_images_build import ImageBuild
 
 candidate_image_main = _candidate_image_cli.main
@@ -150,27 +147,23 @@ class ImageManager(ImageSource, ImageBuild):
         root = self._root()
         try:
             version = read_framework_version(self._file(root, "version.toml"))
-            stack_input = self._stack_input(root)
-            stack, _, selector_sha256 = stack_input
-            files = self._files(root, stack_input)
+            selector, selector_sha256 = self._selector_input(root)
+            files = self._files(root, selector)
             model_sha256 = None
-            tools = b""
-            if stack == "current":
-                if use_packaged_assets:
-                    tools = self._file(root, TOOL_REGISTRY).read_bytes()
-                else:
-                    model_sha256 = self._refresh_model(root)
-                    tools = _compile_tool_registry(root, timeout=self.timeout, max_output=_MAX_OUTPUT)
-                if not tools:
-                    raise self._input_error()
+            if use_packaged_assets:
+                tools = self._file(root, TOOL_REGISTRY).read_bytes()
+            else:
+                model_sha256 = self._refresh_model(root)
+                tools = _compile_tool_registry(root, timeout=self.timeout, max_output=_MAX_OUTPUT)
+            if not tools:
+                raise self._input_error()
             rows = [BuildInput(path.relative_to(root).as_posix(),
                                hashlib.sha256(path.read_bytes()).hexdigest(),
                                path.stat().st_mode & 0o777)
                     for path in files]
-            if next((row.sha256 for row in rows if row.path == "LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/project.toml"), None) != selector_sha256:
+            if next((row.sha256 for row in rows if row.path == _RELEASE_SELECTOR), None) != selector_sha256:
                 raise self._input_error()
-            if stack == "current":
-                rows.append(BuildInput(TOOL_REGISTRY, hashlib.sha256(tools).hexdigest(), 0o644))
+            rows.append(BuildInput(TOOL_REGISTRY, hashlib.sha256(tools).hexdigest(), 0o644))
             rows = tuple(sorted(rows, key=lambda row: row.path))
         except (OSError, ValueError, UnicodeError, subprocess.SubprocessError) as error:
             raise self._input_error() from error
@@ -265,12 +258,11 @@ class ImageManager(ImageSource, ImageBuild):
     def mark_production_image(self, image: str) -> str:
         return set_display_role(self._run, image, "prod", lambda message: ImageError("IMAGE_REFUSED", message))
 
-    def _identity_role(self, identity: ImageIdentity) -> str:
-        stack, _, digest = self._stack_input(self._root())
-        expected = next((row.sha256 for row in identity.manifest if row.path == "LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/project.toml"), None)
+    def _verify_selector(self, identity: ImageIdentity) -> None:
+        _, digest = self._selector_input(self._root())
+        expected = next((row.sha256 for row in identity.manifest if row.path == _RELEASE_SELECTOR), None)
         if digest != expected:
             raise self._input_error()
-        return "beta-next" if stack == "beta_next" else "test"
 
     def _current(
         self, identity: ImageIdentity, *, use_packaged_assets: bool = False
@@ -316,5 +308,6 @@ class ImageManager(ImageSource, ImageBuild):
                              for compact in (False, True))
         except ValueError as error:
             raise ImageError("IMAGE_REFUSED", "Display tag metadata is invalid") from error
-        self.ensure_display_tag(image, identity.version, created, role="prod" if production else self._identity_role(identity))
+        self._verify_selector(identity)
+        self.ensure_display_tag(image, identity.version, created, role="prod" if production else "test")
         return image

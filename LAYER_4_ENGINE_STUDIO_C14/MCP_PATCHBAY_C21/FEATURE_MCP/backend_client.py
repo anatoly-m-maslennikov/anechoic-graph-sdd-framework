@@ -14,7 +14,6 @@ import httpx2
 from MCP_PATCHBAY_C21.FEATURE_MCP.runtime_request_context import (
     current_request_context,
 )
-from MCP_PATCHBAY_C21.FEATURE_MCP.runtime_stack import beta_runtime_arguments, runtime_stack
 
 
 _MODULE = "IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.backend_process"
@@ -50,7 +49,10 @@ class ToolProtocolError(RuntimeError):
             and isinstance(fault.get("message"), str)
         ):
             return cls(
-                fault["code"], fault["message"], result, status_code=status_code
+                fault["code"],
+                fault["message"],
+                result,
+                status_code=status_code,
             )
         return cls("tool_runtime_failure", "Invalid Backend response")
 
@@ -117,16 +119,7 @@ class BackendClient:
             raise RuntimeError(
                 "Workbench Backend reported a different Project binding"
             )
-        elif runtime_stack() == "beta_next" and response.status_code == 200:
-            if state in ("pending", "degraded"):
-                return state
-            if state == "ready":
-                _validate_kernel_readiness(observed)
-        elif (
-            state is None
-            and runtime_stack() == "current"
-            and observed.get("ready") is True
-        ):
+        elif state is None and observed.get("ready") is True:
             state = "ready"
         if response.status_code != 200 or state != "ready":
             raise RuntimeError(
@@ -259,58 +252,17 @@ def _current_arguments(selection, socket, workbench_storage, journal_storage):
 
 
 def _start(selection, socket, workbench_storage, journal_storage):
-    stack = runtime_stack()
     engine = Path(__file__).resolve().parents[2]
     root = engine.parent
     environment = {
         **{k: v for k, v in os.environ.items() if k != "PYTHONHOME"},
         "PYTHONPATH": str(engine),
     }
-    if stack == "beta_next":
-        args = beta_runtime_arguments(
-            selection, socket, workbench_storage, journal_storage
-        )
-        args += ["--role", "api"]
-    else:
-        args = _current_arguments(
-            selection, socket, workbench_storage, journal_storage
-        )
+    args = _current_arguments(selection, socket, workbench_storage, journal_storage)
     command = [sys.executable, "-B", "-P", "-m", *args]
     return subprocess.Popen(
         command, cwd=root, env=environment, stdin=subprocess.PIPE, stdout=2
     )
-
-
-def _stop_owner(owner):
-    owner.stdin.close()
-    try:
-        owner.wait(timeout=15)
-    except subprocess.TimeoutExpired:
-        owner.terminate()
-        try:
-            owner.wait(timeout=5)
-        except subprocess.TimeoutExpired:
-            owner.kill()
-            owner.wait()
-
-
-def _start_owner(selection, socket, workbench_storage, journal_storage, stack):
-    args = beta_runtime_arguments(selection, socket, workbench_storage, journal_storage)
-    args[0] = "ORCHESTRATOR_beta_C68.project_peer_owner"
-    engine = Path(__file__).resolve().parents[2]
-    environment = {**{k: v for k, v in os.environ.items() if k != "PYTHONHOME"}, "PYTHONPATH": str(engine)}
-    owner = subprocess.Popen([sys.executable, "-B", "-P", "-m", *args],
-                             cwd=engine.parent, env=environment, stdin=subprocess.PIPE, stdout=2)
-    stack.callback(_stop_owner, owner)
-    deadline = monotonic() + _STARTUP_SECONDS
-    bounded = os.getenv("ANECHOIC_TEST_IMAGE_DEADLINES") != "0"
-    while not bounded or monotonic() < deadline:
-        if owner.poll() is not None:
-            break
-        if (socket.parent / "peers.ready").is_file():
-            return
-        sleep(0.05)
-    raise RuntimeError("Beta peer owner did not start")
 
 
 @contextmanager
@@ -328,8 +280,6 @@ def backend_client(selection, *, workbench_storage=None, journal_storage=None, b
             transport = httpx2.HTTPTransport(uds=str(socket), limits=limits)
         http = stack.enter_context(httpx2.Client(transport=transport, base_url="http://anechoic-backend",
                                                trust_env=False, timeout=None))
-        if backend_socket is None and runtime_stack() == "beta_next":
-            _start_owner(selection, socket, workbench_storage, journal_storage, stack)
         process = _start(selection, socket, workbench_storage, journal_storage) if backend_socket is None else None
         client = BackendClient(selection, process, http)
         try:

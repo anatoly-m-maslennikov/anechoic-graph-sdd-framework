@@ -1,6 +1,5 @@
 """Check the native Import Graph through a disposable Docker Workbench."""
 
-import json
 import os
 from pathlib import Path
 import re
@@ -301,30 +300,10 @@ class NativeImportGraphDockerE2E(
         self.assertEqual((200, {"state": "ready"}), request(self.url + HEALTH_PATH))
 
     def test_ignored_files_and_parse_errors_appear_as_expected(self):
-        def foreground_warnings():
-            logs = subprocess.run(["docker", "logs", self.container],
-                                  capture_output=True, text=True, check=True, timeout=image_timeout(10))
-            self.assertNotIn("import graph: policy.py: parse error:", logs.stderr)
-            records = (json.loads(line) for line in logs.stderr.splitlines()
-                       if line.startswith("{") and '"worker_stderr_present"' in line)
-            return {record.get("correlation_id"): record for record in records
-                    if record.get("code") == "worker_stderr_present"
-                    and record.get("details", {}).get("phase") == "foreground"}
-
-        before = foreground_warnings()
         self._write("generated/ignored.py", "import dep\n")
         self._write("policy.py", "import\n")
         sql = "SELECT relative_path, scan_status FROM import_nodes WHERE relative_path IN ('policy.py', 'generated/ignored.py')"
         self._wait_rows(sql, [["policy.py", "parse_error"]])
-        after = foreground_warnings()
-        new_runs = after.keys() - before.keys()
-        self.assertTrue(new_runs, after)
-        for run_id in new_runs:
-            warning = after[run_id]
-            self.assertRegex(run_id or "", r"^[0-9a-f]{32}$")
-            self.assertRegex(warning["timestamp"], r"Z$")
-            self.assertEqual(("WARNING", "C68", "worker_stderr_present", "capture", "degraded", {"phase": "foreground"}),
-                             tuple(warning[key] for key in ("severity", "component", "event", "operation", "outcome", "details")))
         self._write("policy.py", "import dep\n")
         self._wait_rows(sql, [["policy.py", "parsed"]])
         ignore = self._write(".gitignore", "policy.py\n")

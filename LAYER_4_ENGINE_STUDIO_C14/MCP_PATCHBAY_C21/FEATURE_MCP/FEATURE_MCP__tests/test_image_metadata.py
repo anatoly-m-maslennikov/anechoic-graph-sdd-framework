@@ -16,7 +16,6 @@ from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import (
 )
 from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import DOCKERFILE, DOCKERIGNORE, LICENSE_INPUTS
 import MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared as runtime_images
-from .test_runtime_image_assets import BETA_NEXT_REQUIRED_FIXTURE_FILES
 
 APP = Path(__file__).resolve().parents[1]
 
@@ -123,67 +122,21 @@ class ImageMetadataTests(unittest.TestCase):
             path = self.root / relative
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(content, encoding="utf-8")
-    def _select_beta_next(self) -> None:
-        (self.root / "LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27").mkdir(parents=True, exist_ok=True)
-        (self.root / "LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/project.toml").write_text('stack = "beta_next"\n')
-        engine = self.root / "LAYER_4_ENGINE_STUDIO_C14"
-        for relative in BETA_NEXT_REQUIRED_FIXTURE_FILES:
-            path = engine / relative
-            path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_text("fixture")
-
-    def test_beta_next_build_reuse_and_production_promotion(self) -> None:
-        self._select_beta_next()
-        probe = DockerProbe(listed=())
-        manager = self._manager(probe)
-        self.assertEqual(IMAGE, manager.resolve())
-        self.assertEqual({BETA_NEXT_TAG}, probe.tags)
-        build, = probe.commands("docker", "build")
-        self.assertEqual("beta_next", build[build.index("--target") + 1])
-        probe.calls.clear()
-        self.assertEqual(IMAGE, manager.resolve(explicit_id=IMAGE, build_if_missing=False))
-        self._assert_no_mutation(probe)
-        probe.tags.update({EXPECTED_TAG, COMPACT_TEST, COMPACT_BETA_NEXT})
-        self.assertEqual(PROD_TAG, manager.mark_production_image(IMAGE))
-        self.assertEqual({PROD_TAG}, probe.tags)
-        probe.calls.clear()
-        self.assertEqual(IMAGE, manager.resolve(explicit_id=IMAGE, build_if_missing=False))
-        self._assert_no_mutation(probe)
-
-    def test_beta_next_reuse_adds_missing_candidate_tag(self) -> None:
-        self._select_beta_next()
-        probe = DockerProbe()
-        self.assertEqual(IMAGE, self._manager(probe).resolve(build_if_missing=False))
-        self.assertEqual({BETA_NEXT_TAG}, probe.tags)
-        self.assertEqual([], probe.commands("docker", "build"))
-
-    def test_beta_next_tag_collision_refuses_mutation(self) -> None:
-        self._select_beta_next()
-        probe = DockerProbe(tags=(BETA_NEXT_TAG,))
-        inspect = probe._inspect
-        def collision(image):
-            if image == BETA_NEXT_TAG:
-                return json.dumps([{"Id": OTHER_IMAGE, "RepoTags": [BETA_NEXT_TAG]}])
-            return inspect(image)
-        probe._inspect = collision
-        with self.assertRaises(ImageError):
-            self._manager(probe).resolve(build_if_missing=False)
-        self._assert_no_mutation(probe)
-
     def test_historical_beta_tags_are_recognized_for_an_immutable_image(self) -> None:
-        probe = DockerProbe(tags=(BETA_TAG, COMPACT_BETA))
+        probe = DockerProbe(tags=(BETA_TAG, COMPACT_BETA, BETA_NEXT_TAG, COMPACT_BETA_NEXT))
         manager = self._manager(probe)
         self.assertEqual(PROD_TAG, manager.mark_production_image(IMAGE))
         self.assertEqual({PROD_TAG}, probe.tags)
         self.assertEqual([], probe.commands("docker", "build"))
 
-    def test_identity_role_rejects_changed_selector(self) -> None:
-        self._select_beta_next()
+    def test_tagging_refuses_changed_selector(self) -> None:
         manager = self._manager(DockerProbe())
         identity = manager.identity()
-        (self.root / "LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/project.toml").write_text('stack = "current"\n')
+        selector = self.root / "LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/project.toml"
+        selector.parent.mkdir(parents=True)
+        selector.write_text('stack = "current"\n')
         with self.assertRaises(ImageError):
-            manager._identity_role(identity)
+            manager._verify_selector(identity)
 
     def _manager(self, probe: DockerProbe) -> ImageManager:
         manager = ImageManager(self.root, executor=probe, timeout=5, uid=1000, gid=1000,
@@ -211,6 +164,7 @@ class ImageMetadataTests(unittest.TestCase):
         self.assertEqual(IMAGE, self._manager(probe).resolve())
         build = probe.commands("docker", "build")
         self.assertEqual(1, len(build))
+        self.assertNotIn("--target", build[0])
         self.assertEqual(VERSION, probe.labels["org.opencontainers.image.version"])
         self.assertEqual("1", probe.labels[SCHEMA_LABEL])
         self.assertEqual(64, len(probe.labels[FINGERPRINT_LABEL]))

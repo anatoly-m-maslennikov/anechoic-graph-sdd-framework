@@ -23,26 +23,7 @@ except ImportError:
 
 _SOURCE_LAYERS = ("LAYER_1_META_ONTOLOGY_C9", "LAYER_2_META_METHODOLOGY_C58")
 
-_BETA_ROOTS = frozenset({"KERNEL_MIXER_beta_C67", "ORCHESTRATOR_beta_C68", "WORKERS_beta_C69", "API_MIXER_beta_C91"})
-_BETA_REQUIRED = (
-    "FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/LAYER_2_FORMAL_MODEL_C51/FEATURE_MODEL_VALIDATION/project_admission__pub.py",
-    "FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ADAPTERS_C30/native_snapshot_cli.py",
-    "IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IMPORT_GRAPH_C61/realization_graph_cli.py",
-    "KERNEL_MIXER_beta_C67/DATABASE_SERVER_beta_C71/DATABASE_SERVER_beta_C71__shared.py",
-    "ORCHESTRATOR_beta_C68/ORCHESTRATOR_beta_C68__shared.py",
-    "ORCHESTRATOR_beta_C68/warm_worker.py",
-    "WORKERS_beta_C69/WORKERS_beta_C69__shared.py",
-    "WORKERS_beta_C69/warm_worker.py",
-    "ORCHESTRATOR_beta_C68/project_peer_owner.py",
-    "ORCHESTRATOR_beta_C68/shared_peer_owner.py",
-    "API_MIXER_beta_C91/API_MIXER_beta_C91__shared.py",
-    "API_MIXER_beta_C91/shared_runtime.py",
-)
-_REPLACED_COMPONENTS = {
-    ENGINE_ROOT + "/KERNEL_MIXER_C59",
-    ENGINE_ROOT
-    + "/IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_BACKEND",
-}
+_RELEASE_SELECTOR = "LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/project.toml"
 
 
 class ImageSource:
@@ -188,16 +169,12 @@ class ImageSource:
             raise self._input_error()
         return path
 
-    def _stack_input(
+    def _selector_input(
         self, root: Path
-    ) -> tuple[str, tuple[Path, ...], str | None]:
-        if not os.path.lexists(
-            root / "LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/project.toml"
-        ):
-            return "current", (), None
-        path = self._file(
-            root, "LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/project.toml"
-        )
+    ) -> tuple[tuple[Path, ...], str | None]:
+        if not os.path.lexists(root / _RELEASE_SELECTOR):
+            return (), None
+        path = self._file(root, _RELEASE_SELECTOR)
         try:
             flags = (
                 os.O_RDONLY
@@ -217,12 +194,12 @@ class ImageSource:
                 "IMAGE_INPUT_UNAVAILABLE",
                 "Invalid project.toml build selector",
             ) from error
-        if settings not in ({"stack": "current"}, {"stack": "beta_next"}):
+        if settings != {"stack": "current"}:
             raise ImageError(
                 "IMAGE_INPUT_UNAVAILABLE",
-                'project.toml must specify stack = "current" or "beta_next"',
+                'project.toml must specify stack = "current"',
             )
-        return settings["stack"], (path,), sha256(raw).hexdigest()
+        return (path,), sha256(raw).hexdigest()
 
     def _source_layer_files(self, root, selected, unavailable):
         for layer in _SOURCE_LAYERS:
@@ -252,38 +229,22 @@ class ImageSource:
             if not count:
                 raise self._input_error()
 
-    def _engine_directories(self, folder, names, root, engine, beta_roots):
+    def _engine_directories(self, folder, names):
         retained = []
         for name in sorted(names):
             path = folder / name
-            relative = path.relative_to(root).as_posix()
             if (_excluded_directory(name) or _excluded_file(name)
-                    or (re.search(r"_beta_C[0-9]+\Z", name)
-                        and path.relative_to(engine).parts[0]
-                        not in beta_roots)
-                    or (beta_roots and relative in _REPLACED_COMPONENTS)):
+                    or re.search(r"_beta_C[0-9]+\Z", name)):
                 continue
             if path.is_symlink() or not path.is_dir():
                 raise self._input_error()
             retained.append(name)
         return retained
 
-    def _files(self, root: Path, stack_input=None) -> tuple[Path, ...]:
-        stack, selector, _ = (
-            self._stack_input(root) if stack_input is None else stack_input
-        )
+    def _files(self, root: Path, selector: tuple[Path, ...]) -> tuple[Path, ...]:
         required = (
             tuple(self._file(root, relative) for relative in _REQUIRED)
             + selector
-        )
-        beta_roots, stack_required = (
-            (_BETA_ROOTS, _BETA_REQUIRED)
-            if stack == "beta_next"
-            else (frozenset(), ())
-        )
-        required += tuple(
-            self._file(root, f"{ENGINE_ROOT}/{path}")
-            for path in stack_required
         )
         engine = root / ENGINE_ROOT
         if engine.is_symlink() or not engine.is_dir():
@@ -297,9 +258,7 @@ class ImageSource:
             engine, followlinks=False, onerror=unavailable
         ):
             folder = Path(current)
-            directories[:] = self._engine_directories(
-                folder, directories, root, engine, beta_roots
-            )
+            directories[:] = self._engine_directories(folder, directories)
             for name in sorted(names):
                 if _excluded_file(name):
                     continue

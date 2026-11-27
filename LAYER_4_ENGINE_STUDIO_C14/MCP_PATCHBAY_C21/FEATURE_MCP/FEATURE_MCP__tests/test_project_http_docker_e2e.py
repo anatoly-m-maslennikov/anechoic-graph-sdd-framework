@@ -1,4 +1,4 @@
-"""Check process recovery in the packaged single-Project HTTP runtime."""
+"""Check the packaged single-Project HTTP runtime."""
 
 import asyncio
 from contextlib import suppress
@@ -29,63 +29,21 @@ from .workbench_docker_support import (
 )
 
 
-_ROLES = {
-    "mcp": (
-        "MCP_PATCHBAY_C21.FEATURE_MCP.server",
-        "--transport",
-        "streamable-http",
-    ),
-    "api": ("API_MIXER_beta_C91.API_MIXER_beta_C91__shared", "--role", "api"),
-    "peer-owner": ("ORCHESTRATOR_beta_C68.project_peer_owner",),
-    "kernel": (
-        "KERNEL_MIXER_beta_C67.DATABASE_SERVER_beta_C71.DATABASE_SERVER_beta_C71__shared",
-    ),
-    "orchestrator": ("ORCHESTRATOR_beta_C68.ORCHESTRATOR_beta_C68__shared",),
-}
-_PROCESS_PROBE = """
-import json
-import os
-from pathlib import Path
-import signal
-import sys
-
-roles = json.loads(sys.argv[1])
-matches = {role: [] for role in roles}
-for path in Path('/proc').glob('[0-9]*/cmdline'):
-    try:
-        args = [os.fsdecode(arg) for arg in path.read_bytes().split(b'\\0')]
-    except (FileNotFoundError, ProcessLookupError):
-        continue
-    pairs = set(zip(args, args[1:]))
-    for role, (module, *option) in roles.items():
-        if ('-m', module) in pairs and (not option or tuple(option) in pairs):
-            matches[role].append(int(path.parent.name))
-if len(sys.argv) == 4:
-    role, pid = sys.argv[2], int(sys.argv[3])
-    if matches[role] != [pid]:
-        raise RuntimeError(f'Expected one {role} process with PID {pid}, got {matches}')
-    os.kill(pid, signal.SIGKILL)
-print(json.dumps(matches, sort_keys=True))
-"""
-
-
-class PackagedProjectSupervisionTests(unittest.IsolatedAsyncioTestCase):
-    async def test_candidate_http_runtime_recovers_after_process_exit(self):
+class PackagedProjectHttpTests(unittest.IsolatedAsyncioTestCase):
+    async def test_current_mcp_serves_pages_across_sessions(self):
         image = os.environ.get("ANECHOIC_IMAGE", "")
         self.assertRegex(
             image,
             r"\Asha256:[0-9a-f]{64}\Z",
             "Require the immutable candidate image ID",
         )
-        environment = self._docker(
+        image_environment = self._docker(
             "image", "inspect", "--format", "{{json .Config.Env}}", image
         )
-        env = set(json.loads(environment))
-        beta = "ANECHOIC_RUNTIME_STACK=beta_next" in env
-        self._roles = dict(_ROLES)
+        self.assertIn("ANECHOIC_RUNTIME_STACK=current", json.loads(image_environment))
         root = Path(
             self.enterContext(
-                tempfile.TemporaryDirectory(prefix="anechoic-supervision-")
+                tempfile.TemporaryDirectory(prefix="anechoic-project-http-")
             )
         ).resolve()
         subprocess.run(
@@ -100,17 +58,16 @@ class PackagedProjectSupervisionTests(unittest.IsolatedAsyncioTestCase):
             async with httpx2.AsyncClient(trust_env=False, timeout=timeout) as http:
                 await self._ready(http, url)
                 query_id = await self._first_page(http, url)
-                previous = await asyncio.to_thread(self._processes)
-                if beta:
-                    for role in ("api", "mcp", "kernel", "orchestrator"):
-                        previous, query_id = await self._restart(
-                            http, url, role, previous, query_id
-                        )
-                else:
-                    self.assertEqual({"mcp": previous["mcp"]}, {role: pids for role, pids in previous.items() if pids})
-                    self.assertEqual(1, len(previous["mcp"]))
-                    await self._assert_page(http, url, query_id)
-                    print("Current candidate verified. Beta restart checks do not apply.", flush=True)
+                processes = await asyncio.to_thread(
+                    self._docker, "top", self.container, "-eo", "pid,args"
+                )
+                mcp_processes = [
+                    line for line in processes.splitlines()
+                    if "-m MCP_PATCHBAY_C21.FEATURE_MCP.server" in line
+                    and "--transport streamable-http" in line
+                ]
+                self.assertEqual(1, len(mcp_processes), processes)
+                await self._assert_page(http, url, query_id)
         except Exception:
             with suppress(OSError, subprocess.SubprocessError, AssertionError):
                 print(self._docker("logs", "--tail", "45", self.container), file=sys.stderr)
@@ -134,7 +91,7 @@ class PackagedProjectSupervisionTests(unittest.IsolatedAsyncioTestCase):
         )
 
     def _start(self, image, root):
-        name = f"anechoic-supervision-{uuid4().hex}"
+        name = f"anechoic-project-http-{uuid4().hex}"
         defer_container_cleanup(self.addCleanup, name)
         self.container = self._docker(
             "run",
@@ -145,7 +102,7 @@ class PackagedProjectSupervisionTests(unittest.IsolatedAsyncioTestCase):
             "--name",
             name,
             "--label",
-            "anechoic.test=project-supervision",
+            "anechoic.test=project-http",
             "--cap-drop",
             "ALL",
             "--security-opt",
@@ -174,20 +131,6 @@ class PackagedProjectSupervisionTests(unittest.IsolatedAsyncioTestCase):
         binding = self._docker("port", self.container, "8092/tcp")
         self.assertRegex(binding, r"\A127\.0\.0\.1:[0-9]+\Z")
         return f"http://{binding}"
-
-    def _processes(self, *signal_target):
-        return json.loads(
-            self._docker(
-                "exec",
-                self.container,
-                "python",
-                "-B",
-                "-c",
-                _PROCESS_PROBE,
-                json.dumps(self._roles),
-                *signal_target,
-            )
-        )
 
     async def _ready(self, http, url, *, deadline_seconds=90):
         deadline = monotonic() + deadline_seconds
@@ -244,51 +187,3 @@ class PackagedProjectSupervisionTests(unittest.IsolatedAsyncioTestCase):
             },
         )
         self.assertEqual((query_id, [[200]]), (page["query_id"], page["rows"]))
-
-    def _assert_beta_processes(self, processes):
-        self.assertEqual(
-            {role: 1 for role in self._roles},
-            {role: len(pids) for role, pids in processes.items()},
-            processes,
-        )
-
-    async def _replacement(self, role, original_pid):
-        await asyncio.to_thread(self._processes, role, str(original_pid))
-        deadline = monotonic() + 30
-        while await asyncio.to_thread(observing, self.container, deadline):
-            current = await asyncio.to_thread(self._processes)
-            if len(current[role]) == 1 and current[role] != [original_pid]:
-                return current[role]
-            await asyncio.sleep(.2)
-        self.fail(f"Candidate did not replace {role} PID {original_pid}")
-
-    async def _restart(self, http, url, role, previous, query_id):
-        self._assert_beta_processes(previous)
-        (original_pid,) = previous[role]
-        replacement = await self._replacement(role, original_pid)
-        peer_restart = role in ("kernel", "orchestrator")
-        await self._ready(
-            http, url, deadline_seconds=90 if peer_restart else 30
-        )
-        current = await asyncio.to_thread(self._processes)
-        self._assert_beta_processes(current)
-        self.assertEqual(replacement, current[role])
-        if peer_restart:
-            for peer in ("kernel", "orchestrator"):
-                self.assertNotEqual(
-                    previous[peer],
-                    current[peer],
-                    f"{peer} survived restart of {role}",
-                )
-            fresh_id = await self._first_page(http, url)
-            self.assertNotEqual(query_id, fresh_id)
-            query_id = fresh_id
-        else:
-            self.assertEqual(previous | {role: replacement}, current)
-        await self._assert_page(http, url, query_id)
-        self.assertEqual(current, await asyncio.to_thread(self._processes))
-        print(
-            f"Restarted {role} PID {original_pid} as {replacement[0]}; ready processes {current}",
-            flush=True,
-        )
-        return current, query_id

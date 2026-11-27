@@ -63,14 +63,11 @@ class ImageBuild:
         self._assemble(context, identity)
         iidfile = attempt / "image.id"
         self._current(identity, use_packaged_assets=use_packaged_assets)
-        stack = self._stack_input(context)[0]
-        target = ("--target", stack) if stack != "current" else ()
         command = ("docker", "build", "--iidfile", str(iidfile),
                    "--label", f"{SCHEMA_LABEL}={SCHEMA}",
                    "--label", f"{FINGERPRINT_LABEL}={identity.fingerprint}",
                    "--label", f"{OCI_VERSION_LABEL}={identity.version}",
                    *label_arguments(self.build_provenance),
-                   *target,
                    "--platform", identity.platform,
                    "--build-arg", f"RUNTIME_UID={identity.uid}",
                    "--build-arg", f"RUNTIME_GID={identity.gid}",
@@ -83,7 +80,8 @@ class ImageBuild:
         self._verify_context(context, identity)
         image = self._read_image_id(iidfile)
         created, _ = self._inspect_details(image, identity, code="BUILD_FAILED", built=True)
-        self.ensure_display_tag(image, identity.version, created, role=self._identity_role(identity))
+        self._verify_selector(identity)
+        self.ensure_display_tag(image, identity.version, created)
         self._current(identity, use_packaged_assets=use_packaged_assets)
         self._verify_context(context, identity)
         return image

@@ -21,7 +21,7 @@ from .release_container import (
 )
 from .release_assets import LocalReleaseError
 from .release_inputs import read_release_selection
-from .release_image_identity import LICENSE_INPUTS, _BETA_REQUIRED
+from .release_image_identity import LICENSE_INPUTS
 from .runtime_support import (
     _RUN_ID,
     _cleanup_staging,
@@ -39,7 +39,6 @@ __all__ = [
     "reconcile_release_container",
     "verify_release_container",
     "LICENSE_INPUTS",
-    "_BETA_REQUIRED",
     "_RUN_ID",
     "_cleanup_staging",
     "_image_manager",

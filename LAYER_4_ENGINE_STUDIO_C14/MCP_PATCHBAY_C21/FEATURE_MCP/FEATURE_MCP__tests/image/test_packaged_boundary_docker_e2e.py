@@ -1,10 +1,7 @@
 """Fast packaged runtime boundary checks against an immutable image."""
 
-import json
 import subprocess
 import unittest
-
-import tomllib
 
 from ..FEATURE_MCP__tests__shared import run_workbench_browser
 from ..workbench_docker_support import image_timeout
@@ -12,24 +9,18 @@ from .test_native_import_graph_docker_e2e import _CanaryProject
 
 
 class PackagedBoundaryDockerE2E(_CanaryProject, unittest.TestCase):
-    def test_openapi_uses_the_packaged_framework_version(self):
-        def read(*command):
-            return subprocess.check_output(
-                ["docker", "exec", self.container, *command],
-                text=True,
-                timeout=image_timeout(10),
-            )
-
-        stack = read("printenv", "ANECHOIC_RUNTIME_STACK").strip()
-        if stack == "current":
-            self.skipTest("OpenAPI is packaged in beta_next")
-        self.assertEqual("beta_next", stack)
-        document = json.loads(
-            read("cat", "/usr/local/share/anechoic/openapi.json")
+    def test_image_contains_the_current_runtime(self):
+        check = (
+            "import os; from pathlib import Path; "
+            "engine = Path('/workspace/LAYER_4_ENGINE_STUDIO_C14'); "
+            "assert os.environ['ANECHOIC_RUNTIME_STACK'] == 'current'; "
+            "assert (engine / 'KERNEL_MIXER_C59').is_dir(); "
+            "assert not list(engine.glob('*_beta_C*'))"
         )
-        version = tomllib.loads(read("cat", "/workspace/version.toml"))
-        self.assertEqual(
-            version["framework"]["version"], document["info"]["version"]
+        subprocess.run(
+            ["docker", "exec", self.container, "python", "-B", "-c", check],
+            check=True,
+            timeout=image_timeout(10),
         )
 
     def test_host_write_and_delete_reach_packaged_runtime(self):

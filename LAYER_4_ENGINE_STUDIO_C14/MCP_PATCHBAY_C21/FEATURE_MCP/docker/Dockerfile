@@ -64,9 +64,11 @@ RUN rm -rf /usr/local/bin/uv /usr/local/bin/uvx /usr/local/bin/pip* \
     -exec rm -rf {} + \
     && ! command -v git && ! command -v perl && ! command -v strip
 
-FROM scratch AS runtime_base
+FROM scratch AS current
 ARG ANECHOIC_RUNTIME_PROFILE=dev-preprod
 ENV ANECHOIC_RUNTIME_PROFILE=${ANECHOIC_RUNTIME_PROFILE}
+ENV ANECHOIC_RUNTIME_STACK=current
+LABEL org.anechoic.runtime.stack=current
 COPY --from=runtime_build / /
 ARG RUNTIME_UID=1000
 ARG RUNTIME_GID=1000
@@ -82,6 +84,8 @@ COPY LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC \
     ./LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC
 COPY LAYER_4_ENGINE_STUDIO_C14/ARCHITECTURE_ANALYSIS_C73 \
     ./LAYER_4_ENGINE_STUDIO_C14/ARCHITECTURE_ANALYSIS_C73
+COPY LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_C59 \
+    ./LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_C59
 COPY LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21 \
     ./LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21
 COPY LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43 \
@@ -109,52 +113,4 @@ HEALTHCHECK --interval=2s --timeout=5s --start-period=420s --retries=25 \
 "LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/healthcheck.py"]
 ENTRYPOINT ["/opt/venv/bin/python", "-B", \
 "LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/entrypoint.py"]
-
-FROM runtime_base AS beta_base
-COPY --from=workbench_frontend /usr/local/bin/node /usr/local/bin/node
-COPY --from=workbench_frontend /frontend/node_modules/typescript \
-    ./LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/\
-FEATURE_IWE_CONSOLE_FRONTEND/node_modules/typescript
-COPY --from=workbench_frontend /frontend/node_modules/svelte \
-    ./LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/\
-FEATURE_IWE_CONSOLE_FRONTEND/node_modules/svelte
-COPY LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_beta_C67 \
-    ./LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_beta_C67
-COPY LAYER_4_ENGINE_STUDIO_C14/ORCHESTRATOR_beta_C68 \
-    ./LAYER_4_ENGINE_STUDIO_C14/ORCHESTRATOR_beta_C68
-COPY LAYER_4_ENGINE_STUDIO_C14/WORKERS_beta_C69 \
-    ./LAYER_4_ENGINE_STUDIO_C14/WORKERS_beta_C69
-RUN PYTHONPYCACHEPREFIX=/workspace/.anechoic_tmp/python/bytecode \
-    /opt/venv/bin/python -B -m compileall -q --invalidation-mode timestamp \
-    /workspace/LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_beta_C67 \
-    /workspace/LAYER_4_ENGINE_STUDIO_C14/ORCHESTRATOR_beta_C68 \
-    /workspace/LAYER_4_ENGINE_STUDIO_C14/WORKERS_beta_C69 \
-    && chmod -R a+rX "$PYTHONPYCACHEPREFIX" \
-    /workspace/LAYER_4_ENGINE_STUDIO_C14
-
-FROM beta_base AS beta_next
-COPY LAYER_4_ENGINE_STUDIO_C14/API_MIXER_beta_C91 \
-    ./LAYER_4_ENGINE_STUDIO_C14/API_MIXER_beta_C91
-ENV ANECHOIC_RUNTIME_STACK=beta_next
-LABEL org.anechoic.runtime.stack=beta_next
-RUN PYTHONPYCACHEPREFIX=/workspace/.anechoic_tmp/python/bytecode \
-    /opt/venv/bin/python -B -m compileall -q --invalidation-mode timestamp \
-    /workspace/LAYER_4_ENGINE_STUDIO_C14/API_MIXER_beta_C91 \
-    && chmod -R a+rX "$PYTHONPYCACHEPREFIX" \
-    /workspace/LAYER_4_ENGINE_STUDIO_C14/API_MIXER_beta_C91
-RUN mkdir -p /usr/local/share/anechoic \
-    && PYTHONPATH=LAYER_4_ENGINE_STUDIO_C14 \
-    /opt/venv/bin/python -B -m API_MIXER_beta_C91.openapi \
-    > /usr/local/share/anechoic/openapi.json
-USER anechoic
-
-FROM runtime_base AS current
-ENV ANECHOIC_RUNTIME_STACK=current
-COPY LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_C59 \
-    ./LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_C59
-RUN PYTHONPYCACHEPREFIX=/workspace/.anechoic_tmp/python/bytecode \
-    /opt/venv/bin/python -B -m compileall -q --invalidation-mode timestamp \
-    /workspace/LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_C59 \
-    && chmod -R a+rX "$PYTHONPYCACHEPREFIX" \
-    /workspace/LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_C59
 USER anechoic

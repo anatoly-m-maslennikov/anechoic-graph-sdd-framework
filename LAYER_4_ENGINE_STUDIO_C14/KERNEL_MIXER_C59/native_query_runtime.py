@@ -130,7 +130,11 @@ class NativeQueryRuntime(
             raise
 
     def _start_watcher(self) -> None:
-        poll_bind_mount = os.environ.get("ANECHOIC_RUNTIME_NAMESPACE") == "docker"
+        # FSEvents cannot register the same watch as the Manifest Runtime.
+        poll_bind_mount = (
+            sys.platform == "darwin"
+            or os.environ.get("ANECHOIC_RUNTIME_NAMESPACE") == "docker"
+        )
         if self._realization_options is not None:
             snapshot = self.selection.structure_snapshot
             self._watcher = SourceWatcher(

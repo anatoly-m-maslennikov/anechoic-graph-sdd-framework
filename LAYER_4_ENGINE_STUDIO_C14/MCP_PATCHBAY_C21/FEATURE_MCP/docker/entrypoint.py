@@ -80,7 +80,8 @@ def _project_mcp_command(mode):
 def _exec_service(mode):
     if mode not in RUNTIME_MODES:
         raise ValueError("unsupported runtime mode")
-    stack = os.environ.get("ANECHOIC_RUNTIME_STACK")
+    if os.environ.get("ANECHOIC_RUNTIME_STACK", "current") != "current":
+        raise ExplicitStartupFailure("invalid_runtime_stack")
     command = (
         _shared_mcp_command()
         if mode == "shared-mcp"
@@ -94,20 +95,6 @@ def _exec_service(mode):
         environment["ANECHOIC_LOG_LEVEL"] = direct_log_level()
     except ValueError as error:
         raise ExplicitStartupFailure("invalid_log_level") from error
-    if mode == "shared-mcp" and stack == "beta_next":
-        from MCP_PATCHBAY_C21.FEATURE_MCP.docker.shared_supervisor import (
-            supervise,
-        )
-
-        return supervise(
-            command, environment, environment["ANECHOIC_HOST_SETTINGS"]
-        )
-    if mode == "mcp-http" and stack == "beta_next":
-        from MCP_PATCHBAY_C21.FEATURE_MCP.docker.shared_supervisor import (
-            supervise_project,
-        )
-
-        return supervise_project(command, environment, PROJECT_ROOT)
     try:
         os.execve(sys.executable, command, environment)
     except OSError as error:

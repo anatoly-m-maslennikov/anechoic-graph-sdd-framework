@@ -9,8 +9,8 @@ from .staged_startup__support import (
     startup_outcome,
     timing_summary,
 )
-from . import test_staged_startup_docker_e2e as staged_startup
-from . import test_generation_load_docker_e2e as generation_load
+from . import historical_staged_startup__support as staged_startup
+from . import historical_generation_load__support as generation_load
 
 __all__ = [
     "PackagedProbe",

@@ -91,77 +91,48 @@ class DockerLoggingTests(unittest.TestCase):
             json.loads(output.getvalue()),
         )
 
-    def test_beta_entrypoint_uses_supervised_project_http(self):
-        supervisor = (
-            'MCP_PATCHBAY_C21.FEATURE_MCP.docker.shared_supervisor.supervise_p'
-            'roject'
-        )
-        for stack in ("beta_next",):
-            environment = {"ANECHOIC_RUNTIME_STACK": stack}
+    def test_current_entrypoint_starts_the_requested_service(self):
+        environment = {
+            "ANECHOIC_RUNTIME_STACK": "current",
+            "ANECHOIC_HOST_SETTINGS": "/settings.toml",
+        }
+        for mode, module, flags in (
+            ("mcp", "server", ["--project-root", "/project"]),
+            ("mcp-http", "server", [
+                "--project-root", "/project", "--transport", "streamable-http"
+            ]),
+            ("shared-mcp", "shared_http_server", [
+                "--host-settings", "/settings.toml"
+            ]),
+        ):
+            with (
+                self.subTest(mode=mode),
+                patch.dict(os.environ, environment, clear=True),
+                patch.object(os, "execve", return_value=None) as start,
+            ):
+                self.run_entrypoint(mode)
+                _, command, child_env = start.call_args.args
+                self.assertEqual("current", child_env["ANECHOIC_RUNTIME_STACK"])
+                self.assertEqual(
+                    [f"MCP_PATCHBAY_C21.FEATURE_MCP.{module}", *flags],
+                    command[4:],
+                )
+
+    def test_entrypoint_refuses_other_runtime_stacks(self):
+        for stack in ("beta", "beta_next", "unsupported", ""):
+            output = io.StringIO()
             with (
                 self.subTest(stack=stack),
-                patch.dict(os.environ, environment, clear=True),
-                patch(supervisor, return_value=None) as start,
+                patch.dict(os.environ, {"ANECHOIC_RUNTIME_STACK": stack}, clear=True),
+                patch.object(os, "execve") as start,
+                redirect_stderr(output),
             ):
-                self.run_entrypoint("mcp-http")
-            command, child_env, project = start.call_args.args
-            self.assertEqual(stack, child_env["ANECHOIC_RUNTIME_STACK"])
-            self.assertEqual(
-                "streamable-http", command[command.index("--transport") + 1]
-            )
-            self.assertEqual(Path("/project"), project)
-
-    def test_beta_next_stdio_entrypoint_starts_server(self):
-        with (
-            patch.dict(
-                os.environ, {"ANECHOIC_RUNTIME_STACK": "beta_next"}, clear=True
-            ),
-            patch.object(os, "execve", return_value=None) as start,
-        ):
-            self.run_entrypoint("mcp")
-        command = start.call_args.args[1]
-        self.assertIn("MCP_PATCHBAY_C21.FEATURE_MCP.server", command)
-        self.assertNotIn("--transport", command)
-
-    def test_shared_entrypoint_selects_the_api_module_and_keeps_the_peer_owner(
-        self,
-    ):
-        supervisor = (
-            "MCP_PATCHBAY_C21.FEATURE_MCP.docker.shared_supervisor._supervise"
-        )
-        settings, directory = "/settings.toml", Path("/private/runtime")
-        for stack, module, owner_module in (
-            (
-                "beta_next",
-                "API_MIXER_beta_C91.shared_runtime",
-                "ORCHESTRATOR_beta_C68.shared_peer_owner",
-            ),
-        ):
-            environment = {
-                "ANECHOIC_RUNTIME_STACK": stack,
-                "ANECHOIC_HOST_SETTINGS": settings,
-            }
-            with (
-                self.subTest(stack=stack),
-                patch.dict(os.environ, environment, clear=True),
-                patch(supervisor, return_value=None) as start,
-            ):
-                self.run_entrypoint("shared-mcp")
-            command, child_env, configure = start.call_args.args
-            self.assertEqual(stack, child_env["ANECHOIC_RUNTIME_STACK"])
-            self.assertIn(
-                "MCP_PATCHBAY_C21.FEATURE_MCP.shared_http_server", command
-            )
-            owner, api, _, _ = configure(directory)
-            self.assertEqual(owner.command[4:], [
-                owner_module, "--socket", str(directory / "owner.sock"),
-                "--host-settings", settings,
-            ])
-            self.assertEqual(api.command[4:], [
-                module, "--socket", str(directory / "api.sock"), "--host-settings", settings,
-                "--peer-owner-socket", str(directory / "owner.sock"),
-            ])
-            self.assertEqual(directory / "api.sock", api.socket)
+                self.run_entrypoint("mcp", expected=1)
+                start.assert_not_called()
+                self.assertEqual(
+                    {"error": "invalid_runtime_stack", "severity": "ERROR"},
+                    json.loads(output.getvalue()),
+                )
 
     def test_base_runtime_services_use_bounded_local_logging(self):
         config = _compose("compose.yaml")

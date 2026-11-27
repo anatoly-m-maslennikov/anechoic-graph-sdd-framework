@@ -11,10 +11,23 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import
     read_structure,
 )
 
+from .atom_document import atom_document
+from .errors import WorkbenchUnavailableError
 from .native_query_runtime import NativeQueryRuntime
 
 
 class NativeQueryOwner(NativeQueryRuntime):
+    def atom_document(self, ref_id: str) -> dict[str, Any]:
+        with self._interface_lock:
+            store = self._owner()
+            if (
+                self._capture is None
+                or self._projection_selection != self.selection
+                or self._manifest_needs_reload(self._capture)
+            ):
+                raise WorkbenchUnavailableError("Project capture is unavailable")
+            return atom_document(self._root, store, self._capture, ref_id)
+
     def lifecycle(
         self, name: str, arguments: dict[str, Any]
     ) -> dict[str, Any]:

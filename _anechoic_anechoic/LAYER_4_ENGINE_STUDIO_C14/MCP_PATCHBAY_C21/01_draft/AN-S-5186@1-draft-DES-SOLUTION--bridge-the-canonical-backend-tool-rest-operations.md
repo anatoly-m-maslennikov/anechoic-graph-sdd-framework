@@ -24,9 +24,10 @@ Bridge the canonical Backend Tool REST operations
 
 ### Prose Claim
 
-The shared `beta_next` host and MCP use the C91 catalog and invocation.
-The direct gateway serves its startup catalog and uses the admitted
-Project client for calls. The legacy wrapper forwards Tool names unchanged.
+The shared Console host and MCP use the C45 shared Tool coordinator for
+catalog and invocation. The direct gateway serves its startup catalog and
+uses the admitted Project client for calls. The legacy wrapper forwards
+Tool names unchanged.
 
 Check the shared Backend envelope and its Project receipt. Reject invalid
 transport input before dispatch. Return a gateway fault if the shared
@@ -58,13 +59,13 @@ component_workflow(
                                                                   'outcome': 'legacy_refused'}}}},
             'shared_catalog': {'on': {'backend_operation': {'to': 'shared_catalog_response',
                                                             'expect': {'kind': 'effect',
-                                                                       'target': 'C91.shared_api',
+                                                                       'target': 'C45.shared_tool_coordinator',
                                                                        'outcome': 'catalog',
                                                                        'detail': {'endpoint': 'GET '
                                                                                               '/tools'}}}}},
             'shared_invocation': {'on': {'backend_operation': {'to': 'shared_invocation_response',
                                                                'expect': {'kind': 'effect',
-                                                                          'target': 'C91.shared_api',
+                                                                          'target': 'C45.shared_tool_coordinator',
                                                                           'outcome': 'invoke',
                                                                           'detail': {'endpoint': 'POST '
                                                                                                  '/tools'}}}}},

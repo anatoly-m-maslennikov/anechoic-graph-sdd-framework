@@ -14,7 +14,6 @@ from ._release_image_build import (
     ImageBuild,
     _IMAGE,
     _PRUNE_BUILD_CACHE,
-    _candidate_role,
     _remove_finder_metadata as _remove_finder_metadata,
 )
 from ._release_image_receipt import (
@@ -191,15 +190,12 @@ class ImageManager(ImageBuild, ImageInputIdentity):
             raise RuntimeError("Docker image operation unavailable") from error
 
     def _expected_labels(self, identity: ImageIdentity) -> dict[str, str]:
-        labels = {
+        return {
             _SCHEMA: "1",
             _FINGERPRINT: identity.fingerprint,
             _VERSION: identity.version,
             **self.labels,
         }
-        if identity.stack == "beta_next":
-            labels[_STACK] = identity.stack
-        return labels
 
     def _inspect(self, image: str, identity: ImageIdentity):
         try:
@@ -221,6 +217,7 @@ class ImageManager(ImageBuild, ImageInputIdentity):
                 or row.get("Os") != "linux"
                 or row.get("Architecture") != self.platform.split("/")[1]
                 or not isinstance(labels, dict)
+                or labels.get(_STACK, "current") != identity.stack
                 or any(labels.get(k) != v for k, v in expected.items())
             ):
                 raise ValueError("image identity differs")
@@ -283,9 +280,7 @@ class ImageManager(ImageBuild, ImageInputIdentity):
         if self.identity(use_packaged_assets=True) != identity:
             raise RuntimeError("image inputs changed")
         tag = self._tag(image, "prod")
-        candidate_tag = (
-            f"anechoic-runtime:{_candidate_role(identity)}-{image[7:]}"
-        )
+        candidate_tag = f"anechoic-runtime:test-{image[7:]}"
         if self._tag_images(candidate_tag) == {image}:
             self._run(("docker", "image", "rm", candidate_tag))
         return tag

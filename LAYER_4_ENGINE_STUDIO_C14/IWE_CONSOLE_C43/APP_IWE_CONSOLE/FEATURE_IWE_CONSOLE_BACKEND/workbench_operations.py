@@ -11,6 +11,8 @@ from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (
 )
 from KERNEL_MIXER_C59.result_delivery import DELIVERY_MODES
 
+from .workbench_tools import ATOM_DOCUMENT
+
 RUN = "query_run"
 PAGE = "query_page"
 CHECK = "query_check"
@@ -56,6 +58,12 @@ class WorkbenchOperations:
             self._empty(arguments)
             return self._query_owner.status()
         with self._lock:
+            if name == ATOM_DOCUMENT:
+                if not isinstance(arguments, dict) or set(arguments) != {
+                    "ref_id"
+                }:
+                    raise ValueError("Expected one Atom reference")
+                return self._query_owner.atom_document(arguments["ref_id"])
             if name == REBUILD:
                 return self._rebuild(arguments)
             if name in INTERFACE_TOOLS:

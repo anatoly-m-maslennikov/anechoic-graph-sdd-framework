@@ -13,8 +13,6 @@ import threading
 from pydantic import ConfigDict, ValidatorFunctionWrapHandler, field_validator
 from pydantic.dataclasses import dataclass
 
-from MCP_PATCHBAY_C21.FEATURE_MCP.runtime_stack import runtime_stack
-
 
 class ProjectAdmissionError(ValueError):
     """The Backend refused a Project binding."""
@@ -62,10 +60,6 @@ class ProjectBinding:
 _MODULE = (
     "IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.project_admis"
     "sion"
-)
-_BETA_MODULE = (
-    "FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.FEATURE_MOD"
-    "EL_VALIDATION.project_admission__pub"
 )
 _PATH_FIELDS = ("root", "control_root", "control_relative", "manifest_path")
 _TEXT_FIELDS = (
@@ -175,9 +169,8 @@ def _start(connection):
         **{k: v for k, v in os.environ.items() if k != "PYTHONHOME"},
         "PYTHONPATH": str(engine),
     }
-    module = _MODULE if runtime_stack() == "current" else _BETA_MODULE
     return subprocess.Popen(
-        [sys.executable, "-B", "-P", "-m", module],
+        [sys.executable, "-B", "-P", "-m", _MODULE],
         cwd=root,
         env=environment,
         stdin=connection,

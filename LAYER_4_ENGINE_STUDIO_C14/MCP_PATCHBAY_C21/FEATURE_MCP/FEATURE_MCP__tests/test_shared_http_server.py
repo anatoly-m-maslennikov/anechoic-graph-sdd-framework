@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import json
 from concurrent.futures import CancelledError as FutureCancelledError
-import os
 from pathlib import Path
 from types import SimpleNamespace
 import unittest
@@ -113,7 +112,7 @@ class SharedHTTPTests(unittest.IsolatedAsyncioTestCase):
         self.app = create_app(self.config, gateway_factory=FakeGateway)
         self.gateway = FakeGateway.instances[-1]
 
-    async def test_beta_next_gateway_reuses_socket_and_preserves_selection_and_tool_replies(self):
+    async def test_current_gateway_starts_backend_and_preserves_selection_and_tool_replies(self):
         messages = []
         root = "/canonical/main"
         project = {"project_name": "Main", "project_prefix": "MA", "instance_id": "a" * 64}
@@ -141,8 +140,7 @@ class SharedHTTPTests(unittest.IsolatedAsyncioTestCase):
         self.addAsyncCleanup(gateway.close)
         socket = "/private/api.sock"
         with (
-            patch("MCP_PATCHBAY_C21.FEATURE_MCP.shared_backend.runtime_stack", return_value="beta_next"),
-            patch.dict(os.environ, {"ANECHOIC_BETA_BACKEND_SOCKET": socket}),
+            patch.object(gateway, "_start_backend", return_value=socket) as start,
             patch.object(httpx2, "AsyncHTTPTransport", return_value=httpx2.MockTransport(backend)) as transport,
         ):
             await gateway.initialize()
@@ -154,6 +152,7 @@ class SharedHTTPTests(unittest.IsolatedAsyncioTestCase):
             refused = await gateway.call(None, types.CallToolRequestParams(name="query_run", arguments={"sql": "SELECT 1"}))
             self.assertTrue(refused.is_error)
             self.assertEqual(["missing_project_root"], refused.structured_content["diagnostics"])
+        start.assert_awaited_once_with()
         transport.assert_called_once_with(uds=socket)
         self.assertEqual([(("POST", "/selection"), {"project_root": root}), (("POST", "/tools"), {
             "name": "query_run", "arguments": {"sql": "SELECT 1", "project_root": root}, "session_id": None, "public_base_url": None,
@@ -209,21 +208,6 @@ class SharedHTTPTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual({"rows": [["private"]]}, web.json())
             self.assertEqual(web.json(), mcp.structured_content)
 
-    async def test_beta_next_gateway_refuses_unsupervised_start(self):
-        gateway = create_app(self.config).gateway
-        with (
-            patch(
-                "MCP_PATCHBAY_C21.FEATURE_MCP.shared_backend.runtime_stack",
-                return_value="beta_next",
-            ),
-            patch.dict(os.environ, {}, clear=True),
-            patch.object(gateway, "_start_backend") as start,
-            self.assertRaisesRegex(
-                Exception, "^beta_next_requires_supervised_shared_http$"
-            ),
-        ):
-            await gateway.initialize()
-        start.assert_not_called()
     async def request(self, method="GET", path=HEALTH_PATH, **kwargs):
         async with httpx2.AsyncClient(
             transport=httpx2.ASGITransport(app=self.app),

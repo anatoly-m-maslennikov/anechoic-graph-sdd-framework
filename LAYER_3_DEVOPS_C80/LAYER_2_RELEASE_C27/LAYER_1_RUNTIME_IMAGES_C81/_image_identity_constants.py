@@ -77,39 +77,4 @@ _REQUIRED = (
     *LICENSE_INPUTS,
     TOOL_REGISTRY,
 )
-_BETA_ROOTS = frozenset(
-    {
-        "KERNEL_MIXER_beta_C67",
-        "ORCHESTRATOR_beta_C68",
-        "WORKERS_beta_C69",
-        "API_MIXER_beta_C91",
-    }
-)
-_BETA_REQUIRED = tuple(
-    f"{ENGINE}/{path}"
-    for path in (
-        "FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/LAYER_2_FORMAL_MODEL_C51/"
-        "FEATURE_MODEL_VALIDATION/project_admission__pub.py",
-        "FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ADAPTERS_C30/"
-        "native_snapshot_cli.py",
-        "IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IMPORT_GRAPH_C61/"
-        "realization_graph_cli.py",
-        "KERNEL_MIXER_beta_C67/DATABASE_SERVER_beta_C71/"
-        "DATABASE_SERVER_beta_C71__shared.py",
-        "ORCHESTRATOR_beta_C68/ORCHESTRATOR_beta_C68__shared.py",
-        "ORCHESTRATOR_beta_C68/warm_worker.py",
-        "WORKERS_beta_C69/WORKERS_beta_C69__shared.py",
-        "WORKERS_beta_C69/warm_worker.py",
-        "ORCHESTRATOR_beta_C68/project_peer_owner.py",
-        "ORCHESTRATOR_beta_C68/shared_peer_owner.py",
-        "API_MIXER_beta_C91/API_MIXER_beta_C91__shared.py",
-        "API_MIXER_beta_C91/shared_runtime.py",
-    )
-)
 _BETA_DIRECTORY = re.compile(r"_beta_C[0-9]+\Z")
-_CURRENT_ONLY = frozenset(
-    {
-        "KERNEL_MIXER_C59",
-        "IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_BACKEND",
-    }
-)

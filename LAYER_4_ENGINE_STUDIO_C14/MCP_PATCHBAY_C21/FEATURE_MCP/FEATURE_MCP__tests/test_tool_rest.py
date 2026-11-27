@@ -11,6 +11,7 @@ from unittest.mock import patch
 import httpx2
 
 from MCP_PATCHBAY_C21.FEATURE_MCP.backend_client import BackendClient
+from MCP_PATCHBAY_C21.FEATURE_MCP.backend_client import ToolProtocolError
 from MCP_PATCHBAY_C21.FEATURE_MCP.direct_gateway import DirectGateway
 from MCP_PATCHBAY_C21.FEATURE_MCP.http_server import create_app as direct_app
 from MCP_PATCHBAY_C21.FEATURE_MCP.shared_http_server import (
@@ -199,6 +200,65 @@ class ToolRestTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(
                 "invalid_tool_request", refused.json()["error"]["code"]
             )
+
+    async def test_shared_catalog_rejects_invalid_descriptors(self):
+        def backend(_request):
+            return httpx2.Response(200, json={"result": {"tools": [None]}})
+
+        client, gateway = await self.shared(backend)
+        response = await client.get("/tools")
+        self.assertEqual(503, response.status_code)
+        self.assertEqual("shared_gateway_failure", response.json()["error"]["code"])
+        with self.assertRaises(ValueError):
+            await gateway._load_catalog()
+
+    async def test_shared_fault_receipts_match_in_rest_and_mcp(self):
+        receipt = None
+
+        def backend(_request):
+            return httpx2.Response(
+                200, json={"error": FAULT | {"scope": "tool"}, "project": receipt}
+            )
+
+        client, gateway = await self.shared(backend)
+        for receipt, expected_status, expected_code in (
+            (PROJECT, 200, FAULT["code"]),
+            (None, 200, FAULT["code"]),
+            (PROJECT | {"instance_id": "b" * 64}, 502, "project_receipt_mismatch"),
+            ({"instance_id": INSTANCE}, 502, "project_receipt_mismatch"),
+        ):
+            with self.subTest(receipt=receipt):
+                response = await client.post("/tools", json=invocation(), headers=BINDING)
+                self.assertEqual(expected_status, response.status_code)
+                self.assertEqual(expected_code, response.json()["error"]["code"])
+                with self.assertRaises(ToolProtocolError) as caught:
+                    await gateway.call_tool(TOOL["name"], {}, project_instance_id=INSTANCE)
+                self.assertEqual(expected_code, caught.exception.code)
+                self.assertEqual(response.json()["error"]["tool_result"], caught.exception.tool_result)
+
+    async def test_shared_limit_applies_after_inserting_trusted_origin(self):
+        sizes = []
+
+        def backend(request):
+            sizes.append(len(request.content))
+            return httpx2.Response(200, json={"result": RESULT, "project": PROJECT})
+
+        def encoded(size):
+            def body(padding):
+                return json.dumps(
+                    invocation(public_base_url=None, arguments={"data": padding}),
+                    separators=(",", ":"),
+                ).encode()
+
+            return body("x" * (size - len(body(""))))
+
+        client, _ = await self.shared(backend)
+        inserted = len(json.dumps(ORIGIN + "/")) - len("null")
+        good = await client.post("/tools", content=encoded(65_536 - inserted), headers=JSON_HEADERS)
+        bad = await client.post("/tools", content=encoded(65_537 - inserted), headers=JSON_HEADERS)
+        self.assertEqual(RESULT, good.json()["result"])
+        self.assertEqual("invalid_tool_request", bad.json()["error"]["code"])
+        self.assertEqual([65_536], sizes)
 
     async def test_valid_request_at_the_body_limit_preserves_cancellation(
         self,

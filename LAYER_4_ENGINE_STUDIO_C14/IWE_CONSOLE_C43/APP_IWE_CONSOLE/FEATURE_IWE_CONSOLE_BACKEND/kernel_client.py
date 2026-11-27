@@ -12,6 +12,9 @@ from time import monotonic, sleep
 
 import httpx2
 
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import (
+    ExplicitBlockingRuntimeFailure,
+)
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (
     QueryExecutionError,
     WorkbenchUnavailableError,
@@ -33,6 +36,7 @@ _OPERATIONS = frozenset(
         "saved_list",
         "rebuild",
         "lifecycle",
+        "atom_document",
     }
 )
 
@@ -124,8 +128,11 @@ class KernelClient:
                     "query_error": QueryExecutionError,
                     "workbench_unavailable": WorkbenchUnavailableError,
                 }
-                if fault.get("code") in errors:
-                    raise errors[fault["code"]](fault["message"])
+                code = fault.get("code")
+                if code in errors:
+                    raise errors[code](fault["message"])
+                if code in {"atom_not_found", "tool_input_invalid"}:
+                    raise ExplicitBlockingRuntimeFailure(code, fault["message"])
         raise RuntimeError("Kernel operation failed; see process diagnostics")
 
     def wait(self):

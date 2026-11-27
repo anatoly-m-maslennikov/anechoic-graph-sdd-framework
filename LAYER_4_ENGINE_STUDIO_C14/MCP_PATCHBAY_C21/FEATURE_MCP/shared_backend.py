@@ -15,20 +15,22 @@ from MCP_PATCHBAY_C21.FEATURE_MCP.backend_client import ToolProtocolError
 from MCP_PATCHBAY_C21.FEATURE_MCP.caller_context import CallerContextError
 from MCP_PATCHBAY_C21.FEATURE_MCP.health_observations import HealthObservations
 from MCP_PATCHBAY_C21.FEATURE_MCP.http_paths import TOOL_REST_PATH
-from MCP_PATCHBAY_C21.FEATURE_MCP.mcp_startup_boundary import (
-    ExplicitStartupFailure,
-)
 from MCP_PATCHBAY_C21.FEATURE_MCP.runtime_request_context import (
     current_request_context,
 )
-from MCP_PATCHBAY_C21.FEATURE_MCP.project_tool_context import valid_project_instance
+from MCP_PATCHBAY_C21.FEATURE_MCP.project_tool_context import (
+    valid_project_instance,
+)
 from MCP_PATCHBAY_C21.FEATURE_MCP.runtime_stack import runtime_stack
 from MCP_PATCHBAY_C21.FEATURE_MCP.shared_gateway_support import (
     call_mcp,
     make_server,
+    parse_tool_catalog,
+    project_receipt_mismatch,
     record_observation,
     refusal,
     tool_failure,
+    valid_project_receipt,
     valid_tool_response,
 )
 
@@ -77,18 +79,8 @@ class SharedBackendGateway:
             if self.ready:
                 return
             try:
-                stack = runtime_stack()
-                socket = (
-                    None
-                    if stack == "current"
-                    else os.environ.get("ANECHOIC_BETA_BACKEND_SOCKET")
-                )
-                if stack == "beta_next" and not socket:
-                    raise ExplicitStartupFailure(
-                        "beta_next_requires_supervised_shared_http"
-                    )
-                if socket is None:
-                    socket = await self._start_backend()
+                runtime_stack()
+                socket = await self._start_backend()
                 self._http = httpx2.AsyncClient(
                     transport=httpx2.AsyncHTTPTransport(uds=str(socket)),
                     base_url="http://anechoic-backend",
@@ -164,12 +156,10 @@ class SharedBackendGateway:
         return socket
 
     async def _load_catalog(self):
-        catalog = await self._request("GET", TOOL_REST_PATH,
-                                      timeout=_operation_timeout(45))
-        raw_tools = catalog.get("tools")
-        if not isinstance(raw_tools, list):
-            raise RuntimeError("Invalid Shared Backend catalog")
-        self.tools = [types.Tool.model_validate(item) for item in raw_tools]
+        catalog = await self._request(
+            "GET", TOOL_REST_PATH, timeout=_operation_timeout(45)
+        )
+        self.tools = parse_tool_catalog(catalog)
         self.ready = True
 
     async def close(self) -> None:
@@ -261,22 +251,27 @@ class SharedBackendGateway:
                 selected = await self.select_project(arguments["project_root"])
                 project_instance_id = selected["instance_id"]
             headers = {"X-Anechoic-Project-Instance": project_instance_id} if project_instance_id is not None else {}
-            status, envelope = await self.tool_rest("POST", json={
-                "name": name, "arguments": arguments,
-                "session_id": context.session_id if context else None,
-                "public_base_url": public_base_url,
-            }, headers=headers)
-            project = envelope.get("project")
+            status, envelope = await self.tool_rest(
+                "POST",
+                json={
+                    "name": name,
+                    "arguments": arguments,
+                    "session_id": context.session_id if context else None,
+                    "public_base_url": public_base_url,
+                },
+                headers=headers,
+            )
+            receipt = envelope.get("project")
+            if receipt is not None and (
+                project_instance_id is None
+                or not valid_project_receipt(receipt, project_instance_id)
+            ):
+                raise project_receipt_mismatch()
+            project = receipt
             result = envelope.get("result")
             if 200 <= status < 300 and valid_tool_response(result):
-                if (project_instance_id is None or not isinstance(project, dict)
-                        or project.get("instance_id") != project_instance_id):
-                    code = "project_receipt_mismatch"
-                    message = (
-                        'The API receipt does not identify the selected '
-                        'Project.'
-                    )
-                    raise ToolProtocolError(code, message, {"outcome": "failed", "diagnostics": [f"{code}: {message}"]})
+                if project is None:
+                    raise project_receipt_mismatch()
                 response = result["value"]
                 return result
             try:

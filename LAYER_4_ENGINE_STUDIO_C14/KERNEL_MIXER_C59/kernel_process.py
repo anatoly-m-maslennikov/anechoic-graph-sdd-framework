@@ -23,6 +23,7 @@ from starlette.routing import Route
 import uvicorn
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import (
+    ExplicitBlockingRuntimeFailure,
     rebind_native_selection,
     resolve_native_project,
 )
@@ -191,6 +192,7 @@ def _operations(owner):
         "saved_list",
         "rebuild",
         "lifecycle",
+        "atom_document",
     )
     return {name: getattr(owner, name) for name in names}
 
@@ -262,6 +264,8 @@ def create_app(owner, orchestrator):
             with anyio.CancelScope(shield=True):
                 result = await anyio.to_thread.run_sync(call)
             return JSONResponse({"result": result})
+        except ExplicitBlockingRuntimeFailure as error:
+            return _error(error.code, str(error))
         except ValueError as error:
             return _error("value_error", str(error))
         except QueryExecutionError as error:

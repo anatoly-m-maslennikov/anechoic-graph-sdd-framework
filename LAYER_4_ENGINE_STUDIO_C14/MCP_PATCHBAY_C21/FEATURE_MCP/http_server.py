@@ -4,12 +4,9 @@ import argparse
 import asyncio
 from concurrent.futures import CancelledError as FutureCancelledError
 from contextlib import ExitStack, asynccontextmanager
-from fcntl import LOCK_NB, LOCK_SH, flock
-import os
 from pathlib import Path
 import re
 
-from starlette.applications import Starlette
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.routing import Route
@@ -22,15 +19,11 @@ from MCP_PATCHBAY_C21.FEATURE_MCP.direct_gateway import (
 from MCP_PATCHBAY_C21.FEATURE_MCP.http_paths import (
     HEALTH_PATH,
     MCP_PATH,
-    TOOL_REST_PATH,
-    URL_PREFIX,
 )
 from mcp.server.transport_security import TransportSecuritySettings
 from MCP_PATCHBAY_C21.FEATURE_MCP.mcp_startup_boundary import http_log_config, run_startup, runtime_log_level, warning
-from MCP_PATCHBAY_C21.FEATURE_MCP.native_startup import ProjectAdmissionError
 from MCP_PATCHBAY_C21.FEATURE_MCP.runtime_stack import runtime_stack
 from MCP_PATCHBAY_C21.FEATURE_MCP.tool_rest import (
-    fault as tool_rest_fault,
     routes as tool_rest_routes,
 )
 from MCP_PATCHBAY_C21.FEATURE_MCP.workbench_web import (
@@ -119,20 +112,13 @@ def _accepts_html(value):
     )
 
 
-async def health(gateway, gate=None):
-    if gate is not None and (refusal := _drain_refusal(gate)):
-        return _gate_health(refusal)
-    if gate is None:
-        state = (
-            "ready"
-            if await asyncio.to_thread(lambda: gateway.ready)
-            else "unavailable"
-        )
-    else:
-        state = await asyncio.to_thread(gateway.health_state)
+async def health(gateway):
+    state = (
+        "ready"
+        if await asyncio.to_thread(lambda: gateway.ready)
+        else "unavailable"
+    )
     payload = {"state": state}
-    if state == "degraded":
-        payload["health_warning"] = "project_build_unavailable"
     observer = getattr(gateway, "health_observations", None)
     if observer is not None:
         try:
@@ -156,7 +142,6 @@ def create_app(
     gateway_factory=None,
     control_root=None,
     runtime_gateway=None,
-    direct_gate=None,
 ):
     if runtime_gateway is not None:
         gateway = runtime_gateway
@@ -175,7 +160,7 @@ def create_app(
         gateway = native_project_gateway(root, selection=selected)
 
     async def readiness(_request):
-        return await health(gateway, direct_gate)
+        return await health(gateway)
 
     return streamable_app(gateway, readiness)
 
@@ -213,117 +198,29 @@ def streamable_app(gateway, health_endpoint, *, shared=False):
     return guarded
 
 
-def _drain_refusal(gate):
-    try:
-        state = gate.read_text(encoding="ascii")
-    except FileNotFoundError:
-        return None
-    except (OSError, UnicodeError):
-        return "admission_gate_unavailable"
-    if state in ("", "project_manifest_reloading"):
-        return "project_manifest_reloading"
-    if state == "project_manifest_invalid":
-        return state
-    return "admission_gate_unavailable"
-
-
-def _gate_health(code):
-    state = {
-        "project_manifest_invalid": "degraded",
-        "project_manifest_reloading": "pending",
-    }.get(code, "unavailable")
-    payload = {"state": state}
-    if state != "pending":
-        payload["health_warning"] = code
-    return JSONResponse(
-        payload, status_code=503 if state == "unavailable" else 200
-    )
-
-
-def _gate_refusal(code, *, tool_rest=False):
-    status = 503 if code == "admission_gate_unavailable" else 409
-    if tool_rest:
-        return tool_rest_fault(code, status=status)
-    return JSONResponse(
-        {"error": code},
-        status_code=status,
-    )
-
-
-def _diagnostics_app(gate):
-    async def readiness(_request):
-        if refusal := _drain_refusal(gate):
-            return _gate_health(refusal)
-        return JSONResponse({"state": "pending"})
-
-    async def refuse(_request):
-        if refusal := _drain_refusal(gate):
-            return _gate_refusal(refusal)
-        return JSONResponse({"error": "project_build_pending"})
-
-    async def refuse_tools(_request):
-        if refusal := _drain_refusal(gate):
-            return _gate_refusal(refusal, tool_rest=True)
-        return tool_rest_fault("project_build_pending")
-
-    return LoopbackGuard(Starlette(routes=[
-        Route(HEALTH_PATH, readiness), Route(f"{URL_PREFIX}/{{path:path}}", refuse, methods=["GET", "POST", "DELETE"]),
-        Route(TOOL_REST_PATH, refuse_tools, methods=["GET", "POST"]),
-    ]))
-
-
-def _guard_direct_transport(app, gate):
-    async def guarded(scope, receive, send):
-        if scope["type"] != "http" or scope["method"] in {"GET", "HEAD"}:
-            return await app(scope, receive, send)
-        tool_rest = scope["path"] == TOOL_REST_PATH
-        if refusal := _drain_refusal(gate):
-            return await _gate_refusal(refusal, tool_rest=tool_rest)(scope, receive, send)
-        with ExitStack() as stack:
-            try:
-                lock = stack.enter_context(
-                    gate.with_suffix(".transport").open("rb")
-                )
-                flock(lock, LOCK_SH | LOCK_NB)
-            except BlockingIOError:
-                refusal = "project_manifest_reloading"
-            except OSError:
-                refusal = "admission_gate_unavailable"
-            else:
-                refusal = _drain_refusal(gate)
-            if refusal:
-                return await _gate_refusal(refusal, tool_rest=tool_rest)(scope, receive, send)
-            return await app(scope, receive, send)
-
-    return guarded
-
-
 def _serve(args, *, gateway_factory=None):
     if args.host != "0.0.0.0" or args.port != PORT:
         raise ValueError("HTTP MCP requires the container bind 0.0.0.0:8092")
     import uvicorn
 
+    runtime_stack()
     level = runtime_log_level().lower()
     with ExitStack() as stack:
-        socket = None if runtime_stack() == "current" else os.environ.get("ANECHOIC_BETA_BACKEND_SOCKET")
-        gate = os.environ.get("ANECHOIC_BETA_DIRECT_TRANSPORT_GATE") if socket else None
         if gateway_factory is not None:
-            app = create_app(args.project_root, gateway_factory=gateway_factory, control_root=args.control_root)
-        elif gate and os.environ.get("ANECHOIC_BETA_DIRECT_DIAGNOSTICS") == "1":
-            app = _diagnostics_app(Path(gate))
+            app = create_app(
+                args.project_root,
+                gateway_factory=gateway_factory,
+                control_root=args.control_root,
+            )
         else:
-            try:
-                selection = startup_selection(args.project_root, args.control_root, args.instance_id, args.host_project_root)
-            except ProjectAdmissionError:
-                if not gate:
-                    raise
-                app = _diagnostics_app(Path(gate))
-            else:
-                gateway = stack.enter_context(native_runtime_gateway(selection, backend_socket=socket))
-                app = create_app(args.project_root, selection=selection, runtime_gateway=gateway,
-                                 direct_gate=Path(gate) if gate else None)
-                if gate:
-                    app.app = _guard_direct_transport(app.app, Path(gate))
+            selection = startup_selection(
+                args.project_root, args.control_root, args.instance_id,
+                args.host_project_root,
+            )
+            gateway = stack.enter_context(native_runtime_gateway(selection))
+            app = create_app(
+                args.project_root, selection=selection, runtime_gateway=gateway,
+            )
         uvicorn.run(app, host=args.host, port=args.port, log_level=level, access_log=False,
                     log_config=http_log_config())
 

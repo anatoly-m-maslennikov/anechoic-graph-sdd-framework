@@ -22,7 +22,7 @@ UV_PROJECT_ENVIRONMENT="$PWD/LAYER_4_ENGINE_STUDIO_C14/.venv-dev" PYTHONPATH="$P
 
 `mcp-http-start` reports ready only after the loopback HTTP health check passes.
 
-Beta images build with `ANECHOIC_RUNTIME_PROFILE=dev-preprod`. An explicit
+Images build with `ANECHOIC_RUNTIME_PROFILE=dev-preprod`. An explicit
 Docker build can select another profile with
 `--build-arg ANECHOIC_RUNTIME_PROFILE=prod`. To select a profile for a
 container at startup, pass `-e ANECHOIC_RUNTIME_PROFILE=test` to `docker run`.

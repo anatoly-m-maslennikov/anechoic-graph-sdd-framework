@@ -81,8 +81,8 @@ def ensure_display_tag(
 def set_display_role(run, image: str, role: str, refused) -> str:
     if not isinstance(image, str) or IMMUTABLE_IMAGE.fullmatch(image) is None:
         raise refused("Display role requires an immutable image ID")
-    if role not in ("test", "beta", "beta-next", "prod"):
-        raise refused("Display role must be test, beta, beta-next or prod")
+    if role not in ("test", "prod"):
+        raise refused("Display role must be test or prod")
     try:
         row, = json.loads(run(("docker", "image", "inspect", image)), object_pairs_hook=_unique_object)
         version = row["Config"]["Labels"][OCI_VERSION_LABEL]

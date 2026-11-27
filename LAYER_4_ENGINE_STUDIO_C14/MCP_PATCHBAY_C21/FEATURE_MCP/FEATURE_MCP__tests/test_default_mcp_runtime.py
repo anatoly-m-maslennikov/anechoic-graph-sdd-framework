@@ -14,7 +14,7 @@ from mcp import ClientSession
 from mcp.client.stdio import StdioServerParameters, stdio_client
 
 from unittest.mock import NonCallableMock
-from .test_beta_next_query_comparison import project
+from .example_project import project
 MCP = Path(__file__).resolve().parents[1]
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import (  # noqa: E402
     ProjectAdmissionError,

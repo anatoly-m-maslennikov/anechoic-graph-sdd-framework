@@ -63,8 +63,7 @@ performance limit. The receipt records both results. An overrun leaves the
 normal verification and delivery gates in effect. Set
 `ANECHOIC_TEST_IMAGE_FANOUT=3` when the host can support three image test workers.
 
-`project.toml` selects the Current or Beta stack when building an image.
-The image records the selected stack for runtime dispatch.
+`project.toml` declares `stack = "current"` for image builds.
 
 Runtime Images provides the `build-image` and `run-image` commands. User
 Setup uses both commands, and Local Release uses the same image layer for

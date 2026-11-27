@@ -113,6 +113,7 @@ class ReleaseImagesTests(ReleaseImageFixture):
         )
         for contents, message in (
             (b'stack = "beta"\n', "invalid project.toml"),
+            (b'stack = "beta_next"\n', "invalid project.toml"),
             (b'stack = "other"\n', "invalid project.toml"),
             (b'stack = "current"\nextra = 1\n', "invalid project.toml"),
             (b'stack = ["current"]\n', "invalid project.toml"),
@@ -135,6 +136,18 @@ class ReleaseImagesTests(ReleaseImageFixture):
             manager.resolve()
         self.assertEqual({}, self.labels)
         self.assertEqual([], self.commands)
+
+    def test_admission_requires_current_if_stack_label_is_present(self):
+        manager = self.make_manager()
+        manager.resolve()
+        stack = "org.anechoic.runtime.stack"
+        self.labels[stack] = "current"
+        self.assertEqual(self.image, manager.resolve(explicit_id=self.image))
+        for invalid in ("beta", "beta_next", None):
+            with self.subTest(stack=invalid):
+                self.labels[stack] = invalid
+                with self.assertRaisesRegex(RuntimeError, "image admission"):
+                    manager.resolve(explicit_id=self.image)
 
     def test_selector_change_during_inventory_fails(self):
         manager = self.make_manager()
