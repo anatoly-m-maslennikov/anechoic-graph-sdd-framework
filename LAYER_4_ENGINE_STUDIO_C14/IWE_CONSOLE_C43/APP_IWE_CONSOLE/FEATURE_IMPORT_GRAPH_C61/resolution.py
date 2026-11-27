@@ -3,6 +3,7 @@ project code."""
 
 from __future__ import annotations
 
+from functools import cache
 import hashlib as hashlib
 from importlib import metadata
 import json as json
@@ -46,7 +47,7 @@ def _environment_root(root: Path, base: PurePosixPath) -> Path:
 
 def _roots(
     root: Path, python_roots: tuple[str, ...] | None
-) -> list[PurePosixPath]:
+) -> tuple[PurePosixPath, ...]:
     if python_roots is None:
         discovered = []
         for child in sorted(
@@ -80,7 +81,7 @@ def _roots(
             )
         roots.append(PurePosixPath(path.relative_to(root).as_posix()))
 
-    return roots
+    return tuple(roots)
 
 
 def _external(
@@ -137,11 +138,12 @@ def _child_matches(site, name, bases, roots, sources, packages, matches):
 
 
 def _lookup(
-    site, file, roots, sources, packages, external, nodes, image_modules=()
+    site, parent, roots, sources, packages, external, nodes, image_modules=(),
+    *, lookup_bases,
 ):
     written = "." * site.level + site.module
     name = site.module
-    bases = _lookup_bases(site, file, roots)
+    bases = lookup_bases(site.level, parent, roots)
     matches = _candidates(name, bases, sources, packages)
     matches = _child_matches(
         site, name, bases, roots, sources, packages, matches
@@ -176,7 +178,7 @@ def _lookup(
     return written, target, status
 
 
-def _resolve_source(path, source, context, output):
+def _resolve_source(path, source, context, output, lookup_bases):
     (
         root,
         roots,
@@ -192,9 +194,10 @@ def _resolve_source(path, source, context, output):
         return
     source_key = f"module:{path}"
     file = PurePosixPath(path)
+    parent = file.parent
     image_modules = (images or {}).get(path, ())
     source_roots = (
-        [base for base in roots if file.is_relative_to(base)]
+        tuple(base for base in roots if file.is_relative_to(base))
         if python_roots is None
         else roots
     )
@@ -209,13 +212,14 @@ def _resolve_source(path, source, context, output):
         else:
             result = _lookup(
                 site,
-                file,
+                parent,
                 source_roots,
                 sources,
                 packages,
                 source_external,
                 nodes,
                 image_modules,
+                lookup_bases=lookup_bases,
             )
         _record_occurrence(
             site, source_key, *result, seen, nodes, occurrences, edges
@@ -272,8 +276,9 @@ def resolve(
         external,
     )
     output = (nodes, seen, occurrences, edges)
+    lookup_bases = cache(_lookup_bases)
     for path, source in sorted(sources.items()):
-        _resolve_source(path, source, context, output)
+        _resolve_source(path, source, context, output, lookup_bases)
     return list(nodes.values()), occurrences, edges
 
 

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
-from functools import partial
+from functools import cache, partial
 from importlib import metadata
 from pathlib import Path, PurePosixPath
 import sys
@@ -11,6 +11,7 @@ import sys
 from pydantic import ConfigDict
 from pydantic.dataclasses import dataclass
 
+from ._resolution_graph import _lookup_bases
 from .resolution import (
     _environment_root,
     _external,
@@ -95,17 +96,19 @@ def _site_lookup(
     packages,
     nodes,
     image_modules,
+    lookup_bases,
 ):
     if python:
         return partial(
             _lookup,
-            file=file,
+            parent=file.parent,
             roots=source_roots,
             sources=sources,
             packages=packages,
             external=source_external,
             nodes=nodes,
             image_modules=image_modules,
+            lookup_bases=lookup_bases,
         )
     else:
         return partial(
@@ -132,13 +135,14 @@ def code_access_occurrences(
     packages = _packages(sources, roots)
     nodes, facts = {}, []
     external_by_root, external = _external_imports(root, roots, python_roots)
+    lookup_bases = cache(_lookup_bases)
     for path, source in sorted(sources.items()):
         if source.language not in _WEB and source.language != "python":
             continue
         file = PurePosixPath(path)
         image_modules = (python_image_imports or {}).get(path, ())
         source_roots = (
-            [base for base in roots if file.is_relative_to(base)]
+            tuple(base for base in roots if file.is_relative_to(base))
             if python_roots is None
             else roots
         )
@@ -158,6 +162,7 @@ def code_access_occurrences(
             packages,
             nodes,
             image_modules,
+            lookup_bases,
         )
         facts.extend(
             _occurrence(path, site, lookup, python=python)

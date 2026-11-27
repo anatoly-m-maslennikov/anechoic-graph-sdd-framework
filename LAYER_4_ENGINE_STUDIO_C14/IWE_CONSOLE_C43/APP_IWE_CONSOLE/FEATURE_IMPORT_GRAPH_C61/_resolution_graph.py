@@ -12,7 +12,7 @@ from .source import Source
 
 
 def _packages(
-    sources: dict[str, Source], roots: list[PurePosixPath]
+    sources: dict[str, Source], roots: tuple[PurePosixPath, ...]
 ) -> set[str]:
     packages: set[str] = set()
     for path, source in sources.items():
@@ -67,7 +67,7 @@ def _nodes(root: Path, sources: dict[str, Source]) -> dict[str, tuple]:
 
 def _candidates(
     name: str,
-    bases: list[PurePosixPath],
+    bases: tuple[PurePosixPath, ...],
     sources: dict[str, Source],
     packages: set[str],
 ) -> list[str]:
@@ -128,25 +128,21 @@ def _external_manifest(root: Path) -> tuple[str, set[str]]:
     return project_name, external
 
 
-def _lookup_bases(site, file, roots):
-    bases = roots
-    if site.level:
-        parent = file.parent
-        for _ in range(site.level - 1):
+def _lookup_bases(level, parent, roots):
+    if level:
+        for _ in range(level - 1):
             parent = parent.parent
-        bases = (
-            [parent]
+        return (
+            (parent,)
             if any(
-                file.is_relative_to(base)
-                and parent.is_relative_to(base)
-                and parent != base
+                parent != base and parent.is_relative_to(base)
                 for base in roots
             )
-            else []
+            else ()
         )
-    elif roots and file.parent.name == file.parent.parent.name + "__tests":
-        bases = [file.parent, *roots]
-    return bases
+    if roots and parent.name == parent.parent.name + "__tests":
+        return (parent, *roots)
+    return roots
 
 
 def _record_occurrence(

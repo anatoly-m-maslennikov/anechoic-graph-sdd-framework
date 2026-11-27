@@ -97,6 +97,32 @@ class CodeAccessOccurrenceTests(unittest.TestCase):
             )
         (root / "second" / "only_second.py").write_text("")
 
+    def test_relative_bases_follow_each_resolution_roots(self):
+        root = Path(self.enterContext(tempfile.TemporaryDirectory()))
+        package = root / "outer" / "pkg"
+        package.mkdir(parents=True)
+        for name in ("first.py", "second.py"):
+            (package / name).write_text(
+                "from .api import local\nfrom ..api import outer\n"
+            )
+        (package / "api.py").write_text("")
+        (package.parent / "api.py").write_text("")
+        sources = capture(root, None)
+
+        for roots, targets in (
+            (("outer", "."), ["outer/pkg/api.py", "outer/api.py"] * 2),
+            (("outer/pkg",), [None] * 4),
+        ):
+            _, facts = code_access_occurrences(root, sources, roots)
+            self.assertEqual([fact.target_path for fact in facts], targets)
+            _, occurrences, _, _, _ = resolve_realization(
+                root, sources, roots
+            )
+            self.assertEqual(
+                [row[2] for row in occurrences],
+                [f"module:{target}" if target else None for target in targets],
+            )
+
     def test_inferred_child_roots_are_isolated_for_both_resolvers(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
