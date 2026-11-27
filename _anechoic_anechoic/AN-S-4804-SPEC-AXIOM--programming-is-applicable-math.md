@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-4804
+concern:
+  subject: Mathematics of computation
+  path: Design Foundations/Reuse automation and maintenance
+  relation: is_contained_by
 container:
   component: C00
 tier: 0
@@ -9,8 +13,8 @@ context:
   template: axiom
 state:
   status: "active"
-  version: 3
-  updated_at: "2026-11-27T12:24:19.341785+00:00"
+  version: 4
+  updated_at: "2026-11-27T12:46:31.237969+00:00"
 
 ---
 

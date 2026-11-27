@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1448
+concern:
+  subject: Direction of specialist work
+  path: Design Foundations/Delegation and control
+  relation: is_contained_by
 container:
   component: C00
 tier: 0
@@ -9,8 +13,8 @@ context:
   template: axiom
 state:
   status: "active"
-  version: 5
-  updated_at: "2026-11-27T12:24:19.317721+00:00"
+  version: 6
+  updated_at: "2026-11-27T12:46:31.209270+00:00"
 ---
 
 **2.1**

@@ -2,7 +2,7 @@
 
 Each number also appears in its linked source Atom. The Atoms contain the authoritative Claims.
 
-## Themes
+## Design Foundations
 
 ### Information and complexity
 
@@ -60,7 +60,7 @@ When AI Agents decide on the Operator’s behalf, the Operator spends less effor
 
 A system is easier to understand and control when we can see what is happening, what decisions and actions rely on, and how the current state came about.
 
-### Reuse, automation, and maintenance
+### Reuse automation and maintenance
 
 A proven solution that fits saves work. Define the need, compare existing solutions, and build only what’s missing. Programs express computational rules that can automate repeated work. Fixing problems before they spread and keeping the parts consistent reduce effort over the system’s life.
 
