@@ -106,13 +106,7 @@ class LocalReleaseEvidenceTests(SimpleReleaseFixture, unittest.TestCase):
                 "COMMAND_ROOT",
                 self.root,
             ),
-            patch(
-                "LAYER_2_LOCAL_RELEASE_C63.local_release_runner."
-                "subprocess.run",
-                side_effect=lambda argv, **options: runner(
-                    argv, options["cwd"]
-                ),
-            ),
+            self._patch_host_commands(runner),
             patch(
                 "LAYER_2_LOCAL_RELEASE_C63.prepare_test_environment."
                 "missing_test_environment",
@@ -165,13 +159,7 @@ class LocalReleaseEvidenceTests(SimpleReleaseFixture, unittest.TestCase):
                 "COMMAND_ROOT",
                 self.root,
             ),
-            patch(
-                "LAYER_2_LOCAL_RELEASE_C63.local_release_runner."
-                "subprocess.run",
-                side_effect=lambda argv, **options: runner(
-                    argv, options["cwd"]
-                ),
-            ),
+            self._patch_host_commands(runner),
             patch(
                 "LAYER_2_LOCAL_RELEASE_C63.local_release_runner."
                 "run_logged_test_process",

@@ -183,7 +183,7 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
             raise KeyboardInterrupt
 
         output = io.StringIO()
-        with patch("LAYER_2_LOCAL_RELEASE_C63.local_release_runner.subprocess.run", side_effect=lambda argv, **kwargs: runner(argv, kwargs["cwd"])), \
+        with self._patch_host_commands(runner), \
                 patch("LAYER_2_LOCAL_RELEASE_C63.local_release_progress.COMMAND_ROOT", self.root), \
                 patch("LAYER_2_LOCAL_RELEASE_C63.local_release_runner.run_logged_test_process", side_effect=interrupted), \
                 patch("LAYER_2_LOCAL_RELEASE_C63.local_release_runner.sys.stderr", output):
@@ -213,7 +213,7 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
             log.write(b"complete test evidence\n")
             return subprocess.CompletedProcess(argv, 0, "bounded tail", "")
 
-        with patch("LAYER_2_LOCAL_RELEASE_C63.local_release_runner.subprocess.run", side_effect=lambda argv, **kwargs: runner(argv, kwargs["cwd"])), \
+        with self._patch_host_commands(runner), \
                 patch("LAYER_2_LOCAL_RELEASE_C63.local_release_progress.COMMAND_ROOT", self.root), \
                 patch("LAYER_2_LOCAL_RELEASE_C63.local_release_runner.run_logged_test_process", side_effect=passed), \
                 patch("LAYER_2_LOCAL_RELEASE_C63.local_release_package_phases._prepare_package", side_effect=RuntimeError("package failed")):
@@ -324,15 +324,9 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
             output = "ANECHOIC_CANARY_ENDPOINT http://127.0.0.1:49152/anechoic/mcp\n" if phase == "canary" else ""
             return subprocess.CompletedProcess(argv, 0, output, "")
 
-        original_run = subprocess.run
-        def run(argv, **kwargs):
-            if argv[0] in ("git", "docker"):
-                return runner(argv, self.root)
-            return original_run(argv, **kwargs)
-
         with patch.dict(os.environ, {"PYTHONHOME": "/bad", "VIRTUAL_ENV": "/bad", "PYTHONPATH": "/bad"}), \
                 patch("LAYER_2_LOCAL_RELEASE_C63.local_release_progress.COMMAND_ROOT", self.root), \
-                patch("LAYER_2_LOCAL_RELEASE_C63.local_release_runner.subprocess.run", side_effect=run), \
+                self._patch_host_commands(runner), \
                 patch("LAYER_2_LOCAL_RELEASE_C63.local_release_runner.run_logged_test_process", side_effect=passed):
             result = run_local_release(self.root, run_id="gate-logs")
         self.assertEqual("completed", result["outcome"], result)

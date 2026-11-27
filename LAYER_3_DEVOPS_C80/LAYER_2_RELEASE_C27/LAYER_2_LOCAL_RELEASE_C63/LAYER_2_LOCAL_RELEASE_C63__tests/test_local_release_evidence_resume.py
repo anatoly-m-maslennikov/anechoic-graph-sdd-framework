@@ -30,13 +30,7 @@ class LocalReleaseEvidenceTests(SimpleReleaseFixture, unittest.TestCase):
                 "COMMAND_ROOT",
                 self.root,
             ),
-            patch(
-                "LAYER_2_LOCAL_RELEASE_C63.local_release_runner."
-                "subprocess.run",
-                side_effect=lambda argv, **options: runner(
-                    argv, options["cwd"]
-                ),
-            ),
+            self._patch_host_commands(runner),
         ):
             result = run_local_release(
                 self.root, run_id="missing-preflight-engine"

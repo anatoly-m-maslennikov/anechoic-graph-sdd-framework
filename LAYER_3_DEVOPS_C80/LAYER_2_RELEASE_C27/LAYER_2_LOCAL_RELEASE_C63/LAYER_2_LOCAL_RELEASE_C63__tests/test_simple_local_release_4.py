@@ -237,9 +237,7 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
         runner, _ = self._runner()
         calls, probes = [], []
 
-        def host(argv, **kwargs):
-            if argv[-1] != "--help":
-                return runner(argv, kwargs["cwd"])
+        def probe(argv, **kwargs):
             self.assertEqual(source, kwargs["cwd"])
             self.assertEqual(str(engine), kwargs["env"]["PYTHONPATH"])
             self.assertEqual(str(engine / ".venv-dev/bin/python"), argv[0])
@@ -260,7 +258,7 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
         with (
             patch.object(LocalReleaseRun, "_test_gate_options", return_value=options),
             patch("LAYER_2_LOCAL_RELEASE_C63.local_release_progress.COMMAND_ROOT", self.root),
-            patch("LAYER_2_LOCAL_RELEASE_C63.local_release_runner.subprocess.run", side_effect=host),
+            self._patch_host_commands(runner, help_probe=probe),
             patch("LAYER_2_LOCAL_RELEASE_C63.local_release_runner.run_logged_test_process", side_effect=gate),
         ):
             result = run_local_release(self.root, run_id="source-gate-capabilities")

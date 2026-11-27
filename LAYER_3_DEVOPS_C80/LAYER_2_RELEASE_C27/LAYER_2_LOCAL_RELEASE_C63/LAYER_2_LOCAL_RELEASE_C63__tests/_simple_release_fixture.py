@@ -163,6 +163,18 @@ class SimpleReleaseFixture:
         self._native_project()
 
 
+    def _patch_host_commands(self, runner, *, help_probe=None):
+        original_run = subprocess.run
+
+        def run(argv, **options):
+            if argv[0] in ("git", "docker"):
+                return runner(argv, options["cwd"])
+            if help_probe is not None and argv[-1] == "--help":
+                return help_probe(argv, **options)
+            return original_run(argv, **options)
+
+        return patch("subprocess.run", side_effect=run)
+
     def _runner(self):
         calls = []
         staged = False
