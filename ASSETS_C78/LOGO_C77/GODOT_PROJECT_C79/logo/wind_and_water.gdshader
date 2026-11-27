@@ -33,9 +33,9 @@ vec3 windy_sky(vec2 p) {
 
 float surface_swell(float x) {
 	// The floating letters follow this profile in iceberg.gd.
-	float phase = x * 0.078 + 0.73 * sin(x * 0.027);
-	float height = 10.0 + 3.8 * sin(x * 0.041 + 1.1);
-	return height * sin(phase) + 3.5 * cos(phase * 2.0 + 0.95) + 1.0 * sin(x * 0.29);
+	float phase = x * 0.077 + sin(x * 0.026) + 0.36 * sin(x * 0.101 + 0.7);
+	float height = 11.0 + 4.6 * sin(x * 0.041 + 1.1) + 2.2 * sin(x * 0.12 - 0.5);
+	return height * sin(phase) + 3.8 * cos(phase * 2.0 + 0.95) + 1.7 * sin(x * 0.29) + 0.9 * sin(x * 0.53);
 }
 
 vec3 surface_water(vec2 pixel, float swell, float depth, vec3 water) {
@@ -97,7 +97,7 @@ float atom_orbit(vec2 point) {
 
 vec3 atoms_and_molecules(vec2 pixel, vec3 water) {
 	vec2 pitch = vec2(24.0, 16.0);
-	vec2 grid = (pixel - vec2(0.0, 452.0)) / pitch;
+	vec2 grid = (pixel - vec2(0.0, 476.0)) * 2.0 / pitch;
 	float row = floor(grid.y);
 	if (row < 0.0 || row >= 3.0) {
 		return water;
@@ -121,15 +121,20 @@ vec3 atoms_and_molecules(vec2 pixel, vec3 water) {
 }
 
 vec3 electricity(vec2 pixel, vec3 water) {
+	vec2 bolt = pixel - vec2(pixel.x < 250.0 ? 69.0 : 431.0, 440.0);
+	float clear_space = 1.0 - smoothstep(6.0, 12.0, length(bolt * vec2(1.0, 0.62)));
 	for (int index = 0; index < 3; index++) {
 		float row = float(index);
 		float wave = 2.6 * sin(pixel.x * (0.17 + row * 0.018) + row * 1.4);
-		float distance = abs(pixel.y - 425.0 - row * 9.0 - wave);
+		float distance = abs(pixel.y - 429.0 - row * 11.0 - wave);
 		float glow = (1.0 - smoothstep(0.6, 3.1, distance)) * 0.15;
 		float current = 1.0 - smoothstep(0.3, 1.25, distance);
-		water = mix(water, vec3(0.34, 0.84, 0.77), glow + 0.66 * current);
+		water = mix(water, vec3(0.34, 0.84, 0.77), (glow + 0.66 * current) * (1.0 - 0.84 * clear_space));
 	}
-	return water;
+	float flash = max(trace(bolt, vec2(3.5, -9.0), vec2(-3.5, 0.0), 2.5),
+		max(trace(bolt, vec2(-3.5, 0.0), vec2(3.5, -1.0), 2.2),
+			trace(bolt, vec2(3.5, -1.0), vec2(-2.5, 9.0), 2.4)));
+	return mix(water, vec3(1.0, 0.79, 0.38), flash);
 }
 
 void fragment() {

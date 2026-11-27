@@ -75,15 +75,15 @@ func _build_water_text() -> void:
 	var font := SystemFont.new()
 	font.font_names = PackedStringArray(["Menlo", "DejaVu Sans Mono", "monospace"])
 	var letters := "aWdeIrTpsNoMtyAVeLcgUkn"
-	for index in range(50):
-		var x := 5.0 + index * 10.0
+	for index in range(71):
+		var x := 3.5 + index * 7.0 + 1.4 * sin(index * 1.8)
 		var crest := _surface_swell(x)
-		var y := 251.0 + crest
+		var y := 251.0 + crest + 2.0 * sin(index * 2.1)
 		var slope := (_surface_swell(x + 1.0) - _surface_swell(x - 1.0)) * 0.5
-		var size := roundi(lerpf(17.0, 14.0, smoothstep(-11.0, 1.0, crest)))
+		var size := 9 + (index * 7) % 10 + roundi(2.0 * (1.0 - smoothstep(-11.0, 1.0, crest)))
 		var letter := _water_label(font, letters[index % letters.length()], Vector2(x, y), size, Color("#e1f6e9"))
-		letter.rotation.z = -atan(slope)
-		letter.outline_size = 2
+		letter.rotation.z = -atan(slope) + 0.15 * sin(index * 3.7)
+		letter.outline_size = 1
 		letter.outline_modulate = Color("#386460")
 
 	_water_label(font, "def idea(): ...", Vector2(59, 286), 11, Color("#c7edba"))
@@ -96,9 +96,9 @@ func _build_water_text() -> void:
 
 func _surface_swell(x: float) -> float:
 	# Match the crest in wind_and_water.gdshader.
-	var phase := x * 0.078 + 0.73 * sin(x * 0.027)
-	var height := 10.0 + 3.8 * sin(x * 0.041 + 1.1)
-	return height * sin(phase) + 3.5 * cos(phase * 2.0 + 0.95) + 1.0 * sin(x * 0.29)
+	var phase := x * 0.077 + sin(x * 0.026) + 0.36 * sin(x * 0.101 + 0.7)
+	var height := 11.0 + 4.6 * sin(x * 0.041 + 1.1) + 2.2 * sin(x * 0.12 - 0.5)
+	return height * sin(phase) + 3.8 * cos(phase * 2.0 + 0.95) + 1.7 * sin(x * 0.29) + 0.9 * sin(x * 0.53)
 
 func _water_label(font: Font, copy: String, pixel: Vector2, size: int, ink: Color) -> Label3D:
 	var label := Label3D.new()
