@@ -80,6 +80,35 @@ def test_ticket_subtype_template_uses_inherited_property():
     )
 
 
+def test_ready_nodes_reuse_records_across_dependency_retries(monkeypatch):
+    nodes = import_module(
+        "FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75."
+        "LAYER_2_FORMAL_MODEL_C51.FEATURE_FORMAL_MODEL_GENERATOR."
+        "manifest_compiler_CS1.active_source_nodes"
+    )
+    record = nodes._model_record
+    parsed = []
+
+    def count_record(subject, claim):
+        parsed.append(subject)
+        return record(subject, claim)
+
+    monkeypatch.setattr(nodes, "_model_record", count_record)
+    records = [("seed", *lower_typed_node("node(Node)", [])[0])]
+    pending = [
+        ("leaf", None, "node(Leaf, Branch)", "manifest_node"),
+        ("branch", None, "node(Branch, Node)", "manifest_node"),
+    ]
+
+    def append_claim(source, subject, claim):
+        records.append((source, subject, claim))
+
+    nodes._lower_ready_nodes(pending, records, append_claim, require_all=True)
+    assert pending == []
+    assert [source for source, _, _ in records] == ["seed", "branch", "leaf"]
+    assert parsed == [subject for _, subject, _ in records[:2]]
+
+
 def test_node_marker_is_static_and_lowers_to_a_class():
     parse_typed_manifest_node = import_module(
         "FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared"

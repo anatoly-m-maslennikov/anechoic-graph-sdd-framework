@@ -12,6 +12,14 @@ from .....FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
 )
 
 
+def _model_record(subject, claim):
+    declaration = parse_native_model_claim(claim)
+    args = declaration["arguments"]
+    name = args.get("entity_class")
+    root = model_class_target(subject, args["entity_name"]) if name else None
+    return declaration, name, root
+
+
 def _lower_node_values(
     node, roots, parents, properties, root, display, claims
 ):
@@ -27,9 +35,11 @@ def _lower_node_values(
         )
 
 
-def lower_typed_node(text, records, subject=None):
+def lower_typed_node(
+    text, records, subject=None, *, model_record=_model_record
+):
     node = parse_typed_manifest_node(text)
-    roots, parents, properties = _model_records(records)
+    roots, parents, properties = _model_records(records, model_record)
     if any(base not in roots or not roots[base] for base in node["bases"]):
         raise ValueError("unknown typed node base")
     if len(node["bases"]) > 1 and subject is None:
@@ -159,13 +169,12 @@ def _lower_property_value(
     )
 
 
-def _model_records(records):
+def _model_records(records, model_record):
     roots, parents, properties = {}, {}, []
     for _, declared_subject, claim in records:
-        declaration = parse_native_model_claim(claim)
+        declaration, name, root = model_record(declared_subject, claim)
         args = declaration["arguments"]
-        if name := args.get("entity_class"):
-            root = model_class_target(declared_subject, args["entity_name"])
+        if name:
             if name in roots:
                 raise ValueError(f"ambiguous Model class: {name}")
             roots[name] = root

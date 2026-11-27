@@ -11,7 +11,10 @@ from .lint_python_model_claim__pub import (
     lint_python_model_claim,
     resolve_model_claim_reference,
 )
-from .native_model_lint__pub import lint_native_model_claim
+from .native_model_lint__pub import (
+    lint_native_model_claim,
+    native_model_claim_linter,
+)
 from .scope_callback_asset import (
     generated_assets,
     load_packaged_module,
@@ -41,6 +44,7 @@ __all__ = [
     "load_packaged_module",
     "lint_native_model_claim",
     "lint_python_model_claim",
+    "native_model_claim_linter",
     "resolve_model_claim_reference",
     "verify_packaged_assets",
     "verify_packaged_dependencies_check",

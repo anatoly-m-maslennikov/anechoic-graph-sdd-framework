@@ -11,6 +11,9 @@ from pydantic.dataclasses import is_pydantic_dataclass
 from importlib.util import module_from_spec, spec_from_file_location
 from unittest.mock import patch
 
+from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE import (
+    native_model_lint__pub,
+)
 from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.\
     FEATURE_FORMAL_MODEL_GENERATOR.\
     FEATURE_FORMAL_MODEL_GENERATOR__shared import (
@@ -197,6 +200,21 @@ class ModelClassAssemblyMoreTests(unittest.TestCase):
             validate_model_instance(
                 node, population_peers={node: [node(1)]}, **args
             )
+
+    def test_selected_declarations_share_one_address_catalog_per_run(self):
+        rows = _validator_rows()
+        with patch.object(
+            native_model_lint__pub, "_catalog",
+            wraps=native_model_lint__pub._catalog,
+        ) as catalog:
+            self.assertEqual(len(select_model_declarations(rows)), len(rows))
+            catalog.assert_called_once()
+            with self.assertRaisesRegex(
+                ValueError,
+                "unknown population Property address: Node.Identity",
+            ):
+                select_model_declarations([rows[0], rows[2]])
+            self.assertEqual(catalog.call_count, 2)
 
 
 if __name__ == "__main__":

@@ -9,7 +9,7 @@ from ....FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
 )
 from ....FEATURE_FORMAL_MODEL_ENGINE.\
     FEATURE_FORMAL_MODEL_ENGINE__shared import (
-        lint_native_model_claim,
+        native_model_claim_linter,
         resolve_model_claim_reference,
     )  # fmt: skip
 from ....FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
@@ -215,8 +215,13 @@ def _selected_carrier(carrier):
 
 
 def _lint_relation_references(parsed, addresses, relations):
-    simple_address = cache(simple_model_address)
-    canonical_address = cache(canonical_model_address)
+    lint = native_model_claim_linter(
+        declared_addresses=addresses,
+        relation_names=set(relations),
+        resolve_address=resolve_model_claim_reference,
+        simple_address=cache(simple_model_address),
+        canonical_address=cache(canonical_model_address),
+    )
     keys = {
         "source_endpoint",
         "target_endpoint",
@@ -233,28 +238,10 @@ def _lint_relation_references(parsed, addresses, relations):
     for source, subject, declaration in sorted(
         parsed, key=lambda item: item[2]["kind"] != "relation"
     ):
-        _lint_relation(
-            source,
-            subject,
-            declaration,
-            keys,
-            addresses,
-            relations,
-            simple_address,
-            canonical_address,
-        )
+        _lint_relation(source, subject, declaration, keys, lint)
 
 
-def _lint_relation(
-    source,
-    subject,
-    declaration,
-    keys,
-    addresses,
-    relations,
-    simple_address,
-    canonical_address,
-):
+def _lint_relation(source, subject, declaration, keys, lint):
     try:
         validate_field_contracts(declaration)
     except ValueError as error:
@@ -269,16 +256,7 @@ def _lint_relation(
         "classes": (),
     }
     check.pop("instance_check", None)
-    errors = lint_native_model_claim(
-        check,
-        declared_addresses=addresses,
-        relation_names=set(relations),
-        path=source,
-        first_line=1,
-        resolve_address=resolve_model_claim_reference,
-        simple_address=simple_address,
-        canonical_address=canonical_address,
-    )
+    errors = lint(check, source, 1)
     if errors:
         raise ValueError(errors[0])
 

@@ -1,7 +1,9 @@
 """Resolve and lower typed active Model nodes."""
 
 import ast
+from functools import cache
 from pathlib import PurePosixPath
+
 from .....FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
     parse_typed_manifest_node,
 )
@@ -10,7 +12,7 @@ from .....FEATURE_TOOLS.ADAPTERS_C30.model_ontology_path__pub import (
 )
 from .active_source_claims import _source_error, _valid_subject
 from .typed_addresses import typed_addresses
-from .typed_node_lowering import lower_typed_node
+from .typed_node_lowering import _model_record, lower_typed_node
 from .typed_property_relation_lowering import typed_property_subject
 
 
@@ -69,11 +71,14 @@ def _classify_typed_sources(typed):
 
 
 def _lower_ready_nodes(pending, records, append_claim, *, require_all):
+    model_record = cache(_model_record)
     while pending:
         progress = False
         for source, scope, text, kind in pending[:]:
             try:
-                lowered = lower_typed_node(text, records, scope)
+                lowered = lower_typed_node(
+                    text, records, scope, model_record=model_record
+                )
             except ValueError as error:
                 if str(error) in {
                     "unknown typed node base",

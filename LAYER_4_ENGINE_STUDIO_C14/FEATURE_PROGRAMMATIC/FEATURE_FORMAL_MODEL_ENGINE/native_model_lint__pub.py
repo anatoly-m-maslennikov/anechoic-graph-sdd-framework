@@ -8,40 +8,74 @@ from collections.abc import Collection, Callable, Mapping
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.dataclass_field_contract__pub import validate_field_contracts
 
 
-def lint_native_model_claim(declaration: dict, *, declared_addresses: Collection[str],
-                            relation_names: Collection[str], path: str, first_line: int,
-                            resolve_address: Callable, simple_address: Callable, canonical_address: Callable,
-                            python_class_bindings: Mapping[str, Collection[str]] | None = None) -> tuple[str, ...]:
+def lint_native_model_claim(
+    declaration: dict,
+    *,
+    declared_addresses: Collection[str],
+    relation_names: Collection[str],
+    path: str,
+    first_line: int,
+    resolve_address: Callable,
+    simple_address: Callable,
+    canonical_address: Callable,
+    python_class_bindings: Mapping[str, Collection[str]] | None = None,
+) -> tuple[str, ...]:
+    lint = native_model_claim_linter(
+        declared_addresses=declared_addresses,
+        relation_names=relation_names,
+        resolve_address=resolve_address,
+        simple_address=simple_address,
+        canonical_address=canonical_address,
+        python_class_bindings=python_class_bindings,
+    )
+    return lint(declaration, path, first_line)
+
+
+def native_model_claim_linter(
+    *,
+    declared_addresses: Collection[str],
+    relation_names: Collection[str],
+    resolve_address: Callable,
+    simple_address: Callable,
+    canonical_address: Callable,
+    python_class_bindings: Mapping[str, Collection[str]] | None = None,
+) -> Callable[[dict, str, int], tuple[str, ...]]:
+    """Prepare the address catalog once for a set of Claims."""
     declared, canonical, class_names = _catalog(
         declared_addresses, simple_address, canonical_address
     )
-    args = declaration["arguments"]
-    line = first_line + declaration["line"] - 1
 
-    def error(message: str) -> tuple[str, ...]:
-        return (f"{path}:{line}:1: {message}",)
+    def lint(declaration: dict, path: str, first_line: int) -> tuple[str, ...]:
+        args = declaration["arguments"]
+        line = first_line + declaration["line"] - 1
 
-    result = _validate_claim(
-        declaration,
-        args,
-        python_class_bindings,
-        canonical_address,
-        canonical,
-        class_names,
-        error,
-    )
-    if result:
-        return result
-    result = _validate_fallback(args, relation_names, canonical_address, canonical,
-                                simple_address, declared, error)
-    if result:
-        return result
-    result = _validate_population(args, canonical_address, canonical, resolve_address,
-                                  declared, relation_names, error)
-    if result:
-        return result
-    return _validate_paths(declaration, args, relation_names, resolve_address,
-                           canonical_address, canonical, declared, error)
+        def error(message: str) -> tuple[str, ...]:
+            return (f"{path}:{line}:1: {message}",)
+
+        result = _validate_claim(
+            declaration, args, python_class_bindings, canonical_address,
+            canonical, class_names, error,
+        )
+        if result:
+            return result
+        result = _validate_fallback(
+            args, relation_names, canonical_address, canonical, simple_address,
+            declared, error,
+        )
+        if result:
+            return result
+        result = _validate_population(
+            args, canonical_address, canonical, resolve_address, declared,
+            relation_names, error,
+        )
+        if result:
+            return result
+        return _validate_paths(
+            declaration, args, relation_names, resolve_address,
+            canonical_address, canonical, declared, error,
+        )
+
+    return lint
 
 
 def _catalog(declared_addresses, simple_address, canonical_address):
