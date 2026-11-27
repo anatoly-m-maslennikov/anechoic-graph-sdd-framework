@@ -8,3 +8,14 @@ export type QueryRun = {
   save?: boolean;
   name?: string;
 };
+
+export type QueryColumn = {
+  name: string;
+  type: string;
+  has_values: boolean;
+};
+
+export type QueryPageCore = {
+  query_id: string;
+  columns: Array<QueryColumn>;
+};

@@ -1,10 +1,10 @@
-"""Generate the query_run wire contract from its owning Pydantic model."""
+"""Generate query wire types from the owning Pydantic models."""
 
 from argparse import ArgumentParser
 import json
 from pathlib import Path
 
-from .models import Query
+from .models import Page, Query
 
 ROOT = Path(__file__).resolve().parents[2]
 SCHEMA_PATH = Path(__file__).with_name("query_run.schema.json")
@@ -35,18 +35,40 @@ def schema_text():
     return json.dumps(query_schema(), indent=2, sort_keys=True) + "\n"
 
 
-def typescript_text():
-    schema = query_schema()
-    types = {"string": "string", "integer": "number", "boolean": "boolean"}
-    lines = ["export type QueryRun = {"]
-    for name, field in schema["properties"].items():
-        if "enum" in field:
-            value = " | ".join(json.dumps(item) for item in field["enum"])
-        else:
-            value = types[field["type"]]
-        optional = "" if name in schema["required"] else "?"
-        lines.append(f"  {name}{optional}: {value};")
+def _typescript_type(field):
+    if "enum" in field:
+        return " | ".join(json.dumps(item) for item in field["enum"])
+    if field.get("$ref") == "#/$defs/Column":
+        return "QueryColumn"
+    if field["type"] == "array":
+        return f"Array<{_typescript_type(field['items'])}>"
+    return {"string": "string", "integer": "number", "boolean": "boolean"}[
+        field["type"]
+    ]
+
+
+def _typescript_declaration(name, schema, fields=None):
+    properties = schema["properties"]
+    required = schema.get("required", ())
+    if fields is None:
+        fields = properties
+    lines = [f"export type {name} = {{"]
+    for field in fields:
+        optional = "" if field in required else "?"
+        value = _typescript_type(properties[field])
+        lines.append(f"  {field}{optional}: {value};")
     return "\n".join([*lines, "};", ""])
+
+
+def typescript_text():
+    page = Page.model_json_schema()
+    return "\n".join(
+        (
+            _typescript_declaration("QueryRun", query_schema()),
+            _typescript_declaration("QueryColumn", page["$defs"]["Column"]),
+            _typescript_declaration("QueryPageCore", page, page["required"]),
+        )
+    )
 
 
 def main():

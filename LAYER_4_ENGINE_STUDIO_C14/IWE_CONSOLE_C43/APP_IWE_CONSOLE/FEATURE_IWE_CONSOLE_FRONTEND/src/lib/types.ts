@@ -1,5 +1,8 @@
+import type { QueryPageCore } from './query_run.generated';
 
-export type Column = { name: string; type: string; has_values?: boolean };
+type PageColumn = QueryPageCore['columns'][number];
+export type Column = Omit<PageColumn, 'has_values'> &
+  Partial<Pick<PageColumn, 'has_values'>>;
 
 export type SavedIdentity = {
   saved_query_id: string;
@@ -9,9 +12,8 @@ export type SavedIdentity = {
   name?: string;
 };
 
-export type QueryResult = {
+export type QueryResult = Omit<QueryPageCore, 'columns'> & {
   sql: string;
-  query_id: string;
   columns: Column[];
   rows: unknown[][];
   row_count: number;
