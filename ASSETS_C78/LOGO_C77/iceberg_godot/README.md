@@ -1,6 +1,8 @@
 # Anechoic Iceberg
 
-This separate Godot 4 project renders the medium iceberg logo. The profile camera places the waterline halfway up the image. Smooth wind trails sit above the water. Quantized signal noise fills the water around the iceberg.
+This Godot 4 project renders the medium logo. The iceberg represents the project. Wind carries the person's ideas through the noosphere. The digital technosphere spans interfaces and models near the waterline and microelectronics at depth.
+
+The profile camera places the waterline halfway up the image. Cutaway openings reveal an inset spiral with guardrails and a glass canopy below the waterline. A single smooth line in the ice represents an idea without echoes.
 
 Edit the iceberg profile and the spiral in `iceberg.gd`. The scene uses Avenir Next Demi Bold for the wordmark, with a system sans-serif fallback.
 
