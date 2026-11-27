@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-168
+concern:
+  subject: "Projection"
+  path: "Model/Graph/Node//Artifact//Derived"
+  relation: "is_narrower_than"
 container:
   component: C16
 tier: 1
@@ -8,8 +12,8 @@ context:
   lens: DES
 state:
   status: active
-  version: 22
-  updated_at: 2026-10-27 19:59:49 +0400
+  version: 23
+  updated_at: "2026-11-27T16:16:01.404965+00:00"
 ---
 ## Summary
 

@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-3364
+concern:
+  subject: "Ticket"
+  path: "Model/Graph/Node//Artifact//SSOT//Prescribed/Content/Atom"
+  relation: "is_narrower_than"
 container:
   component: C16
 tier: 1
@@ -11,9 +15,9 @@ relations:
   IS_SOLUTION_FOR:
   - AN-S-3304@2
 state:
-  status: "active"
-  version: 2
-  updated_at: "2026-11-26T16:43:14.662251+00:00"
+  status: active
+  version: 6
+  updated_at: "2026-11-27T17:35:01.150345+00:00"
 ---
 
 ## Summary
@@ -24,9 +28,9 @@ Apply one admitted native Task or Ticket lifecycle request.
 
 ### Prose Claim
 
-The CLI checks the pinned Project and captures carriers, then dispatches
-the lifecycle operation. Report its result, including any effects. A
-rejected request or runtime error can exit on stderr.
+The CLI checks the pinned Project and captures carriers before dispatch.
+Apply the native lifecycle operation and result Contract in AN-S-3056.
+A rejected request or runtime error can exit on stderr.
 
 ### Formal Claim
 
@@ -69,5 +73,4 @@ component_workflow(
 
 ## Details
 
-This Solution defines the expected event sequence for the selected workflow.
-Trace conformance requires recorded evidence.
+Use AN-S-2686 for trace evidence.

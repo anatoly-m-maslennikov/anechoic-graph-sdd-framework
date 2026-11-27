@@ -31,7 +31,7 @@ _UNADAPTABLE_ROOT_KEYS = frozenset(
 
 
 def _native_presence(predicate, fields):
-    """Match predicates whose truth is unchanged by adding envelope properties."""
+    "Match predicates whose truth is unchanged by adding envelope properties."
     if not isinstance(predicate, dict) or predicate.keys() - {
         "required",
         "anyOf",
@@ -65,7 +65,8 @@ def public_tool(tool: types.Tool, *, required: bool = True) -> types.Tool:
         for arm in schema.get("oneOf", ())
     ):
         raise ValueError(
-            "Native Tool input schema cannot safely add project_root at its root"
+            "Native Tool input schema cannot safely add "
+            "project_root at its root"
         )
     if {"project_root", "caller_context"} & properties.keys():
         raise ValueError(
@@ -85,11 +86,9 @@ def public_tool(tool: types.Tool, *, required: bool = True) -> types.Tool:
     required_fields = list(schema.get("required", []))
     if required and "project_root" not in required_fields:
         required_fields.append("project_root")
-    schema["type"], schema["properties"], schema["required"] = (
-        "object",
-        properties,
-        required_fields,
-    )
+    schema["type"] = "object"
+    schema["properties"] = properties
+    schema["required"] = required_fields
     try:
         Draft202012Validator.check_schema(schema)
     except SchemaError as error:

@@ -114,13 +114,15 @@ def derive_filename(
 
 
 _ORDER = re.compile(
-    r'^Atom/\(\s*\.Header\.Context\.Role\s*:=\s*(?P<role>"[^"\r\n]+"|[A-Za-z][A-Za-z0-9 _-]*)\s*\)'
+    r"^Atom/\(\s*\.Header\.Context\.Role\s*:=\s*"
+    r'(?P<role>"[^"\r\n]+"|[A-Za-z][A-Za-z0-9 _-]*)\s*\)'
     r"\s*>\|\s*\(\s*Role Order Number\s*==\s*(?P<order>[1-9][0-9]*)\s*\)$"
 )
 
 
 def compile_role_folders(statements):
-    """Return canonical Role -> (derived folder, source) for bounded order claims."""
+    """Return canonical Role -> (derived folder, source) \
+for bounded order claims."""
     return role_folders_from_orders(_legacy_role_orders(statements))
 
 

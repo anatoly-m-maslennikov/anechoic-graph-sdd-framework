@@ -8,8 +8,8 @@ context:
   lens: DevOps
 state:
   status: active
-  version: 38
-  updated_at: 2026-11-02 19:46:47 +0400
+  version: 39
+  updated_at: "2026-11-27T17:35:01.150345+00:00"
 ---
 ## Summary
 
@@ -19,8 +19,6 @@ Deliver the commit-change-set script
 
 Realize `COMMIT_CHANGE_SET` through the canonical source script `LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/COMMIT_CHANGE_SET/commit_change_set.py` **and** its content-identical carrier **in** the selected `.anechoic_runtime/tools` release. It exposes the common Doer CLI **in** dry-run **and** authorized-MCP apply modes. It consumes **only** sealed peer results **and** **must not** import, invoke, schedule, **or** **otherwise** orchestrate `COMMIT_TRIGGER`, `COMMIT_CONTEXT`, **or** `APPEND_CHANGE_RECORDS`.
 
-the script receives a durable outbox action, chooses it **only** while holding the repository-scoped lease **and** current fencing token, **and** revalidates the sealed Initiative, expected Git base, subject frontier, **and** complete target set immediately **before** staging, Git mutation, **and** result recording. An atomic real-change commit stages exactly one action target; a bulk commit stages **all** **and** **only** its frozen targets. Both use the Initiative-based message Projection **and** stage no Journal carrier. Journal append is a peer operation; a later Journal-only batch is a distinct gate item with **only** Journal carrier changes **and** the batch message form.
+Apply AN-S-83 to durable outbox selection, the repository-scoped lease and fence, and exact real-change and Journal-only target sets. Revalidate the sealed Initiative, expected Git base, subject frontier, and complete target set immediately before staging, Git mutation, and result recording. Stage no Journal Carrier in a real-change commit. Journal append is a peer operation. Use AN-S-273 for both commit message forms.
 
-Dry run is mutation-free. Recovery reconciles **any** uncertain Git effect against the outbox **and** reachable Git history **before** retry. The installed script **may** expose read-only Git-hook validation **and** observation modes. Each synchronous `pre-commit` **or** `commit-msg` carrier performs **only** its required fail-closed Evaluation, **and** `post-commit` performs **only** its declared observation. Every carrier has an explicit measured latency threshold **and** timeout, stable exit semantics, **and** structured diagnostics. Broad repository scans, graph traversal, context gathering, Journal append, staging, commit creation, retry, lifecycle control, **and** background processing are prohibited inside these Hook processes; non-gating work is handed **to** changed-target **or** background execution.
-
-No Git-hook mode creates a trigger, writes a Journal record, stages a path, **or** creates a commit. The modes reject staged installation, Runtime, Git-internal, mixed real-change/Journal, stale, **or** unfenced action boundaries. Codex automatic-commit intake remains a separate asynchronous carrier governed by `COMMIT_TRIGGER`.
+Dry run is mutation-free. Recovery reconciles **any** uncertain Git effect against the outbox **and** reachable Git history **before** retry. Apply AN-S-5176 to installed Git Hook modes.

@@ -16,6 +16,7 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.\
 
 
 Record = dict[str, Any]
+_MISSING_BEARER = "Native Property base_path has no declared immediate bearer."
 
 
 def _bind_native_property_paths(
@@ -56,7 +57,7 @@ def _bind_native_property_paths(
                 gaps.append(
                     {
                         **entry,
-                        "message": "Native Property base_path has no declared immediate bearer.",
+                        "message": _MISSING_BEARER,
                     }
                 )
             break
@@ -73,38 +74,48 @@ def _pending_property_paths(catalog, _target):
         if kind != "property":
             continue
         for entry in list(entries):
-            blocks = entry.get("python_blocks", [])
-            if len(blocks) != 1 or entry["diagnostics"]:
-                continue
-            try:
-                declaration = native_declaration(blocks[0]["block"])
-            except ValueError:
-                continue
-            if not declaration or declaration["kind"] != "entity":
-                continue
-            args = declaration["arguments"]
-            if args.get("relation_name") != "IS_PROPERTY_OF":
-                continue
-            try:
-                explicit = _subject_parse_subject_expression(
-                    args["base_path"] + "." + args["entity_name"],
-                    subject_profile="approved",
-                ).expression
-                base = _subject_parse_subject_expression(
-                    args["base_path"], subject_profile="approved"
-                ).expression
-            except _subject_SubjectNotationError:
-                continue
-            target, bearer = _target(explicit), _target(base)
-            original = _property_parts(identity)
-            if not target or target[0] != "property" or not original:
-                continue
-            if (
-                not isinstance(original[1][-1].operand, _subject_Name)
-                or original[1][-1].operand.value != args["entity_name"]
-            ):
-                continue
-            if target[1] != identity:
+            result = _property_path(
+                entry, identity, _target, native_declaration
+            )
+            if result is not None:
+                target, bearer = result
                 pending.append(((kind, identity), entry, target, bearer))
 
     return pending
+
+
+def _property_path(entry, identity, _target, native_declaration):
+    blocks = entry.get("python_blocks", [])
+    if len(blocks) != 1 or entry["diagnostics"]:
+        return None
+    try:
+        declaration = native_declaration(blocks[0]["block"])
+    except ValueError:
+        return None
+    if not declaration or declaration["kind"] != "entity":
+        return None
+    args = declaration["arguments"]
+    if args.get("relation_name") != "IS_PROPERTY_OF":
+        return None
+    try:
+        explicit = _subject_parse_subject_expression(
+            args["base_path"] + "." + args["entity_name"],
+            subject_profile="approved",
+        ).expression
+        base = _subject_parse_subject_expression(
+            args["base_path"], subject_profile="approved"
+        ).expression
+    except _subject_SubjectNotationError:
+        return None
+    target, bearer = _target(explicit), _target(base)
+    original = _property_parts(identity)
+    if not target or target[0] != "property" or not original:
+        return None
+    if (
+        not isinstance(original[1][-1].operand, _subject_Name)
+        or original[1][-1].operand.value != args["entity_name"]
+    ):
+        return None
+    if target[1] != identity:
+        return target, bearer
+    return None

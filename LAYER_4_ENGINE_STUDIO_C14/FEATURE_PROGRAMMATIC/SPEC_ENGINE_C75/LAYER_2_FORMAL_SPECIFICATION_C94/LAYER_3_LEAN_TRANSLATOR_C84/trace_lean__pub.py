@@ -17,7 +17,14 @@ def _details(detail):
 
 
 def _bindings(values):
-    return '[' + ', '.join(f'({lean_string(key)}, {lean_string(value)})' for key, value in sorted(values.items())) + ']'
+    return (
+        "["
+        + ", ".join(
+            f"({lean_string(key)}, {lean_string(value)})"
+            for key, value in sorted(values.items())
+        )
+        + "]"
+    )
 
 
 def _effect(effect):
@@ -59,17 +66,31 @@ def _edges(states):
     final = {state['name'] for state in states if state['final']}
     edges = []
     for state in states:
-        for transition in state['transitions']:
-            expect = transition['expect']
-            values = (state['name'], transition['target'], expect['kind'],
-                      expect.get('target') or '', expect.get('outcome') or '')
-            flags = ('outcome' not in expect, transition['target'] in final, 'target' not in expect,
-                     not (expect.get('outcome') or '').strip())
-            fields = [*(lean_string(value) for value in values), *(str(flag).lower() for flag in flags),
-                      _details(expect.get('detail') or {}), lean_string(transition['event']),
-                      _bindings(expect.get('bind', {})), _bindings(expect.get('same_as', {}))]
-            edges.append('⟨' + ', '.join(fields) + '⟩')
-    return ', '.join(edges)
+        for transition in state["transitions"]:
+            expect = transition["expect"]
+            values = (
+                state["name"],
+                transition["target"],
+                expect["kind"],
+                expect.get("target") or "",
+                expect.get("outcome") or "",
+            )
+            flags = (
+                "outcome" not in expect,
+                transition["target"] in final,
+                "target" not in expect,
+                not (expect.get("outcome") or "").strip(),
+            )
+            fields = [
+                *(lean_string(value) for value in values),
+                *(str(flag).lower() for flag in flags),
+                _details(expect.get("detail") or {}),
+                lean_string(transition["event"]),
+                _bindings(expect.get("bind", {})),
+                _bindings(expect.get("same_as", {})),
+            ]
+            edges.append("⟨" + ", ".join(fields) + "⟩")
+    return ", ".join(edges)
 
 
 def _rules(count):

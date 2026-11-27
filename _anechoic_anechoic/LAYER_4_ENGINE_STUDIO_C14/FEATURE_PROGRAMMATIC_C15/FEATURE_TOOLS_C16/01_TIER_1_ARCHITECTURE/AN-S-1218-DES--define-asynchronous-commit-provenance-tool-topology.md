@@ -8,8 +8,8 @@ context:
   lens: DES
 state:
   status: active
-  version: 34
-  updated_at: 2026-11-02 19:44:26 +0400
+  version: 35
+  updated_at: "2026-11-27T17:35:01.150345+00:00"
 ---
 ## Summary
 
@@ -33,4 +33,4 @@ trigger intake, context gathering, **and** Journal preparation **may** run concu
 
 **after** COMMIT_CONTEXT seals an action, real-change commit work **and** Journal append work are independent branches. a real-change commit does **not** wait for a Journal append **or** Journal-only commit. Journal records remain the canonical append-only provenance stream **and** are committed later through an independent Journal-only batch. both commit classes share the same Git gate, while Journal append itself does **not**.
 
-automatic execution is limited by the current COMMIT_AUTOMATION autonomy envelope. that envelope **may** admit **only** local real-change commits **and** local Journal-only commits. Branch creation, deletion, **or** rename; upstream **or** remote selection **or** configuration; fetch, pull, merge, **or** rebase; push **or** force-push; tags; releases; **and** **every** other Git effect remain explicit Operator **or** external operations outside ANECHOIC Tools. the final Git Doer **must not** import **or** orchestrate its peers.
+Apply the COMMIT_AUTOMATION autonomy envelope in AN-S-1188 and the Git gate in AN-S-83. Every other Git effect remains an explicit Operator or external operation. Apply AN-S-132 to final Doer peer isolation.

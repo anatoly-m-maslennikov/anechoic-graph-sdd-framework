@@ -77,7 +77,9 @@ class NestedHeaderReaderTests(unittest.TestCase):
         )
         return path
 
-    def _model_declaration(self, name: str, atom_id: str, statement: str) -> Path:
+    def _model_declaration(
+        self, name: str, atom_id: str, statement: str
+    ) -> Path:
         return self._nested(
             name,
             atom_id,
@@ -86,7 +88,9 @@ class NestedHeaderReaderTests(unittest.TestCase):
         )
 
     def test_nested_and_flat_headers_keep_typed_values_and_raw_properties(self) -> None:
-        nested = self._nested("nested.md", "CA-R-101", topic="Subject/Graph/Node")
+        nested = self._nested(
+            "nested.md", "CA-R-101", topic="Subject/Graph/Node"
+        )
         flat = self._path("flat.md")
         flat.write_text(
             "---\natom_id: CA-R-102\nrole: Requirement\nform: Definition\n"
@@ -102,11 +106,18 @@ class NestedHeaderReaderTests(unittest.TestCase):
             tuple(by_id["CA-R-101"][name] for name in ("id", "ref", "version", "status", "role", "form", "tier")),
         )
         self.assertNotIn("atom_id", by_id["CA-R-101"]["header_json"])
-        self.assertEqual("CA-R-101", by_id["CA-R-101"]["header_json"]["identity"]["atom_id"])
+        self.assertEqual(
+            "CA-R-101", by_id["CA-R-101"]["header_json"]["identity"]["atom_id"]
+        )
         self.assertEqual("CA-R-102", by_id["CA-R-102"]["id"])
-        self.assertEqual(nested.relative_to(self.root).as_posix(), by_id["CA-R-101"]["source_path"])
+        self.assertEqual(
+            nested.relative_to(self.root).as_posix(),
+            by_id["CA-R-101"]["source_path"],
+        )
 
-    def test_nested_identity_id_is_read_without_rewriting_the_raw_header(self) -> None:
+    def test_nested_identity_id_is_read_without_rewriting_the_raw_header(
+        self,
+    ) -> None:
         source = self._path("identity-id.md")
         source.write_text(
             "---\n"
@@ -130,14 +141,16 @@ class NestedHeaderReaderTests(unittest.TestCase):
         self._nested(
             "contained-by.md", "CA-R-201", form="Relation Definition",
             topic="Subject/Graph/Relation//IS_CONTAINED_BY",
-            body="## Claim\n\n### Formal Claim\n\n```python\nrelation(source=\"Relation//IS_CONTAINED_BY\", name=\"HAS_INVERSE\", target=\"Relation//CONTAINS\")\n```\n",
+            body='## Claim\n\n### Formal Claim\n\n```python\nrelation(source="Relation//IS_CONTAINED_BY", name="HAS_INVERSE", target="Relation//CONTAINS")\n```\n',
         )
         self._nested(
             "contains.md", "CA-R-202", form="Relation Definition",
             topic="Subject/Graph/Relation//CONTAINS",
         )
         self._nested("parent.md", "CA-R-203", container="TEST-SU-1")
-        self._nested("child.md", "CA-R-204", container="CA-R-203", container_kind="atom")
+        self._nested(
+            "child.md", "CA-R-204", container="CA-R-203", container_kind="atom"
+        )
 
         atoms, scopes = materialize(*self.reader.capture())
         by_ref = {row["ref"]: row for row in atoms}
@@ -265,7 +278,10 @@ class NestedHeaderReaderTests(unittest.TestCase):
         declaration = self._model_declaration("content-model.md", "CA-R-407", SUMMARY_RULE)
         self.reader.capture()
         declaration.write_text(
-            declaration.read_text(encoding="utf-8").replace("version: 3", "version: 4"), encoding="utf-8",
+            declaration.read_text(encoding="utf-8").replace(
+                "version: 3", "version: 4"
+            ),
+            encoding="utf-8",
         )
 
         with mock.patch.object(self.reader, "_capture_full", side_effect=AssertionError("full capture")):

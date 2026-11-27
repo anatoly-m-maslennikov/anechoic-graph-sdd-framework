@@ -36,44 +36,63 @@ class IncrementalRelationTests(unittest.TestCase):
     def test_all_carriers_are_retained_without_polluting_the_current_graph(self):
         first_parent, second_parent = atom("CA-P-1"), atom("CA-P-3")
         current = atom("CA-P-2", relation={"IS_CONTAINED_BY": ["CA-P-1"]})
-        duplicate = dict(atom("CA-P-2", relation={"IS_CONTAINED_BY": ["CA-P-3"]}),
-                         source_path="duplicate.md")
-        archived = dict(atom("CA-P-2@1", relation={"IS_CONTAINED_BY": ["CA-P-3"]}),
-                        status_group="Archived", source_path="archived.md")
+        duplicate = dict(
+            atom("CA-P-2", relation={"IS_CONTAINED_BY": ["CA-P-3"]}),
+            source_path="duplicate.md",
+        )
+        archived = dict(
+            atom("CA-P-2@1", relation={"IS_CONTAINED_BY": ["CA-P-3"]}),
+            status_group="Archived",
+            source_path="archived.md",
+        )
         sources = declarations() + [first_parent, second_parent, current, duplicate, archived]
         rows, scopes, names, _, state, _ = materialize_delta(sources, [])
         self.assertEqual(len(sources), len(rows))
-        self.assertEqual({"duplicate.md", "archived.md"},
-                         {row["source_path"] for row in rows if row.get("_graph_excluded")})
+        self.assertEqual(
+            {"duplicate.md", "archived.md"},
+            {row["source_path"] for row in rows if row.get("_graph_excluded")},
+        )
         for row in rows:
             if row.get("_graph_excluded"):
                 self.assertEqual([], row["relation_edges_json"])
                 self.assertEqual(1, len(row["_carrier_relation_edges_json"]))
         graph = graph_state(rows, scopes, names)
-        self.assertEqual({("Atom", "CA-P-2", "Atom", "CA-P-1", "IS_CONTAINED_BY", False)},
-                         set(graph.edges["IS_CONTAINED_BY"]))
+        self.assertEqual(
+            {("Atom", "CA-P-2", "Atom", "CA-P-1", "IS_CONTAINED_BY", False)},
+            set(graph.edges["IS_CONTAINED_BY"]),
+        )
 
         sources.remove(current)
-        rows, scopes, names, _, _, delta = materialize_delta(sources, [], state, {current["source_path"]: None})
+        rows, scopes, names, _, _, delta = materialize_delta(
+            sources, [], state, {current["source_path"]: None}
+        )
         self.assertIsNone(delta)
         graph = graph_state(rows, scopes, names)
-        self.assertEqual({("Atom", "CA-P-2", "Atom", "CA-P-3", "IS_CONTAINED_BY", False)},
-                         set(graph.edges["IS_CONTAINED_BY"]))
+        self.assertEqual(
+            {("Atom", "CA-P-2", "Atom", "CA-P-3", "IS_CONTAINED_BY", False)},
+            set(graph.edges["IS_CONTAINED_BY"]),
+        )
 
     def test_archived_carrier_delta_does_not_change_graph(self):
         source = atom("CA-P-1")
         initial = declarations() + [source]
         rows, scopes, names, _, state, _ = materialize_delta(initial, [])
         previous = graph_state(rows, scopes, names)
-        archived = dict(atom("CA-P-1@1", relation={"IS_CONTAINED_BY": ["CA-P-2"]}),
-                        status_group="Archived", source_path="archived.md")
-        rows, scopes, names, _, state, delta = materialize_delta(initial + [archived], [], state,
-                                                                  {"archived.md": archived})
+        archived = dict(
+            atom("CA-P-1@1", relation={"IS_CONTAINED_BY": ["CA-P-2"]}),
+            status_group="Archived",
+            source_path="archived.md",
+        )
+        rows, scopes, names, _, state, delta = materialize_delta(
+            initial + [archived], [], state, {"archived.md": archived}
+        )
         self.assertIsNotNone(delta)
         self.assertIn("archived.md", delta.new_atoms)
         actual, *_ = graph_delta_state(previous, delta, names)
         self.assertEqual(previous, actual)
-        _, _, names, _, _, delta = materialize_delta(initial, [], state, {"archived.md": None})
+        _, _, names, _, _, delta = materialize_delta(
+            initial, [], state, {"archived.md": None}
+        )
         self.assertIsNotNone(delta)
         self.assertIn("archived.md", delta.old_atoms)
 
@@ -82,7 +101,10 @@ class IncrementalRelationTests(unittest.TestCase):
         registry = compile_registry(metadata).registry
         source = atom("CA-P-100")
         changed = atom("CA-P-100", relation={"IS_CONTAINED_BY": ["CA-P-200"]})
-        module = "IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.incremental_relation_state"
+        module = (
+            'IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.incre'
+            'mental_relation_state'
+        )
         with patch(f"{module}.compile_registry", side_effect=AssertionError("compiled")), \
              patch(f"{module}.registry_contribution", side_effect=AssertionError("compiled contribution")):
             _, _, _, _, state, _ = materialize_delta(metadata + [source], [], registry=registry)
@@ -96,15 +118,29 @@ class IncrementalRelationTests(unittest.TestCase):
 
     def test_unique_deleted_sources_leave_no_relation_cache_keys(self):
         sources = declarations() + [atom("CA-P-100")]
-        _rows, _scopes, _registered, _inverse, state, _delta = materialize_delta(sources, [])
+        _rows, _scopes, _registered, _inverse, state, _delta = (
+            materialize_delta(sources, [])
+        )
         baseline = dict(state.outgoing)
         for number in range(200, 220):
-            row = atom(f"CA-P-{number}", relation={"IS_CONTAINED_BY": ["CA-P-100"]})
-            _rows, _scopes, _registered, _inverse, state, _delta = materialize_delta(
-                sources + [row], [], state, {row["source_path"]: row},
+            row = atom(
+                f"CA-P-{number}", relation={"IS_CONTAINED_BY": ["CA-P-100"]}
             )
-            rows, _scopes, _registered, _inverse, state, delta = materialize_delta(
-                sources, [], state, {row["source_path"]: None},
+            _rows, _scopes, _registered, _inverse, state, _delta = (
+                materialize_delta(
+                    sources + [row],
+                    [],
+                    state,
+                    {row["source_path"]: row},
+                )
+            )
+            rows, _scopes, _registered, _inverse, state, delta = (
+                materialize_delta(
+                    sources,
+                    [],
+                    state,
+                    {row["source_path"]: None},
+                )
             )
             self.assertEqual(baseline, state.outgoing)
             self.assertIn("CA-P-100.md", delta.new_atoms)
@@ -136,17 +172,27 @@ class IncrementalRelationTests(unittest.TestCase):
         old = atom("CA-P-1")
         new = atom("CA-P-3")
         task = atom("CA-P-2", relation={"is_contained_by": ["CA-P-1"]})
-        rows, _scopes, _registered, _inverse, state, delta = materialize_delta(declarations() + [old, task, new], [])
+        rows, _scopes, _registered, _inverse, state, delta = materialize_delta(
+            declarations() + [old, task, new], []
+        )
         self.assertIsNone(delta)
         changed = atom("CA-P-2", relation={"is_contained_by": ["CA-P-3"]})
         rows, _scopes, _registered, _inverse, state, delta = materialize_delta(
-            declarations() + [old, changed, new], [], state, {"CA-P-2.md": changed},
+            declarations() + [old, changed, new],
+            [],
+            state,
+            {"CA-P-2.md": changed},
         )
-        self.assertEqual({"CA-P-1.md", "CA-P-2.md", "CA-P-3.md"}, set(delta.old_atoms))
+        self.assertEqual(
+            {"CA-P-1.md", "CA-P-2.md", "CA-P-3.md"}, set(delta.old_atoms)
+        )
         self.assertEqual(set(delta.old_atoms), set(delta.new_atoms))
         by_ref = {row["ref"]: row for row in rows}
         self.assertEqual([], by_ref["CA-P-1"]["relation_edges_json"])
-        self.assertEqual("CONTAINS", by_ref["CA-P-3"]["relation_edges_json"][0]["relation_type"])
+        self.assertEqual(
+            "CONTAINS",
+            by_ref["CA-P-3"]["relation_edges_json"][0]["relation_type"],
+        )
 
     def test_legacy_inverse_writing_contributes_the_one_canonical_fact(self):
         parent = atom("CA-P-1", relation={"CONTAINS": ["CA-P-2"]})
@@ -212,35 +258,67 @@ class IncrementalRelationTests(unittest.TestCase):
     def test_relation_registry_change_uses_full_boundary(self):
         source = atom("CA-P-1")
         metadata = declarations()
-        _rows, _scopes, _registered, _inverse, state, _delta = materialize_delta(metadata + [source], [])
-        changed = dict(metadata[0], content_markdown="## Claim\n", header_json={"relations": {}})
-        _rows, _scopes, _registered, _inverse, _state, delta = materialize_delta(
-            [changed, metadata[1], source], [], state, {changed["source_path"]: changed},
+        _rows, _scopes, _registered, _inverse, state, _delta = (
+            materialize_delta(metadata + [source], [])
+        )
+        changed = dict(
+            metadata[0],
+            content_markdown="## Claim\n",
+            header_json={"relations": {}},
+        )
+        _rows, _scopes, _registered, _inverse, _state, delta = (
+            materialize_delta(
+                [changed, metadata[1], source],
+                [],
+                state,
+                {changed["source_path"]: changed},
+            )
         )
         self.assertIsNone(delta)
 
     def test_registry_source_prose_change_keeps_incremental_delta(self):
         metadata = declarations()
         source = atom("CA-P-1")
-        _rows, _scopes, _registered, _inverse, state, _delta = materialize_delta(metadata + [source], [])
-        changed = dict(metadata[0], content_markdown=metadata[0]["content_markdown"] + "\nProse only.\n")
-        _rows, _scopes, _registered, _inverse, _state, delta = materialize_delta(
-            [changed, metadata[1], source], [], state, {changed["source_path"]: changed},
+        _rows, _scopes, _registered, _inverse, state, _delta = (
+            materialize_delta(metadata + [source], [])
+        )
+        changed = dict(
+            metadata[0],
+            content_markdown=metadata[0]["content_markdown"]
+            + "\nProse only.\n",
+        )
+        _rows, _scopes, _registered, _inverse, _state, delta = (
+            materialize_delta(
+                [changed, metadata[1], source],
+                [],
+                state,
+                {changed["source_path"]: changed},
+            )
         )
         self.assertIsNotNone(delta)
 
     def test_ordinary_change_parses_only_the_changed_source(self):
         untouched = _RelationReadProbe(relations={})
-        first, second = atom("CA-P-1"), dict(atom("CA-P-2"), header_json=untouched)
+        first, second = (
+            atom("CA-P-1"),
+            dict(atom("CA-P-2"), header_json=untouched),
+        )
         metadata = declarations()
-        _, _, _, _, state, _ = materialize_delta(metadata + [first, second], [])
+        _, _, _, _, state, _ = materialize_delta(
+            metadata + [first, second], []
+        )
         self.assertGreater(untouched.reads, 0)
         untouched.reads = 0
         changed = _RelationReadProbe(relations={})
-        first_changed = dict(first, header_json=changed, content_markdown="## Claim\nChanged.\n")
+        first_changed = dict(
+            first, header_json=changed, content_markdown="## Claim\nChanged.\n"
+        )
 
         _, _, _, _, _, delta = materialize_delta(
-            metadata + [first_changed, second], [], state, {"CA-P-1.md": first_changed},
+            metadata + [first_changed, second],
+            [],
+            state,
+            {"CA-P-1.md": first_changed},
         )
 
         self.assertGreater(changed.reads, 0)

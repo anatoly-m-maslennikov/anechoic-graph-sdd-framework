@@ -37,9 +37,13 @@ class LifecycleSocketTests(unittest.TestCase):
     def archive_poll(self, watcher):
         control = str(watcher.control_root)
         started = time.monotonic_ns()
-        watcher._proof.remember_archive_sample(control, started, DirectorySnapshot(control))
+        watcher._proof.remember_archive_sample(
+            control, started, DirectorySnapshot(control)
+        )
         self.assertIsNone(watcher._proof.sampled_archive_carriers(started, ()))
-        watcher.on_poll_complete(PollComplete(control, started=started, clean=True, archive=True))
+        watcher.on_poll_complete(
+            PollComplete(control, started=started, clean=True, archive=True)
+        )
 
     def test_admitted_archive_creation_filters_only_its_directory_and_files(self):
         watcher, archive, owned, effects = self.archive_receipts()
@@ -119,16 +123,25 @@ class LifecycleSocketTests(unittest.TestCase):
             {"target": str(owned.relative_to(root)), "operation": "create", "state": "known",
              "evidence": sha256(owned.read_bytes()).hexdigest()},
         ])
-        for event in (DirCreatedEvent(str(directory)), FileCreatedEvent(str(owned)),
-                      FileCreatedEvent(str(external)), DirCreatedEvent(str(other_directory))):
+        for event in (
+            DirCreatedEvent(str(directory)),
+            FileCreatedEvent(str(owned)),
+            FileCreatedEvent(str(external)),
+            DirCreatedEvent(str(other_directory)),
+        ):
             watcher.dispatch(event)
-        self.assertEqual([str(external), str(other_directory)],
-                         [change["old_path"] for change in watcher.changes(0.1)])
+        self.assertEqual(
+            [str(external), str(other_directory)],
+            [change["old_path"] for change in watcher.changes(0.1)],
+        )
 
         owned.write_text("independent replacement")
         watcher.dispatch(FileModifiedEvent(str(owned)))
         watcher.dispatch(DirCreatedEvent(str(directory)))
-        self.assertEqual([str(owned), str(directory)], [change["old_path"] for change in watcher.changes(0.1)])
+        self.assertEqual(
+            [str(owned), str(directory)],
+            [change["old_path"] for change in watcher.changes(0.1)],
+        )
 
         directory.rename(directory.with_name("old"))
         directory.mkdir()
@@ -263,13 +276,23 @@ class LifecycleSocketTests(unittest.TestCase):
         self.assertEqual(atom_id, result["savedDraft"]["atom_id"])
 
     def call_lifecycle(self, path, binding, operation, arguments):
-        request = {**binding, "instance_id": "test", "name": "atom_lifecycle_" + operation,
-                   "arguments": arguments}
-        status, result = request_json(path, "POST", "/jobs/lifecycle", request, timeout=610)
+        request = {
+            **binding,
+            "instance_id": "test",
+            "name": "atom_lifecycle_" + operation,
+            "arguments": arguments,
+        }
+        status, result = request_json(
+            path, "POST", "/jobs/lifecycle", request, timeout=610
+        )
         self.assertEqual(200, status, result)
         self.assertEqual("known", result["result"]["write_state"], result)
-        self.assertEqual("completed", result["result"]["lifecycle"]["outcome"], result)
-        self.assertEqual("ready", result["result"]["projection"]["state"], result)
+        self.assertEqual(
+            "completed", result["result"]["lifecycle"]["outcome"], result
+        )
+        self.assertEqual(
+            "ready", result["result"]["projection"]["state"], result
+        )
         return result["result"]["lifecycle"]
 
     def assert_indexed_transitions(self, path, database, binding):
@@ -293,6 +316,8 @@ class LifecycleSocketTests(unittest.TestCase):
 
     def assert_visible(self, path, refs):
         sql = "SELECT reference FROM atoms WHERE status_group = 'Draft' ORDER BY reference"
-        status, result = request_json(path, "POST", "/database", {"instance_id": "test", "sql": sql})
+        status, result = request_json(
+            path, "POST", "/database", {"instance_id": "test", "sql": sql}
+        )
         self.assertEqual(200, status, result)
         self.assertEqual([[ref] for ref in refs], result["result"]["rows"])

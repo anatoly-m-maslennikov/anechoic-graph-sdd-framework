@@ -4,14 +4,29 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
 
-from .DATABASE_SERVER_beta_C71__tests__shared import BINDING, _generation, _query, _server
+from .DATABASE_SERVER_beta_C71__tests__shared import (
+    BINDING,
+    _generation,
+    _query,
+    _server,
+)
 
 
 class GridResultsTest(unittest.TestCase):
     def test_query_and_view_grid(self):
-        with TemporaryDirectory() as root, _server(None, "--project-root", str(Path(root).resolve())) as client:
-            self.assertEqual(client.put("/generation", json=_generation()).status_code, 200)
-            sql = "SELECT * FROM (VALUES ('a', 2), ('A', 1), ('b', 3), (NULL, 4)) t(k, n)"
+        with (
+            TemporaryDirectory() as root,
+            _server(
+                None, "--project-root", str(Path(root).resolve())
+            ) as client,
+        ):
+            self.assertEqual(
+                client.put("/generation", json=_generation()).status_code, 200
+            )
+            sql = (
+                "SELECT * FROM (VALUES ('a', 2), ('A', 1), ('b', 3), (NULL, "
+                '4)) t(k, n)'
+            )
             grid = {"filters": [{"column": 0, "operator": "contains", "value": "a"}],
                     "sort": [{"column": 1, "direction": "desc"}],
                     "group_by": {"column": 0, "direction": "asc"}}
@@ -20,7 +35,9 @@ class GridResultsTest(unittest.TestCase):
                 return client.post("/database", json={**BINDING, "query_id": run["query_id"],
                                    "offset": offset, "page_size": 1, "grid": grid})
             result = page(0).json()["result"]
-            self.assertEqual((result["row_count"], result["source_row_count"]), (2, 4))
+            self.assertEqual(
+                (result["row_count"], result["source_row_count"]), (2, 4)
+            )
             self.assertEqual(result["rows"], [["A", 1]])
             self.assertEqual(result["groups"], [{"value": "A", "count": 1}])
             self.assertEqual(page(1).json()["result"]["rows"], [["a", 2]])

@@ -7,7 +7,9 @@ from pathlib import Path
 from unittest.mock import patch
 
 import LAYER_2_RELEASE_C27__shared as release
-from LAYER_2_RELEASE_C27__tests.LAYER_2_RELEASE_C27__tests__shared import ReleaseCliFixture
+from LAYER_2_RELEASE_C27__tests.LAYER_2_RELEASE_C27__tests__shared import (
+    ReleaseCliFixture,
+)
 
 _ENTRY = "LAYER_2_LOCAL_RELEASE_C63.LAYER_2_LOCAL_RELEASE_C63__shared"
 _REVISION = "a" * 40
@@ -50,12 +52,32 @@ class ExtendedReleaseCliTests(ReleaseCliFixture, unittest.TestCase):
     def test_local_prepare_environment_dispatch(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory).resolve()
-            args = ["local", "--prepare-environment", "--project-root", str(root), "--run-id", "prerequisites"]
-            with patch(_ENTRY + ".run_local_release", return_value={"outcome": "completed"}) as prepare:
-                self.assertEqual(self.invoke(args), (0, {
-                    "outcome": "completed", "project_root": str(root), "run_id": "prerequisites",
-                }))
-            prepare.assert_called_once_with(root, run_id="prerequisites", mode="prepare")
+            args = [
+                "local",
+                "--prepare-environment",
+                "--project-root",
+                str(root),
+                "--run-id",
+                "prerequisites",
+            ]
+            with patch(
+                _ENTRY + ".run_local_release",
+                return_value={"outcome": "completed"},
+            ) as prepare:
+                self.assertEqual(
+                    self.invoke(args),
+                    (
+                        0,
+                        {
+                            "outcome": "completed",
+                            "project_root": str(root),
+                            "run_id": "prerequisites",
+                        },
+                    ),
+                )
+            prepare.assert_called_once_with(
+                root, run_id="prerequisites", mode="prepare"
+            )
 
     def test_generated_run_id_and_scoped_start(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -111,23 +133,46 @@ class ExtendedReleaseCliTests(ReleaseCliFixture, unittest.TestCase):
             self.assertFalse(marker.exists())
 
     def test_engine_context_applies_to_runtime_commands(self):
-        previous = {"DOCKER_CONTEXT": "custom", "DOCKER_HOST": "unix:///custom/docker.sock"}
+        previous = {
+            "DOCKER_CONTEXT": "custom",
+            "DOCKER_HOST": "unix:///custom/docker.sock",
+        }
         cases = (
             ("darwin", ["local", "--run-id", "local"], "orbstack"),
-            ("darwin", ["build-image", "--run-id", "build", "--engine", "docker"], "desktop-linux"),
+            (
+                "darwin",
+                ["build-image", "--run-id", "build", "--engine", "docker"],
+                "desktop-linux",
+            ),
             ("linux", ["verify-image", "--run-id", "verify"], "default"),
-            ("linux", ["run-image", "--image", "candidate", "--engine", "orbstack"], "orbstack"),
+            (
+                "linux",
+                ["run-image", "--image", "candidate", "--engine", "orbstack"],
+                "orbstack",
+            ),
         )
         for platform, arguments, expected in cases:
-            with self.subTest(arguments=arguments), patch.object(release.sys, "platform", platform):
+            with (
+                self.subTest(arguments=arguments),
+                patch.object(release.sys, "platform", platform),
+            ):
+
                 def invoke(_arguments, expected=expected):
-                    self.assertEqual(os.environ.get("DOCKER_CONTEXT"), expected)
+                    self.assertEqual(
+                        os.environ.get("DOCKER_CONTEXT"), expected
+                    )
                     self.assertNotIn("DOCKER_HOST", os.environ)
                     return {"outcome": "completed"}
 
-                with patch.dict(os.environ, previous), patch.object(release, "_invoke", side_effect=invoke):
+                with (
+                    patch.dict(os.environ, previous),
+                    patch.object(release, "_invoke", side_effect=invoke),
+                ):
                     self.assertEqual(self.invoke(arguments)[0], 0)
-                    self.assertEqual({key: os.environ.get(key) for key in previous}, previous)
+                    self.assertEqual(
+                        {key: os.environ.get(key) for key in previous},
+                        previous,
+                    )
 
     def test_verify_image_dispatch(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -145,15 +190,38 @@ class ExtendedReleaseCliTests(ReleaseCliFixture, unittest.TestCase):
             source.mkdir()
             target.mkdir()
             result = {"outcome": "completed"}
-            args = ["local", "--resume", "--run-id", "split", "--project-root", str(source),
-                    "--target-project-root", str(target), "--source-revision", _REVISION]
-            with patch(_ENTRY + ".run_snapshot_release", return_value=result) as run:
+            args = [
+                "local",
+                "--resume",
+                "--run-id",
+                "split",
+                "--project-root",
+                str(source),
+                "--target-project-root",
+                str(target),
+                "--source-revision",
+                _REVISION,
+            ]
+            with patch(
+                _ENTRY + ".run_snapshot_release", return_value=result
+            ) as run:
                 status, payload = self.invoke(args)
-            run.assert_called_once_with(source, target_root=target, source_revision=_REVISION,
-                                        run_id="split", resume=True)
+            run.assert_called_once_with(
+                source,
+                target_root=target,
+                source_revision=_REVISION,
+                run_id="split",
+                resume=True,
+            )
             self.assertEqual(status, 0)
-            self.assertEqual((payload["source_root"], payload["target_root"], payload["source_revision"]),
-                             (str(source), str(target), _REVISION))
+            self.assertEqual(
+                (
+                    payload["source_root"],
+                    payload["target_root"],
+                    payload["source_revision"],
+                ),
+                (str(source), str(target), _REVISION),
+            )
 
     def test_continue_split_accepts_corrected_head_until_delivery(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -162,20 +230,40 @@ class ExtendedReleaseCliTests(ReleaseCliFixture, unittest.TestCase):
             source.mkdir()
             target.mkdir()
             changed = "b" * 40
-            state = {"outcome": "completed", "run_id": "split", "docker_context": "orbstack",
-                     "source_root": str(source), "source_revision": _REVISION}
+            state = {
+                "outcome": "completed",
+                "run_id": "split",
+                "docker_context": "orbstack",
+                "source_root": str(source),
+                "source_revision": _REVISION,
+            }
             args = ["local", "--continue", "--project-root", str(target)]
             for delivery, revision in ((False, changed), (True, _REVISION)):
                 with (
                     self.subTest(delivery=delivery),
-                    patch(_ENTRY + ".run_local_release", return_value=state | {"delivery_started": delivery}),
-                    patch(_ENTRY + ".run_snapshot_release", return_value={"outcome": "completed"}) as run,
-                    patch.object(release.subprocess, "check_output", return_value=changed + "\n") as head,
+                    patch(
+                        _ENTRY + ".run_local_release",
+                        return_value=state | {"delivery_started": delivery},
+                    ),
+                    patch(
+                        _ENTRY + ".run_snapshot_release",
+                        return_value={"outcome": "completed"},
+                    ) as run,
+                    patch.object(
+                        release.subprocess,
+                        "check_output",
+                        return_value=changed + "\n",
+                    ) as head,
                 ):
                     code, reply = self.invoke(args)
                 self.assertEqual((code, reply["run_id"]), (0, "split"))
-                run.assert_called_once_with(source, target_root=target, source_revision=revision,
-                                            run_id="split", resume=True)
+                run.assert_called_once_with(
+                    source,
+                    target_root=target,
+                    source_revision=revision,
+                    run_id="split",
+                    resume=True,
+                )
                 self.assertEqual(head.call_count, 0 if delivery else 1)
 
     def test_split_refuses_missing_or_imprecise_pins(self):
@@ -184,7 +272,10 @@ class ExtendedReleaseCliTests(ReleaseCliFixture, unittest.TestCase):
             ["--source-revision", _REVISION],
             ["--target-project-root", "target", "--source-revision", "HEAD"],
         ):
-            with self.subTest(args=args), self.assertRaises(SystemExit) as refused:
+            with (
+                self.subTest(args=args),
+                self.assertRaises(SystemExit) as refused,
+            ):
                 self.invoke(["local", "--run-id", "missing", *args])
             self.assertEqual(refused.exception.code, 2)
 
@@ -195,16 +286,30 @@ class ExtendedReleaseCliTests(ReleaseCliFixture, unittest.TestCase):
             for args in (
                 ["local", "--project-root", str(missing)],
                 ["verify-image", "--project-root", str(missing)],
-                ["local", "--project-root", str(root), "--target-project-root", str(missing),
-                 "--source-revision", _REVISION],
+                [
+                    "local",
+                    "--project-root",
+                    str(root),
+                    "--target-project-root",
+                    str(missing),
+                    "--source-revision",
+                    _REVISION,
+                ],
             ):
                 with self.subTest(args=args):
-                    status, result = self.invoke([*args, "--run-id", "missing"])
-                    self.assertEqual((status, result["failed_step"], result["effects"]),
-                                     (1, "validate_project_selection", []))
+                    status, result = self.invoke(
+                        [*args, "--run-id", "missing"]
+                    )
+                    self.assertEqual(
+                        (status, result["failed_step"], result["effects"]),
+                        (1, "validate_project_selection", []),
+                    )
 
     def test_invalid_run_id_is_usage_error(self):
         for command in ("local", "verify-image"):
-            with self.subTest(command=command), self.assertRaises(SystemExit) as refused:
+            with (
+                self.subTest(command=command),
+                self.assertRaises(SystemExit) as refused,
+            ):
                 self.invoke([command, "--run-id", "invalid/id"])
             self.assertEqual(refused.exception.code, 2)

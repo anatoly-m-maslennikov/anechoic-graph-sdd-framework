@@ -8,8 +8,8 @@ context:
   lens: DevOps
 state:
   status: active
-  version: 24
-  updated_at: 2026-11-02 19:46:47 +0400
+  version: 26
+  updated_at: "2026-11-27T16:29:34.309627+00:00"
 ---
 ## Summary
 
@@ -27,7 +27,5 @@ CONNECTOR_TOOLS owns the current ATOM_READ contracts flattened into its role dir
 
 ## Details
 
-- The new FEATURE Delivery root is future/unmaterialized. It does not relocate, copy or reinterpret this existing code binding.
+- Apply the shared connector, legacy binding, and pin rules in AN-S-2478.
 - CA-D-423 supplies the rebuilt operation contract. The authority location is not an independently registered ATOM_READ Scope Unit or a derivation rule for the executable path.
-- This primitive uses CA-D-625's coherent logical connector interface. The bound caller context supplies the requested scope, source view, permission and applicable validation authority; the connector checks them mechanically. It does not choose Atom identity, Version changes, lifecycle, defaults or a configuration schema.
-- Re-pin changed current source locations and Versions before consumption. Existing receipts, historical pins and installed copies retain their original evidence; this source revision neither refreshes nor admits them.

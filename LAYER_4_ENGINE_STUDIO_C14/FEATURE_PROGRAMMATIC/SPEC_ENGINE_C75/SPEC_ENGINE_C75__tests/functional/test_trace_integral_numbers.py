@@ -2,7 +2,9 @@ import os
 import shutil
 import unittest
 
-from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75._package__shared import compile_workflow
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75._package__shared import (
+    compile_workflow,
+)
 from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_2_SPEC_READING_C83.SPECIFICATION_MODEL_C85._package__shared import (
     parse_trace_contract,
 )
@@ -21,8 +23,10 @@ def _edge(target, kind, name, outcome, **detail):
 
 class IntegralTraceNumbersTests(unittest.TestCase):
     def setUp(self):
-        self.lean = os.environ.get('ANECHOIC_TEST_LEAN') or shutil.which('lean')
-        self.assertTrue(self.lean, 'Lean executable unavailable')
+        self.lean = os.environ.get("ANECHOIC_TEST_LEAN") or shutil.which(
+            "lean"
+        )
+        self.assertTrue(self.lean, "Lean executable unavailable")
 
     def test_earlier_bounded_effect(self):
         contract = parse_trace_contract(
@@ -49,10 +53,13 @@ class IntegralTraceNumbersTests(unittest.TestCase):
                     'action': 'write', **compile_workflow(machine)['model'],
                 }
                 result = compare_trace_workflow(
-                    contract, workflow, lean=self.lean)
-                facts = {fact['key']: fact['status'] for fact in result['facts']}
-                self.assertEqual('matched', facts['must_effect'])
-                self.assertEqual(expected, facts['must_precede'])
+                    contract, workflow, lean=self.lean
+                )
+                facts = {
+                    fact["key"]: fact["status"] for fact in result["facts"]
+                }
+                self.assertEqual("matched", facts["must_effect"])
+                self.assertEqual(expected, facts["must_precede"])
 
     def test_observed_numeric_values(self):
         values = {
@@ -80,5 +87,9 @@ class IntegralTraceNumbersTests(unittest.TestCase):
         ]
         result = compare_trace_values(case, events, lean=self.lean)
         expected = [row[2] for row in values.values()]
-        expected.extend(row[3] for row in values.values() if row[3] is not None)
-        self.assertEqual(expected, [fact['status'] for fact in result['facts']])
+        expected.extend(
+            row[3] for row in values.values() if row[3] is not None
+        )
+        self.assertEqual(
+            expected, [fact["status"] for fact in result["facts"]]
+        )

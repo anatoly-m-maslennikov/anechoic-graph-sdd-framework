@@ -44,8 +44,15 @@ def _delta(base, snapshot, paths, atoms, hashes):
 @contextmanager
 def _server_without_lifespan(database):
     _, env = _launch_arguments(database.with_suffix(".sock"))
-    with patch.dict("os.environ", env), open_database(str(database), PIN, BINDING["instance_id"]) as connection:
-        client = TestClient(create_app(connection, BINDING["instance_id"], PIN))
+    with (
+        patch.dict("os.environ", env),
+        open_database(
+            str(database), PIN, BINDING["instance_id"]
+        ) as connection,
+    ):
+        client = TestClient(
+            create_app(connection, BINDING["instance_id"], PIN)
+        )
         try:
             yield client
         finally:
@@ -154,16 +161,22 @@ class StartupCheckpointTests(unittest.TestCase):
             proof = self._reuse(client)
             self.assertNotIn("archive_pending", proof)
             self.assertEqual({_path(moved): "d" * 64}, proof["carrier_hashes"])
-            rows = _query(client, 'SELECT relative_path, "content.summary" FROM atoms').json()["result"]["rows"]
+            rows = _query(
+                client, 'SELECT relative_path, "content.summary" FROM atoms'
+            ).json()["result"]["rows"]
             self.assertEqual([[moved["relative_path"], "edited"]], rows)
         self._assert_disk_checkpoint(database, data["carrier_hashes"], initial_folders,
                                      {_path(current): None, _path(moved): "d" * 64, _path(archived): None})
         with _server(database) as client:
             self.assertEqual(proof, self._reuse(client))
-        self._assert_disk_checkpoint(database, proof["carrier_hashes"], proof["folder_hashes"], {})
+        self._assert_disk_checkpoint(
+            database, proof["carrier_hashes"], proof["folder_hashes"], {}
+        )
 
     def test_latest_live_digest_is_retained_across_offline_reversion(self):
-        directory = Path(self.enterContext(TemporaryDirectory(dir="/tmp"))).resolve()
+        directory = Path(
+            self.enterContext(TemporaryDirectory(dir="/tmp"))
+        ).resolve()
         database = directory / "projection.duckdb"
         data = _baseline()
         snapshot = data["snapshot"]
@@ -179,19 +192,29 @@ class StartupCheckpointTests(unittest.TestCase):
             for content in (b"first edit", b"latest admitted bytes"):
                 carrier.write_bytes(content)
                 updated = sha256(carrier.read_bytes()).hexdigest()
-                delta = _delta(base, snapshot, paths, [current], {path: updated})
-                base = self._accepted(client, "/generation/native-delta", delta)
+                delta = _delta(
+                    base, snapshot, paths, [current], {path: updated}
+                )
+                base = self._accepted(
+                    client, "/generation/native-delta", delta
+                )
         carrier.write_bytes(b"original")
-        initial_folders = {current["relative_path"]: _folder(current["filename"], original),
-                           archived["relative_path"]: _folder(archived["filename"], "b" * 64)}
-        self._assert_disk_checkpoint(database, data["carrier_hashes"], initial_folders, {path: updated})
+        initial_folders = {
+            current["relative_path"]: _folder(current["filename"], original),
+            archived["relative_path"]: _folder(archived["filename"], "b" * 64),
+        }
+        self._assert_disk_checkpoint(
+            database, data["carrier_hashes"], initial_folders, {path: updated}
+        )
         with _server(database) as client:
             proof = self._reuse(client)
             self.assertEqual(base, proof["base_generation"])
             self.assertEqual(updated, proof["carrier_hashes"][path])
             self.assertNotEqual(sha256(carrier.read_bytes()).hexdigest(), proof["carrier_hashes"][path])
             self.assertEqual(_folder(current["filename"], updated), proof["folder_hashes"][current["relative_path"]])
-        self._assert_disk_checkpoint(database, proof["carrier_hashes"], proof["folder_hashes"], {})
+        self._assert_disk_checkpoint(
+            database, proof["carrier_hashes"], proof["folder_hashes"], {}
+        )
 
     def test_live_checkpoint_skips_folder_rebuild_and_changes_roll_back(self):
         data = _baseline()
@@ -249,12 +272,19 @@ class StartupCheckpointTests(unittest.TestCase):
             for key, value in witness.items():
                 self.assertEqual(value, proof[key])
             self.assertNotIn("folder_hashes", proof)
-            invalid = [None, witness | {"endpoints": {}}, witness | {"extra": 1},
-                       witness | {"inputs": witness["inputs"] | {"carrier_schema": None}},
-                       witness | {"inputs": witness["inputs"] | {"graph": "invalid"}}]
+            invalid = [
+                None,
+                witness | {"endpoints": {}},
+                witness | {"extra": 1},
+                witness
+                | {"inputs": witness["inputs"] | {"carrier_schema": None}},
+                witness | {"inputs": witness["inputs"] | {"graph": "invalid"}},
+            ]
             for item in invalid:
                 with self.subTest(witness=item):
-                    response = client.put("/generation", json=data | {"reuse": item})
+                    response = client.put(
+                        "/generation", json=data | {"reuse": item}
+                    )
                     self.assertEqual(400, response.status_code, response.text)
                     self.assertIn("Invalid reuse witness", response.text)
                     self.assertEqual(proof, self._reuse(client))
@@ -263,8 +293,13 @@ class StartupCheckpointTests(unittest.TestCase):
         data = _baseline()
         snapshot = data["snapshot"]
         current, archived = snapshot["atoms"]
-        off_path = archived | {"relative_path": current["relative_path"], "reference": "AN-T-1@3",
-                               "exact_ref": "AN-T-1@3", "version": 3, "filename": "AN-T-1@3-extra.md"}
+        off_path = archived | {
+            "relative_path": current["relative_path"],
+            "reference": "AN-T-1@3",
+            "exact_ref": "AN-T-1@3",
+            "version": 3,
+            "filename": "AN-T-1@3-extra.md",
+        }
         snapshot["atoms"].append(off_path)
         data["carrier_hashes"][_path(off_path)] = "d" * 64
         data["receipt"]["snapshot_sha256"] = _digest(snapshot)

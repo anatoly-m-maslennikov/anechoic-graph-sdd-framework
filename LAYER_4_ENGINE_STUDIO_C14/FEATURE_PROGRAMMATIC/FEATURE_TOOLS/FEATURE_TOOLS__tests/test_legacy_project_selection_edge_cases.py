@@ -9,8 +9,8 @@ import sys
 import tempfile
 import unittest
 
-TOOLS = Path(__file__).resolve().parents[1]
-sys.path[:0] = [str(TOOLS), str(TOOLS.parent)]
+sys.path.insert(0, str((TOOLS := Path(__file__).resolve().parents[1]).parent))
+sys.path.insert(0, str(TOOLS))
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import (  # noqa: E402
     write_scope_unit_declarations,
 )

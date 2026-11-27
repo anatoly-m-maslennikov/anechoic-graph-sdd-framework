@@ -1,4 +1,5 @@
-"""Select staged native Model Claims with Workbench and compile them for image admission."""
+("Select staged native Model Claims with Workbench "
+ "and compile them for image admission.")  # fmt: skip
 
 import os
 from pathlib import Path
@@ -34,7 +35,8 @@ def verify_project_model(
     control = select_runtime_project(project).control_root
     module = (
         "FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51."
-        "FEATURE_FORMAL_MODEL_GENERATOR.manifest_compiler_CS1.image_model_stage"
+        "FEATURE_FORMAL_MODEL_GENERATOR.manifest_compiler_CS1."
+        "image_model_stage"
     )
     remaining = _remaining(deadline)
     command = [

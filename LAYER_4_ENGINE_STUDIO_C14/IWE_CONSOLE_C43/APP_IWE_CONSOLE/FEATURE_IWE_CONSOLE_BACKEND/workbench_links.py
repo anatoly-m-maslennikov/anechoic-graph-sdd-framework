@@ -34,7 +34,12 @@ def project_name(selection: Any) -> str:
 def _saved_page(request: Any, selection: Any) -> str | None:
     base_url = getattr(request, "base_url", None)
     if base_url is not None:
-        return f"{str(base_url).rstrip('/')}{IWE_CONSOLE_PATH}/{quote(project_name(selection), safe='')}"
+        return (
+            f"{str(base_url).rstrip('/')}"
+            f"{IWE_CONSOLE_PATH}"
+            "/"
+            f"{quote(project_name(selection), safe='')}"
+        )
     try:
         document = selection.parameters.get("runtime", {})
         page = document.get("workbench", {}).get("public_url")
@@ -116,7 +121,9 @@ def public_workspace(
     return {
         **value,
         "project_name": name,
-        "workspace_url": f"{str(base_url).rstrip('/')}{path}?{urlencode(query)}",
+        "workspace_url": (
+            f"{str(base_url).rstrip('/')}{path}?{urlencode(query)}"
+        ),
     }
 
 

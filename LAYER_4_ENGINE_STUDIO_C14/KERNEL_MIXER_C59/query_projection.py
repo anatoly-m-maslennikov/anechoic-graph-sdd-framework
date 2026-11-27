@@ -6,9 +6,18 @@ import sys
 import time
 from typing import Any
 
-from .content_schema import ContentSchema, compile_content_schema, content_schema_asset_path
+from .content_schema import (
+    ContentSchema,
+    compile_content_schema,
+    content_schema_asset_path,
+)
 from .errors import WorkbenchUnavailableError
-from .header_columns import HeaderSchema, HeaderSchemaState, header_schema_for_mode, schema_asset_path
+from .header_columns import (
+    HeaderSchema,
+    HeaderSchemaState,
+    header_schema_for_mode,
+    schema_asset_path,
+)
 from .index_delta import MaterializationDelta
 from .projection_delta import apply as apply_projection_delta
 from .query_admission import is_duckdb_internal
@@ -22,11 +31,15 @@ class ProjectionPublication:
     ) -> None:
         with self._lock:
             if not self._available:
-                raise WorkbenchUnavailableError("query store unavailable; Workbench restart required")
+                raise WorkbenchUnavailableError(
+                    "query store unavailable; Workbench restart required"
+                )
             transaction = False
             self._graph_registration_changed = False
             try:
-                header_state, header_schema = self._replacement_header(atom_rows, header_schema)
+                header_state, header_schema = self._replacement_header(
+                    atom_rows, header_schema
+                )
                 if content_schema is None:
                     content_schema = compile_content_schema(atom_rows)
                 self._connection.execute("BEGIN TRANSACTION")
@@ -62,10 +75,17 @@ class ProjectionPublication:
         if self._schema_mode == 2:
             header_state = HeaderSchemaState.from_atoms(atom_rows)
             return header_state, header_state.schema
-        return self._header_state, header_schema_for_mode(self._schema_mode, atom_rows)
+        return self._header_state, header_schema_for_mode(
+            self._schema_mode, atom_rows
+        )
 
     def _info_edit(
-        self, operation: str, table: str, row_count: int, started: float, reference: str | None = None,
+        self,
+        operation: str,
+        table: str,
+        row_count: int,
+        started: float,
+        reference: str | None = None,
     ) -> None:
         if row_count:
             elapsed_ms = round((time.monotonic() - started) * 1000, 1)
@@ -123,25 +143,44 @@ class ProjectionPublication:
                 self._projection_failure(exc, transaction)
 
     def _record_projection_change(self, change, started):
-        self._info_edit("delete", "atoms", change.deleted_atoms, started, change.reference)
-        self._info_edit("delete", "scope_units", change.deleted_scopes, started)
-        self._info_edit("insert", "atoms", change.inserted_atoms, started, change.reference)
-        self._info_edit("insert", "scope_units", change.inserted_scopes, started)
-        self._info_edit("update", "graph", change.graph_rows, started, change.reference)
+        self._info_edit(
+            "delete", "atoms", change.deleted_atoms, started, change.reference
+        )
+        self._info_edit(
+            "delete", "scope_units", change.deleted_scopes, started
+        )
+        self._info_edit(
+            "insert", "atoms", change.inserted_atoms, started, change.reference
+        )
+        self._info_edit(
+            "insert", "scope_units", change.inserted_scopes, started
+        )
+        self._info_edit(
+            "update", "graph", change.graph_rows, started, change.reference
+        )
         return bool(
-            change.deleted_atoms or change.deleted_scopes or change.inserted_atoms
-            or change.inserted_scopes or change.graph_rows
+            change.deleted_atoms
+            or change.deleted_scopes
+            or change.inserted_atoms
+            or change.inserted_scopes
+            or change.graph_rows
         )
 
     def _projection_failure(self, exc: Exception, transaction: bool) -> None:
-        if not self._native or self._graph_registration_changed or is_duckdb_internal(exc):
+        if (
+            not self._native
+            or self._graph_registration_changed
+            or is_duckdb_internal(exc)
+        ):
             self._available = False
         if transaction:
             self._connection.execute("ROLLBACK")
         print(f"query store refresh failed: {exc}", file=sys.stderr)
         if self._native and self._available:
             raise
-        raise WorkbenchUnavailableError("query store unavailable; Workbench restart required") from exc
+        raise WorkbenchUnavailableError(
+            "query store unavailable; Workbench restart required"
+        ) from exc
 
     def _apply_schemas(self, atom_rows, delta, header_schema, content_schema):
         if header_schema is not None or self._schema_mode == 1:
@@ -149,9 +188,13 @@ class ProjectionPublication:
         elif delta is None:
             header_state = HeaderSchemaState.from_atoms(atom_rows)
         else:
-            header_state = self._header_state.updated(delta.old_atoms, delta.new_atoms)
+            header_state = self._header_state.updated(
+                delta.old_atoms, delta.new_atoms
+            )
         header_schema = header_schema or (
-            self._header_schema if self._schema_mode == 1 else header_state.schema
+            self._header_schema
+            if self._schema_mode == 1
+            else header_state.schema
         )
         if content_schema is None:
             content_schema = compile_content_schema(atom_rows)

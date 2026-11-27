@@ -2,8 +2,10 @@ import { formalCases } from './console-formal-cases';
 import { expect, test, type Page } from '@playwright/test';
 import { mockGraph } from './console-graph-mock';
 
-type Detail = { view: string; depth?: number; types?: string; layout?: string; structure?: boolean;
-  nodes?: string; edges?: string; red?: boolean; error?: string; seed?: string };
+type Detail = { view: string; depth?: number; types?
+  : string; layout?: string; structure?: boolean;
+  nodes?: string; edges?: string; red?:
+    boolean; error?: string; seed?: string };
 type Case = { name: string; input: Detail; effect: [string, string, Detail] };
 const cases = formalCases<Case>('observe_console_graph').observe_console_graph;
 test.use({ actionTimeout: 5000 });
@@ -21,7 +23,8 @@ async function setGraphInputs(page: Page, detail: Detail) {
     if ((detail.types ?? '').split('|').includes(type)) await checkbox.check();
     else await checkbox.uncheck();
   }
-  if (detail.structure) await graph.getByLabel('Components and Packages with Spec Bindings').check();
+  if (detail.structure) await graph.getByLabel(
+    'Components and Packages with Spec Bindings').check();
   await graph.getByLabel('Depth').fill(String(detail.depth));
   await graph.getByRole('button', { name: 'Show related' }).click();
   if (detail.layout === 'horizontal') {
@@ -34,20 +37,27 @@ async function setGraphInputs(page: Page, detail: Detail) {
 }
 
 async function checkVisible(page: Page, detail: Detail) {
-  if (detail.error) { await expect(page.getByRole('alert')).toContainText(detail.error); return; }
-  const graph = page.getByRole('region', { name: detail.view === 'graph' ? 'Atom Graph' : 'Imports Graph' });
+  if (detail.error) { await expect(page.getByRole(
+    'alert')).toContainText(detail.error); return; }
+  const graph = page.getByRole('region', { name:
+    detail.view === 'graph' ? 'Atom Graph' : 'Imports Graph' });
   const nodes = detail.nodes ? detail.nodes.split('|') : [];
   await expect(graph.locator('.node')).toHaveCount(nodes.length);
-  if (detail.layout) await expect(graph).toHaveAttribute('data-layout', detail.layout);
-  for (const node of nodes) await expect(graph.locator('.node').filter({ hasText: node })).toBeVisible();
+  if (detail.layout) await expect(
+    graph).toHaveAttribute('data-layout', detail.layout);
+  for (const node of nodes) await expect(graph.locator(
+    '.node').filter({ hasText: node })).toBeVisible();
   const edges = detail.edges ? detail.edges.split('|') : [];
   if (edges.length) {
     await graph.getByText('Graph edges').click();
     await expect(graph.locator('details ul li')).toHaveCount(edges.length);
-    await expect.poll(async () => (await graph.locator('details ul li').allTextContents())
-      .map(text => text.replace(/\s+/g, ' ').trim().replace(' · ', ': ')).sort()).toEqual([...edges].sort());
+    await expect.poll(async () => (await graph.locator(
+      'details ul li').allTextContents())
+      .map(text => text.replace(/\s+/g, ' ').trim().replace(
+        ' · ', ': ')).sort()).toEqual([...edges].sort());
   } else await expect(graph.locator('svg line, svg > path')).toHaveCount(0);
-  if (detail.red) await expect(graph.locator('line.violation')).toHaveCSS('stroke', 'rgb(204, 34, 34)');
+  if (detail.red) await expect(graph.locator(
+    'line.violation')).toHaveCSS('stroke', 'rgb(204, 34, 34)');
 }
 
 for (const scenario of cases) {
@@ -60,12 +70,16 @@ for (const scenario of cases) {
     if (detail.view === 'graph') await setGraphInputs(page, detail);
     await checkVisible(page, { ...expected, view: detail.view });
     if (detail.seed) {
-      const request = page.waitForRequest(request => request.method() === 'POST' && request.url().endsWith('/interface') &&
-        request.postDataJSON()?.operation === 'iwe_console_atom_document');
+      const request = page.waitForRequest(request => request.method(
+        ) === 'POST' && request.url().endsWith('/tools') &&
+        request.postDataJSON()?.name === 'iwe_console_atom_document');
       const graph = page.getByRole('region', { name: 'Atom Graph' });
-      await graph.locator('.node').getByRole('button', { name: detail.seed, exact: true }).click();
-      expect((await request).postDataJSON().arguments.ref_id).toBe(detail.seed);
-      await expect(page.getByRole('dialog', { name: 'Atom document' })).toContainText(detail.seed);
+      await graph.locator('.node').getByRole('button',
+        { name: detail.seed, exact: true }).click();
+      expect((await request).postDataJSON(
+        ).arguments.ref_id).toBe(detail.seed);
+      await expect(page.getByRole('dialog', { name:
+        'Atom document' })).toContainText(detail.seed);
     }
   });
 }

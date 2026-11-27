@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-501
+concern:
+  subject: "Projection"
+  path: "Model/Graph/Node//Artifact//Derived"
+  relation: "is_narrower_than"
 container:
   component: C15
 tier: 1
@@ -8,8 +12,8 @@ context:
   lens: DevOps
 state:
   status: active
-  version: 34
-  updated_at: '2026-11-25T22:26:06.737370+00:00'
+  version: 36
+  updated_at: "2026-11-27T16:16:01.404965+00:00"
 ---
 ## Summary
 
@@ -23,7 +27,7 @@ Carry Projected Atoms without New Identity
 The source binding and representation of each Atom Carrier projected as an Applicable Methodology member.
 
 
-Applicable Methodology **must** represent each projected Atom Carrier with a one-way source binding **to** its selected authoritative Atom Revision **without** creating another Atom identity:
+Use AN-S-1999 and AN-S-2134 for Carrier and Projection semantics. Bind each projected Applicable Methodology member to its exact source revision.
 
 - preserve the source Atom's authored Frontmatter **and** Main Content unchanged; the **only** compiler-added block is the source binding below.
 - store **`=1`** `projection.source_carrier_path` value **in** the projected Carrier's Frontmatter. resolve it relative **to** the projected Markdown file's directory **to** the original Atom Carrier **in** the selected Methodology Sources.

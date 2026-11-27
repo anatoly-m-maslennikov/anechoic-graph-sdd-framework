@@ -1,4 +1,5 @@
 """Basic worker job and private socket connection."""
+
 import http.client
 import json
 import os
@@ -16,17 +17,27 @@ from pydantic import BaseModel, ConfigDict, Field, InstanceOf
 from .retry import COVERAGE_RECOVERED, CurrentnessRetry
 
 ENGINE = Path(__file__).resolve().parents[1]
-FIELDS = {"instance_id", "root", "control_root", "manifest_path", "manifest_sha256", "project_prefix"}
+FIELDS = {
+    "instance_id",
+    "root",
+    "control_root",
+    "manifest_path",
+    "manifest_sha256",
+    "project_prefix",
+}
 DEADLINE_SECONDS = 120
 
 
 def operation_timeout(seconds):
-    return (None if os.getenv("ANECHOIC_TEST_IMAGE_DEADLINES") == "0"
-            else seconds)
+    return (
+        None if os.getenv("ANECHOIC_TEST_IMAGE_DEADLINES") == "0" else seconds
+    )
 
 
 class _Run(BaseModel):
-    model_config = ConfigDict(strict=True, extra="forbid", validate_assignment=True)
+    model_config = ConfigDict(
+        strict=True, extra="forbid", validate_assignment=True
+    )
 
     state: str
     started_at: float
@@ -45,7 +56,12 @@ class _Run(BaseModel):
 
 
 class _GenerationJob(BaseModel):
-    model_config = ConfigDict(strict=True, extra="forbid", validate_assignment=True, arbitrary_types_allowed=True)
+    model_config = ConfigDict(
+        strict=True,
+        extra="forbid",
+        validate_assignment=True,
+        arbitrary_types_allowed=True,
+    )
     event: threading.Event = Field(default_factory=threading.Event)
     outcome: Any = None
     target: str | None
@@ -54,7 +70,12 @@ class _GenerationJob(BaseModel):
 
 
 class _LifecycleJob(BaseModel):
-    model_config = ConfigDict(strict=True, extra="forbid", validate_assignment=True, arbitrary_types_allowed=True)
+    model_config = ConfigDict(
+        strict=True,
+        extra="forbid",
+        validate_assignment=True,
+        arbitrary_types_allowed=True,
+    )
     event: threading.Event = Field(default_factory=threading.Event)
     outcome: Any = None
     deadline: float | None
@@ -68,6 +89,38 @@ class LifecycleCoveragePending(Exception):
     """A recovery or file-change batch may still precede the write."""
 
 
+def _build_worker(request):
+    binding = {
+        key: value for key, value in request.items() if key != "instance_id"
+    }
+    env = {
+        key: value for key, value in os.environ.items() if key != "PYTHONHOME"
+    }
+    env["PYTHONPATH"] = str(ENGINE)
+    process = subprocess.run(
+        [
+            sys.executable,
+            "-B",
+            "-P",
+            "-m",
+            "WORKERS_beta_C69.WORKERS_beta_C69__shared",
+        ],
+        input=json.dumps(binding),
+        text=True,
+        capture_output=True,
+        timeout=operation_timeout(DEADLINE_SECONDS),
+        cwd=ENGINE,
+        env=env,
+        check=False,
+    )
+    if process.returncode:
+        raise RuntimeError("Worker failed: " + process.stderr[:2048])
+    snapshot = json.loads(process.stdout)
+    if not isinstance(snapshot, dict):
+        raise ValueError("Worker returned an invalid snapshot")
+    return snapshot
+
+
 class Jobs:
     def __init__(self, instance_id):
         self.instance_id = instance_id
@@ -79,51 +132,81 @@ class Jobs:
 
     def health(self):
         with self.lock:
-            return {"instance_id": self.instance_id, "pid": os.getpid(),
-                    "lifecycle_active": self.lifecycle_job is not None,
-                    "startup_replay_pending": self.startup_replay}
+            return {
+                "instance_id": self.instance_id,
+                "pid": os.getpid(),
+                "lifecycle_active": self.lifecycle_job is not None,
+                "startup_replay_pending": self.startup_replay,
+            }
 
     def status(self):
         with self.lock:
-            return {"active": self.active.model_dump(exclude_unset=True) if self.active else None,
-                    "latest": self.latest.model_dump(exclude_unset=True) if self.latest else None}
+            return {
+                "active": self.active.model_dump(exclude_unset=True)
+                if self.active
+                else None,
+                "latest": self.latest.model_dump(exclude_unset=True)
+                if self.latest
+                else None,
+            }
 
     def build(self, request):
-        if not isinstance(request, dict) or set(request) != FIELDS:
-            return 400, {"error": {"code": "invalid_request", "message": "Invalid build fields"}}
-        if request["instance_id"] != self.instance_id:
-            return 409, {"error": {"code": "instance_mismatch", "message": "Instance does not match"}}
+        error = self._validate_build(request)
+        if error is not None:
+            return error
         with self.lock:
             if self.active is not None:
-                return 409, {"error": {"code": "build_active", "message": "A build is already active"}}
+                return 409, {
+                    "error": {
+                        "code": "build_active",
+                        "message": "A build is already active",
+                    }
+                }
             self.active = _Run(state="running", started_at=time.time())
         outcome = {"state": "failed", "code": "internal_error"}
         try:
-            binding = {key: value for key, value in request.items() if key != "instance_id"}
-            env = {key: value for key, value in os.environ.items() if key != "PYTHONHOME"}
-            env["PYTHONPATH"] = str(ENGINE)
-            process = subprocess.run(
-                [sys.executable, "-B", "-P", "-m", "WORKERS_beta_C69.WORKERS_beta_C69__shared"],
-                input=json.dumps(binding), text=True, capture_output=True,
-                timeout=operation_timeout(DEADLINE_SECONDS), cwd=ENGINE,
-                env=env, check=False)
-            if process.returncode:
-                raise RuntimeError("Worker failed: " + process.stderr[:2048])
-            snapshot = json.loads(process.stdout)
-            if not isinstance(snapshot, dict):
-                raise ValueError("Worker returned an invalid snapshot")
+            snapshot = _build_worker(request)
             outcome = {"state": "succeeded"}
             return 200, {"result": snapshot}
         except subprocess.TimeoutExpired:
             outcome = {"state": "failed", "code": "worker_timeout"}
-            return 504, {"error": {"code": "worker_timeout", "message": "Worker deadline exceeded"}}
+            return 504, {
+                "error": {
+                    "code": "worker_timeout",
+                    "message": "Worker deadline exceeded",
+                }
+            }
         except (OSError, ValueError, RuntimeError) as error:
             outcome = {"state": "failed", "code": "worker_failed"}
-            return 502, {"error": {"code": "worker_failed", "message": str(error)[:2048]}}
+            return 502, {
+                "error": {
+                    "code": "worker_failed",
+                    "message": str(error)[:2048],
+                }
+            }
         finally:
             with self.lock:
-                self.latest = _Run(**(self.active.model_dump(exclude_unset=True) | outcome), finished_at=time.time())
+                self.latest = _Run(
+                    **(self.active.model_dump(exclude_unset=True) | outcome),
+                    finished_at=time.time(),
+                )
                 self.active = None
+
+    def _validate_build(self, request):
+        if not isinstance(request, dict) or set(request) != FIELDS:
+            return 400, {
+                "error": {
+                    "code": "invalid_request",
+                    "message": "Invalid build fields",
+                }
+            }
+        if request["instance_id"] != self.instance_id:
+            return 409, {
+                "error": {
+                    "code": "instance_mismatch",
+                    "message": "Instance does not match",
+                }
+            }
 
 
 class QueuedJobs:
@@ -138,7 +221,9 @@ class QueuedJobs:
         while not self.stopping.is_set():
             self.watcher.restore_foreground()
             batch = self.watcher.changes(0.1)
-            changes = self._partition_archive_changes([change for change in batch if change])
+            changes = self._partition_archive_changes(
+                [change for change in batch if change]
+            )
             due = retry.ready()
             if batch or due or self.lifecycle_job is not None:
                 with self.lock:
@@ -172,7 +257,9 @@ class QueuedJobs:
     def _replay_startup(self, retry):
         if self.stopping.is_set():
             return
-        changes = self._partition_archive_changes([change for change in self.watcher.changes(0) if change])
+        changes = self._partition_archive_changes(
+            [change for change in self.watcher.changes(0) if change]
+        )
         finished = True
         if changes:
             outcome = self._generate(changes=changes)
@@ -185,14 +272,31 @@ class QueuedJobs:
 
     def _run_queued_generation(self, retry, job, changes, due):
         from .archive_jobs import ARCHIVE_RECONCILIATION
+
         graph_only = job is not None and job.target == "realization_graph"
-        if job is not None and not graph_only and any(change.get("event_type") == ARCHIVE_RECONCILIATION for change in changes):
+        if (
+            job is not None
+            and not graph_only
+            and any(
+                change.get("event_type") == ARCHIVE_RECONCILIATION
+                for change in changes
+            )
+        ):
             self.archive_reconciliation_pending = False
-        if getattr(self.latest, "code", None) == "watcher_coverage_lost" and job is None:
+        if (
+            getattr(self.latest, "code", None) == "watcher_coverage_lost"
+            and job is None
+        ):
             changes = [*changes, {"event_type": COVERAGE_RECOVERED}]
-        self.flow_context = {"job": job, "changes": changes if job is None else (), "retry": due}
-        outcome = self._generate(job.target if job is not None else None,
-                                 changes=changes if job is None else ())
+        self.flow_context = {
+            "job": job,
+            "changes": changes if job is None else (),
+            "retry": due,
+        }
+        outcome = self._generate(
+            job.target if job is not None else None,
+            changes=changes if job is None else (),
+        )
         retry.observe(outcome)
         if graph_only:
             for change in changes:
@@ -220,5 +324,3 @@ class UnixConnection(http.client.HTTPConnection):
         self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         self.sock.settimeout(self.timeout)
         self.sock.connect(self.path)
-
-

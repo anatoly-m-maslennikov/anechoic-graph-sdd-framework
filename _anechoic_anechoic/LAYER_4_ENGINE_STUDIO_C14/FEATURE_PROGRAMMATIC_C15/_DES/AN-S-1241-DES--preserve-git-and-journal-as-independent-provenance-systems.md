@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1241
+concern:
+  subject: "Event Record"
+  path: "Model/Graph/Node//Artifact//SSOT//Recorded"
+  relation: "is_narrower_than"
 container:
   component: C15
 tier: 3
@@ -8,8 +12,8 @@ context:
   lens: DES
 state:
   status: active
-  version: 24
-  updated_at: 2026-11-10 20:47:54 +0400
+  version: 25
+  updated_at: "2026-11-27T16:16:01.404965+00:00"
 ---
 ## Summary
 

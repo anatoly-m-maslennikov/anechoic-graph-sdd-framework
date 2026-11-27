@@ -11,9 +11,9 @@ relations:
   IS_SOLUTION_FOR:
   - AN-S-4800
 state:
-  status: "active"
-  version: 6
-  updated_at: "2026-11-26T00:22:14.169841+00:00"
+  status: active
+  version: 9
+  updated_at: "2026-11-27T17:35:01.150345+00:00"
 ---
 
 ## Summary
@@ -26,7 +26,7 @@ Run Studio in one supervised container
 
 Run Kernel, Orchestrator, Backend, and MCP as separate long-lived processes in one container. Kernel owns the Project database through Database Server C71. Its read-only Model and Structure Hosts expose the same admitted generation. Kernel commits artifacts and projection rows together. Orchestrator owns the watcher and job state. Isolated Workers build from pinned inputs. Backend serves Web and MCP and keeps durable Project state in Kernel.
 
-Restart Backend and MCP independently. If Kernel or Orchestrator exits, replace the affected Project's pair and re-admit it. Keep the container's existing memory and OOM policy. Use one warm Worker for small Ticket batches. Orchestrator waits at most the measured spawn-to-ready time before using a cold Worker. Larger supported batches use one cold Worker. Keep restart fingerprints by path and content so catch-up detects deletions.
+Restart Backend and MCP independently. If Kernel or Orchestrator exits, replace the affected Project's pair and re-admit it. Keep the container's existing memory and OOM policy. Apply AN-S-3337 to warm Worker use, wait limits, and cold Worker fallback. Keep restart fingerprints by path and content so catch-up detects deletions.
 
 ```mermaid
 flowchart LR
@@ -47,24 +47,9 @@ Use one `stack` selector in `LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/project.toml
 Compare the immutable candidate and baseline images with the same fixture.
 Check each discrepancy against its Contract before cutover.
 
-Studio waits for the Project watcher's coverage baseline before
-capture. Admit the pinned capture as a base and replay the covered
-changes through the completed observation before reporting readiness.
-
-If coverage is lost, reconcile the affected inputs and use a broader
-capture if their scope is unknown. Require source proof for external
-and unwatched inputs.
-
-Incremental Startup is the default with a compatible, verified
-projection checkpoint. Compare the deterministic folder and path
-inventory and carrier content hashes. Reuse the unchanged projection
-and apply only additions, edits, moves, and deletions.
-
-Use a full reload when the projection database or checkpoint is missing,
-the checkpoint is incompatible or cannot be verified, or a Model,
-Structure, or compiler schema input changed. When only Realization
-Graph inputs changed, rebuild the Graph with the admitted Model and
-Structure.
+Apply the Orchestrator and Worker Contracts to watcher coverage,
+startup capture and replay, and incremental startup (AN-S-3337 and
+AN-S-3334).
 
 For a full rebuild, a Worker stages complete rows from one pinned
 snapshot in batches of about 10 MiB. Orchestrator passes the artifact
@@ -88,17 +73,10 @@ Detect live Project Manifest edits through the source watcher. When
 the digest changes, the supervisor validates the new binding and
 reloads the affected Project in the running container.
 
-Run one Manifest Builder per selected Project at a time. Within the
-pinned owner, coalesce Manifest input changes during a build into one
-follow-up for the newest observed inputs.
-
-Preserve admitted artifacts after a formatting-only edit when
-compatibility is verified. Rebuild only the artifacts affected by a
-settings or schema change.
-
-Publish the exact Model and Structure together in one Kernel admission.
-Mark affected data pending and block affected writes until Kernel
-admits the generation for the newest observed inputs.
+Apply the Orchestrator Contract to Manifest Builder scheduling and
+joint Model and Structure admission (AN-S-3337). Preserve admitted
+artifacts after a formatting-only edit when compatibility is verified.
+Rebuild only the artifacts affected by a settings or schema change.
 
 Index the title of each Atom Summary. Keep the full Summary in its
 carrier. Compile a candidate Model from the captured sources.

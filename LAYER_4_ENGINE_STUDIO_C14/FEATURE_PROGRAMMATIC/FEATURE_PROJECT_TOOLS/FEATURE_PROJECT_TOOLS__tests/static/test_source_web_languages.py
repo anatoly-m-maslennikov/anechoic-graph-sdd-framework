@@ -18,7 +18,10 @@ class SourceWebLanguageTests(unittest.TestCase):
             with self.subTest(name=name):
                 self.assertEqual(
                     [
-                        f"{name}: authored JavaScript source must use TypeScript"
+                        (
+                            f"{name}"
+                            ": authored JavaScript source must use TypeScript"
+                        )
                     ],
                     lint.web_language_findings(Path("."), Path(name)),
                 )
@@ -57,7 +60,12 @@ class SourceWebLanguageTests(unittest.TestCase):
             (root / path).write_text(source, encoding="utf-8")
             self.assertEqual(
                 [
-                    f"index.html:{line}: inline JavaScript must be built from TypeScript source"
+                    (
+                        "index.html:"
+                        f"{line}"
+                        ": inline JavaScript must be built from TypeScript "
+                        "source"
+                    )
                     for line in (8, 9, 10, 11)
                 ],
                 lint.web_language_findings(root, path),

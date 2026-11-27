@@ -40,8 +40,12 @@ async def pilot_app(state):
     api = app.routes[0].endpoint.__self__
     asset = Path(__file__).resolve().parents[1] / "tool_registry.json"
     registry_data = json.loads(asset.read_bytes())
-    schema, = (tool["inputSchema"] for provider in registry_data["providers"]
-               for tool in provider["tools"] if tool["name"] == "query_run")
+    (schema,) = (
+        tool["inputSchema"]
+        for provider in registry_data["providers"]
+        for tool in provider["tools"]
+        if tool["name"] == "query_run"
+    )
 
     class QueryOwner:
         def run(self, sql, **options):
@@ -55,22 +59,26 @@ async def pilot_app(state):
         return operations.call(name, arguments)
 
     gateway = NonCallableMock(
-        spec_set=[
-            'selection', 'workbench'
-        ],
-        selection=api._selection, workbench=NonCallableMock(
-        spec_set=[
-            'call'
-        ],
-        call=call))
-    binding = ProviderBinding(factory=create_provider, root=Path("/test"), gateway=gateway)
-    tool = RegisteredTool(binding=binding,
-                          input_validator=Draft202012Validator(schema),
-                          output_validator=None)
+        spec_set=["selection", "workbench"],
+        selection=api._selection,
+        workbench=NonCallableMock(spec_set=["call"], call=call),
+    )
+    binding = ProviderBinding(
+        factory=create_provider, root=Path("/test"), gateway=gateway
+    )
+    tool = RegisteredTool(
+        binding=binding,
+        input_validator=Draft202012Validator(schema),
+        output_validator=None,
+    )
     registry = ActiveToolRegistry(
-        tools=(), routes={"query_run": tool}, bindings=(binding,),
-        global_blacklist=frozenset(), asset_root=Path("/test"),
-        registry_revision="test", inventory_revision="test",
+        tools=(),
+        routes={"query_run": tool},
+        bindings=(binding,),
+        global_blacklist=frozenset(),
+        asset_root=Path("/test"),
+        registry_revision="test",
+        inventory_revision="test",
     )
     api._registry = registry
     with patch.object(ActiveToolRegistry, "ensure_current"):
@@ -89,8 +97,12 @@ async def provider_app(root, state):
     )
     inputs = NativeQueryInputs(lambda *_: None, frozenset(), {})
     owner = NativeQueryOwner(selection, inputs)
-    with duckdb.connect(config={"enable_external_access": False}) as connection:
-        with patch(f"{QueryStore.__module__}._connect", return_value=connection):
+    with duckdb.connect(
+        config={"enable_external_access": False}
+    ) as connection:
+        with patch(
+            f"{QueryStore.__module__}._connect", return_value=connection
+        ):
             owner._store = QueryStore(native=True)
         owner._capture = object()
         operations = WorkbenchOperations(query_owner=owner)
@@ -120,18 +132,35 @@ async def provider_app(root, state):
 
 async def serve():
     state = {}
-    context = provider_app(Path(sys.argv[1]), state) if len(sys.argv) > 1 else pilot_app(state)
-    with patch(f"{BackendToolAPI.__module__}.report_failure", return_value=(None, None)):
-        async with context as app, httpx2.AsyncClient(
-            transport=httpx2.ASGITransport(app=app), base_url="http://test"
-        ) as client:
+    context = (
+        provider_app(Path(sys.argv[1]), state)
+        if len(sys.argv) > 1
+        else pilot_app(state)
+    )
+    with patch(
+        f"{BackendToolAPI.__module__}.report_failure",
+        return_value=(None, None),
+    ):
+        async with (
+            context as app,
+            httpx2.AsyncClient(
+                transport=httpx2.ASGITransport(app=app), base_url="http://test"
+            ) as client,
+        ):
             for line in sys.stdin:
                 request = json.loads(line)
                 state["mode"] = request["mode"]
                 response = await client.post("/tools", json=request["body"])
-                print(json.dumps({"status": response.status_code,
-                                  "headers": dict(response.headers),
-                                  "body": response.text}), flush=True)
+                print(
+                    json.dumps(
+                        {
+                            "status": response.status_code,
+                            "headers": dict(response.headers),
+                            "body": response.text,
+                        }
+                    ),
+                    flush=True,
+                )
 
 
 asyncio.run(serve())

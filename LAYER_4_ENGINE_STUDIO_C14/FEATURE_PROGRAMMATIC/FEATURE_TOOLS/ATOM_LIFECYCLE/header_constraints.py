@@ -10,7 +10,9 @@ from pydantic.dataclasses import dataclass
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import iter_formal_claims
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_native_model_claim
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.cardinality__pub import cardinality_bounds
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.cardinality__pub import (
+    cardinality_bounds,
+)
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import matches_named_value
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import GROUP_FIELDS, ROLE_FIELDS, header_value, path_value
 
@@ -21,17 +23,23 @@ _SELECTOR = (rf'(?:/\(\s*\.Header\.(?:Context\.)?(Role|Form)\s*'
 
 
 def _path(value):
-    parts = [re.sub(r'\s+', '_', p.strip()).lower() for p in value.split('.')]
+    parts = [re.sub(r"\s+", "_", p.strip()).lower() for p in value.split(".")]
     if len(parts) > 1 and parts[0] in GROUP_FIELDS:
         group, leaf = parts[:2]
-        if group == 'identity' and leaf == 'id':
-            parts[:2] = ['atom_id']
+        if group == "identity" and leaf == "id":
+            parts[:2] = ["atom_id"]
         elif leaf in GROUP_FIELDS[group]:
             parts.pop(0)
-        elif group == 'context' and len(parts) > 2 and parts[2] in ROLE_FIELDS.get(leaf, ()):
+        elif (
+            group == "context"
+            and len(parts) > 2
+            and parts[2] in ROLE_FIELDS.get(leaf, ())
+        ):
             parts = parts[2:]
-    parts[0] = {'id': 'atom_id', 'carrier_destination': 'destination'}.get(parts[0], parts[0])
-    return '.'.join(parts)
+    parts[0] = {"id": "atom_id", "carrier_destination": "destination"}.get(
+        parts[0], parts[0]
+    )
+    return ".".join(parts)
 
 
 def _value(view, path):
@@ -39,10 +47,14 @@ def _value(view, path):
 
 
 def _group(metadata, name, fields):
-    _, stored = path_value(metadata, tuple(name.split('.')))
-    values = {_path(key): value for key, value in stored.items()} if isinstance(stored, dict) else {}
+    _, stored = path_value(metadata, tuple(name.split(".")))
+    values = (
+        {_path(key): value for key, value in stored.items()}
+        if isinstance(stored, dict)
+        else {}
+    )
     for field in fields:
-        address = f'{name}.{field}' if '.' in name else field
+        address = f"{name}.{field}" if "." in name else field
         present, value = header_value(metadata, address)
         if present:
             values[field] = value
@@ -65,28 +77,42 @@ def _logical_groups(metadata, role):
 
 def _selected(value):
     if value is None:
-        return ''
-    text = value.partition('(')[2][:-1] if value.startswith('in') else value.lstrip(':=')
+        return ""
+    text = (
+        value.partition("(")[2][:-1]
+        if value.startswith("in")
+        else value.lstrip(":=")
+    )
     return text.strip().strip('"')
 
 
 def _native_header_target(args, source):
-    if args.get('relation_name') != 'IS_PROPERTY_OF':
+    if args.get("relation_name") != "IS_PROPERTY_OF":
         return None
-    base, name = args.get('base_path'), args.get('entity_name')
+    base, name = args.get("base_path"), args.get("entity_name")
     if not isinstance(base, str) or not isinstance(name, str):
         return None
-    match = re.fullmatch(rf'Atom{_SELECTOR}\.Header(?:\.({_PATH}))?', base)
+    match = re.fullmatch(rf"Atom{_SELECTOR}\.Header(?:\.({_PATH}))?", base)
     if match is None:
         return None
     selector, selected, rest = match.groups()
-    selector, selected = (selector.lower(), _selected(selected)) if selector else ('', '')
-    roles = args.get('applies_to_entity_classes', ())
+    selector, selected = (
+        (selector.lower(), _selected(selected)) if selector else ("", "")
+    )
+    roles = args.get("applies_to_entity_classes", ())
     if roles:
-        if len(roles) != 1 or selector and (selector != 'role' or selected != roles[0]):
-            raise ValueError(f'{source}: unsupported Header Entity selector')
-        selector, selected = 'role', roles[0]
-    return _path('.'.join(part for part in (rest, name) if part)), selector, selected
+        if (
+            len(roles) != 1
+            or selector
+            and (selector != "role" or selected != roles[0])
+        ):
+            raise ValueError(f"{source}: unsupported Header Entity selector")
+        selector, selected = "role", roles[0]
+    return (
+        _path(".".join(part for part in (rest, name) if part)),
+        selector,
+        selected,
+    )
 
 
 def _native_header_records(code, source):
@@ -99,8 +125,10 @@ def _native_header_records(code, source):
         return set()
     path, selector, selected = target
     records = set()
-    if (occurrence := args.get('property_occurrence_cardinality')) in (0, 1):
-        records.add(('property', path, selector, selected, str(occurrence), source))
+    if (occurrence := args.get("property_occurrence_cardinality")) in (0, 1):
+        records.add(
+            ("property", path, selector, selected, str(occurrence), source)
+        )
     if (cardinality := args.get('value_cardinality')) is not None:
         records.add(('value', path, selector, selected, cardinality_bounds(cardinality), source))
     if (children := args.get('allowed_dependent_property_names')):
@@ -108,8 +136,19 @@ def _native_header_records(code, source):
         if high is not None:
             names = tuple(sorted(_path(child) for child in children))
             records.add(('children', path, selector, selected, (low, high, *names), source))
-    if (cardinality := args.get('dependent_property_value_cardinality')) is not None:
-        records.add(('value', path + '.*', selector, selected, cardinality_bounds(cardinality), source))
+    if (
+        cardinality := args.get("dependent_property_value_cardinality")
+    ) is not None:
+        records.add(
+            (
+                "value",
+                path + ".*",
+                selector,
+                selected,
+                cardinality_bounds(cardinality),
+                source,
+            )
+        )
     if path not in {'role', 'form', 'status'}:
         for value in args.get('allowed_values', ()):
             records.add(('domain', path, selector, selected, value, source))
@@ -119,10 +158,13 @@ def _native_header_records(code, source):
 def compile_header_constraints(rows):
     records = set()
     for row in rows:
-        for block in iter_formal_claims(row['_content_bytes'].decode('utf-8')):
-            records.update(_native_header_records(block, row['id']))
-    keys = ('kind', 'path', 'selector', 'selected', 'value', 'source')
-    return [dict(zip(keys, item, strict=False)) for item in sorted(records, key=repr)]
+        for block in iter_formal_claims(row["_content_bytes"].decode("utf-8")):
+            records.update(_native_header_records(block, row["id"]))
+    keys = ("kind", "path", "selector", "selected", "value", "source")
+    return [
+        dict(zip(keys, item, strict=False))
+        for item in sorted(records, key=repr)
+    ]
 
 
 @dataclass(frozen=True, config=ConfigDict(strict=True, extra="forbid"))
@@ -133,19 +175,33 @@ class HeaderConstraints:
     values: tuple[tuple[str, str, str, tuple[int, int | None], str], ...] = ()
 
     def validate(self, view, *, metadata=None):
-        metadata = _logical_groups(view if metadata is None else metadata, view.get('role'))
+        metadata = _logical_groups(
+            view if metadata is None else metadata, view.get("role")
+        )
         errors = []
         for path, selector, selected, count, source in self.properties:
-            if selector and not matches_named_value(view.get(selector), selected):
+            if selector and not matches_named_value(
+                view.get(selector), selected
+            ):
                 continue
             logical = _path(path)
-            parent_path = logical.rpartition('.')[0]
-            if parent_path and not isinstance(_value(metadata, parent_path)[1], dict):
+            parent_path = logical.rpartition(".")[0]
+            if parent_path and not isinstance(
+                _value(metadata, parent_path)[1], dict
+            ):
                 continue
             present, _ = _value(metadata, logical)
-            if (count == '1' and not present) or (count == '0' and present):
-                field = self._missing_field(view, logical) if not present else path
-                errors.append((field, f'Header {path} requires property cardinality {count} ({source}).', None))
+            if (count == "1" and not present) or (count == "0" and present):
+                field = (
+                    self._missing_field(view, logical) if not present else path
+                )
+                errors.append(
+                    (
+                        field,
+                        f"Header {path} requires property cardinality {count} ({source}).",
+                        None,
+                    )
+                )
         for path, selector, selected, values, source in self.domains:
             if selector and not matches_named_value(view.get(selector), selected):
                 continue
@@ -162,30 +218,63 @@ class HeaderConstraints:
 
     def _validate_values(self, view, metadata):
         for path, selector, selected, (low, high), source in self.values:
-            if selector and not matches_named_value(view.get(selector), selected):
+            if selector and not matches_named_value(
+                view.get(selector), selected
+            ):
                 continue
-            wildcard = path.endswith('.*')
+            wildcard = path.endswith(".*")
             present, value = _value(metadata, path[:-2] if wildcard else path)
             if not present:
                 continue
-            entries = value.items() if wildcard and isinstance(value, dict) else () if wildcard else ((None, value),)
+            entries = (
+                value.items()
+                if wildcard and isinstance(value, dict)
+                else ()
+                if wildcard
+                else ((None, value),)
+            )
             for child, item in entries:
-                count = 0 if isinstance(item, dict) else len(item) if isinstance(item, list) else 1
+                count = (
+                    0
+                    if isinstance(item, dict)
+                    else len(item)
+                    if isinstance(item, list)
+                    else 1
+                )
                 if count < low or (high is not None and count > high):
-                    field = f'{path[:-2]}.{child}' if wildcard else path
-                    expected = f'{low}+' if high is None else str(low) if low == high else f'{low}..{high}'
-                    yield field, f'Header {field} requires value cardinality {expected} ({source}).', None
+                    field = f"{path[:-2]}.{child}" if wildcard else path
+                    expected = (
+                        f"{low}+"
+                        if high is None
+                        else str(low)
+                        if low == high
+                        else f"{low}..{high}"
+                    )
+                    yield (
+                        field,
+                        f"Header {field} requires value cardinality {expected} ({source}).",
+                        None,
+                    )
 
     def _missing_field(self, view, path):
         for group, selector, selected, bounds, _ in self.children:
-            if (_path(group) == path and bounds[:2] == (1, 1) and len(bounds) == 3
-                    and (not selector or matches_named_value(view.get(selector), selected))):
-                return _path(f'{path}.{bounds[2]}')
+            if (
+                _path(group) == path
+                and bounds[:2] == (1, 1)
+                and len(bounds) == 3
+                and (
+                    not selector
+                    or matches_named_value(view.get(selector), selected)
+                )
+            ):
+                return _path(f"{path}.{bounds[2]}")
         return path
 
     def _validate_children(self, view, metadata):
         for path, selector, selected, value, source in self.children:
-            if selector and not matches_named_value(view.get(selector), selected):
+            if selector and not matches_named_value(
+                view.get(selector), selected
+            ):
                 continue
             present, group = _value(metadata, path)
             if not present:

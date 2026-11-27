@@ -18,7 +18,9 @@ class DocumentArguments(BaseModel):
 def descriptor():
     return {
         "name": NAME,
-        "description": "Read an admitted Atom revision and its authored Markdown body.",
+        "description": (
+            "Read an admitted Atom revision and its authored Markdown body."
+        ),
         "annotations": {
             "readOnlyHint": True,
             "destructiveHint": False,

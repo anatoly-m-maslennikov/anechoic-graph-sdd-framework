@@ -1,6 +1,7 @@
 """Controlled Inherency view acceptance under R1456, M385, E449 and D634."""
 
 import copy
+from importlib import import_module
 from pathlib import Path
 import re
 import sys
@@ -8,13 +9,11 @@ import unittest
 
 import yaml
 
-sys.path[:0] = [
-    str(Path(__file__).resolve().parents[1]),
-    str(Path(__file__).resolve().parents[2]),
-]
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import (  # noqa: E402
-    readable_entity_tree as readable,
-)
+sys.path[:0] = [str(Path(__file__).resolve().parents[i]) for i in (1, 2)]
+readable = import_module(
+    "FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH."
+    "GENERATE_ENTITY_GRAPH__shared"
+).readable_entity_tree
 
 
 STAMP = "2026-10-15 19:00:00 +0400"
@@ -167,7 +166,7 @@ class ReadableEntityTreeTests(unittest.TestCase):
             )
         )
 
-    def test_instance_relation_renders_kind_to_named_instance_and_keeps_bearer_details(
+    def _case_0(
         self,
     ):
         names = {
@@ -318,6 +317,14 @@ class ReadableEntityTreeTests(unittest.TestCase):
                 source["version"] = version
             with self.subTest(version=version), self.assertRaises(ValueError):
                 render(graph, provenance)
+
+
+setattr(
+    ReadableEntityTreeTests,
+    "test_instance_relation_renders_kind_to_"
+    "named_instance_and_keeps_bearer_details",
+    ReadableEntityTreeTests._case_0,
+)
 
 
 if __name__ == "__main__":

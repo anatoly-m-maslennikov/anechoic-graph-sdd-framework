@@ -15,13 +15,19 @@ from .native_query_runtime import NativeQueryRuntime
 
 
 class NativeQueryOwner(NativeQueryRuntime):
-    def lifecycle(self, name: str, arguments: dict[str, Any]) -> dict[str, Any]:
+    def lifecycle(
+        self, name: str, arguments: dict[str, Any]
+    ) -> dict[str, Any]:
         if name not in LIFECYCLE_TOOLS:
             raise ValueError("The native Atom Lifecycle Tool is unavailable")
         with self._interface_lock, bind_native_runtime(self.selection):
             store = self._owner()
             assert self._capture is not None
-            previous = self._capture if self._projection_selection == self.selection else None
+            previous = (
+                self._capture
+                if self._projection_selection == self.selection
+                else None
+            )
             if self._manifest_needs_reload(previous):
                 return {
                     "outcome": "blocked",

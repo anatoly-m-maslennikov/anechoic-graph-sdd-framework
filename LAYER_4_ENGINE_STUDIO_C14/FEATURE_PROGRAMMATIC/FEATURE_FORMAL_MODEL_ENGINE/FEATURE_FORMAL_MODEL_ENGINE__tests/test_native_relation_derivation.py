@@ -14,7 +14,8 @@ def claim(name, base=None):
     derivation = f", derived_from={base!r}" if base is not None else ""
     return (
         "from anechoic.formal_claims import declare_relation\n"
-        f'declare_relation(relation_name={name!r}, source_endpoint={{"level": "instances"}}, '
+        f"declare_relation(relation_name={name!r}, "
+        'source_endpoint={"level": "instances"}, '
         f'target_endpoint={{"level": "instances"}}{derivation})\n'
     )
 
@@ -24,7 +25,10 @@ class NativeRelationDerivationTests(unittest.TestCase):
         for value in ("", "bad name", "Relation//OTHER", "SELF", 1, None):
             code = claim("SELF").replace(
                 'target_endpoint={"level": "instances"}',
-                f'target_endpoint={{"level": "instances"}}, derived_from={value!r}',
+                (
+                    'target_endpoint={"level": "instances"}, derived_from='
+                    f"{value!r}"
+                ),
             )
             with (
                 self.subTest(value=value),

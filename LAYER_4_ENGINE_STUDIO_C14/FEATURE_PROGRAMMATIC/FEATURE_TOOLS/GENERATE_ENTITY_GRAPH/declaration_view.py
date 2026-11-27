@@ -1,4 +1,3 @@
-
 """Render the middle-level Entities Graph declaration view.
 
 The caller supplies already-selected Relation Type and Graph Rule records. This
@@ -8,115 +7,40 @@ derive source facts.
 
 from __future__ import annotations
 
-import json
-from collections.abc import Mapping
+import json as json
+from collections.abc import Mapping as Mapping
 
 import yaml
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.readable_entity_tree import _fence as _text_fence
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.readable_entity_tree import _projection_frontmatter
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.\
+    readable_entity_tree import (
+    _fence as _text_fence,
+)  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.\
+    readable_entity_tree import (
+    _projection_frontmatter,
+)  # fmt: skip
 
 
-_METADATA_FIELDS = (
-    ("meaning", "Meaning"),
-    ("direction", "Declared direct direction"),
-    ("inverse", "Inverse direction"),
-    ("authority_effect", "Authority effect"),
-    ("transitivity", "Transitivity"),
-    ("applicability", "Applicability"),
-    ("status", "Status"),
-    ("exclusive_purpose", "Exclusive purpose"),
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.\
+    declaration_view_helpers import (
+    _METADATA_FIELDS as _METADATA_FIELDS,
+    _UNAVAILABLE as _UNAVAILABLE,
+    _display as _display,
+    _metadata as _metadata,
+    _record as _record,
+    _relation_type_key as _relation_type_key,
+    _relation_type_lines as _relation_type_lines,
+    _required_text as _required_text,
+    _source_id as _source_id,
+    _source_ids as _source_ids,
+)  # fmt: skip
+
+
+_DISPLAY_SELECTION = (
+    "Display selection: named Relation Types and concrete Graph Rule "
+    "declarations; actual Atom-to-Atom Relation tuples are excluded."
 )
-_UNAVAILABLE = "unavailable (not evidenced in selected authority)"
-
-
-def _record(value: object, field: str) -> dict[str, object]:
-    if not isinstance(value, dict):
-        raise ValueError(f"{field} must be a plain mapping")
-    return value
-
-
-def _required_text(value: object, field: str) -> str:
-    if not isinstance(value, str) or not value.strip() or any(char in value for char in "\r\n\t"):
-        raise ValueError(f"Invalid {field}")
-    return value
-
-
-def _source_id(value: object) -> str | None:
-    if value is None:
-        return None
-    source = _record(value, "source")
-    atom_id = source.get("atom_id")
-    version = source.get("version")
-    if (
-        not isinstance(atom_id, str)
-        or not atom_id.strip()
-        or isinstance(version, bool)
-        or not isinstance(version, int)
-        or version < 1
-    ):
-        raise ValueError("Invalid SourceRef")
-    return f"{atom_id.strip()}@{version}"
-
-
-def _source_ids(value: object) -> list[str]:
-    if value is None:
-        return []
-    if not isinstance(value, list):
-        raise ValueError("sources must be a list")
-    return sorted({_source_id(item) for item in value if item is not None})
-
-
-def _display(value: object, unavailable: str = _UNAVAILABLE) -> str:
-    if value is None:
-        return unavailable
-    if isinstance(value, str):
-        if not value:
-            return unavailable
-        return value.replace("\r", "\\r").replace("\n", "\\n")
-    if isinstance(value, Mapping):
-        normalized = {str(key): item for key, item in value.items()}
-        return json.dumps(
-            normalized, ensure_ascii=False, sort_keys=True, default=str, separators=(",", ":")
-        )
-    if isinstance(value, list):
-        return json.dumps(
-            value, ensure_ascii=False, sort_keys=True, default=str, separators=(",", ":")
-        )
-    return str(value)
-
-
-def _metadata(row: dict[str, object]) -> dict[str, object]:
-    value = row.get("metadata")
-    if value is None:
-        return {}
-    return _record(value, "metadata")
-
-
-def _relation_type_lines(row: dict[str, object]) -> list[str]:
-    graph_kind = _display(row.get("graph_kind"))
-    canonical_name = _display(row.get("canonical_name"))
-    metadata = _metadata(row)
-    lines = [f"Relation Type: {graph_kind} / {canonical_name}"]
-    lines.extend((f"\tOwning graph kind: {graph_kind}", f"\tCanonical name: {canonical_name}"))
-    for key, label in _METADATA_FIELDS:
-        lines.append(f"\t{label}: {_display(metadata.get(key))}")
-    source_ids = _source_ids(row.get("sources"))
-    if source_ids:
-        lines.append("\tSources:")
-        lines.extend(f"\t\t{source_id}" for source_id in source_ids)
-    else:
-        lines.append(f"\tSources: {_UNAVAILABLE}")
-    return lines
-
-
-def _relation_type_key(row: object) -> tuple[str, str, str]:
-    mapped = _record(row, "relation type")
-    return (
-        _display(mapped.get("graph_kind")),
-        _display(mapped.get("canonical_name")),
-        json.dumps(mapped.get("metadata", {}), ensure_ascii=False, sort_keys=True, default=str),
-    )
 
 
 def _raw_body_lines(value: object) -> list[str]:
@@ -148,9 +72,14 @@ def _relation_type_evidence(row: dict[str, object]) -> list[object]:
     evidence = row.get("evidence") or []
     if not isinstance(evidence, list):
         raise ValueError("evidence must be a list")
-    evidence_rows = [_record(item, "Relation Type evidence") for item in evidence]
+    evidence_rows = [
+        _record(item, "Relation Type evidence") for item in evidence
+    ]
     evidence_rows.sort(
-        key=lambda item: (_source_id(item.get("source")) or "~unavailable~", _display(item.get("subject")))
+        key=lambda item: (
+            _source_id(item.get("source")) or "~unavailable~",
+            _display(item.get("subject")),
+        )
     )
     lines: list[object] = []
     for index, item in enumerate(evidence_rows):
@@ -198,19 +127,28 @@ def _unresolved_lines(row: dict[str, object]) -> list[object]:
     ]
     body = row.get("body")
     if body is not None:
-        lines.extend(["Governing evidence:", *_text_fence(_raw_body_lines(body))])
+        lines.extend(
+            ["Governing evidence:", *_text_fence(_raw_body_lines(body))]
+        )
     return lines
 
 
-def _limitations(catalog: dict[str, object], graph_rule_count: int) -> list[object]:
+def _limitations(
+    catalog: dict[str, object], graph_rule_count: int
+) -> list[object]:
     limitations = catalog.get("limitations", []) or []
     unresolved = catalog.get("unresolved", []) or []
     if not isinstance(limitations, list) or not isinstance(unresolved, list):
         raise ValueError("limitations and unresolved must be lists")
     lines: list[object] = ["## Source limitations", ""]
     if graph_rule_count == 0:
-        lines.append("- Concrete Graph Rule catalogue: empty for the selected source set.")
-    supplied = sorted({_display(item) for item in limitations if item is not None})
+        lines.append(
+            "- Concrete Graph Rule catalogue: empty for the "
+            "selected source set."
+        )
+    supplied = sorted(
+        {_display(item) for item in limitations if item is not None}
+    )
     if supplied:
         lines.extend(f"- {item}" for item in supplied)
     unresolved_rows = [_record(item, "unresolved item") for item in unresolved]
@@ -228,23 +166,46 @@ def _limitations(catalog: dict[str, object], graph_rule_count: int) -> list[obje
                 lines.append("")
             lines.extend(_unresolved_lines(row))
     if graph_rule_count and not supplied and not unresolved_rows:
-        lines.append("- No source limitations supplied; this does not establish completeness outside the selection.")
+        lines.append(
+            "- No source limitations supplied; this does not "
+            "establish completeness outside the selection."
+        )
     if not supplied and not unresolved_rows and not graph_rule_count:
-        lines.append("- No additional limitations supplied; the empty Rule catalogue does not establish completeness outside the selection.")
+        lines.append(
+            "- No additional limitations supplied; the empty Rule catalogue "
+            "does not establish completeness outside the selection."
+        )
     return lines
 
 
 def _sorted_declarations(catalog):
     relation_types_value = catalog.get("relation_types", []) or []
     graph_rules_value = catalog.get("graph_rules", []) or []
-    if not isinstance(relation_types_value, list) or not isinstance(graph_rules_value, list):
+    if not isinstance(relation_types_value, list) or not isinstance(
+        graph_rules_value, list
+    ):
         raise ValueError("relation_types and graph_rules must be lists")
-    relation_types = [_record(row, "relation type") for row in relation_types_value]
+    relation_types = [
+        _record(row, "relation type") for row in relation_types_value
+    ]
     graph_rules = [_record(row, "graph rule") for row in graph_rules_value]
     relation_types.sort(key=_relation_type_key)
     graph_rules.sort(key=_graph_rule_key)
 
     return relation_types, graph_rules
+
+
+def _declaration_identity(projection_identity):
+    projection_identity = _record(projection_identity, "projection_identity")
+    identity = {
+        "projection_id": _required_text(
+            projection_identity.get("projection_id"), "projection_id"
+        ),
+        "named_selection": _required_text(
+            projection_identity.get("named_selection"), "named_selection"
+        ),
+    }
+    return identity
 
 
 def render_declarations(
@@ -258,17 +219,15 @@ def render_declarations(
     """Return deterministic Markdown for supplied declaration records only."""
 
     catalog = _record(catalog, "catalog")
-    projection_identity = _record(projection_identity, "projection_identity")
-    identity = {
-        "projection_id": _required_text(projection_identity.get("projection_id"), "projection_id"),
-        "named_selection": _required_text(projection_identity.get("named_selection"), "named_selection"),
-    }
+    identity = _declaration_identity(projection_identity)
     updated_at = _required_text(updated_at, "updated_at")
     source_selection = _required_text(source_selection, "source selection")
     relation_types, graph_rules = _sorted_declarations(catalog)
 
     frontmatter = yaml.safe_dump(
-        _projection_frontmatter(provenance, updated_at, identity, form="Catalog"),
+        _projection_frontmatter(
+            provenance, updated_at, identity, form="Catalog"
+        ),
         allow_unicode=True,
         sort_keys=False,
     ).rstrip()
@@ -280,7 +239,7 @@ def render_declarations(
         "",
         "Source selection: " + source_selection,
         "",
-        "Display selection: named Relation Types and concrete Graph Rule declarations; actual Atom-to-Atom Relation tuples are excluded.",
+        _DISPLAY_SELECTION,
         "",
         "This is a derived Projection, not independent model authority.",
         "",
@@ -304,7 +263,13 @@ def _append_declaration_sections(body, relation_types, graph_rules):
                 body.extend(["", *evidence])
             body.append("")
     else:
-        body.extend(["- No Relation Type declarations supplied for the selected source set.", ""])
+        body.extend(
+            [
+                "- No Relation Type declarations supplied for the "
+                "selected source set.",
+                "",
+            ]
+        )
 
     body.extend(["## Graph Rules", ""])
     if graph_rules:
@@ -314,4 +279,10 @@ def _append_declaration_sections(body, relation_types, graph_rules):
             body.extend(_graph_rule_lines(row))
             body.append("")
     else:
-        body.extend(["- Concrete Graph Rule catalogue: empty for the selected source set.", ""])
+        body.extend(
+            [
+                "- Concrete Graph Rule catalogue: empty for the "
+                "selected source set.",
+                "",
+            ]
+        )

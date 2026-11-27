@@ -8,12 +8,12 @@ context:
   template: DECISION
   lens: DES
 state:
-  status: "active"
-  version: 4
-  updated_at: '2026-11-26T16:36:22.647504+00:00'
+  status: active
+  version: 6
+  updated_at: "2026-11-27T17:36:37.991574+00:00"
 relations:
   IS_SOLUTION_FOR:
-  - AN-S-4810@3
+  - AN-S-4809@6
 
 ---
 
@@ -25,14 +25,11 @@ Route the first API Beta query through the admitted Kernel
 
 ### Prose Claim
 
-C21 starts `python -m API_MIXER_beta_C91.API_MIXER_beta_C91__shared` with
-`--role api` and the direct startup arguments. Check the pinned binding
-against the Project peers before serving queries.
-
-C21 starts `python -m API_MIXER_beta_C91.shared_runtime` with the API and
-peer-owner socket paths. Use C68 `select`, `status`, and `lease` over private
-IPC. Release each lease when the request ends. Discard results when
-the binding changes during the request.
+Use the C91 direct and shared API entry points in AN-S-4809@6. Check the
+pinned direct binding against the Project peers before serving queries. In
+shared mode, release every acquired lease on every exit, including errors
+and stale-binding refusal. C68 owns the lease record. Revalidate after
+dispatch and discard the result if the binding changed.
 
 Select C91 with `beta_next`. Before cutover, compare catalog capabilities,
 results, and errors on the same Project against the immutable Beta baseline.
@@ -48,20 +45,38 @@ component_workflow(
         'initial': 'idle',
         'states': {
             'idle': {'on': {
-                'query_run_requested': {'target': 'validating', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'trigger'}}},
+                'query_run_requested': {'target': 'validating', 'guard': {'type': 'matchesTrace', 'params': {'kind': 'trigger'}}},
             }},
             'validating': {'on': {
-                'query_sent_to_kernel': {'target': 'reporting', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'effect', 'target': 'C71'}}},
-                'query_refused': {'target': 'failed', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'output'}}},
+                'query_sent_to_kernel': {'target': 'direct_reporting', 'guard': {'type': 'matchesTrace', 'params': {'kind': 'effect', 'target': 'C71'}}},
+                'lease_acquired': {'target': 'leased', 'guard': {'type': 'matchesTrace', 'params': {'kind': 'effect', 'target': 'C68'}}},
+                'query_refused': {'target': 'failed', 'guard': {'type': 'matchesTrace', 'params': {'kind': 'output'}}},
             }},
-            'reporting': {'on': {
-                'kernel_result_returned': {'target': 'completed', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'output', 'outcome': 'completed'}}},
-                'kernel_failure_returned': {'target': 'failed', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'output', 'outcome': 'failed'}}},
+            'leased': {'on': {
+                'query_sent_to_kernel': {'target': 'leased_reporting', 'guard': {'type': 'matchesTrace', 'params': {'kind': 'effect', 'target': 'C71'}}},
+                'query_refusal_pending': {'target': 'release_failure', 'guard': {'type': 'matchesTrace', 'params': {'kind': 'effect', 'target': 'C91'}}},
+            }},
+            'direct_reporting': {'on': {
+                'kernel_result_returned': {'target': 'completed', 'guard': {'type': 'matchesTrace', 'params': {'kind': 'output', 'outcome': 'completed'}}},
+                'kernel_failure_returned': {'target': 'failed', 'guard': {'type': 'matchesTrace', 'params': {'kind': 'output', 'outcome': 'failed'}}},
+                'stale_binding_refused': {'target': 'failed', 'guard': {'type': 'matchesTrace', 'params': {'kind': 'output', 'outcome': 'failed'}}},
+            }},
+            'leased_reporting': {'on': {
+                'binding_valid_result_pending': {'target': 'release_success', 'guard': {'type': 'matchesTrace', 'params': {'kind': 'effect', 'target': 'C91'}}},
+                'kernel_failure_pending': {'target': 'release_failure', 'guard': {'type': 'matchesTrace', 'params': {'kind': 'effect', 'target': 'C91'}}},
+                'stale_binding_detected': {'target': 'release_failure', 'guard': {'type': 'matchesTrace', 'params': {'kind': 'effect', 'target': 'C91'}}},
+            }},
+            'release_success': {'on': {
+                'lease_released': {'target': 'return_success', 'guard': {'type': 'matchesTrace', 'params': {'kind': 'effect', 'target': 'C68'}}},
+            }},
+            'release_failure': {'on': {
+                'lease_released': {'target': 'return_failure', 'guard': {'type': 'matchesTrace', 'params': {'kind': 'effect', 'target': 'C68'}}},
+            }},
+            'return_success': {'on': {
+                'kernel_result_returned': {'target': 'completed', 'guard': {'type': 'matchesTrace', 'params': {'kind': 'output', 'outcome': 'completed'}}},
+            }},
+            'return_failure': {'on': {
+                'query_refused': {'target': 'failed', 'guard': {'type': 'matchesTrace', 'params': {'kind': 'output', 'outcome': 'failed'}}},
             }},
             'completed': {'type': 'final'},
             'failed': {'type': 'final'},

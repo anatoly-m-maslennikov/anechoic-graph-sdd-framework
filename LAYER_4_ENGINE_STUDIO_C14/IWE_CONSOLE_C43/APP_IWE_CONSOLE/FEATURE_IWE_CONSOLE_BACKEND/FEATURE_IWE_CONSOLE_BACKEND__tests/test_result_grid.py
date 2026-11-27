@@ -13,7 +13,9 @@ from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEA
 
 class ResultGridTest(unittest.TestCase):
     def setUp(self) -> None:
-        self.store = QueryStore(extension_directory=extension_directory(APP_ROOT.parents[1]))
+        self.store = QueryStore(
+            extension_directory=extension_directory(APP_ROOT.parents[1])
+        )
 
     def tearDown(self) -> None:
         self.store.close()
@@ -77,14 +79,20 @@ class ResultGridTest(unittest.TestCase):
         self.assertEqual(
             [[3], [4]],
             self.store.page(
-                preview["query_id"], 0,
+                preview["query_id"],
+                0,
                 grid={"sort": [{"column": 0, "direction": "asc"}]},
             )["rows"],
         )
 
-        ttl_store = QueryStore(extension_directory=extension_directory(APP_ROOT.parents[1]), result_ttl_seconds=1)
+        ttl_store = QueryStore(
+            extension_directory=extension_directory(APP_ROOT.parents[1]),
+            result_ttl_seconds=1,
+        )
         try:
-            unpinned = ttl_store.run("SELECT 1", include_rows=False)["query_id"]
+            unpinned = ttl_store.run("SELECT 1", include_rows=False)[
+                "query_id"
+            ]
             pinned = ttl_store.run("SELECT 2", include_rows=False)["query_id"]
             ttl_store.pin(pinned)
             time.sleep(1.05)

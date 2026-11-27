@@ -8,8 +8,8 @@ context:
   lens: DES
 state:
   status: active
-  version: 10
-  updated_at: '2026-11-13T15:55:22.858276+00:00'
+  version: 11
+  updated_at: "2026-11-27T17:35:01.150345+00:00"
 ---
 ## Summary
 
@@ -29,7 +29,7 @@ The backend **must** provide only the minimum operations needed to list known Wo
 
 Standalone, embedded and native-mode clients **must** expose the same Workspace, View and query-log capabilities through the same Workbench backend. Every operation **must** retain the explicitly selected Project and Workspace. No client-specific create, update, run, fetch, focus, rename, remove, save, query or backend path is introduced.
 
-Tabs support caller-ordered editing, execution, checking, paginated results, focus, renaming, removal and saving. Removing the last Tab is rejected. Running a Tab returns execution metadata and one result ID. Reading its results is a separate explicit operation. Ordinary Run, Check and result fetch do not echo full SQL; an explicit query read returns it. Saved Views and Bookmarks remain separate from temporary query history.
+Tabs support caller-ordered editing, execution, checking, paginated results, focus, renaming, removal and saving. Reject removal of the last Tab. Apply AN-S-1955 to Run and Fetch, AN-S-2547 to explicit SQL reads, and AN-S-1943 and AN-S-2242 to saved SQL and query history.
 
 All access modes **must** expose the same Workspace and Tab effects. Each Tab holds one query for Run or Check under CA-R-2728. Editing can leave unfinished SQL. Existing saved multi-statement text remains intact and readable. Historical View names in persisted records and API identifiers are compatibility names for Tabs, not a separate active UI object. No magic Workflow, code runner, scheduler or retry behavior is introduced.
 

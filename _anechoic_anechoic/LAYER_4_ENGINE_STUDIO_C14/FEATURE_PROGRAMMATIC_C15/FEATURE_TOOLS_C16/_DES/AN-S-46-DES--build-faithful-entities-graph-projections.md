@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-46
+concern:
+  subject: "Projection"
+  path: "Model/Graph/Node//Artifact//Derived"
+  relation: "is_narrower_than"
 container:
   component: C16
 tier: 3
@@ -8,8 +12,8 @@ context:
   lens: DES
 state:
   status: active
-  version: 10
-  updated_at: 2026-11-02 19:30:12 +0400
+  version: 12
+  updated_at: "2026-11-27T16:29:34.309627+00:00"
 ---
 # Summary
 
@@ -31,7 +35,7 @@ The result has a separate `entities_graph` namespace and records source Atoms/Cl
 
 Generic Atom/Carrier metadata (including author, content role, status, and version) remains only on that Atom/Carrier's source record. It is not an Entity Property and is never transferred to the Entity governed by a Subject. `GOVERNS` and `DEPENDS_ON` Subject rows are Atom-incidence/provenance evidence, not native Entity-graph Relation facts: each retains its source Atom identity, Version, location, and digest. `DEPENDS_ON` remains a distinguishable external reference unless an admitted source-fact context independently establishes a native Relation. No generic Property-fact syntax is admitted here; absent such admitted source-fact context, the projection reports Property coverage as unavailable rather than fabricating values or claiming full Property coverage.
 
-Construction is split from execution recording. The pure builder reads the already admitted frontier and produces no source or Journal write. The shared executor alone appends actual Action/Run recording evidence to the existing Journal history; it neither replaces prior entries nor permits an unrecorded construction to claim a complete Run.
+Apply AN-S-2532 to separate projection construction from Run recording.
 
 `built` or `no_op` is permitted only when the exact selection/configuration is current, complete, faithful, graph-valid, authorized, and durably recorded. Otherwise return `incomplete`, `conflicting`, `stale`, `blocked`, `failed`, or `canceled` with the affected frontier and actual limited effects; no partial output can claim a complete Projection or Run.
 

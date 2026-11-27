@@ -15,15 +15,28 @@ from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import QueryExecutionError  # noq
 from KERNEL_MIXER_C59.native_projection import project_native  # noqa: E402
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import capture_native  # noqa: E402
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import publish_imports  # noqa: E402
-from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import read_import_sources, replace_import_sources  # noqa: E402
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (  # noqa: E402
+    read_import_sources,
+    replace_import_sources,
+)
 from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IMPORT_GRAPH_C61.import_graph__shared import Source  # noqa: E402
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import extension_directory  # noqa: E402
 
 
 class JournalTableTest(unittest.TestCase):
-    def store(self, database: Path | None, journal: Path | None, *, disk: bool = False) -> QueryStore:
-        return QueryStore(extension_directory=extension_directory(APP_ROOT.parents[1]), database_path=database,
-                          journal_path=journal, journal_disk=disk)
+    def store(
+        self,
+        database: Path | None,
+        journal: Path | None,
+        *,
+        disk: bool = False,
+    ) -> QueryStore:
+        return QueryStore(
+            extension_directory=extension_directory(APP_ROOT.parents[1]),
+            database_path=database,
+            journal_path=journal,
+            journal_disk=disk,
+        )
 
     def test_disk_and_memory_import_restart_and_read_only_history(self) -> None:
         for memory in (False, True):
@@ -64,18 +77,27 @@ class JournalTableTest(unittest.TestCase):
         history = self.store(None, database)
         try:
             history.sync_work_journal(root)
-            self.assertEqual([record["event"]], history.work_journal_events("a"))
-            self.assertEqual([[1]], history.run("SELECT count(*) FROM main.work_journal")["rows"])
+            self.assertEqual(
+                [record["event"]], history.work_journal_events("a")
+            )
+            self.assertEqual(
+                [[1]],
+                history.run("SELECT count(*) FROM main.work_journal")["rows"],
+            )
         finally:
             history.close()
         restarted = self.store(database, database)
         try:
-            self.assertEqual([record["event"]], restarted.work_journal_events("a"))
+            self.assertEqual(
+                [record["event"]], restarted.work_journal_events("a")
+            )
         finally:
             restarted.close()
 
 
-    def test_unselected_journal_does_not_create_database_or_consume_inbox(self) -> None:
+    def test_unselected_journal_does_not_create_database_or_consume_inbox(
+        self,
+    ) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary).resolve()
             database = root / "missing.duckdb"
@@ -102,7 +124,9 @@ class JournalTableTest(unittest.TestCase):
             record.write_text("not json")
             store = self.store(None, root / "journal.duckdb", disk=True)
             try:
-                with self.assertRaisesRegex(RuntimeError, "invalid Work Journal inbox record"):
+                with self.assertRaisesRegex(
+                    RuntimeError, "invalid Work Journal inbox record"
+                ):
                     store.sync_work_journal(root)
                 self.assertTrue(record.exists())
                 self.assertEqual([], store.work_journal_events("a"))
@@ -151,17 +175,37 @@ class JournalTableTest(unittest.TestCase):
         self.assertEqual({}, read_import_sources(memory._connection))
         project_native(memory, capture, use_retained=True, **bindings)
         columns = memory.schema()["tables"]["atoms"]
-        self.assertEqual(len(columns), len({column["name"] for column in columns}))
+        self.assertEqual(
+            len(columns), len({column["name"] for column in columns})
+        )
         self.assertNotIn("import_nodes", memory.schema()["tables"])
         with self.assertRaises(QueryExecutionError):
             memory.run("SELECT * FROM main.import_nodes")
-        publish_imports(memory, [("memory", "package", "python", "memory", "ok", None)], [], [])
-        replace_import_sources(memory._connection, {"memory.py": Source("python", "ok", "memory")})
-        self.assertEqual([["memory"]], memory.run("SELECT node_key FROM main.import_nodes")["rows"])
-        self.assertEqual([("disk",)], memory._connection.execute(
-            "SELECT node_key FROM journal_store.main.import_nodes").fetchall())
-        self.assertEqual([("disk.py",)], memory._connection.execute(
-            "SELECT path FROM journal_store._anechoic_import_cache.sources").fetchall())
+        publish_imports(
+            memory,
+            [("memory", "package", "python", "memory", "ok", None)],
+            [],
+            [],
+        )
+        replace_import_sources(
+            memory._connection, {"memory.py": Source("python", "ok", "memory")}
+        )
+        self.assertEqual(
+            [["memory"]],
+            memory.run("SELECT node_key FROM main.import_nodes")["rows"],
+        )
+        self.assertEqual(
+            [("disk",)],
+            memory._connection.execute(
+                "SELECT node_key FROM journal_store.main.import_nodes"
+            ).fetchall(),
+        )
+        self.assertEqual(
+            [("disk.py",)],
+            memory._connection.execute(
+                "SELECT path FROM journal_store._anechoic_import_cache.sources"
+            ).fetchall(),
+        )
 
 
 if __name__ == "__main__":

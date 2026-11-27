@@ -18,8 +18,12 @@ from . import (full_suite_docker as full_suite_docker,
 from . import source_comments as source_comments, suite_preflight as suite_preflight
 from .python_bytecode import (python_findings as python_findings, shell_findings as shell_findings,
                               unsafe as unsafe, yaml_findings as yaml_findings)
-from .source_sizes import (check_functions as check_functions, check_module as check_module,
-                           python_functions as python_functions, web_functions as web_functions)
+from .source_sizes import (
+    check_functions as check_functions,
+    check_module as check_module,
+    python_functions as python_functions,
+    web_functions as web_functions,
+)
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.functional_suite import (
     MCP_TESTS as MCP_TESTS, WORKBENCH, _test_phase, select_phase_modules, valid_test_request,
 )
@@ -69,7 +73,9 @@ def discover_test_modules(root: Path) -> list[Path]:
         source = root / name
         if source.is_symlink() or not source.is_dir():
             raise OSError(f"source test root is unavailable: {source}")
-        for folder, directories, filenames in os.walk(source, followlinks=False, onerror=failed):
+        for folder, directories, filenames in os.walk(
+            source, followlinks=False, onerror=failed
+        ):
             directory = Path(folder)
             parts = directory.relative_to(source).parts
             test_package = directory.name == directory.parent.name + "__tests"
@@ -95,7 +101,9 @@ def discover_test_modules(root: Path) -> list[Path]:
                     and not path.stem.endswith(("__pub", "__shared"))
                 ):
                     if path.is_symlink():
-                        raise OSError(f"test module is a symbolic link: {path}")
+                        raise OSError(
+                            f"test module is a symbolic link: {path}"
+                        )
                     modules.append(path)
     return sorted(modules)
 
@@ -127,7 +135,9 @@ def run_module(
     """Return one isolated module's result and output for coherent reporting."""
     started = time.monotonic()
     child = next(root / name for name in CODE_ROOTS if module.is_relative_to(root / name))
-    environment = _module_environment(child, environment, image_module=_docker_module(root, module))
+    environment = _module_environment(
+        child, environment, image_module=_docker_module(root, module)
+    )
     environment["ANECHOIC_TEST_IMPORT_DIRS"] = os.pathsep.join((
         str(module.parent), str(module.parent.parent), str(root / WORKBENCH / "FEATURE_IWE_CONSOLE_BACKEND"),
     ))
@@ -247,14 +257,18 @@ def _output_text(output: str | bytes | None) -> str:
     return output.decode("utf-8", errors="replace") if isinstance(output, bytes) else output or ""
 
 
-def _record_modules(root: Path, pending: dict, modules_report: list) -> tuple[list[str], int, int]:
+def _record_modules(
+    root: Path, pending: dict, modules_report: list
+) -> tuple[list[str], int, int]:
     failed = []
     tests = skipped = 0
     for future in as_completed(pending):
         module = pending.pop(future)
         result = future.result()
         successful, count, skips, *_ = result
-        record_module(modules_report, module.relative_to(root).as_posix(), result)
+        record_module(
+            modules_report, module.relative_to(root).as_posix(), result
+        )
         tests += count
         skipped += skips
         if not successful:

@@ -16,7 +16,7 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.\
 def build_current_graph(
     source_root: Path, repository: Path
 ) -> tuple[dict[str, Any], dict[str, Any]]:
-    "Discover current carriers afresh, then pass only their data to the pure core."
+    "Discover Current Carriers and pass their data to the pure core."
     return compose_current_graph(
         read_current_carriers(source_root, repository)
     )
@@ -25,7 +25,7 @@ def build_current_graph(
 def build_enhanced_current_graph(
     source_root: Path, repository: Path
 ) -> tuple[dict[str, Any], dict[str, Any]]:
-    "Discover current carriers and add diagnostic-only model and Claim records."
+    "Discover Current Carriers and add Model and Claim diagnostics."
 
     from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.\
         current_subject_graph \

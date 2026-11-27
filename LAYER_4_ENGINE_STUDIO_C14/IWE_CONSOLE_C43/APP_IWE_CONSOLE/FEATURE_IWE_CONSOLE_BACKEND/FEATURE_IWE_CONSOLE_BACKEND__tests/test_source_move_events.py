@@ -1,4 +1,7 @@
-"""A native destination-create event can arrive before its source-remove event."""
+(
+    'A native destination-create event can arrive before its source-remove '
+    'event.'
+)
 
 from pathlib import Path
 import re
@@ -23,7 +26,9 @@ def write_settings(root: Path) -> Path:
     return control
 
 
-def write_atom(path: Path, atom_id: str, *, status: str = "Active", version: int = 1) -> Path:
+def write_atom(
+    path: Path, atom_id: str, *, status: str = "Active", version: int = 1
+) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
         "---\n"

@@ -8,11 +8,11 @@ context:
   template: solution
   lens: DES
 relations:
-  ANSWERS: [AN-S-4936@1]
+  ANSWERS: [AN-S-4936@2]
 state:
   status: active
-  version: 1
-  updated_at: '2026-11-26T23:29:03+00:00'
+  version: 2
+  updated_at: "2026-11-27T16:43:06.703447+00:00"
 ---
 
 ## Summary
@@ -47,16 +47,39 @@ component_workflow(
 component_workflow(
     component='C89',
     action='check_sibling_outcome',
-    machine={'id': 'check_sibling_outcome',
- 'initial': 'idle',
- 'states': {'idle': {'on': {'request': {'to': 'step0', 'expect': {'kind': 'trigger'}}}},
-            'step0': {'on': {'effect0': {'to': 'step1',
-                                         'expect': {'kind': 'effect',
-                                                    'target': 'C89.sibling_outcome_comparison',
-                                                    'outcome': 'reported'}}}},
-            'step1': {'on': {'return': {'to': 'done',
-                                        'expect': {'kind': 'output',
-                                                   'outcome': 'compared'}}}},
-            'done': {'type': 'final'}}},
+    machine={
+        'id': 'check_sibling_outcome', 'initial': 'admit',
+        'states': {
+            'admit': {'on': {
+                'declared_sibling': {'to': 'compare', 'expect': {
+                    'kind': 'effect', 'target': 'C89.sibling_request',
+                    'outcome': 'observed',
+                    'detail': {'siblings': True, 'client_declared': True}}},
+                'non_sibling': {'to': 'reject_parent', 'expect': {
+                    'kind': 'effect', 'target': 'C89.sibling_request',
+                    'outcome': 'observed', 'detail': {'siblings': False}}},
+                'undeclared_client': {'to': 'reject_client', 'expect': {
+                    'kind': 'effect', 'target': 'C89.sibling_request',
+                    'outcome': 'observed',
+                    'detail': {'siblings': True, 'client_declared': False}}},
+            }},
+            'compare': {'on': {'report': {'to': 'reported', 'expect': {
+                'kind': 'effect', 'target': 'C89.sibling_outcome_comparison',
+                'outcome': 'reported'}}}},
+            'reported': {'on': {'return': {'to': 'end', 'expect': {
+                'kind': 'output', 'outcome': 'compared'}}}},
+            'reject_parent': {'on': {'raise': {'to': 'parent_error', 'expect': {
+                'kind': 'effect', 'target': 'C89.sibling_admission_error',
+                'outcome': 'raised', 'detail': {'exception': 'ValueError'}}}}},
+            'parent_error': {'on': {'return_error': {'to': 'end', 'expect': {
+                'kind': 'output', 'outcome': 'rejected_non_sibling'}}}},
+            'reject_client': {'on': {'raise': {'to': 'client_error', 'expect': {
+                'kind': 'effect', 'target': 'C89.sibling_admission_error',
+                'outcome': 'raised', 'detail': {'exception': 'ValueError'}}}}},
+            'client_error': {'on': {'return_error': {'to': 'end', 'expect': {
+                'kind': 'output', 'outcome': 'rejected_undeclared_client'}}}},
+            'end': {'type': 'final'},
+        },
+    },
 )
 ```

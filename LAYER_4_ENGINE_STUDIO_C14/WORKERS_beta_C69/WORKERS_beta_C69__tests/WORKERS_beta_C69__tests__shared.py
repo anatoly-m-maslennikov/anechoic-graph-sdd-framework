@@ -17,13 +17,18 @@ def generation_fixture(directory):
     control.mkdir(parents=True)
     manifest = root / "AN-S-1-SPEC-PROJECT_MANIFEST--declare-anechoic.md"
     manifest.write_text(
-        "---\natom_family: SPEC\natom_id: AN-S-1\ncontainer:\n  component: C00\ntier: -1\n"
-        "context:\n  template: project_manifest\n  lens: SPEC\nstate:\n  status: active\n  version: 1\n"
-        "  updated_at: '2026-11-19T00:00:00Z'\n---\n\n## Summary\n\nAnechoic\n\n"
-        "## Claim\n\n### Formal Claim\n\n```python\n"
-        "from anechoic.formal_claims import declare_entity\n"
-        "from anechoic.model import ProjectManifest\n"
-        "declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Anechoic', prefix='AN'))\n```\n",
+        (
+            "---\natom_family: SPEC\natom_id: AN-S-1\ncontainer:\n"
+            "  component: C00\ntier: -1\ncontext:\n"
+            "  template: project_manifest\n  lens: SPEC\nstate:\n"
+            "  status: active\n  version: 1\n"
+            "  updated_at: '2026-11-19T00:00:00Z'\n---\n\n## Summary\n\n"
+            "Anechoic\n\n## Claim\n\n### Formal Claim\n\n```python\n"
+            "from anechoic.formal_claims import declare_entity\n"
+            "from anechoic.model import ProjectManifest\n"
+            "declare_entity(entity_name='Project Manifest', "
+            "instance=ProjectManifest(name='Anechoic', prefix='AN'))\n```\n"
+        ),
     )
     output = Path(directory).resolve() / "generation"
     output.mkdir()
@@ -41,7 +46,8 @@ def generation_fixture(directory):
 
 
 def command_with_fixture(module, payload, *arguments):
-    """Run the command entry point while its external peers can be replaced by fixtures."""
+    """Run the command entry point while its external peers can be \
+replaced by fixtures."""
     stdout, stderr = StringIO(), StringIO()
     argv = [module, *arguments]
     with (

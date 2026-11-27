@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-3116
+concern:
+  subject: "Projection"
+  path: "Model/Graph/Node//Artifact//Derived"
+  relation: "is_narrower_than"
 container:
   component: C45
 tier: 1
@@ -9,8 +13,8 @@ context:
   lens: DES
 state:
   status: active
-  version: 2
-  updated_at: '2026-11-26T16:38:46.186169+00:00'
+  version: 4
+  updated_at: "2026-11-27T17:35:01.150345+00:00"
 ---
 ## Summary
 
@@ -25,9 +29,9 @@ Store native Workbench DuckDB data on disk
 - Keep Project sources and the Journal authoritative for their facts.
 - Validate retained data before serving queries.
 - Reuse valid parsed imports and reconcile changes made while Workbench was stopped.
-- Store live results in the database. Apply expiry, pinning, and startup rules.
-- Rebuild one table or all tables on demand. Include dependent tables by default.
-- Publish new result IDs with their View bindings and pins.
+- Store live results in the database. Apply AN-S-1363 to result retention and disposal.
+- Apply AN-S-1940 and AN-S-3156 to on-demand rebuild.
+- Apply AN-S-1363 to publishing replacement result IDs with View bindings and pins.
 - Report rebuild failures to stderr and the requesting HTTP or MCP client.
 - Roll back failed SQL writes.
 - Require an explicit restart if a failure may have invalidated graph registration.

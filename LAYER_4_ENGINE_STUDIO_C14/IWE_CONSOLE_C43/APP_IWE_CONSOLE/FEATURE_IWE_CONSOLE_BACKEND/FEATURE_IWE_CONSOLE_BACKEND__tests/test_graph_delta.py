@@ -33,7 +33,9 @@ class GraphDeltaTest(unittest.TestCase):
     relation_types = {"CONTAINS", "IS_CONTAINED_BY"}
 
     def setUp(self) -> None:
-        self.store = QueryStore(extension_directory=extension_directory(APP_ROOT.parents[1]))
+        self.store = QueryStore(
+            extension_directory=extension_directory(APP_ROOT.parents[1])
+        )
         self.addCleanup(self.store.close)
 
     @staticmethod
@@ -79,7 +81,9 @@ class GraphDeltaTest(unittest.TestCase):
         self.store._projection = current
         return current, change
 
-    def test_delta_requires_structured_rows_without_exposing_values(self) -> None:
+    def test_delta_requires_structured_rows_without_exposing_values(
+        self,
+    ) -> None:
         with self.assertRaises(ValidationError) as error:
             MaterializationDelta({"row": "private-value"}, {}, {}, {})
         self.assertNotIn("private-value", str(error.exception))
@@ -92,26 +96,39 @@ class GraphDeltaTest(unittest.TestCase):
         previous = self.store._projection
         assert previous is not None
         key = ("archive", "CA-R-123@1.md")
-        self.assertEqual(set(previous.atoms[key]), {"relative_path", "filename", "status_group", "reference", "hash"})
+        self.assertEqual(
+            set(previous.atoms[key]),
+            {"relative_path", "filename", "status_group", "reference", "hash"},
+        )
         self.assertEqual(self.store._connection.execute('SELECT "header.atom_id" FROM atoms').fetchone(), ("CA-R-123",))
-        changed = dict(archived, header_json={"atom_id": "CA-R-123", "version": 2})
+        changed = dict(
+            archived, header_json={"atom_id": "CA-R-123", "version": 2}
+        )
         self.apply_delta([changed], MaterializationDelta({archived["source_path"]: archived},
                                                          {changed["source_path"]: changed}, {}, {}))
         self.assertEqual(self.store._connection.execute('SELECT "header.version" FROM atoms').fetchone(), (2,))
-        self.assertEqual(set(self.store._projection.atoms[key]),
-                         {"relative_path", "filename", "status_group", "reference", "hash"})
+        self.assertEqual(
+            set(self.store._projection.atoms[key]),
+            {"relative_path", "filename", "status_group", "reference", "hash"},
+        )
         self.apply_delta([], MaterializationDelta({changed["source_path"]: changed}, {}, {}, {}))
         self.assertEqual(self.store._connection.execute('SELECT count(*) FROM atoms').fetchone(), (0,))
 
     def test_delta_has_full_projection_parity_without_graph_state_scan(self) -> None:
         old_a = self.atom("A", edges=[self.edge("A", "CONTAINS", "B")])
-        old_b = self.atom("B", edges=[self.edge("B", "IS_CONTAINED_BY", "A", derived=True)])
+        old_b = self.atom(
+            "B", edges=[self.edge("B", "IS_CONTAINED_BY", "A", derived=True)]
+        )
         self.replace([old_a, old_b, self.atom("UNRELATED")])
         previous = self.store._projection
         assert previous is not None
-        new_a = self.atom("A", edges=[self.edge("A", "CONTAINS", "C")], version=2)
+        new_a = self.atom(
+            "A", edges=[self.edge("A", "CONTAINS", "C")], version=2
+        )
         new_b = self.atom("B")
-        new_c = self.atom("C", edges=[self.edge("C", "IS_CONTAINED_BY", "A", derived=True)])
+        new_c = self.atom(
+            "C", edges=[self.edge("C", "IS_CONTAINED_BY", "A", derived=True)]
+        )
         updated = [new_a, new_b, new_c, self.atom("UNRELATED")]
         expected = snapshot(
             updated, [], self.relation_types, self.store._header_schema, self.store._content_schema,
@@ -142,12 +159,16 @@ class GraphDeltaTest(unittest.TestCase):
             graph_relations(self.store._connection, has_edges=True),
         )
 
-    def test_delta_keeps_dangling_target_and_accepts_its_reappearance(self) -> None:
+    def test_delta_keeps_dangling_target_and_accepts_its_reappearance(
+        self,
+    ) -> None:
         source = self.atom("A", edges=[self.edge("A", "CONTAINS", "B")])
         target = self.atom("B")
         self.replace([source, target])
 
-        self.apply_delta([source], MaterializationDelta({"B.md": target}, {}, {}, {}))
+        self.apply_delta(
+            [source], MaterializationDelta({"B.md": target}, {}, {}, {})
+        )
         self.assertEqual(
             [("Atom", "B")],
             self.store._connection.execute(
@@ -155,13 +176,22 @@ class GraphDeltaTest(unittest.TestCase):
             ).fetchall(),
         )
         self.assertEqual(
-            [], self.store._connection.execute("SELECT * FROM atoms WHERE reference = 'B'").fetchall(),
+            [],
+            self.store._connection.execute(
+                "SELECT * FROM atoms WHERE reference = 'B'"
+            ).fetchall(),
         )
 
         reappeared = self.atom("B", version=2)
-        self.apply_delta([source, reappeared], MaterializationDelta({}, {"B.md": reappeared}, {}, {}))
+        self.apply_delta(
+            [source, reappeared],
+            MaterializationDelta({}, {"B.md": reappeared}, {}, {}),
+        )
         self.assertEqual(
-            [("B",)], self.store._connection.execute("SELECT reference FROM atoms WHERE reference = 'B'").fetchall(),
+            [("B",)],
+            self.store._connection.execute(
+                "SELECT reference FROM atoms WHERE reference = 'B'"
+            ).fetchall(),
         )
         self.assertEqual(
             [("Atom", "B")],
@@ -197,7 +227,9 @@ class GraphDeltaTest(unittest.TestCase):
             self.store._connection.execute("SELECT reference FROM atoms WHERE reference = 'UNRELATED'").fetchall(),
         )
 
-    def test_delta_preserves_and_removes_self_loop_reference_counts(self) -> None:
+    def test_delta_preserves_and_removes_self_loop_reference_counts(
+        self,
+    ) -> None:
         old = self.atom("A", edges=[self.edge("A", "CONTAINS", "A")])
         self.replace([old])
         previous = self.store._projection
@@ -205,23 +237,41 @@ class GraphDeltaTest(unittest.TestCase):
         revised = self.atom("A", version=2)
 
         current, _ = self.apply_delta(
-            [revised], MaterializationDelta({"A.md": old}, {"A.md": revised}, {}, {}),
+            [revised],
+            MaterializationDelta({"A.md": old}, {"A.md": revised}, {}, {}),
         )
-        self.assertIs(previous.graph.edges["IS_CONTAINED_BY"], current.graph.edges["IS_CONTAINED_BY"])
+        self.assertIs(
+            previous.graph.edges["IS_CONTAINED_BY"],
+            current.graph.edges["IS_CONTAINED_BY"],
+        )
         self.assertEqual(
             [("Atom", "A")],
-            self.store._connection.execute("SELECT kind, ref FROM internal.reference").fetchall(),
+            self.store._connection.execute(
+                "SELECT kind, ref FROM internal.reference"
+            ).fetchall(),
         )
-        self.apply_delta([], MaterializationDelta({"A.md": revised}, {}, {}, {}))
-        self.assertEqual([], self.store._connection.execute("SELECT kind, ref FROM internal.reference").fetchall())
+        self.apply_delta(
+            [], MaterializationDelta({"A.md": revised}, {}, {}, {})
+        )
+        self.assertEqual(
+            [],
+            self.store._connection.execute(
+                "SELECT kind, ref FROM internal.reference"
+            ).fetchall(),
+        )
 
-    def test_delta_moves_public_atom_without_reinserting_its_reference(self) -> None:
+    def test_delta_moves_public_atom_without_reinserting_its_reference(
+        self,
+    ) -> None:
         old = self.atom("A", path="old/A.md")
         self.replace([old])
         moved = self.atom("A", version=2, path="new/A.md")
 
         self.apply_delta(
-            [moved], MaterializationDelta({"old/A.md": old}, {"new/A.md": moved}, {}, {}),
+            [moved],
+            MaterializationDelta(
+                {"old/A.md": old}, {"new/A.md": moved}, {}, {}
+            ),
         )
 
         self.assertEqual(
@@ -231,7 +281,10 @@ class GraphDeltaTest(unittest.TestCase):
             ).fetchall(),
         )
         self.assertEqual(
-            [("Atom", "A")], self.store._connection.execute("SELECT kind, ref FROM internal.reference").fetchall(),
+            [("Atom", "A")],
+            self.store._connection.execute(
+                "SELECT kind, ref FROM internal.reference"
+            ).fetchall(),
         )
 
     def test_delta_accepts_content_schema_provenance_only_change(self) -> None:

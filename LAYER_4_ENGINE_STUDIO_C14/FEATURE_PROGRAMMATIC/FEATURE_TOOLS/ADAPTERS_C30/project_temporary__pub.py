@@ -49,7 +49,13 @@ def atomic_tempfile(
     ).st_dev
     if staging_device != destination_device:
         raise TemporaryBoundaryError(
-            f"temporary state and destination are on different filesystems: {directory} -> {destination}"
+            (
+                "temporary state and destination are on different "
+                "filesystems: "
+                f"{directory}"
+                " -> "
+                f"{destination}"
+            )
         )
     directory.mkdir(parents=True, exist_ok=True)
     destination.parent.mkdir(parents=True, exist_ok=True)
@@ -61,7 +67,7 @@ def atomic_tempfile(
 
 
 def _existing_directory(path: Path) -> Path:
-    """Return the nearest existing directory used for a pre-mutation device check."""
+    "Find the nearest directory for a device check before mutation."
 
     candidate = path
     while not candidate.exists():

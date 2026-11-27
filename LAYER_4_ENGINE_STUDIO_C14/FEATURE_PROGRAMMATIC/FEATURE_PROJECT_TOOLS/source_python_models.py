@@ -6,8 +6,13 @@ import tokenize
 
 
 FORBIDDEN = {
-    "dataclasses.dataclass", "dataclasses.make_dataclass", "typing.TypedDict", "typing.NamedTuple",
-    "typing_extensions.TypedDict", "typing_extensions.NamedTuple", "collections.namedtuple",
+    "dataclasses.dataclass",
+    "dataclasses.make_dataclass",
+    "typing.TypedDict",
+    "typing.NamedTuple",
+    "typing_extensions.TypedDict",
+    "typing_extensions.NamedTuple",
+    "collections.namedtuple",
 }
 FACTORIES = FORBIDDEN - {"dataclasses.dataclass"}
 RECORD_METHODS = {"__init__", "__eq__", "__hash__", "__iter__", "__repr__", "__str__"}
@@ -28,12 +33,17 @@ def _name(node, bindings):
 
 
 def _instance_field(item, bindings):
-    if not isinstance(item, ast.AnnAssign) or not isinstance(item.target, ast.Name):
+    if not isinstance(item, ast.AnnAssign) or not isinstance(
+        item.target, ast.Name
+    ):
         return False
     annotation = item.annotation
     if isinstance(annotation, ast.Subscript):
         annotation = annotation.value
-    return _name(annotation, bindings) not in {"typing.ClassVar", "typing_extensions.ClassVar"}
+    return _name(annotation, bindings) not in {
+        "typing.ClassVar",
+        "typing_extensions.ClassVar",
+    }
 
 
 def _plain_record(node, bindings):
@@ -52,54 +62,89 @@ def _plain_record(node, bindings):
 
 
 def _named_fields(keys):
-    return len(keys) >= 2 and all(isinstance(key, str) and key.isidentifier() for key in keys)
+    return len(keys) >= 2 and all(
+        isinstance(key, str) and key.isidentifier() for key in keys
+    )
 
 
 def _dictionary_fields(value, bindings):
     if isinstance(value, ast.Dict):
-        return [key.value if isinstance(key, ast.Constant) else None for key in value.keys]
-    if (isinstance(value, ast.Call) and isinstance(value.func, ast.Name) and value.func.id == "dict"
-            and not _name(value.func, bindings) and not value.args):
+        return [
+            key.value if isinstance(key, ast.Constant) else None
+            for key in value.keys
+        ]
+    if (
+        isinstance(value, ast.Call)
+        and isinstance(value.func, ast.Name)
+        and value.func.id == "dict"
+        and not _name(value.func, bindings)
+        and not value.args
+    ):
         return [keyword.arg for keyword in value.keywords]
     return []
 
 
 def _dictionary_record(node, bindings):
     annotation = node.annotation
-    if not isinstance(annotation, ast.Subscript) or not isinstance(annotation.slice, ast.Tuple):
+    if not isinstance(annotation, ast.Subscript) or not isinstance(
+        annotation.slice, ast.Tuple
+    ):
         return False
     name = _name(annotation.value, bindings)
-    builtin = isinstance(annotation.value, ast.Name) and annotation.value.id == "dict" and not name
-    if not (builtin or name == "typing.Dict") or len(annotation.slice.elts) != 2:
+    builtin = (
+        isinstance(annotation.value, ast.Name)
+        and annotation.value.id == "dict"
+        and not name
+    )
+    if (
+        not (builtin or name == "typing.Dict")
+        or len(annotation.slice.elts) != 2
+    ):
         return False
     key, value = annotation.slice.elts
     if not isinstance(key, ast.Name) or key.id != "str":
         return False
-    heterogeneous = ((isinstance(value, ast.Name) and value.id == "object")
-                     or _name(value, bindings) in {"typing.Any", "typing_extensions.Any"}
-                     or (isinstance(value, ast.BinOp) and isinstance(value.op, ast.BitOr))
-                     or (isinstance(value, ast.Subscript) and _name(value.value, bindings) == "typing.Union"))
-    return heterogeneous and _named_fields(_dictionary_fields(node.value, bindings))
+    heterogeneous = (
+        (isinstance(value, ast.Name) and value.id == "object")
+        or _name(value, bindings) in {"typing.Any", "typing_extensions.Any"}
+        or (isinstance(value, ast.BinOp) and isinstance(value.op, ast.BitOr))
+        or (
+            isinstance(value, ast.Subscript)
+            and _name(value.value, bindings) == "typing.Union"
+        )
+    )
+    return heterogeneous and _named_fields(
+        _dictionary_fields(node.value, bindings)
+    )
 
 
 def _exemptions(source, pragma):
     if pragma not in source:
         return set()
-    return {token.start[0] for token in tokenize.generate_tokens(StringIO(source).readline)
-            if token.type == tokenize.COMMENT
-            and token.string.startswith(pragma)
-            and token.string.removeprefix(pragma).strip()}
+    return {
+        token.start[0]
+        for token in tokenize.generate_tokens(StringIO(source).readline)
+        if token.type == tokenize.COMMENT
+        and token.string.startswith(pragma)
+        and token.string.removeprefix(pragma).strip()
+    }
 
 
 def _literal_tags(node, bindings):
     tags = {}
     for item in node.body:
-        if not isinstance(item, ast.AnnAssign) or not isinstance(item.target, ast.Name):
+        if not isinstance(item, ast.AnnAssign) or not isinstance(
+            item.target, ast.Name
+        ):
             continue
         annotation = item.annotation
-        if (isinstance(annotation, ast.Subscript)
-                and _name(annotation.value, bindings) in {"typing.Literal", "typing_extensions.Literal"}
-                and isinstance(annotation.slice, ast.Constant) and isinstance(annotation.slice.value, str)):
+        if (
+            isinstance(annotation, ast.Subscript)
+            and _name(annotation.value, bindings)
+            in {"typing.Literal", "typing_extensions.Literal"}
+            and isinstance(annotation.slice, ast.Constant)
+            and isinstance(annotation.slice.value, str)
+        ):
             tags[item.target.id] = annotation.slice.value
     return tags
 

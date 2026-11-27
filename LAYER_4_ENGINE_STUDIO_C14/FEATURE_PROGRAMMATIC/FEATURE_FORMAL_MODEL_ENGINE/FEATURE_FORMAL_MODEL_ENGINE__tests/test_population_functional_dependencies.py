@@ -1,19 +1,22 @@
-"""Population constraints remain source-bound structured data, without evaluation."""
+"Population constraints stay bound to source without evaluation."
 
 import unittest
 from pathlib import Path
 
-from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.FEATURE_FORMAL_MODEL_ENGINE__shared import (
-    compiler_model_statements,
-    lint_python_model_claim,
-)
-from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import (
-    DEPENDENCIES as CLAIM,
-)
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
-    NativeModelClaimError,
-    parse_native_model_claim,
-)
+from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.\
+    FEATURE_FORMAL_MODEL_ENGINE__shared \
+    import (
+        compiler_model_statements,
+        lint_python_model_claim,
+    )  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.\
+    FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared \
+    import DEPENDENCIES as CLAIM  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
+    import (
+        NativeModelClaimError,
+        parse_native_model_claim,
+    )  # fmt: skip
 
 PROGRAMMATIC = Path(__file__).resolve().parents[2]
 

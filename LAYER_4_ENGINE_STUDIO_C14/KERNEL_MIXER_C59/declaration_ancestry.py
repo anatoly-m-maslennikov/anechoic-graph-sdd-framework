@@ -13,14 +13,21 @@ from typing import Generic, Iterable, Iterator, TypeVar
 
 from .declaration_cfel import filters
 
-S = TypeVar('S')
-_NAME = r'[A-Za-z_][A-Za-z_0-9 -]*?'
-_REL = re.compile(rf'^\s*({_NAME})\s*\(\((NARROWER_THAN|INSTANCE_OF)\)\)\s*(.+?)\s*$')
-_BINDING = re.compile(rf'^\s*({_NAME})\.Header\.(?:Context\.)?(Role|Form)\s*::\s*\[\s*in\s*\(([^()]*)\)\s*\]')
-_PROPERTY = re.compile(r'\.(?:Content|Header)(?=\.|\s|\[|\{|::|$)')
+S = TypeVar("S")
+_NAME = r"[A-Za-z_][A-Za-z_0-9 -]*?"
+_REL = re.compile(
+    rf"^\s*({_NAME})\s*\(\((NARROWER_THAN|INSTANCE_OF)\)\)\s*(.+?)\s*$"
+)
+_BINDING = re.compile(
+    rf"^\s*({_NAME})\.Header\.(?:Context\.)?(Role|Form)\s*::\s*\[\s*in\s*\(([^()]*)\)\s*\]"
+)
+_PROPERTY = re.compile(r"\.(?:Content|Header)(?=\.|\s|\[|\{|::|$)")
 
 
-@dataclass(config=ConfigDict(strict=True, extra="forbid", hide_input_in_errors=True), frozen=True)
+@dataclass(
+    config=ConfigDict(strict=True, extra="forbid", hide_input_in_errors=True),
+    frozen=True,
+)
 class ProjectedStatement(Generic[S]):
     statement: str
     source: S
@@ -85,11 +92,15 @@ def _selector_end(text: str, pos: int) -> int | None:
     return None if depth else pos
 
 
-def _intersect(a: frozenset[str] | None, b: frozenset[str] | None) -> frozenset[str] | None:
+def _intersect(
+    a: frozenset[str] | None, b: frozenset[str] | None
+) -> frozenset[str] | None:
     return b if a is None else a if b is None else a & b
 
 
-def _form_role_constraints(items: tuple[tuple[str, S], ...]) -> list[tuple[S, str, frozenset[str]]]:
+def _form_role_constraints(
+    items: tuple[tuple[str, S], ...],
+) -> list[tuple[S, str, frozenset[str]]]:
     """Recognize the two literal, source-local population declarations."""
     populations: list[tuple[S, str, str]] = []
     constraints: list[tuple[S, str, frozenset[str]]] = []
@@ -104,7 +115,8 @@ def _form_role_constraints(items: tuple[tuple[str, S], ...]) -> list[tuple[S, st
             if roles is not None:
                 constraints.append((source, form.strip(), roles))
         population = re.fullmatch(
-            r'\s*\$([A-Za-z_][A-Za-z_0-9]*)\[<Atom>,\s*\(\.Header\.(?:Context\.)?Form\s*=\s*([^()]+)\)\]\s*', statement,
+            r"\s*\$([A-Za-z_][A-Za-z_0-9]*)\[<Atom>,\s*\(\.Header\.(?:Context\.)?Form\s*=\s*([^()]+)\)\]\s*",
+            statement,
         )
         if population:
             variable, form = population.groups()
@@ -113,12 +125,17 @@ def _form_role_constraints(items: tuple[tuple[str, S], ...]) -> list[tuple[S, st
         match = re.fullmatch(r'\s*\$([A-Za-z_][A-Za-z_0-9]*)\.Header\.(?:Context\.)?Role\s*==\s*([A-Za-z_][A-Za-z_0-9 ]*)\s*', statement)
         if match:
             variable, role = match.groups()
-            constraints.extend((source, form, frozenset({role.strip()})) for owner, name, form in populations
-                               if owner == source and name == variable)
+            constraints.extend(
+                (source, form, frozenset({role.strip()}))
+                for owner, name, form in populations
+                if owner == source and name == variable
+            )
     return constraints
 
 
-def compile_ancestry(statements: Iterable[tuple[str, S]]) -> tuple[ProjectedStatement[S], ...]:  # noqa: C901
+def compile_ancestry(
+    statements: Iterable[tuple[str, S]],
+) -> tuple[ProjectedStatement[S], ...]:  # noqa: C901
     """Return direct Atom expressions and conservatively projected named properties."""
     items = tuple(statements)
     form_roles = _form_role_constraints(items)
@@ -149,8 +166,16 @@ def _collect_items(items):
                     aliases[name].add(address)
                 relations.append((child_name.strip(), nodes, trailing, source))
             continue
-        prop = next((m for m in _PROPERTY.finditer(statement) if statement[:m.start()].count('(') == statement[:m.start()].count(')')), None)
-        parsed = _path(statement[:prop.start()] if prop else statement)
+        prop = next(
+            (
+                m
+                for m in _PROPERTY.finditer(statement)
+                if statement[: m.start()].count("(")
+                == statement[: m.start()].count(")")
+            ),
+            None,
+        )
+        parsed = _path(statement[: prop.start()] if prop else statement)
         if not parsed:
             if statement.startswith("Atom") and not re.match(r"Atom/\*", statement):
                 direct_statements.append((statement, source))
@@ -192,7 +217,9 @@ def _compile_edges(aliases, parsed_items, relations):
             binding = re.match(r'^\.Header\.(?:Context\.)?(Role|Form)\s*::\s*\[\s*in\s*\(([^()]*)\)\s*\]', suffix)
             if binding:
                 field, raw = binding.groups()
-                vals = frozenset(v.strip().strip("\"'") for v in raw.split(',') if v.strip())
+                vals = frozenset(
+                    v.strip().strip("\"'") for v in raw.split(",") if v.strip()
+                )
                 if vals:
                     bindings[address].append((field, vals, source))
     for child_name, nodes, trailing, source in relations:
@@ -211,8 +238,16 @@ def _direct_projections(direct_statements, form_roles):
     result = []
     for statement, source in direct_statements:
         roles = None
-        prop = next((m for m in _PROPERTY.finditer(statement) if statement[:m.start()].count('(') == statement[:m.start()].count(')')), None)
-        if prop and statement.startswith('Atom/'):
+        prop = next(
+            (
+                m
+                for m in _PROPERTY.finditer(statement)
+                if statement[: m.start()].count("(")
+                == statement[: m.start()].count(")")
+            ),
+            None,
+        )
+        if prop and statement.startswith("Atom/"):
             try:
                 selected_forms = filters(statement[:prop.start()], 'Form')
                 for owner, form, allowed in form_roles:
@@ -220,43 +255,78 @@ def _direct_projections(direct_statements, form_roles):
                         roles = _intersect(roles, allowed)
             except ValueError:
                 pass
-        result.append(ProjectedStatement(statement, source, roles=roles, provenance=(source,), original_statement=statement))
+        result.append(
+            ProjectedStatement(
+                statement,
+                source,
+                roles=roles,
+                provenance=(source,),
+                original_statement=statement,
+            )
+        )
 
     return result
 
 
 def _project_properties(properties, edges, bindings, result):
-    def paths(address: tuple[str, ...], visited: frozenset[tuple[str, ...]]) -> Iterator[tuple[str, tuple[S, ...], tuple[tuple[str, ...], ...]]]:
-        if address == ('Atom',):
-            yield '', (), ()
-            return
-        if address in visited:
-            return
-        for parent, selector, src in edges.get(address, ()):
-            for prior, provenance, names in paths(parent, visited | {address}):
-                yield prior + selector, provenance + (src,), names + (address,)
-
     from .declaration_cfel import _filter_groups
     for original, source, address, trailing, suffix in properties:
         if original.startswith('Atom') and address == ('Atom',):
             continue
-        for selectors, provenance, names in paths(address, frozenset()):
+        for selectors, provenance, names in _ancestry_paths(
+            edges, address, frozenset()
+        ):
             roles = forms = None
             for group in _filter_groups(selectors + trailing):
                 try:
-                    roles = _intersect(roles, filters('/(' + group + ')', 'Role'))
-                    forms = _intersect(forms, filters('/(' + group + ')', 'Form'))
+                    roles = _intersect(
+                        roles, filters("/(" + group + ")", "Role")
+                    )
+                    forms = _intersect(
+                        forms, filters("/(" + group + ")", "Form")
+                    )
                 except ValueError:
                     roles = frozenset()
-            binding_sources = []
-            for node in names:
-                for field, values, binding_source in bindings.get(node, ()):
-                    if field == 'Role':
-                        roles = _intersect(roles, values)
-                    else:
-                        forms = _intersect(forms, values)
-                    binding_sources.append(binding_source)
-            if not any(field == 'Form' for field, _, _ in bindings.get(address, ())):
-                roles = frozenset()
-            result.append(ProjectedStatement('Atom//$declared' + suffix, source, roles, forms,
-                                             provenance + tuple(binding_sources) + (source,), original, selectors + trailing))
+            roles, forms, binding_sources = _apply_bindings(
+                address, names, bindings, roles, forms
+            )
+            result.append(
+                ProjectedStatement(
+                    "Atom//$declared" + suffix,
+                    source,
+                    roles,
+                    forms,
+                    provenance + tuple(binding_sources) + (source,),
+                    original,
+                    selectors + trailing,
+                )
+            )
+
+
+def _ancestry_paths(
+    edges, address: tuple[str, ...], visited: frozenset[tuple[str, ...]]
+) -> Iterator[tuple[str, tuple[S, ...], tuple[tuple[str, ...], ...]]]:
+    if address == ("Atom",):
+        yield "", (), ()
+        return
+    if address in visited:
+        return
+    for parent, selector, src in edges.get(address, ()):
+        for prior, provenance, names in _ancestry_paths(
+            edges, parent, visited | {address}
+        ):
+            yield prior + selector, provenance + (src,), names + (address,)
+
+
+def _apply_bindings(address, names, bindings, roles, forms):
+    binding_sources = []
+    for node in names:
+        for field, values, binding_source in bindings.get(node, ()):
+            if field == 'Role':
+                roles = _intersect(roles, values)
+            else:
+                forms = _intersect(forms, values)
+            binding_sources.append(binding_source)
+    if not any(field == 'Form' for field, _, _ in bindings.get(address, ())):
+        roles = frozenset()
+    return roles, forms, binding_sources

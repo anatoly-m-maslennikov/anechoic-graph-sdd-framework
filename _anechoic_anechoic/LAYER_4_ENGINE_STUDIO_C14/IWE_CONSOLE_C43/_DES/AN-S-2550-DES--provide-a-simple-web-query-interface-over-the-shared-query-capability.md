@@ -7,9 +7,9 @@ tier: 3
 context:
   lens: DES
 state:
-  status: active
-  version: 22
-  updated_at: '2026-11-12T16:57:49.202245+00:00'
+  status: "active"
+  version: 23
+  updated_at: "2026-11-27T15:07:37.342283+00:00"
 ---
 ## Summary
 
@@ -40,17 +40,17 @@ The web interface **must**:
 - offer Open Saved only in the command palette, without a separate toolbar button or dedicated shortcut. The command opens a modal with an autofocus ID/URL input; native paste with Cmd+V is allowed, Enter opens the saved item without executing its SQL, and Escape or Cancel closes the modal.
 - ask before closing an unsaved tab or window. The standard browser beforeunload warning is allowed; flush the latest local draft on pagehide and beforeunload when possible.
 - show each available hotkey inside its action button or immediately beside it.
-- bind Cmd+Enter to Run and Shift+Cmd+Enter to Check. These shortcuts must invoke different operations on the whole View query; Run & Save uses that same query. Save View saves its query text without execution.
+- bind Cmd+Enter to Run and Shift+Cmd+Enter to Check. These shortcuts must invoke different operations on the whole View query;
 - show ordinary result rows in navigable pages, exact row and column counts and query errors. Show `Not checked` until the current SQL has a Check verdict, `Valid` with counts when Check accepts it, and `Invalid` with a diagnostic when Check rejects it. Editing the SQL clears the verdict and keeps the existing result rows. Show column names separately from their SQL types, with types in smaller, pale text.
 - use a small reusable component palette for consistent controls and result presentation.
 - open a searchable command palette with Cmd+P from anywhere in Workbench. Expose every current user action, including Settings, moving focus, switching/creat…232 tokens truncated…hema in schema metadata for completion. When a qualified or unqualified condition has a single-quoted prefix such as `"header.state.status" = 'Act`, completion may insert the matching escaped value such as 'Active'; completion never executes SQL or creates a saved record.
 - load a Bookmark or View from ?query=<saved_query_id> without executing it, while preserving the existing project_root URL parameter. Open Saved accepts an ID or URL and opens it in the current Workbench browser context. Show a recent combined query/View list from query_saved_list in one Bookmarks and Saved Views tab.
 - keep presentation, formatting, page navigation and UI state in the frontend; SQL filtering, sorting and aggregation remain in the database.
 - use the same query capability as MCP.
-- save a query only through a successful Run & Save. Run, Check, Page and their errors do not create permanent saved entries or return a new saved identity. Query runs have a separate two-day log; saved Views have no TTL. A save failure keeps the completed rows and error state, preserves the previous saved identity and dirty state, and shows the save error. Save View saves the whole View query text. Successful save answers include the saved ID, kind and full URL.
+- save a query only through a successful Run & Save. Run, Check, Page and their errors do not create permanent saved entries or return a new saved identity. Query runs have a separate two-day log; saved Views have no TTL. A save failure keeps the completed rows and error state, preserves the previous saved identity and dirty state, and shows the save error. Successful save answers include the saved ID, kind and full URL.
 - allow the Operator to rename a current View and keep its optional name in browser autosave. Save View may persist an optional name; Run & Save may take an optional query name. Do not rename Bookmarks or saved Views after creation; their IDs and URLs do not change.
 - identify the selected Project by its declared name in the Workbench URL and reject a Project name that does not match the selected Project.
-- remain within the existing local application boundary and avoid custom TABLE, DOC or TREE result modes. Do not auto-execute a query from a URL, add sharing or authentication, or add a queue, retry, repair or rollback mechanism. Bookmarks and Views do not expire. Query logs and transient result tables follow their separate retention rules.
+- remain within the existing local application boundary and avoid custom TABLE, DOC or TREE result modes. Do not auto-execute a query from a URL, add sharing or authentication, or add a queue, retry, repair or rollback mechanism. Query logs and transient result tables follow their separate retention rules.
 
 - provide a Result display preference with `Adaptive` or `Fixed` row/page sizing. Adaptive is the default. Retain a Fixed value of 100 rows in the preference, but show that numeric value only when Fixed is selected; persist explicit choices in browser storage.
 - in Fixed mode, accept and persist a positive integer page size from 1 through 1000, matching the existing backend `page_size` limit. In Adaptive mode, fit the visible Results to the available space and update the display when viewport size, Interface text zoom, Content text zoom, Interface zoom or Density changes.

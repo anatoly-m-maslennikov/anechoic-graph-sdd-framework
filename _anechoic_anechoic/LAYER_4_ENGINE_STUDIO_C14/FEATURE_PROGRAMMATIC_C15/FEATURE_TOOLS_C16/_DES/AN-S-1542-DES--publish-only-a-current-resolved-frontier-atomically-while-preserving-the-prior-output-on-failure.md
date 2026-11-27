@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1542
+concern:
+  subject: "Projection"
+  path: "Model/Graph/Node//Artifact//Derived"
+  relation: "is_narrower_than"
 container:
   component: C16
 tier: 3
@@ -8,8 +12,8 @@ context:
   lens: DES
 state:
   status: active
-  version: 18
-  updated_at: 2026-10-27 20:00:04 +0400
+  version: 20
+  updated_at: "2026-11-27T16:29:34.309627+00:00"
 ---
 # Summary
 
@@ -27,7 +31,7 @@ The CA-O-157 projection-publication boundary after a current conflict-free reass
 
 Immediately before commit, the Tool revalidates every selected source path, Atom ID, Revision, byte digest, source relation, decision provenance when applicable, and final source-frontier digest. It stages the full replacement output, including all governed RMED role directories, before one recoverable publication transaction. Any changed, newly discovered, missing, malformed, incomplete, stale, unresolved, or unsupported input blocks publication before output mutation. A transaction, filesystem, output-fidelity, or source-currentness failure leaves the prior output byte-for-byte intact and reports whether publication was not started, rolled back, or has an explicitly uncertain recovery state. If the atomic publication succeeds but the business Journal append fails, retain the actual published output, report a `recording_error` diagnostic with the known publication and effect evidence, and do not claim a completed Journal record. Journal append remains a plain explicit business-record operation; repeating it neither establishes identity nor authorizes or blocks the operation.
 
-Each published Carrier retains its original authored frontmatter, body, and Relations unchanged and adds only the non-authoritative projection binding required to identify its original source Carrier, Atom ID, Revision, and digest. The output is a derived Projection, not source authority. Successful publication returns the exact published output digest and independently verified publication/effect evidence, with optional Journal/Run observation references; a failed Journal append is reported without rolling back a successful publication. It neither edits source authority nor substitutes a generated file for a source correction.
+Each published Carrier retains its original authored frontmatter, body, and Relations unchanged and adds only the non-authoritative projection binding required to identify its original source Carrier, Atom ID, Revision, and digest. The output is a derived Projection, not source authority. Successful publication returns the exact published output digest and independently verified publication/effect evidence, with optional Journal/Run observation references. It neither edits source authority nor substitutes a generated file for a source correction.
 
 ### Sources
 

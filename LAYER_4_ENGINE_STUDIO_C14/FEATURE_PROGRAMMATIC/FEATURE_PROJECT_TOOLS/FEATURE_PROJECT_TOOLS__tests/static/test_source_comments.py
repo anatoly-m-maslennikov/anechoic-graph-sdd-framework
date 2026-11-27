@@ -6,14 +6,22 @@ from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.test_suite__shared import (
     source_comments as lint,
 )
 
-NEXT_LINE_DIRECTIVE = "editorconfig-checker-disable-" "next-line"
+NEXT_LINE_DIRECTIVE = "editorconfig-checker-disable-next-line"
 
 
 class SourceCommentsTests(unittest.TestCase):
     def test_source_has_no_ordinary_comments(self):
         findings = lint.check_sources(lint.ROOT)
         if findings:
-            self.fail("\n".join([*findings, "Run source_comments.py --fix to remove these comments."]))
+            self.fail(
+                "\n".join(
+                    [
+                        *findings,
+                        "Run source_comments.py --fix to remove "
+                        + "these comments.",
+                    ]
+                )
+            )
 
     def test_python_purge_keeps_strings_and_directives(self):
         source = (
@@ -47,26 +55,36 @@ class SourceCommentsTests(unittest.TestCase):
             [source[start:end] for start, end in removed],
         )
 
-    def test_web_purge_keeps_syntax_and_directives(self):
+    def web_fixture(self):
         source = (
-            '<script>\n// @ts-nocheck\n'
-            '// editorconfig-checker-disable-line\n'
-            f'// {NEXT_LINE_DIRECTIVE}\n'
+            "<script>\n// @ts-nocheck\n"
+            "// editorconfig-checker-disable-line\n"
+            f"// {NEXT_LINE_DIRECTIVE}\n"
             'let url = "🙂 https://example.org"; // prose\n'
-            'let slash = /https?:\\/\\//;\n</script>\n'
-            '<p>{url}<!-- editorconfig-checker-disable-line -->{slash}</p>\n'
-            f'<style>/* {NEXT_LINE_DIRECTIVE} */\n'
-            '/* prose */ p { color: red; }</style>\n'
+            "let slash = /https?:\\/\\//;\n</script>\n"
+            "<p>{url}<!-- editorconfig-checker-disable-line -->{slash}</p>\n"
+            f"<style>/* {NEXT_LINE_DIRECTIVE} */\n"
+            "/* prose */ p { color: red; }</style>\n"
         )
-        edits, css_edits, ts_edits = lint.web_edits(lint.ROOT, [
-            {"path": "Fixture.svelte", "source": source},
-            {"path": "fixture.css", "source": "a { color: red/* separate */blue; }"},
-            {
-                "path": "fixture.ts",
-                "source": "// editorconfig-checker-disable-line\n"
-                "const value = 1; // prose\n",
-            },
-        ])
+        edits, css_edits, ts_edits = lint.web_edits(
+            lint.ROOT,
+            [
+                {"path": "Fixture.svelte", "source": source},
+                {
+                    "path": "fixture.css",
+                    "source": "a { color: red/* separate */blue; }",
+                },
+                {
+                    "path": "fixture.ts",
+                    "source": "// editorconfig-checker-disable-line\n"
+                    "const value = 1; // prose\n",
+                },
+            ],
+        )
+        return source, edits, css_edits, ts_edits
+
+    def test_web_purge_keeps_syntax_and_directives(self):
+        source, edits, css_edits, ts_edits = self.web_fixture()
         self.assertEqual([(14, 28, None)], css_edits)
         self.assertEqual(4, len(edits))
         self.assertEqual(1, len(ts_edits))
@@ -83,7 +101,7 @@ class SourceCommentsTests(unittest.TestCase):
         self.assertNotIn(NEXT_LINE_DIRECTIVE, source)
         self.assertIn("<!-- editorconfig-checker-disable-line -->", source)
         self.assertIn('"🙂 https://example.org"', source)
-        self.assertIn('/https?:\\/\\//', source)
+        self.assertIn("/https?:\\/\\//", source)
         self.assertIn(
             "<p>{url}<!-- editorconfig-checker-disable-line -->{slash}</p>",
             source,

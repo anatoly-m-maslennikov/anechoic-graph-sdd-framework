@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 4
-  updated_at: "2026-11-27T13:09:34.996603+00:00"
+  version: 5
+  updated_at: "2026-11-27T17:36:33.183448+00:00"
 ---
 # Manifest Build
 
@@ -58,6 +58,16 @@ declare_entity(
 ## Purpose
 
 Build compatible Model and Structure artifacts for one pinned Project.
+
+## Contract
+
+`manifest_input_signature` returns a digest bound to the pinned Project
+binding, compiler inputs, and Component topology. It returns no witness if
+it cannot establish a stable observation. A watcher-guarded observation
+requires the caller to maintain the guard for the observation.
+
+C69 decides whether to reuse a compiled Manifest. This filesystem witness
+is separate from the managed Model input fingerprint.
 
 ## Solution
 

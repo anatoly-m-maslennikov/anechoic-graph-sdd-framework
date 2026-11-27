@@ -8,7 +8,9 @@ import unittest
 
 def _dockerfile():
     path = Path(__file__).resolve().parents[1] / "docker/Dockerfile"
-    return re.sub(r"[ \t]*\\\n[ \t]*", " ", path.read_text(encoding="utf-8"))
+    text = path.read_text(encoding="utf-8")
+    text = re.sub(r"(?<=\S)\\\n(?=\S)", "", text)
+    return re.sub(r"[ \t]*\\\n[ \t]*", " ", text)
 
 
 class DockerfileUVEntrypointTests(unittest.TestCase):

@@ -101,7 +101,11 @@ class SpecTraceStore:
         if not self._allowed(sidecar) or not sidecar.is_file():
             if os.path.lexists(sidecar):
                 print(
-                    f"Invalid spec trace {sidecar}: not an allowed regular file",
+                    (
+                        "Invalid spec trace "
+                        f"{sidecar}"
+                        ": not an allowed regular file"
+                    ),
                     file=sys.stderr,
                 )
             return []
@@ -180,7 +184,8 @@ class SpecTraceStore:
         return True
 
     def refresh(self, paths=None):
-        """Refresh all pilot files initially, or affected paths and directory subtrees."""
+        "Refresh all pilot files initially, or affected paths and \
+directory subtrees."
         if paths is None:
             self.connection.execute("DELETE FROM implementation_rmedo")
             self.connection.execute("DELETE FROM implementation_objects")
@@ -202,7 +207,15 @@ class SpecTraceStore:
                 ("implementation_objects", "path"),
             ):
                 self.connection.execute(
-                    f"DELETE FROM {table} WHERE {column} = ? OR starts_with({column}, ?)",
+                    (
+                        "DELETE FROM "
+                        f"{table}"
+                        " WHERE "
+                        f"{column}"
+                        " = ? OR starts_with("
+                        f"{column}"
+                        ", ?)"
+                    ),
                     [rel, rel + "/"],
                 )
             self._scan(path)

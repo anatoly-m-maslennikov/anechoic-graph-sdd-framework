@@ -1,4 +1,4 @@
-"Bind the carrier pilot to its authored Manifest, Contract, and Draft Solution."
+"""Bind the carrier to its Manifest, Contract, and Draft Solution."""
 
 import hashlib
 from pathlib import Path
@@ -106,7 +106,7 @@ def _linked_source(root, pin, source, role):
 
 
 def framing_exports(root, manifest, solution, sources):
-    "Rebind the formal receipt to both requested source files and check framing operations."
+    """Rebind the receipt to both sources and check framing operations."""
     root = Path(root).resolve()
     if not isinstance(sources, dict):
         raise ValueError("Formal receipt has no source pins")

@@ -18,6 +18,7 @@ from uuid import uuid4
 sys.dont_write_bytecode = True
 REPOSITORY = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(REPOSITORY / "LAYER_4_ENGINE_STUDIO_C14"))
 
 
 def _arguments(argv: list[str] | None) -> argparse.Namespace:
@@ -44,12 +45,14 @@ def _arguments(argv: list[str] | None) -> argparse.Namespace:
             _local_arguments(command)
     run_image = commands.add_parser("run-image")
     _engine_argument(run_image)
-    run_image.add_argument("--host-settings", type=Path)
-    run_image.add_argument("--image", required=True)
+    location = run_image.add_mutually_exclusive_group()
+    location.add_argument("--host-settings", type=Path)
+    location.add_argument("--mounted-folder", type=Path)
+    run_image.add_argument("--image")
     run_image.add_argument("--apply", action="store_true")
     run_image.add_argument("--verify-mcp", action="store_true")
-    run_image.add_argument("--startup-timeout", type=int, default=420)
-    run_image.add_argument("--readiness-timeout", type=int, default=420)
+    run_image.add_argument("--startup-timeout", type=int)
+    run_image.add_argument("--readiness-timeout", type=int)
     arguments = parser.parse_args(argv)
     if (arguments.operation in ("local", "verify-image") and arguments.run_id is not None
             and re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", arguments.run_id) is None):
@@ -94,7 +97,9 @@ def _local_arguments(command):
     command.add_argument("--target-project-root", type=Path, help="Project receiving the verified release")
     command.add_argument("--source-revision", help="exact Git commit for a separate release source")
     command.add_argument("--suite", choices=("full", "fast"), help="Functional suite (default: full)")
-    command.add_argument("--base", help="exact base commit for a scoped release")
+    command.add_argument(
+        "--base", help="exact base commit for a scoped release"
+    )
     command.add_argument("--changed-path", action="append", dest="changed_paths", metavar="PATH",
                          help="literal file overlay for a scoped release")
     command.add_argument(
@@ -281,12 +286,21 @@ def _continue_local(target, run_id, run_local_release, run_snapshot_release):
 
 
 def _run_image(arguments: argparse.Namespace) -> dict[str, object]:
-    from LAYER_1_RUNTIME_IMAGES_C81.LAYER_1_RUNTIME_IMAGES_C81__shared import launch_shared_image
+    from LAYER_1_RUNTIME_IMAGES_C81.LAYER_1_RUNTIME_IMAGES_C81__shared import (
+        launch_shared_image,
+    )
 
     result = launch_shared_image(
-        host_settings=arguments.host_settings, image=arguments.image, apply=arguments.apply,
-        verify_mcp=arguments.verify_mcp, startup_timeout=arguments.startup_timeout,
+        host_settings=arguments.host_settings,
+        image=arguments.image,
+        apply=arguments.apply,
+        verify_mcp=arguments.verify_mcp,
+        startup_timeout=arguments.startup_timeout,
         readiness_timeout=arguments.readiness_timeout,
+        **(
+            {"mounted_folder": arguments.mounted_folder}
+            if arguments.mounted_folder is not None else {}
+        ),
     )
     if result.get("mode") == "dry-run" or result.get("ready") is True:
         result["outcome"] = "completed"

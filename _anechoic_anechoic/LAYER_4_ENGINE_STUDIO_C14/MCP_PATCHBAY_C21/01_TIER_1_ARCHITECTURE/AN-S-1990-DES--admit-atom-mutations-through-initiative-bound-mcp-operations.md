@@ -8,8 +8,8 @@ context:
   lens: DES
 state:
   status: active
-  version: 32
-  updated_at: '2026-11-12T17:12:13.598433+00:00'
+  version: 33
+  updated_at: "2026-11-27T17:35:01.150345+00:00"
 ---
 ## Summary
 
@@ -33,6 +33,6 @@ For Initiative-bound Atom Tools, **every** ANECHOIC Markdown Atom mutation **mus
 
 Search **and** read operations remain mutation-free. An Initiative-bound Tool for an atomic or bulk Atom operation **must** validate the current project frontier **and** **must** cause `COMMIT_TRIGGER` **to** receive durable intake acknowledgement **after** a successful mutation **and** **before** MCP reports success. MCP **may** return that Tool outcome but **must not** turn a failed, partial, blocked, **or** unacknowledged outcome into success.
 
-An Atom Action selects exactly one explicit Atom target and binds its expected Revision or source digest before that Action's effect. A Workflow with several Atom targets executes independent admitted Actions, stops at its first failed Action, retains completed Actions and leaves the remainder untouched. MCP **must** preserve those actual per-Action outcomes and **must not** advertise a cross-Atom all-or-nothing effect or overwrite concurrent work. Resume and retry policy for that sequence is deferred; each Action's existing source, permission, preview and storage-effect safeguards remain required.
+Apply AN-S-2481 to the single-target Atom Action and the independent multi-target Workflow. Bind the expected Revision or digest before each Action's effect. Preserve actual per-Action outcomes and concurrent source changes.
 
 Multiple MCP service instances **and** sessions **may** operate concurrently. Every mutation of an existing Atom **must** carry its expected Atom Revision **or** carrier digest; a mismatch **must** reject that target rather than overwrite concurrent work. Promotion through an Initiative-bound Tool validates its pre-promotion input and seals a new action. It does not wait for future Git or Journal reconciliation of that action. A direct **or** **otherwise** unowned Atom write outside this gateway is unadmitted **and** cannot be represented as a normal governed MCP mutation.

@@ -31,11 +31,18 @@ class NativeWorkflowDefinitionTests(unittest.TestCase):
         self.root = Path(self.enterContext(TemporaryDirectory())).resolve()
         self.control = ".anechoic_anechoic"
         (self.root / self.control).mkdir()
-        self.manifest = self._write("AN-S-1-PROJECT_MANIFEST--declare.md", {
-            "identity": {"atom_id": "AN-S-1"},
-            "context": {"container": {"component": "C0"}, "tier": -1, "template": "project_manifest"},
-            "state": {"status": "active", "version": 1},
-        }, """## Claim
+        self.manifest = self._write(
+            "AN-S-1-PROJECT_MANIFEST--declare.md",
+            {
+                "identity": {"atom_id": "AN-S-1"},
+                "context": {
+                    "container": {"component": "C0"},
+                    "tier": -1,
+                    "template": "project_manifest",
+                },
+                "state": {"status": "active", "version": 1},
+            },
+            """## Claim
 
 ### Formal Claim
 
@@ -60,13 +67,34 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
         return path
 
     def _pin(self, template, atom_id, version, *, relative=None, header_id=None, status="active"):
-        relative = relative or f"{self.control}/_PMETA/{atom_id}-{template.upper()}--fixture.md"
-        path = self._write(relative, {
-            "identity": {"atom_id": header_id or atom_id},
-            "context": {"template": template, "container": {"component": "C0"}},
-            "state": {"status": status, "version": version},
-        }, "## Summary\n\nFixture.\n\n```python\nraise AssertionError('carrier code executed')\n```\n")
-        return NativeDefinitionPin(f"{atom_id}@{version}", relative, sha256(path.read_bytes()).hexdigest())
+        relative = relative or (
+            f'{self.control}'
+            '/_PMETA/'
+            f'{atom_id}'
+            '-'
+            f'{template.upper()}'
+            '--fixture.md'
+        )
+        path = self._write(
+            relative,
+            {
+                "identity": {"atom_id": header_id or atom_id},
+                "context": {
+                    "template": template,
+                    "container": {"component": "C0"},
+                },
+                "state": {"status": status, "version": version},
+            },
+            (
+                "## Summary\n\nFixture.\n\n```python\nraise "
+                "AssertionError('carrier code executed')\n```\n"
+            ),
+        )
+        return NativeDefinitionPin(
+            f"{atom_id}@{version}",
+            relative,
+            sha256(path.read_bytes()).hexdigest(),
+        )
 
     def test_pin_preserves_positional_frozen_value_and_safe_errors(self):
         pin = NativeDefinitionPin("AN-P-1@1", "project/fixture.md", "a" * 64)
@@ -78,14 +106,24 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
 
     def test_project_config_workflow_pin(self):
         pin = self._pin("workflow", "AN-P-4", 1,
-                        relative=f"{self.control}/__PROJECT_CONFIG/AN-P-4-WORKFLOW--fixture.md")
+                        relative=(
+                            f'{self.control}'
+                            '/__PROJECT_CONFIG/AN-P-4-WORKFLOW--fixture.md'
+                        ))
         self._bind(workflow=pin)()
         pin = self._pin("workflow", "AN-C-4", 1,
-                        relative=f"{self.control}/__PROJECT_CONFIG/AN-C-4-WORKFLOW--fixture.md")
+                        relative=(
+                            f'{self.control}'
+                            '/__PROJECT_CONFIG/AN-C-4-WORKFLOW--fixture.md'
+                        ))
         self._bind(workflow=pin)()
 
     def _bind(self, **changes):
-        binding = {"workflow": self.workflow, "steps": (self.step,), "actions": (self.action,)}
+        binding = {
+            "workflow": self.workflow,
+            "steps": (self.step,),
+            "actions": (self.action,),
+        }
         return bind_native_workflow(self.selection, **(binding | changes))
 
     def _status_binding(self):
@@ -101,25 +139,55 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
             path = self.root / relative
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes(raw)
-            rows.append({"_exact_ref": native, "status_group": "Current", "source_path": relative.as_posix(),
-                         "_source_sha256": sha256(raw).hexdigest()})
+            rows.append(
+                {
+                    "_exact_ref": native,
+                    "status_group": "Current",
+                    "source_path": relative.as_posix(),
+                    "_source_sha256": sha256(raw).hexdigest(),
+                }
+            )
         return rows
 
     def test_relocated_status_binding_checks_component_and_lens(self):
         rows, pins = [], {}
         for index, kind in enumerate(("workflow", "step", "action"), 1):
             atom_id = f"AN-S-{index + 10}"
-            relative = f"{self.control}/ONTOLOGY_SCORE_C91/OCCURRENT_METRONOME_C58/_DOM/MTD/{atom_id}-MTD-{kind.upper()}--fixture.md"
+            relative = (
+                f'{self.control}'
+                '/ONTOLOGY_SCORE_C91/OCCURRENT_METRONOME_C58/_DOM/MTD/'
+                f'{atom_id}'
+                '-MTD-'
+                f'{kind.upper()}'
+                '--fixture.md'
+            )
             path = self._write(relative, {"identity": {"atom_id": atom_id},
                 "context": {"template": kind, "lens": "DOM/MTD"},
                 "state": {"status": "active", "version": 1}}, "## Summary\n\nFixture.\n")
             raw = path.read_bytes()
-            pins[kind] = (f"{atom_id}@1", sha256(raw.partition(b"\n---\n")[2]).hexdigest())
-            rows.append({"_exact_ref": f"{atom_id}@1", "status_group": "Current",
-                         "source_path": relative, "_source_sha256": sha256(raw).hexdigest()})
-        with patch("FEATURE_PROGRAMMATIC.FEATURE_TOOLS.native_workflow_definition.STATUS_SPECIFICATIONS", pins):
+            pins[kind] = (
+                f"{atom_id}@1",
+                sha256(raw.partition(b"\n---\n")[2]).hexdigest(),
+            )
+            rows.append(
+                {
+                    "_exact_ref": f"{atom_id}@1",
+                    "status_group": "Current",
+                    "source_path": relative,
+                    "_source_sha256": sha256(raw).hexdigest(),
+                }
+            )
+        with patch(
+            (
+                "FEATURE_PROGRAMMATIC.FEATURE_TOOLS.native_workflow_definition.STA"
+                "TUS_SPECIFICATIONS"
+            ),
+            pins,
+        ):
             bind_status_specifications(self.selection, current_rows=rows)()
-            rows[0]["source_path"] = rows[0]["source_path"].replace("OCCURRENT_METRONOME_C58", "OTHER_C8")
+            rows[0]["source_path"] = rows[0]["source_path"].replace(
+                "OCCURRENT_METRONOME_C58", "OTHER_C8"
+            )
             with self.assertRaisesRegex(NativeWorkflowDefinitionError, "path"):
                 bind_status_specifications(self.selection, current_rows=rows)
 
@@ -145,15 +213,26 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
     def test_native_status_binding_refuses_invalid_inventory_and_header(self):
         rows = self._status_binding()
         for invalid in (rows + rows[:1], rows[1:]):
-            with self.assertRaisesRegex(NativeWorkflowDefinitionError, "Missing or ambiguous"):
-                bind_status_specifications(self.selection, current_rows=invalid)
+            with self.assertRaisesRegex(
+                NativeWorkflowDefinitionError, "Missing or ambiguous"
+            ):
+                bind_status_specifications(
+                    self.selection, current_rows=invalid
+                )
         path = self.root / rows[0]["source_path"]
         header, delimiter, body = path.read_bytes().partition(b"\n---\n")
         metadata = yaml.safe_load(header.removeprefix(b"---\n"))
         metadata["state"]["status"] = "draft"
-        path.write_bytes(b"---\n" + yaml.safe_dump(metadata, sort_keys=False).rstrip().encode() + delimiter + body)
+        path.write_bytes(
+            b"---\n"
+            + yaml.safe_dump(metadata, sort_keys=False).rstrip().encode()
+            + delimiter
+            + body
+        )
         rows[0]["_source_sha256"] = sha256(path.read_bytes()).hexdigest()
-        with self.assertRaisesRegex(NativeWorkflowDefinitionError, "Expected active native workflow"):
+        with self.assertRaisesRegex(
+            NativeWorkflowDefinitionError, "Expected active native workflow"
+        ):
             bind_status_specifications(self.selection, current_rows=rows)
 
     def test_exact_active_native_binding_can_be_rechecked(self):
@@ -168,35 +247,58 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
                 path = self.root / pin.relative_path
                 original = path.read_bytes()
                 path.write_bytes(original + b"\n")
-                with self.assertRaisesRegex(NativeWorkflowDefinitionError, f"{pin.ref_id} changed"):
+                with self.assertRaisesRegex(
+                    NativeWorkflowDefinitionError, f"{pin.ref_id} changed"
+                ):
                     check()
                 path.write_bytes(original)
                 check()
 
     def test_refuses_wrong_tree_and_noncurrent_paths(self):
-        for directory in (f"{self.control}/SPEC", f"{self.control}/_PMETA/draft",
-                          f"{self.control}/_PMETA/archived", ".anechoic_legacy/_PMETA"):
+        for directory in (
+            f"{self.control}/SPEC",
+            f"{self.control}/_PMETA/draft",
+            f"{self.control}/_PMETA/archived",
+            ".anechoic_legacy/_PMETA",
+        ):
             with self.subTest(directory=directory):
-                pin = self._pin("workflow", "AN-P-1", 3, relative=f"{directory}/AN-P-1-WORKFLOW--fixture.md")
-                with self.assertRaisesRegex(NativeWorkflowDefinitionError, "Invalid native PROJECT_CONFIG pin"):
+                pin = self._pin(
+                    "workflow",
+                    "AN-P-1",
+                    3,
+                    relative=f"{directory}/AN-P-1-WORKFLOW--fixture.md",
+                )
+                with self.assertRaisesRegex(
+                    NativeWorkflowDefinitionError,
+                    "Invalid native PROJECT_CONFIG pin",
+                ):
                     self._bind(workflow=pin)
 
     def test_refuses_header_mismatch_even_with_trusted_matching_digest(self):
         for header in ({"status": "draft"}, {"status": "archived"}, {"header_id": "AN-P-9"}):
             with self.subTest(header=header):
                 pin = self._pin("workflow", "AN-P-1", 3, **header)
-                with self.assertRaisesRegex(NativeWorkflowDefinitionError, "Expected active native workflow"):
+                with self.assertRaisesRegex(
+                    NativeWorkflowDefinitionError,
+                    "Expected active native workflow",
+                ):
                     self._bind(workflow=pin)
         newer = self._pin("workflow", "AN-P-1", 4)
-        with self.assertRaisesRegex(NativeWorkflowDefinitionError, "Expected active native workflow"):
+        with self.assertRaisesRegex(
+            NativeWorkflowDefinitionError, "Expected active native workflow"
+        ):
             self._bind(workflow=replace(newer, ref_id=self.workflow.ref_id))
-        with self.assertRaisesRegex(NativeWorkflowDefinitionError, "Expected active native action"):
+        with self.assertRaisesRegex(
+            NativeWorkflowDefinitionError, "Expected active native action"
+        ):
             self._bind(workflow=newer, steps=(), actions=(self.step,))
 
     def test_refuses_bad_digest_and_duplicate_binding(self):
         with self.assertRaisesRegex(NativeWorkflowDefinitionError, "AN-P-3@1 changed"):
             self._bind(actions=(replace(self.action, sha256="0" * 64),))
-        with self.assertRaisesRegex(NativeWorkflowDefinitionError, "Duplicate native definition"):
+        with self.assertRaisesRegex(
+            NativeWorkflowDefinitionError, "Duplicate native definition"
+        ):
             self._bind(steps=(self.step, self.step))
 
     def test_recheck_refuses_missing_or_symlinked_source_even_with_same_bytes(self):

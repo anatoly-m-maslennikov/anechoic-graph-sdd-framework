@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-4721
+concern:
+  subject: "Atom"
+  path: "Model/Graph/Node//Artifact//SSOT//Prescribed/Content"
+  relation: "is_contained_by"
 container:
   component: C14
 tier: 1
@@ -9,8 +13,8 @@ context:
   lens: DES
 state:
   status: active
-  version: 1
-  updated_at: '2026-11-23T13:57:04.062935+00:00'
+  version: 2
+  updated_at: "2026-11-27T16:16:01.404965+00:00"
 ---
 
 ## Summary

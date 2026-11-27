@@ -52,11 +52,15 @@ def _validate_structured_call(
     elif name == "set_value":
         _validate_value(args, node, ref, validate_reference)
     else:
-        ref("address")
-        if name in {"property_rule", "allowed_children", "allowed_values"}:
-            _validate_property(name, args, node, count)
-        else:
-            _validate_layout(name, args, node, count)
+        _validate_address_call(name, args, node, ref, count)
+
+
+def _validate_address_call(name, args, node, ref, count):
+    ref("address")
+    if name in {"property_rule", "allowed_children", "allowed_values"}:
+        _validate_property(name, args, node, count)
+    else:
+        _validate_layout(name, args, node, count)
 
 
 def _validate_structure(name, args, node, ref, validate_reference):
@@ -154,21 +158,7 @@ def _validate_value(args, node, ref, validate_reference):
 
 def _validate_property(name, args, node, count):
     if name == "property_rule":
-        count("occurrences")
-        count("values")
-        fmt = args.get("value_format")
-        if (
-            fmt is None
-            and args.get("values") is None
-            and args.get("occurrences") is None
-        ):
-            raise _error(node, "property_rule requires a constraint")
-        if fmt is not None:
-            fmt = _text(fmt, "value_format", node, empty=True)
-            if fmt and not re.fullmatch(r"[A-Za-z0-9_,. +()/$-]+", fmt):
-                raise _error(
-                    node, "value_format contains an unsupported character"
-                )
+        _validate_property_rule(args, node, count)
     elif name == "allowed_children":
         for child in _items(args["names"], "names", node):
             _name(child, "child name", node)
@@ -183,6 +173,24 @@ def _validate_property(name, args, node, count):
         count("occurrences")
 
 
+def _validate_property_rule(args, node, count):
+    count("occurrences")
+    count("values")
+    fmt = args.get("value_format")
+    if (
+        fmt is None
+        and args.get("values") is None
+        and args.get("occurrences") is None
+    ):
+        raise _error(node, "property_rule requires a constraint")
+    if fmt is not None:
+        fmt = _text(fmt, "value_format", node, empty=True)
+        if fmt and not re.fullmatch(r"[A-Za-z0-9_,. +()/$-]+", fmt):
+            raise _error(
+                node, "value_format contains an unsupported character"
+            )
+
+
 def _validate_layout(name, args, node, count):
     if name == "children":
         fmt = args.get("name_format", "")
@@ -192,23 +200,7 @@ def _validate_layout(name, args, node, count):
             raise _error(node, "recursive must be a boolean")
         count("occurrences")
     elif name == "classify":
-        _name(args["axis"], "axis", node)
-        if type(args["value"]) is not int:
-            _text(args["value"], "value", node)
-        grouped = args.get("grouped", False)
-        if type(grouped) is not bool:
-            raise _error(node, "grouped must be a boolean")
-        notation = args.get("notation", "assignment")
-        if notation not in ("assignment", "allowed") and not (
-            notation == "relation" and not grouped
-        ):
-            raise _error(
-                node,
-                (
-                    "notation must be 'assignment', 'allowed', or 'relation' "
-                    "without grouping"
-                ),
-            )
+        _validate_classify(args, node)
     elif name == "path_template":
         _text(args["template"], "template", node)
     elif name == "minimum_value":
@@ -216,3 +208,23 @@ def _validate_layout(name, args, node, count):
             raise _error(node, "minimum must be an integer")
     elif name == "population":
         count("count")
+
+
+def _validate_classify(args, node):
+    _name(args["axis"], "axis", node)
+    if type(args["value"]) is not int:
+        _text(args["value"], "value", node)
+    grouped = args.get("grouped", False)
+    if type(grouped) is not bool:
+        raise _error(node, "grouped must be a boolean")
+    notation = args.get("notation", "assignment")
+    if notation not in ("assignment", "allowed") and not (
+        notation == "relation" and not grouped
+    ):
+        raise _error(
+            node,
+            (
+                "notation must be 'assignment', 'allowed', or 'relation' "
+                "without grouping"
+            ),
+        )

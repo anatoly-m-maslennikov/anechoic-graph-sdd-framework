@@ -103,7 +103,8 @@ def main_objects(connection):
     return dict(
         connection.execute(
             "SELECT table_name, table_type FROM information_schema.tables "
-            "WHERE table_catalog = current_database() AND table_schema = 'main'"
+            "WHERE table_catalog = current_database() "
+            "AND table_schema = 'main'"
         ).fetchall()
     )
 
@@ -113,7 +114,8 @@ def sync_query_views(connection):
     for name, families in ATOM_FAMILY_VIEWS.items():
         choices = ", ".join(repr(family) for family in families)
         connection.execute(
-            f"CREATE OR REPLACE VIEW main.{name} AS SELECT * FROM main.mrt_atoms "
+            f"CREATE OR REPLACE VIEW main.{name} AS SELECT * "
+            "FROM main.mrt_atoms "
             f"WHERE split_part(reference, '-', 2) IN ({choices})"
         )
     for old, new in _ALIASES.items():
@@ -124,14 +126,22 @@ def sync_query_views(connection):
                 else "*"
             )
             connection.execute(
-                f"CREATE OR REPLACE VIEW main.{old} AS SELECT {columns} FROM main.{new}"
+                (
+                    "CREATE OR REPLACE VIEW main."
+                    f"{old}"
+                    " AS SELECT "
+                    f"{columns}"
+                    " FROM main."
+                    f"{new}"
+                )
             )
         elif objects.get(old) == "VIEW":
             connection.execute(f"DROP VIEW main.{old}")
 
 
 def migrate_legacy_names(connection, objects, *, legacy):
-    """Rename retained rows and regenerate their derived views in the caller's transaction."""
+    """Rename retained rows and regenerate their derived views in the \
+caller's transaction."""
     names = (
         _MAIN_NAMES
         if legacy
@@ -177,7 +187,8 @@ def _move_projection(connection, old, new, kind):
 def _migrate_graph_tables(connection):
     rows = connection.execute(
         "SELECT table_schema, table_name FROM information_schema.tables "
-        "WHERE table_catalog = current_database() AND table_type = 'BASE TABLE' "
+        "WHERE table_catalog = current_database() "
+        "AND table_type = 'BASE TABLE' "
         "AND table_schema IN ('native_graph', 'realization_internal')"
     ).fetchall()
     for schema, name in rows:

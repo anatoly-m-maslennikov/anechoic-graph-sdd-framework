@@ -7,42 +7,57 @@ import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const require = createRequire(new URL('../package.json', import.meta.url));
-const { chromium } = require('@playwright/test') as typeof import('@playwright/test');
+const { chromium } = require(
+  '@playwright/test') as typeof import('@playwright/test');
 type ToolCall = { name: string; arguments: Record<string, unknown> };
-type ToolResult = { isError: boolean; structuredContent: Record<string, unknown> };
+type ToolResult = { isError: boolean;
+  structuredContent: Record<string, unknown> };
 type ToolHistory = { name: string; result?: ToolResult; error?: string };
-declare global { interface Window { __workbenchToolCall: (params: ToolCall) => Promise<ToolResult> } }
-const fixtureUrl = process.env.WORKBENCH_NATIVE_E2E_URL ?? process.env.WORKBENCH_E2E_URL;
-const projectRoot = process.env.WORKBENCH_NATIVE_E2E_PROJECT_ROOT ?? (fixtureUrl ? new URL(fixtureUrl).searchParams.get('project_root') : null);
+declare global { interface Window { __workbenchToolCall:
+  (params: ToolCall) => Promise<ToolResult> } }
+const fixtureUrl = process.env.WORKBENCH_NATIVE_E2E_URL
+  ?? process.env.WORKBENCH_E2E_URL;
+const projectRoot = process.env.WORKBENCH_NATIVE_E2E_PROJECT_ROOT ?? (
+  fixtureUrl ? new URL(fixtureUrl).searchParams.get('project_root') : null);
 const fixtureReady = Boolean(fixtureUrl && projectRoot);
 
 const interfaceOperations = new Set([
-  'workspace_open', 'workspace_list', 'workspace_get', 'view_create', 'view_list', 'view_get',
-  'view_update', 'view_run', 'view_check', 'view_fetch', 'view_focus', 'view_rename',
+  'workspace_open', 'workspace_list', 'workspace_get',
+    'view_create', 'view_list', 'view_get',
+  'view_update', 'view_run', 'view_check',
+    'view_fetch', 'view_focus', 'view_rename',
   'view_duplicate', 'view_remove', 'query_log_list', 'query_log_get',
 ]);
 const routes: Record<string, string> = {
-  query_run: 'run', query_check: 'check', query_page: 'page', query_schema: 'schema',
+  query_run: 'run', query_check: 'check',
+    query_page: 'page', query_schema: 'schema',
   query_rebuild: 'rebuild',
-  iwe_console_status: 'status', workbench_status: 'status', query_load: 'load', query_saved_list: 'saved-list', view_save: 'view-save',
+  iwe_console_status: 'status', workbench_status: 'status', query_load:
+    'load', query_saved_list: 'saved-list', view_save: 'view-save',
 };
 
-async function artifact() { return readFile(resolve(root, 'dist/mcp-app.html'), 'utf8'); }
+async function artifact() { return readFile(
+  resolve(root, 'dist/mcp-app.html'), 'utf8'); }
 
-async function backendCall(name: string, arguments_: Record<string, unknown>): Promise<ToolResult> {
+async function backendCall(name: string, arguments_:
+  Record<string, unknown>): Promise<ToolResult> {
   const { project_root, ...argumentsWithoutRoot } = arguments_;
-  assert.equal(project_root, projectRoot, `${name} must retain the selected Project`);
+  assert.equal(project_root, projectRoot,
+    `${name} must retain the selected Project`);
   assert.ok(fixtureUrl);
   const base = new URL(fixtureUrl);
-  const usesInterface = interfaceOperations.has(name) || (name === 'view_save' && 'workspace_id' in argumentsWithoutRoot);
+  const usesInterface = interfaceOperations.has(name) || (
+    name === 'view_save' && 'workspace_id' in argumentsWithoutRoot);
   const path = usesInterface ? 'interface' : routes[name];
   assert.ok(path, `unexpected MCP tool ${name}`);
-  const endpoint = new URL(`${base.pathname.replace(/\/$/, '')}/${path}`, base.origin);
+  const endpoint = new URL(`${base.pathname.replace(
+    /\/$/, '')}/${path}`, base.origin);
   const body = usesInterface
     ? { operation: name, arguments: argumentsWithoutRoot, project_root }
     : { ...argumentsWithoutRoot, project_root };
   const response = await fetch(endpoint, {
-    method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body),
+    method: 'POST', headers: { 'content-type':
+      'application/json' }, body: JSON.stringify(body),
   });
   const content = await response.json() as Record<string, unknown>;
   return response.ok ? { isError: false, structuredContent: content }
@@ -50,7 +65,8 @@ async function backendCall(name: string, arguments_: Record<string, unknown>): P
 }
 
 async function openWorkspace(sessionId: string) {
-  const result = await backendCall('workspace_open', { session_id: sessionId, project_root: projectRoot });
+  const result = await backendCall('workspace_open', {
+    session_id: sessionId, project_root: projectRoot });
   assert.equal(result.isError, false);
   return result.structuredContent;
 }
@@ -101,7 +117,8 @@ async function bridgePage({ input, initial, resultFirst = false, callTool }: {
   return { browser, page, frame: page.frameLocator('iframe'), calls, toolResults, pageErrors };
 }
 
-test('native artifact inlines the shared UI assets and license notices', async () => {
+test('native artifact inlines the shared UI assets and license notices',
+  async () => {
   const html = await artifact();
   assert.equal(/<script\b[^>]*\bsrc=/i.test(html), false);
   assert.equal(/<link\b[^>]*\brel=["']stylesheet/i.test(html), false);
@@ -113,41 +130,56 @@ test('native artifact inlines the shared UI assets and license notices', async (
   assert.ok(html.includes('RollupJS Plugin Contributors'));
 });
 
-test('rebuild command sends target and refreshes the workspace result', async () => {
+test('rebuild command sends target and refreshes the workspace result',
+  async () => {
   let queryId = 'q1';
-  const workspace = () => ({ workspace_id: 'session', project_name: 'Project', active_view_id: 'v1', views: [
-    { id: 'v1', sql: 'select 1', cursor_position: 0, revision: 1, result: { query_id: queryId, status: 'success' } },
+  const workspace = () => ({ workspace_id: 'session',
+    project_name: 'Project', active_view_id: 'v1', views: [
+    { id: 'v1', sql: 'select 1', cursor_position: 0, revision:
+      1, result: { query_id: queryId, status: 'success' } },
   ] });
-  const host = await bridgePage({ input: { session_id: 'session', project_root: '/project' }, initial: workspace(),
+  const host = await bridgePage({ input: { session_id:
+    'session', project_root: '/project' }, initial: workspace(),
     callTool: ({ name }) => {
       if (name === 'query_rebuild') queryId = 'q2';
-      const result = { query_id: queryId, columns: [{ name: 'result', type: 'VARCHAR' }], rows: [[queryId]],
-        row_count: 1, source_row_count: 1, column_count: 1, offset: 0, page_size: 100, has_more: false };
-      return { isError: false, structuredContent: name === 'workspace_get' ? workspace()
+      const result = { query_id: queryId, columns: [{ name:
+        'result', type: 'VARCHAR' }], rows: [[queryId]],
+        row_count: 1, source_row_count: 1, column_count:
+          1, offset: 0, page_size: 100, has_more: false };
+      return { isError: false, structuredContent:
+        name === 'workspace_get' ? workspace()
         : name === 'view_fetch' ? result
-        : name === 'query_saved_list' || name === 'query_log_list' ? { items: [] } : {} };
+        : name === 'query_saved_list' ||
+          name === 'query_log_list' ? { items: [] } : {} };
     },
   });
   try {
-    try { await host.frame.getByRole('button', { name: /Commands/ }).click({ timeout: 8000 }); }
+    try { await host.frame.getByRole('button', {
+      name: /Commands/ }).click({ timeout: 8000 }); }
     catch (error) {
-      assert.fail(`${error instanceof Error ? error.message : String(error)}\nbody=${await host.frame.locator('body').innerText()}\nerrors=${JSON.stringify(host.pageErrors)}`);
+      assert.fail(`${error instanceof Error ? error.message : String(error)}\nbody=${await host.frame.locator(
+        'body').innerText()}\nerrors=${JSON.stringify(host.pageErrors)}`);
     }
     const palette = host.frame.getByRole('dialog', { name: 'Command palette' });
     await palette.getByRole('textbox').fill('Rebuild tables');
     host.page.once('dialog', (dialog) => dialog.accept('atoms'));
     await palette.getByRole('textbox').press('Enter');
-    await host.frame.getByRole('dialog', { name: 'Command palette' }).waitFor({ state: 'hidden' });
+    await host.frame.getByRole('dialog', { name:
+      'Command palette' }).waitFor({ state: 'hidden' });
     await host.frame.getByText('q2', { exact: true }).waitFor({ timeout: 8000 });
     const rebuild = host.calls.find((call) => call.name === 'query_rebuild');
     assert.equal(rebuild?.arguments.target, 'atoms');
     const index = host.calls.indexOf(rebuild);
-    assert.ok(host.calls.slice(index + 1).some((call) => call.name === 'workspace_get'));
-    assert.ok(host.calls.slice(index + 1).some((call) => call.name === 'view_fetch'));
+    assert.ok(host.calls.slice(index + 1).some(
+      (call) => call.name === 'workspace_get'));
+    assert.ok(host.calls.slice(index + 1).some(
+      (call) => call.name === 'view_fetch'));
   } finally { await host.browser.close(); }
 });
 
-test('native bridge binds reordered host context to the actual Workbench backend', { skip: !fixtureReady }, async () => {
+test(
+  'native bridge binds reordered host context to the actual Workbench backend',
+  { skip: !fixtureReady }, async () => {
   const sessionId = `native-bridge-${Date.now()}`;
   const initial = await openWorkspace(sessionId);
   const host = await bridgePage({
@@ -169,7 +201,8 @@ test('native bridge binds reordered host context to the actual Workbench backend
     catch (error) {
       const alerts = await host.frame.getByRole('alert').allTextContents();
       const body = await host.frame.locator('body').innerText();
-      assert.fail(`${error instanceof Error ? error.message : error}\nalerts=${JSON.stringify(alerts)}\npageErrors=${JSON.stringify(host.pageErrors)}\ncalls=${JSON.stringify(host.calls)}\ntoolResults=${JSON.stringify(host.toolResults)}\nbody=${body}`);
+      assert.fail(`${error instanceof Error ? error.message : error}\nalerts=${JSON.stringify(alerts)}\npageErrors=${JSON.stringify(
+        host.pageErrors)}\ncalls=${JSON.stringify(host.calls)}\ntoolResults=${JSON.stringify(host.toolResults)}\nbody=${body}`);
     }
     const names = host.calls.map((call) => call.name);
     assert.ok(names.includes('view_update'));
@@ -192,27 +225,34 @@ test('native bridge binds reordered host context to the actual Workbench backend
   }
 });
 
-test('native bridge rejects missing host context before tool calls', { skip: !fixtureReady }, async () => {
+test('native bridge rejects missing host context before tool calls',
+  { skip: !fixtureReady }, async () => {
   const host = await bridgePage({
     input: { project_root: '/trusted/project' },
-    initial: { workspace_id: 'missing-session', active_view_id: 'view-1', views: [] },
+    initial: { workspace_id: 'missing-session',
+      active_view_id: 'view-1', views: [] },
   });
   try {
-    await host.frame.getByRole('alert').getByText('Native IWE Console binding requires session_id and project_root.').waitFor();
+    await host.frame.getByRole('alert').getByText(
+      'Native IWE Console binding requires session_id and project_root.').waitFor(
+        );
     assert.deepEqual(host.calls, []);
   } finally {
     await host.browser.close();
   }
 });
 
-test('native bridge rejects a missing project name before tool calls', { skip: !fixtureReady }, async () => {
+test('native bridge rejects a missing project name before tool calls',
+  { skip: !fixtureReady }, async () => {
   const sessionId = `missing-project-name-${Date.now()}`;
   const host = await bridgePage({
     input: { session_id: sessionId, project_root: projectRoot },
     initial: { workspace_id: sessionId, active_view_id: 'view-1', views: [] },
   });
   try {
-    await host.frame.getByRole('alert').getByText('Native IWE Console binding requires the initial Workspace project name.').waitFor();
+    await host.frame.getByRole('alert').getByText(
+      'Native IWE Console binding requires the initial Workspace project name.').waitFor(
+        );
     assert.deepEqual(host.calls, []);
   } finally {
     await host.browser.close();

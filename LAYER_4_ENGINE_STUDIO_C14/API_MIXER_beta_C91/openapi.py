@@ -7,6 +7,7 @@ from pathlib import Path
 import tomllib
 
 from .api import descriptors
+from ._shared_runtime_support import TOOL_REST_PATH
 from .shared_runtime import Invocation, public_tool
 
 _TEXT = {"type": "string"}
@@ -107,7 +108,7 @@ def export_openapi(version):
             "description": "The Backend checks Project admission at runtime.",
         },
         "paths": {
-            "/tools": {
+            TOOL_REST_PATH: {
                 "get": {
                     "operationId": "listTools",
                     "responses": {

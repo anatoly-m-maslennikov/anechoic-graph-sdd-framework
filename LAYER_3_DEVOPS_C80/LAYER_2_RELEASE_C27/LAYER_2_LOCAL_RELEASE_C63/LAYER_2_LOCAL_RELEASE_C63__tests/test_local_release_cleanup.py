@@ -6,20 +6,37 @@ from pathlib import Path
 import unittest
 from unittest.mock import patch
 
-from LAYER_2_LOCAL_RELEASE_C63.LAYER_2_LOCAL_RELEASE_C63__tests import test_release_cleanup as docker_tests
-from LAYER_2_LOCAL_RELEASE_C63.LAYER_2_LOCAL_RELEASE_C63__tests import test_simple_local_release as local_tests
-from LAYER_2_LOCAL_RELEASE_C63.LAYER_2_LOCAL_RELEASE_C63__shared import run_local_release
-from LAYER_1_RUNTIME_IMAGES_C81.LAYER_1_RUNTIME_IMAGES_C81__shared import read_release_selection
-from LAYER_1_RUNTIME_IMAGES_C81.LAYER_1_RUNTIME_IMAGES_C81__shared import LocalReleaseError
+from LAYER_2_LOCAL_RELEASE_C63.LAYER_2_LOCAL_RELEASE_C63__tests import (
+    test_release_cleanup as docker_tests,
+)
+from LAYER_2_LOCAL_RELEASE_C63.LAYER_2_LOCAL_RELEASE_C63__tests import (
+    test_simple_local_release as local_tests,
+)
+from LAYER_2_LOCAL_RELEASE_C63.LAYER_2_LOCAL_RELEASE_C63__shared import (
+    run_local_release,
+)
+from LAYER_1_RUNTIME_IMAGES_C81.LAYER_1_RUNTIME_IMAGES_C81__shared import (
+    read_release_selection,
+)
+from LAYER_1_RUNTIME_IMAGES_C81.LAYER_1_RUNTIME_IMAGES_C81__shared import (
+    LocalReleaseError,
+)
 
 
 class LocalReleaseCleanupTests(unittest.TestCase):
     @staticmethod
-    def _successful_host_command(argv: tuple[str, ...]) -> subprocess.CompletedProcess[str]:
-        output = ("d" * 40 if argv[:2] == ("git", "rev-parse") else
-                  "ANECHOIC_CANARY_ENDPOINT http://127.0.0.1:49152/anechoic/mcp\n"
-                  if any(Path(part).name == "test_suite__pub.py" for part in argv)
-                  and "--phase" in argv and argv[argv.index("--phase") + 1] == "canary" else "")
+    def _successful_host_command(
+        argv: tuple[str, ...],
+    ) -> subprocess.CompletedProcess[str]:
+        output = (
+            "d" * 40
+            if argv[:2] == ("git", "rev-parse")
+            else "ANECHOIC_CANARY_ENDPOINT http://127.0.0.1:49152/anechoic/mcp\n"
+            if any(Path(part).name == "test_suite__pub.py" for part in argv)
+            and "--phase" in argv
+            and argv[argv.index("--phase") + 1] == "canary"
+            else ""
+        )
         return subprocess.CompletedProcess(argv, 0, output, "")
 
     def fixture(self) -> tuple[local_tests.SimpleLocalReleaseTests, docker_tests.DockerFixture]:
@@ -46,7 +63,9 @@ class LocalReleaseCleanupTests(unittest.TestCase):
 
         return read
 
-    def _assert_prior_replacement(self, calls, docker, identifier: str, prior_image: str) -> None:
+    def _assert_prior_replacement(
+        self, calls, docker, identifier: str, prior_image: str
+    ) -> None:
         self.assertNotIn(identifier, docker.containers)
         stop = next(index for index, argv in enumerate(calls) if argv[1:3] == ("container", "stop"))
         remove = next(index for index, argv in enumerate(calls) if argv[1:3] == ("container", "rm"))
@@ -69,7 +88,9 @@ class LocalReleaseCleanupTests(unittest.TestCase):
         _, third_image = docker.add("3")
         order: list[str] = []
 
-        def runner(argv: tuple[str, ...], root: Path) -> subprocess.CompletedProcess[str]:
+        def runner(
+            argv: tuple[str, ...], root: Path
+        ) -> subprocess.CompletedProcess[str]:
             if argv[0] == "docker":
                 order.append(" ".join(argv[1:3]))
                 return docker.run(argv, root)
@@ -93,7 +114,10 @@ class LocalReleaseCleanupTests(unittest.TestCase):
             {argv[-1] for argv in docker.calls if argv[1:3] == ("image", "rm")},
         )
         self.assertFalse(
-            any(argv[1:3] in {("image", "prune"), ("system", "prune")} for argv in docker.calls)
+            any(
+                argv[1:3] in {("image", "prune"), ("system", "prune")}
+                for argv in docker.calls
+            )
         )
         self.assertLess(order.index("container rm"), order.index("launch"))
         self.assertGreater(order.index("image rm"), order.index("launch"))
@@ -103,28 +127,44 @@ class LocalReleaseCleanupTests(unittest.TestCase):
         orphan = "sha256:" + "f" * 64
         docker.images[orphan] = "f" * 64
 
-        def runner(argv: tuple[str, ...], root: Path) -> subprocess.CompletedProcess[str]:
+        def runner(
+            argv: tuple[str, ...], root: Path
+        ) -> subprocess.CompletedProcess[str]:
             if argv[0] == "docker":
                 return docker.run(argv, root)
             return self._successful_host_command(argv)
 
         fixture.startup.side_effect = LocalReleaseError("start failed")
         with (
-            patch("LAYER_2_LOCAL_RELEASE_C63.local_release_runner._launcher_image", return_value=None),
+            patch(
+                "LAYER_2_LOCAL_RELEASE_C63.local_release_runner._launcher_image",
+                return_value=None,
+            ),
         ):
-            result = run_local_release(fixture.root, run_id="first-install", runner=runner)
-        self.assertEqual(("failed", "start_mcp"), (result["outcome"], result["failed_step"]))
+            result = run_local_release(
+                fixture.root, run_id="first-install", runner=runner
+            )
+        self.assertEqual(
+            ("failed", "start_mcp"), (result["outcome"], result["failed_step"])
+        )
         self.assertFalse(
-            any(argv[1:3] in {("image", "ls"), ("image", "rm")} for argv in docker.calls)
+            any(
+                argv[1:3] in {("image", "ls"), ("image", "rm")}
+                for argv in docker.calls
+            )
         )
 
     def test_existing_current_image_container_is_reused_without_stop_or_removal(self) -> None:
         fixture, docker = self.fixture()
         docker.add("1", Image=fixture.image_id, State={"Running": True, "Status": "running"})
 
-        def runner(argv: tuple[str, ...], root: Path) -> subprocess.CompletedProcess[str]:
+        def runner(
+            argv: tuple[str, ...], root: Path
+        ) -> subprocess.CompletedProcess[str]:
             if argv[:2] == ("docker", "ps"):
-                return subprocess.CompletedProcess(argv, 0, "\n".join(docker.containers), "")
+                return subprocess.CompletedProcess(
+                    argv, 0, "\n".join(docker.containers), ""
+                )
             if argv[0] == "docker":
                 return docker.run(argv, root)
             return self._successful_host_command(argv)
@@ -133,9 +173,14 @@ class LocalReleaseCleanupTests(unittest.TestCase):
             patch("LAYER_2_LOCAL_RELEASE_C63.local_release_runner._launcher_image", return_value=fixture.image_id),
         ):
             result = run_local_release(fixture.root, run_id="reuse", runner=runner)
-        self.assertEqual(result["outcome"], "completed", (result, docker.calls))
+        self.assertEqual(
+            result["outcome"], "completed", (result, docker.calls)
+        )
         self.assertEqual(len(docker.containers), 1)
-        self.assertEqual(fixture.startup.call_args.kwargs["existing_container"], next(iter(docker.containers)))
+        self.assertEqual(
+            fixture.startup.call_args.kwargs["existing_container"],
+            next(iter(docker.containers)),
+        )
         self.assertFalse(
             any(
                 argv[1:3] in {("container", "stop"), ("container", "rm"), ("image", "rm")}
@@ -143,14 +188,20 @@ class LocalReleaseCleanupTests(unittest.TestCase):
             )
         )
 
-    def test_same_fingerprint_different_prior_image_is_replaced_before_candidate_launch(self) -> None:
+    def test_same_fingerprint_different_prior_image_is_replaced_before_candidate_launch(
+        self,
+    ) -> None:
         fixture, docker = self.fixture()
-        identifier, prior_image = docker.add("b", State={"Running": True, "Status": "running"})
+        identifier, prior_image = docker.add(
+            "b", State={"Running": True, "Status": "running"}
+        )
         self.assertNotEqual(prior_image, fixture.image_id)
         self.assertEqual("b" * 64, fixture.image.identity().fingerprint)
         calls: list[tuple[str, ...]] = []
 
-        def runner(argv: tuple[str, ...], root: Path) -> subprocess.CompletedProcess[str]:
+        def runner(
+            argv: tuple[str, ...], root: Path
+        ) -> subprocess.CompletedProcess[str]:
             calls.append(argv)
             if argv[:2] == ("docker", "ps"):
                 return subprocess.CompletedProcess(argv, 0, identifier, "")
@@ -168,11 +219,19 @@ class LocalReleaseCleanupTests(unittest.TestCase):
         with (
             patch(
                 "LAYER_2_LOCAL_RELEASE_C63.local_release_runner._launcher_image",
-                side_effect=self._launcher_image(fixture, prior_image, fixture.image_id),
+                side_effect=self._launcher_image(
+                    fixture, prior_image, fixture.image_id
+                ),
             ),
         ):
-            result = run_local_release(fixture.root, run_id="replace-same-fingerprint", runner=runner)
-        self.assertEqual("completed_with_cleanup_pending", result["outcome"], (result, docker.calls))
+            result = run_local_release(
+                fixture.root, run_id="replace-same-fingerprint", runner=runner
+            )
+        self.assertEqual(
+            "completed_with_cleanup_pending",
+            result["outcome"],
+            (result, docker.calls),
+        )
         self.assertNotIn(("docker", "image", "rm", prior_image), docker.calls)
         self._assert_prior_replacement(calls, docker, identifier, prior_image)
 
@@ -180,18 +239,26 @@ class LocalReleaseCleanupTests(unittest.TestCase):
         fixture, docker = self.fixture()
         docker.add("1")
 
-        def runner(argv: tuple[str, ...], root: Path) -> subprocess.CompletedProcess[str]:
+        def runner(
+            argv: tuple[str, ...], root: Path
+        ) -> subprocess.CompletedProcess[str]:
             if argv[0] == "docker":
                 return docker.run(argv, root)
             return self._successful_host_command(argv)
 
         fixture.startup.side_effect = LocalReleaseError("start failed")
-        result = run_local_release(fixture.root, run_id="launch-failed", runner=runner)
+        result = run_local_release(
+            fixture.root, run_id="launch-failed", runner=runner
+        )
         self.assertEqual(result["outcome"], "failed")
         self.assertEqual(result["failed_step"], "start_mcp")
-        self.assertFalse(any(argv[1:3] == ("image", "rm") for argv in docker.calls))
+        self.assertFalse(
+            any(argv[1:3] == ("image", "rm") for argv in docker.calls)
+        )
         report = (fixture.root / str(result["report_path"])).read_text()
-        self.assertIn("Removed obsolete stopped Project container " + "1" * 64, report)
+        self.assertIn(
+            "Removed obsolete stopped Project container " + "1" * 64, report
+        )
 
     def test_prior_path_does_not_retry_pre_start_removal_failure(self) -> None:
         fixture, docker = self.fixture()
@@ -212,23 +279,39 @@ class LocalReleaseCleanupTests(unittest.TestCase):
         self.assertEqual(result["outcome"], "completed_with_cleanup_pending")
         self.assertEqual(sum(argv[1:3] == ("container", "rm") for argv in docker.calls), 1)
 
-    def test_failed_launcher_reports_exact_prior_running_container_removal(self) -> None:
+    def test_failed_launcher_reports_exact_prior_running_container_removal(
+        self,
+    ) -> None:
         fixture, docker = self.fixture()
-        identifier, image = docker.add("1", State={"Running": True, "Status": "running"})
+        identifier, image = docker.add(
+            "1", State={"Running": True, "Status": "running"}
+        )
 
-        def runner(argv: tuple[str, ...], root: Path) -> subprocess.CompletedProcess[str]:
+        def runner(
+            argv: tuple[str, ...], root: Path
+        ) -> subprocess.CompletedProcess[str]:
             if argv[:2] == ("docker", "ps"):
-                return subprocess.CompletedProcess(argv, 0, "\n".join(docker.containers), "")
+                return subprocess.CompletedProcess(
+                    argv, 0, "\n".join(docker.containers), ""
+                )
             if argv[0] == "docker":
                 return docker.run(argv, root)
             return self._successful_host_command(argv)
 
         fixture.startup.side_effect = LocalReleaseError("start failed")
-        with patch("LAYER_2_LOCAL_RELEASE_C63.local_release_runner._launcher_image", return_value=image):
-            result = run_local_release(fixture.root, run_id="prior-failed", runner=runner)
+        with patch(
+            "LAYER_2_LOCAL_RELEASE_C63.local_release_runner._launcher_image",
+            return_value=image,
+        ):
+            result = run_local_release(
+                fixture.root, run_id="prior-failed", runner=runner
+            )
         self.assertEqual(result["outcome"], "failed")
         report = (fixture.root / str(result["report_path"])).read_text()
-        self.assertIn("Stopped and removed prior Project MCP container " + identifier, report)
+        self.assertIn(
+            "Stopped and removed prior Project MCP container " + identifier,
+            report,
+        )
 
     def test_post_smoke_does_not_retry_failed_prior_running_container_removal(self) -> None:
         fixture, docker = self.fixture()

@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-2544
+concern:
+  subject: "Projection"
+  path: "Model/Graph/Node//Artifact//Derived"
+  relation: "is_narrower_than"
 container:
   component: C45
 tier: 4
@@ -8,8 +12,8 @@ context:
   lens: SWD
 state:
   status: active
-  version: 17
-  updated_at: '2026-11-21T13:13:26.138497+00:00'
+  version: 18
+  updated_at: "2026-11-27T16:16:01.404965+00:00"
 ---
 ## Summary
 

@@ -11,8 +11,8 @@ relations:
   - AN-C-3193
 state:
   status: active
-  version: 4
-  updated_at: '2026-11-26T17:13:39.857096+00:00'
+  version: 5
+  updated_at: '2026-11-27T17:50:26.617704+00:00'
 concern:
   path: Model/Graph/Node//Artifact//SSOT//Prescribed/Content/Atom//Specification//.Header.Context
   relation: .
@@ -25,7 +25,7 @@ Declare Axiom Spec Template
 
 ## Semantics
 
-An Axiom states an accepted premise for the Project within the context of the Project Goal.
+An Axiom states an accepted premise for the Project within the context of the Project purpose.
 
 ## Formal Manifest
 

@@ -4,9 +4,15 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75._package__shared import verify_formal_chain
-from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_4_SPEC_COMPARISON_C88._package__shared import check_cli_spec
-from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_4_SPEC_COMPARISON_C88._package__shared import check_trace_spec
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75._package__shared import (
+    verify_formal_chain,
+)
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_4_SPEC_COMPARISON_C88._package__shared import (
+    check_cli_spec,
+)
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_4_SPEC_COMPARISON_C88._package__shared import (
+    check_trace_spec,
+)
 from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.SPEC_ENGINE_C75__tests.functional.test_cli_spec import (
     _CONTRACT, _MANIFEST, _SOLUTION, _carrier,
 )
@@ -37,7 +43,14 @@ class MixedCliTraceOperationsTests(unittest.TestCase):
             )
 
             def cli():
-                return check_cli_spec(root, 'C2', *pins, interface='suite', action='run', lean=lean)
+                return check_cli_spec(
+                    root,
+                    "C2",
+                    *pins,
+                    interface="suite",
+                    action="run",
+                    lean=lean,
+                )
 
             def trace():
                 return check_trace_spec(root, 'C2', *pins, action='render', lean=lean)
@@ -65,9 +78,13 @@ class MixedCliTraceOperationsTests(unittest.TestCase):
     def test_selects_cli_action_on_shared_interface(self):
         lean = os.environ.get('ANECHOIC_TEST_LEAN') or shutil.which('lean')
         if not lean:
-            self.skipTest('Lean executable unavailable')
-        inspect_contract = _CONTRACT.replace("action='run'", "action='inspect'")
-        inspect_solution = _SOLUTION.replace("action='run'", "action='inspect'").replace("'pass':", "'inspected':")
+            self.skipTest("Lean executable unavailable")
+        inspect_contract = _CONTRACT.replace(
+            "action='run'", "action='inspect'"
+        )
+        inspect_solution = _SOLUTION.replace(
+            "action='run'", "action='inspect'"
+        ).replace("'pass':", "'inspected':")
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             pins = (
@@ -77,9 +94,28 @@ class MixedCliTraceOperationsTests(unittest.TestCase):
                 _carrier(root, 'AN-S-3', 'decision', 'C2', '{IS_SOLUTION_FOR: [AN-S-2@1]}',
                          combined(_SOLUTION, inspect_solution)),
             )
-            for action, event in (('run', 'pass'), ('inspect', 'inspected')):
-                report = check_cli_spec(root, 'C2', *pins, interface='suite', action=action, lean=lean)
-                self.assertEqual({'matched'}, {row['status'] for row in report['directions'].values()})
-                self.assertIn(f' : {event} / output', report['mermaid'])
-            with self.assertRaisesRegex(ValueError, 'No CLI Contract for Action'):
-                check_cli_spec(root, 'C2', *pins, interface='suite', action='missing', lean=lean)
+            for action, event in (("run", "pass"), ("inspect", "inspected")):
+                report = check_cli_spec(
+                    root,
+                    "C2",
+                    *pins,
+                    interface="suite",
+                    action=action,
+                    lean=lean,
+                )
+                self.assertEqual(
+                    {"matched"},
+                    {row["status"] for row in report["directions"].values()},
+                )
+                self.assertIn(f" : {event} / output", report["mermaid"])
+            with self.assertRaisesRegex(
+                ValueError, "No CLI Contract for Action"
+            ):
+                check_cli_spec(
+                    root,
+                    "C2",
+                    *pins,
+                    interface="suite",
+                    action="missing",
+                    lean=lean,
+                )

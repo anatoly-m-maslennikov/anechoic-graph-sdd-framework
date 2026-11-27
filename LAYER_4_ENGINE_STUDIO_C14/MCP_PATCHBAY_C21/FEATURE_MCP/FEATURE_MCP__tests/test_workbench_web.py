@@ -17,7 +17,9 @@ FRONTEND_ROOT = MCP_ROOT.parents[1] / "IWE_CONSOLE_C43" / "APP_IWE_CONSOLE" / "F
 
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import WORKBENCH_PATH  # noqa: E402
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import ToolProtocolError  # noqa: E402
-from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import workbench_routes as routes  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import (  # noqa: E402
+    workbench_routes as routes,
+)
 
 
 PROJECT_NAME = "anechoic"
@@ -36,7 +38,8 @@ class WorkbenchWebTests(unittest.TestCase):
         (frontend / "assets").mkdir()
         (frontend / "assets" / "app.js").write_text("// fixture")
         (frontend / "index.html").write_text(
-            f'<div id="app"></div><script src="{IWE_CONSOLE_PATH}/assets/app.js"></script>'
+            '<!doctype html><html><head></head><body><div id="app"></div>'
+            f'<script src="{IWE_CONSOLE_PATH}/assets/app.js"></script></body></html>'
         )
         self.routes = partial(routes, frontend=frontend)
         self.addCleanup(self._temporary.cleanup)
@@ -46,9 +49,18 @@ class WorkbenchWebTests(unittest.TestCase):
         gateway.selection.project_name = "assets"
         with TestClient(Starlette(routes=self.routes(gateway))) as client:
             for prefix in (IWE_CONSOLE_PATH, WORKBENCH_PATH):
-                self.assertEqual(200, client.get(f"{prefix}/assets").status_code)
-                self.assertEqual(200, client.post(f"{prefix}/assets/check", json={"sql": "SELECT 1"}).status_code)
-                self.assertEqual(200, client.get(f"{prefix}/assets/app.js").status_code)
+                self.assertEqual(
+                    200, client.get(f"{prefix}/assets").status_code
+                )
+                self.assertEqual(
+                    200,
+                    client.post(
+                        f"{prefix}/assets/check", json={"sql": "SELECT 1"}
+                    ).status_code,
+                )
+                self.assertEqual(
+                    200, client.get(f"{prefix}/assets/app.js").status_code
+                )
 
     def test_project_api_and_legacy_routes_share_handlers_and_binding(self):
         gateway = FakeGateway()
@@ -96,7 +108,10 @@ class WorkbenchWebTests(unittest.TestCase):
 
     def test_diagnostic_failure_preserves_original_error(self):
         gateway = FakeGateway()
-        with patch("MCP_PATCHBAY_C21.FEATURE_MCP.mcp_startup_boundary.logger.warning", side_effect=RuntimeError("secret sink detail")):
+        with patch(
+            "MCP_PATCHBAY_C21.FEATURE_MCP.mcp_startup_boundary.logger.warning",
+            side_effect=RuntimeError("secret sink detail"),
+        ):
             with TestClient(Starlette(routes=self.routes(gateway))) as client:
                 response = client.post(f"{API_PATH}/run", json={"sql": "bad"})
         self.assertEqual(400, response.status_code)
@@ -121,8 +136,13 @@ class WorkbenchWebTests(unittest.TestCase):
         self.assertEqual(
             {
                 "query_id": "query-1",
-                "columns": [{"name": "item", "type": "VARCHAR"}, {"name": "item", "type": "VARCHAR"}],
-                "rows": [[f"λ-{index}", f"value-{index}"] for index in range(100)],
+                "columns": [
+                    {"name": "item", "type": "VARCHAR"},
+                    {"name": "item", "type": "VARCHAR"},
+                ],
+                "rows": [
+                    [f"λ-{index}", f"value-{index}"] for index in range(100)
+                ],
                 "row_count": 1024,
                 "column_count": 2,
                 "offset": 0,
@@ -183,16 +203,23 @@ class WorkbenchWebTests(unittest.TestCase):
             response = client.get(PROJECT_PATH)
             self.assertEqual(503, response.status_code)
             self.assertEqual(
-                {"error": "Workbench frontend is unavailable; build required"}, response.json()
+                {"error": "Workbench frontend is unavailable; build required"},
+                response.json(),
             )
             self.assertEqual(
                 1,
-                client.post(f"{PROJECT_PATH}/check", json={"sql": "SELECT 1"}).json()["row_count"],
+                client.post(
+                    f"{PROJECT_PATH}/check", json={"sql": "SELECT 1"}
+                ).json()["row_count"],
             )
 
     def test_standalone_codex_chat_route_is_disabled(self):
-        with TestClient(Starlette(routes=self.routes(FakeGateway()))) as client:
-            self.assertEqual(404, client.get(f"{PROJECT_PATH}/codex").status_code)
+        with TestClient(
+            Starlette(routes=self.routes(FakeGateway()))
+        ) as client:
+            self.assertEqual(
+                404, client.get(f"{PROJECT_PATH}/codex").status_code
+            )
 
     def test_workspace_interface_uses_the_shared_native_operation_and_public_url(self):
         with TestClient(Starlette(routes=self.routes(FakeGateway())), base_url="http://workbench.test") as client:
@@ -269,7 +296,9 @@ class WorkbenchWebTests(unittest.TestCase):
             assets = re.findall(r'(?:src|href)="([^"?#]+)', index.read_text())
             self.assertTrue(assets)
             for asset in assets:
-                self.assertTrue(asset.startswith(f"{IWE_CONSOLE_PATH}/assets/"))
+                self.assertTrue(
+                    asset.startswith(f"{IWE_CONSOLE_PATH}/assets/")
+                )
                 self.assertNotIn("/assets/assets/", asset)
                 self.assertEqual(200, client.get(asset).status_code, asset)
 
@@ -291,7 +320,9 @@ class WorkbenchWebTests(unittest.TestCase):
             failure = client.post(f"{PROJECT_PATH}/run", json={"project_root": "/project", "sql": "bad"})
             self.assertEqual(400, failure.status_code)
             self.assertEqual({"error": "bad query"}, failure.json())
-        self.assertEqual(["/project", "/project", "/project", "/project"], gateway.roots)
+        self.assertEqual(
+            ["/project", "/project", "/project", "/project"], gateway.roots
+        )
 
 
 if __name__ == "__main__":

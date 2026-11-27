@@ -26,7 +26,11 @@ class RegistryContribution:
 
 def _unsupported_metadata(source: str) -> None:
     print(
-        f"Workbench: {source}: unsupported Python relation metadata; link skipped",
+        (
+            "Workbench: "
+            f"{source}"
+            ": unsupported Python relation metadata; link skipped"
+        ),
         file=sys.stderr,
     )
 

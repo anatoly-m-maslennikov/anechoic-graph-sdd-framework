@@ -76,7 +76,10 @@ def bind_ordering_declarations(declarations):
         address = canonical_model_address(f"{base}.{name}")
         if canonical_model_address(subject) != address:
             raise ValueError(
-                f"Ordering Declaration does not match its Main Subject: {subject}"
+                (
+                    "Ordering Declaration does not match its Main Subject: "
+                    f"{subject}"
+                )
             )
         roles = _ordering_roles(args)
         key = (address, roles)

@@ -12,9 +12,12 @@ from watchdog.observers.polling import PollingObserver
 
 
 def polling_source_watcher():
-    """Use filesystem snapshots for transport fixtures that run in a sandbox."""
+    "Use filesystem snapshots for transport fixtures that run in a sandbox."
     return patch(
-        "FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.source_watcher__pub.NativeObserver",
+        (
+            "FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.source_watcher__p"
+            "ub.NativeObserver"
+        ),
         PollingObserver,
     )
 

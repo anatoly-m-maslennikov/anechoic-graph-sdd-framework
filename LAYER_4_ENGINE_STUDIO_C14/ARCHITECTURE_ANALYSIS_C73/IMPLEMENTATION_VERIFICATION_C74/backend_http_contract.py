@@ -157,17 +157,27 @@ def contract_to_lean(path: Path) -> str:
         raise ValueError("expected exactly one python contract formal claim")
     args = _call(fences[0][1])
     rows = _rows(args)
+    return _render_contract(rows, _checks(args))
+
+
+def _render_contract(rows, checks):
     values = ", ".join(
         f'("{name}", {status}, "{kind}")' for name, status, kind in rows
     )
-    checks = _checks(args)
     check_values = ", ".join(
-        f"({_lean_string(name)}, [{', '.join(_lean_string(value) for value in items)}])"
+        (
+            "("
+            f"{_lean_string(name)}"
+            ", ["
+            f"{', '.join((_lean_string(value) for value in items))}"
+            "])"
+        )
         for name, items in checks
     )
     return (
         "namespace BackendHttpContract\n"
         f"def expected : List (String × Nat × String) := [{values}]\n"
-        f"def expectedChecks : List (String × List String) := [{check_values}]\n"
+        "def expectedChecks : List (String × List String) := "
+        f"[{check_values}]\n"
         "end BackendHttpContract\n"
     )

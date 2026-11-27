@@ -28,10 +28,16 @@ class NativeModelClaimTests(unittest.TestCase):
             'declare_entity(entity_name="Component Manifest", instance=', '').replace('None))', 'None)')
         self.assertEqual(fields, parse_component_manifest_fields(short))
         self.assertIsNone(parse_component_manifest(formal)[1])
-        self.assertIsNone(parse_component_manifest('## Purpose\n\n' + formal)[1])
-        legacy = '## Claim\n\n### Component ID\n\nAN-C-14\n\n### Name\n\nExample\n'
-        self.assertEqual(({'component_id': 'AN-C-14', 'name': 'Example'}, None),
-                         parse_component_manifest(legacy))
+        self.assertIsNone(
+            parse_component_manifest("## Purpose\n\n" + formal)[1]
+        )
+        legacy = (
+            "## Claim\n\n### Component ID\n\nAN-C-14\n\n### Name\n\nExample\n"
+        )
+        self.assertEqual(
+            ({"component_id": "AN-C-14", "name": "Example"}, None),
+            parse_component_manifest(legacy),
+        )
         invalid = (body + '\n## Purpose\nAgain\n', body + '\n' + formal,
                    formal + '\n## Claim\n', formal.replace('## Formal manifest', '### Formal manifest'),
                    formal.replace('```python', '```text'), formal + '\n```python\npass\n```\n',
@@ -78,12 +84,16 @@ class NativeModelClaimTests(unittest.TestCase):
     def test_aspect_instance_requires_full_matching_structure_address(self):
         prefix = ('from anechoic.formal_claims import declare_entity\n'
                   'from anechoic.model import Aspect\n')
-        address = 'PROJECT STRUCTURE//ANECHOIC <+ Aspects <+ Engineering <+ Schema'
+        address = (
+            "PROJECT STRUCTURE//ANECHOIC <+ Aspects <+ Engineering <+ Schema"
+        )
         call = f'declare_entity(entity_name="Schema", instance=Aspect(address={address!r}))'
         result = parse_native_model_claim(prefix + call)
         self.assertEqual({"type": "Aspect", "fields": {"address": address}},
                          result["arguments"]["instance"])
-        self.assertEqual(address, validate_aspect_instance(result["arguments"]))
+        self.assertEqual(
+            address, validate_aspect_instance(result["arguments"])
+        )
         spaced = call.replace(address, 'PROJECT STRUCTURE // ANECHOIC  <+  Aspects <+ Engineering <+ Schema')
         self.assertEqual(address, validate_aspect_instance(parse_native_model_claim(prefix + spaced)["arguments"]))
         invalid = (

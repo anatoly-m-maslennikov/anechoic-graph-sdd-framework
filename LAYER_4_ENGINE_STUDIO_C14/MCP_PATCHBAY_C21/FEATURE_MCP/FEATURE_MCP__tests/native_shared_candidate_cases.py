@@ -21,7 +21,10 @@ from mcp.client.streamable_http import streamable_http_client
 from .FEATURE_MCP__tests__shared import write_manifest
 from .native_shared_core_recovery import KILL_CHILD, assert_core_recovery
 from .workbench_docker_support import defer_container_cleanup, docker_deadline_env, image_timeout, observing
-from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import HEALTH_PATH, MCP_PATH
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import (
+    HEALTH_PATH,
+    MCP_PATH,
+)
 
 
 _MCP_MODULE = "MCP_PATCHBAY_C21.FEATURE_MCP.shared_http_server"
@@ -29,8 +32,12 @@ _BETA_BACKEND_MODULE = "API_MIXER_beta_C91.shared_runtime"
 
 
 class SharedCandidateCases:
-    def test_shared_candidate_isolates_projects_and_recovers_after_refusal(self):
-        directory = self.enterContext(tempfile.TemporaryDirectory(prefix="shared-candidate-"))
+    def test_shared_candidate_isolates_projects_and_recovers_after_refusal(
+        self,
+    ):
+        directory = self.enterContext(
+            tempfile.TemporaryDirectory(prefix="shared-candidate-")
+        )
         host = Path(directory).resolve()
         projects = self._shared_projects(host)
         endpoint = self._start_shared_candidate(host, projects)
@@ -39,8 +46,17 @@ class SharedCandidateCases:
         except Exception:
             with suppress(OSError, subprocess.SubprocessError):
                 logs = subprocess.run(
-                    ["docker", "logs", "--tail", "60", self._shared_candidate_container],
-                    timeout=image_timeout(10), capture_output=True, text=True, check=True,
+                    [
+                        "docker",
+                        "logs",
+                        "--tail",
+                        "60",
+                        self._shared_candidate_container,
+                    ],
+                    timeout=image_timeout(10),
+                    capture_output=True,
+                    text=True,
+                    check=True,
                 )
                 print(logs.stdout + logs.stderr, file=sys.stderr)
             raise
@@ -66,7 +82,9 @@ class SharedCandidateCases:
             timeout=image_timeout(10), text=True,
         )
         env = set(json.loads(environment))
-        self._shared_candidate_beta_next = "ANECHOIC_RUNTIME_STACK=beta_next" in env
+        self._shared_candidate_beta_next = (
+            "ANECHOIC_RUNTIME_STACK=beta_next" in env
+        )
         self._shared_candidate_beta = self._shared_candidate_beta_next
         self._backend_module = _BETA_BACKEND_MODULE
         defaults = '\n[project_defaults]\nworkbench_storage="memory"\n' if self._shared_candidate_beta else ""
@@ -90,7 +108,9 @@ class SharedCandidateCases:
         self.assertRegex(container, r"\A[a-f0-9]{64}\Z")
         self._shared_candidate_container = container
         binding = subprocess.check_output(
-            ["docker", "port", container, "8092/tcp"], timeout=image_timeout(10), text=True,
+            ["docker", "port", container, "8092/tcp"],
+            timeout=image_timeout(10),
+            text=True,
         ).strip()
         self.assertRegex(binding, r"\A127\.0\.0\.1:[0-9]+\Z")
         base = f"http://{binding}"
@@ -127,7 +147,10 @@ class SharedCandidateCases:
                     {},
                     {"project_root": str(host)},
                     {"project_root": "relative/path"},
-                    {"project_root": str(projects / "alpha"), "caller_context": {"session_id": ""}},
+                    {
+                        "project_root": str(projects / "alpha"),
+                        "caller_context": {"session_id": ""},
+                    },
                 ):
                     with self.subTest(arguments=arguments):
                         result = await session.call_tool("query_run", {
@@ -150,7 +173,11 @@ class SharedCandidateCases:
         processes, listing = self._processes()
         mcp = self._one(processes, _MCP_MODULE, listing)
         beta = [item for item in processes if self._backend_module in item[2]]
-        current = [item for item in processes if "FEATURE_IWE_CONSOLE_BACKEND.shared_backend_process" in item[2]]
+        current = [
+            item
+            for item in processes
+            if "FEATURE_IWE_CONSOLE_BACKEND.shared_backend_process" in item[2]
+        ]
         self.assertEqual(1, len(beta) + len(current), listing)
         self.assertEqual(self._shared_candidate_beta, bool(beta), listing)
         if beta:
@@ -158,13 +185,26 @@ class SharedCandidateCases:
             owner_module = "ORCHESTRATOR_beta_C68.shared_peer_owner"
             owner = self._one(processes, owner_module, listing)
             self.assertEqual({mcp[1]}, {backend[1], owner[1]}, listing)
-            self.assertTrue(any(pid == mcp[1] and "docker/entrypoint.py" in command
-                                for pid, _, command in processes), listing)
-            peer_processes = self._assert_beta_processes(processes, backend[0], owner[0], listing)
-            return {_MCP_MODULE: mcp[0], self._backend_module: backend[0], "peer_processes": peer_processes}
+            self.assertTrue(
+                any(
+                    pid == mcp[1] and "docker/entrypoint.py" in command
+                    for pid, _, command in processes
+                ),
+                listing,
+            )
+            peer_processes = self._assert_beta_processes(
+                processes, backend[0], owner[0], listing
+            )
+            return {
+                _MCP_MODULE: mcp[0],
+                self._backend_module: backend[0],
+                "peer_processes": peer_processes,
+            }
         backend = current[0]
         self.assertEqual(mcp[0], backend[1], listing)
-        self._assert_current_processes(processes, backend[0], projects, listing)
+        self._assert_current_processes(
+            processes, backend[0], projects, listing
+        )
 
     def _restart_shared_child(self, endpoint, module, old_pid):
         container = self._shared_candidate_container
@@ -206,11 +246,21 @@ class SharedCandidateCases:
     def _assert_current_processes(self, processes, coordinator, projects, listing):
         self.assertFalse(any("FEATURE_IWE_CONSOLE_BACKEND.project_admission" in command
                              for _, _, command in processes), listing)
-        backends = [item for item in processes if "FEATURE_IWE_CONSOLE_BACKEND.backend_process" in item[2]]
-        kernels = [item for item in processes if "KERNEL_MIXER_C59.kernel_process" in item[2]]
+        backends = [
+            item
+            for item in processes
+            if "FEATURE_IWE_CONSOLE_BACKEND.backend_process" in item[2]
+        ]
+        kernels = [
+            item
+            for item in processes
+            if "KERNEL_MIXER_C59.kernel_process" in item[2]
+        ]
         self.assertEqual(2, len(backends), listing)
         self.assertEqual(2, len(kernels), listing)
-        self.assertEqual({coordinator}, {parent for _, parent, _ in backends}, listing)
+        self.assertEqual(
+            {coordinator}, {parent for _, parent, _ in backends}, listing
+        )
         self.assertEqual({pid for pid, _, _ in backends}, {parent for _, parent, _ in kernels}, listing)
         kernel_pids = {pid for pid, _, _ in kernels}
         self.assertTrue(all("manifest_compiler_CS1." in command for _, parent, command in processes
@@ -232,12 +282,17 @@ class SharedCandidateCases:
         self.assertEqual(2, len(kernels), listing)
         self.assertEqual(2, len(orchestrators), listing)
         self.assertEqual({owner}, {parent for _, parent, _ in kernels + orchestrators}, listing)
-        self.assertTrue(all("--database-path" not in command for _, _, command in kernels), listing)
+        self.assertTrue(
+            all("--database-path" not in command for _, _, command in kernels),
+            listing,
+        )
         def option(command, name):
             words = shlex.split(command)
             return words[words.index(name) + 1]
-        kernel_ids = {option(command, "--instance-id"): option(command, "--socket")
-                      for _, _, command in kernels}
+        kernel_ids = {
+            option(command, "--instance-id"): option(command, "--socket")
+            for _, _, command in kernels
+        }
         orchestrator_ids = {option(command, "--instance-id"): option(command, "--database-socket")
                             for _, _, command in orchestrators}
         self.assertEqual(2, len(kernel_ids), listing)

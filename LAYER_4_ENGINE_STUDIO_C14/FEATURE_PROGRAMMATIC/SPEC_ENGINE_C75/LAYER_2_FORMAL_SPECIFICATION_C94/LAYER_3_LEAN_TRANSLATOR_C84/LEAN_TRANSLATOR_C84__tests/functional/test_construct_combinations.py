@@ -7,7 +7,9 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75._package__shared import compile_workflow
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75._package__shared import (
+    compile_workflow,
+)
 from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_2_SPEC_READING_C83.SPECIFICATION_MODEL_C85._package__shared import (
     parse_trace_contract,
 )
@@ -20,42 +22,79 @@ from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER
 def transition(target, kind, observed=None, outcome=None, detail=None):
     params = {'kind': kind, 'target': observed, 'outcome': outcome}
     if detail is not None:
-        params['detail'] = detail
-    return {'target': target, 'guard': {'type': 'matchesTrace', 'params': params}}
+        params["detail"] = detail
+    return {
+        "target": target,
+        "guard": {"type": "matchesTrace", "params": params},
+    }
 
 
 def workflow(first, second, alternate=None):
     states = {
-        'start': {'on': {'first': first}},
-        'middle': {'on': {'second': second}},
-        'end': {'on': {'output': transition('done', 'output', outcome='ready')}},
-        'done': {'type': 'final'},
+        "start": {"on": {"first": first}},
+        "middle": {"on": {"second": second}},
+        "end": {
+            "on": {"output": transition("done", "output", outcome="ready")}
+        },
+        "done": {"type": "final"},
     }
     if alternate:
-        states['start']['on']['alternate'] = transition('done', 'output', outcome=alternate)
-    return {'action': 'run', **compile_workflow({'id': 'run', 'initial': 'start', 'states': states})['model']}
+        states["start"]["on"]["alternate"] = transition(
+            "done", "output", outcome=alternate
+        )
+    return {
+        "action": "run",
+        **compile_workflow(
+            {"id": "run", "initial": "start", "states": states}
+        )["model"],
+    }
 
 
 class ConstructCombinationTests(unittest.TestCase):
     def test_lean_evaluation_rejects_non_json_numeric_constants(self):
-        lean = os.environ.get('ANECHOIC_TEST_LEAN') or os.environ.get('LEAN_BIN') or shutil.which('lean')
-        self.assertTrue(lean, 'Set ANECHOIC_TEST_LEAN or LEAN_BIN, or put lean on PATH')
-        for token in ('NaN', 'Infinity', '-Infinity'):
-            with self.subTest(token=token), self.assertRaisesRegex(ValueError, 'invalid Lean output'):
+        lean = (
+            os.environ.get("ANECHOIC_TEST_LEAN")
+            or os.environ.get("LEAN_BIN")
+            or shutil.which("lean")
+        )
+        self.assertTrue(
+            lean, "Set ANECHOIC_TEST_LEAN or LEAN_BIN, or put lean on PATH"
+        )
+        for token in ("NaN", "Infinity", "-Infinity"):
+            with (
+                self.subTest(token=token),
+                self.assertRaisesRegex(ValueError, "invalid Lean output"),
+            ):
                 run_lean_json(f'#eval IO.println "[{token}]"', lean)
-        self.assertEqual([0, 2.5, 'NaN', None], run_lean_json('#eval IO.println r#"[0,2.5,"NaN",null]"#', lean))
+        self.assertEqual(
+            [0, 2.5, "NaN", None],
+            run_lean_json('#eval IO.println r#"[0,2.5,"NaN",null]"#', lean),
+        )
 
     def test_history_sensitive_comparison_is_unresolved(self):
-        lean = os.environ.get('ANECHOIC_TEST_LEAN') or os.environ.get('LEAN_BIN') or shutil.which('lean')
-        self.assertTrue(lean, 'Set ANECHOIC_TEST_LEAN or LEAN_BIN, or put lean on PATH')
-        contract = {'action': 'run', 'output': 'ready', 'must_effect': [('query', 'done')],
-                    'forbid_effect': ['publish'], 'must_precede': [(('query', 'done'), ('show', 'done'))]}
-        first = transition('middle', 'effect', 'query', 'done')
-        second = transition('end', 'effect', 'show', 'done')
-        first['guard']['params']['bind'] = {'request': 'request_id'}
-        second['guard']['params']['same_as'] = {'reply_id': 'request'}
+        lean = (
+            os.environ.get("ANECHOIC_TEST_LEAN")
+            or os.environ.get("LEAN_BIN")
+            or shutil.which("lean")
+        )
+        self.assertTrue(
+            lean, "Set ANECHOIC_TEST_LEAN or LEAN_BIN, or put lean on PATH"
+        )
+        contract = {
+            "action": "run",
+            "output": "ready",
+            "must_effect": [("query", "done")],
+            "forbid_effect": ["publish"],
+            "must_precede": [(("query", "done"), ("show", "done"))],
+        }
+        first = transition("middle", "effect", "query", "done")
+        second = transition("end", "effect", "show", "done")
+        first["guard"]["params"]["bind"] = {"request": "request_id"}
+        second["guard"]["params"]["same_as"] = {"reply_id": "request"}
         program = _program(contract, workflow(first, second))
-        self.assertEqual(['matched'] + ['unresolved'] * 4, run_lean_json(program, lean))
+        self.assertEqual(
+            ["matched"] + ["unresolved"] * 4, run_lean_json(program, lean)
+        )
 
     def test_json_number_equality_and_bounds(self):
         lean = os.environ.get('ANECHOIC_TEST_LEAN') or os.environ.get('LEAN_BIN') or shutil.which('lean')
@@ -82,24 +121,44 @@ example : detailImplies "{\"at_most\":1}" "{\"at_most\":2}" = true := by native_
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / 'Numbers.lean'
             path.write_text(program)
-            result = subprocess.run([lean, str(path)], capture_output=True, text=True, timeout=45, check=False)
+            result = subprocess.run(
+                [lean, str(path)],
+                capture_output=True,
+                text=True,
+                timeout=45,
+                check=False,
+            )
         self.assertEqual(0, result.returncode, result.stdout + result.stderr)
 
     def test_generated_trace_combinations(self):
         lean = os.environ.get('ANECHOIC_TEST_LEAN') or os.environ.get('LEAN_BIN') or shutil.which('lean')
         self.assertTrue(lean, 'Set ANECHOIC_TEST_LEAN or LEAN_BIN, or put lean on PATH')
         programs, expected = [], []
-        contract = parse_trace_contract("declare_trace_contract(action='run', output='ready', "
+        contract = parse_trace_contract(
+            "declare_trace_contract(action='run', output='ready', "
             "must_effect=(('convert', 'done', {'version': 'current'}),), "
             "must_precede=((('convert', 'done', {'version': 'old'}), "
-            "('convert', 'done', {'version': 'current'})),))")
-        for first, second in itertools.product(('old', 'current'), repeat=2):
-            first_edge = transition('middle', 'effect', 'convert', 'done', {'version': first})
-            second_edge = transition('end', 'effect', 'convert', 'done', {'version': second})
-            programs.append(_program(contract, workflow(first_edge, second_edge)))
-            effect = 'matched' if 'current' in (first, second) else 'conflicting'
-            order = 'matched' if (first, second) in (('old', 'old'), ('old', 'current')) else 'conflicting'
-            expected.append(['matched', effect, order, 'matched'])
+            "('convert', 'done', {'version': 'current'})),))"
+        )
+        for first, second in itertools.product(("old", "current"), repeat=2):
+            first_edge = transition(
+                "middle", "effect", "convert", "done", {"version": first}
+            )
+            second_edge = transition(
+                "end", "effect", "convert", "done", {"version": second}
+            )
+            programs.append(
+                _program(contract, workflow(first_edge, second_edge))
+            )
+            effect = (
+                "matched" if "current" in (first, second) else "conflicting"
+            )
+            order = (
+                "matched"
+                if (first, second) in (("old", "old"), ("old", "current"))
+                else "conflicting"
+            )
+            expected.append(["matched", effect, order, "matched"])
 
         bound = parse_trace_contract("declare_trace_contract(action='run', output='ready', "
             "must_effect=(('query', 'done', {'rows': {'at_most': 2}}),))")

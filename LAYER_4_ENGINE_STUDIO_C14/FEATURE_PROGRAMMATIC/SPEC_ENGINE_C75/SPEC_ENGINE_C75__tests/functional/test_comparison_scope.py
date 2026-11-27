@@ -68,33 +68,76 @@ class ComparisonScopeTests(unittest.TestCase):
         self.root = Path(directory.name)
 
     def check(self, contract, solution, boundaries, action=None):
-        manifest = _manifest(self.root, 'AN-S-1', 'C1', 'C2', contract, boundaries)
-        candidate = _carrier(self.root, 'AN-S-2', 'solution', 'C2', '{ANSWERS: [AN-S-1@1]}',
-                             f'## Claim\n\n### Formal Claim\n\n{solution}')
-        return verify_formal_chain(self.root, 'C2', manifest, candidate, action=action, lean=self.lean)
+        manifest = _manifest(
+            self.root, "AN-S-1", "C1", "C2", contract, boundaries
+        )
+        candidate = _carrier(
+            self.root,
+            "AN-S-2",
+            "solution",
+            "C2",
+            "{ANSWERS: [AN-S-1@1]}",
+            f"## Claim\n\n### Formal Claim\n\n{solution}",
+        )
+        return verify_formal_chain(
+            self.root, "C2", manifest, candidate, action=action, lean=self.lean
+        )
 
     def test_shape_comparison_reports_unchecked_logical_outcome(self):
-        for kind, values in (('must_effect', [('parser', 'called')]), ('forbid_effect', ['parser'])):
+        for kind, values in (
+            ("must_effect", [("parser", "called")]),
+            ("forbid_effect", ["parser"]),
+        ):
             with self.subTest(kind=kind):
-                io = {'class_shapes': _SHAPES,
-                      'server': {'compile': {'outcomes': {'done': {kind: values}}}}}
-                report = self.check(_fence('python shape', CONTRACT), _fence('python shape', SOLUTION), {'io': io})
-                self.assertEqual('matched', report['translation']['status'], report)
-                self.assertEqual('unresolved', report['status'], report)
-                self.assertEqual('unresolved', report['directions']['manifest_solution']['status'])
-                self.assertIn('boundaries.io.server.compile.outcomes.done',
-                              {gap['field'] for gap in report['unresolved']})
+                io = {
+                    "class_shapes": _SHAPES,
+                    "server": {
+                        "compile": {"outcomes": {"done": {kind: values}}}
+                    },
+                }
+                report = self.check(
+                    _fence("python shape", CONTRACT),
+                    _fence("python shape", SOLUTION),
+                    {"io": io},
+                )
+                self.assertEqual(
+                    "matched", report["translation"]["status"], report
+                )
+                self.assertEqual("unresolved", report["status"], report)
+                self.assertEqual(
+                    "unresolved",
+                    report["directions"]["manifest_solution"]["status"],
+                )
+                self.assertIn(
+                    "boundaries.io.server.compile.outcomes.done",
+                    {gap["field"] for gap in report["unresolved"]},
+                )
 
-    def test_trace_comparison_reports_unchecked_shape_only_for_whole_chain(self):
-        io = {'class_shapes': _SHAPES,
-              'server': {'compile': {'outcomes': {'done': {'must_effect': [('parser', 'called')]}}}}}
-        contract = _fence('python trace', _TRACE)
-        report = self.check(contract, _compile(), {'io': io})
-        self.assertEqual('unresolved', report['status'], report)
-        self.assertIn('boundaries.io.class_shapes', {gap['field'] for gap in report['unresolved']})
-        selected = self.check(contract, _compile(), {'io': io}, action='compile')
-        self.assertEqual('matched', selected['status'], selected)
-        self.assertEqual('compile', selected['evidence']['action'])
+    def test_trace_comparison_reports_unchecked_shape_only_for_whole_chain(
+        self,
+    ):
+        io = {
+            "class_shapes": _SHAPES,
+            "server": {
+                "compile": {
+                    "outcomes": {
+                        "done": {"must_effect": [("parser", "called")]}
+                    }
+                }
+            },
+        }
+        contract = _fence("python trace", _TRACE)
+        report = self.check(contract, _compile(), {"io": io})
+        self.assertEqual("unresolved", report["status"], report)
+        self.assertIn(
+            "boundaries.io.class_shapes",
+            {gap["field"] for gap in report["unresolved"]},
+        )
+        selected = self.check(
+            contract, _compile(), {"io": io}, action="compile"
+        )
+        self.assertEqual("matched", selected["status"], selected)
+        self.assertEqual("compile", selected["evidence"]["action"])
 
     def test_selects_tool_and_trace_actions_in_the_same_chain(self):
         contract = _fence('python contract', _TOOL) + '\n' + _fence('python trace', _TRACE)
@@ -108,15 +151,37 @@ class ComparisonScopeTests(unittest.TestCase):
                 self.assertTrue(any(fact['key'] == required and fact['status'] == 'matched' for fact in facts))
 
     def test_reports_unchecked_obligations_alongside_a_tool_conflict(self):
-        io = {'class_shapes': _SHAPES,
-              'server': {'invoke': {'outcomes': {'succeeded': {'must_effect': [('parser', 'called')]}}}}}
-        solution = _invoke({'operation': 'POST /tools'}, {'operation': 'POST /other'})
-        report = self.check(_fence('python contract', _TOOL), solution, {'io': io})
-        self.assertEqual('conflicting', report['status'], report)
-        required = {'boundaries.io.class_shapes', 'boundaries.io.server.invoke.outcomes.succeeded'}
-        self.assertEqual(required, {gap['field'] for gap in report['unresolved']})
-        facts = report['evidence']['coverage']
-        self.assertTrue(required <= {fact['key'] for fact in facts if fact['status'] == 'unresolved'})
+        io = {
+            "class_shapes": _SHAPES,
+            "server": {
+                "invoke": {
+                    "outcomes": {
+                        "succeeded": {"must_effect": [("parser", "called")]}
+                    }
+                }
+            },
+        }
+        solution = _invoke(
+            {"operation": "POST /tools"}, {"operation": "POST /other"}
+        )
+        report = self.check(
+            _fence("python contract", _TOOL), solution, {"io": io}
+        )
+        self.assertEqual("conflicting", report["status"], report)
+        required = {
+            "boundaries.io.class_shapes",
+            "boundaries.io.server.invoke.outcomes.succeeded",
+        }
+        self.assertEqual(
+            required, {gap["field"] for gap in report["unresolved"]}
+        )
+        facts = report["evidence"]["coverage"]
+        self.assertTrue(
+            required
+            <= {
+                fact["key"] for fact in facts if fact["status"] == "unresolved"
+            }
+        )
 
     def test_every_request_branch_must_support_the_declared_format(self):
         contract = _fence('python contract', _TOOL[:-1]
@@ -125,18 +190,31 @@ class ComparisonScopeTests(unittest.TestCase):
         json_request = {**request, 'request_format': 'json'}
         text_request = {**request, 'request_format': 'text'}
         for primary, alternate, status in (
-                (json_request, json_request, 'matched'),
-                (json_request, request, 'unresolved'),
-                (json_request, text_request, 'conflicting'),
-                (request, text_request, 'conflicting')):
-            with self.subTest(primary=primary, alternate=alternate, status=status):
-                report = self.check(contract, _invoke(primary, alternate),
-                                    {'state': {'reads': [], 'writes': []}}, action='invoke')
-                self.assertEqual('compared', report['outcome'], report.get('diagnostics'))
-                facts = report['directions']['manifest_solution']['facts']
-                fact = next(row for row in facts if row['key'] == 'interface.request_format')
-                self.assertEqual(status, fact['status'])
-                self.assertEqual(status, report['status'])
+            (json_request, json_request, "matched"),
+            (json_request, request, "unresolved"),
+            (json_request, text_request, "conflicting"),
+            (request, text_request, "conflicting"),
+        ):
+            with self.subTest(
+                primary=primary, alternate=alternate, status=status
+            ):
+                report = self.check(
+                    contract,
+                    _invoke(primary, alternate),
+                    {"state": {"reads": [], "writes": []}},
+                    action="invoke",
+                )
+                self.assertEqual(
+                    "compared", report["outcome"], report.get("diagnostics")
+                )
+                facts = report["directions"]["manifest_solution"]["facts"]
+                fact = next(
+                    row
+                    for row in facts
+                    if row["key"] == "interface.request_format"
+                )
+                self.assertEqual(status, fact["status"])
+                self.assertEqual(status, report["status"])
 
     def test_invalid_input_dispatch_is_checked_on_each_reachable_path(self):
         tool = _TOOL[:-1] + ", checks={'effects': {'invalid_input_dispatch': 'none'}})"
@@ -154,7 +232,9 @@ class ComparisonScopeTests(unittest.TestCase):
             with self.subTest(provider=provider, late=late):
                 after = dict(responses)
                 if late is not None:
-                    after['late_reject'] = _response('invalid_input', 400, 'typed_error', **late)
+                    after["late_reject"] = _response(
+                        "invalid_input", 400, "typed_error", **late
+                    )
                 states = {
                     'start': {'on': {'request': {'to': 'routing', 'expect': {
                         'kind': 'trigger', 'detail': {'operation': 'POST /tools'}}}}},
@@ -173,12 +253,19 @@ class ComparisonScopeTests(unittest.TestCase):
                             if row['key'] == 'effects.invalid_input_dispatch')
                 self.assertEqual(expected, fact['status'])
 
-    def test_provider_precondition_requires_evidence_on_each_dispatch_branch(self):
-        contract = _fence('python contract', _TOOL[:-1]
-                          + ", checks={'preconditions': {'project_binding': 'matching_instance'}})")
-        for detail, status in (({'matches_admitted_instance': True}, 'matched'),
-                               ({}, 'unresolved'),
-                               ({'matches_admitted_instance': False}, 'conflicting')):
+    def test_provider_precondition_requires_evidence_on_each_dispatch_branch(
+        self,
+    ):
+        contract = _fence(
+            "python contract",
+            _TOOL[:-1]
+            + ", checks={'preconditions': {'project_binding': 'matching_instance'}})",
+        )
+        for detail, status in (
+            ({"matches_admitted_instance": True}, "matched"),
+            ({}, "unresolved"),
+            ({"matches_admitted_instance": False}, "conflicting"),
+        ):
             with self.subTest(detail=detail):
                 states = {'start': {'on': {'request': {'to': 'routing', 'expect': {
                     'kind': 'trigger', 'detail': {'operation': 'POST /tools'}}}}},
@@ -202,13 +289,22 @@ class ComparisonScopeTests(unittest.TestCase):
         sql = {'statement_count': 1, 'read_only': True, 'cursor_metadata_only': True}
         complete = {**sql, 'uses_full_submitted_sql': True, 'uses_selected_project': True}
         for operation, evidence, status in (
-                ('run', complete, 'matched'),
-                ('run', sql, 'unresolved'),
-                ('run', {**sql, 'uses_full_submitted_sql': True}, 'unresolved'),
-                ('operation', complete, 'unresolved'),
-                ('run', {**complete, 'uses_full_submitted_sql': False}, 'conflicting'),
-                ('run', {**complete, 'uses_selected_project': False}, 'conflicting'),
-                ('run', {**sql, 'read_only': False}, 'conflicting')):
+            ("run", complete, "matched"),
+            ("run", sql, "unresolved"),
+            ("run", {**sql, "uses_full_submitted_sql": True}, "unresolved"),
+            ("operation", complete, "unresolved"),
+            (
+                "run",
+                {**complete, "uses_full_submitted_sql": False},
+                "conflicting",
+            ),
+            (
+                "run",
+                {**complete, "uses_selected_project": False},
+                "conflicting",
+            ),
+            ("run", {**sql, "read_only": False}, "conflicting"),
+        ):
             with self.subTest(operation=operation, evidence=evidence):
                 states = {'start': {'on': {'request': {'to': 'routing', 'expect': {
                     'kind': 'trigger', 'detail': {'operation': 'POST /tools'}}}}},

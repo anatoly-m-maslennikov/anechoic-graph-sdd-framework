@@ -11,8 +11,12 @@ from pathlib import Path
 from unittest.mock import NonCallableMock
 from unittest.mock import AsyncMock, patch
 
-from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.test_suite__shared import _release_canary as release_canary
-from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS import test_suite__shared as suite
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.test_suite__shared import (
+    _release_canary as release_canary,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS import (
+    test_suite__shared as suite,
+)
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.canary_test_support import assert_failed_queries, startup_run
 
 
@@ -134,11 +138,16 @@ class CanaryTests(unittest.TestCase):
         self.assertEqual("image", run.call_args.kwargs["phase"])
         self.assertEqual(image, run.call_args.kwargs["candidate_image"])
         canary.assert_called_once()
-        self.assertEqual("ANECHOIC_CANARY_ENDPOINT http://127.0.0.1:54321/anechoic/mcp\n", output.getvalue())
+        self.assertEqual(
+            "ANECHOIC_CANARY_ENDPOINT http://127.0.0.1:54321/anechoic/mcp\n",
+            output.getvalue(),
+        )
         report, = (root / ".anechoic_tmp/test_reports").glob("*.json")
         payload = json.loads(report.read_text())
         self.assertEqual("passed", payload["status"])
-        self.assertEqual("http://127.0.0.1:54321/anechoic/mcp", payload["canary_endpoint"])
+        self.assertEqual(
+            "http://127.0.0.1:54321/anechoic/mcp", payload["canary_endpoint"]
+        )
         with patch.object(sys, "argv", argv), patch.object(suite, "run_full_suite", return_value=1), \
              patch("sys.stderr", new_callable=io.StringIO), \
              patch.object(release_canary, "verify_candidate_image") as canary:
@@ -155,7 +164,9 @@ class CanaryTests(unittest.TestCase):
             stage.mkdir(parents=True, mode=0o700)
             package = stage / "package"
             package.mkdir()
-            self.assertEqual(stage, release_canary._workspace(root, package, "session-1"))
+            self.assertEqual(
+                stage, release_canary._workspace(root, package, "session-1")
+            )
             stage.chmod(0o755)
             with self.assertRaises(release_canary.CanaryError):
                 release_canary._workspace(root, package, "session-1")
@@ -175,7 +186,9 @@ class CanaryTests(unittest.TestCase):
         live = source / "tickets/current.md"
         live.write_text("active")
         release_canary._copy_tree(source, copy, skip_archives=True)
-        self.assertEqual("active", (copy / live.relative_to(source)).read_text())
+        self.assertEqual(
+            "active", (copy / live.relative_to(source)).read_text()
+        )
         self.assertFalse((copy / archive.relative_to(source)).exists())
 
     def test_rejects_invalid_selection_and_manifest_changes(self):

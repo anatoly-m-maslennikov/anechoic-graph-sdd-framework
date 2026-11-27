@@ -2,13 +2,19 @@ import os
 import unittest
 from unittest.mock import patch
 
-from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75._package__shared import verify_formal_chain
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75._package__shared import (
+    verify_formal_chain,
+)
 from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_4_SPEC_COMPARISON_C88._package__shared import (
     check_trace_spec,
     compare_obligations,
 )
 
-LEAN = os.environ.get('ANECHOIC_TEST_LEAN') or os.environ.get('LEAN_BIN') or 'lean'
+LEAN = (
+    os.environ.get("ANECHOIC_TEST_LEAN")
+    or os.environ.get("LEAN_BIN")
+    or "lean"
+)
 
 
 def order_model(early):
@@ -33,54 +39,104 @@ def order_model(early):
         'finish': edge('end', 'output'), 'end': {'type': 'final'}}}
     solution = f"component_workflow(component='C52',action='invoke',machine={machine!r})"
     return {
-        'component_id': 'C52',
-        'manifest': {'source': {'atom_id': 'M'}, 'boundaries': boundaries,
-                     'fields': {'component_id': 'C52', 'name': 'Core', 'boundaries': boundaries}},
-        'contract': {'source': {'atom_id': 'C'}, 'claims': [('python trace', contract)]},
-        'solution': {'source': {'atom_id': 'S'}, 'claims': [('python', solution)]},
+        "component_id": "C52",
+        "manifest": {
+            "source": {"atom_id": "M"},
+            "boundaries": boundaries,
+            "fields": {
+                "component_id": "C52",
+                "name": "Core",
+                "boundaries": boundaries,
+            },
+        },
+        "contract": {
+            "source": {"atom_id": "C"},
+            "claims": [("python trace", contract)],
+        },
+        "solution": {
+            "source": {"atom_id": "S"},
+            "claims": [("python", solution)],
+        },
     }
 
 
 class NumericUnicodeRegressionTests(unittest.TestCase):
     def test_equivalent_number_conflicts_before_approval(self):
-        for early, expected in ((1, 'conflicting'), (1.0, 'conflicting'),
-                                (True, 'matched'), (2, 'matched'), (1.0000000000000002, 'matched')):
+        for early, expected in (
+            (1, "conflicting"),
+            (1.0, "conflicting"),
+            (True, "matched"),
+            (2, "matched"),
+            (1.0000000000000002, "matched"),
+        ):
             with self.subTest(early=early):
                 source = order_model(early)
-                with patch('FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.formal_chain__pub.load_boundary_model', return_value=source):
-                    result = verify_formal_chain('.', 'C52', {}, {}, {}, lean=LEAN)
-                self.assertEqual('matched', result['translation']['status'])
-                fact = next(f for f in result['directions']['contract_solution']['facts']
-                            if f['key'] == 'must_precede')
-                self.assertEqual(expected, fact['status'])
+                with patch(
+                    "FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.formal_chain__pub.load_boundary_model",
+                    return_value=source,
+                ):
+                    result = verify_formal_chain(
+                        ".", "C52", {}, {}, {}, lean=LEAN
+                    )
+                self.assertEqual("matched", result["translation"]["status"])
+                fact = next(
+                    f
+                    for f in result["directions"]["contract_solution"]["facts"]
+                    if f["key"] == "must_precede"
+                )
+                self.assertEqual(expected, fact["status"])
 
     def test_non_printable_manifest_name_round_trips(self):
         source = order_model(2)
-        source['manifest']['fields']['name'] = 'Core\N{NO-BREAK SPACE}label'
-        with patch('FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.formal_chain__pub.load_boundary_model', return_value=source):
-            result = verify_formal_chain('.', 'C52', {}, {}, {}, lean=LEAN)
-        self.assertEqual('compared', result['outcome'])
-        self.assertEqual('matched', result['translation']['status'])
-        self.assertEqual('matched', result['status'])
+        source["manifest"]["fields"]["name"] = "Core\N{NO-BREAK SPACE}label"
+        with patch(
+            "FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.formal_chain__pub.load_boundary_model",
+            return_value=source,
+        ):
+            result = verify_formal_chain(".", "C52", {}, {}, {}, lean=LEAN)
+        self.assertEqual("compared", result["outcome"])
+        self.assertEqual("matched", result["translation"]["status"])
+        self.assertEqual("matched", result["status"])
 
     def test_non_printable_obligation_compares(self):
-        sources = {role: {'atom_id': role} for role in ('manifest', 'contract', 'solution')}
-        obligations = {role: {'label': 'Core\N{NO-BREAK SPACE}label'} for role in sources}
+        sources = {
+            role: {"atom_id": role}
+            for role in ("manifest", "contract", "solution")
+        }
+        obligations = {
+            role: {"label": "Core\N{NO-BREAK SPACE}label"} for role in sources
+        }
         result = compare_obligations(sources, obligations, lean=LEAN)
         self.assertEqual('matched', result['status'])
 
     def test_surrogate_effect_cannot_match_a_null_scalar(self):
         source = order_model(2)
-        name = 'write\x00'
-        source['manifest']['boundaries']['io']['server']['invoke']['outcomes']['done']['must_effect'][0][0] = name
-        language, contract = source['contract']['claims'][0]
-        source['contract']['claims'][0] = (language, contract.replace("'write'", repr(name)))
-        language, workflow = source['solution']['claims'][0]
-        loader = ('FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.'
-                  'LAYER_2_SPEC_READING_C83._package__shared.load_boundary_model')
+        name = "write\x00"
+        source["manifest"]["boundaries"]["io"]["server"]["invoke"]["outcomes"][
+            "done"
+        ]["must_effect"][0][0] = name
+        language, contract = source["contract"]["claims"][0]
+        source["contract"]["claims"][0] = (
+            language,
+            contract.replace("'write'", repr(name)),
+        )
+        language, workflow = source["solution"]["claims"][0]
+        loader = (
+            "FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94."
+            "LAYER_2_SPEC_READING_C83._package__shared.load_boundary_model"
+        )
         with patch(loader, return_value=source):
-            source['solution']['claims'][0] = (language, workflow.replace("'write'", repr(name)))
-            self.assertEqual('matched', check_trace_spec('.', 'C52', {}, {}, {}, lean=LEAN)['status'])
-            source['solution']['claims'][0] = (language, workflow.replace("'write'", repr('write\ud800')))
-            with self.assertRaisesRegex(ValueError, 'Unicode scalar values'):
-                check_trace_spec('.', 'C52', {}, {}, {}, lean=LEAN)
+            source["solution"]["claims"][0] = (
+                language,
+                workflow.replace("'write'", repr(name)),
+            )
+            self.assertEqual(
+                "matched",
+                check_trace_spec(".", "C52", {}, {}, {}, lean=LEAN)["status"],
+            )
+            source["solution"]["claims"][0] = (
+                language,
+                workflow.replace("'write'", repr("write\ud800")),
+            )
+            with self.assertRaisesRegex(ValueError, "Unicode scalar values"):
+                check_trace_spec(".", "C52", {}, {}, {}, lean=LEAN)

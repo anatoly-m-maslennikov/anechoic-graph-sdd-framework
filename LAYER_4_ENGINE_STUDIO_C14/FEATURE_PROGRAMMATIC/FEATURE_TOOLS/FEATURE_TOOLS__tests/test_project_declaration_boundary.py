@@ -36,7 +36,13 @@ class DeclarationBoundaryAuthorTests(unittest.TestCase):
         path = self.root / relative / "anechoic_project_settings.toml"
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(
-            f'[project]\nname="{name}"\n[paths]\ncontrol_root="{declared or path.parent.name}"\n'
+            (
+                '[project]\nname="'
+                f"{name}"
+                '"\n[paths]\ncontrol_root="'
+                f"{declared or path.parent.name}"
+                '"\n'
+            )
         )
         return path
 

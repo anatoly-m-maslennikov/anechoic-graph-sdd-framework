@@ -44,6 +44,18 @@ def _call_detail(expect, manifest):
     return {**{key: detail[key] for key in detail.keys() - HTTP_BINDING_INPUTS}, **binding}
 
 
+def _binding_fields(transport, manifest, manifest_pin):
+    fields = (_TRACE_BINDING | HTTP_BINDING_INPUTS
+              if transport == 'http' else _TRACE_BINDING)
+    if manifest or manifest_pin:
+        fields = fields | {'manifest'}
+        if manifest and transport == 'cli':
+            fields |= _CLI_BINDING
+        elif manifest and transport == 'http':
+            fields.add('request_fields')
+    return fields
+
+
 def _requirement(workflow, event, interface=None, *, caller_action=None, manifest=False, manifest_pin=False, sibling=False):
     if caller_action is None:
         operations = workflow.get('operations', {'': workflow}).values()
@@ -52,10 +64,17 @@ def _requirement(workflow, event, interface=None, *, caller_action=None, manifes
     selected = [row['expect'] for model in operations for state in model.get('states', [])
                 for row in state['transitions'] if row['event'] == event]
     if interface is not None and any(
-            expect.get('detail', {}).get('interface') != interface for expect in selected):
-        raise ValueError(f'The selected event does not use interface {interface}')
-    if (not selected or selected[0]['kind'] != 'effect'
-            or any(not json_equal(expect, selected[0]) for expect in selected[1:])):
+        expect.get("detail", {}).get("interface") != interface
+        for expect in selected
+    ):
+        raise ValueError(
+            f"The selected event does not use interface {interface}"
+        )
+    if (
+        not selected
+        or selected[0]["kind"] != "effect"
+        or any(not json_equal(expect, selected[0]) for expect in selected[1:])
+    ):
         return {}
     expect = selected[0]
     detail = _call_detail(expect, manifest or sibling)
@@ -67,13 +86,7 @@ def _requirement(workflow, event, interface=None, *, caller_action=None, manifes
     if sibling and transport is None and 'entry' in detail:
         detail = {**detail, 'transport': 'in_process'}
         transport = 'in_process'
-    fields = _TRACE_BINDING | HTTP_BINDING_INPUTS if transport == 'http' else _TRACE_BINDING
-    if manifest or manifest_pin:
-        fields = fields | {'manifest'}
-        if manifest and transport == 'cli':
-            fields |= _CLI_BINDING
-        elif manifest and transport == 'http':
-            fields.add('request_fields')
+    fields = _binding_fields(transport, manifest, manifest_pin)
     qualifiers = {key: value for key, value in detail.items() if key not in fields and key not in names}
     if qualifiers:
         effect = (*effect, qualifiers)
@@ -170,9 +183,17 @@ def _add_outcome_binding(provider, compiled, required, obligations):
     fields = tuple(key for key in ('interface', 'transport', 'entry', 'endpoint', 'route_name') if key in required)
     binding = _offered_bindings(compiled['claims'], required, fields, required['action'])
     for role, facts in binding.items():
-        obligations[role].update({key: facts[key] for key in fields if key in facts})
-    private_fields = {key for key in fields if key not in binding['contract']} if provider.get('embedded_contract') else set()
-    obligations['contract'].update({key: required[key] for key in private_fields})
+        obligations[role].update(
+            {key: facts[key] for key in fields if key in facts}
+        )
+    private_fields = (
+        {key for key in fields if key not in binding["contract"]}
+        if provider.get("embedded_contract")
+        else set()
+    )
+    obligations["contract"].update(
+        {key: required[key] for key in private_fields}
+    )
     return private_fields
 
 
@@ -182,13 +203,24 @@ def _check_outcome(caller, caller_id, caller_issues, provider, *, event, lean, i
                             sibling=interface is not None)
     selected_provider = select_formal_claims(provider, required['action']) if required.get('action') else provider
     compiled = compile_lean(selected_provider)
-    sources = {'caller': caller['source'],
-               **{role: provider[role]['source'] for role in ('manifest', 'contract', 'solution')}}
-    obligations = {role: {'component': provider['component_id'], **(facts or {})}
-                   for role, facts in _offerings(compiled, provider, required, lean, interface).items()}
-    if 'manifest' in required:
-        source = provider['manifest']['source']
-        ref = derive_atom_ref(source['atom_id'], source['version'], source['status'])
+    sources = {
+        "caller": caller["source"],
+        **{
+            role: provider[role]["source"]
+            for role in ("manifest", "contract", "solution")
+        },
+    }
+    obligations = {
+        role: {"component": provider["component_id"], **(facts or {})}
+        for role, facts in _offerings(
+            compiled, provider, required, lean, interface
+        ).items()
+    }
+    if "manifest" in required:
+        source = provider["manifest"]["source"]
+        ref = derive_atom_ref(
+            source["atom_id"], source["version"], source["status"]
+        )
         for facts in obligations.values():
             facts['manifest'] = ref
     private_fields = interface is not None and _add_outcome_binding(provider, compiled, required, obligations)
@@ -230,11 +262,24 @@ def _manifest_outcome(child, contract, required, lean):
 
 def _check_manifest_outcome(root, parent_manifest, parent_solution, child_id, pin, *, event, caller_action, lean):
     caller, workflow, child, contract, issues, unresolved = load_manifest_call(
-        root, parent_manifest, parent_solution, child_id, pin)
-    required = _requirement(workflow, event, caller_action=caller_action, manifest=True)
-    offered = _manifest_outcome(child, contract, required, lean) if not issues else {}
-    report = compare_manifest_call(caller, child, required, offered, issues, unresolved, lean=lean)
-    return {**report, 'event': event, 'unmodeled': ['Exact call argument and return values']}
+        root, parent_manifest, parent_solution, child_id, pin
+    )
+    required = _requirement(
+        workflow, event, caller_action=caller_action, manifest=True
+    )
+    offered = (
+        _manifest_outcome(child, contract, required, lean)
+        if not issues
+        else {}
+    )
+    report = compare_manifest_call(
+        caller, child, required, offered, issues, unresolved, lean=lean
+    )
+    return {
+        **report,
+        "event": event,
+        "unmodeled": ["Exact call argument and return values"],
+    }
 
 
 def check_child_outcome(root, parent_solution, child_id, child_pins, *, event, parent_manifest=None,
@@ -260,13 +305,21 @@ def check_sibling_outcome(root, caller_pins, provider_id, provider_pins, *, even
     caller = _load_sibling_caller(root, caller_pins)
     caller_id = caller['component_id']
     provider = load_boundary_model(root, provider_id, *provider_pins)
-    workflow, _ = normalize_claim('solution', caller['solution'], caller_id)
-    required = _requirement(workflow or {}, event, caller_action=caller_action, sibling=True)
-    route = {key: required[key] for key in ('endpoint', 'route_name') if key in required} or None
-    _require_sibling(caller, provider, interface, route, transport=required.get('transport'))
-    boundaries = provider['manifest']['boundaries']
-    io = boundaries.get('io') if isinstance(boundaries, dict) else None
-    servers = io.get('server') if isinstance(io, dict) else None
+    workflow, _ = normalize_claim("solution", caller["solution"], caller_id)
+    required = _requirement(
+        workflow or {}, event, caller_action=caller_action, sibling=True
+    )
+    route = {
+        key: required[key]
+        for key in ("endpoint", "route_name")
+        if key in required
+    } or None
+    _require_sibling(
+        caller, provider, interface, route, transport=required.get("transport")
+    )
+    boundaries = provider["manifest"]["boundaries"]
+    io = boundaries.get("io") if isinstance(boundaries, dict) else None
+    servers = io.get("server") if isinstance(io, dict) else None
     if not isinstance(servers, dict) or interface not in servers:
         raise ValueError(f'{provider_id} does not declare server {interface}')
     issues = [issue for issue in caller['issues'] if issue.startswith('solution:')]

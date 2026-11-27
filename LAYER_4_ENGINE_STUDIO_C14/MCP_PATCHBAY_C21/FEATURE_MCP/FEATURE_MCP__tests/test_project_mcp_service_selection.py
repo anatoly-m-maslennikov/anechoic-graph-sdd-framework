@@ -13,7 +13,9 @@ from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import (  # noqa: E402
     HEALTH_PATH,
     MCP_PATH,
 )
-from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import BackendError  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import (  # noqa
+    BackendError,
+)
 from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import (  # noqa: E402
     ProjectMcpBackend,
 )

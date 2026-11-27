@@ -8,8 +8,8 @@ context:
   lens: SWD
 state:
   status: active
-  version: 24
-  updated_at: 2026-11-02 19:46:47 +0400
+  version: 25
+  updated_at: "2026-11-27T16:29:34.309627+00:00"
 ---
 ## Summary
 
@@ -23,7 +23,7 @@ use this Method **when** `TARGET_SET` **must** resolve identities **or** governe
 
 ## Procedure
 
-1. confirm that `TARGET_SET` is registered as one `unordered_unit` Finder owned immediately by `TOOLS` at Structural level `4`, with prefix `TARGET_SET`, address `LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/TARGET_SET`, **and** realization path `LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/TARGET_SET/`.
+1. Verify the `TARGET_SET` registration against AN-S-1181.
 2. resolve the supplied explicit identities **and** composable governed selectors against the current project frontier.
 3. deduplicate the resolved members **and** order them by the registered stable ordering rule.
 4. seal membership, source frontier, **and** content digest together as one target-set identity.

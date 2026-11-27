@@ -64,11 +64,11 @@ class CarrierEffectsTest(unittest.TestCase):
         self.assertEqual(MOD.check_effects(["local", "io"]), "forbidden")
         self.assertEqual(MOD.check_effects(["local", "mystery"]), "unresolved")
         self.assertEqual(MOD.check_effects([]), "unresolved")
+        target = "return raw[bounds[2] :]"
+        self.assertEqual(self.fixed.count(target), 1)
         self.assertEqual(
             MOD.analyze_carrier(
-                self.fixed.replace(
-                    "return raw[bounds[2]:]", "return unknown(raw)"
-                )
+                self.fixed.replace(target, "return unknown(raw)")
             )["status"],
             "unresolved",
         )

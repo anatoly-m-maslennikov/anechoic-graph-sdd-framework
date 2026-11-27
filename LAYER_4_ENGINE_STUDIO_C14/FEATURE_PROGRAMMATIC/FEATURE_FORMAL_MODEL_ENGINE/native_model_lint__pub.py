@@ -12,15 +12,24 @@ def lint_native_model_claim(declaration: dict, *, declared_addresses: Collection
                             relation_names: Collection[str], path: str, first_line: int,
                             resolve_address: Callable, simple_address: Callable, canonical_address: Callable,
                             python_class_bindings: Mapping[str, Collection[str]] | None = None) -> tuple[str, ...]:
-    declared, canonical, class_names = _catalog(declared_addresses, simple_address, canonical_address)
+    declared, canonical, class_names = _catalog(
+        declared_addresses, simple_address, canonical_address
+    )
     args = declaration["arguments"]
     line = first_line + declaration["line"] - 1
 
     def error(message: str) -> tuple[str, ...]:
         return (f"{path}:{line}:1: {message}",)
 
-    result = _validate_claim(declaration, args, python_class_bindings, canonical_address,
-                             canonical, class_names, error)
+    result = _validate_claim(
+        declaration,
+        args,
+        python_class_bindings,
+        canonical_address,
+        canonical,
+        class_names,
+        error,
+    )
     if result:
         return result
     result = _validate_fallback(args, relation_names, canonical_address, canonical,
@@ -51,13 +60,79 @@ def _catalog(declared_addresses, simple_address, canonical_address):
         if simple is not None:
             declared.add(simple)
             if "." not in simple and "//" not in simple:
-                name = re.sub(r"[^a-z0-9]", "", simple.rsplit("/", 1)[-1].casefold())
-                class_names.setdefault(name, set()).add(re.sub(r"\s+", "", simple).casefold())
-        qualifier = re.search(r"/\(\.Header\.Context\.(?:Role|Form)\s*:=\s*([^)]*)\)\s*$", address)
+                name = re.sub(
+                    r"[^a-z0-9]", "", simple.rsplit("/", 1)[-1].casefold()
+                )
+                class_names.setdefault(name, set()).add(
+                    re.sub(r"\s+", "", simple).casefold()
+                )
+        qualifier = re.search(
+            r"/\(\.Header\.Context\.(?:Role|Form)\s*:=\s*([^)]*)\)\s*$",
+            address,
+        )
         if qualifier:
             name = re.sub(r"[^a-z0-9]", "", qualifier[1].casefold())
-            class_names.setdefault(name, set()).add(re.sub(r"\s+", "", address).casefold())
+            class_names.setdefault(name, set()).add(
+                re.sub(r"\s+", "", address).casefold()
+            )
     return declared, canonical, class_names
+
+
+def _validate_instance_check(declaration, args, error):
+    check = declaration.get("instance_check")
+    if check is not None:
+        model_type = check["parameter_type"]
+        local_classes = {item["name"] for item in declaration["classes"]}
+        if (
+            model_type not in local_classes
+            and declaration["imports"].get(model_type) != "anechoic.model"
+        ):
+            return error(
+                f"instance check requires a Model class: {model_type}"
+            )
+        entity_class = args.get("entity_class")
+        if entity_class is not None and model_type != entity_class:
+            return error(
+                f"instance check does not match entity_class: {model_type}"
+            )
+
+    return ()
+
+
+def _validate_imports(
+    declaration,
+    python_class_bindings,
+    canonical_address,
+    canonical,
+    class_names,
+    error,
+):
+    for name, module in declaration["imports"].items():
+        if module == "anechoic.model":
+            if (
+                python_class_bindings is not None
+                and name in python_class_bindings
+            ):
+                targets = python_class_bindings[name]
+                if isinstance(targets, str) or not isinstance(
+                    targets, Collection
+                ):
+                    return error(f"invalid Model class binding: {name}")
+                try:
+                    matches = {canonical_address(target) for target in targets}
+                except ValueError, TypeError:
+                    return error(f"invalid Model class binding: {name}")
+                if matches - canonical:
+                    return error(f"unknown Model class address: {name}")
+            else:
+                matches = class_names.get(
+                    re.sub(r"[^a-z0-9]", "", name.casefold()), set()
+                )
+            if not matches:
+                return error(f"unknown Model class: {name}")
+            if len(matches) > 1:
+                return error(f"ambiguous Model class: {name}")
+    return ()
 
 
 def _validate_claim(declaration, args, python_class_bindings, canonical_address,
@@ -67,80 +142,102 @@ def _validate_claim(declaration, args, python_class_bindings, canonical_address,
     except ValueError as failure:
         return error(str(failure))
 
-    check = declaration.get("instance_check")
-    if check is not None:
-        model_type = check["parameter_type"]
-        local_classes = {item["name"] for item in declaration["classes"]}
-        if model_type not in local_classes and declaration["imports"].get(model_type) != "anechoic.model":
-            return error(f"instance check requires a Model class: {model_type}")
-        entity_class = args.get("entity_class")
-        if entity_class is not None and model_type != entity_class:
-            return error(f"instance check does not match entity_class: {model_type}")
+    result = _validate_instance_check(declaration, args, error)
+    if result:
+        return result
 
-    for name, module in declaration["imports"].items():
-        if module == "anechoic.model":
-            if python_class_bindings is not None and name in python_class_bindings:
-                targets = python_class_bindings[name]
-                if isinstance(targets, str) or not isinstance(targets, Collection):
-                    return error(f"invalid Model class binding: {name}")
-                try:
-                    matches = {canonical_address(target) for target in targets}
-                except (ValueError, TypeError):
-                    return error(f"invalid Model class binding: {name}")
-                if matches - canonical:
-                    return error(f"unknown Model class address: {name}")
-            else:
-                matches = class_names.get(re.sub(r"[^a-z0-9]", "", name.casefold()), set())
-            if not matches:
-                return error(f"unknown Model class: {name}")
-            if len(matches) > 1:
-                return error(f"ambiguous Model class: {name}")
-    return ()
+    return _validate_imports(declaration, python_class_bindings, canonical_address, canonical, class_names, error)
 
 
-def _validate_fallback(args, relation_names, canonical_address, canonical,
-                       simple_address, declared, error):
+def _validate_fallback_chain(
+    args, relation_names, canonical_address, canonical, error
+):
     if "fallback_chain" in args:
         lookup, project = args["fallback_chain"]
         if lookup["lookup_relation"] not in relation_names:
-            return error(f"unknown fallback Relation: {lookup['lookup_relation']}")
+            return error(
+                f"unknown fallback Relation: {lookup['lookup_relation']}"
+            )
         for full in (lookup["lookup_property"], project["project_property"]):
             try:
                 if canonical_address(full) not in canonical:
                     return error(f"unknown fallback Property address: {full}")
-            except (TypeError, ValueError):
+            except TypeError, ValueError:
                 return error(f"invalid fallback Property address: {full}")
         try:
             if canonical_address(project["project_entity"]) not in canonical:
-                return error(f"unknown Project model address: {project['project_entity']}")
-        except (TypeError, ValueError):
-            return error(f"invalid Project model address: {project['project_entity']}")
+                return error(
+                    (
+                        'unknown Project model address: '
+                        f"{project['project_entity']}"
+                    )
+                )
+        except TypeError, ValueError:
+            return error(
+                f"invalid Project model address: {project['project_entity']}"
+            )
+
+    return ()
+
+
+def _validate_fallback(
+    args,
+    relation_names,
+    canonical_address,
+    canonical,
+    simple_address,
+    declared,
+    error,
+):
+    result = _validate_fallback_chain(
+        args, relation_names, canonical_address, canonical, error
+    )
+    if result:
+        return result
 
     if "fallback_property_name" in args:
         bearer = args.get("base_path")
         if not isinstance(bearer, str):
             return error("fallback requires a bearer")
-        for member in (args.get("entity_name"), args["fallback_property_name"]):
+        for member in (
+            args.get("entity_name"),
+            args["fallback_property_name"],
+        ):
             full = f"{bearer}.{member}"
             try:
                 if simple_address(full) not in declared:
                     return error(f"unknown declared fallback Property: {full}")
-            except (TypeError, ValueError):
+            except TypeError, ValueError:
                 return error(f"invalid fallback Property: {full}")
     return ()
 
 
-def _validate_population(args, canonical_address, canonical, resolve_address,
-                         declared, relation_names, error):
+def _validate_population(
+    args,
+    canonical_address,
+    canonical,
+    resolve_address,
+    declared,
+    relation_names,
+    error,
+):
     for rule in args.get("population_unique_constraints", ()):
-        population = args.get("population_entity_path", args.get("base_path", args["entity_name"]))
-        for relative in (*rule["keys"], *(("Header.State.Status",) if "status" in rule else ())):
+        population = args.get(
+            "population_entity_path",
+            args.get("base_path", args["entity_name"]),
+        )
+        for relative in (
+            *rule["keys"],
+            *(("Header.State.Status",) if "status" in rule else ()),
+        ):
             full = f"{population}.{relative}"
             try:
-                if canonical_address(full) in canonical or resolve_address(full, declared, relation_names, {}):
+                if canonical_address(full) in canonical or resolve_address(
+                    full, declared, relation_names, {}
+                ):
                     continue
                 return error(f"unknown population Property address: {full}")
-            except (TypeError, ValueError):
+            except TypeError, ValueError:
                 return error(f"unknown population Property address: {full}")
 
     for dependency in args.get("population_functional_dependencies", ()):
@@ -152,36 +249,15 @@ def _validate_population(args, canonical_address, canonical, resolve_address,
             full = f"{population}.{relative}"
             try:
                 if canonical_address(full) not in canonical:
-                    return error(f"unknown population Property address: {full}")
-            except (TypeError, ValueError):
+                    return error(
+                        f"unknown population Property address: {full}"
+                    )
+            except TypeError, ValueError:
                 return error(f"invalid population Property address: {full}")
     return ()
 
 
-def _validate_paths(declaration, args, relation_names, resolve_address,
-                    canonical_address, canonical, declared, error):
-    paths = [args[key] for key in ("base_path", "qualification_property_path", "population_entity_path") if key in args]
-    for pair in args.get("ordered_dependent_property_pairs", ()):
-        paths.extend(f"{args['base_path']}.{args['entity_name']}.{name}" for name in pair)
-    endpoints = [args.get("source_endpoint", {}), args.get("target_endpoint", {})]
-    for pair in args.get("endpoint_pairs", ()):
-        endpoints.extend((pair["source_endpoint"], pair["target_endpoint"]))
-    for endpoint in endpoints:
-        paths.extend(endpoint.get("entity_paths", ()))
-    relations = ["IS_ORDERED_RIGHT_BEFORE"] if args.get("ordered_dependent_property_pairs") else []
-    for incoming in args.get("incoming_model_relations", ()):
-        paths.append(incoming["source"])
-        relations.append(incoming["relation"])
-    for field in ("model_relation_constraints", "instance_relation_constraints"):
-        constraints = args.get(field, {})
-        if not isinstance(constraints, dict) or any(not isinstance(item, dict) for item in constraints.values()):
-            return error(f"{field} must map Relation names to constraints")
-        relations.extend(constraints)
-        for constraint in constraints.values():
-            targets = constraint.get("target_entity_paths", ())
-            if not isinstance(targets, (tuple, list)):
-                return error("target_entity_paths must be a list of Model addresses")
-            paths.extend(targets)
+def _validate_model_addresses(paths, canonical_address, canonical, resolve_address, declared, relation_names, error):
     for address in paths:
         if not isinstance(address, str):
             return error("Model address must be a string")
@@ -195,6 +271,60 @@ def _validate_paths(declaration, args, relation_names, resolve_address,
                 return error(f"unknown Model address: {address}")
         except ValueError as exc:
             return error(str(exc))
+    return ()
+
+
+def _collect_relation_constraints(args, paths, relations, error):
+    for field in (
+        "model_relation_constraints",
+        "instance_relation_constraints",
+    ):
+        constraints = args.get(field, {})
+        if not isinstance(constraints, dict) or any(
+            not isinstance(item, dict) for item in constraints.values()
+        ):
+            return error(f"{field} must map Relation names to constraints")
+        relations.extend(constraints)
+        for constraint in constraints.values():
+            targets = constraint.get("target_entity_paths", ())
+            if not isinstance(targets, (tuple, list)):
+                return error(
+                    "target_entity_paths must be a list of Model addresses"
+                )
+            paths.extend(targets)
+    return ()
+
+
+def _validate_paths(declaration, args, relation_names, resolve_address,
+                    canonical_address, canonical, declared, error):
+    paths = [args[key] for key in ("base_path", "qualification_property_path", "population_entity_path") if key in args]
+    for pair in args.get("ordered_dependent_property_pairs", ()):
+        paths.extend(
+            f"{args['base_path']}.{args['entity_name']}.{name}"
+            for name in pair
+        )
+    endpoints = [
+        args.get("source_endpoint", {}),
+        args.get("target_endpoint", {}),
+    ]
+    for pair in args.get("endpoint_pairs", ()):
+        endpoints.extend((pair["source_endpoint"], pair["target_endpoint"]))
+    for endpoint in endpoints:
+        paths.extend(endpoint.get("entity_paths", ()))
+    relations = (
+        ["IS_ORDERED_RIGHT_BEFORE"]
+        if args.get("ordered_dependent_property_pairs")
+        else []
+    )
+    for incoming in args.get("incoming_model_relations", ()):
+        paths.append(incoming["source"])
+        relations.append(incoming["relation"])
+    result = _collect_relation_constraints(args, paths, relations, error)
+    if result:
+        return result
+    result = _validate_model_addresses(paths, canonical_address, canonical, resolve_address, declared, relation_names, error)
+    if result:
+        return result
     if declaration["kind"] == "entity" and args.get("relation_name"):
         relations.append(args["relation_name"])
     for relation in relations:

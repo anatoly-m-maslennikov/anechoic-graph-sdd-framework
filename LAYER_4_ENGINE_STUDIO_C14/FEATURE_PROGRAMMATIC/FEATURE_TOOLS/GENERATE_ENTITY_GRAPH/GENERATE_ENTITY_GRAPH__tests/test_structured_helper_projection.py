@@ -21,7 +21,10 @@ class StructuredHelperProjectionTests(unittest.TestCase):
     def test_live_helpers_match_old_records_without_compiler(self):
         samples = [
             (
-                "# model\ncomposition(container='Aspects', parts=('Product',))",
+                (
+                    "# model\ncomposition(container='Aspects', "
+                    "parts=('Product',))"
+                ),
                 "Node",
             ),
             (
@@ -39,7 +42,10 @@ class StructuredHelperProjectionTests(unittest.TestCase):
                 "Node",
             ),
             (
-                "# model\nset_value(address='Operator//Addition', value='\"+\"')",
+                (
+                    "# model\nset_value(address='Operator//Addition', "
+                    "value='\"+\"')"
+                ),
                 "ANECHOIC_MODEL <+ CFEL <+ Operator//Addition",
             ),
         ]

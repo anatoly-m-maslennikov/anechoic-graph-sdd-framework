@@ -68,7 +68,9 @@ def _value(events, reference):
 
 
 def _encoded(value):
-    return lean_string(json.dumps(value, ensure_ascii=False, allow_nan=False, sort_keys=True))
+    return lean_string(
+        json.dumps(value, ensure_ascii=False, allow_nan=False, sort_keys=True)
+    )
 
 
 def _equality(left, right):

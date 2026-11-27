@@ -15,7 +15,8 @@ class AspectHierarchyTests(unittest.TestCase):
         b = "PROJECT STRUCTURE//ANECHOIC <+ Aspects <+ Product"
         claim = (
             "from anechoic.formal_claims import declare_entity\n"
-            f'declare_entity(entity_name="Project Structure", structure_paths=({a!r},), aspect_memberships=({b!r},))'
+            f'declare_entity(entity_name="Project Structure", '
+            f"structure_paths=({a!r},), aspect_memberships=({b!r},))"
         )
         parsed = parse_native_model_claim(claim)
         self.assertEqual(

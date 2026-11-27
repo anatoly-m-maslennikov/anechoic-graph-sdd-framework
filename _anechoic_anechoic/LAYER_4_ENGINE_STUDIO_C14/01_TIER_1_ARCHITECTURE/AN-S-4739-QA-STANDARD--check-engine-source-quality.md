@@ -9,8 +9,8 @@ context:
   lens: QA
 state:
   status: active
-  version: 3
-  updated_at: '2026-11-27T11:11:44.727957+00:00'
+  version: 4
+  updated_at: "2026-11-27T17:35:01.150345+00:00"
 
 ---
 
@@ -58,13 +58,7 @@ length gate is enabled, check source covered by the root EditorConfig.
 
 #### Prose comments
 
-Engine source and tests must contain no prose comments. Keep comment syntax
-only when an interpreter, build tool or static analyzer uses it, including
-shebangs, encoding declarations, type annotations and applicable lint
-suppressions. The required source check must report prose comments by file and
-line and fail without mutating source. An explicit purge must preserve code
-behavior, string literals, docstrings and required directives.
+Check source comments under AN-S-5183. Report prose comments by file and
+line and fail without mutating source.
 
-#### Cache placement
-
-Apply AN-S-1342 to Python cache placement.
+Apply AN-S-4740 and AN-S-1342 to Static cache placement.

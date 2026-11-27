@@ -1,7 +1,10 @@
 """Normal startup selects one validated Project across the migration rename."""
 from .native_query_test_support import local_gateway
 from .FEATURE_MCP__tests__shared import write_manifest
-from .test_launcher_runtime_profiles import DirectSupervisorProbe, runtime_flags
+from .test_launcher_runtime_profiles import (
+    DirectSupervisorProbe,
+    runtime_flags,
+)
 
 
 import asyncio
@@ -32,12 +35,18 @@ TOOLS = PROGRAMMATIC / "FEATURE_TOOLS"
 
 def native_fixture_gateway(root, cache, *, selection=None):
     from dataclasses import asdict, replace
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import NativeProjectSelection
-    from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import select_runtime_project as startup_selection
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import (
+        NativeProjectSelection,
+    )
+    from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import (
+        select_runtime_project as startup_selection,
+    )
     from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import NativeQueryOwner
     from .native_query_test_support import load_native_inputs
 
-    fields = asdict(selection if selection is not None else startup_selection(root))
+    fields = asdict(
+        selection if selection is not None else startup_selection(root)
+    )
     fields.pop("tool_blacklist", None)
     fields.pop("release_workflows_enabled", None)
     selected = NativeProjectSelection(**fields)
@@ -206,14 +215,20 @@ class RuntimeSelectionTests(unittest.TestCase):
 
 class DirectSupervisorTests(unittest.TestCase):
     def setUp(self):
-        self.root = Path(self.enterContext(tempfile.TemporaryDirectory())).resolve()
+        self.root = Path(
+            self.enterContext(tempfile.TemporaryDirectory())
+        ).resolve()
         self.control = self.root / "_anechoic_anechoic"
         self.manifest = write_manifest(self, self.control)
 
     def test_direct_manifest_repair_rotates_once_after_transport_and_lifecycle_drain(self):
         previous = self.manifest.read_text()
-        probe = DirectSupervisorProbe(self.manifest, repair=lambda: self.manifest.write_text(previous + "\n"),
-                                      invalid=True, lifecycle=(0, True, False))
+        probe = DirectSupervisorProbe(
+            self.manifest,
+            repair=lambda: self.manifest.write_text(previous + "\n"),
+            invalid=True,
+            lifecycle=(0, True, False),
+        )
         status, stderr = probe.run(self.root, "beta_next")
         self.assertEqual(0, status)
         self.assertEqual(1, stderr.count("Manifest reload refused"))
@@ -222,11 +237,20 @@ class DirectSupervisorTests(unittest.TestCase):
         self.assertEqual(2, len(probe.launched["owner"]))
         self.assertEqual([("stop", "api", None), ("stop", "mcp", None), ("lifecycle",), ("lifecycle",),
                           ("lifecycle",), ("stop", "owner", None), ("start", "owner")], probe.events[3:10])
-        [first, repaired] = [runtime_flags(command) for command, _ in probe.launched["owner"]]
+        [first, repaired] = [
+            runtime_flags(command) for command, _ in probe.launched["owner"]
+        ]
         self.assertEqual(first["--instance-id"], repaired["--instance-id"])
-        self.assertNotEqual(first["--manifest-sha256"], repaired["--manifest-sha256"])
-        self.assertEqual(sha256(self.manifest.read_bytes()).hexdigest(), repaired["--manifest-sha256"])
-        binding = json.loads(probe.launched["api"][-1][1]["ANECHOIC_BETA_DIRECT_MANIFEST"])
+        self.assertNotEqual(
+            first["--manifest-sha256"], repaired["--manifest-sha256"]
+        )
+        self.assertEqual(
+            sha256(self.manifest.read_bytes()).hexdigest(),
+            repaired["--manifest-sha256"],
+        )
+        binding = json.loads(
+            probe.launched["api"][-1][1]["ANECHOIC_BETA_DIRECT_MANIFEST"]
+        )
         info = self.manifest.stat()
         self.assertEqual([info.st_dev, info.st_ino, info.st_mode, info.st_size, info.st_mtime_ns, info.st_ctime_ns],
                          binding["version"])
@@ -280,14 +304,20 @@ class DirectManifestTransportTests(unittest.IsolatedAsyncioTestCase):
         async def accepted(_request):
             return StreamingResponse(body())
 
-        env = {"ANECHOIC_RUNTIME_STACK": "beta_next", "ANECHOIC_BETA_BACKEND_SOCKET": str(root / "api.sock"),
-               "ANECHOIC_BETA_DIRECT_TRANSPORT_GATE": str(gate), "ANECHOIC_BETA_DIRECT_DIAGNOSTICS": "0"}
+        env = {
+            "ANECHOIC_RUNTIME_STACK": "beta_next",
+            "ANECHOIC_BETA_BACKEND_SOCKET": str(root / "api.sock"),
+            "ANECHOIC_BETA_DIRECT_TRANSPORT_GATE": str(gate),
+            "ANECHOIC_BETA_DIRECT_DIAGNOSTICS": "0",
+        }
         runtime_stack.cache_clear()
         self.addCleanup(runtime_stack.cache_clear)
         with patch.dict(os.environ, env), patch("uvicorn.run") as run:
             self.assertIsNone(await asyncio.to_thread(http_main, ["--project-root", str(root)]))
         app = run.call_args.args[0]
-        app.starlette_app.router.routes.insert(0, Route(MCP_PATH, accepted, methods=["POST"]))
+        app.starlette_app.router.routes.insert(
+            0, Route(MCP_PATH, accepted, methods=["POST"])
+        )
         transport = httpx2.ASGITransport(app=app)
         client = await self.enterAsyncContext(httpx2.AsyncClient(transport=transport, base_url="http://localhost"))
         request = asyncio.create_task(client.post(MCP_PATH))
@@ -301,7 +331,9 @@ class DirectManifestTransportTests(unittest.IsolatedAsyncioTestCase):
         finally:
             finish.set()
             completed = await asyncio.wait_for(request, 5)
-        self.assertEqual((200, "lifecycle result"), (completed.status_code, completed.text))
+        self.assertEqual(
+            (200, "lifecycle result"), (completed.status_code, completed.text)
+        )
         with lock.open("rb") as waiter:
             flock(waiter, LOCK_EX | LOCK_NB)
 

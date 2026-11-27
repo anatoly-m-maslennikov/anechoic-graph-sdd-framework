@@ -8,8 +8,8 @@ context:
   lens: DevOps
 state:
   status: active
-  version: 23
-  updated_at: 2026-11-02 19:46:47 +0400
+  version: 25
+  updated_at: "2026-11-27T16:29:34.309627+00:00"
 ---
 ## Summary
 
@@ -27,7 +27,5 @@ TOOL_WORKFLOWS owns the current ATOM_CREATE contracts flattened into its role di
 
 ## Details
 
-- The new FEATURE Delivery root is future/unmaterialized. It does not relocate, copy or reinterpret this existing code binding.
+- Apply the shared connector, legacy binding, and pin rules in AN-S-2478.
 - CA-E-303 supplies the rebuilt operation contract. The authority location is not an independently registered ATOM_CREATE Scope Unit or a derivation rule for the executable path.
-- Workflow admission owns identity, Version/time, lifecycle and complete schema decisions. Connector calls use CA-D-625 only to verify the supplied request, source preconditions and permission and to perform the explicit mechanical operation. A connector does not choose those decisions.
-- Re-pin changed current source locations and Versions before consumption. Existing receipts, historical pins and installed copies retain their original evidence; this source revision neither refreshes nor admits them.

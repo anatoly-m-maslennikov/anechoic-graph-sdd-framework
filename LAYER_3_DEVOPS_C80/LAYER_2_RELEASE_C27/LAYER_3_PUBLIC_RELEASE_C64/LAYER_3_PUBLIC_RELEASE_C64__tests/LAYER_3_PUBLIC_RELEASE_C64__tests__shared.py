@@ -45,7 +45,12 @@ class PublicReleaseFixture:
             directory = self.root / "_anechoic_anechoic" / branch / "TASKS"
             directory.mkdir(parents=True)
             (directory / f"AN-T-{number}-TASK--done.md").write_text(
-                f"---\natom_id: AN-T-{number}\ncontext:\n  template: task\nstate:\n  status: done\n---\n"
+                (
+                    "---\natom_id: AN-T-"
+                    f"{number}"
+                    "\ncontext:\n  template: task\nstate:\n  status: "
+                    "done\n---\n"
+                )
             )
         self.git("add", ".")
         self.git("commit", "-qm", "head")

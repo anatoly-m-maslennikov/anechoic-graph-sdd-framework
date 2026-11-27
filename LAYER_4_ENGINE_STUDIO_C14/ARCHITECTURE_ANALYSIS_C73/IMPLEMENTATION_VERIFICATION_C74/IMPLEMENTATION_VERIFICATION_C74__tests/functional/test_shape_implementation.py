@@ -16,10 +16,16 @@ from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75._package__shared import (
 )
 
 ROOT = Path(__file__).resolve().parents[5]
-BASE = "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/SPEC_ENGINE_C75/LAYER_2_FORMAL_MODEL_C51/"
+BASE = (
+    "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/SPE"
+    "C_ENGINE_C75/LAYER_2_FORMAL_MODEL_C51/"
+)
 MANIFEST = {
     "path": BASE
-    + "01_TIER_1_ARCHITECTURE/AN-S-3066-SPEC-COMPONENT_MANIFEST--declare-generated-model.md",
+    + (
+        "01_TIER_1_ARCHITECTURE/AN-S-3066-SPEC-COMPONENT_MANIFEST--declare-gen"
+        "erated-model.md"
+    ),
     "atom_id": "AN-S-3066",
     "version": 10,
     "status": "active",
@@ -27,7 +33,10 @@ MANIFEST = {
 }
 SOLUTION = {
     "path": BASE
-    + "FEATURE_GENERATED_MODEL_C52/AN-S-5033-DES-SOLUTION--represent-bundled-model-classes.md",
+    + (
+        "FEATURE_GENERATED_MODEL_C52/AN-S-5033-DES-SOLUTION--represent-bundled"
+        "-model-classes.md"
+    ),
     "atom_id": "AN-S-5033",
     "version": 2,
     "status": "active",
@@ -35,7 +44,9 @@ SOLUTION = {
 }
 SOURCE = (
     "LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/"
-    "LAYER_2_FORMAL_MODEL_C51/FEATURE_GENERATED_MODEL_C52/FEATURE_GENERATED_MODEL_C52__shared.py"
+    "LAYER_2_FORMAL_MODEL_C51/FEATURE"
+    "_GENERATED_MODEL_C52/FEATURE_GEN"
+    "ERATED_MODEL_C52__shared.py"
 )
 LEAN = (
     os.environ.get("ANECHOIC_TEST_LEAN")

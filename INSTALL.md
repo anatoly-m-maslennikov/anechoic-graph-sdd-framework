@@ -53,15 +53,15 @@ To set up multiple Project repositories under one containing folder, use `--proj
   and WSL 2, Docker is the default. Setup selects the matching Docker context
   for its commands without changing the host's current context.
 - Add `--agent codex` (or `--codex`) to install the user-wide hook and register the loopback MCP endpoint. Ask the user to review and trust the hook in Codex with `/hooks`. See the [Codex hooks documentation](https://learn.chatgpt.com/docs/hooks).
-- Add `--host-settings PATH` to select a settings file. By default, it is `anechoic/runtime.toml` under `XDG_CONFIG_HOME`, or `~/.config/anechoic/runtime.toml` when `XDG_CONFIG_HOME` is unset. See the [settings example](LAYER_5_USER_SETUP_C65/runtime.example.toml).
-- Set `level` in `[logging]` to choose the machine-wide Studio log level for the next Shared runtime launch. Accepted values are `DEBUG`, `INFO`, `WARNING`, and `ERROR`. The default is `INFO`.
+- Setup saves startup settings in `.anechoic_runtime_config.toml` at the root of the selected mount. Edit its `[container]` table to set the port, image, Docker context, timeouts, storage defaults, or log level. See the [settings example](LAYER_5_USER_SETUP_C65/runtime.example.toml).
+- Add `--host-settings PATH` to select an existing settings file. Setup can also read the earlier `anechoic/runtime.toml` under `XDG_CONFIG_HOME` or `~/.config`.
 - For new Projects, select storage with `--workbench-storage disk|memory` and `--journal-storage files|duckdb`. The defaults are `disk` and `files`.
 
 For example, add `--agent codex` to the install command if the user selected Codex. Do not change an existing endpoint or another service automatically to resolve a conflict.
 
 ## Verify and repeat
 
-The installer builds an immutable image. The Engine launcher opens an MCP session from the host through the published port. In single-Project mode it also verifies access to that Project. Check for `"outcome": "completed"` in the JSON result. Report the selected folder and MCP endpoint.
+The installer uses the saved immutable image when one is set. On first setup it builds and saves the image ID. The Engine launcher opens an MCP session through the published port and verifies access in single-Project mode. Check for `"outcome": "completed"` in the JSON result.
 
 After the user trusts the hook, start a new Codex session inside a mounted Project repository. The hook sends the nearest Git worktree root, including when Codex starts in a subdirectory. With `--projects-root`, the same hook serves every configured Project under that folder.
 

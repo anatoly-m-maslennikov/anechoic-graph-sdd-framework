@@ -134,8 +134,11 @@ class CallEffectProjectionTest(unittest.TestCase):
                     sys.executable,
                     "-B",
                     "-c",
-                    "from main import start, silent, forward; from pkg import helper; "
-                    "start(); assert silent() is None; print(forward(), helper._count)",
+                    (
+                        "from main import start, silent, forward; from "
+                        "pkg import helper; start(); assert silent() is "
+                        "None; print(forward(), helper._count)"
+                    ),
                 ],
                 cwd=root,
                 text=True,
@@ -162,9 +165,13 @@ class CallEffectProjectionTest(unittest.TestCase):
                     "node",
                     "--input-type=module",
                     "-e",
-                    "import { start, silent, forward } from './main.mjs'; "
-                    "import { read } from './pkg/helper.mjs'; "
-                    "start(); if (silent() !== undefined) process.exit(1); console.log(forward(), read());",
+                    (
+                        "import { start, silent, forward } from "
+                        "'./main.mjs'; import { read } from "
+                        "'./pkg/helper.mjs'; start(); if (silent() !== "
+                        "undefined) process.exit(1); "
+                        "console.log(forward(), read());"
+                    ),
                 ],
                 cwd=root,
                 text=True,

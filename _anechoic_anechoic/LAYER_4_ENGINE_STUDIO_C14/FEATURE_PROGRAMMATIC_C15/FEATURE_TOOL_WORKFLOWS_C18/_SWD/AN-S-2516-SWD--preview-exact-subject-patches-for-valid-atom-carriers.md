@@ -1,15 +1,19 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-2516
+concern:
+  subject: "Atom"
+  path: "Model/Graph/Node//Artifact//SSOT//Prescribed/Content"
+  relation: "is_contained_by"
 container:
   component: C18
 tier: 3
 context:
   lens: SWD
 state:
-  status: "active"
-  version: 30
-  updated_at: "2026-11-25T20:25:07.180157+00:00"
+  status: active
+  version: 34
+  updated_at: "2026-11-27T17:35:01.150345+00:00"
 ---
 ## Summary
 
@@ -17,7 +21,7 @@ Preview exact Subject patches for valid Atom carriers
 
 ## Claim
 
-This contract describes the legacy sealed-carrier or Subject-batch route. Native Draft and Current carriers use AN-S-3160 and the lifecycle rules in AN-S-1604. Exact historical carrier references apply when interpreting legacy inputs.
+This legacy route uses the scope and native exclusions in AN-S-2517.
 
 ### Prose Claim
 
@@ -32,11 +36,11 @@ syntax under that same profile. The exact batch-only transition below uses its e
 uniquely current-value-selected dependency-list item, validates the complete resulting carrier, and returns the
 exact default preview without writing a Carrier. The pure planner remains free of filesystem writes; an opt-in local wrapper may export derived preview copies under CA-D-425 without updating any authoritative Carrier.
 
-Subject-only preview **must** select a complete original Atom Carrier with a stable Atom ID, excluding Draft and archived carriers by both carried Status and placement. Both the pinned source and proposed result **must** pass existing complete-carrier validation, including the applicable Content Role/Type Status model and correct Carrier placement. Preserve the carried Status byte-for-byte; do not activate the source or perform a lifecycle transition. Missing, ambiguous, unsupported, or stale validation authority **must** fail closed.
+Use AN-S-2517's Subject-only eligibility and complete-carrier validation.
 
 ## Details
 
-The logical Workflow owns Subject eligibility, selected profile, proposal, Version, preview and effect admission; its connector receives explicit logical targets, deltas and bound source/schema/permission evidence through the coherent interface. The closed legacy CLI payload and Markdown staging layout below are private existing implementation bindings, not a new universal connector schema. This authority split moves no code and does not establish that the existing implementation admits the new connector contract.
+Apply the Workflow and connector ownership rules in AN-S-2517.
 
 Accept only the closed root `{atoms, subject_profile?}` and an item exactly
 `{selector, expected, subject_patches}`, with
@@ -82,20 +86,11 @@ Recheck actual definition/grammar and selected Project settings/structure proven
 
 ### Stage and promote the instructed edit drafts
 
-Follow the instructed sequence: commit current state, create full AN-S-1771@32 edit drafts using existing `stage_subject_batch` bounded calls, commit drafts, archive/promote through the existing updater, then rebuild the entity graph after successful completion. Bind exact canonical target/source pins and actual draft path/digest in the selected schema1 or schema2 packet; no mixed staged/unstaged packet is admitted. No further full-validation, content-review or form/confirmation round is required. At each operation reopen pinned bytes, normalize canonical ID/original Status and actual time, and keep normal Subjects-only patch/layout, archive, Version and conditional-write/readback checks. Preserve actual progress/failure evidence, stop first failure and retain completed members without automatic batch rollback/replay. For this batch, local carrier parsing, exact descriptors, explicit old-value patches, selected grammar, safe layout, deterministic byte materialization and conditional-write/readback are the normal checks; do not repeatedly revalidate unchanged body content or build a global reference inventory for every member. The existing final graph operation remains separate. After verified canonical output and any required predecessor readback, conditionally remove only that member's exact packet-pinned draft bytes. If draft cleanup fails or its bytes have drifted, stop and report the actual cleanup failure, preserving the published canonical Revision and archive; do not roll them back or remove another file. A separately instructed map-only batch remains available; existing scratch `stage_subjects` behavior stays separate.
+Use the instructed batch and exact Draft-backed promotion for AN-S-1771@32 in AN-S-2517. Use AN-S-2519 for bounded `stage_subject_batch` calls and AN-S-1472 and AN-S-1471 for the exact staged or map-only packets. The existing scratch `stage_subjects` path remains separate.
 
 ### Explicit batch-only source-profile transition
 
-The instructed Subjects-only batch admits `source_subject_profile: "legacy"` with target `subject_profile: "approved"` only for the exact active packet member and its bound request.
-
-An existing schema1 packet has no `source_subject_profile` field and keeps the selected-profile validation of both source and result. A transition schema2 packet requires the exact string `"legacy"`; missing, `null`, empty, unknown and every other value are rejected. No profile is inferred and no parser fallback is permitted.
-
-The existing closed schema1 batch packet is unchanged and rejects `source_subject_profile`. The explicit transition uses a separate closed packet with exactly `schema_version: 2`, `subject_profile: "approved"`, `source_subject_profile: "legacy"`, `git_checkpoint` and `atoms`; existing member and draft descriptors are unchanged. The outer `{subject_batch: {path, digest}}` request and every ordinary public preview, direct preparation and singleton request remain unchanged; those ordinary requests reject `source_subject_profile`.
-
-The exact active batch context must bind the packet digest, selected target, ordered patches, request and both declared profiles before the planner may validate source Subjects under `legacy`. Every resulting governs and depends_on value must validate under `approved`, including values left unchanged by the patches. Preserve final complete-carrier validation and all existing eligibility, identity, placement, Status, unrelated-byte and effect checks.
-
-Retain separate source and target grammar evidence. Each evidence object contains exactly `grammar_pins` and `native_admission: "not_performed"`; every pin contains `atom_id`, positive `version`, canonical Project-relative `path` and `sha256`. The source profile binds the five existing historical legacy grammar definitions; the target profile binds the five actual Current approved grammar definitions at that operation's Scope epoch. Reopen and revalidate both sets at staging, materialization and effect; drift or unavailable authority refuses the attempt without rebinding or fallback.
-
-For this explicit transition only, the private Subject intent uses `schema_version: 2`: the existing schema1 fields plus exactly `source_subject_profile` and `source_subject_profile_evidence`. Its `subject_profile` and `subject_profile_evidence` remain the approved target pair. Seal both pairs and every existing intent field in the same canonical-JSON SHA-256 calculation. The ordinary same-profile path continues to produce the unchanged closed schema1 intent. Reject unknown fields, mixed versions, a mismatched profile pair or reuse outside the exact active packet member and request.
-
-Recognize this permission only from this operative section in the uniquely resolved Current M371, R866 and O030 authority carriers, each with its actual positive Version, canonical path and SHA-256 bound to the operation. A Draft, historical citation, prohibition, keyword mention or unknown clause is not permission. The delivery bindings in D425 and D531 must also agree with these closed shapes. Source authoring alone does not activate the route or establish implementation acceptance.
+This Method adopts AN-S-2517's transition rule for the exact active packet
+member and bound request. Use its validation, evidence, currentness, and
+refusal rules throughout the operation. The ordinary preview and singleton
+preparation keep their existing same-profile rules.

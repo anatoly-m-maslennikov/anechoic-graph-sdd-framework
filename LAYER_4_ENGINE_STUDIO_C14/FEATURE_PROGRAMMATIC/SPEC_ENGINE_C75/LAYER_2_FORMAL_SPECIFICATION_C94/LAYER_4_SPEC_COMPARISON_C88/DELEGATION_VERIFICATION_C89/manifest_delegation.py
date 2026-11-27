@@ -15,20 +15,41 @@ from ...LAYER_2_SPEC_READING_C83.SPECIFICATION_MODEL_C85._package__shared import
 )
 from .._package__shared import compare_delegation
 
-CLI_INPUT_FIELDS = ('arguments', 'input_fields', 'optional_paired_inputs', 'stdin')
+CLI_INPUT_FIELDS = (
+    "arguments",
+    "input_fields",
+    "optional_paired_inputs",
+    "stdin",
+)
 
 
-def load_manifest_call(root, parent_manifest, parent_solution, child_id, child_pin):
-    parent_id = parent_solution['container_component']
-    parent = load_boundary_model(root, parent_id, parent_manifest, solution=parent_solution)
+def load_manifest_call(
+    root, parent_manifest, parent_solution, child_id, child_pin
+):
+    parent_id = parent_solution["container_component"]
+    parent = load_boundary_model(
+        root, parent_id, parent_manifest, solution=parent_solution
+    )
     child = load_manifest(root, child_id, child_pin)
-    if child_id == parent_id or child['source']['container_component'] != parent_id:
-        raise ValueError(f'{child_id} is not a declared child of {parent_id}')
-    issues = [*validate_manifest(child)['issues'], *(
-        finding(child['source'], 'manifest', message) for message in child.get('contract_issues', ()))]
-    workflow, caller_error = normalize_claim('solution', parent['solution'], parent_id)
-    if 'contract' in child:
-        contract, child_error = normalize_claim('contract', child['contract'], child_id)
+    if (
+        child_id == parent_id
+        or child["source"]["container_component"] != parent_id
+    ):
+        raise ValueError(f"{child_id} is not a declared child of {parent_id}")
+    issues = [
+        *validate_manifest(child)["issues"],
+        *(
+            finding(child["source"], "manifest", message)
+            for message in child.get("contract_issues", ())
+        ),
+    ]
+    workflow, caller_error = normalize_claim(
+        "solution", parent["solution"], parent_id
+    )
+    if "contract" in child:
+        contract, child_error = normalize_claim(
+            "contract", child["contract"], child_id
+        )
     else:
         contract, child_error = None, 'A black-box child call requires a Manifest with an embedded Contract'
     unresolved = [finding(source, field, error) for source, field, error in (
@@ -38,17 +59,46 @@ def load_manifest_call(root, parent_manifest, parent_solution, child_id, child_p
     return parent['solution']['source'], workflow or {}, child, contract or {}, issues, unresolved
 
 
-def compare_manifest_call(caller, child, required, offered, issues, unresolved, *, lean):
-    source = child['source']
-    ref = required.get('manifest')
+def compare_manifest_call(
+    caller, child, required, offered, issues, unresolved, *, lean
+):
+    source = child["source"]
+    ref = required.get("manifest")
     if not required:
-        unresolved.append(finding(caller, 'solution', 'The selected call has no complete child binding'))
+        unresolved.append(
+            finding(
+                caller,
+                "solution",
+                "The selected call has no complete child binding",
+            )
+        )
     elif not isinstance(ref, str) or not ref.strip():
-        required.setdefault('manifest', None)
-        unresolved.append(finding(caller, 'solution', 'The selected call needs an exact child Manifest reference'))
+        required.setdefault("manifest", None)
+        unresolved.append(
+            finding(
+                caller,
+                "solution",
+                "The selected call needs an exact child Manifest reference",
+            )
+        )
     else:
-        offered['manifest'] = derive_atom_ref(source['atom_id'], source['version'], source['status'])
-    report = compare_delegation({'caller': caller, 'manifest': source},
-                                {'caller': required, 'manifest': offered}, manifest_only=True, lean=lean)
-    status = verdict([report['status'], 'unresolved']) if unresolved or issues else report['status']
-    return {**report, 'status': status, 'issues': issues, 'unresolved': unresolved}
+        offered["manifest"] = derive_atom_ref(
+            source["atom_id"], source["version"], source["status"]
+        )
+    report = compare_delegation(
+        {"caller": caller, "manifest": source},
+        {"caller": required, "manifest": offered},
+        manifest_only=True,
+        lean=lean,
+    )
+    status = (
+        verdict([report["status"], "unresolved"])
+        if unresolved or issues
+        else report["status"]
+    )
+    return {
+        **report,
+        "status": status,
+        "issues": issues,
+        "unresolved": unresolved,
+    }

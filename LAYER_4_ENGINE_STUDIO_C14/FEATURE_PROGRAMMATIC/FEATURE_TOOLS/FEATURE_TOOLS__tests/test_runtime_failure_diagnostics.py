@@ -40,14 +40,24 @@ class RuntimeFailureDiagnosticsTests(unittest.TestCase):
         self.selection = SimpleNamespace(settings={"actual": "settings"})
 
     def _logger(self, stream: io.TextIOBase) -> TechnicalDiagnosticLogger:
-        return TechnicalDiagnosticLogger("ACTUAL", self.root, "test", stream, "host")
+        return TechnicalDiagnosticLogger(
+            "ACTUAL", self.root, "test", stream, "host"
+        )
 
-    def test_bound_root_uses_selected_settings_and_actual_component(self) -> None:
+    def test_bound_root_uses_selected_settings_and_actual_component(
+        self,
+    ) -> None:
         stream = io.StringIO()
         logger = self._logger(stream)
         with (
-            patch(f"{report_failure.__module__}.active_selection", return_value=self.selection) as selected,
-            patch(f"{report_failure.__module__}.make_technical_logger", return_value=(logger, None)) as made,
+            patch(
+                f"{report_failure.__module__}.active_selection",
+                return_value=self.selection,
+            ) as selected,
+            patch(
+                f"{report_failure.__module__}.make_technical_logger",
+                return_value=(logger, None),
+            ) as made,
         ):
             failure, secondary = report_failure(
                 self.root,
@@ -66,13 +76,21 @@ class RuntimeFailureDiagnosticsTests(unittest.TestCase):
         self.assertEqual("corr-1", record["correlation_id"])
         self.assertNotIn("password=secret", stream.getvalue())
 
-    def test_unbound_or_invalid_selection_is_visible_without_guessed_prefix(self) -> None:
+    def test_unbound_or_invalid_selection_is_visible_without_guessed_prefix(
+        self,
+    ) -> None:
         stream = io.StringIO()
         logger = TechnicalDiagnosticLogger(None, None, "test", stream, "host")
-        with patch(f"{report_failure.__module__}.make_unbound_technical_logger", return_value=(logger, None)):
+        with patch(
+            f"{report_failure.__module__}.make_unbound_technical_logger",
+            return_value=(logger, None),
+        ):
             with redirect_stderr(io.StringIO()):
                 failure, secondary = report_failure(
-                    None, RuntimeError("password=secret"), component="COMP", operation="op"
+                    None,
+                    RuntimeError("password=secret"),
+                    component="COMP",
+                    operation="op",
                 )
         self.assertEqual("internal_failure", failure.code)
         self.assertIsNone(secondary)
@@ -83,14 +101,25 @@ class RuntimeFailureDiagnosticsTests(unittest.TestCase):
         stream = io.StringIO()
         logger = TechnicalDiagnosticLogger(None, None, "test", stream, "host")
         with (
-            patch(f"{report_failure.__module__}.active_selection", side_effect=ValueError("secret")),
-            patch(f"{report_failure.__module__}.make_unbound_technical_logger", return_value=(logger, None)),
+            patch(
+                f"{report_failure.__module__}.active_selection",
+                side_effect=ValueError("secret"),
+            ),
+            patch(
+                f"{report_failure.__module__}.make_unbound_technical_logger",
+                return_value=(logger, None),
+            ),
         ):
             _failure, secondary = report_failure(
-                self.root, RuntimeError("password=secret"), component="COMP", operation="op"
+                self.root,
+                RuntimeError("password=secret"),
+                component="COMP",
+                operation="op",
             )
         self.assertEqual("project binding unavailable", secondary)
-        self.assertEqual("unbound", json.loads(stream.getvalue())["project_binding"])
+        self.assertEqual(
+            "unbound", json.loads(stream.getvalue())["project_binding"]
+        )
 
     def test_record_preserves_optional_fields_and_elapsed_number(self) -> None:
         for elapsed, expected in ((1, '"elapsed_ms":1'), (1.5, '"elapsed_ms":1.5')):
@@ -109,21 +138,38 @@ class RuntimeFailureDiagnosticsTests(unittest.TestCase):
     def test_sink_failure_is_secondary_and_sanitized(self) -> None:
         logger = self._logger(_FailingStream())
         with (
-            patch(f"{report_failure.__module__}.active_selection", return_value=self.selection),
-            patch(f"{report_failure.__module__}.make_technical_logger", return_value=(logger, None)),
+            patch(
+                f"{report_failure.__module__}.active_selection",
+                return_value=self.selection,
+            ),
+            patch(
+                f"{report_failure.__module__}.make_technical_logger",
+                return_value=(logger, None),
+            ),
         ):
             _failure, secondary = report_failure(
-                self.root, RuntimeError("password=secret"), component="COMP", operation="op"
+                self.root,
+                RuntimeError("password=secret"),
+                component="COMP",
+                operation="op",
             )
         self.assertEqual("technical diagnostic emission failed", secondary)
 
-    def test_structured_warning_is_not_given_a_fake_exception_class(self) -> None:
+    def test_structured_warning_is_not_given_a_fake_exception_class(
+        self,
+    ) -> None:
         stream = io.StringIO()
         logger = self._logger(stream)
         warning = FailureRecord("WARNING", "project_invalid", "safe warning")
         with (
-            patch(f"{report_failure.__module__}.active_selection", return_value=self.selection),
-            patch(f"{report_failure.__module__}.make_technical_logger", return_value=(logger, None)),
+            patch(
+                f"{report_failure.__module__}.active_selection",
+                return_value=self.selection,
+            ),
+            patch(
+                f"{report_failure.__module__}.make_technical_logger",
+                return_value=(logger, None),
+            ),
         ):
             failure, secondary = report_failure(
                 self.root, warning, component="COMP", operation="op"
@@ -132,7 +178,9 @@ class RuntimeFailureDiagnosticsTests(unittest.TestCase):
         self.assertIsNone(secondary)
         self.assertNotIn("exception_class", json.loads(stream.getvalue()))
 
-    def test_structured_errors_preserve_severity_except_workbench_query_error(self) -> None:
+    def test_structured_errors_preserve_severity_except_workbench_query_error(
+        self,
+    ) -> None:
         stream = io.StringIO()
         logger = self._logger(stream)
         cases = (
@@ -141,8 +189,14 @@ class RuntimeFailureDiagnosticsTests(unittest.TestCase):
             ("synthetic_error", "ERROR", "blocked"),
         )
         with (
-            patch(f"{report_failure.__module__}.active_selection", return_value=self.selection),
-            patch(f"{report_failure.__module__}.make_technical_logger", return_value=(logger, None)),
+            patch(
+                f"{report_failure.__module__}.active_selection",
+                return_value=self.selection,
+            ),
+            patch(
+                f"{report_failure.__module__}.make_technical_logger",
+                return_value=(logger, None),
+            ),
         ):
             for code, severity, outcome in cases:
                 with self.subTest(code=code):
@@ -165,15 +219,25 @@ class RuntimeFailureDiagnosticsTests(unittest.TestCase):
     def test_explicit_blocking_failure_remains_error(self) -> None:
         stream = io.StringIO()
         logger = self._logger(stream)
-        error = ExplicitBlockingRuntimeFailure("runtime_blocked", "worker unavailable")
+        error = ExplicitBlockingRuntimeFailure(
+            "runtime_blocked", "worker unavailable"
+        )
         with (
-            patch(f"{report_failure.__module__}.active_selection", return_value=self.selection),
-            patch(f"{report_failure.__module__}.make_technical_logger", return_value=(logger, None)),
+            patch(
+                f"{report_failure.__module__}.active_selection",
+                return_value=self.selection,
+            ),
+            patch(
+                f"{report_failure.__module__}.make_technical_logger",
+                return_value=(logger, None),
+            ),
         ):
             failure, secondary = report_failure(
                 self.root, error, component="COMP", operation="op"
             )
-        self.assertEqual(("ERROR", "runtime_blocked"), (failure.severity, failure.code))
+        self.assertEqual(
+            ("ERROR", "runtime_blocked"), (failure.severity, failure.code)
+        )
         self.assertIsNone(secondary)
         self.assertEqual("ERROR", json.loads(stream.getvalue())["severity"])
 
@@ -181,25 +245,46 @@ class RuntimeFailureDiagnosticsTests(unittest.TestCase):
         stream = io.StringIO()
         logger = self._logger(stream)
         with (
-            patch(f"{report_failure.__module__}.active_selection", return_value=self.selection),
-            patch(f"{report_failure.__module__}.make_technical_logger", return_value=(logger, None)),
+            patch(
+                f"{report_failure.__module__}.active_selection",
+                return_value=self.selection,
+            ),
+            patch(
+                f"{report_failure.__module__}.make_technical_logger",
+                return_value=(logger, None),
+            ),
         ):
             query, query_secondary = report_failure(
-                self.root, ExplicitBlockingRuntimeFailure("query_error", "invalid SQL"),
-                component="MCP_HTTP", operation="workbench",
+                self.root,
+                ExplicitBlockingRuntimeFailure("query_error", "invalid SQL"),
+                component="MCP_HTTP",
+                operation="workbench",
             )
             unavailable, unavailable_secondary = report_failure(
-                self.root, ExplicitBlockingRuntimeFailure(
-                    "workbench_unavailable", "Workbench unavailable; restart required"
-                ), component="MCP_HTTP", operation="workbench",
+                self.root,
+                ExplicitBlockingRuntimeFailure(
+                    "workbench_unavailable",
+                    "Workbench unavailable; restart required",
+                ),
+                component="MCP_HTTP",
+                operation="workbench",
             )
-        self.assertEqual(("WARNING", "query_error"), (query.severity, query.code))
+        self.assertEqual(
+            ("WARNING", "query_error"), (query.severity, query.code)
+        )
         self.assertIsNone(query_secondary)
-        self.assertEqual(("ERROR", "workbench_unavailable"), (unavailable.severity, unavailable.code))
+        self.assertEqual(
+            ("ERROR", "workbench_unavailable"),
+            (unavailable.severity, unavailable.code),
+        )
         self.assertIsNone(unavailable_secondary)
         records = [json.loads(line) for line in stream.getvalue().splitlines()]
-        self.assertEqual(["WARNING", "ERROR"], [record["severity"] for record in records])
-        self.assertEqual(["failed", "blocked"], [record["outcome"] for record in records])
+        self.assertEqual(
+            ["WARNING", "ERROR"], [record["severity"] for record in records]
+        )
+        self.assertEqual(
+            ["failed", "blocked"], [record["outcome"] for record in records]
+        )
 
     def test_report_does_not_write_journal_or_source_files(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -212,7 +297,10 @@ class RuntimeFailureDiagnosticsTests(unittest.TestCase):
             logger = TechnicalDiagnosticLogger(None, None, "test", io.StringIO(), "host")
             with (
                 patch(f"{report_failure.__module__}.active_selection", side_effect=ValueError("invalid")),
-                patch(f"{report_failure.__module__}.make_unbound_technical_logger", return_value=(logger, None)),
+                patch((
+                    f'{report_failure.__module__}'
+                    '.make_unbound_technical_logger'
+                ), return_value=(logger, None)),
             ):
                 report_failure(
                     root, RuntimeError("secret"), component="COMP", operation="op"

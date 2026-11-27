@@ -4,28 +4,61 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
 
-from .DATABASE_SERVER_beta_C71__tests__shared import BINDING, _generation, _query, _server
+from .DATABASE_SERVER_beta_C71__tests__shared import (
+    BINDING,
+    _generation,
+    _query,
+    _server,
+)
 
 
 def workspace(client, operation, arguments):
-    return client.post("/workspace", json=BINDING | {"operation": operation, "arguments": arguments})
+    return client.post(
+        "/workspace",
+        json=BINDING | {"operation": operation, "arguments": arguments},
+    )
 
 
 class GenerationRefreshTest(unittest.TestCase):
     def test_model_targets_refresh_all_model_results_on_same_generation(self):
         with TemporaryDirectory(dir="/tmp") as directory, _server(None, "--project-root", str(Path(directory).resolve())) as client:
             generation = _generation()
-            original = client.put("/generation", json=generation).json()["result"]["generation"]
-            for target in ("model_tree", "mrt_model_tree", "model_primary_entities", "mrt_model_primary_entities"):
+            original = client.put("/generation", json=generation).json()[
+                "result"
+            ]["generation"]
+            for target in (
+                "model_tree",
+                "mrt_model_tree",
+                "model_primary_entities",
+                "mrt_model_primary_entities",
+            ):
                 with self.subTest(target=target):
-                    names = ("model_tree", "mrt_model_primary_entities", "model_entities", "mrt_model_properties")
-                    results = [_query(client, f"SELECT * FROM {name}", page_size=2).json()["result"] for name in names]
-                    unrelated = _query(client, "SELECT * FROM atoms", page_size=2).json()["result"]["query_id"]
-                    response = client.put("/generation", json=generation | {"refresh_target": target})
+                    names = (
+                        "model_tree",
+                        "mrt_model_primary_entities",
+                        "model_entities",
+                        "mrt_model_properties",
+                    )
+                    results = [
+                        _query(
+                            client, f"SELECT * FROM {name}", page_size=2
+                        ).json()["result"]
+                        for name in names
+                    ]
+                    unrelated = _query(
+                        client, "SELECT * FROM atoms", page_size=2
+                    ).json()["result"]["query_id"]
+                    response = client.put(
+                        "/generation",
+                        json=generation | {"refresh_target": target},
+                    )
                     self.assertEqual(200, response.status_code, response.text)
                     refreshed = response.json()["result"]
                     self.assertEqual(original, refreshed["generation"])
-                    self.assertTrue({row["query_id"] for row in results} <= set(refreshed["result_ids"]))
+                    self.assertTrue(
+                        {row["query_id"] for row in results}
+                        <= set(refreshed["result_ids"])
+                    )
                     self.assertNotIn(unrelated, refreshed["result_ids"])
                     for row in results:
                         page = client.post("/database", json=BINDING | {
@@ -54,9 +87,18 @@ class GenerationRefreshTest(unittest.TestCase):
             for query_id in (first["query_id"], run["query_id"]):
                 page = client.post("/database", json=BINDING | {"query_id": query_id, "offset": 0, "page_size": 2})
                 self.assertEqual(200, page.status_code, page.text)
-            self.assertEqual(run["query_id"], workspace(client, "view_fetch", view).json()["result"]["query_id"])
-            candidate["snapshot"]["atoms"] = [{"reference": "new", "summary": "s"}]
-            success = client.put("/generation", json=candidate | {"refresh_target": "atoms"})
+            self.assertEqual(
+                run["query_id"],
+                workspace(client, "view_fetch", view).json()["result"][
+                    "query_id"
+                ],
+            )
+            candidate["snapshot"]["atoms"] = [
+                {"reference": "new", "summary": "s"}
+            ]
+            success = client.put(
+                "/generation", json=candidate | {"refresh_target": "atoms"}
+            )
             self.assertEqual(200, success.status_code, success.text)
             result = success.json()["result"]
             self.assertNotEqual(original, result["generation"])

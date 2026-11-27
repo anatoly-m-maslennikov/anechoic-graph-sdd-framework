@@ -9,7 +9,9 @@ from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import patch
 
-from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.test_suite__shared import _release_canary as release_canary
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.test_suite__shared import (
+    _release_canary as release_canary,
+)
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.canary_test_support import retry_run
 
 
@@ -19,17 +21,33 @@ SETTINGS = b"[workbench]\nresult_ttl_seconds = 120\n"
 class CanaryRetryTests(unittest.TestCase):
     def test_degraded_health_fails_when_deadlines_are_disabled(self):
         with (
-            patch.dict(release_canary.os.environ, {"ANECHOIC_TEST_IMAGE_DEADLINES": "0"}),
-            patch.object(release_canary._HTTP, "open", return_value=io.BytesIO(b'{"state":"degraded"}')),
+            patch.dict(
+                release_canary.os.environ,
+                {"ANECHOIC_TEST_IMAGE_DEADLINES": "0"},
+            ),
+            patch.object(
+                release_canary._HTTP,
+                "open",
+                return_value=io.BytesIO(b'{"state":"degraded"}'),
+            ),
             patch.object(release_canary.subprocess, "run") as inspect,
-            self.assertRaisesRegex(release_canary.CanaryError, "local-release-canary-health-degraded"),
+            self.assertRaisesRegex(
+                release_canary.CanaryError,
+                "local-release-canary-health-degraded",
+            ),
         ):
-            release_canary._await_canary(Path("."), "canary", 5050, query_enabled=True)
+            release_canary._await_canary(
+                Path("."), "canary", 5050, query_enabled=True
+            )
         inspect.assert_not_called()
 
-    def _assert_candidate_cleanup(self, root, staging, image, calls, deadline_mode):
+    def _assert_candidate_cleanup(
+        self, root, staging, image, calls, deadline_mode
+    ):
         tag = calls[0][-1]
-        self.assertTrue(tag.startswith("anechoic-runtime:candidate-session-1-"))
+        self.assertTrue(
+            tag.startswith("anechoic-runtime:candidate-session-1-")
+        )
         self.assertEqual(calls[0], ["docker", "image", "tag", image, tag])
         launch = next(argv for argv in calls if argv[:2] == ["docker", "run"])
         self.assertIn("127.0.0.1::8092", launch)
@@ -41,11 +59,20 @@ class CanaryRetryTests(unittest.TestCase):
         self.assertEqual(staging, attempt.parent)
         self.assertTrue(attempt.name.startswith("canary-attempt-"))
         copied_root = attempt / "canary-project"
-        instance = sha256(f"{copied_root.resolve()}\0.anechoic_test".encode()).hexdigest()
+        instance = sha256(
+            f"{copied_root.resolve()}\0.anechoic_test".encode()
+        ).hexdigest()
         self.assertIn(f"ANECHOIC_PROJECT_INSTANCE_ID={instance}", launch)
-        self.assertNotEqual(instance, sha256(f"{root}\0.anechoic_test".encode()).hexdigest())
-        self.assertEqual(calls[-2:], [["docker", "rm", "-f", "-v", "b" * 64],
-                                      ["docker", "image", "rm", tag]])
+        self.assertNotEqual(
+            instance, sha256(f"{root}\0.anechoic_test".encode()).hexdigest()
+        )
+        self.assertEqual(
+            calls[-2:],
+            [
+                ["docker", "rm", "-f", "-v", "b" * 64],
+                ["docker", "image", "rm", tag],
+            ],
+        )
         self.assertFalse(attempt.exists())
         return tag, attempt
 
@@ -63,10 +90,16 @@ class CanaryRetryTests(unittest.TestCase):
         package = staging / "package"
         package.mkdir()
         (package / "candidate").write_text("candidate")
-        selection = {"control_root": ".anechoic_test", "manifest_path": manifest.relative_to(root).as_posix(),
-                     "manifest_ref": "AN-S-1@1", "manifest_sha256": sha256(b"control").hexdigest(),
-                     "project_name": "test", "project_prefix": "AN", "query_enabled": False,
-                     "runtime_settings_sha256": sha256(SETTINGS).hexdigest()}
+        selection = {
+            "control_root": ".anechoic_test",
+            "manifest_path": manifest.relative_to(root).as_posix(),
+            "manifest_ref": "AN-S-1@1",
+            "manifest_sha256": sha256(b"control").hexdigest(),
+            "project_name": "test",
+            "project_prefix": "AN",
+            "query_enabled": False,
+            "runtime_settings_sha256": sha256(SETTINGS).hexdigest(),
+        }
         return root, staging, package, selection
 
     def test_probe_retries_same_package_after_failure_and_cleans_up_each_attempt(self):
@@ -107,7 +140,9 @@ class CanaryRetryTests(unittest.TestCase):
         other = root / "other"
         other.mkdir()
         settings.parent.symlink_to(other, target_is_directory=True)
-        with self.assertRaisesRegex(release_canary.CanaryError, "runtime-settings-unsafe"):
+        with self.assertRaisesRegex(
+            release_canary.CanaryError, "runtime-settings-unsafe"
+        ):
             release_canary._runtime_settings(root)
         settings.parent.unlink()
         settings.parent.mkdir()
@@ -115,18 +150,26 @@ class CanaryRetryTests(unittest.TestCase):
         data = other / "settings.toml"
         data.write_bytes(SETTINGS)
         settings.symlink_to(data)
-        with self.assertRaisesRegex(release_canary.CanaryError, "runtime-settings-unsafe"):
+        with self.assertRaisesRegex(
+            release_canary.CanaryError, "runtime-settings-unsafe"
+        ):
             release_canary._runtime_settings(root)
         settings.unlink()
         os.link(data, settings)
-        with self.assertRaisesRegex(release_canary.CanaryError, "runtime-settings-unsafe"):
+        with self.assertRaisesRegex(
+            release_canary.CanaryError, "runtime-settings-unsafe"
+        ):
             release_canary._runtime_settings(root)
         settings.unlink()
         settings.write_bytes(b"x" * 65537)
-        with self.assertRaisesRegex(release_canary.CanaryError, "runtime-settings-too-large"):
+        with self.assertRaisesRegex(
+            release_canary.CanaryError, "runtime-settings-too-large"
+        ):
             release_canary._runtime_settings(root)
 
-    def test_canary_refuses_settings_that_differ_from_bound_digest_or_absence(self):
+    def test_canary_refuses_settings_that_differ_from_bound_digest_or_absence(
+        self,
+    ):
         root, staging, package, selection = self._candidate_fixture()
         image = "sha256:" + "c" * 64
         settings = root / release_canary._RUNTIME_SETTINGS
@@ -134,17 +177,29 @@ class CanaryRetryTests(unittest.TestCase):
         with patch.object(release_canary.subprocess, "run") as run:
             for expected in (selection["runtime_settings_sha256"], None):
                 run.reset_mock()
-                with self.assertRaisesRegex(release_canary.CanaryError, "runtime-settings-changed"):
+                with self.assertRaisesRegex(
+                    release_canary.CanaryError, "runtime-settings-changed"
+                ):
                     release_canary.verify_candidate_image(
-                        root, package, image, run_id="session-1",
-                        selection=selection | {"runtime_settings_sha256": expected},
+                        root,
+                        package,
+                        image,
+                        run_id="session-1",
+                        selection=selection
+                        | {"runtime_settings_sha256": expected},
                     )
-                self.assertEqual([call.args[0][:3] for call in run.call_args_list],
-                                 [["docker", "image", "tag"], ["docker", "image", "rm"]])
+                self.assertEqual(
+                    [call.args[0][:3] for call in run.call_args_list],
+                    [["docker", "image", "tag"], ["docker", "image", "rm"]],
+                )
                 self.assertEqual([package], list(staging.iterdir()))
         settings.unlink()
-        with self.assertRaisesRegex(release_canary.CanaryError, "runtime-settings-changed"):
+        with self.assertRaisesRegex(
+            release_canary.CanaryError, "runtime-settings-changed"
+        ):
             release_canary._copy_runtime_settings(root, staging, selection)
-        release_canary._copy_runtime_settings(root, staging, selection | {"runtime_settings_sha256": None})
+        release_canary._copy_runtime_settings(
+            root, staging, selection | {"runtime_settings_sha256": None}
+        )
         self.assertFalse((staging / release_canary._RUNTIME_SETTINGS).exists())
 

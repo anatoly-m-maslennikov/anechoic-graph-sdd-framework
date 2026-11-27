@@ -8,8 +8,8 @@ context:
   lens: DES
 state:
   status: active
-  version: 22
-  updated_at: 2026-11-10 20:47:54 +0400
+  version: 23
+  updated_at: "2026-11-27T16:29:34.309627+00:00"
 ---
 
 ## Summary
@@ -27,10 +27,6 @@ MCP **must** grant each projected capability no more authority than its source T
 ### Authorization and secrets
 
 When MCP projects a capability, forwards an invocation, or forms a result:
-
-1. Grant no more authority than the source Tool requires and preserve every authorization/permission check.
-2. Bind credentials only to their admitted transport and resource boundary.
-3. Exclude secrets from discovery, results, diagnostics, logs, progress, and generated registries.
 
 Expose only the Tool's admitted authority without leaking credentials. Stop the affected projection/invocation when authority broadens or a secret-bearing representation would be emitted.
 

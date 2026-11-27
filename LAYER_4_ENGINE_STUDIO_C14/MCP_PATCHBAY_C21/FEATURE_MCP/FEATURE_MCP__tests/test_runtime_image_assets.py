@@ -40,8 +40,13 @@ BETA_NEXT_REQUIRED_FIXTURE_FILES = (
     "API_MIXER_beta_C91/shared_runtime.py",
 )
 
-_FRONTEND = "IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_FRONTEND/index.html"
-_CURRENT_ONLY = ("IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_BACKEND/legacy.py", "KERNEL_MIXER_C59/legacy.py")
+_FRONTEND = (
+    "IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_FRONTEND/index.html"
+)
+_CURRENT_ONLY = (
+    "IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_BACKEND/legacy.py",
+    "KERNEL_MIXER_C59/legacy.py",
+)
 _RETIRED_BACKEND = "WORKBENCH_BACKEND_beta_C70/query_run.json"
 
 
@@ -51,7 +56,10 @@ class LifecycleImageAssetsTests(unittest.TestCase):
         delivery.write_text("changed")
         changed = manager.identity(use_packaged_assets=True)
         self.assertNotEqual(before.fingerprint, changed.fingerprint)
-        self.assertIn(delivery.relative_to(root).as_posix(), {entry.path for entry in changed.manifest})
+        self.assertIn(
+            delivery.relative_to(root).as_posix(),
+            {entry.path for entry in changed.manifest},
+        )
         delivery.write_text("source")
         delivery.unlink()
         delivery.symlink_to(root / "version.toml")
@@ -85,7 +93,10 @@ class LifecycleImageAssetsTests(unittest.TestCase):
             selector.write_text('stack = "current"\n')
             selected = manager.identity(use_packaged_assets=True)
             self.assertNotEqual(before.fingerprint, selected.fingerprint)
-            self.assertIn("LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/project.toml", {entry.path for entry in selected.manifest})
+            self.assertIn(
+                "LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/project.toml",
+                {entry.path for entry in selected.manifest},
+            )
             self.assert_beta_next_closure(root, manager, selector)
             docker.assert_not_called()
             selector.write_text('stack = "current"\nextra = true\n')
@@ -108,10 +119,15 @@ class LifecycleImageAssetsTests(unittest.TestCase):
             candidate = manager.identity()
         engine_name = image_inputs.ENGINE_ROOT + "/"
         expected = {entry.path for entry in baseline.manifest} - {
-            images.TOOL_REGISTRY, *(engine_name + name for name in _CURRENT_ONLY),
+            images.TOOL_REGISTRY,
+            *(engine_name + name for name in _CURRENT_ONLY),
         }
-        expected.update(engine_name + name for name in BETA_NEXT_REQUIRED_FIXTURE_FILES)
-        self.assertEqual(expected, {entry.path for entry in candidate.manifest})
+        expected.update(
+            engine_name + name for name in BETA_NEXT_REQUIRED_FIXTURE_FILES
+        )
+        self.assertEqual(
+            expected, {entry.path for entry in candidate.manifest}
+        )
         self.assertNotEqual(baseline.fingerprint, candidate.fingerprint)
         self.assertEqual("beta-next", manager._identity_role(candidate))
         self.assert_beta_next_build_context(root, manager, candidate, expected)
@@ -143,31 +159,51 @@ class LifecycleImageAssetsTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "captured"):
                 manager._build(candidate, use_packaged_assets=False)
             command = run.call_args.args[0]
-            self.assertEqual("beta_next", command[command.index("--target") + 1])
-            self.assertIn(f"{images.FINGERPRINT_LABEL}={candidate.fingerprint}", command)
+            self.assertEqual(
+                "beta_next", command[command.index("--target") + 1]
+            )
+            self.assertIn(
+                f"{images.FINGERPRINT_LABEL}={candidate.fingerprint}", command
+            )
 
-    def test_registry_generator_stages_backend_assets_without_touching_source(self):
+    def test_registry_generator_stages_backend_assets_without_touching_source(
+        self,
+    ):
         backend = "LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_BACKEND"
-        self.assertEqual(f"{backend}/generate_tool_registry.py", images.TOOL_REGISTRY_COMPILER)
-        self.assertEqual(f"{backend}/tool_providers.json", images.TOOL_PROVIDERS)
+        self.assertEqual(
+            f"{backend}/generate_tool_registry.py",
+            images.TOOL_REGISTRY_COMPILER,
+        )
+        self.assertEqual(
+            f"{backend}/tool_providers.json", images.TOOL_PROVIDERS
+        )
         self.assertEqual(f"{backend}/tool_registry.json", images.TOOL_REGISTRY)
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            for component in ("FEATURE_PROGRAMMATIC", "ARCHITECTURE_ANALYSIS_C73",
-                              "MCP_PATCHBAY_C21", "IWE_CONSOLE_C43"):
-                (root / "LAYER_4_ENGINE_STUDIO_C14" / component).mkdir(parents=True)
+            for component in (
+                "FEATURE_PROGRAMMATIC",
+                "ARCHITECTURE_ANALYSIS_C73",
+                "MCP_PATCHBAY_C21",
+                "IWE_CONSOLE_C43",
+            ):
+                (root / "LAYER_4_ENGINE_STUDIO_C14" / component).mkdir(
+                    parents=True
+                )
             feature = root / backend
             feature.mkdir(parents=True)
             (feature / "tool_providers.json").write_text('{"fixture": true}')
             (feature / "generate_tool_registry.py").write_text(
-                'from pathlib import Path\n'
-                'import sys\n'
+                "from pathlib import Path\n"
+                "import sys\n"
                 'root = Path(sys.argv[sys.argv.index("--package-root") + 1])\n'
                 f'feature = root / "{backend}"\n'
                 'assert (feature / "tool_providers.json").is_file()\n'
                 '(feature / "tool_registry.json").write_text("{}")\n'
             )
-            self.assertEqual(b"{}", images.compile_tool_registry(root, timeout=5, max_output=100))
+            self.assertEqual(
+                b"{}",
+                images.compile_tool_registry(root, timeout=5, max_output=100),
+            )
             self.assertFalse((feature / "tool_registry.json").exists())
 
     def test_predecessor_pins_selected_ready_receipt(self):
@@ -243,30 +279,45 @@ class LifecycleImageAssetsTests(unittest.TestCase):
     def test_refresh_uses_explicit_predecessor(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            selector = root / image_inputs.DOCKER_ROOT / "native_model_refresh.py"
+            selector = (
+                root / image_inputs.DOCKER_ROOT / "native_model_refresh.py"
+            )
             selector.parent.mkdir(parents=True)
             selector.touch()
-            manager = images.ImageManager(root, project_root=root, previous_image=IMAGE_ID)
+            manager = images.ImageManager(
+                root, project_root=root, previous_image=IMAGE_ID
+            )
             process = MagicMock(returncode=0)
             process.communicate.return_value = ("b" * 64 + "\n", None)
-            with patch.object(images.subprocess, "Popen", return_value=process) as run:
+            with patch.object(
+                images.subprocess, "Popen", return_value=process
+            ) as run:
                 self.assertEqual("b" * 64, manager._refresh_model(root))
                 self.assertEqual(IMAGE_ID, run.call_args.args[0][-1])
                 self.assertTrue(run.call_args.kwargs["start_new_session"])
             with self.assertRaises(images.ImageError):
-                images.ImageManager(root, project_root=root, previous_image="mutable:tag")
+                images.ImageManager(
+                    root, project_root=root, previous_image="mutable:tag"
+                )
 
     def test_refresh_timeout_kills_process_group(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            selector = root / image_inputs.DOCKER_ROOT / "native_model_refresh.py"
+            selector = (
+                root / image_inputs.DOCKER_ROOT / "native_model_refresh.py"
+            )
             selector.parent.mkdir(parents=True)
             selector.touch()
             manager = images.ImageManager(root, project_root=root)
             process = MagicMock(pid=123, returncode=-9)
-            process.communicate.side_effect = [subprocess.TimeoutExpired("refresh", 1), ("", None)]
-            with (patch.object(images.subprocess, "Popen", return_value=process),
-                  patch.object(images.os, "killpg") as kill):
+            process.communicate.side_effect = [
+                subprocess.TimeoutExpired("refresh", 1),
+                ("", None),
+            ]
+            with (
+                patch.object(images.subprocess, "Popen", return_value=process),
+                patch.object(images.os, "killpg") as kill,
+            ):
                 with self.assertRaises(subprocess.TimeoutExpired):
                     manager._refresh_model(root)
                 kill.assert_called_once_with(123, signal.SIGKILL)

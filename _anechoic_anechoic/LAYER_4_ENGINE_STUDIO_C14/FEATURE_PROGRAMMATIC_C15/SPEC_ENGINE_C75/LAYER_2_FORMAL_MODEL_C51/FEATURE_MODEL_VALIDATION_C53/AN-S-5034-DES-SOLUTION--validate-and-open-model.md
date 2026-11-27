@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-5034
+concern:
+  subject: "Model"
+  path: "ANECHOIC"
+  relation: "is_contained_by"
 container:
   component: C53
 tier: 0
@@ -12,8 +16,8 @@ relations:
   - AN-S-3067@44
 state:
   status: active
-  version: 3
-  updated_at: '2026-11-27T11:43:54.041100+00:00'
+  version: 4
+  updated_at: "2026-11-27T16:16:01.404965+00:00"
 ---
 
 ## Summary

@@ -12,7 +12,9 @@ import unittest
 from unittest.mock import patch
 
 
-from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS import test_suite__shared as full
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS import (
+    test_suite__shared as full,
+)
 
 TOOLS = Path(__file__).resolve().parents[1]
 
@@ -45,28 +47,44 @@ class FocusedReleaseTests(unittest.TestCase):
         with redirect_stdout(self.output), redirect_stderr(self.errors):
             if modules is None:
                 return full.run_full_suite(self.root, phase="unit")
-            return full.run_full_suite(self.root, test_modules=modules, phase="unit")
+            return full.run_full_suite(
+                self.root, test_modules=modules, phase="unit"
+            )
 
     def test_default_selection_runs_the_discovered_unit_suite(self) -> None:
         markers = (self.root / "first.marker", self.root / "second.marker")
-        paths = ("LAYER_4_ENGINE_STUDIO_C14/test_first.py", "LAYER_4_ENGINE_STUDIO_C14/test_second.py")
+        paths = (
+            "LAYER_4_ENGINE_STUDIO_C14/test_first.py",
+            "LAYER_4_ENGINE_STUDIO_C14/test_second.py",
+        )
         for relative, marker in zip(paths, markers):
             self.file(relative, (
                 "import unittest\nclass Test(unittest.TestCase):\n def test_one(self):\n"
                 f"  with open({str(marker)!r}, 'a', encoding='utf-8') as output: output.write('ran\\n')\n"
             ))
         for name in ("test_suite__pub.py", "test_suite__shared.py"):
-            self.file(f"LAYER_4_ENGINE_STUDIO_C14/{name}", "raise AssertionError('excluded')\n")
+            self.file(
+                f"LAYER_4_ENGINE_STUDIO_C14/{name}",
+                "raise AssertionError('excluded')\n",
+            )
         result = subprocess.run(
             (sys.executable, "-B", str(TOOLS / "test_suite__pub.py"), "--project-root", str(self.root)),
             cwd=self.root, capture_output=True, text=True, check=False, timeout=30,
         )
         self.assertEqual(0, result.returncode, result.stderr)
-        self.assertIn("Test scope: unit; selected modules: unit modules\n", result.stdout)
-        starts = [line.removeprefix("Test module START: ") for line in result.stdout.splitlines()
-                  if line.startswith("Test module START: ")]
+        self.assertIn(
+            "Test scope: unit; selected modules: unit modules\n", result.stdout
+        )
+        starts = [
+            line.removeprefix("Test module START: ")
+            for line in result.stdout.splitlines()
+            if line.startswith("Test module START: ")
+        ]
         self.assertCountEqual(paths, starts)
-        self.assertIn("Modules: 2; tests run: 2; skipped: 0; failed modules: 0", result.stdout)
+        self.assertIn(
+            "Modules: 2; tests run: 2; skipped: 0; failed modules: 0",
+            result.stdout,
+        )
         for marker in markers:
             self.assertEqual("ran\n", marker.read_text(encoding="utf-8"))
         self.assertNotIn("focused", result.stdout.lower())
@@ -74,7 +92,10 @@ class FocusedReleaseTests(unittest.TestCase):
         self.assertNotIn("test_suite__shared.py", result.stdout)
 
     def test_public_cli_preserves_selection_report_and_exit_status(self) -> None:
-        passing_marker, failing_marker = self.root / "passing.marker", self.root / "failing.marker"
+        passing_marker, failing_marker = (
+            self.root / "passing.marker",
+            self.root / "failing.marker",
+        )
         def fixture(marker: Path, success: bool) -> str:
             return (
                 "import unittest\n"
@@ -83,8 +104,14 @@ class FocusedReleaseTests(unittest.TestCase):
                 f"  with open({str(marker)!r}, 'a', encoding='utf-8') as output: output.write('ran\\n')\n"
                 f"  self.assertTrue({success!r})\n"
             )
-        passing = self.file("LAYER_4_ENGINE_STUDIO_C14/test_passing.py", fixture(passing_marker, True))
-        failing = self.file("LAYER_4_ENGINE_STUDIO_C14/test_failing.py", fixture(failing_marker, False))
+        passing = self.file(
+            "LAYER_4_ENGINE_STUDIO_C14/test_passing.py",
+            fixture(passing_marker, True),
+        )
+        failing = self.file(
+            "LAYER_4_ENGINE_STUDIO_C14/test_failing.py",
+            fixture(failing_marker, False),
+        )
         for selected, unselected, marker, other_marker, expected in (
             (passing, failing, passing_marker, failing_marker, 0),
             (failing, passing, failing_marker, passing_marker, 1),
@@ -141,15 +168,24 @@ class FocusedReleaseTests(unittest.TestCase):
         self.output, self.errors = io.StringIO(), io.StringIO()
         self.assert_rejected((link.relative_to(self.root).as_posix(),))
 
-    def test_failing_focused_and_skipped_required_modules_fail_the_suite(self) -> None:
+    def test_failing_focused_and_skipped_required_modules_fail_the_suite(
+        self,
+    ) -> None:
         failing = self.file(
             "LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/test_failing.py",
             PASSING.replace("assertTrue(True)", "assertTrue(False)"),
         )
-        later = self.file("LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/test_later.py")
+        later = self.file(
+            "LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/test_later.py"
+        )
         self.assertEqual(
             1,
-            self.run_suite((failing.relative_to(self.root).as_posix(), later.relative_to(self.root).as_posix())),
+            self.run_suite(
+                (
+                    failing.relative_to(self.root).as_posix(),
+                    later.relative_to(self.root).as_posix(),
+                )
+            ),
         )
         self.assertIn(later.name, self.output.getvalue())
         self.assertIn("failed modules: 1", self.output.getvalue())
@@ -163,11 +199,18 @@ class FocusedReleaseTests(unittest.TestCase):
             " def test_required(self): pass\n",
         )
         relative = skipped.relative_to(self.root).as_posix()
-        self.file("pyproject.toml", '[tool.anechoic.test_suite]\n'
-                  f'functional_test_modules = ["{relative}"]\n')
+        self.file(
+            "pyproject.toml",
+            "[tool.anechoic.test_suite]\n"
+            f'functional_test_modules = ["{relative}"]\n',
+        )
         with redirect_stdout(self.output), redirect_stderr(self.errors):
-            self.assertEqual(1, full.run_full_suite(self.root, phase="unit", required=True))
-        self.assertIn("Required functional tests skipped", self.errors.getvalue())
+            self.assertEqual(
+                1, full.run_full_suite(self.root, phase="unit", required=True)
+            )
+        self.assertIn(
+            "Required functional tests skipped", self.errors.getvalue()
+        )
 
 
 if __name__ == "__main__":

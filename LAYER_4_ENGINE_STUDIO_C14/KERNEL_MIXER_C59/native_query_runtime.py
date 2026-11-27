@@ -29,10 +29,20 @@ from .spec_trace import remove_native_traces
 from .statements import select_statement
 from .workspace import WorkspaceStore
 from .watcher_change_log import WatcherChangeLog
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import ManifestIdentity, NativeProjectSelection
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import journal_storage, validated_journal_root
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import pending_database_journal
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import migrate_project_database
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import (
+    ManifestIdentity,
+    NativeProjectSelection,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    journal_storage,
+    validated_journal_root,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    pending_database_journal,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    migrate_project_database,
+)
 
 
 @dataclass(config=ConfigDict(strict=True, extra="forbid", hide_input_in_errors=True), frozen=True)
@@ -51,12 +61,12 @@ class NativeQueryInputs:
     status_domains: dict[str, set[str]] | None = None
 
 
-
-
-
-
-class NativeQueryRuntime(NativeQueryProjection, NativeQueryRebuild, ServiceInterface):
-    def __init__(self, selection: NativeProjectSelection, inputs: NativeQueryInputs) -> None:
+class NativeQueryRuntime(
+    NativeQueryProjection, NativeQueryRebuild, ServiceInterface
+):
+    def __init__(
+        self, selection: NativeProjectSelection, inputs: NativeQueryInputs
+    ) -> None:
         self.selection = selection
         self._projection_selection = selection
         self._root = selection.root
@@ -83,7 +93,14 @@ class NativeQueryRuntime(NativeQueryProjection, NativeQueryRebuild, ServiceInter
         self._watcher: SourceWatcher | None = None
         self._watch_thread: threading.Thread | None = None
         self._watch_stop = threading.Event()
-        self._realization_options: tuple[tuple[str, ...] | None, tuple[str, ...], dict[str, tuple[str, ...]]] | None = None
+        self._realization_options: (
+            tuple[
+                tuple[str, ...] | None,
+                tuple[str, ...],
+                dict[str, tuple[str, ...]],
+            ]
+            | None
+        ) = None
 
     def _open_store(self, workbench: dict) -> QueryStore:
         from duckdb import IOException
@@ -117,15 +134,26 @@ class NativeQueryRuntime(NativeQueryProjection, NativeQueryRebuild, ServiceInter
         if self._realization_options is not None:
             snapshot = self.selection.structure_snapshot
             self._watcher = SourceWatcher(
-                self._root, self.selection.control_root, implementation_root=self._root, watch_root_files=True,
-                exclude_directory=lambda path: realization_projection.exclude_directory(
-                    path, self.selection.control_relative,
+                self._root,
+                self.selection.control_root,
+                implementation_root=self._root,
+                watch_root_files=True,
+                exclude_directory=lambda path: (
+                    realization_projection.exclude_directory(
+                        path,
+                        self.selection.control_relative,
+                    )
                 ),
                 additional_directory=snapshot.parent if snapshot is not None else None,
                 poll_bind_mount=poll_bind_mount,
             )
         else:
-            self._watcher = SourceWatcher(self._root, self.selection.control_root, watch_root_files=True, poll_bind_mount=poll_bind_mount)
+            self._watcher = SourceWatcher(
+                self._root,
+                self.selection.control_root,
+                watch_root_files=True,
+                poll_bind_mount=poll_bind_mount,
+            )
         self._watcher.start()
 
     def start(self) -> None:
@@ -159,8 +187,12 @@ class NativeQueryRuntime(NativeQueryProjection, NativeQueryRebuild, ServiceInter
                 lambda record: store.record_query_attempts([record])
             ))
             self._workspaces.clear_transient_results()
-            self._watch_thread = threading.Thread(target=self._watch_sources, args=(store,),
-                                                  name="native-source-watcher", daemon=True)
+            self._watch_thread = threading.Thread(
+                target=self._watch_sources,
+                args=(store,),
+                name="native-source-watcher",
+                daemon=True,
+            )
             self._watch_thread.start()
         except BaseException as error:
             print(f"Native Workbench startup failed: {error}", file=sys.stderr)
@@ -265,8 +297,12 @@ class NativeQueryRuntime(NativeQueryProjection, NativeQueryRebuild, ServiceInter
         validate_delivery(result_delivery, result_format)
         store = self._owner()
         store.prune_results()
-        result = store.page(query_id, offset, page_size=page_size, grid=grid, preview=preview)
-        return deliver(store, self.selection.root, result, result_delivery, result_format)
+        result = store.page(
+            query_id, offset, page_size=page_size, grid=grid, preview=preview
+        )
+        return deliver(
+            store, self.selection.root, result, result_delivery, result_format
+        )
 
     def check(self, sql: str, cursor_position: int | None = None) -> dict[str, Any]:
         result = self._owner().check(select_statement(sql, cursor_position))

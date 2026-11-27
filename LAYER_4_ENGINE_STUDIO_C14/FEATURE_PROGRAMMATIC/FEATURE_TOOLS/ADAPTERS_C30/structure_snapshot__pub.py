@@ -58,6 +58,7 @@ class Component:
     sha256: str
     fields: Mapping
     source_path: str
+    purpose: str | None = None
 
     _validate_fields = field_validator("fields", mode="wrap")(
         _preserve_mapping
@@ -105,7 +106,7 @@ class StructureSnapshot:
 
 
 def read_structure(path: Path) -> StructureSnapshot:
-    """Load an immutable view of one complete published file; propagate read errors."""
+    """Load one immutable published view. Propagate read errors."""
     return parse_structure(path.read_bytes())
 
 
@@ -147,7 +148,10 @@ def parse_structure(content: bytes) -> StructureSnapshot:
         parent = record["parent"]
         if parent is not None:
             _string(parent, f"component {cid} parent")
-        component = Component(parent, *_carrier(record, f"component {cid}"))
+        component = Component(
+            parent, *_carrier(record, f"component {cid}"),
+            purpose=record.get("purpose"),
+        )
         _string(component.fields.get("name"), f"component {cid} name")
         components[cid] = component
     packages = {}

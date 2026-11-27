@@ -9,30 +9,59 @@ from .top_down__pub import compare_obligations
 
 
 def _facts(claim):
-    return {'children': sorted(set(claim['roles'].values())),
-            **({'entry_points': sorted(claim['entry_points'])} if 'entry_points' in claim else {}),
-            **({'current_record_count': claim['current_record_count']} if 'current_record_count' in claim else {}),
-            **{f'role.{key}': value for key, value in claim['roles'].items()}}
+    return {
+        "children": sorted(set(claim["roles"].values())),
+        **(
+            {"entry_points": sorted(claim["entry_points"])}
+            if "entry_points" in claim
+            else {}
+        ),
+        **(
+            {"current_record_count": claim["current_record_count"]}
+            if "current_record_count" in claim
+            else {}
+        ),
+        **{f"role.{key}": value for key, value in claim["roles"].items()},
+    }
 
 
 def _count_gaps(model, facts, compiled):
-    if any('current_record_count' in facts[role] for role in ('contract', 'solution')):
-        for role in ('manifest', 'contract', 'solution'):
-            if 'current_record_count' not in facts[role]:
-                compiled['unresolved'].append({'source': model[role]['source'], 'field': 'current_record_count',
-                                               'message': 'Current record count is absent'})
+    if any(
+        "current_record_count" in facts[role]
+        for role in ("contract", "solution")
+    ):
+        for role in ("manifest", "contract", "solution"):
+            if "current_record_count" not in facts[role]:
+                compiled["unresolved"].append(
+                    {
+                        "source": model[role]["source"],
+                        "field": "current_record_count",
+                        "message": "Current record count is absent",
+                    }
+                )
 
 
 def _count_directions(facts, report):
-    if any('current_record_count' in facts[role] for role in ('contract', 'solution')):
-        for left, right in (('manifest', 'contract'), ('manifest', 'solution'), ('contract', 'solution')):
-            direction = report['directions'][f'{left}_{right}']
-            if (('current_record_count' not in facts[left] or 'current_record_count' not in facts[right])
-                    and direction['status'] == 'matched'):
-                direction['status'] = 'unresolved'
-        if report['status'] == 'matched' and any(direction['status'] == 'unresolved'
-                                                 for direction in report['directions'].values()):
-            report['status'] = 'unresolved'
+    if any(
+        "current_record_count" in facts[role]
+        for role in ("contract", "solution")
+    ):
+        for left, right in (
+            ("manifest", "contract"),
+            ("manifest", "solution"),
+            ("contract", "solution"),
+        ):
+            direction = report["directions"][f"{left}_{right}"]
+            if (
+                "current_record_count" not in facts[left]
+                or "current_record_count" not in facts[right]
+            ) and direction["status"] == "matched":
+                direction["status"] = "unresolved"
+        if report["status"] == "matched" and any(
+            direction["status"] == "unresolved"
+            for direction in report["directions"].values()
+        ):
+            report["status"] = "unresolved"
 
 
 def _provider_facts(root, component_id, children, providers):
@@ -115,8 +144,10 @@ def check_group_spec(root, component_id, manifest, contract=None, solution=None,
     _names([component_id], r'C[0-9]+', 'group Component ID')
     children = _names(structure_children, r'C[0-9]+', 'Structure children')
     if component_id in children:
-        raise ValueError('group cannot be its own direct child')
-    model = load_boundary_model(root, component_id, manifest, contract, solution)
+        raise ValueError("group cannot be its own direct child")
+    model = load_boundary_model(
+        root, component_id, manifest, contract, solution
+    )
     compiled = compile_lean(model)
     claims = compiled['claims']
     facts = {role: _facts(claims[role]) if role in claims and 'roles' in claims[role] else {}
@@ -132,7 +163,10 @@ def check_group_spec(root, component_id, manifest, contract=None, solution=None,
         facts['manifest']['current_record_count'] = _count(current_record_count)
     _count_gaps(model, facts, compiled)
     _server_facts(model, facts, compiled)
-    sources = {role: model[role]['source'] for role in ('manifest', 'contract', 'solution')}
+    sources = {
+        role: model[role]["source"]
+        for role in ("manifest", "contract", "solution")
+    }
     report = compare_obligations(sources, facts, lean=lean)
     _count_directions(facts, report)
     if report['status'] == 'matched' and (compiled['issues'] or compiled['unresolved']):

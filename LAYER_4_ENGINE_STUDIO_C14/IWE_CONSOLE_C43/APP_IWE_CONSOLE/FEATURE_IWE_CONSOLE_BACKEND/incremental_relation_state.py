@@ -14,8 +14,14 @@ from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (
     _carrier_facts, _materialized_atom,
 )
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (
-    RelationRegistry, RegistryCompilation, RegistryContribution, _unambiguous_aliases,
-    _warn_colliding_uses, compile_registry, registry_contribution, registry_from_contributions,
+    RelationRegistry,
+    RegistryCompilation,
+    RegistryContribution,
+    _unambiguous_aliases,
+    _warn_colliding_uses,
+    compile_registry,
+    registry_contribution,
+    registry_from_contributions,
 )
 
 
@@ -43,8 +49,13 @@ class RelationState:
     static_registry: bool
 
 
-def _scope_signature(scopes: list[dict]) -> tuple[tuple[str, str | None, str | None], ...]:
-    return tuple((row["name"], row.get("scope_unit_id"), row.get("parent_name")) for row in scopes)
+def _scope_signature(
+    scopes: list[dict],
+) -> tuple[tuple[str, str | None, str | None], ...]:
+    return tuple(
+        (row["name"], row.get("scope_unit_id"), row.get("parent_name"))
+        for row in scopes
+    )
 
 
 def _registry(
@@ -55,7 +66,9 @@ def _registry(
 
 
 def _fact_contributors(
-    scopes: list[dict], registry: RelationRegistry, direct: Mapping[str, tuple[tuple, ...]],
+    scopes: list[dict],
+    registry: RelationRegistry,
+    direct: Mapping[str, tuple[tuple, ...]],
 ) -> dict[tuple, frozenset[tuple[str, str]]]:
     contributors: dict[tuple, set[tuple[str, str]]] = {}
     for fact in _scope_facts(scopes, registry):
@@ -66,7 +79,9 @@ def _fact_contributors(
     return {fact: frozenset(owners) for fact, owners in contributors.items()}
 
 
-def _facts_by_endpoint(contributors: Mapping[tuple, object]) -> dict[tuple[str, str], frozenset[tuple]]:
+def _facts_by_endpoint(
+    contributors: Mapping[tuple, object],
+) -> dict[tuple[str, str], frozenset[tuple]]:
     indexed: dict[tuple[str, str], set[tuple]] = {}
     for fact in contributors:
         for endpoint in (fact[:2], fact[3:]):
@@ -75,7 +90,10 @@ def _facts_by_endpoint(contributors: Mapping[tuple, object]) -> dict[tuple[str, 
 
 
 def _index_fact(
-    indexed: dict[tuple[str, str], frozenset[tuple]], fact: tuple, *, add: bool,
+    indexed: dict[tuple[str, str], frozenset[tuple]],
+    fact: tuple,
+    *,
+    add: bool,
 ) -> None:
     for endpoint in {fact[:2], fact[3:]}:
         facts = set(indexed.get(endpoint, ()))
@@ -90,8 +108,12 @@ def _index_fact(
 
 
 def _refresh_support(
-    support: dict[tuple[str, str], frozenset[tuple]], fact: tuple, registry: RelationRegistry,
-    present: set[tuple[str, str]], *, active: bool,
+    support: dict[tuple[str, str], frozenset[tuple]],
+    fact: tuple,
+    registry: RelationRegistry,
+    present: set[tuple[str, str]],
+    *,
+    active: bool,
 ) -> set[tuple[str, str]]:
     """Replace this fact's support edges without enumerating unrelated facts."""
     inverse = registry.inverse.get(fact[2])
@@ -112,7 +134,9 @@ def _refresh_support(
             support.pop(owner, None)
         if before != frozenset(edges):
             affected.add(owner)
-    for owner, edges in (_support_for_fact(fact, registry, present).items() if active else ()):
+    for owner, edges in (
+        _support_for_fact(fact, registry, present).items() if active else ()
+    ):
         before = support.get(owner, frozenset())
         current = set(before)
         current.update(edges)
@@ -122,7 +146,9 @@ def _refresh_support(
     return affected
 
 
-def _duplicate_membership(atoms: list[dict]) -> tuple[frozenset[str], frozenset[str]]:
+def _duplicate_membership(
+    atoms: list[dict],
+) -> tuple[frozenset[str], frozenset[str]]:
     paths_by_ref: dict[str, set[str]] = {}
     first_paths: dict[str, str] = {}
     for row in atoms:
@@ -130,15 +156,26 @@ def _duplicate_membership(atoms: list[dict]) -> tuple[frozenset[str], frozenset[
         if isinstance(ref, str) and isinstance(path, str):
             paths_by_ref.setdefault(ref, set()).add(path)
             first_paths.setdefault(ref, path)
-    duplicate_refs = frozenset(ref for ref, paths in paths_by_ref.items() if len(paths) > 1)
+    duplicate_refs = frozenset(
+        ref for ref, paths in paths_by_ref.items() if len(paths) > 1
+    )
     return (
-        frozenset(path for ref, paths in paths_by_ref.items() if ref in duplicate_refs
-                  for path in paths if path != first_paths[ref]),
+        frozenset(
+            path
+            for ref, paths in paths_by_ref.items()
+            if ref in duplicate_refs
+            for path in paths
+            if path != first_paths[ref]
+        ),
         duplicate_refs,
     )
 
 
-def _add(outgoing: dict[tuple[str, str], set[tuple]], fact: tuple, inverse: Mapping[str, str]) -> set[tuple[str, str]]:
+def _add(
+    outgoing: dict[tuple[str, str], set[tuple]],
+    fact: tuple,
+    inverse: Mapping[str, str],
+) -> set[tuple[str, str]]:
     affected = {fact[:2]}
     outgoing.setdefault(fact[:2], set()).add((*fact, False))
     if fact[2] in inverse:
@@ -148,7 +185,11 @@ def _add(outgoing: dict[tuple[str, str], set[tuple]], fact: tuple, inverse: Mapp
     return affected
 
 
-def _remove(outgoing: dict[tuple[str, str], set[tuple]], fact: tuple, inverse: Mapping[str, str]) -> set[tuple[str, str]]:
+def _remove(
+    outgoing: dict[tuple[str, str], set[tuple]],
+    fact: tuple,
+    inverse: Mapping[str, str],
+) -> set[tuple[str, str]]:
     affected = {fact[:2]}
     outgoing.get(fact[:2], set()).discard((*fact, False))
     if fact[2] in inverse:
@@ -159,7 +200,11 @@ def _remove(outgoing: dict[tuple[str, str], set[tuple]], fact: tuple, inverse: M
 
 
 def _delta_edge(
-    outgoing: dict[tuple[str, str], frozenset[tuple]], fact: tuple, inverse: Mapping[str, str], *, add: bool,
+    outgoing: dict[tuple[str, str], frozenset[tuple]],
+    fact: tuple,
+    inverse: Mapping[str, str],
+    *,
+    add: bool,
 ) -> set[tuple[str, str]]:
     affected = {fact[:2]}
     edges = set(outgoing.get(fact[:2], ()))
@@ -207,7 +252,11 @@ def _full_state(
     graph_atoms = _graph_sources(atoms)
     static_registry = registry is not None
     if registry is None:
-        compiled = compile_registry(graph_atoms) if compilation is None else compilation
+        compiled = (
+            compile_registry(graph_atoms)
+            if compilation is None
+            else compilation
+        )
         contributions = compiled.contributions
         registry = compiled.registry
     else:
@@ -224,7 +273,9 @@ def _full_state(
     for fact in contributors:
         _add(outgoing, fact, registry.inverse)
     support = _support_facts(graph_atoms, scopes, registry, direct)
-    atom_rows, scope_rows = _full_rows(raw_by_path, graph_paths, aliases, registry, outgoing, support, scopes)
+    atom_rows, scope_rows = _full_rows(
+        raw_by_path, graph_paths, aliases, registry, outgoing, support, scopes
+    )
     return RelationState(
         raw_by_path, {row["ref"]: row["source_path"] for row in graph_atoms if row["ref"] is not None}, direct,
         {key: frozenset(value) for key, value in outgoing.items()}, atom_rows, tuple(raw_by_path),

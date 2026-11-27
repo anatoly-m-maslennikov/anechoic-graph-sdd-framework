@@ -4,16 +4,28 @@ import unittest
 from itertools import pairwise
 from pathlib import Path
 
-from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_4_SPEC_COMPARISON_C88._package__shared import check_cli_spec
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_4_SPEC_COMPARISON_C88._package__shared import (
+    check_cli_spec,
+)
 from .test_cli_spec import _CONTRACT, _MANIFEST, _carrier
 
 
 def _release_workflow(*, bypass=None, refs=('candidate', 'candidate', 'candidate'),
                       early=None, outcome='completed', build_owner='C81'):
     def edge(destination, **params):
-        return {'target': destination, 'guard': {'type': 'matchesTrace', 'params': params}}
+        return {
+            "target": destination,
+            "guard": {"type": "matchesTrace", "params": params},
+        }
 
-    stages = ('static', 'functional', 'build', 'verify_image', 'install', 'report')
+    stages = (
+        "static",
+        "functional",
+        "build",
+        "verify_image",
+        "install",
+        "report",
+    )
     states = {}
     for stage, target in pairwise(stages):
         detail = {'release_stage': stage}
@@ -29,15 +41,19 @@ def _release_workflow(*, bypass=None, refs=('candidate', 'candidate', 'candidate
     states['report'] = {'on': {'complete': edge('done', kind='output', outcome=outcome)}}
     states['done'] = {'type': 'final'}
     if early:
-        states['static']['on']['early'] = edge(
-            'done', kind='output', **({} if early == 'wildcard' else {'outcome': early}))
+        states["static"]["on"]["early"] = edge(
+            "done",
+            kind="output",
+            **({} if early == "wildcard" else {"outcome": early}),
+        )
     if bypass:
         source, target = bypass
-        states[source]['on']['skip'] = edge(target, kind='effect')
-    machine = {'id': 'release', 'initial': 'idle', 'states': states}
-    return (f'## Claim\n\n### Formal Claim\n\n```python\n'
-            f"component_workflow(component='C2', action='run', machine={machine!r})\n```\n")
-
+        states[source]["on"]["skip"] = edge(target, kind="effect")
+    machine = {"id": "release", "initial": "idle", "states": states}
+    return (
+        f"## Claim\n\n### Formal Claim\n\n```python\n"
+        f"component_workflow(component='C2', action='run', machine={machine!r})\n```\n"
+    )
 
 
 class CliReleaseSpecTests(unittest.TestCase):

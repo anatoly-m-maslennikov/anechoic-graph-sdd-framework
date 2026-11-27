@@ -1,4 +1,4 @@
-"""Exercise optional warm Worker startup and cleanup through the shared owner CLI."""
+"Exercise optional warm Worker startup and cleanup through the shared owner CLI."
 
 from contextlib import suppress
 import json
@@ -97,7 +97,11 @@ class WarmWorkerOwnerTests(unittest.TestCase):
     def start_owner(self, mode):
         settings = self.root / "host.toml"
         settings.write_text(
-            f"schema_version=1\n[shared_mcp]\nproject_root={json.dumps(str(self.root))}\nhttp_port=8092\n"
+            (
+                "schema_version=1\n[shared_mcp]\nproject_root="
+                f"{json.dumps(str(self.root))}"
+                "\nhttp_port=8092\n"
+            )
         )
         env = {
             **os.environ,
@@ -154,7 +158,10 @@ class WarmWorkerOwnerTests(unittest.TestCase):
             except FileNotFoundError, ConnectionRefusedError:
                 sleep(0.02)
         self.fail(
-            f"Peer owner did not reach its expected state: {self.log.read_text()}"
+            (
+                "Peer owner did not reach its expected state: "
+                f"{self.log.read_text()}"
+            )
         )
 
     def assert_owner_ready(self):

@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-5032
+concern:
+  subject: "Component"
+  path: "Model/Graph/Node//Artifact//SSOT//Prescribed/Structure"
+  relation: "is_contained_by"
 container:
   component: C51
 tier: 0
@@ -12,8 +16,8 @@ relations:
   - AN-S-3054@8
 state:
   status: active
-  version: 1
-  updated_at: '2026-11-27T01:04:20.461163+00:00'
+  version: 2
+  updated_at: "2026-11-27T16:16:01.404965+00:00"
 ---
 
 ## Summary

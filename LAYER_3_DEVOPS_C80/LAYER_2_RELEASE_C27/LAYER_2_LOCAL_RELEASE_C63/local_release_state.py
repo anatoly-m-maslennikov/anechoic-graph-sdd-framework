@@ -29,7 +29,9 @@ PHASES = (
     "copy active sources", "build package", "prepare candidate image", "verify candidate image",
     "verify candidate canary", "copy product to installed framework", "install project runtime", "start mcp", "final",
 )
-_OLD_PHASES = tuple(phase for phase in PHASES if phase != "verify candidate canary")
+_OLD_PHASES = tuple(
+    phase for phase in PHASES if phase != "verify candidate canary"
+)
 
 
 def abort_request_path(root, journal_path):
@@ -74,7 +76,9 @@ def _version_applied(journal, expected):
 
 def atomic_write(path, text):
     path.parent.mkdir(parents=True, exist_ok=True)
-    with NamedTemporaryFile(mode="w", dir=path.parent, encoding="utf-8", delete=False) as output:
+    with NamedTemporaryFile(
+        mode="w", dir=path.parent, encoding="utf-8", delete=False
+    ) as output:
         temporary = Path(output.name)
         try:
             output.write(text)
@@ -103,7 +107,9 @@ def _read(path):
             raise ValueError("oversized journal")
         return json.loads(raw)
     except (OSError, ValueError) as error:
-        raise LocalReleaseError("local-release-resume-journal-invalid") from error
+        raise LocalReleaseError(
+            "local-release-resume-journal-invalid"
+        ) from error
 
 
 def _checked(data, run_id):
@@ -132,7 +138,8 @@ def _checked(data, run_id):
 
 def _checked_failures(failures):
     return isinstance(failures, list) and all(
-        isinstance(item, dict) and isinstance(item.get("logs"), dict) for item in failures
+        isinstance(item, dict) and isinstance(item.get("logs"), dict)
+        for item in failures
     )
 
 
@@ -164,7 +171,9 @@ class Journal:
     def __init__(self, root, run_id, selection, options, resume, *, source_binding=None, started_at=None):
         self.root = root
         self.run_id = run_id
-        self.path = _project_path(root, _RUNS / run_id / "state.json", label="resume-journal")
+        self.path = _project_path(
+            root, _RUNS / run_id / "state.json", label="resume-journal"
+        )
         if resume:
             if not self.path.is_file():
                 raise LocalReleaseError("local-release-resume-run-missing")
@@ -186,7 +195,9 @@ class Journal:
             self.save()
 
     def save(self):
-        _project_path(self.root, self.path.relative_to(self.root), label="resume-journal")
+        _project_path(
+            self.root, self.path.relative_to(self.root), label="resume-journal"
+        )
         atomic_write(self.path, json.dumps(self.data, sort_keys=True) + "\n")
 
     def abort_path(self):
@@ -298,7 +309,8 @@ def test_environment():
         os.environ.get("ANECHOIC_TEST_IMAGE_DEADLINES"),
         os.environ.get("ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY"),
         os.environ.get("ANECHOIC_TEST_FANOUT"),
-        os.environ.get("PLAYWRIGHT_BROWSERS_PATH"), *((image_fanout,) if image_fanout is not None else ()),
+        os.environ.get("PLAYWRIGHT_BROWSERS_PATH"),
+        *((image_fanout,) if image_fanout is not None else ()),
     )
 
 def _hash_tree(digest, root):

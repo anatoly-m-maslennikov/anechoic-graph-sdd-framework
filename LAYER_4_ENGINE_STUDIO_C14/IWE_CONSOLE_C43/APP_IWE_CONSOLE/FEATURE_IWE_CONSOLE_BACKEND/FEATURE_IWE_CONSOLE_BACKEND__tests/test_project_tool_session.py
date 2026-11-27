@@ -41,7 +41,7 @@ def _project(parent, name):
 
 
 class ChildHTTP:
-    """Return the native health, catalog and Tool envelopes over the HTTP boundary."""
+    "Return the native health, catalog and Tool envelopes over the HTTP boundary."
 
     def __init__(self):
         self.started = asyncio.Event()
@@ -98,7 +98,12 @@ class ChildHTTP:
                     value = {"result": {"value": {}, "text": None}}
                 case _:
                     raise AssertionError(
-                        f"Unexpected child request {request.method} {request.url.path}"
+                        (
+                            "Unexpected child request "
+                            f"{request.method}"
+                            " "
+                            f"{request.url.path}"
+                        )
                     )
             return httpx2.Response(200, json=value)
 

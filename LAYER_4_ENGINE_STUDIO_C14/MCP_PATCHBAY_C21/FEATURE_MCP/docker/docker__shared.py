@@ -16,14 +16,26 @@ from pathlib import Path
 import platform as host_platform
 import subprocess
 
-from MCP_PATCHBAY_C21.FEATURE_MCP.docker import candidate_image_cli as _candidate_image_cli
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker import (
+    candidate_image_cli as _candidate_image_cli,
+)
 from MCP_PATCHBAY_C21.FEATURE_MCP.docker import runtime as _runtime
-from MCP_PATCHBAY_C21.FEATURE_MCP.docker import shared_mcp_launcher as _shared_mcp_launcher
-from MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_backend import ProjectMcpBackend as ProjectMcpBackend
-from MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_launcher import Launcher as Launcher
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker import (
+    shared_mcp_launcher as _shared_mcp_launcher,
+)
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_backend import (
+    ProjectMcpBackend as ProjectMcpBackend,
+)
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_launcher import (
+    Launcher as Launcher,
+)
 from MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime import Runtime as Runtime
-from MCP_PATCHBAY_C21.FEATURE_MCP.docker.shared_mcp_launcher import SharedMcpLauncher as SharedMcpLauncher
-from MCP_PATCHBAY_C21.FEATURE_MCP.docker.shared_supervisor import supervise_project as supervise_project
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.shared_mcp_launcher import (
+    SharedMcpLauncher as SharedMcpLauncher,
+)
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.shared_supervisor import (
+    supervise_project as supervise_project,
+)
 
 try:
     from .project_mcp_docker_command import BackendError as BackendError
@@ -97,14 +109,26 @@ class ImageManager(ImageSource, ImageBuild):
         if project_root is None:
             raise ImageError("IMAGE_INPUT_UNAVAILABLE", "An explicit selected Project root is required")
         self.project_root = Path(project_root)
-        if previous_image is not None and (not isinstance(previous_image, str)
-                                           or IMMUTABLE_IMAGE.fullmatch(previous_image) is None):
-            raise ImageError("IMAGE_INPUT_UNAVAILABLE", "Previous image must be an immutable sha256 ID")
+        if previous_image is not None and (
+            not isinstance(previous_image, str)
+            or IMMUTABLE_IMAGE.fullmatch(previous_image) is None
+        ):
+            raise ImageError(
+                "IMAGE_INPUT_UNAVAILABLE",
+                "Previous image must be an immutable sha256 ID",
+            )
         self.previous_image = previous_image
         self._previous_image_resolved = previous_image is not None
-        self.build_temp_root = Path(build_temp_root) if build_temp_root is not None else None
-        if build_provenance is not None and not isinstance(build_provenance, ImageBuildProvenance):
-            raise ImageError("IMAGE_INPUT_UNAVAILABLE", "Image build provenance must be explicitly typed")
+        self.build_temp_root = (
+            Path(build_temp_root) if build_temp_root is not None else None
+        )
+        if build_provenance is not None and not isinstance(
+            build_provenance, ImageBuildProvenance
+        ):
+            raise ImageError(
+                "IMAGE_INPUT_UNAVAILABLE",
+                "Image build provenance must be explicitly typed",
+            )
         self.build_provenance = build_provenance
         self.executor = executor
         if isinstance(timeout, bool) or not isinstance(timeout, (int, float)) or not 0 < timeout <= 900:
@@ -186,8 +210,13 @@ class ImageManager(ImageSource, ImageBuild):
                 return None
             raise ImageError(code, "Docker image operation failed")
         output = "" if build else result.stdout
-        if not isinstance(output, str) or len(output.encode("utf-8")) > _MAX_OUTPUT:
-            raise ImageError(code, "Docker image output is incomplete or invalid")
+        if (
+            not isinstance(output, str)
+            or len(output.encode("utf-8")) > _MAX_OUTPUT
+        ):
+            raise ImageError(
+                code, "Docker image output is incomplete or invalid"
+            )
         return output
 
     def _inspect_details(self, image: str, identity: ImageIdentity, *,
@@ -203,12 +232,16 @@ class ImageManager(ImageSource, ImageBuild):
                 if not isinstance(labels, dict) or any(labels.get(key) != expected for key, expected in self.build_provenance.labels().items()):
                     raise ValueError("built image provenance differs")
             platform = identity.platform.split("/")
-            if (value["Id"] != image or not isinstance(labels, dict)
-                    or labels.get(SCHEMA_LABEL) != SCHEMA
-                    or labels.get(FINGERPRINT_LABEL) != identity.fingerprint
-                    or labels.get(OCI_VERSION_LABEL) != identity.version
-                    or value.get("Os") != platform[0] or value.get("Architecture") != platform[1]
-                    or (len(platform) == 3 and value.get("Variant") != platform[2])):
+            if (
+                value["Id"] != image
+                or not isinstance(labels, dict)
+                or labels.get(SCHEMA_LABEL) != SCHEMA
+                or labels.get(FINGERPRINT_LABEL) != identity.fingerprint
+                or labels.get(OCI_VERSION_LABEL) != identity.version
+                or value.get("Os") != platform[0]
+                or value.get("Architecture") != platform[1]
+                or (len(platform) == 3 and value.get("Variant") != platform[2])
+            ):
                 raise ValueError("image identity differs")
             created = value["Created"]
             tags = value.get("RepoTags") or []
@@ -239,15 +272,22 @@ class ImageManager(ImageSource, ImageBuild):
             raise self._input_error()
         return "beta-next" if stack == "beta_next" else "test"
 
-    def _current(self, identity: ImageIdentity, *, use_packaged_assets: bool = False):
+    def _current(
+        self, identity: ImageIdentity, *, use_packaged_assets: bool = False
+    ):
         if self.identity(use_packaged_assets=use_packaged_assets) != identity:
             raise self._input_error()
 
     def resolve(self, explicit_id: str | None = None, build_if_missing: bool = True, *,
                 use_packaged_assets: bool = False) -> str:
-        if explicit_id is not None and (not isinstance(explicit_id, str)
-                                       or IMMUTABLE_IMAGE.fullmatch(explicit_id) is None):
-            raise ImageError("IMAGE_REFUSED", "An explicit image must be one lowercase immutable sha256 ID")
+        if explicit_id is not None and (
+            not isinstance(explicit_id, str)
+            or IMMUTABLE_IMAGE.fullmatch(explicit_id) is None
+        ):
+            raise ImageError(
+                "IMAGE_REFUSED",
+                "An explicit image must be one lowercase immutable sha256 ID",
+            )
         if type(build_if_missing) is not bool or type(use_packaged_assets) is not bool:
             raise ImageError("IMAGE_REFUSED", "Image build selection must be a boolean")
         use_packaged_assets = use_packaged_assets or not build_if_missing

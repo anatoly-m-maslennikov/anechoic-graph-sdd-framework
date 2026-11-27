@@ -21,7 +21,9 @@ from pydantic import ConfigDict, field_validator
 from pydantic.dataclasses import dataclass
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import atomic_tempfile, owned_temporary_root
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import runtime_project_root as repository_root
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import (
+    runtime_project_root as repository_root,
+)
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import open_regular
 
 
@@ -74,7 +76,9 @@ def _parent(root: Path, path: Path) -> tuple[int, str, str]:
         relative = path.relative_to(root)
     except ValueError as exc:
         raise ValueError("carrier outside project") from exc
-    if not relative.parts or any(part in (".", "..") for part in relative.parts):
+    if not relative.parts or any(
+        part in (".", "..") for part in relative.parts
+    ):
         raise ValueError("invalid project-relative carrier path")
     flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
     fd = os.open(root, flags)
@@ -90,7 +94,9 @@ def _parent(root: Path, path: Path) -> tuple[int, str, str]:
 
 
 def _read(parent: int, name: str) -> bytes:
-    fd = os.open(name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=parent)
+    fd = os.open(
+        name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=parent
+    )
     with os.fdopen(fd, "rb") as stream:
         if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):
             raise ValueError("carrier is not a regular file")
@@ -138,19 +144,25 @@ def _query_read(reader, root: Path, path: Path, parent: int, name: str) -> bytes
             raise ValueError("carrier parent changed")
     finally:
         os.close(checked_parent)
-    descriptor = os.open(name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=parent)
+    descriptor = os.open(
+        name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=parent
+    )
     try:
         before = os.fstat(descriptor)
         if not stat.S_ISREG(before.st_mode):
             raise ValueError("carrier is not a regular file")
         try:
-            data = reader.lifecycle_read(Path(root).absolute() / path, descriptor=descriptor)
+            data = reader.lifecycle_read(
+                Path(root).absolute() / path, descriptor=descriptor
+            )
         except Exception as exc:
             raise RuntimeError("Workbench carrier read failed") from exc
         actual = os.fstat(descriptor)
         after = os.stat(name, dir_fd=parent, follow_symlinks=False)
-        if ((after.st_dev, after.st_ino) != (actual.st_dev, actual.st_ino)
-                or (before.st_size, before.st_mtime_ns) != (actual.st_size, actual.st_mtime_ns)):
+        if (after.st_dev, after.st_ino) != (actual.st_dev, actual.st_ino) or (
+            before.st_size,
+            before.st_mtime_ns,
+        ) != (actual.st_size, actual.st_mtime_ns):
             raise ValueError("carrier changed during Workbench read")
     finally:
         os.close(descriptor)
@@ -186,7 +198,8 @@ def _changed(reader, old: Path | None, new: Path | None) -> None:
 
 def _message(exc: Exception) -> str:
     if isinstance(exc, RuntimeError) and str(exc) in {
-        "Workbench carrier read failed", "Workbench carrier read returned invalid bytes",
+        "Workbench carrier read failed",
+        "Workbench carrier read returned invalid bytes",
         "Workbench synchronization failed",
     }:
         return str(exc)

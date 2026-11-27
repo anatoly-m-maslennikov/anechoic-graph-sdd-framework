@@ -15,7 +15,9 @@ import time
 import unittest
 from unittest.mock import patch
 
-from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS import test_suite__shared as full
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS import (
+    test_suite__shared as full,
+)
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.test_suite__shared import APP
 
 TOOLS = Path(__file__).resolve().parents[1]
@@ -152,7 +154,9 @@ class FullTestSuiteTests(unittest.TestCase):
             self.assertEqual(0, future.result(timeout=5), self.errors.getvalue())
         self.assertIn(f"Test module FINISH: {module.relative_to(self.root)}", self.output.getvalue())
 
-    def test_platform_skip_is_reported_without_claiming_every_test_passed(self) -> None:
+    def test_platform_skip_is_reported_without_claiming_every_test_passed(
+        self,
+    ) -> None:
         self.file(
             "LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/test_skip.py",
             "import unittest\n@unittest.skip('platform fixture: symlinks unavailable')\n"
@@ -160,7 +164,9 @@ class FullTestSuiteTests(unittest.TestCase):
         )
         self.assertEqual(0, self.run_suite())
         self.assertIn("skipped: 1", self.output.getvalue())
-        self.assertIn("platform fixture: symlinks unavailable", self.errors.getvalue())
+        self.assertIn(
+            "platform fixture: symlinks unavailable", self.errors.getvalue()
+        )
 
     def test_required_integration_skip_is_a_failure(self) -> None:
         self.file(

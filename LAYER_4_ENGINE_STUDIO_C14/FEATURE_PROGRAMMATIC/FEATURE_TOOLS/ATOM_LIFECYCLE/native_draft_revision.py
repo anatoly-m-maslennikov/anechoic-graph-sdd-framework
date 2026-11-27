@@ -16,15 +16,26 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.continuant_concern__pub imp
 from . import common, effects
 from .effects import _project_write_lock
 from .native_draft_guards import _check_owner, _summary, is_c9_typed_manifest, _validate_c9_typed_manifest, _has_formal_declaration
-from .native_draft_source import _revision_header, _revision_root, _state_bytes, _task_path
+from .native_draft_source import (
+    _revision_header,
+    _revision_root,
+    _state_bytes,
+    _task_path,
+)
 from .source import bind_query_reader
-from .native_replacement_promotion import _plan_replacements, _archive_replacements, _check_replacement_activation
+from .native_replacement_promotion import (
+    _plan_replacements,
+    _archive_replacements,
+    _check_replacement_activation,
+)
 
 
 def _promote_revision(selection, target, status, draft, previous, current_rows,
                       structure_snapshot, previous_capture, validate_project_spec_model):
     atom_id, version = target['ref_id'].split('@')[0], target['version']
-    root = _revision_root(selection, previous, structure_snapshot, current_rows)
+    root = _revision_root(
+        selection, previous, structure_snapshot, current_rows
+    )
     paths = []
     for row, marker, directory in ((draft, target['ref_id'], (selection.root / draft['source_path']).parent),
                                    (previous, atom_id, (selection.root / previous['source_path']).parent)):
@@ -43,7 +54,9 @@ def _promote_revision(selection, target, status, draft, previous, current_rows,
     suffix = draft_path.name[len(target['ref_id']):]
     typed = is_c9_typed_manifest(draft['header_json'])
     if not typed and previous_path.name != atom_id + suffix:
-        raise common.InputError('target', 'Draft and Current filename must agree.')
+        raise common.InputError(
+            "target", "Draft and Current filename must agree."
+        )
     previous_suffix = previous_path.name[len(atom_id):]
     archive_path = root / ARCHIVE_DIRECTORY / f"{atom_id}@{previous['version']}{previous_suffix if typed else suffix}"
     destination = (root / ('' if status in {'active', 'in_queue'} else status) / (atom_id + suffix)
@@ -105,7 +118,10 @@ def _preflight_revision(selection, status, draft, previous, current_rows,
 
 
 def _check_revision_headers(draft_header, previous_header, draft_body, previous_body, typed):
-    draft_revision, previous_revision = _revision_header(draft_header), _revision_header(previous_header)
+    draft_revision, previous_revision = (
+        _revision_header(draft_header),
+        _revision_header(previous_header),
+    )
     if (typed and previous_header.get('atom_family') == 'SPEC'
             and (previous_revision.get('context', {}).get('template') == draft_revision['context']['template']
                  or (previous_revision.get('context', {}).get('template') is None and _has_formal_declaration(previous_body)))):
@@ -125,31 +141,67 @@ def _check_revision_headers(draft_header, previous_header, draft_body, previous_
                     revision.pop('relations')
     draft_relations = draft_revision.pop('relations', {})
     previous_relations = previous_revision.pop('relations', {})
-    if (not isinstance(draft_relations, dict) or not isinstance(previous_relations, dict)
-            or any(not isinstance(values, list) or not isinstance(previous_relations.get(key), list)
-                   or any(values.count(value) > previous_relations[key].count(value) for value in values)
-                   for key, values in draft_relations.items())):
-        raise common.InputError('target', 'A Draft may only remove existing authored relations.')
+    if (
+        not isinstance(draft_relations, dict)
+        or not isinstance(previous_relations, dict)
+        or any(
+            not isinstance(values, list)
+            or not isinstance(previous_relations.get(key), list)
+            or any(
+                values.count(value) > previous_relations[key].count(value)
+                for value in values
+            )
+            for key, values in draft_relations.items()
+        )
+    ):
+        raise common.InputError(
+            "target", "A Draft may only remove existing authored relations."
+        )
     if (draft_revision != previous_revision
             or _summary(draft_body) != _summary(previous_body)):
         raise common.InputError('target', 'Only a body revision with unchanged Summary is supported.')
 
 
-def _check_promotion_destinations(archive_path, destination, previous_path, capture, atom_id):
-    if archive_path.exists() or archive_path.is_symlink() or (destination != previous_path and
-            (destination.exists() or destination.is_symlink())):
-        raise common.InputError('target', 'A promotion destination already exists.')
-    if destination != previous_path and (previous_path.with_suffix('').exists() or
-            previous_path.with_suffix('').is_symlink() or any(
-                row.get('status_group') == 'Current' and
-                native_header_view(row['header_json']).get('context', {}).get('container', {}).get('atom') == atom_id
-                for row in capture.atoms)):
-        raise common.InputError('target', 'A container cannot change status during promotion.')
+def _check_promotion_destinations(
+    archive_path, destination, previous_path, capture, atom_id
+):
+    if (
+        archive_path.exists()
+        or archive_path.is_symlink()
+        or (
+            destination != previous_path
+            and (destination.exists() or destination.is_symlink())
+        )
+    ):
+        raise common.InputError(
+            "target", "A promotion destination already exists."
+        )
+    if destination != previous_path and (
+        previous_path.with_suffix("").exists()
+        or previous_path.with_suffix("").is_symlink()
+        or any(
+            row.get("status_group") == "Current"
+            and native_header_view(row["header_json"])
+            .get("context", {})
+            .get("container", {})
+            .get("atom")
+            == atom_id
+            for row in capture.atoms
+        )
+    ):
+        raise common.InputError(
+            "target", "A container cannot change status during promotion."
+        )
     for parent in (archive_path.parent, destination.parent):
         if parent.is_symlink() or (parent.exists() and not parent.is_dir()):
-            raise common.InputError('target', 'A promotion destination directory is unsafe.')
+            raise common.InputError(
+                "target", "A promotion destination directory is unsafe."
+            )
 
-def _read_revision_sources(selection, draft, previous, previous_capture, paths, atom_id, version):
+
+def _read_revision_sources(
+    selection, draft, previous, previous_capture, paths, atom_id, version
+):
     capture = revalidate_native(selection, previous_capture)
     if capture.errors:
         raise common.SourceChanged('Native carrier capture is incomplete.')
@@ -164,34 +216,64 @@ def _read_revision_sources(selection, draft, previous, previous_capture, paths, 
         raise common.InputError('target', 'The Draft Version already has a non-Draft revision.')
     reader = ReadContext(roots=[str(selection.root)], limits=dict(CEILINGS))
     raw_draft, raw_previous = (reader.read(path) for path in paths)
-    for row, path, raw in zip((draft, previous), paths, (raw_draft, raw_previous), strict=False):
+    for row, path, raw in zip(
+        (draft, previous), paths, (raw_draft, raw_previous), strict=False
+    ):
         bounds = frontmatter_bounds(raw)
-        if (bounds is None or sha256(raw).hexdigest() != row['_source_sha256']
-                or raw[bounds[2]:] != row.get('_content_bytes')
-                or parse_carrier(raw, path).metadata != row.get('header_json')):
-            raise common.SourceChanged('Draft or Current predecessor changed after selection.')
-    draft_bounds, previous_bounds = frontmatter_bounds(raw_draft), frontmatter_bounds(raw_previous)
-    draft_body, previous_body = raw_draft[draft_bounds[2]:].decode(), raw_previous[previous_bounds[2]:].decode()
+        if (
+            bounds is None
+            or sha256(raw).hexdigest() != row["_source_sha256"]
+            or raw[bounds[2] :] != row.get("_content_bytes")
+            or parse_carrier(raw, path).metadata != row.get("header_json")
+        ):
+            raise common.SourceChanged(
+                "Draft or Current predecessor changed after selection."
+            )
+    draft_bounds, previous_bounds = (
+        frontmatter_bounds(raw_draft),
+        frontmatter_bounds(raw_previous),
+    )
+    draft_body, previous_body = (
+        raw_draft[draft_bounds[2] :].decode(),
+        raw_previous[previous_bounds[2] :].decode(),
+    )
     return capture, raw_draft, raw_previous, draft_bounds, previous_bounds, draft_body, previous_body
 
 
-def _rollback_promotion(selection, previous_path, previous_digest, created, recorded, errors):
+def _rollback_promotion(
+    selection, previous_path, previous_digest, created, recorded, errors
+):
     errors = list(errors)
     for path, raw in reversed(created):
         try:
-            reader = ReadContext(roots=[str(selection.root)], limits=dict(CEILINGS))
-            if sha256(reader.read(previous_path)).hexdigest() != previous_digest:
-                raise ValueError('Current changed')
-            if reader.currentness()['state'] != 'unchanged':
-                raise ValueError('Current changed')
-        except (OSError, RuntimeError, ValueError):
-            errors.append({'code': 'rollback_unconfirmed', 'message': 'Current is no longer pinned; generated carriers were retained.'})
+            reader = ReadContext(
+                roots=[str(selection.root)], limits=dict(CEILINGS)
+            )
+            if (
+                sha256(reader.read(previous_path)).hexdigest()
+                != previous_digest
+            ):
+                raise ValueError("Current changed")
+            if reader.currentness()["state"] != "unchanged":
+                raise ValueError("Current changed")
+        except OSError, RuntimeError, ValueError:
+            errors.append(
+                {
+                    "code": "rollback_unconfirmed",
+                    "message": "Current is no longer pinned; generated carriers were retained.",
+                }
+            )
             break
         removed = effects.remove(selection.root, path, sha256(raw).hexdigest())
         recorded.extend(removed.effects)
         if removed.errors:
             errors.extend(removed.errors)
-            errors.append({'code': 'rollback_unconfirmed', 'message': 'A generated carrier could not be safely removed.'})
+            errors.append(
+                {
+                    "code": "rollback_unconfirmed",
+                    "message": "A generated carrier could not be safely removed.",
+                }
+            )
     return common.result(effects=recorded, errors=errors)
 
 

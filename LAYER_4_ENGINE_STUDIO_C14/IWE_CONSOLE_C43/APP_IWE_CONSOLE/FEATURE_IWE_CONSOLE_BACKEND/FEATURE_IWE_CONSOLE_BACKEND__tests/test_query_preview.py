@@ -65,7 +65,10 @@ class QueryPreviewTests(unittest.TestCase):
     def test_preview_caps_native_result_without_changing_public_sql(
         self,
     ) -> None:
-        sql = "WITH values_cte AS (SELECT range AS value FROM range(5)) SELECT value FROM values_cte ORDER BY value DESC"
+        sql = (
+            "WITH values_cte AS (SELECT range AS value FROM range(5)) SELECT "
+            "value FROM values_cte ORDER BY value DESC"
+        )
 
         result = self.store.run(sql, preview=2)
 

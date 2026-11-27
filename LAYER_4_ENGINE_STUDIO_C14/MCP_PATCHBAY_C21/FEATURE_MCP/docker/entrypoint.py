@@ -13,9 +13,10 @@ sys.path.insert(0, str(ENGINE))
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import (  # noqa: E402
     ExplicitStartupFailure,
 )
-from MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_log_level import (  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.\
+    runtime_log_level import (  # noqa: E402
     direct_log_level,
-)
+)  # fmt: skip
 
 RUNTIME_MODES = frozenset({"mcp", "mcp-http", "shared-mcp"})
 

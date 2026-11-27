@@ -9,17 +9,31 @@ import unittest
 from pathlib import Path
 
 
-TOOL = Path(__file__).resolve().parents[1] / "compile_applicable_methodology.py"
-SPEC = importlib.util.spec_from_file_location("compile_applicable_methodology", TOOL)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import (
+    SETTINGS_PATH,
+)
+
+TOOL = (
+    Path(__file__).resolve().parents[1] / "compile_applicable_methodology.py"
+)
+SPEC = importlib.util.spec_from_file_location(
+    "compile_applicable_methodology", TOOL
+)
 assert SPEC and SPEC.loader
 module = importlib.util.module_from_spec(SPEC)
 sys.modules[SPEC.name] = module
 SPEC.loader.exec_module(module)
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import SETTINGS_PATH
 
 
-def carrier(atom_id: str, version: int = 1, extra: str = "", body: str = "claim", relations: str = "{}") -> bytes:
+
+def carrier(
+    atom_id: str,
+    version: int = 1,
+    extra: str = "",
+    body: str = "claim",
+    relations: str = "{}",
+) -> bytes:
     return (
         "---\n"
         f"atom_id: {atom_id}\n"
@@ -53,7 +67,10 @@ class CompilerFixture(unittest.TestCase):
         settings = self.temp / SETTINGS_PATH
         settings.parent.mkdir(parents=True, exist_ok=True)
         settings.write_text(
-            '[project]\nname = "anechoic"\n[paths]\ncontrol_root = ".anechoic_anechoic"\n'
+            (
+                '[project]\nname = "anechoic"\n[paths]\ncontrol_root = '
+                '".anechoic_anechoic"\n'
+            )
         )
         self.declarations = write_scope_unit_declarations(
             self.temp,
@@ -64,8 +81,12 @@ class CompilerFixture(unittest.TestCase):
                 {"scope_unit_name": "PROJECT_CONFIGURATION", "parent": "METHODOLOGY_SOURCES", "scope_unit_type": "Unordered"},
             ),
         )
-        self.source = Path(self.declarations["METHODOLOGY_SOURCES"]["authority_path"])
-        self.output = Path(self.declarations["METHODOLOGY_SOURCES"]["delivery_path"])
+        self.source = Path(
+            self.declarations["METHODOLOGY_SOURCES"]["authority_path"]
+        )
+        self.output = Path(
+            self.declarations["METHODOLOGY_SOURCES"]["delivery_path"]
+        )
         self.layers = {
             name: Path(self.declarations[name]["authority_path"])
             for name, _, _ in module.LAYERS
@@ -95,7 +116,10 @@ class CompilerFixture(unittest.TestCase):
         self.assertIn(arguments, {(), ("--apply",)})
         report, candidates, snapshot = module.compile_report(self.temp)
         if report["can_apply"] and arguments == ("--apply",):
-            module.replace_outputs_atomically(self.temp, module.stage_outputs(self.temp, candidates, snapshot))
+            module.replace_outputs_atomically(
+                self.temp,
+                module.stage_outputs(self.temp, candidates, snapshot),
+            )
         return (0 if report["can_apply"] else 2), report
 
 

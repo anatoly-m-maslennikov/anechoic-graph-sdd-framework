@@ -9,9 +9,9 @@ from unittest.mock import patch
 
 import yaml
 
-TOOLS = Path(__file__).resolve().parents[1]
-ENGINE = TOOLS.parents[1]
-sys.path[:0] = [str(TOOLS), str(ENGINE / 'IWE_CONSOLE_C43')]
+sys.path.insert(0, str((ENGINE := (TOOLS := Path(__file__).resolve()
+    .parents[1]).parents[1]) / 'IWE_CONSOLE_C43'))
+sys.path.insert(0, str(TOOLS))
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import TICKET_DIRECTORY, capture_native
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import InputError, SourceChanged
@@ -47,9 +47,13 @@ class NewNativeTaskTests(fixtures.NewNativeTaskTests, unittest.TestCase):
         self.assertEqual('AN-T-9@1-draft', result['savedDraft']['ref_id'])
         draft = self.root / result['savedDraft']['path']
         header = yaml.safe_load(draft.read_text().split('---', 2)[1])
-        self.assertEqual(('TKT', 'AN-T-9', 2),
-                         (header['atom_family'], header['atom_id'], header['priority']))
-        self.assertEqual({'template': 'task', 'label': 'Task'}, header['context'])
+        self.assertEqual(
+            ("TKT", "AN-T-9", 2),
+            (header["atom_family"], header["atom_id"], header["priority"]),
+        )
+        self.assertEqual(
+            {"template": "task", "label": "Task"}, header["context"]
+        )
         self.assertEqual('AN-T-9@1-draft-TASK--create-a-task.md', draft.name)
         rows = capture_native(self.selection).atoms
         result = promote_draft(self.selection, {'target': {'ref_id': 'AN-T-9@1-draft', 'version': 1}, 'targetStatus': 'backlog'},
@@ -58,12 +62,20 @@ class NewNativeTaskTests(fixtures.NewNativeTaskTests, unittest.TestCase):
         self.assertFalse(draft.exists())
         from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import change_ticket_status
         target = {'ref_id': 'AN-T-9', 'version': 1}
-        queued = change_ticket_status(self.selection, {'target': target, 'targetStatus': 'in_queue'},
-                                      current_rows=capture_native(self.selection).atoms, check_definition=lambda: None)
+        queued = change_ticket_status(
+            self.selection,
+            {"target": target, "targetStatus": "in_queue"},
+            current_rows=capture_native(self.selection).atoms,
+            check_definition=lambda: None,
+        )
         self.assertEqual(self.control / TICKET_DIRECTORY / 'TASKS', (self.root / queued['artifact']['path']).parent)
         with self.assertRaises(InputError):
-            change_ticket_status(self.selection, {'target': target, 'targetStatus': 'in_progress'},
-                                 current_rows=capture_native(self.selection).atoms, check_definition=lambda: None)
+            change_ticket_status(
+                self.selection,
+                {"target": target, "targetStatus": "in_progress"},
+                current_rows=capture_native(self.selection).atoms,
+                check_definition=lambda: None,
+            )
         done = change_ticket_status(self.selection, {'target': target, 'targetStatus': 'done'},
                                     current_rows=capture_native(self.selection).atoms, check_definition=lambda: None)
         self.assertEqual('done', done['artifact']['status'])
@@ -74,7 +86,9 @@ class NewNativeTaskTests(fixtures.NewNativeTaskTests, unittest.TestCase):
 
 
     def test_new_draft_publishes_nested_drafts_and_preserves_assets(self):
-        created = create_draft(self.selection, self.new, current_rows=self.rows)
+        created = create_draft(
+            self.selection, self.new, current_rows=self.rows
+        )
         ref = created['savedDraft']['ref_id']
         draft = self.root / created['savedDraft']['path']
         labels = ('Task', 'Epic', 'Version')
@@ -92,17 +106,29 @@ class NewNativeTaskTests(fixtures.NewNativeTaskTests, unittest.TestCase):
         grand = self.root / grand_result['savedDraft']['path']
         asset = grand.parent.parent / 'notes.txt'
         asset.write_text('keep')
-        outcome = promote_draft(self.selection, {'target': {'ref_id': ref, 'version': 1}, 'targetStatus': 'backlog'},
-                                current_rows=capture_native(self.selection).atoms)
+        outcome = promote_draft(
+            self.selection,
+            {
+                "target": {"ref_id": ref, "version": 1},
+                "targetStatus": "backlog",
+            },
+            current_rows=capture_native(self.selection).atoms,
+        )
         self.assertEqual('completed', outcome['outcome'], outcome)
         parent = self.root / outcome['artifact']['path']
-        child_current = parent.with_suffix('') / f'backlog/{child_id}-EPIC--child.md'
+        child_current = (
+            parent.with_suffix("") / f"backlog/{child_id}-EPIC--child.md"
+        )
         grand_id = grand_result['savedDraft']['atom_id']
         grand_current = child_current.with_suffix('') / f'backlog/{grand_id}-VERSION--grand.md'
         header = yaml.safe_load(grand_current.read_text().split('---', 2)[1])
         self.assertEqual('backlog', header['state']['status'])
-        self.assertEqual({'template': 'task', 'label': 'Version'}, header['context'])
-        self.assertEqual('keep', (child_current.with_suffix('') / 'notes.txt').read_text())
+        self.assertEqual(
+            {"template": "task", "label": "Version"}, header["context"]
+        )
+        self.assertEqual(
+            "keep", (child_current.with_suffix("") / "notes.txt").read_text()
+        )
         self.assertFalse(draft.exists())
 
 
@@ -127,7 +153,9 @@ class NewNativeTaskTests(fixtures.NewNativeTaskTests, unittest.TestCase):
 
 
     def test_incomplete_child_companion_blocks_parent_retry(self):
-        parent = create_draft(self.selection, self.new, current_rows=self.rows)['savedDraft']
+        parent = create_draft(
+            self.selection, self.new, current_rows=self.rows
+        )["savedDraft"]
         child = create_draft(self.selection, {'newAtom': {
             'template': 'task', 'container': {'atom': parent['atom_id']}, 'body': '## Summary\n\nChild\n',
         }}, current_rows=capture_native(self.selection).atoms)['savedDraft']
@@ -135,20 +163,32 @@ class NewNativeTaskTests(fixtures.NewNativeTaskTests, unittest.TestCase):
         companion.mkdir()
         note = companion / 'notes.txt'
         note.write_text('keep')
-        params = {'target': {'ref_id': parent['ref_id'], 'version': 1}, 'targetStatus': 'backlog'}
+        params = {
+            "target": {"ref_id": parent["ref_id"], "version": 1},
+            "targetStatus": "backlog",
+        }
 
         def partial_move(root, source, destination):
             destination.mkdir()
             return NonCallableMock(
-                spec_set=['effects', 'errors'],
-                effects=[{'operation': 'create', 'target': str(destination)}],
-                errors=[{'code': 'backend_failure', 'message': 'copy interrupted'}])
+                spec_set=["effects", "errors"],
+                effects=[{"operation": "create", "target": str(destination)}],
+                errors=[
+                    {"code": "backend_failure", "message": "copy interrupted"}
+                ],
+            )
 
         with patch('FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.native_update.move_directory', side_effect=partial_move):
             outcome = promote_draft(self.selection, params, current_rows=capture_native(self.selection).atoms)
         self.assertEqual('backend_failure', outcome['errors'][0]['code'])
-        with self.assertRaisesRegex(InputError, 'interrupted child publication'):
-            promote_draft(self.selection, params, current_rows=capture_native(self.selection).atoms)
+        with self.assertRaisesRegex(
+            InputError, "interrupted child publication"
+        ):
+            promote_draft(
+                self.selection,
+                params,
+                current_rows=capture_native(self.selection).atoms,
+            )
         self.assertEqual('keep', note.read_text())
         self.assertTrue((self.root / parent['path']).is_file())
 
@@ -191,20 +231,28 @@ class NewNativeTaskTests(fixtures.NewNativeTaskTests, unittest.TestCase):
 
 
     def test_canonical_flat_owned_task_keeps_validated_flat_revision_paths(self):
-        flat = self.write('001_TICKETS/TASKS/AN-T-2-SUBTASK--example.md', 'AN-T-2')
+        flat = self.write(
+            "001_TICKETS/TASKS/AN-T-2-SUBTASK--example.md", "AN-T-2"
+        )
         _, header, body = flat.read_text().split('---', 2)
         metadata = yaml.safe_load(header)
         metadata['context']['container'] = {'atom': 'AN-T-1'}
         metadata['context']['label'] = 'Subtask'
         flat.write_text('---\n' + yaml.safe_dump(canonical_native_header(metadata), sort_keys=False) + '---' + body)
-        result = create_draft(self.selection, {'sourceCurrent': {'ref_id': 'AN-T-2', 'version': 1}},
-                              current_rows=capture_native(self.selection).atoms)
+        result = create_draft(
+            self.selection,
+            {"sourceCurrent": {"ref_id": "AN-T-2", "version": 1}},
+            current_rows=capture_native(self.selection).atoms,
+        )
         draft = self.root / result['savedDraft']['path']
         self.assertEqual(flat.parent / '01_draft', draft.parent)
         result = promote_draft(self.selection, {'target': {'ref_id': result['savedDraft']['ref_id'], 'version': 2},
                                                 'targetStatus': 'backlog'},
                                current_rows=capture_native(self.selection).atoms)
-        self.assertEqual(flat.parent / 'backlog' / flat.name, self.root / result['artifact']['path'])
+        self.assertEqual(
+            flat.parent / "backlog" / flat.name,
+            self.root / result["artifact"]["path"],
+        )
         self.assertTrue((flat.parent / '09_archived' / flat.name.replace('AN-T-2-', 'AN-T-2@1-')).exists())
 
 
@@ -221,8 +269,11 @@ class NewNativeTaskTests(fixtures.NewNativeTaskTests, unittest.TestCase):
                                    current_rows=capture_native(self.selection).atoms)
             owner = self.root / result['artifact']['path']
             self.assertEqual(draft.parent.parent / 'backlog', owner.parent)
-        result = create_draft(self.selection, {'sourceCurrent': {'ref_id': 'AN-T-3', 'version': 1}},
-                              current_rows=capture_native(self.selection).atoms)
+        result = create_draft(
+            self.selection,
+            {"sourceCurrent": {"ref_id": "AN-T-3", "version": 1}},
+            current_rows=capture_native(self.selection).atoms,
+        )
         draft = self.root / result['savedDraft']['path']
         self.assertEqual(owner.parent.parent / '01_draft', draft.parent)
         result = promote_draft(self.selection, {'target': {'ref_id': result['savedDraft']['ref_id'], 'version': 2},
@@ -233,27 +284,49 @@ class NewNativeTaskTests(fixtures.NewNativeTaskTests, unittest.TestCase):
 
 
     def test_unicode_punctuation_uses_reviewed_slug(self):
-        self.new['newAtom']['body'] = self.new['newAtom']['body'].replace('Create a Task!', 'Create — a Task!')
+        self.new["newAtom"]["body"] = self.new["newAtom"]["body"].replace(
+            "Create a Task!", "Create — a Task!"
+        )
         output = create_draft(self.selection, self.new, current_rows=self.rows)
-        self.assertTrue(output['savedDraft']['path'].endswith('-TASK--create-a-task.md'))
+        self.assertTrue(
+            output["savedDraft"]["path"].endswith("-TASK--create-a-task.md")
+        )
 
 
     def test_task_owner_and_stale_or_foreign_owner(self):
-        self.new['newAtom']['container'] = {'atom': 'AN-T-1'}
+        self.new["newAtom"]["container"] = {"atom": "AN-T-1"}
         output = create_draft(self.selection, self.new, current_rows=self.rows)
-        self.assertEqual('completed', output['outcome'])
-        self.assertTrue(output['savedDraft']['path'].endswith('-SUBTASK--create-a-task.md'))
-        metadata = yaml.safe_load((self.root / output['savedDraft']['path']).read_text().split('---', 2)[1])
-        self.assertEqual({'template': 'task', 'label': 'Subtask'}, metadata['context'])
-        ref = output['savedDraft']['ref_id']
-        promoted = promote_draft(self.selection, {'target': {'ref_id': ref, 'version': 1}, 'targetStatus': 'backlog'},
-                                 current_rows=capture_native(self.selection).atoms)
-        self.assertTrue(promoted['artifact']['path'].endswith('-SUBTASK--create-a-task.md'))
-        self.new['newAtom']['container'] = {'atom': 'XX-T-1'}
+        self.assertEqual("completed", output["outcome"])
+        self.assertTrue(
+            output["savedDraft"]["path"].endswith("-SUBTASK--create-a-task.md")
+        )
+        metadata = yaml.safe_load(
+            (self.root / output["savedDraft"]["path"])
+            .read_text()
+            .split("---", 2)[1]
+        )
+        self.assertEqual(
+            {"template": "task", "label": "Subtask"}, metadata["context"]
+        )
+        ref = output["savedDraft"]["ref_id"]
+        promoted = promote_draft(
+            self.selection,
+            {
+                "target": {"ref_id": ref, "version": 1},
+                "targetStatus": "backlog",
+            },
+            current_rows=capture_native(self.selection).atoms,
+        )
+        self.assertTrue(
+            promoted["artifact"]["path"].endswith("-SUBTASK--create-a-task.md")
+        )
+        self.new["newAtom"]["container"] = {"atom": "XX-T-1"}
         with self.assertRaises(InputError):
             create_draft(self.selection, self.new, current_rows=self.rows)
-        self.new['newAtom']['container'] = {'atom': 'AN-T-1'}
-        self.path.write_bytes(self.path.read_bytes().replace(b'Old', b'Altered'))
+        self.new["newAtom"]["container"] = {"atom": "AN-T-1"}
+        self.path.write_bytes(
+            self.path.read_bytes().replace(b"Old", b"Altered")
+        )
         with self.assertRaises(SourceChanged):
             create_draft(self.selection, self.new, current_rows=self.rows)
 

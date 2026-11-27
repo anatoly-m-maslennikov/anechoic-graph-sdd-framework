@@ -8,8 +8,8 @@ context:
   lens: DES
 state:
   status: active
-  version: 15
-  updated_at: '2026-11-25T23:12:27.652867+00:00'
+  version: 16
+  updated_at: "2026-11-27T16:29:34.309627+00:00"
 ---
 ## Summary
 
@@ -19,12 +19,4 @@ Require monitors for important production health signals
 
 ### Prose Claim
 
-
-important production health counters, thresholds, **and** service-level signals.
-
-
 important production health counters, thresholds, **and** service-level signals receive explicit monitors.
-
-## Details
-
-the monitors provide production health observation.

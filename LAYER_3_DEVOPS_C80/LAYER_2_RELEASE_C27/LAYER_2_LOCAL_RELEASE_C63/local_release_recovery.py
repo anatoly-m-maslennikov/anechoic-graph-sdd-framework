@@ -125,8 +125,7 @@ class ResumableRelease(ReleaseProgress):
         data = self.journal.data
         self.head, self.production_port = data.get("head"), data.get("port")
         if self.production_port is not None:
-            settings = self.selection.parameters.get("project_mcp")
-            if not isinstance(settings, dict) or settings.get("http_port") != self.production_port:
+            if package_phases.project_port(self.root, self.selection) != self.production_port:
                 raise LocalReleaseError("local-release-resume-port-changed")
         self.test_log_paths = data["logs"].copy()
         self._restore_log_path()
@@ -261,7 +260,9 @@ class ResumableRelease(ReleaseProgress):
             self.journal.save()
 
     def _package_matches(self):
-        if self.package is None or any(path.is_symlink() for path in (self.package, self.prepared_product)):
+        if self.package is None or any(
+            path.is_symlink() for path in (self.package, self.prepared_product)
+        ):
             return False
         try:
             _verify_package(self.package, self.package_identity)

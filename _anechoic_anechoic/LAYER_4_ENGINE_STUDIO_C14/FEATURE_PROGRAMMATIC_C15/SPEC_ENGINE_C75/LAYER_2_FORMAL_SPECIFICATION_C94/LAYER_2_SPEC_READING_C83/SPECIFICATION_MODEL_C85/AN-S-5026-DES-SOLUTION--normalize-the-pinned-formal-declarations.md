@@ -12,8 +12,8 @@ relations:
   - AN-S-4932@2
 state:
   status: active
-  version: 2
-  updated_at: '2026-11-27T04:19:32Z'
+  version: 3
+  updated_at: "2026-11-27T16:29:34.309627+00:00"
 ---
 
 ## Summary
@@ -22,7 +22,8 @@ Normalize the pinned formal declarations.
 
 ## Approach
 
-Validate the Manifest. Parse each supported claim for its carrier role and Component. Collect normalized declarations and source-linked issues or unresolved findings.
+Use the declared carrier role and Component to select the claim parser.
+Apply AN-S-4932 for admissibility and source-linked findings.
 
 ## Claim
 

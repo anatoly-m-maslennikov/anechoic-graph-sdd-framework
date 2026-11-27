@@ -55,7 +55,10 @@ class BackendImageModeTests(unittest.TestCase):
             with (
                 self.subTest(build_if_missing=build),
                 patch(
-                    "MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared.ImageManager"
+                    (
+                        "MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared.Im"
+                        "ageManager"
+                    )
                 ) as factory,
             ):
                 manager = factory.return_value

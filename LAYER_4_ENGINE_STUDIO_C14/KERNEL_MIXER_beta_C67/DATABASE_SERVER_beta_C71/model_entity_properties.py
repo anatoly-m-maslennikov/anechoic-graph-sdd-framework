@@ -47,7 +47,6 @@ def _own_properties(classes, properties, normalize):
             refinements.append((owner, prop_path, scopes, args))
 
     for owner, prop_path, scopes, args in refinements:
-        # Model assembly refines the Property from its declared bearer.
         base = own[owner][prop_path]
         for scope in scopes:
             target = normalize(scope)

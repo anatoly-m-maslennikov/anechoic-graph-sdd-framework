@@ -1,10 +1,10 @@
 """Bound all reads, reject protected paths, and fingerprint actual inputs."""
 
 from collections.abc import Callable
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor as ThreadPoolExecutor
 from dataclasses import field
 import hashlib
-from itertools import groupby
+from itertools import groupby as groupby
 import os
 from pathlib import Path
 import stat
@@ -13,11 +13,25 @@ from threading import Lock
 import time
 from typing import Any
 
-from pydantic import ConfigDict, InstanceOf, ValidatorFunctionWrapHandler, field_validator
+from pydantic import (
+    ConfigDict,
+    InstanceOf,
+    ValidatorFunctionWrapHandler,
+    field_validator,
+)
 from pydantic.dataclasses import dataclass
 
 
-__all__ = ["CEILINGS", "LimitReached", "ReadContext", "ReadFailure", "open_regular", "protected", "TemporaryBoundaryError", "validate_directory_components"]
+__all__ = [
+    "CEILINGS",
+    "LimitReached",
+    "ReadContext",
+    "ReadFailure",
+    "open_regular",
+    "protected",
+    "TemporaryBoundaryError",
+    "validate_directory_components",
+]
 
 
 CEILINGS = dict(
@@ -30,7 +44,10 @@ CEILINGS = dict(
 
 
 if __package__:
-    from .temporary_boundary import TemporaryBoundaryError, validate_directory_components
+    from .temporary_boundary import (
+        TemporaryBoundaryError,
+        validate_directory_components,
+    )
 
 
 class ReadFailure(OSError):
@@ -54,21 +71,41 @@ def protected(path: Path) -> bool:
 
 
 def open_regular(path: Path, *, directory: bool = False) -> int:
-    """Open every path component with O_NOFOLLOW to close symlink TOCTOU gaps."""
+    """Open every path component with O_NOFOLLOW to close \
+symlink TOCTOU gaps."""
     descriptor = os.open("/", os.O_RDONLY | os.O_DIRECTORY)
     try:
         for part in path.parts[1:-1]:
-            child = os.open(part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=descriptor)
+            child = os.open(
+                part,
+                os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW,
+                dir_fd=descriptor,
+            )
             os.close(descriptor)
             descriptor = child
         flags = os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK
-        return os.open(path.name, flags | (os.O_DIRECTORY if directory else 0), dir_fd=descriptor)
+        return os.open(
+            path.name,
+            flags | (os.O_DIRECTORY if directory else 0),
+            dir_fd=descriptor,
+        )
     finally:
         os.close(descriptor)
 
 
+def _remember_fingerprint(reader, path, raw):
+    reader.fingerprints.setdefault(str(path), hashlib.sha256(raw).hexdigest())
+    reader.sizes[str(path)] = len(raw)
+
+
+if __package__:
+    from .reader_filesystem import _ReaderFilesystem
+else:
+    from reader_filesystem import _ReaderFilesystem
+
+
 @dataclass(config=ConfigDict(strict=True, extra="forbid"))
-class ReadContext:
+class ReadContext(_ReaderFilesystem):
     roots: list[str]
     limits: dict[str, int]
     started: float = field(default_factory=time.monotonic)
@@ -78,20 +115,43 @@ class ReadContext:
     versions: dict[str, tuple[int, ...]] = field(default_factory=dict)
     metadata_inputs: set[str] = field(default_factory=set)
     inventories: dict[str, tuple[str, ...]] = field(default_factory=dict)
-    inventory_prunes: dict[str, Callable[[Path], bool]] = field(default_factory=dict, init=False)
-    shallow_inventories: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    inventory_prunes: dict[str, Callable[[Path], bool]] = field(
+        default_factory=dict, init=False
+    )
+    shallow_inventories: dict[str, tuple[str, ...]] = field(
+        default_factory=dict
+    )
     candidates: set[str] = field(default_factory=set)
-    _read_budget: InstanceOf[Lock] = field(default_factory=Lock, init=False, repr=False, compare=False)
+    _read_budget: InstanceOf[Lock] = field(
+        default_factory=Lock, init=False, repr=False, compare=False
+    )
 
-    @field_validator("roots", "limits", "started", "fingerprints", "sizes", "versions", "metadata_inputs",
-                     "inventories", "shallow_inventories", "candidates", mode="wrap")
-    def _preserve_state(cls, value: Any, validate: ValidatorFunctionWrapHandler) -> Any:
+    @field_validator(
+        "roots",
+        "limits",
+        "started",
+        "fingerprints",
+        "sizes",
+        "versions",
+        "metadata_inputs",
+        "inventories",
+        "shallow_inventories",
+        "candidates",
+        mode="wrap",
+    )
+    def _preserve_state(
+        cls, value: Any, validate: ValidatorFunctionWrapHandler
+    ) -> Any:
         validate(value)
         return value
 
     def checkpoint(self) -> None:
-        if ("timeout_seconds" in self.limits and time.monotonic() - self.started >= self.limits["timeout_seconds"]
-                and os.getenv("ANECHOIC_TEST_IMAGE_DEADLINES") != "0"):
+        if (
+            "timeout_seconds" in self.limits
+            and time.monotonic() - self.started
+            >= self.limits["timeout_seconds"]
+            and os.getenv("ANECHOIC_TEST_IMAGE_DEADLINES") != "0"
+        ):
             raise LimitReached("timeout_seconds")
 
     def _allowed_lexical(self, path: Path) -> Path:
@@ -99,7 +159,9 @@ class ReadContext:
         normalized = Path(os.path.abspath(path))
         if protected(normalized):
             raise ReadFailure("Protected path.")
-        if not any(normalized.is_relative_to(Path(root)) for root in self.roots):
+        if not any(
+            normalized.is_relative_to(Path(root)) for root in self.roots
+        ):
             raise ReadFailure("Path is outside allowed_read_roots.")
         return normalized
 
@@ -117,15 +179,30 @@ class ReadContext:
             self.allowed(path)
             raise
 
-    def read(self, path: Path, *, remember: bool = True, directory_fd: int | None = None,
-             metadata_guard: bool = False, skip_version: tuple[int, ...] | None = None) -> bytes | None:
+    def read(
+        self,
+        path: Path,
+        *,
+        remember: bool = True,
+        directory_fd: int | None = None,
+        metadata_guard: bool = False,
+        skip_version: tuple[int, ...] | None = None,
+    ) -> bytes | None:
         if directory_fd is None:
             path, descriptor = self._open_input(path)
         else:
             self.checkpoint()
-            if protected(path) or not any(path.is_relative_to(root) for root in self.roots):
-                raise ReadFailure("Path is outside the admitted read boundary.")
-            descriptor = os.open(path.name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=directory_fd)
+            if protected(path) or not any(
+                path.is_relative_to(root) for root in self.roots
+            ):
+                raise ReadFailure(
+                    "Path is outside the admitted read boundary."
+                )
+            descriptor = os.open(
+                path.name,
+                os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK,
+                dir_fd=directory_fd,
+            )
         with os.fdopen(descriptor, "rb") as stream:
             info = os.fstat(stream.fileno())
             if not stat.S_ISREG(info.st_mode):
@@ -143,8 +220,7 @@ class ReadContext:
             if self.version(after) != version:
                 raise ReadFailure("Input changed during read.")
         if remember and not metadata_guard:
-            self.fingerprints.setdefault(str(path), hashlib.sha256(raw).hexdigest())
-            self.sizes[str(path)] = len(raw)
+            _remember_fingerprint(self, path, raw)
         return raw
 
     def _read_bytes(self, stream, size: int) -> bytes:
@@ -162,7 +238,13 @@ class ReadContext:
 
     @staticmethod
     def version(info: os.stat_result) -> tuple[int, ...]:
-        return (info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns, info.st_ctime_ns)
+        return (
+            info.st_dev,
+            info.st_ino,
+            info.st_size,
+            info.st_mtime_ns,
+            info.st_ctime_ns,
+        )
 
     def check_size(self, size: int) -> None:
         if size > self.limits["max_file_bytes"]:
@@ -170,170 +252,21 @@ class ReadContext:
         if self.bytes_read + size > self.limits["max_total_read_bytes"]:
             raise LimitReached("max_total_read_bytes")
 
-    def _inspect_inventory(self, path, versions):
-        self.checkpoint()
-        try:
-            return path, path.lstat()
-        except OSError:
-            if versions is not None:
-                raise
-            return path, None
-
-    def inventory(self, root: Path, *, remember: bool = True,
-                  versions: dict[str, tuple[int, ...]] | None = None,
-                  prune: Callable[[Path], bool] | None = None) -> list[Path]:
-        root = self.allowed(root)
-        pending = [root]
-        found: list[Path] = []
-
-        with ThreadPoolExecutor(max_workers=8) as pool:
-            while pending:
-                batch = pending[-128:]
-                del pending[-128:]
-                inspected = pool.map if len(batch) >= 16 else map
-                for path, info in inspected(lambda path: self._inspect_inventory(path, versions), reversed(batch)):
-                    mode = info.st_mode if info is not None else 0
-                    if stat.S_ISDIR(mode):
-                        if prune is not None and prune(path):
-                            continue
-                        self.allowed(path)
-                        descriptor = open_regular(path, directory=True)
-                        try:
-                            with os.scandir(descriptor) as entries:
-                                for entry in entries:
-                                    self.checkpoint()
-                                    if entry.name != ".DS_Store":
-                                        pending.append(path / entry.name)
-                                    if len(pending) > 1_000_000:
-                                        raise ReadFailure("Directory traversal exceeds host ceiling.")
-                        finally:
-                            os.close(descriptor)
-                    elif stat.S_ISLNK(mode) or path.suffix.lower() == ".md" or protected(path):
-                        found.append(path)
-                        if versions is not None and info is not None:
-                            versions[str(path)] = self.version(info)
-                    if len(found) > self.limits["max_candidates"]:
-                        raise LimitReached("max_candidates")
-        names = tuple(sorted(str(path) for path in found))
-        if remember:
-            self.inventories[str(root)] = names
-            if prune is not None:
-                self.inventory_prunes[str(root)] = prune
-            else:
-                self.inventory_prunes.pop(str(root), None)
-        return [Path(name) for name in names]
-
-    def discover(self, roots: list[str]) -> list[Path]:
-        found = set()
-        for root in sorted(roots):
-            found.update(self.inventory(Path(root)))
-            if len(found) > self.limits["max_candidates"]:
-                raise LimitReached("max_candidates")
-        return sorted(found)
-
-    def inventory_shallow(self, root: Path, *, remember: bool = True) -> list[Path]:
-        root = self.allowed(root)
-        descriptor = open_regular(root, directory=True)
-        try:
-            names = []
-            with os.scandir(descriptor) as entries:
-                for count, entry in enumerate(entries, 1):
-                    self.checkpoint()
-                    if count > self.limits["max_candidates"]:
-                        raise LimitReached("max_candidates")
-                    if entry.name.endswith(".md"):
-                        names.append(str(root / entry.name))
-        finally:
-            os.close(descriptor)
-        members = tuple(sorted(names))
-        if remember:
-            self.shallow_inventories[str(root)] = members
-        return [Path(name) for name in members]
-
-    def currentness(self) -> dict[str, Any]:
-        affected: list[dict[str, str]] = []
-        for name, digest in sorted(self.fingerprints.items()):
-            try:
-                current = hashlib.sha256(self.read(Path(name), remember=False)).hexdigest()
-            except OSError:
-                current = ""
-            if current != digest:
-                affected.append({"path": name, "sha256": digest})
-        for name, version in sorted(self._observed_versions().items()):
-            if version != self.versions[name]:
-                affected.append({"path": name})
-        for root, members in sorted(self.inventories.items()):
-            try:
-                names = tuple(str(path) for path in self.inventory(
-                    Path(root), remember=False, prune=self.inventory_prunes.get(root),
-                ))
-            except OSError:
-                names = None
-            if names != members:
-                affected.append({"path": root})
-        for root, members in sorted(self.shallow_inventories.items()):
-            try:
-                names = tuple(str(path) for path in self.inventory_shallow(Path(root), remember=False))
-            except OSError:
-                names = None
-            if names != members:
-                affected.append({"path": root})
-        return {"state": "changed" if affected else "unchanged", "affected_inputs": affected}
-
-    def _observed_versions(self) -> dict[str, tuple[int, ...] | None]:
-        observed = {}
-        paths = sorted(map(Path, self.metadata_inputs), key=lambda path: (path.parent, path.name))
-        for parent, siblings in groupby(paths, key=lambda path: path.parent):
-            members = list(siblings)
-            try:
-                observed.update(self._directory_versions(parent, members))
-            except OSError:
-                observed.update((str(path), self._input_version(path)) for path in members)
-        return observed
-
-    def _directory_versions(self, parent: Path, paths: list[Path]) -> dict[str, tuple[int, ...] | None]:
-        descriptor = open_regular(self._allowed_lexical(parent), directory=True)
-        try:
-            def observe(path):
-                self._allowed_lexical(path)
-                info = os.stat(path.name, dir_fd=descriptor, follow_symlinks=False)
-                return str(path), self.version(info) if stat.S_ISREG(info.st_mode) else None
-
-            with ThreadPoolExecutor(max_workers=8) as pool:
-                observed = pool.map(observe, paths, buffersize=16) if len(paths) >= 16 else map(observe, paths)
-                versions = dict(observed)
-            check = open_regular(parent, directory=True)
-            try:
-                if not os.path.samestat(os.fstat(descriptor), os.fstat(check)):
-                    raise ReadFailure("Input directory changed during verification.")
-            finally:
-                os.close(check)
-            return versions
-        finally:
-            os.close(descriptor)
-
-    def _input_version(self, path: Path) -> tuple[int, ...] | None:
-        try:
-            _, descriptor = self._open_input(path)
-            try:
-                info = os.fstat(descriptor)
-                return self.version(info) if stat.S_ISREG(info.st_mode) else None
-            finally:
-                os.close(descriptor)
-        except OSError:
-            return None
-
 
 def _main(argv: list[str]) -> int:
     """Read one explicitly named file with a small, fixed ceiling."""
-    if len(argv) != 2 or argv[0] != "--read-bounded" or not Path(argv[1]).is_absolute():
+    if (
+        len(argv) != 2
+        or argv[0] != "--read-bounded"
+        or not Path(argv[1]).is_absolute()
+    ):
         return 2
     limits = {**CEILINGS, "max_file_bytes": 65536, "timeout_seconds": 5}
     try:
         raw = ReadContext(roots=["/"], limits=limits).read(Path(argv[1]))
         sys.stdout.buffer.write(raw)
         return 0
-    except (OSError, ValueError, LimitReached):
+    except OSError, ValueError, LimitReached:
         return 1
 
 

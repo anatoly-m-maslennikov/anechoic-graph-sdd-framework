@@ -24,8 +24,12 @@ from jsonschema import Draft202012Validator
 from schemathesis.checks import not_a_server_error
 from schemathesis.core.failures import FailureGroup
 from schemathesis.openapi.checks import JsonSchemaError
-from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75._package__shared import export_openapi
-from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_2_SPEC_READING_C83._package__shared import load_manifest
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75._package__shared import (
+    export_openapi,
+)
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_2_SPEC_READING_C83._package__shared import (
+    load_manifest,
+)
 
 from ._package__shared import C45_QUERY_RUN_PIN
 
@@ -97,18 +101,28 @@ def test_exact_outcomes_and_bad_response(bridge):
                                   (body, "failure", 500)):
         response = invoke(bridge, payload, mode)
         assert response.status_code == status
-        OPERATION.Case(body=payload, media_type="application/json").validate_response(
-            response, excluded_checks=[not_a_server_error])
-    bad = httpx.Response(200, json={"unexpected": True},
-                         request=httpx.Request("POST", "http://test/tools"))
+        OPERATION.Case(
+            body=payload, media_type="application/json"
+        ).validate_response(response, excluded_checks=[not_a_server_error])
+    bad = httpx.Response(
+        200,
+        json={"unexpected": True},
+        request=httpx.Request("POST", "http://test/tools"),
+    )
     bad.elapsed = timedelta()
     with pytest.raises(FailureGroup):
-        OPERATION.Case(body=body, media_type="application/json").validate_response(bad)
+        OPERATION.Case(
+            body=body, media_type="application/json"
+        ).validate_response(bad)
 
 
 @seed(4001)
 @settings(max_examples=20, deadline=None, database=None)
-@given(case=ARG_OPERATION.as_strategy(generation_mode=schemathesis.GenerationMode.POSITIVE))
+@given(
+    case=ARG_OPERATION.as_strategy(
+        generation_mode=schemathesis.GenerationMode.POSITIVE
+    )
+)
 def test_generated_positive(bridge, case):
     body = envelope(case.body)
     assert Draft202012Validator(REQUEST).is_valid(body)
@@ -120,7 +134,11 @@ def test_generated_positive(bridge, case):
 
 @seed(4002)
 @settings(max_examples=20, deadline=None, database=None)
-@given(case=ARG_OPERATION.as_strategy(generation_mode=schemathesis.GenerationMode.NEGATIVE))
+@given(
+    case=ARG_OPERATION.as_strategy(
+        generation_mode=schemathesis.GenerationMode.NEGATIVE
+    )
+)
 def test_generated_negative(bridge, case):
     assume(isinstance(case.body, dict))
     body = envelope(case.body)
@@ -144,7 +162,11 @@ def provider_responses(root, calls):
     )
     process = subprocess.run(
         [sys.executable, "-B", str(BRIDGE), str(root)],
-        input=messages, capture_output=True, text=True, timeout=30, check=False,
+        input=messages,
+        capture_output=True,
+        text=True,
+        timeout=30,
+        check=False,
     )
     assert process.returncode == 0, process.stderr
     return [bridge_response(line) for line in process.stdout.splitlines()]
@@ -171,7 +193,9 @@ def provider_results(tmp_path_factory):
     responses = provider_responses(root, cases.values())
     return root, {
         key: (body, response)
-        for (key, (body, _)), response in zip(cases.items(), responses, strict=True)
+        for (key, (body, _)), response in zip(
+            cases.items(), responses, strict=True
+        )
     }
 
 
@@ -215,11 +239,16 @@ def test_governed_result_file(governed_operation, provider_results, case):
     if case == "file":
         assert (root / relative).read_bytes() == b'"value"\r\n"1"\r\n"2"\r\n'
         return
-    assert toon_format.loads((root / relative).read_text(encoding="utf-8")) == {
-        "columns": ["value"], "rows": [[1], [2]],
+    assert toon_format.loads(
+        (root / relative).read_text(encoding="utf-8")
+    ) == {
+        "columns": ["value"],
+        "rows": [[1], [2]],
     }
     assert value["kind"] == "query" and value["name"] == "HTTP Bookmark"
-    journal, = root.glob("_anechoic_test/_journal/workbench-saved-items-*.ndjson")
+    (journal,) = root.glob(
+        "_anechoic_test/_journal/workbench-saved-items-*.ndjson"
+    )
     saved = json.loads(journal.read_bytes())
     assert saved["saved_query_id"] == value["saved_query_id"]
     assert saved["sql"] == SQL
@@ -245,14 +274,19 @@ def test_governed_partial_export(governed_operation, tmp_path):
     assert list(outside.iterdir()) == []
 
 
-@pytest.mark.parametrize(("case", "code", "status", "outcome"), [
-    ("stale_binding", "tool_registry_stale", 200, "rejected"),
-    ("query_error", "query_error", 200, "failed"),
-    ("nan", "query_error", 200, "failed"),
-    ("tool_input_invalid", "tool_input_invalid", 400, "rejected"),
-    ("internal", "internal", 500, "failed"),
-])
-def test_governed_error(governed_operation, provider_results, case, code, status, outcome):
+@pytest.mark.parametrize(
+    ("case", "code", "status", "outcome"),
+    [
+        ("stale_binding", "tool_registry_stale", 200, "rejected"),
+        ("query_error", "query_error", 200, "failed"),
+        ("nan", "query_error", 200, "failed"),
+        ("tool_input_invalid", "tool_input_invalid", 400, "rejected"),
+        ("internal", "internal", 500, "failed"),
+    ],
+)
+def test_governed_error(
+    governed_operation, provider_results, case, code, status, outcome
+):
     _, results = provider_results
     body, response = results[case]
     assert response.status_code == status
@@ -268,13 +302,22 @@ def test_governed_error(governed_operation, provider_results, case, code, status
         assert "private failure" not in response.text
 
 
-@pytest.mark.parametrize(("status", "case"), [
-    (200, "tool_input_invalid"), (400, "internal"), (500, "tool_input_invalid"),
-])
-def test_governed_wrong_status_body(governed_operation, provider_results, status, case):
+@pytest.mark.parametrize(
+    ("status", "case"),
+    [
+        (200, "tool_input_invalid"),
+        (400, "internal"),
+        (500, "tool_input_invalid"),
+    ],
+)
+def test_governed_wrong_status_body(
+    governed_operation, provider_results, status, case
+):
     _, results = provider_results
     body, response = results[case]
-    wrong = httpx.Response(status, json=response.json(), request=response.request)
+    wrong = httpx.Response(
+        status, json=response.json(), request=response.request
+    )
     wrong.elapsed = timedelta()
     with pytest.raises(FailureGroup) as errors:
         validate_provider(governed_operation, body, wrong)

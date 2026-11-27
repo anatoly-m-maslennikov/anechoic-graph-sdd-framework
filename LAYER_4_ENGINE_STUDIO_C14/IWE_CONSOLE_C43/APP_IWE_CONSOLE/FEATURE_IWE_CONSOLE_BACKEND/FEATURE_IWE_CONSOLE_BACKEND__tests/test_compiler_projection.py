@@ -59,7 +59,10 @@ class CompilerProjectionTests(unittest.TestCase):
     def test_recursive_content_and_role_scoped_ordering(self):
         row = _native_row(RECURSIVE_CONTENT)
         schema = compile_content_schema([row])
-        prefix = "Atom/(.Header.Context.Role in (Requirement, Method, Evaluation, Delivery)).Content"
+        prefix = (
+            "Atom/(.Header.Context.Role in (Requirement, Method, Evaluation, "
+            "Delivery)).Content"
+        )
         statements = [
             statement for statement, _ in declaration_statements(row)
         ]
@@ -107,7 +110,10 @@ class CompilerProjectionTests(unittest.TestCase):
         self.assertEqual(
             (
                 (
-                    "Atom/(.Header.Context.Role in (Plan)).Header.Context.Plan{::0..1} :: []{::0}",
+                    (
+                        "Atom/(.Header.Context.Role in "
+                        "(Plan)).Header.Context.Plan{::0..1} :: []{::0}"
+                    ),
                     SOURCE,
                 ),
                 (

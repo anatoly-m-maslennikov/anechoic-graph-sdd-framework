@@ -73,7 +73,7 @@ def _settings(root: Path) -> Mapping[str, Any]:
 
 
 def control_root(root: Path) -> Path:
-    "Return the selected control root or the one canonical unbound carrier root."
+    "Return the selected control root or canonical unbound root."
     root = root.resolve()
     selection = bound_selection(root)
     if selection is not None:

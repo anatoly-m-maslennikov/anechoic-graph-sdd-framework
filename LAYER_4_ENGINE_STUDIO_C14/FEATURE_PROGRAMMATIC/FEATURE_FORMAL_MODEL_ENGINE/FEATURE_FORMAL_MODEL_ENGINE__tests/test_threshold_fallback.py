@@ -3,16 +3,23 @@
 import unittest
 
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.\
+    ADAPTERS_C30__shared \
+    import (
     parse_native_model_claim,
     NativeModelClaimError,
-)
-from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.FEATURE_FORMAL_MODEL_ENGINE__shared import (
+)  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.\
+    FEATURE_FORMAL_MODEL_ENGINE__shared \
+    import (
     compiler_model_statements,
-)
-from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import (
+)  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.\
+    FEATURE_PROJECT_TOOLS__tests.\
+    FEATURE_PROJECT_TOOLS__tests__shared \
+    import (
     THRESHOLD as CLAIM,
-)
+)  # fmt: skip
 
 
 class ThresholdTests(unittest.TestCase):
@@ -21,7 +28,10 @@ class ThresholdTests(unittest.TestCase):
         self.assertEqual(
             compiler_model_statements(decl),
             (
-                "Project.Settings.AI Agent Confidence Threshold{::1} :: [int, 0..100]{::1} ?== 90",
+                (
+                    "Project.Settings.AI Agent Confidence Threshold{::1} :: "
+                    "[int, 0..100]{::1} ?== 90"
+                ),
                 "Project.Settings.AI Agent Confidence Threshold.*[]{::0}",
             ),
         )

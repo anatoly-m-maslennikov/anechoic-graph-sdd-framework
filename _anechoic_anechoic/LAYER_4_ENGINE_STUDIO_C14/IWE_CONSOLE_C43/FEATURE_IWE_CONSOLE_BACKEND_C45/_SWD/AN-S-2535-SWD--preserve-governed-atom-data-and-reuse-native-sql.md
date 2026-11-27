@@ -8,8 +8,8 @@ context:
   lens: SWD
 state:
   status: active
-  version: 19
-  updated_at: '2026-11-13T19:29:03.465398+00:00'
+  version: 22
+  updated_at: "2026-11-27T16:29:34.309627+00:00"
 ---
 ## Summary
 
@@ -27,8 +27,8 @@ Discover Current and Draft Atom carriers throughout the selected Project’s `.a
 
 Preserve raw Header properties, original Markdown and real heading paths privately without a fixed heading list or Form validation. Build flattened SQL columns for model-declared Header paths in Mode 1, observed raw Header paths in Mode 2, and model-admitted Content paths in both modes; source carriers, intermediate files and a third public source table are not created. Only Current Scope Unit Declarations establish current Scope Unit inventory; a Draft Declaration remains queryable only.
 
-Normalize admitted authored inverse writing before materializing canonical direct facts. Each object row carries outgoing direct and declared-derived Relations; source or relevant Declaration changes refresh affected source/counterpart rows, mappings and hashes without source edits or Version changes. Use DuckDB and DuckPGQ for SQL/PGQ, pattern matching and traversal rather than a ANECHOIC traversal engine. Reachability resolves an unambiguous typed seed, selected relation types/directions, includes each typed reference once and terminates cycles; querying an inverse uses its materialized fact once.
+Use the Active Model for Relation names and derivation. Apply AN-S-3175 to Atom Relations. Each object row carries outgoing direct and declared-derived Relations; source or relevant Declaration changes refresh affected source/counterpart rows, mappings and hashes without source edits or Version changes. Use DuckDB and DuckPGQ for SQL/PGQ, pattern matching and traversal rather than a ANECHOIC traversal engine. Apply AN-S-1350 for typed reachability. Query each materialized inverse once.
 
 Use native DuckDB for runtime lookups. Reuse existing tables and remove duplicate custom lookup indexes when their callers can query SQL. Archive bodies load on demand.
 
-Use CA-M-509's registry for relation names, exact inverse aliases and literal unqualified inverse bindings. Ambiguity is diagnosed and omitted, never guessed; qualified model derivations remain out of runtime facts. Keep timezone-aware values until the shared encoder returns ISO strings; retain required `pytz` rather than changing source-column casts.
+Normalize inverse writing from admitted legacy carriers using CA-M-509. Diagnose ambiguous aliases and unsupported derivations. Omit the affected projected facts. Keep timezone-aware values until the shared encoder returns ISO strings; retain required `pytz` rather than changing source-column casts.

@@ -20,9 +20,13 @@ def read_settings_carrier(
 
 
 def write_settings_carrier(
-    path: Path, text: str, *, validate: Callable[[dict[str, Any]], object]
+    path: Path,
+    text: str,
+    *,
+    validate: Callable[[dict[str, Any]], object],
+    replace_existing: bool = True,
 ) -> None:
-    "Validate the complete proposed TOML using the Carrier's schema before replacement."
+    """Validate the complete TOML before atomically saving it."""
     document = parse_settings_carrier(text.encode("utf-8"))
     validate(document)
     descriptor, temporary = tempfile.mkstemp(
@@ -33,10 +37,12 @@ def write_settings_carrier(
             handle.write(text.encode("utf-8"))
             handle.flush()
             os.fsync(handle.fileno())
-        os.replace(temporary, path)
-    except BaseException:
+        if replace_existing:
+            os.replace(temporary, path)
+        else:
+            os.link(temporary, path, follow_symlinks=False)
+    finally:
         try:
             os.unlink(temporary)
         except FileNotFoundError:
             pass
-        raise

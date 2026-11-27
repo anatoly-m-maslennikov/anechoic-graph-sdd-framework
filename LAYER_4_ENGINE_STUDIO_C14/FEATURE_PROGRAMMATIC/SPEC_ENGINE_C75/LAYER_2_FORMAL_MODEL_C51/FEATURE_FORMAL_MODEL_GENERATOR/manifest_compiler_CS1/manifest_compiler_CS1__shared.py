@@ -7,6 +7,12 @@ from .model_lean import render_atom_header_lean, verify_model_lean
 from .model_ingestion import compile_ingested_cli
 
 __all__ = [
-    "bounded_run", "compile_ingested_cli", "previous_claims", "read_active_model_sources", "render_atom_header_lean",
-    "stage_model", "verify_model_lean", "write_model",
+    "bounded_run",
+    "compile_ingested_cli",
+    "previous_claims",
+    "read_active_model_sources",
+    "render_atom_header_lean",
+    "stage_model",
+    "verify_model_lean",
+    "write_model",
 ]

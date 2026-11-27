@@ -11,10 +11,18 @@ import tomllib
 from pathlib import Path
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import atomic_tempfile
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.project_runtime import repository_root as temporary_project_root
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import bound_selection
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import read_settings_carrier
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    atomic_tempfile,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.project_runtime import (
+    repository_root as temporary_project_root,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    bound_selection,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    read_settings_carrier,
+)
 from collections.abc import Mapping
 
 
@@ -27,16 +35,24 @@ def project_identity(root: Path) -> dict[str, dict[str, object]]:
     selection = bound_selection(root)
     path = selection.settings_path if selection is not None else root / SETTINGS_PATH
     if not path.is_file() or path.is_symlink():
-        raise ValueError(f"Project Settings Carrier is missing or invalid: {SETTINGS_PATH}")
+        raise ValueError(
+            f"Project Settings Carrier is missing or invalid: {SETTINGS_PATH}"
+        )
     try:
         settings = selection.settings if selection is not None else read_settings_carrier(path)
     except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError) as error:
-        raise ValueError(f"invalid Project Settings: {SETTINGS_PATH}") from error
+        raise ValueError(
+            f"invalid Project Settings: {SETTINGS_PATH}"
+        ) from error
     project = settings.get("project")
     artifacts = settings.get("artifacts")
-    identity = artifacts.get("identity") if isinstance(artifacts, Mapping) else None
+    identity = (
+        artifacts.get("identity") if isinstance(artifacts, Mapping) else None
+    )
     if not isinstance(project, Mapping) or not isinstance(identity, Mapping):
-        raise ValueError("Project Settings lacks project or artifacts.identity")
+        raise ValueError(
+            "Project Settings lacks project or artifacts.identity"
+        )
     for key in ("key", "name", "repository_slug"):
         value = project.get(key)
         if not isinstance(value, str) or not value.strip():
@@ -45,11 +61,20 @@ def project_identity(root: Path) -> dict[str, dict[str, object]]:
         raise ValueError("Project Settings project.name must be lowercase without surrounding whitespace")
     prefix = identity.get("project_prefix")
     if not isinstance(prefix, str) or not prefix.strip():
-        raise ValueError("Project Settings lacks artifacts.identity.project_prefix")
+        raise ValueError(
+            "Project Settings lacks artifacts.identity.project_prefix"
+        )
     obsolete = project.get("obsolete_names", [])
-    if not isinstance(obsolete, (list, tuple)) or any(not isinstance(name, str) or not name for name in obsolete):
-        raise ValueError("Project Settings project.obsolete_names must be a list of names")
-    return {"project": dict(project, obsolete_names=list(obsolete)), "identity": dict(identity)}
+    if not isinstance(obsolete, (list, tuple)) or any(
+        not isinstance(name, str) or not name for name in obsolete
+    ):
+        raise ValueError(
+            "Project Settings project.obsolete_names must be a list of names"
+        )
+    return {
+        "project": dict(project, obsolete_names=list(obsolete)),
+        "identity": dict(identity),
+    }
 
 
 def repository_root(path: Path) -> Path:
@@ -66,7 +91,11 @@ def repository_root(path: Path) -> Path:
 
 def configured_timezone(root: Path) -> dt.tzinfo | None:
     selection = bound_selection(root)
-    settings = selection.settings if selection is not None else read_settings_carrier(root / SETTINGS_PATH)
+    settings = (
+        selection.settings
+        if selection is not None
+        else read_settings_carrier(root / SETTINGS_PATH)
+    )
     value = settings.get("artifact_timestamps", {}).get("timezone", "local")
     return _timezone_value(value)
 
@@ -79,11 +108,17 @@ def _timezone_value(value: str) -> dt.tzinfo | None:
     try:
         return ZoneInfo(value)
     except ZoneInfoNotFoundError as error:
-        raise RuntimeError(f"unknown artifact timestamp timezone: {value}") from error
+        raise RuntimeError(
+            f"unknown artifact timestamp timezone: {value}"
+        ) from error
 
 
 def _timestamp(timezone: dt.tzinfo | None) -> str:
-    moment = dt.datetime.now().astimezone() if timezone is None else dt.datetime.now(timezone)
+    moment = (
+        dt.datetime.now().astimezone()
+        if timezone is None
+        else dt.datetime.now(timezone)
+    )
     return moment.strftime(TIMESTAMP_FORMAT)
 
 
@@ -92,9 +127,13 @@ def current_timestamp(root: Path) -> str:
 
 
 def atomic_write(path: Path, text: str, *, mode: int | None = None) -> None:
-    descriptor, temporary_name = atomic_tempfile(temporary_project_root(path), path, "artifact_metadata")
+    descriptor, temporary_name = atomic_tempfile(
+        temporary_project_root(path), path, "artifact_metadata"
+    )
     try:
-        with os.fdopen(descriptor, "w", encoding="utf-8", newline="\n") as handle:
+        with os.fdopen(
+            descriptor, "w", encoding="utf-8", newline="\n"
+        ) as handle:
             handle.write(text)
             handle.flush()
             if mode is not None:

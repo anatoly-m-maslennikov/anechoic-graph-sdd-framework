@@ -20,15 +20,22 @@ class ScopeUnitDeclarationReaderTests(ScopeUnitFixture, unittest.TestCase):
         source = self.declaration("demo", "CA-R-1", project=True)
         current = source.read_text(encoding="utf-8")
         self.assertIn("### Formal Claim\n\n```python\n", current)
-        self.assertEqual("demo", parse_scope_unit_declaration(current.encode(), source).name)
+        self.assertEqual(
+            "demo", parse_scope_unit_declaration(current.encode(), source).name
+        )
         for invalid in (
             current.replace("```python", "```CFEL"),
             current.replace("### Formal Claim", "### Prose Claim"),
             current + "\n```python\nextra\n```\n",
             current.rsplit("```", 1)[0],
-            current.replace("declare_entity(", "open('unexpected', 'w')\ndeclare_entity("),
+            current.replace(
+                "declare_entity(", "open('unexpected', 'w')\ndeclare_entity("
+            ),
         ):
-            with self.subTest(invalid=invalid), self.assertRaises(ScopeDeclarationError):
+            with (
+                self.subTest(invalid=invalid),
+                self.assertRaises(ScopeDeclarationError),
+            ):
                 parse_scope_unit_declaration(invalid.encode(), source)
 
     def test_compatibility_python_claim_is_rejected(self) -> None:
@@ -51,14 +58,18 @@ class ScopeUnitDeclarationReaderTests(ScopeUnitFixture, unittest.TestCase):
         root_claim = ('from anechoic.model import Project\n'
                       'from anechoic.formal_claims import declare_entity\n'
                       'declare_entity(entity_name="demo", instance=Project(id="CA-SU-00", name="demo"))')
-        parent_claim = ('from anechoic.model import ScopeUnit\n'
-                        'from anechoic.formal_claims import declare_entity\n'
-                        'declare_entity(entity_name="PARENT", instance=ScopeUnit('
-                        'id="CA-SU-1", name="PARENT", label="LAYER", ordered=True, '
-                        'order_number=1, container="demo"))')
+        parent_claim = (
+            "from anechoic.model import ScopeUnit\n"
+            "from anechoic.formal_claims import declare_entity\n"
+            'declare_entity(entity_name="PARENT", instance=ScopeUnit('
+            'id="CA-SU-1", name="PARENT", label="LAYER", ordered=True, '
+            'order_number=1, container="demo"))'
+        )
         original = parse_scope_unit_declaration(parent.read_bytes(), parent)
         native = convert(parent, parent_claim)
-        self.assertEqual(original, parse_scope_unit_declaration(native.encode(), parent))
+        self.assertEqual(
+            original, parse_scope_unit_declaration(native.encode(), parent)
+        )
         self.assertEqual(parse_scope_unit_declaration(root.read_bytes(), root),
                          parse_scope_unit_declaration(convert(root, root_claim).encode(), root))
         with_level = native.replace('container="demo"', 'container="demo", structural_level=2')
@@ -102,46 +113,80 @@ class ScopeUnitDeclarationReaderTests(ScopeUnitFixture, unittest.TestCase):
         result = read_scope_unit_declarations(self.root, self.control.name)
 
         self.assertEqual(result.root.name, "demo")
-        self.assertEqual(tuple(result.paths), tuple(sorted((root_source, parent_source, child_source))))
+        self.assertEqual(
+            tuple(result.paths),
+            tuple(sorted((root_source, parent_source, child_source))),
+        )
         self.assertEqual(set(result.by_name), {"demo", "PARENT", "CHILD"})
         self.assertEqual(len(result.digest), 64)
         self.assertEqual(
             set(result.source_pins),
-            {source.relative_to(self.root).as_posix() for source in (root_source, parent_source, child_source)},
+            {
+                source.relative_to(self.root).as_posix()
+                for source in (root_source, parent_source, child_source)
+            },
         )
-        rows = {row["scope_unit_name"]: row for row in result.as_structure()["scope_units"]}
+        rows = {
+            row["scope_unit_name"]: row
+            for row in result.as_structure()["scope_units"]
+        }
         self.assertEqual(rows["demo"], {
             "scope_unit_name": "demo", "parent": "PROJECT", "scope_unit_id": None,
             "scope_unit_label": None, "scope_unit_type": "Unordered",
             "admitted_role_forms": (),
             "authority_path": ".anechoic_demo", "delivery_path": ".",
         })
-        self.assertEqual(rows["PARENT"]["authority_path"], ".anechoic_demo/CA-SU-1_LAYER_1_PARENT")
+        self.assertEqual(
+            rows["PARENT"]["authority_path"],
+            ".anechoic_demo/CA-SU-1_LAYER_1_PARENT",
+        )
         self.assertEqual(rows["PARENT"]["delivery_path"], "LAYER_1_PARENT")
-        self.assertEqual(rows["CHILD"]["authority_path"], ".anechoic_demo/CA-SU-1_LAYER_1_PARENT/CA-SU-2_FEATURE_CHILD")
-        self.assertEqual(rows["CHILD"]["delivery_path"], "LAYER_1_PARENT/FEATURE_CHILD")
+        self.assertEqual(
+            rows["CHILD"]["authority_path"],
+            ".anechoic_demo/CA-SU-1_LAYER_1_PARENT/CA-SU-2_FEATURE_CHILD",
+        )
+        self.assertEqual(
+            rows["CHILD"]["delivery_path"], "LAYER_1_PARENT/FEATURE_CHILD"
+        )
 
     def test_structure_topics_follow_discovered_names(self) -> None:
         root, parent, child = self.complete_tree()
         import re
         def topic(path, value):
             path.write_text(re.sub(r'(?m)^  active: .*$', f'  active: "{value}"', path.read_text()))
-        root.write_text(root.read_text().replace('entity_name="demo"', 'entity_name="anechoic"').replace('name="demo"', 'name="anechoic"'))
-        parent.write_text(parent.read_text().replace('container="demo"', 'container="anechoic"'))
+        root.write_text(
+            root.read_text()
+            .replace('entity_name="demo"', 'entity_name="anechoic"')
+            .replace('name="demo"', 'name="anechoic"')
+        )
+        parent.write_text(
+            parent.read_text().replace(
+                'container="demo"', 'container="anechoic"'
+            )
+        )
         topic(root, 'ANECHOIC_STRUCTURE')
         topic(parent, 'ANECHOIC_STRUCTURE/PARENT')
         topic(child, 'ANECHOIC_STRUCTURE/PARENT/CHILD')
         delegation = child.parent / 'CA-R-4-delegation.md'
         raw = child.read_text().replace('CA-R-3', 'CA-R-4').replace('form: Scope Unit Declaration', 'form: Scope Delegation')
-        raw = raw[:raw.index('### Formal Claim')] + '### Prose Claim\n\nDelegated responsibility.\n'
-        delegation.write_text(raw.replace('---\n', '---\ncontainer:\n  scope_unit: CA-SU-1\n', 1))
+        raw = (
+            raw[: raw.index("### Formal Claim")]
+            + "### Prose Claim\n\nDelegated responsibility.\n"
+        )
+        delegation.write_text(
+            raw.replace("---\n", "---\ncontainer:\n  scope_unit: CA-SU-1\n", 1)
+        )
         self.assertEqual({'anechoic', 'PARENT', 'CHILD'}, set(read_scope_unit_declarations(self.root, self.control.name).by_name))
         delegation.write_text(delegation.read_text().replace('ANECHOIC_STRUCTURE/PARENT/CHILD', 'ANECHOIC_STRUCTURE/WRONG/CHILD'))
-        with self.assertRaisesRegex(ScopeDeclarationError, 'contradicts declared containment'):
+        with self.assertRaisesRegex(
+            ScopeDeclarationError, "contradicts declared containment"
+        ):
             read_scope_unit_declarations(self.root, self.control.name)
         delegation.unlink()
         child.write_text(child.read_text().replace('ANECHOIC_STRUCTURE/PARENT/CHILD', 'ANECHOIC_STRUCTURE/WRONG/CHILD'))
-        with self.assertRaisesRegex(ScopeDeclarationError, 'contradicts declared containment'):
+        with self.assertRaisesRegex(
+            ScopeDeclarationError, "contradicts declared containment"
+        ):
             read_scope_unit_declarations(self.root, self.control.name)
 
     def test_prefixed_active_subjects_roundtrip_while_claims_stay_local(self) -> None:
@@ -164,8 +209,13 @@ class ScopeUnitDeclarationReaderTests(ScopeUnitFixture, unittest.TestCase):
             (child_source, "Scope Unit//CHILD"),
         ):
             text = source.read_text(encoding="utf-8")
-            self.assertIn(f'active: "ANECHOIC_STRUCTURE <+ {local_subject}"', text)
-            self.assertIn(f'entity_name="{local_subject.split("//", 1)[1]}"', text.split("## Claim", 1)[1])
+            self.assertIn(
+                f'active: "ANECHOIC_STRUCTURE <+ {local_subject}"', text
+            )
+            self.assertIn(
+                f'entity_name="{local_subject.split("//", 1)[1]}"',
+                text.split("## Claim", 1)[1],
+            )
             self.assertNotIn("ANECHOIC", text.split("## Claim", 1)[1])
             parsed = parse_scope_unit_declaration(text.encode(), source)
             self.assertEqual(parsed.name, local_subject.split("//", 1)[1])
@@ -189,32 +239,53 @@ class ScopeUnitDeclarationReaderTests(ScopeUnitFixture, unittest.TestCase):
             "subjects:\n  active:", "topics:\n  main_subject:",
         ).replace("\n  passive: []", ""), encoding="utf-8")
 
-        self.assertEqual(parse_scope_unit_declaration(source.read_bytes(), source).name, "UNIT")
+        self.assertEqual(
+            parse_scope_unit_declaration(source.read_bytes(), source).name,
+            "UNIT",
+        )
 
-    def test_formal_identity_allows_missing_but_not_ambiguous_main_subject(self) -> None:
+    def test_formal_identity_allows_missing_but_not_ambiguous_main_subject(
+        self,
+    ) -> None:
         source = self.declaration(
-            "UNIT", "CA-R-2", scope_id="CA-SU-2", parent=PROJECT, project_name="anechoic",
+            "UNIT",
+            "CA-R-2",
+            scope_id="CA-SU-2",
+            parent=PROJECT,
+            project_name="anechoic",
         )
         current = source.read_text(encoding="utf-8")
         missing = current.replace(
-            'subjects:\n  active: "ANECHOIC_STRUCTURE <+ Scope Unit//UNIT"\n  passive: []\n', "",
+            'subjects:\n  active: "ANECHOIC_STRUCTURE <+ Scope Unit//UNIT"\n  passive: []\n',
+            "",
         )
         equal_aliases = current.replace(
-            "subjects:\n", "topics:\n  main_subject: \"ANECHOIC_STRUCTURE <+ Scope Unit//UNIT\"\nsubjects:\n",
+            "subjects:\n",
+            'topics:\n  main_subject: "ANECHOIC_STRUCTURE <+ Scope Unit//UNIT"\nsubjects:\n',
         )
         ambiguous = equal_aliases.replace(
             'main_subject: "ANECHOIC_STRUCTURE <+ Scope Unit//UNIT"',
             'main_subject: "ANECHOIC_STRUCTURE <+ Scope Unit//OTHER"',
         )
         invalid_current = current.replace(
-            "subjects:\n", "topics:\n  main_subject: 1\nsubjects:\n",
+            "subjects:\n",
+            "topics:\n  main_subject: 1\nsubjects:\n",
         )
 
-        self.assertEqual("UNIT", parse_scope_unit_declaration(missing.encode(), source).name)
-        self.assertEqual("UNIT", parse_scope_unit_declaration(equal_aliases.encode(), source).name)
-        with self.assertRaisesRegex(ScopeDeclarationError, "invalid declaration carrier"):
+        self.assertEqual(
+            "UNIT", parse_scope_unit_declaration(missing.encode(), source).name
+        )
+        self.assertEqual(
+            "UNIT",
+            parse_scope_unit_declaration(equal_aliases.encode(), source).name,
+        )
+        with self.assertRaisesRegex(
+            ScopeDeclarationError, "invalid declaration carrier"
+        ):
             parse_scope_unit_declaration(ambiguous.encode(), source)
-        with self.assertRaisesRegex(ScopeDeclarationError, "invalid declaration carrier"):
+        with self.assertRaisesRegex(
+            ScopeDeclarationError, "invalid declaration carrier"
+        ):
             parse_scope_unit_declaration(invalid_current.encode(), source)
 
     def test_prefixed_active_subject_wrong_branch_refuses(self) -> None:
@@ -229,17 +300,27 @@ class ScopeUnitDeclarationReaderTests(ScopeUnitFixture, unittest.TestCase):
         with self.assertRaisesRegex(ScopeDeclarationError, "namespace branch"):
             parse_scope_unit_declaration(source.read_bytes(), source)
 
-    def test_named_structure_namespace_is_read_without_changing_the_source(self) -> None:
+    def test_named_structure_namespace_is_read_without_changing_the_source(
+        self,
+    ) -> None:
         source = self.declaration(
-            "UNIT", "CA-R-2", scope_id="CA-SU-2", parent=PROJECT, project_name="anechoic",
+            "UNIT",
+            "CA-R-2",
+            scope_id="CA-SU-2",
+            parent=PROJECT,
+            project_name="anechoic",
         )
         carrier = source.read_bytes().replace(
             b"ANECHOIC_STRUCTURE <+ Scope Unit//UNIT",
             b"PROJECT STRUCTURE//ANECHOIC <+ Scope Unit//UNIT",
         )
-        self.assertEqual("UNIT", parse_scope_unit_declaration(carrier, source).name)
+        self.assertEqual(
+            "UNIT", parse_scope_unit_declaration(carrier, source).name
+        )
         with self.assertRaisesRegex(ScopeDeclarationError, "namespace branch"):
-            parse_scope_unit_declaration(carrier.replace(b"PROJECT STRUCTURE//", b"MODEL//"), source)
+            parse_scope_unit_declaration(
+                carrier.replace(b"PROJECT STRUCTURE//", b"MODEL//"), source
+            )
 
 
 if __name__ == "__main__":

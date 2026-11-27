@@ -25,8 +25,10 @@ class StateProjectionTests(TestCase):
     def test_publication_rebuild_rollback_and_removal(self):
         connection = duckdb.connect(':memory:')
         self.addCleanup(connection.close)
-        row = state_finding_row('src/a.py', '<module>', 1, 'unresolved', detail='Lean unavailable')
-        connection.execute('BEGIN')
+        row = state_finding_row(
+            "src/a.py", "<module>", 1, "unresolved", detail="Lean unavailable"
+        )
+        connection.execute("BEGIN")
         replace_boundaries(connection, ([], [], [row]))
         connection.execute('COMMIT')
         self.assertEqual([row], connection.execute('SELECT * FROM state_effect_findings').fetchall())
@@ -44,17 +46,17 @@ class StateProjectionTests(TestCase):
                 '_projection'
             ],
             _projection=NonCallableMock(
-            spec_set=[
-                'graph'
-            ],
-            graph=NonCallableMock(
-            spec_set=[
-                'tables'
-            ],
-            tables={})))
-        table, scope, dependencies = rebuild._rebuild_scope(store, 'state_effect_findings')
-        self.assertEqual((table, scope), ('state_effect_findings', 'realization'))
-        self.assertIn('state_effect_findings', dependencies)
+                spec_set=["graph"],
+                graph=NonCallableMock(spec_set=["tables"], tables={}),
+            ),
+        )
+        table, scope, dependencies = rebuild._rebuild_scope(
+            store, "state_effect_findings"
+        )
+        self.assertEqual(
+            (table, scope), ("state_effect_findings", "realization")
+        )
+        self.assertIn("state_effect_findings", dependencies)
 
         connection.execute('BEGIN')
         replace_boundaries(connection, ([], [], []))
@@ -74,38 +76,84 @@ class StateProjectionTests(TestCase):
             ],
             root='root', control_root='control')
         snapshot = NonCallableMock(
-            spec_set=[
-                'components', 'packages'
-            ],
-            components={}, packages={})
-        sources, ownership, expected = {'a.py': object()}, object(), [('finding',)]
-        with (patch(f'{_BOUNDARY_TABLES}.code_access_occurrences', return_value=(set(), [])),
-              patch(f'{_BOUNDARY_TABLES}.build_code_access_ownership', return_value=ownership) as build,
-              patch(f'{_BOUNDARY_TABLES}.check_code_access', return_value=[]) as check,
-              patch(f'{_BOUNDARY_TABLES}.analyze_state', return_value=expected) as analyze):
-            result = prepare_boundaries(selection, snapshot, sources, [], None, {})
+            spec_set=["components", "packages"], components={}, packages={}
+        )
+        sources, ownership, expected = (
+            {"a.py": object()},
+            object(),
+            [("finding",)],
+        )
+        with (
+            patch(
+                f"{_BOUNDARY_TABLES}.code_access_occurrences",
+                return_value=(set(), []),
+            ),
+            patch(
+                f"{_BOUNDARY_TABLES}.build_code_access_ownership",
+                return_value=ownership,
+            ) as build,
+            patch(
+                f"{_BOUNDARY_TABLES}.check_code_access", return_value=[]
+            ) as check,
+            patch(
+                f"{_BOUNDARY_TABLES}.analyze_state", return_value=expected
+            ) as analyze,
+        ):
+            result = prepare_boundaries(
+                selection, snapshot, sources, [], None, {}
+            )
         self.assertEqual(([], [], expected), result)
         build.assert_called_once()
-        check.assert_called_once_with(ownership, sources, [], include_entry_bypasses=True)
-        analyze.assert_called_once_with('root', sources, ownership=ownership)
+        check.assert_called_once_with(
+            ownership, sources, [], include_entry_bypasses=True
+        )
+        analyze.assert_called_once_with("root", sources, ownership=ownership)
 
     def test_analysis_runs_without_structure(self):
-        selection = NonCallableMock(spec_set=['root'], root='root')
-        sources = {'a.py': object()}
-        with patch(f'{_BOUNDARY_TABLES}.analyze_state', return_value=[]) as analyze:
-            declarations, findings, state = prepare_boundaries(selection, None, sources, [], None, {})
+        selection = NonCallableMock(spec_set=["root"], root="root")
+        sources = {"a.py": object()}
+        with patch(
+            f"{_BOUNDARY_TABLES}.analyze_state", return_value=[]
+        ) as analyze:
+            declarations, findings, state = prepare_boundaries(
+                selection, None, sources, [], None, {}
+            )
         self.assertEqual(([], []), (declarations, state))
-        self.assertEqual([('module:a.py', 'a.py', None, None, 'Package entry', 'denied',
-                           'Expected one __shared or __public entry in ., found 0')], findings)
-        analyze.assert_called_once_with('root', sources, ownership=None)
+        self.assertEqual(
+            [
+                (
+                    "module:a.py",
+                    "a.py",
+                    None,
+                    None,
+                    "Package entry",
+                    "denied",
+                    "Expected one __shared or __public entry in ., found 0",
+                )
+            ],
+            findings,
+        )
+        analyze.assert_called_once_with("root", sources, ownership=None)
 
     def test_lint_reports_denied_and_silent_actions(self):
         path = 'src/effects.py'
         rows = [
-            state_finding_row(path, 'action', 1, 'deadEnd', witness='REQUEST_CTX', dead_end=True),
-            state_finding_row(path, 'action', 2, 'hasEffects',
-                              violations='[{"line": 2, "kind": "write", "name": "REQUEST_CTX"}]'),
-            state_finding_row(path, 'declared', 3, 'declaredNoOp'),
+            state_finding_row(
+                path,
+                "action",
+                1,
+                "deadEnd",
+                witness="REQUEST_CTX",
+                dead_end=True,
+            ),
+            state_finding_row(
+                path,
+                "action",
+                2,
+                "hasEffects",
+                violations='[{"line": 2, "kind": "write", "name": "REQUEST_CTX"}]',
+            ),
+            state_finding_row(path, "declared", 3, "declaredNoOp"),
         ]
         errors = StringIO()
         with redirect_stderr(errors):

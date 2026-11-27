@@ -8,8 +8,8 @@ context:
   lens: DES
 state:
   status: active
-  version: 25
-  updated_at: 2026-11-11 09:03:52 +0400
+  version: 26
+  updated_at: "2026-11-27T15:50:51.353081+00:00"
 ---
 ## Summary
 
@@ -33,9 +33,9 @@ Find, Read and Modify **must** be independent logical operations. Find returns m
 
 Finders, including `ATOM_SEARCH` **and** `ATOM_READ`, are strictly read-only. Doers default **to** dry run **and** require explicit authorized application. **Each** Atom Action **must** affect **`=1`** explicit Atom target. A Workflow selecting several targets **must** invoke independent Atom Actions, stop at the first failed Action, retain completed Actions, and leave the remaining targets untouched. The Workflow **must not** promise a cross-Atom all-or-nothing transaction. This boundary preserves each Action's own preconditions, source checks and storage-effect safeguards; it does not weaken them.
 
-Every actual changed same-ID Atom update, including Status-only and carrier-only edits, **must** advance Version by **`=1`** and use actual Updated At; a verified no-op changes neither. Every Summary or Type value change **must** use replacement with a new Atom ID and predecessor archival. Atom removal **must** use the applicable retire or archive lifecycle transition and preserve required history; Atom deletion is not admitted. General file cleanup belongs to a separate operation and is not implied by an Atom operation. Resume and retry policy for the independent Action sequence is deferred; this Requirement selects no such policy. This required Engine contract does not establish implementation or acceptance; alignment of differing legacy Core content remains separate.
+Apply AN-S-2517 to legacy sealed-carrier Version and Type replacement. Use AN-S-1604 for native identity, transitions, and metadata. Atom removal **must** use the applicable retire or archive lifecycle transition and preserve required history; Atom deletion is not admitted. General file cleanup belongs to a separate operation and is not implied by an Atom operation. Resume and retry policy for the independent Action sequence is deferred; this Requirement selects no such policy. This required Engine contract does not establish implementation or acceptance; alignment of differing legacy Core content remains separate.
 
-`ATOM_ARCHIVE`, `ATOM_PROMOTE`, **and** `ATOM_UPGRADE` are distinct transitions. archive preserves the assigned Atom ID **and** historical carrier. promotion assigns an operator-supplied role-matching Atom ID **to** a draft **and** makes it active. upgrade preserves an active Atom ID, requires an explicit enabled target Tier of `core` **or** `standard` that is higher than the source Tier, **and** **may** move the Atom **only** **to** an explicitly named ancestor Scope Unit.
+In the legacy Role and Tier interface, `ATOM_ARCHIVE`, `ATOM_PROMOTE`, and `ATOM_UPGRADE` are distinct operations. archive preserves the assigned Atom ID **and** historical carrier. promotion assigns an operator-supplied role-matching Atom ID **to** a draft **and** makes it active. upgrade preserves an active Atom ID, requires an explicit enabled target Tier of `core` **or** `standard` that is higher than the source Tier, **and** **may** move the Atom **only** **to** an explicitly named ancestor Scope Unit.
 
 ## Details
 

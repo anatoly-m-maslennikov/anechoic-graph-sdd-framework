@@ -1,15 +1,19 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1556
+concern:
+  subject: "Realization"
+  path: "Model/Graph/Node//Artifact//SSOT"
+  relation: "is_narrower_than"
 container:
   component: C23
 tier: 4
 context:
   lens: SWD
 state:
-  status: "active"
-  version: 2
-  updated_at: "2026-11-26T10:14:10.362056+00:00"
+  status: active
+  version: 3
+  updated_at: "2026-11-27T16:16:01.404965+00:00"
 ---
 ## Summary
 Write very thin Skills for MCP-delivered Step instructions

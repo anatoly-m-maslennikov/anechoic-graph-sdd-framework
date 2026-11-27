@@ -44,16 +44,26 @@ def _projection_checks(model, claims, unresolved, bounded_framing):
         languages = [language for language, _ in declaration['claims']]
         if languages == ['python shape']:
             shape[role] = shape_checks(claims[role], role)
-        if 'python framing' in languages:
-            claim = claims[role]['framing'] if len(languages) > 1 else claims[role]
+        if "python framing" in languages:
+            claim = (
+                claims[role]["framing"] if len(languages) > 1 else claims[role]
+            )
             try:
                 framing[role] = (claim, framing_witnesses(
                     claim, role, include_overlap_cases=bounded_framing))
             except ValueError as error:
-                unresolved.append(finding(declaration['source'], role, str(error)))
-    shared = sorted({raw for _, cases in framing.values() for raw in cases}) if bounded_framing else []
-    checks = {role: framing_checks(claim, role, shared or cases)
-              for role, (claim, cases) in framing.items()}
+                unresolved.append(
+                    finding(declaration["source"], role, str(error))
+                )
+    shared = (
+        sorted({raw for _, cases in framing.values() for raw in cases})
+        if bounded_framing
+        else []
+    )
+    checks = {
+        role: framing_checks(claim, role, shared or cases)
+        for role, (claim, cases) in framing.items()
+    }
     return shape, checks, shared if len(framing) == 2 else []
 
 
@@ -70,8 +80,13 @@ def _check_shape(model, claims, checks, results, issues):
             raise ValueError('Unexpected Lean shape validation output')
         for field, matches in zip(fields, values, strict=True):
             if not matches:
-                issues.append(finding(model[role]['source'], f'{role}.{field}',
-                                      'Lean shape differs from the normalized source'))
+                issues.append(
+                    finding(
+                        model[role]["source"],
+                        f"{role}.{field}",
+                        "Lean shape differs from the normalized source",
+                    )
+                )
 
 
 def _check_framing(model, checks, actual, issues, unresolved):
@@ -84,7 +99,11 @@ def _check_framing(model, checks, actual, issues, unresolved):
         source = model[role]['source']
         if False in results:
             witness = witnesses[results.index(False)]
-            issues.append(finding(source, role, f'Lean framing witness disagrees: {witness}'))
+            issues.append(
+                finding(
+                    source, role, f"Lean framing witness disagrees: {witness}"
+                )
+            )
         else:
             unresolved.append(finding(source, role,
                 f'Framing passed {len(witnesses) // 2} byte witnesses. Unbounded equivalence remains unverified.'))
@@ -98,7 +117,13 @@ def _check_declarations(model, claims, actual, issues):
         value = json.dumps({'source': source, 'claim': claim}, allow_nan=False)
         expected = json.loads(value, parse_float=Decimal)
         if not json_equal([expected], observed):
-            issues.append(finding(source, role, 'Lean declaration differs from the normalized source'))
+            issues.append(
+                finding(
+                    source,
+                    role,
+                    "Lean declaration differs from the normalized source",
+                )
+            )
 
 
 def _bounded_report(witnesses, pair_results, claims):
@@ -125,10 +150,14 @@ def _run_validation(program, claims, shape, framing, witnesses, lean):
 def validate_translation(model, program, *, lean='lean', bounded_framing=False):
     """Check emitted declarations, shape metadata, and bounded framing witnesses."""
     normalized = normalize_spec(model)
-    claims = normalized['claims']
-    comparison_fields = {'boundaries.code.imports', 'boundaries.code.exports', 'boundaries.io'}
-    if model.get('embedded_contract'):
-        comparison_fields.update(('boundaries.process', 'boundaries.state'))
+    claims = normalized["claims"]
+    comparison_fields = {
+        "boundaries.code.imports",
+        "boundaries.code.exports",
+        "boundaries.io",
+    }
+    if model.get("embedded_contract"):
+        comparison_fields.update(("boundaries.process", "boundaries.state"))
     unresolved, coverage_unresolved = [], []
     for issue in normalized['unresolved']:
         if issue['field'] not in comparison_fields:
@@ -144,7 +173,9 @@ def validate_translation(model, program, *, lean='lean', bounded_framing=False):
     witnesses = []
     pair_results = None
     if claims:
-        shape, framing, witnesses = _projection_checks(model, claims, unresolved, bounded_framing)
+        shape, framing, witnesses = _projection_checks(
+            model, claims, unresolved, bounded_framing
+        )
         shapes, actual, witness_results, pair_results = _run_validation(
             program, claims, shape, framing, witnesses, lean)
         _check_shape(model, claims, shape, shapes, issues)

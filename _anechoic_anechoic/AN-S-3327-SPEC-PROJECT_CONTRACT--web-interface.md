@@ -9,11 +9,11 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 3
-  updated_at: '2026-11-22T11:34:35.965837+00:00'
+  version: 4
+  updated_at: '2026-11-27T17:49:09.957980+00:00'
 relations:
   SERVES:
-  - AN-S-1233
+  - AN-S-3037
 ---
 ## Summary
 

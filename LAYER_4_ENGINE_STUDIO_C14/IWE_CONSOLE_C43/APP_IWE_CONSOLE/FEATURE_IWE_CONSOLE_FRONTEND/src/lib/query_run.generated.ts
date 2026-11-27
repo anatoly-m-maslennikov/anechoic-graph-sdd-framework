@@ -1,3 +1,5 @@
+export const TOOL_REST_PATH = "/tools";
+
 export type QueryRun = {
   sql: string;
   cursor_position?: number;

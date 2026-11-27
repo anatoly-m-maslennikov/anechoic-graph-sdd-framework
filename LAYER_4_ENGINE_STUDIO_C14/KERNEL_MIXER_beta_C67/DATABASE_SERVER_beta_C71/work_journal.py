@@ -82,24 +82,34 @@ def validate_journal_schema(connection, catalog):
     columns = connection.execute(
         "SELECT column_name, data_type, is_nullable FROM information_schema.columns "
         "WHERE table_catalog = ? AND table_schema = 'main' "
-        "AND table_name = 'work_journal' ORDER BY ordinal_position", [catalog],
+        "AND table_name = 'work_journal' ORDER BY ordinal_position",
+        [catalog],
     ).fetchall()
-    if columns != [("record_id", "VARCHAR", "NO"), ("position", "BIGINT", "NO"),
-                   ("author", "VARCHAR", "NO"), ("local_date", "VARCHAR", "NO"),
-                   ("event", "JSON", "NO")]:
+    if columns != [
+        ("record_id", "VARCHAR", "NO"),
+        ("position", "BIGINT", "NO"),
+        ("author", "VARCHAR", "NO"),
+        ("local_date", "VARCHAR", "NO"),
+        ("event", "JSON", "NO"),
+    ]:
         raise ValueError("Work Journal database has an incompatible schema")
     keys = connection.execute(
         "SELECT constraint_column_names FROM duckdb_constraints() WHERE database_name = ? "
-        "AND schema_name = 'main' AND table_name = 'work_journal' AND constraint_type = 'PRIMARY KEY'", [catalog],
+        "AND schema_name = 'main' AND table_name = 'work_journal' AND constraint_type = 'PRIMARY KEY'",
+        [catalog],
     ).fetchall()
     if keys != [(["record_id"],)]:
-        raise ValueError("Work Journal database has an incompatible primary key")
+        raise ValueError(
+            "Work Journal database has an incompatible primary key"
+        )
 
 
 def initialize_journal(connection: Any, project_root: Path) -> None:
     """Attach the Project's native journal before external access is locked."""
-    if connection.execute("SELECT 1 FROM information_schema.tables WHERE table_catalog = current_database() "
-                          "AND table_schema = 'main' AND table_name = 'work_journal'").fetchone():
+    if connection.execute(
+        "SELECT 1 FROM information_schema.tables WHERE table_catalog = current_database() "
+        "AND table_schema = 'main' AND table_name = 'work_journal'"
+    ).fetchone():
         raise ValueError("Database already has a Work Journal object")
     path = journal_database_path(project_root, create=True)
     escaped = str(path).replace("'", "''")
@@ -113,13 +123,22 @@ def initialize_journal(connection: Any, project_root: Path) -> None:
         "author VARCHAR NOT NULL, local_date VARCHAR NOT NULL, event JSON NOT NULL)"
     )
     validate_journal_schema(connection, "journal_store")
-    connection.execute(f"CREATE TEMP VIEW ops_work_journal AS SELECT * FROM {TABLE}")
-    connection.execute("CREATE TEMP VIEW work_journal AS SELECT * FROM ops_work_journal")
+    connection.execute(
+        f"CREATE TEMP VIEW ops_work_journal AS SELECT * FROM {TABLE}"
+    )
+    connection.execute(
+        "CREATE TEMP VIEW work_journal AS SELECT * FROM ops_work_journal"
+    )
 
 
 def _canonical_json_bytes(value):
-    return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"),
-                      allow_nan=False).encode("utf-8")
+    return json.dumps(
+        value,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+        allow_nan=False,
+    ).encode("utf-8")
 
 
 def _published_records(directory: int):
@@ -143,7 +162,9 @@ def _fingerprint(info):
 
 def _read_record(directory, name, canonical_json_bytes, limit):
     try:
-        descriptor = os.open(name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=directory)
+        descriptor = os.open(
+            name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=directory
+        )
     except OSError as error:
         if error.errno in (errno.ENOENT, errno.ELOOP):
             return None
@@ -155,14 +176,18 @@ def _read_record(directory, name, canonical_json_bytes, limit):
         data = stream.read(limit + 1)
         after = os.fstat(stream.fileno())
     if len(data) > limit or _fingerprint(before) != _fingerprint(after):
-        raise RuntimeError(f"Work Journal inbox record is too large or changed: {name}")
+        raise RuntimeError(
+            f"Work Journal inbox record is too large or changed: {name}"
+        )
     try:
         value = json.loads(data)
         row = _JournalRecord.model_validate(value)
         if canonical_json_bytes(value) != data:
             raise ValueError("invalid record")
     except (ValueError, TypeError, UnicodeError) as error:
-        raise RuntimeError(f"invalid Work Journal inbox record: {name}") from error
+        raise RuntimeError(
+            f"invalid Work Journal inbox record: {name}"
+        ) from error
     return row, _fingerprint(after)
 
 
@@ -219,7 +244,9 @@ def sync_journal(connection: Any, project_root: Path) -> None:
         os.close(directory)
 
 
-_FILE_NAME = re.compile(r"(.+)-(\d{4}-\d{2}-\d{2})-part-([1-9][0-9]*)\.ndjson\Z")
+_FILE_NAME = re.compile(
+    r"(.+)-(\d{4}-\d{2}-\d{2})-part-([1-9][0-9]*)\.ndjson\Z"
+)
 
 
 def _file_binding(project_root, journal_relative):
@@ -260,10 +287,15 @@ def _file_rows(directory):
         author = unquote(encoded)
         if quote(author, safe="") != encoded:
             raise RuntimeError(f"invalid Work Journal carrier name: {name}")
-        descriptor = os.open(name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=directory)
+        descriptor = os.open(
+            name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=directory
+        )
         with os.fdopen(descriptor, "rb") as stream:
             before = os.fstat(stream.fileno())
-            if not stat.S_ISREG(before.st_mode) or before.st_dev != os.fstat(directory).st_dev:
+            if (
+                not stat.S_ISREG(before.st_mode)
+                or before.st_dev != os.fstat(directory).st_dev
+            ):
                 raise RuntimeError(f"unsafe Work Journal carrier: {name}")
             data = stream.read()
             after = os.fstat(stream.fileno())
@@ -272,10 +304,16 @@ def _file_rows(directory):
         try:
             for number, line in enumerate(data.splitlines(), 1):
                 event = _canonical_json_bytes(json.loads(line)).decode("utf-8")
-                record_id = str(uuid.uuid5(uuid.NAMESPACE_URL, f"{name}:{number}"))
-                rows.append((record_id, len(rows) + 1, author, local_date, event))
+                record_id = str(
+                    uuid.uuid5(uuid.NAMESPACE_URL, f"{name}:{number}")
+                )
+                rows.append(
+                    (record_id, len(rows) + 1, author, local_date, event)
+                )
         except (ValueError, TypeError, UnicodeError) as error:
-            raise RuntimeError(f"invalid Work Journal carrier: {name}") from error
+            raise RuntimeError(
+                f"invalid Work Journal carrier: {name}"
+            ) from error
     return rows
 
 

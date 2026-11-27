@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 import os
 from pathlib import Path
-import re
 import sys
 from tempfile import TemporaryDirectory
 from typing import Any
@@ -15,10 +14,23 @@ from mcp import types
 from MCP_PATCHBAY_C21.FEATURE_MCP.backend_client import ToolProtocolError
 from MCP_PATCHBAY_C21.FEATURE_MCP.caller_context import CallerContextError
 from MCP_PATCHBAY_C21.FEATURE_MCP.health_observations import HealthObservations
-from MCP_PATCHBAY_C21.FEATURE_MCP.mcp_startup_boundary import ExplicitStartupFailure
-from MCP_PATCHBAY_C21.FEATURE_MCP.runtime_request_context import current_request_context
+from MCP_PATCHBAY_C21.FEATURE_MCP.http_paths import TOOL_REST_PATH
+from MCP_PATCHBAY_C21.FEATURE_MCP.mcp_startup_boundary import (
+    ExplicitStartupFailure,
+)
+from MCP_PATCHBAY_C21.FEATURE_MCP.runtime_request_context import (
+    current_request_context,
+)
+from MCP_PATCHBAY_C21.FEATURE_MCP.project_tool_context import valid_project_instance
 from MCP_PATCHBAY_C21.FEATURE_MCP.runtime_stack import runtime_stack
-from MCP_PATCHBAY_C21.FEATURE_MCP.shared_gateway_support import call_mcp, make_server, record_observation, refusal, tool_failure, valid_tool_response
+from MCP_PATCHBAY_C21.FEATURE_MCP.shared_gateway_support import (
+    call_mcp,
+    make_server,
+    record_observation,
+    refusal,
+    tool_failure,
+    valid_tool_response,
+)
 
 
 def _operation_timeout(seconds):
@@ -34,13 +46,18 @@ class SharedGatewayRefusal(ValueError):
 
 def _raise_fault(envelope):
     fault = envelope.get("error")
-    if (isinstance(fault, dict) and isinstance(fault.get("code"), str)
-            and isinstance(fault.get("message"), str)):
+    if (
+        isinstance(fault, dict)
+        and isinstance(fault.get("code"), str)
+        and isinstance(fault.get("message"), str)
+    ):
         if fault.get("scope") == "project":
             raise SharedGatewayRefusal(fault["code"])
         if fault.get("scope") == "tool":
             raise ToolProtocolError.from_fault(fault)
-    raise ToolProtocolError("tool_runtime_failure", "Invalid Shared Backend response")
+    raise ToolProtocolError(
+        "tool_runtime_failure", "Invalid Shared Backend response"
+    )
 
 
 class SharedBackendGateway:
@@ -61,14 +78,22 @@ class SharedBackendGateway:
                 return
             try:
                 stack = runtime_stack()
-                socket = None if stack == "current" else os.environ.get("ANECHOIC_BETA_BACKEND_SOCKET")
+                socket = (
+                    None
+                    if stack == "current"
+                    else os.environ.get("ANECHOIC_BETA_BACKEND_SOCKET")
+                )
                 if stack == "beta_next" and not socket:
-                    raise ExplicitStartupFailure("beta_next_requires_supervised_shared_http")
+                    raise ExplicitStartupFailure(
+                        "beta_next_requires_supervised_shared_http"
+                    )
                 if socket is None:
                     socket = await self._start_backend()
                 self._http = httpx2.AsyncClient(
                     transport=httpx2.AsyncHTTPTransport(uds=str(socket)),
-                    base_url="http://anechoic-backend", trust_env=False, timeout=None,
+                    base_url="http://anechoic-backend",
+                    trust_env=False,
+                    timeout=None,
                 )
                 deadline = _operation_timeout(self.startup_timeout)
                 async with asyncio.timeout(deadline):
@@ -104,22 +129,42 @@ class SharedBackendGateway:
             await asyncio.sleep(0.05)
 
     async def _start_backend(self):
-        self._directory = TemporaryDirectory(prefix="anechoic-shared-", dir="/tmp")
+        self._directory = TemporaryDirectory(
+            prefix="anechoic-shared-", dir="/tmp"
+        )
         socket = Path(self._directory.name).resolve() / "api.sock"
         engine = Path(__file__).resolve().parents[2]
-        environment = {**{k: v for k, v in os.environ.items() if k != "PYTHONHOME"}, "PYTHONPATH": str(engine)}
-        module = "IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.shared_backend_process"
-        command = [sys.executable, "-B", "-P", "-m", module, "--socket", str(socket)]
+        environment = {
+            **{k: v for k, v in os.environ.items() if k != "PYTHONHOME"},
+            "PYTHONPATH": str(engine),
+        }
+        module = (
+            'IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.share'
+            'd_backend_process'
+        )
+        command = [
+            sys.executable,
+            "-B",
+            "-P",
+            "-m",
+            module,
+            "--socket",
+            str(socket),
+        ]
         source = getattr(self.config, "source_path", self.config)
         if source is not None:
             command += ["--host-settings", str(source)]
         self._process = await asyncio.create_subprocess_exec(
-            *command, cwd=engine.parent, env=environment, stdin=asyncio.subprocess.PIPE, stdout=sys.stderr,
+            *command,
+            cwd=engine.parent,
+            env=environment,
+            stdin=asyncio.subprocess.PIPE,
+            stdout=sys.stderr,
         )
         return socket
 
     async def _load_catalog(self):
-        catalog = await self._request("GET", "/tools",
+        catalog = await self._request("GET", TOOL_REST_PATH,
                                       timeout=_operation_timeout(45))
         raw_tools = catalog.get("tools")
         if not isinstance(raw_tools, list):
@@ -153,22 +198,35 @@ class SharedBackendGateway:
 
     async def _exchange(self, method, path, **kwargs):
         if self._http is None:
-            raise ToolProtocolError("tool_runtime_failure", "Shared Backend unavailable")
+            raise ToolProtocolError(
+                "tool_runtime_failure", "Shared Backend unavailable"
+            )
         try:
             response = await self._http.request(method, path, **kwargs)
         except httpx2.HTTPError as error:
-            raise ToolProtocolError("tool_runtime_failure", "Shared Backend unavailable") from error
+            raise ToolProtocolError(
+                "tool_runtime_failure", "Shared Backend unavailable"
+            ) from error
         try:
             envelope = response.json()
         except ValueError as error:
-            raise ToolProtocolError("tool_runtime_failure", "Invalid Shared Backend response") from error
+            raise ToolProtocolError(
+                "tool_runtime_failure", "Invalid Shared Backend response"
+            ) from error
         if not isinstance(envelope, dict):
-            raise ToolProtocolError("tool_runtime_failure", "Invalid Shared Backend response")
-        return response.is_success, envelope
+            raise ToolProtocolError(
+                "tool_runtime_failure", "Invalid Shared Backend response"
+            )
+        return response.status_code, envelope
 
-    async def _request(self, method: str, path: str, **kwargs: Any) -> dict[str, Any]:
-        succeeded, envelope = await self._exchange(method, path, **kwargs)
-        if succeeded and isinstance(envelope.get("result"), dict):
+    async def tool_rest(self, method, **kwargs):
+        return await self._exchange(method, TOOL_REST_PATH, **kwargs)
+
+    async def _request(
+        self, method: str, path: str, **kwargs: Any
+    ) -> dict[str, Any]:
+        status, envelope = await self._exchange(method, path, **kwargs)
+        if 200 <= status < 300 and isinstance(envelope.get("result"), dict):
             return envelope["result"]
         _raise_fault(envelope)
 
@@ -178,11 +236,18 @@ class SharedBackendGateway:
         return {**status, **self.health_observations.snapshot()}
 
     async def select_project(self, value: object) -> dict[str, Any]:
-        selection = await self._request("POST", "/selection", json={"project_root": value},
-                                        timeout=_operation_timeout(45))
+        selection = await self._request(
+            "POST",
+            "/selection",
+            json={"project_root": value},
+            timeout=_operation_timeout(45),
+        )
         instance = selection.get("instance_id")
-        if not isinstance(instance, str) or not re.fullmatch(r"[0-9a-f]{64}", instance):
-            raise ToolProtocolError("tool_runtime_failure", "Invalid Shared Backend Project selection")
+        if not valid_project_instance(instance):
+            raise ToolProtocolError(
+                "tool_runtime_failure",
+                "Invalid Shared Backend Project selection",
+            )
         return selection
 
     async def call_tool(self, name: str, arguments: Any, *, public_base_url: str | None = None,
@@ -196,18 +261,21 @@ class SharedBackendGateway:
                 selected = await self.select_project(arguments["project_root"])
                 project_instance_id = selected["instance_id"]
             headers = {"X-Anechoic-Project-Instance": project_instance_id} if project_instance_id is not None else {}
-            succeeded, envelope = await self._exchange("POST", "/tools", json={
+            status, envelope = await self.tool_rest("POST", json={
                 "name": name, "arguments": arguments,
                 "session_id": context.session_id if context else None,
                 "public_base_url": public_base_url,
             }, headers=headers)
             project = envelope.get("project")
             result = envelope.get("result")
-            if succeeded and valid_tool_response(result):
+            if 200 <= status < 300 and valid_tool_response(result):
                 if (project_instance_id is None or not isinstance(project, dict)
                         or project.get("instance_id") != project_instance_id):
                     code = "project_receipt_mismatch"
-                    message = "The API receipt does not identify the selected Project."
+                    message = (
+                        'The API receipt does not identify the selected '
+                        'Project.'
+                    )
                     raise ToolProtocolError(code, message, {"outcome": "failed", "diagnostics": [f"{code}: {message}"]})
                 response = result["value"]
                 return result
@@ -229,7 +297,12 @@ class SharedBackendGateway:
 
     async def call(self, context: Any, params: Any) -> types.CallToolResult:
         try:
-            return await call_mcp(self.call_tool, context, params.name, getattr(params, "arguments", None))
+            return await call_mcp(
+                self.call_tool,
+                context,
+                params.name,
+                getattr(params, "arguments", None),
+            )
         except CallerContextError as error:
             return refusal(str(error))
         except SharedGatewayRefusal as error:

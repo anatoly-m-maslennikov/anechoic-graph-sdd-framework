@@ -8,8 +8,8 @@ context:
   lens: DES
 state:
   status: active
-  version: 19
-  updated_at: "2026-11-23T01:48:06.179432+00:00"
+  version: 20
+  updated_at: "2026-11-27T16:29:34.309627+00:00"
 ---
 ## Summary
 
@@ -23,4 +23,4 @@ The Project MCP launcher must resolve one safe explicit Project context or refus
 
 Carry the host root, control root, and container mapping through startup. Compute the Project instance ID from the SHA-256 of the canonical host root, NUL, and control-root-relative path. Keep per-Project state and locks isolated; do not reuse or clean another Project's state. The launcher may read the Project Manifest and runtime settings through declared interfaces.
 
-In single-Project mode, a supplied `project_root` assertion must match the binding. Shared calls require an explicit Project. Reject invalid or mismatched assertions before execution and keep routing context separate from native Tool arguments. Initialization and discovery are protocol operations, not Tool-call envelopes.
+Apply AN-S-1383 to invocation and AN-S-1394 to the routing context.

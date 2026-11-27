@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 7
-  updated_at: '2026-11-27T13:15:51.443862+00:00'
+  version: 8
+  updated_at: '2026-11-27T17:35:19.540236+00:00'
 ---
 
 ## Summary
@@ -49,6 +49,7 @@ ComponentManifest(
         'ADAPTERS_C30__shared.open_regular', 'ADAPTERS_C30__shared.native_header_view',
         'ADAPTERS_C30__shared.spec_folder_layout', 'ADAPTERS_C30__shared.select_manifest_carriers',
         'ADAPTERS_C30__shared.manifest_inputs', 'ADAPTERS_C30__shared.manifest_state_fields',
+        'ADAPTERS_C30__shared.manifest_purpose',
         'component_manifest__pub.parse_component_manifest', 'code_access_rules__pub.parse_code_access',
         'lens_scopes__pub.compile_lens_groups', 'lens_scopes__pub.validate_lens_whitelist',
         'atom_reference__pub.derive_atom_ref', 'atom_reference__pub.COMPONENT_MANIFEST_FILENAME',

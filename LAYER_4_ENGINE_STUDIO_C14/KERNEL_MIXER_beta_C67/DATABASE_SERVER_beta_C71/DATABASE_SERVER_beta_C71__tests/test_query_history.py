@@ -7,13 +7,24 @@ from tempfile import TemporaryDirectory
 from time import monotonic, sleep
 import unittest
 
-from .DATABASE_SERVER_beta_C71__tests__shared import BINDING, _generation, _query, _server
+from .DATABASE_SERVER_beta_C71__tests__shared import (
+    BINDING,
+    _generation,
+    _query,
+    _server,
+)
 
 
 def _legacy_record(name, hours):
-    return {"log_id": name, "at": (datetime.now(UTC) - timedelta(hours=hours)).isoformat(),
-            "sql": f"SELECT '{name}'", "outcome": "success", "error": None,
-            "row_count": 1, "column_count": 1}
+    return {
+        "log_id": name,
+        "at": (datetime.now(UTC) - timedelta(hours=hours)).isoformat(),
+        "sql": f"SELECT '{name}'",
+        "outcome": "success",
+        "error": None,
+        "row_count": 1,
+        "column_count": 1,
+    }
 
 
 class QueryHistoryTest(unittest.TestCase):
@@ -22,12 +33,17 @@ class QueryHistoryTest(unittest.TestCase):
         return response.json()["result"]
 
     def call(self, client, name, arguments):
-        return client.post("/workspace", json=BINDING | {"operation": name, "arguments": arguments})
+        return client.post(
+            "/workspace",
+            json=BINDING | {"operation": name, "arguments": arguments},
+        )
 
     def attempts(self, client, count):
         deadline = monotonic() + 3
         while monotonic() < deadline:
-            items = self.value(self.call(client, "query_log_list", {}))["items"]
+            items = self.value(self.call(client, "query_log_list", {}))[
+                "items"
+            ]
             if len(items) == count:
                 return items
             sleep(0.03)
@@ -38,7 +54,9 @@ class QueryHistoryTest(unittest.TestCase):
             root = Path(directory).resolve()
             legacy = root / ".anechoic_runtime/workbench/query-log.json"
             legacy.parent.mkdir(parents=True, mode=0o700)
-            old_bytes = json.dumps([_legacy_record("retained", 1), _legacy_record("expired", 49)]).encode()
+            old_bytes = json.dumps(
+                [_legacy_record("retained", 1), _legacy_record("expired", 49)]
+            ).encode()
             legacy.write_bytes(old_bytes)
             arguments = (None, "--project-root", str(root))
             with _server(*arguments) as client:
@@ -47,9 +65,15 @@ class QueryHistoryTest(unittest.TestCase):
                 newest = records[0]
                 self.assertEqual(newest, self.value(self.call(client, "query_log_get", {"log_id": newest["log_id"]})))
                 self.assertEqual([newest], self.value(self.call(client, "query_log_list", {"limit": 1}))["items"])
-                sql_rows = self.value(_query(client, 'SELECT sql, outcome, "at" FROM query_log ORDER BY "at" DESC'))["rows"]
+                sql_rows = self.value(_query(client, (
+                    'SELECT sql, outcome, "at" FROM query_log ORDER BY "at" '
+                    'DESC'
+                )))["rows"]
                 self.assertEqual([(row["sql"], row["outcome"]) for row in records], [tuple(row[:2]) for row in sql_rows])
-                canonical = self.value(_query(client, 'SELECT sql, outcome, "at" FROM ops_query_log ORDER BY "at" DESC'))["rows"]
+                canonical = self.value(_query(client, (
+                    'SELECT sql, outcome, "at" FROM ops_query_log ORDER BY '
+                    '"at" DESC'
+                )))["rows"]
                 self.assertEqual(sql_rows, canonical)
                 self.assertTrue(all(datetime.fromisoformat(row[2]).tzinfo for row in sql_rows))
                 foreign = client.post("/workspace", json={"instance_id": "foreign", "operation": "query_log_list", "arguments": {}})
@@ -71,16 +95,39 @@ class QueryHistoryTest(unittest.TestCase):
         self.value(_query(client, "SELECT 33"))
         sql = "SELECT 42\n"
         self.value(_query(client, sql, page_size=1))
-        view = self.value(self.call(client, "workspace_open", {"session_id": "query-log-test"}))
-        selector = {"workspace_id": view["workspace_id"], "view_id": view["active_view_id"]}
+        view = self.value(
+            self.call(
+                client, "workspace_open", {"session_id": "query-log-test"}
+            )
+        )
+        selector = {
+            "workspace_id": view["workspace_id"],
+            "view_id": view["active_view_id"],
+        }
         failed_sql = "SELECT missing"
-        self.value(self.call(client, "view_update", selector | {"sql": failed_sql, "expected_revision": 0}))
+        self.value(
+            self.call(
+                client,
+                "view_update",
+                selector | {"sql": failed_sql, "expected_revision": 0},
+            )
+        )
         failed = self.value(self.call(client, "view_run", selector))
         self.assertEqual("failed", failed["status"])
         records = self.attempts(client, 3)
-        self.assertEqual([failed_sql, sql, "SELECT 'retained'"], [row["sql"] for row in records])
+        self.assertEqual(
+            [failed_sql, sql, "SELECT 'retained'"],
+            [row["sql"] for row in records],
+        )
         self.assertEqual(set(_legacy_record("shape", 0)), set(records[0]))
-        self.assertEqual(("failed", None, None), (records[0]["outcome"], records[0]["row_count"], records[0]["column_count"]))
+        self.assertEqual(
+            ("failed", None, None),
+            (
+                records[0]["outcome"],
+                records[0]["row_count"],
+                records[0]["column_count"],
+            ),
+        )
         self.assertEqual(("success", 1, 1), (records[1]["outcome"], records[1]["row_count"], records[1]["column_count"]))
         return records
 
@@ -93,8 +140,17 @@ class QueryHistoryTest(unittest.TestCase):
             source.parent.mkdir(parents=True, mode=0o700)
             with _server(None, "--project-root", str(root)) as client:
                 source.write_text(json.dumps([legacy]))
-                self.assertEqual([legacy], self.value(self.call(client, "query_log_list", {}))["items"])
-                for changes in ({"row_count": True}, {"extra": 1}, {"at": "2020-01-01T00:00:00"}):
+                self.assertEqual(
+                    [legacy],
+                    self.value(self.call(client, "query_log_list", {}))[
+                        "items"
+                    ],
+                )
+                for changes in (
+                    {"row_count": True},
+                    {"extra": 1},
+                    {"at": "2020-01-01T00:00:00"},
+                ):
                     source.write_text(json.dumps([legacy | changes]))
                     response = self.call(client, "query_log_list", {})
                     self.assertEqual(400, response.status_code, response.text)

@@ -23,7 +23,13 @@ class BackendStartupBudgetTests(unittest.TestCase):
         for code in ("tool_input_invalid", "internal"):
             with self.subTest(code=code):
                 failure = {"outcome": "failed", "diagnostics": [code]}
-                fault = {"error": {"code": code, "message": code, "tool_result": failure}}
+                fault = {
+                    "error": {
+                        "code": code,
+                        "message": code,
+                        "tool_result": failure,
+                    }
+                }
                 response = httpx2.Response(400, json=fault)
                 with self.assertRaises(ToolProtocolError) as caught:
                     client._tool_response(response)
@@ -39,29 +45,54 @@ class BackendStartupBudgetTests(unittest.TestCase):
             ("prod", True, 180, False),
         )
         for profile, managed, elapsed, ready in cases:
-            with self.subTest(profile=profile, managed=managed, elapsed=elapsed):
-                process = Mock(spec_set=["pid", "poll"], pid=42, poll=lambda: None) if managed else None
+            with self.subTest(
+                profile=profile, managed=managed, elapsed=elapsed
+            ):
+                process = (
+                    Mock(spec_set=["pid", "poll"], pid=42, poll=lambda: None)
+                    if managed
+                    else None
+                )
                 client = BackendClient(None, process, None)
-                with (patch.dict(os.environ, {"ANECHOIC_RUNTIME_PROFILE": profile}, clear=True),
-                      patch("MCP_PATCHBAY_C21.FEATURE_MCP.backend_client.monotonic",
-                            side_effect=[0, elapsed]),
-                      patch.object(client, "_probe_state", return_value="ready") as probe):
+                with (
+                    patch.dict(
+                        os.environ,
+                        {"ANECHOIC_RUNTIME_PROFILE": profile},
+                        clear=True,
+                    ),
+                    patch(
+                        (
+                            'MCP_PATCHBAY_C21.FEATURE_MCP.backend_client.monot'
+                            'onic'
+                        ),
+                        side_effect=[0, elapsed],
+                    ),
+                    patch.object(
+                        client, "_probe_state", return_value="ready"
+                    ) as probe,
+                ):
                     if ready:
                         client.start()
                         probe.assert_called_once_with()
                     else:
-                        with self.assertRaisesRegex(RuntimeError, "Backend did not start"):
+                        with self.assertRaisesRegex(
+                            RuntimeError, "Backend did not start"
+                        ):
                             client.start()
                         probe.assert_not_called()
 
 
 class MCPHTTPRuntimeTests(unittest.TestCase):
     def setUp(self):
-        self.temporary = APP.parents[2] / ".anechoic_tmp/tests/mcp-http-runtime"
+        self.temporary = (
+            APP.parents[2] / ".anechoic_tmp/tests/mcp-http-runtime"
+        )
         self.temporary.mkdir(parents=True, exist_ok=True)
 
     def root(self):
-        directory = tempfile.TemporaryDirectory(dir=self.temporary, ignore_cleanup_errors=True)
+        directory = tempfile.TemporaryDirectory(
+            dir=self.temporary, ignore_cleanup_errors=True
+        )
         self.addCleanup(directory.cleanup)
         root = Path(directory.name)
         (root / ".anechoic_anechoic").mkdir()
@@ -69,25 +100,45 @@ class MCPHTTPRuntimeTests(unittest.TestCase):
         return root
 
     @staticmethod
-    def _published_status(port=8099, *, state="running", health="healthy", publishers=None):
+    def _published_status(
+        port=8099, *, state="running", health="healthy", publishers=None
+    ):
         if publishers is None:
-            publishers = [{
-                "Protocol": "tcp", "TargetPort": 8092,
-                "PublishedPort": port, "URL": "127.0.0.1",
-            }]
-        return {"services": [{
-            "Service": "mcp-http", "State": state, "Health": health,
-            "Publishers": publishers,
-        }]}
+            publishers = [
+                {
+                    "Protocol": "tcp",
+                    "TargetPort": 8092,
+                    "PublishedPort": port,
+                    "URL": "127.0.0.1",
+                }
+            ]
+        return {
+            "services": [
+                {
+                    "Service": "mcp-http",
+                    "State": state,
+                    "Health": health,
+                    "Publishers": publishers,
+                }
+            ]
+        }
 
     def test_explicit_port_is_required_without_a_token_or_agent_auth(self):
         runtime = Runtime(self.root(), image=IMAGE)
         with patch.dict(os.environ, {}, clear=True):
             with self.assertRaisesRegex(ValueError, "ANECHOIC_MCP_HTTP_PORT"):
                 runtime.mcp_http_start()
-        with patch.dict(os.environ, {"ANECHOIC_MCP_HTTP_PORT": "8099"}, clear=True):
-            with patch.object(runtime, "call", return_value="") as call, \
-                    patch.object(runtime, "mcp_http_status", return_value=self._published_status()):
+        with patch.dict(
+            os.environ, {"ANECHOIC_MCP_HTTP_PORT": "8099"}, clear=True
+        ):
+            with (
+                patch.object(runtime, "call", return_value="") as call,
+                patch.object(
+                    runtime,
+                    "mcp_http_status",
+                    return_value=self._published_status(),
+                ),
+            ):
                 result = runtime.mcp_http_start()
         self.assertEqual(f"http://127.0.0.1:8099{MCP_PATH}", result["url"])
         self.assertIn("mcp-http", call.call_args.args)
@@ -95,17 +146,28 @@ class MCPHTTPRuntimeTests(unittest.TestCase):
 
     def test_startup_deadlines_cover_generation_readiness_budget(self):
         runtime = Runtime(self.root(), image=IMAGE)
-        with patch.dict(os.environ, {"ANECHOIC_MCP_HTTP_PORT": "8099"}, clear=True), \
-                patch.object(runtime, "call", return_value="") as call, \
-                patch.object(runtime, "mcp_http_status", return_value=self._published_status()):
+        with (
+            patch.dict(
+                os.environ, {"ANECHOIC_MCP_HTTP_PORT": "8099"}, clear=True
+            ),
+            patch.object(runtime, "call", return_value="") as call,
+            patch.object(
+                runtime,
+                "mcp_http_status",
+                return_value=self._published_status(),
+            ),
+        ):
             runtime.mcp_http_start()
 
         args = call.call_args.args
         compose_wait = int(args[args.index("--wait-timeout") + 1])
         outer_timeout = call.call_args.kwargs["timeout"]
-        health_start_period = int(re.search(
-            r"start_period:\s*(\d+)s", (APP / "docker/mcp-http.compose.yaml").read_text()
-        ).group(1))
+        health_start_period = int(
+            re.search(
+                r"start_period:\s*(\d+)s",
+                (APP / "docker/mcp-http.compose.yaml").read_text(),
+            ).group(1)
+        )
         self.assertEqual(compose_wait, 420)
         self.assertGreater(outer_timeout, compose_wait)
         self.assertEqual(health_start_period, 420)
@@ -126,12 +188,23 @@ class MCPHTTPRuntimeTests(unittest.TestCase):
             "multiple-services": {"services": self._published_status()["services"] * 2},
         }
         for name, status in cases.items():
-            with self.subTest(name=name), \
-                    patch.dict(os.environ, {"ANECHOIC_MCP_HTTP_PORT": "8099"}, clear=True):
+            with (
+                self.subTest(name=name),
+                patch.dict(
+                    os.environ, {"ANECHOIC_MCP_HTTP_PORT": "8099"}, clear=True
+                ),
+            ):
                 runtime = Runtime(self.root(), image=IMAGE)
-                with patch.object(runtime, "call", return_value=""), \
-                        patch.object(runtime, "mcp_http_status", return_value=status):
-                    with self.assertRaisesRegex(RuntimeError, "HTTP MCP published listener admission failed"):
+                with (
+                    patch.object(runtime, "call", return_value=""),
+                    patch.object(
+                        runtime, "mcp_http_status", return_value=status
+                    ),
+                ):
+                    with self.assertRaisesRegex(
+                        RuntimeError,
+                        "HTTP MCP published listener admission failed",
+                    ):
                         runtime.mcp_http_start()
 
     def test_overlay_is_loopback_only_and_has_no_agent_or_socket(self):

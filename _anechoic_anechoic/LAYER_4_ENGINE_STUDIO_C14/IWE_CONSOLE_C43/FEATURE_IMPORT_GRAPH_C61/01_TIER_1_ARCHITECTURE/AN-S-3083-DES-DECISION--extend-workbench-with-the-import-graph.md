@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-3083
+concern:
+  subject: "Projection"
+  path: "Model/Graph/Node//Artifact//Derived"
+  relation: "is_narrower_than"
 container:
   component: C61
 tier: 1
@@ -9,8 +13,8 @@ context:
   lens: DES
 state:
   status: active
-  version: 6
-  updated_at: '2026-11-26T16:38:46.228224+00:00'
+  version: 8
+  updated_at: "2026-11-27T16:16:01.404965+00:00"
 ---
 
 ## Summary
@@ -22,15 +26,13 @@ Extend Workbench with the Import Graph
 ### Prose Claim
 
 Call the Workbench projection the Realization Graph. Reuse Module and Package
-node identities across import and test Relations. A local folder with a direct executable file has one Package
-node across all languages. Skip dot folders. Record each static import with its source
-Module, written target, and file location. Resolve it without running source.
-Keep all four Module and Package import pairs and direct Package imports.
+node identities across import and test Relations. Identify local Packages under
+AN-S-3159 and AN-S-4837. Skip dot folders. Record each static import with its
+source Module, written target, and file location. Resolve it without running
+source. Keep all four Module and Package import pairs and direct Package imports.
 
-Derive `TESTS` from a direct `<full package folder name>__tests/` subdirectory
-to its parent Package, or to the declared Component when the parent has no direct executables.
-Expose `IS_TESTED_BY` as the inverse. Audit missing visibility on tested Packages.
-A qualifying test folder uses a Package node of type Test Package.
+Use AN-S-3014 and AN-S-3159 to derive Test Package Relations. Publish the
+admitted Package and Component targets. Audit visibility on tested Packages.
 
 Reuse the Workbench index and `SourceWatcher`. Parse changed files and
 resolve affected imports again when targets change. Publish each update

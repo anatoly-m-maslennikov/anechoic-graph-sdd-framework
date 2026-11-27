@@ -14,13 +14,28 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.routing import Route
 
-from MCP_PATCHBAY_C21.FEATURE_MCP.direct_gateway import native_project_gateway, native_runtime_gateway, startup_selection
-from MCP_PATCHBAY_C21.FEATURE_MCP.http_paths import HEALTH_PATH, MCP_PATH, URL_PREFIX
+from MCP_PATCHBAY_C21.FEATURE_MCP.direct_gateway import (
+    native_project_gateway,
+    native_runtime_gateway,
+    startup_selection,
+)
+from MCP_PATCHBAY_C21.FEATURE_MCP.http_paths import (
+    HEALTH_PATH,
+    MCP_PATH,
+    TOOL_REST_PATH,
+    URL_PREFIX,
+)
 from mcp.server.transport_security import TransportSecuritySettings
 from MCP_PATCHBAY_C21.FEATURE_MCP.mcp_startup_boundary import http_log_config, run_startup, runtime_log_level, warning
 from MCP_PATCHBAY_C21.FEATURE_MCP.native_startup import ProjectAdmissionError
 from MCP_PATCHBAY_C21.FEATURE_MCP.runtime_stack import runtime_stack
-from MCP_PATCHBAY_C21.FEATURE_MCP.workbench_web import routes as workbench_routes
+from MCP_PATCHBAY_C21.FEATURE_MCP.tool_rest import (
+    fault as tool_rest_fault,
+    routes as tool_rest_routes,
+)
+from MCP_PATCHBAY_C21.FEATURE_MCP.workbench_web import (
+    routes as workbench_routes,
+)
 
 PATH = MCP_PATH
 PORT = 8092
@@ -28,12 +43,17 @@ MAX_REQUEST_BODY_SIZE = 16 * 1024 * 1024
 SECURITY = TransportSecuritySettings(
     enable_dns_rebinding_protection=True,
     allowed_hosts=["127.0.0.1:*", "localhost:*", "[::1]:*"],
-    allowed_origins=["http://127.0.0.1:*", "http://localhost:*", "http://[::1]:*"],
+    allowed_origins=[
+        "http://127.0.0.1:*",
+        "http://localhost:*",
+        "http://[::1]:*",
+    ],
 )
 
 
 class LoopbackGuard:
     """Apply loopback Host and Origin admission before the MCP ASGI application."""
+
     def __init__(self, app):
         self.app = app
 
@@ -44,15 +64,18 @@ class LoopbackGuard:
         request = Request(scope, receive)
         host = request.headers.get("host", "")
         origin = request.headers.get("origin")
-        valid_host = re.fullmatch(r"(?:127\.0\.0\.1|localhost|\[::1\])(?::\d+)?", host)
+        valid_host = re.fullmatch(
+            r"(?:127\.0\.0\.1|localhost|\[::1\])(?::\d+)?", host
+        )
         valid_origin = origin is None or re.fullmatch(
-            r"http://(?:127\.0\.0\.1|localhost|\[::1\])(?::\d+)?", origin)
+            r"http://(?:127\.0\.0\.1|localhost|\[::1\])(?::\d+)?", origin
+        )
         if not valid_host:
-            warning('http_host_rejected')
+            warning("http_host_rejected")
             await Response(status_code=421)(scope, receive, send)
             return
         if not valid_origin:
-            warning('http_origin_rejected')
+            warning("http_origin_rejected")
             await Response(status_code=403)(scope, receive, send)
             return
         await self.app(scope, receive, send)
@@ -85,7 +108,9 @@ def _accepts_html(value):
         elif media_type == "*/*":
             wildcard_quality = max(wildcard_quality, quality)
     json_quality = (
-        explicit_json_quality if explicit_json_quality is not None else wildcard_quality
+        explicit_json_quality
+        if explicit_json_quality is not None
+        else wildcard_quality
     )
     return (
         html_quality is not None
@@ -98,7 +123,11 @@ async def health(gateway, gate=None):
     if gate is not None and (refusal := _drain_refusal(gate)):
         return _gate_health(refusal)
     if gate is None:
-        state = "ready" if await asyncio.to_thread(lambda: gateway.ready) else "unavailable"
+        state = (
+            "ready"
+            if await asyncio.to_thread(lambda: gateway.ready)
+            else "unavailable"
+        )
     else:
         state = await asyncio.to_thread(gateway.health_state)
     payload = {"state": state}
@@ -112,20 +141,37 @@ async def health(gateway, gate=None):
             raise
         except Exception:
             warning("health_observations_unavailable")
-            payload.setdefault("health_warning", "health observations unavailable")
-    return JSONResponse(payload, status_code=503 if state == "unavailable" else 200)
+            payload.setdefault(
+                "health_warning", "health observations unavailable"
+            )
+    return JSONResponse(
+        payload, status_code=503 if state == "unavailable" else 200
+    )
 
 
-def create_app(root, *, selection=None, gateway_factory=None, control_root=None, runtime_gateway=None,
-               direct_gate=None):
+def create_app(
+    root,
+    *,
+    selection=None,
+    gateway_factory=None,
+    control_root=None,
+    runtime_gateway=None,
+    direct_gate=None,
+):
     if runtime_gateway is not None:
         gateway = runtime_gateway
     elif gateway_factory is not None:
         if selection is not None or not control_root:
-            raise ValueError("Injected gateway requires an explicit control root")
+            raise ValueError(
+                "Injected gateway requires an explicit control root"
+            )
         gateway = gateway_factory(root, control_root)
     else:
-        selected = selection if selection is not None else startup_selection(root, control_root)
+        selected = (
+            selection
+            if selection is not None
+            else startup_selection(root, control_root)
+        )
         gateway = native_project_gateway(root, selection=selected)
 
     async def readiness(_request):
@@ -141,7 +187,9 @@ def streamable_app(gateway, health_endpoint, *, shared=False):
         max_request_body_size=MAX_REQUEST_BODY_SIZE,
         host="127.0.0.1",
         custom_starlette_routes=[
-            Route(HEALTH_PATH, health_endpoint), *workbench_routes(gateway, shared=shared),
+            Route(HEALTH_PATH, health_endpoint),
+            *tool_rest_routes(gateway, shared=shared),
+            *workbench_routes(gateway, shared=shared),
         ],
     )
     inner_lifespan = app.router.lifespan_context
@@ -180,15 +228,26 @@ def _drain_refusal(gate):
 
 
 def _gate_health(code):
-    state = {"project_manifest_invalid": "degraded", "project_manifest_reloading": "pending"}.get(code, "unavailable")
+    state = {
+        "project_manifest_invalid": "degraded",
+        "project_manifest_reloading": "pending",
+    }.get(code, "unavailable")
     payload = {"state": state}
     if state != "pending":
         payload["health_warning"] = code
-    return JSONResponse(payload, status_code=503 if state == "unavailable" else 200)
+    return JSONResponse(
+        payload, status_code=503 if state == "unavailable" else 200
+    )
 
 
-def _gate_refusal(code):
-    return JSONResponse({"error": code}, status_code=503 if code == "admission_gate_unavailable" else 409)
+def _gate_refusal(code, *, tool_rest=False):
+    status = 503 if code == "admission_gate_unavailable" else 409
+    if tool_rest:
+        return tool_rest_fault(code, status=status)
+    return JSONResponse(
+        {"error": code},
+        status_code=status,
+    )
 
 
 def _diagnostics_app(gate):
@@ -202,8 +261,14 @@ def _diagnostics_app(gate):
             return _gate_refusal(refusal)
         return JSONResponse({"error": "project_build_pending"})
 
+    async def refuse_tools(_request):
+        if refusal := _drain_refusal(gate):
+            return _gate_refusal(refusal, tool_rest=True)
+        return tool_rest_fault("project_build_pending")
+
     return LoopbackGuard(Starlette(routes=[
         Route(HEALTH_PATH, readiness), Route(f"{URL_PREFIX}/{{path:path}}", refuse, methods=["GET", "POST", "DELETE"]),
+        Route(TOOL_REST_PATH, refuse_tools, methods=["GET", "POST"]),
     ]))
 
 
@@ -211,11 +276,14 @@ def _guard_direct_transport(app, gate):
     async def guarded(scope, receive, send):
         if scope["type"] != "http" or scope["method"] in {"GET", "HEAD"}:
             return await app(scope, receive, send)
+        tool_rest = scope["path"] == TOOL_REST_PATH
         if refusal := _drain_refusal(gate):
-            return await _gate_refusal(refusal)(scope, receive, send)
+            return await _gate_refusal(refusal, tool_rest=tool_rest)(scope, receive, send)
         with ExitStack() as stack:
             try:
-                lock = stack.enter_context(gate.with_suffix(".transport").open("rb"))
+                lock = stack.enter_context(
+                    gate.with_suffix(".transport").open("rb")
+                )
                 flock(lock, LOCK_SH | LOCK_NB)
             except BlockingIOError:
                 refusal = "project_manifest_reloading"
@@ -224,7 +292,7 @@ def _guard_direct_transport(app, gate):
             else:
                 refusal = _drain_refusal(gate)
             if refusal:
-                return await _gate_refusal(refusal)(scope, receive, send)
+                return await _gate_refusal(refusal, tool_rest=tool_rest)(scope, receive, send)
             return await app(scope, receive, send)
 
     return guarded
@@ -270,11 +338,16 @@ def main(argv=None, *, gateway_factory=None):
     parser.add_argument("--port", default=PORT, type=int)
     args = parser.parse_args(argv)
     if gateway_factory is not None and (
-        not args.control_root or args.instance_id is not None or args.host_project_root is not None
+        not args.control_root
+        or args.instance_id is not None
+        or args.host_project_root is not None
     ):
-        parser.error("Native selection requires --control-root and derives its own instance identity")
+        parser.error(
+            "Native selection requires --control-root and derives its own instance identity"
+        )
     return run_startup(
-        lambda: _serve(args, gateway_factory=gateway_factory), operation='mcp_http_startup',
+        lambda: _serve(args, gateway_factory=gateway_factory),
+        operation="mcp_http_startup",
     )
 
 

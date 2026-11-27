@@ -42,7 +42,12 @@ _PRESERVED_NAMES = frozenset(
         "operator_registry",
     }
 )
-_ROOT_PACKAGE_EXCLUDES = frozenset({".anechoic_install", *map(str.casefold, (_DEFAULT_PRODUCT, *_LAYER_NAMES))})
+_ROOT_PACKAGE_EXCLUDES = frozenset(
+    {
+        ".anechoic_install",
+        *map(str.casefold, (_DEFAULT_PRODUCT, *_LAYER_NAMES)),
+    }
+)
 _ROOT_PROJECT_GOAL = re.compile(r"[A-Z]+-S-[0-9]+-SPEC-PROJECT_GOAL--.+\.md")
 
 
@@ -50,10 +55,17 @@ def _walk_package_tree(root, source, product, excluded, tracked):
     if tracked is not None and source != product:
         return _tracked_package_tree(root, source, excluded, tracked)
     return _walk_regular_files(
-        source, excluded_directories=excluded,
-        excluded_root_prefix=(".anechoic_", "_anechoic_") if source == root else (),
-        excluded_root_directories=_ROOT_PACKAGE_EXCLUDES if source == root else frozenset(),
-        excluded_root_files=frozenset({".git"}) if source == root else frozenset(),
+        source,
+        excluded_directories=excluded,
+        excluded_root_prefix=(".anechoic_", "_anechoic_")
+        if source == root
+        else (),
+        excluded_root_directories=_ROOT_PACKAGE_EXCLUDES
+        if source == root
+        else frozenset(),
+        excluded_root_files=frozenset({".git"})
+        if source == root
+        else frozenset(),
     )
 
 
@@ -69,11 +81,20 @@ def _tracked_package_tree(root, source, excluded, tracked):
         parents = tuple(part.casefold() for part in parts[:-1])
         if set(parents) & excluded:
             continue
-        if source == root and (parts == (".git",)
-                               or (parents and (parents[0] in _ROOT_PACKAGE_EXCLUDES
-                                               or parents[0].startswith((".anechoic_", "_anechoic_"))))):
+        if source == root and (
+            parts == (".git",)
+            or (
+                parents
+                and (
+                    parents[0] in _ROOT_PACKAGE_EXCLUDES
+                    or parents[0].startswith((".anechoic_", "_anechoic_"))
+                )
+            )
+        ):
             continue
-        path = _project_path(root, relative, label="package-source", require_exists=True)
+        path = _project_path(
+            root, relative, label="package-source", require_exists=True
+        )
         if not stat.S_ISREG(path.lstat().st_mode):
             raise LocalReleaseError("local-release-package-source-unavailable")
         result.append(path)
@@ -84,7 +105,11 @@ def _package_sources(root, product, package, excluded, manifest_path, tracked):
     trees = (
         (root, Path(".")),
         (product, Path(".")),
-        (root / "LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_SKILLS/ane", Path("SKILLS/ane")),
+        (
+            root
+            / "LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_SKILLS/ane",
+            Path("SKILLS/ane"),
+        ),
     )
     sources: list[tuple[Path, Path]] = []
     inventories: list[tuple[Path, list[Path]]] = []
@@ -96,10 +121,17 @@ def _package_sources(root, product, package, excluded, manifest_path, tracked):
             raise LocalReleaseError("local-release-package-source-unavailable")
         inventories.append((source, members))
         (package / destination).mkdir(parents=True, exist_ok=True)
-        sources.extend((entry, destination / entry.relative_to(source)) for entry in members
-                       if entry != manifest_path
-                       and not (entry.parent == root and _ROOT_PROJECT_GOAL.fullmatch(entry.name))
-                       and (destination / entry.relative_to(source)).as_posix() not in RETIRED_ASSETS)
+        sources.extend(
+            (entry, destination / entry.relative_to(source))
+            for entry in members
+            if entry != manifest_path
+            and not (
+                entry.parent == root
+                and _ROOT_PROJECT_GOAL.fullmatch(entry.name)
+            )
+            and (destination / entry.relative_to(source)).as_posix()
+            not in RETIRED_ASSETS
+        )
     return sources, inventories
 
 
@@ -109,11 +141,15 @@ def _prepare_package(root: Path, product: Path, package: Path, *,
     if (len(control_relative.parts) != 1
             or not control_relative.name.startswith((".anechoic_", "_anechoic_"))):
         raise LocalReleaseError("local-release-project-selection-invalid")
-    control_root = _project_path(root, control_relative, label="control-root", require_exists=True)
+    control_root = _project_path(
+        root, control_relative, label="control-root", require_exists=True
+    )
     if not control_root.is_dir():
         raise LocalReleaseError("local-release-project-selection-invalid")
     excluded = frozenset({control_relative.name.casefold(), ".anechoic_runtime", ".anechoic_tmp", ".runtime", ".git", ".pytest_cache", "__pycache__", ".mypy_cache", ".ruff_cache", ".venv", ".vite", "node_modules"})
-    sources, inventories = _package_sources(root, product, package, excluded, manifest_path, tracked)
+    sources, inventories = _package_sources(
+        root, product, package, excluded, manifest_path, tracked
+    )
     expected = {}
     for source, relative in sources:
         expected[relative.as_posix()] = _file_identity(source)
@@ -148,18 +184,31 @@ def _prepare_package(root: Path, product: Path, package: Path, *,
 def _launcher_image(selection) -> str | None:
     """Read only this selected instance's observation; never scan legacy state."""
     try:
-        record = _project_path(selection.root, selection.launcher_state.relative_to(selection.root) / "last_launch.json",
-                               label="project-launch-state")
+        record = _project_path(
+            selection.root,
+            selection.launcher_state.relative_to(selection.root)
+            / "last_launch.json",
+            label="project-launch-state",
+        )
         if not record.is_file():
             return None
         payload = json.loads(record.read_text(encoding="utf-8"))
         image = payload.get("image_id") if isinstance(payload, dict) else None
-        if (isinstance(payload, dict) and payload.get("project_root") == str(selection.root)
-                and payload.get("control_root") == str(selection.control_root)
-                and payload.get("project_id") == selection.instance_id
-                and isinstance(image, str) and re.fullmatch(r"sha256:[0-9a-f]{64}", image)):
+        if (
+            isinstance(payload, dict)
+            and payload.get("project_root") == str(selection.root)
+            and payload.get("control_root") == str(selection.control_root)
+            and payload.get("project_id") == selection.instance_id
+            and isinstance(image, str)
+            and re.fullmatch(r"sha256:[0-9a-f]{64}", image)
+        ):
             return image
-    except (LocalReleaseError, OSError, UnicodeDecodeError, json.JSONDecodeError):
+    except (
+        LocalReleaseError,
+        OSError,
+        UnicodeDecodeError,
+        json.JSONDecodeError,
+    ):
         pass
     return None
 
@@ -167,37 +216,62 @@ def _launcher_image(selection) -> str | None:
 def _build_predecessor(selection) -> str | None:
     try:
         history = _project_path(
-            selection.root, Path(".anechoic_runtime/simple_local_release/ready-images.json"),
+            selection.root,
+            Path(".anechoic_runtime/simple_local_release/ready-images.json"),
             label="simple-image-history",
         )
         images = read_ready_images(history, selection.instance_id)
         if images:
             return images[0]
-        _project_path(selection.root, selection.launcher_state.relative_to(selection.root) / "ready.json",
-                      label="project-launch-state")
+        _project_path(
+            selection.root,
+            selection.launcher_state.relative_to(selection.root)
+            / "ready.json",
+            label="project-launch-state",
+        )
         return ready_predecessor(selection)
     except (OSError, ValueError, AttributeError) as error:
-        raise LocalReleaseError("local-release-predecessor-receipt-invalid") from error
+        raise LocalReleaseError(
+            "local-release-predecessor-receipt-invalid"
+        ) from error
 
 
-def _read_version(root: Path, *, installed_version: str = "") -> tuple[Path, str]:
-    version_path = _project_path(root, Path("version.toml"), label="version-path", require_exists=True)
+def _read_version(
+    root: Path, *, installed_version: str = ""
+) -> tuple[Path, str]:
+    version_path = _project_path(
+        root, Path("version.toml"), label="version-path", require_exists=True
+    )
     if not version_path.is_file():
         raise LocalReleaseError("local-release-version-invalid")
     try:
         version_text = version_path.read_text(encoding="utf-8")
         version = tomllib.loads(version_text)["framework"]["version"]
-    except (OSError, KeyError, TypeError, UnicodeDecodeError, tomllib.TOMLDecodeError) as error:
+    except (
+        OSError,
+        KeyError,
+        TypeError,
+        UnicodeDecodeError,
+        tomllib.TOMLDecodeError,
+    ) as error:
         raise LocalReleaseError("local-release-version-invalid") from error
-    match = re.fullmatch(r"([0-9]+)\.([0-9]+)\.([0-9]+)(?:\.([0-9]+))?", version) if isinstance(version, str) else None
+    match = (
+        re.fullmatch(r"([0-9]+)\.([0-9]+)\.([0-9]+)(?:\.([0-9]+))?", version)
+        if isinstance(version, str)
+        else None
+    )
     if match is None:
         raise LocalReleaseError("local-release-version-invalid")
     parts = (*map(int, match.groups()[:3]), int(match.group(4) or "0"))
     if installed_version:
         installed = tuple(map(int, installed_version.split(".")))
-        parts = max(parts, (*installed, 0) if len(installed) == 3 else installed)
+        parts = max(
+            parts, (*installed, 0) if len(installed) == 3 else installed
+        )
     next_version = ".".join(map(str, (*parts[:3], parts[3] + 1)))
-    return version_path, version_text.replace(f'"{version}"', f'"{next_version}"', 1)
+    return version_path, version_text.replace(
+        f'"{version}"', f'"{next_version}"', 1
+    )
 
 
 def _failed_test_output(
@@ -209,20 +283,39 @@ def _failed_test_output(
     named_temporary_file: Any = tempfile.NamedTemporaryFile,
 ) -> str:
     """Retain complete failed-suite output separately from the bounded report."""
-    streams = {name: str(getattr(result, name, "") or "") for name in ("stdout", "stderr")}
+    streams = {
+        name: str(getattr(result, name, "") or "")
+        for name in ("stdout", "stderr")
+    }
     if log_path is not None:
-        return f"Complete test output: `{log_path}`\n{streams['stdout'][-8000:]}"
+        return (
+            f"Complete test output: `{log_path}`\n{streams['stdout'][-8000:]}"
+        )
     try:
-        temporary = _target(root, Path(".anechoic_tmp/simple_local_release"), label="test-log")
+        temporary = _target(
+            root, Path(".anechoic_tmp/simple_local_release"), label="test-log"
+        )
         temporary.mkdir(parents=True, exist_ok=True)
         with named_temporary_file(
-            mode="w", encoding="utf-8", prefix=f"{run_id}-tests-", suffix=".log",
-            dir=temporary, delete=False,
+            mode="w",
+            encoding="utf-8",
+            prefix=f"{run_id}-tests-",
+            suffix=".log",
+            dir=temporary,
+            delete=False,
         ) as log:
-            log.write("\n".join(f"{name}:\n{value}" for name, value in streams.items()))
+            log.write(
+                "\n".join(
+                    f"{name}:\n{value}" for name, value in streams.items()
+                )
+            )
             location = Path(log.name).relative_to(root).as_posix()
         note = f"Complete test output: `{location}`"
     except (LocalReleaseError, OSError) as error:
-        note = f"Complete test output could not be saved ({type(error).__name__})"
-    detail = "\n".join(f"{name}:\n{value[-4000:]}" for name, value in streams.items())
+        note = (
+            f"Complete test output could not be saved ({type(error).__name__})"
+        )
+    detail = "\n".join(
+        f"{name}:\n{value[-4000:]}" for name, value in streams.items()
+    )
     return f"{note}\n{detail}"

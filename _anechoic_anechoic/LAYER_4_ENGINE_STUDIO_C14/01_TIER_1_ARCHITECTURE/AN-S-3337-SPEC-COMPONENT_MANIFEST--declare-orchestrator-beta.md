@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: "active"
-  version: 28
-  updated_at: '2026-11-27T13:09:34.994060+00:00'
+  version: 31
+  updated_at: "2026-11-27T15:10:44.706424+00:00"
 ---
 ## Summary
 
@@ -166,129 +166,75 @@ ComponentManifest(
 
 #### Guarantee
 
-For `beta_next`, own the selected Project peer pair and its warm Worker.
-The Project owner publishes readiness only after its bound peers start.
-Keep the peers bound to the owner process and stop them when it exits.
+For `beta_next`, own the selected Project's peer pair and warm Worker.
+Report readiness after its bound peers start. Stop them with their owner.
+In shared mode, select Projects and serve status and leases over a private
+Unix socket. Keep leases with the owner and release them at request end.
 
-For shared `beta_next`, select Projects and provide status and leases over
-a private Unix socket. Keep lease state with the peer owner. Release a
-lease when its request ends.
+Establish watcher coverage before capture. Admit the pinned Current and
+Draft base and replay events through the completed observation before
+Ready or affected writes. Leave later events queued. Require source proof
+for uncovered inputs. On coverage loss, reconcile affected inputs and
+broaden capture if the scope is unknown. Log failed source checks once to
+stderr with run ID, phase, wait, and Project-relative evidence. Distinguish
+source changes from coverage loss.
 
-Wait for the Project watcher's coverage baseline before startup capture.
-Queue covered changes during capture. When coverage holds, admit the
-pinned Current and Draft capture as the base.
+Serialize live builds and Kernel admissions at startup and on watched
+changes. Watch Graph inputs when enabled. Follow AN-S-3389 for Archive
+readiness. Load Archive in a separate Worker while live changes proceed.
+Keep Archive pending until Kernel admits it. Report progress, failure,
+and the separate readiness and Archive timing.
 
-Replay the changes through the completed observation before reporting
-readiness or admitting affected writes. Leave later events queued for
-normal refresh.
+Use one Manifest Builder per Project. Coalesce input changes during a
+build into one follow-up for the newest observed inputs. Submit its exact
+Model and Structure together. Mark affected data pending and block
+affected writes until that generation is admitted.
 
-If coverage is lost, reconcile the affected inputs with source proof.
-Use a broader capture when the affected scope cannot be verified.
-Require source proof for inputs outside watcher coverage.
+Serialize pinned rebuild requests with source changes. Requests for the
+same target share one admission and result map. Reply after the fresh
+generation is admitted, with result replacements or a typed failure.
+Report the active build and latest outcome.
 
-For each failed source check, write one bounded stderr record with the
-run ID, phase, wait time, and available Project-relative evidence.
-Distinguish source changes from missing watcher coverage.
+Serialize lifecycle jobs with generation builds. Use one admitted Kernel
+generation for SQL allocation, history, containment, and replacements.
+Supply the Model rules and Structure. Use an isolated warm Worker child
+when configured, and coordinated capture for Ticket tree or Model changes.
+Return the write outcome and native delta admission result. Preserve known
+effects on projection failure. A lost response leaves the effect unknown.
+Block further writes until complete recapture confirms the source.
+Never repeat a write automatically.
 
-Load Archived Atoms in a separate Worker while the live lane handles
-source changes. Report Archive progress and failures separately. Wait
-for complete history before admitting lifecycle writes.
+Reuse the input proof only after Kernel acceptance. For watcher refresh,
+pin the proof and the matching Structure when needed for non-Ticket work.
+Submit native refresh, or native and Graph refresh, against the named base.
+Full-build if the base changed. Explicit rebuilds use the full build path. Retry native
+currentness failures with backoff. Report a failed Code Analyzer restart
+as a build issue. Ignore delayed watcher events only when source matches
+the retained effect, including absence.
 
-Serialize live builds and admissions. Start a live build at Project
-startup and after changes to watched Project sources. Watch code and
-dependency inputs when the Project enables its Realization Graph.
+Default to Incremental Startup after Worker verification and Kernel
+confirmation of a compatible checkpoint. Reuse unchanged projection and
+apply verified offline Current and Draft deltas. Apply AN-S-3334 to
+checkpoint verification and Graph-only changes. Full reload also applies
+when the database or checkpoint is missing.
 
-Offer the generation to Kernel for admission. Report the active build
-and latest outcome. Retry a build with backoff when changed inputs
-prevent the required source proof.
+Use native Ticket notifications when available and polling for missed
+or other events. Send both rename paths. Collect events for 20 ms after
+the first. For up to 32 distinct Ticket paths, wait for the warm Worker
+at most the measured cold-load time, then use a fresh Worker if needed.
+Send 33 through 1,024 paths to one fresh Worker. Broaden capture or
+reconcile when the paths or base cannot be verified. Keep one admission
+in flight per Project. Report mode, capture including startup, admission
+time, and path count for the latest successful delta.
 
-Keep one active Manifest Builder per selected Project. Within the
-pinned owner, coalesce Manifest input changes during a build into one
-follow-up for the newest observed inputs. Submit its exact Model and
-Structure for admission together.
+Report the active run ID and liveness of its cold Worker or warm child.
+Wait for completion or explicit abort. Stop the aborted process group
+and report that outcome. Exclude writes and Kernel admission from abort.
+Bind fresh Workers to the current Orchestrator. They stop their process
+group on owner loss. A replacement admits from Project state.
 
-Mark affected data pending and block affected writes until Kernel
-admits the generation for those inputs.
-
-For a rebuild request matching the pinned Project, complete a fresh
-generation before replying. Serialize rebuild requests with source changes.
-Return the admitted generation and requested result replacements, or a
-typed failure. Overlapping requests for the same target share one
-admission and result map.
-
-Serialize each accepted lifecycle job with generation builds. Require an
-admitted base. Admit the Worker’s native carrier delta against that base.
-Return the recorded write outcome and projection result. Preserve known
-effects on projection failure. If the Worker response is lost, report
-the write outcome as unknown. Never repeat a write automatically.
-
-Select single-Atom lifecycle facts from one admitted Kernel generation.
-Use SQL for allocation, revision history, containment, and replacements.
-Give the Worker the admitted Structure and needed Model rules. Run the
-write in an isolated child of the warm Worker when configured. Use the
-coordinated capture path for Ticket tree moves and Model input changes.
-Block writes after an unconfirmed write until Kernel admits a complete
-source snapshot.
-
-Retain recent admitted carrier receipts by path. Ignore delayed watcher
-events only while the file contents or absence match the recorded effect.
-
-Retain the input proof only after Kernel accepts the generation. On a
-watcher event, supply that proof to a short-lived Worker. For a
-change outside the Ticket delta path, supply the Kernel Structure
-when its generation matches the proof. Submit a native or native
-and Realization Graph refresh against that base. Run a full build
-if the base changed. Explicit rebuilds use the full build path.
-
-Report a failed Code Analyzer restart as a build issue and reserve the
-automatic generation retry for native source currentness failures.
-
-Use Incremental Startup by default with a compatible persisted checkpoint
-from Kernel. Require Worker verification and Kernel confirmation of the
-base. Reuse an unchanged projection and admit the verified offline
-Current and Draft additions, edits, moves, and deletions.
-
-Use a full reload when the projection database or checkpoint is missing,
-the checkpoint is incompatible or cannot be verified, or a Model,
-Structure, or compiler schema input changed. When only Realization
-Graph inputs changed, request a Graph rebuild using the admitted
-Model and Structure.
-
-Run Archive catch-up in the background. Mark Archive pending while it
-catches up, including when prior checkpoint rows are visible. Clear
-that state only after Kernel confirms complete Archive. Report elapsed
-time to live readiness and Archive completion separately.
-
-Use native notifications for Ticket files where available. Retain
-polling for missed changes and other inputs. Send both paths for a
-Ticket rename. For supported Ticket-only changes, submit the delta
-against the accepted base. Reconcile when Kernel rejects that base
-or the available evidence cannot establish a safe delta.
-
-Collect watcher events for 20 ms after the first event in a batch.
-For a supported batch of up to 32 distinct Ticket paths, wait for
-the warm Worker up to the measured cold load time. Use a fresh
-Worker if that wait expires or the warm Worker cannot return a delta.
-
-For 33 through 1,024 distinct Ticket paths, send the whole batch to
-one fresh Worker. Use the existing broader capture when the path
-set cannot be verified. Keep one admission in flight per Project.
-
-Report the Worker mode, capture time including startup, admission
-time, and delta path count for the latest successful delta.
-
-Report the active run ID and the liveness of its cold Worker or
-accepted warm child. Wait for completion or an abort for that run.
-Stop its process group and report the terminal outcome as aborted.
-Keep lifecycle writes and Kernel admission outside this operation.
-
-Bind fresh Workers to the current Orchestrator process.
-A Worker stops its group if that owner exits. A replacement
-Orchestrator starts admission from Project state.
-
-Record the generation trigger, output, and observed side effects as one
-causal trace. Include accepted file changes and the clock-driven retry.
-Send observations to the bound Kernel. Report publication errors to stderr.
+Send one causal trace of the trigger, accepted changes, effects, output,
+and any clock-driven retry to the bound Kernel. Log publication errors.
 
 #### References
 

@@ -10,7 +10,9 @@ import unittest
 from unittest.mock import patch
 
 
-from LAYER_2_LOCAL_RELEASE_C63 import local_release_package_phases as package_phases  # noqa: E402
+from LAYER_2_LOCAL_RELEASE_C63 import (  # noqa: E402
+    local_release_package_phases as package_phases,
+)
 from LAYER_2_LOCAL_RELEASE_C63.LAYER_2_LOCAL_RELEASE_C63__shared import run_local_release  # noqa: E402
 from LAYER_2_LOCAL_RELEASE_C63.local_release_runner import _launcher_image  # noqa: E402
 from LAYER_1_RUNTIME_IMAGES_C81.LAYER_1_RUNTIME_IMAGES_C81__shared import read_release_selection  # noqa: E402
@@ -105,7 +107,9 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
             return "http://127.0.0.1:12345/anechoic/mcp"
 
         self.start_container.side_effect = observe
-        self.image.mark_production_image.side_effect = RuntimeError("tag unavailable")
+        self.image.mark_production_image.side_effect = RuntimeError(
+            "tag unavailable"
+        )
         runner, calls = self._runner()
         with (patch("LAYER_2_LOCAL_RELEASE_C63.local_release_runner.cleanup_obsolete_images") as cleanup,
               patch("LAYER_2_LOCAL_RELEASE_C63.local_release_runner.prune_temporary_files") as prune):
@@ -113,10 +117,15 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
         cleanup.assert_not_called()
         prune.assert_not_called()
         self.image.prune_build_cache.assert_not_called()
-        self.assertEqual(("completed_with_cleanup_pending", None), (result["outcome"], result["failed_step"]))
+        self.assertEqual(
+            ("completed_with_cleanup_pending", None),
+            (result["outcome"], result["failed_step"]),
+        )
         self.assertEqual("healthy", result["evidence"]["readiness"])
         receipt = (self.root / result["receipt_path"]).read_text()
-        self.assertIn("Production image tag failed. Cleanup deferred.", receipt)
+        self.assertIn(
+            "Production image tag failed. Cleanup deferred.", receipt
+        )
         self.assertIn(result["endpoint"], receipt)
         self.assertNotIn("tag unavailable", receipt)
 
@@ -126,17 +135,27 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
               patch("LAYER_2_LOCAL_RELEASE_C63.local_release_runner.verify_release_container", side_effect=observe)):
             resumed = run_local_release(self.root, run_id="tag-failed", runner=runner, resume=True)
         self.assertEqual("completed", resumed["outcome"], resumed)
-        self.assertEqual(result["evidence"]["container_id"], resumed["evidence"]["container_id"])
+        self.assertEqual(
+            result["evidence"]["container_id"],
+            resumed["evidence"]["container_id"],
+        )
         self.assertEqual(2, self.image.mark_production_image.call_count)
         self.start_container.assert_called_once()
         self.assertFalse(any("--phase" in argv for argv in calls))
 
     def test_cache_prune_failure_reports_pending_after_promotion(self):
-        self.image.prune_build_cache.side_effect = RuntimeError("prune unavailable")
+        self.image.prune_build_cache.side_effect = RuntimeError(
+            "prune unavailable"
+        )
         runner, _ = self._runner()
-        result = run_local_release(self.root, run_id="prune-failed", runner=runner)
+        result = run_local_release(
+            self.root, run_id="prune-failed", runner=runner
+        )
         self.assertEqual("completed_with_cleanup_pending", result["outcome"])
-        self.assertIn("Docker build cache cleanup failed.", (self.root / result["receipt_path"]).read_text())
+        self.assertIn(
+            "Docker build cache cleanup failed.",
+            (self.root / result["receipt_path"]).read_text(),
+        )
 
 
     def test_native_manifest_change_stops_before_product_replacement(self):
@@ -267,21 +286,34 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
         self.assertEqual("static and functional", result["test_scope"])
         self.assertIsNone(result["test_modules"])
         test_commands = [argv for argv in calls if "--phase" in argv]
-        self.assertEqual(["preflight", "static", "functional", "image-tests", "canary"],
-                         [argv[argv.index("--phase") + 1] for argv in test_commands])
-        self.assertTrue(all("--test-module" not in argv for argv in test_commands))
-        receipt = (self.root / result["receipt_path"]).read_text(encoding="utf-8")
+        self.assertEqual(
+            ["preflight", "static", "functional", "image-tests", "canary"],
+            [argv[argv.index("--phase") + 1] for argv in test_commands],
+        )
+        self.assertTrue(
+            all("--test-module" not in argv for argv in test_commands)
+        )
+        receipt = (self.root / result["receipt_path"]).read_text(
+            encoding="utf-8"
+        )
         self.assertIn("Test scope: `static and functional`", receipt)
-        self.assertIn("Selected test modules: configured required tests", receipt)
+        self.assertIn(
+            "Selected test modules: configured required tests", receipt
+        )
 
 
     def test_focused_test_failure_blocks_downstream_release(self):
-        modules = ("LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/test_failing.py",)
+        modules = (
+            "LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/test_failing.py",
+        )
         base_runner, calls = self._runner()
 
         def failed_tests(argv, cwd):
             result = base_runner(argv, cwd)
-            if "--phase" in argv and argv[argv.index("--phase") + 1] == "static":
+            if (
+                "--phase" in argv
+                and argv[argv.index("--phase") + 1] == "static"
+            ):
                 return subprocess.CompletedProcess(
                     argv, 1, "focused tests ran\n", "focused test failure\n"
                 )
@@ -294,13 +326,20 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
             test_modules=modules,
         )
 
-        self.assertEqual(("failed", "static_tests"), (result["outcome"], result["failed_step"]))
+        self.assertEqual(
+            ("failed", "static_tests"),
+            (result["outcome"], result["failed_step"]),
+        )
         self.assertEqual("static and functional", result["test_scope"])
         self.assertIsNone(result["test_modules"])
         self.start_container.assert_not_called()
-        report = (self.root / result["report_path"]).read_text(encoding="utf-8")
+        report = (self.root / result["report_path"]).read_text(
+            encoding="utf-8"
+        )
         self.assertIn("Test scope: `static and functional`", report)
-        self.assertIn("Selected test modules: configured required tests", report)
+        self.assertIn(
+            "Selected test modules: configured required tests", report
+        )
         self.assertIn("focused test failure", report)
 
 

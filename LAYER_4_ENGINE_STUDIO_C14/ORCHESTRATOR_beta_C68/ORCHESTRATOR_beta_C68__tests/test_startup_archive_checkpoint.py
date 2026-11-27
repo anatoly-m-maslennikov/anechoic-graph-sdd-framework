@@ -163,14 +163,27 @@ class StartupArchiveCheckpointTests(StartupArchiveCheckpointCases, unittest.Test
             self.assertEqual({"foreground": True, "watcher_guarded": epoch is not None,
                               "force_model": False}, worker.call_args.kwargs)
 
-    def test_failed_foreground_fence_keeps_legacy_error_and_passes_run_id(self):
-        self.jobs.active = RunFixture(state="running", started_at=0, run_id="a" * 32)
+    def test_failed_foreground_fence_keeps_legacy_error_and_passes_run_id(
+        self,
+    ):
+        self.jobs.active = RunFixture(
+            state="running", started_at=0, run_id="a" * 32
+        )
         for fence in (False, None):
-            with self.subTest(fence=fence), patch.object(self.jobs, "_run_worker", return_value={}):
+            with (
+                self.subTest(fence=fence),
+                patch.object(self.jobs, "_run_worker", return_value={}),
+            ):
                 self.jobs.watcher.capture_fence.return_value = fence
-                with self.assertRaisesRegex(ValueError, "Native Project carriers changed during generation"):
+                with self.assertRaisesRegex(
+                    ValueError,
+                    "Native Project carriers changed during generation",
+                ):
                     self.jobs._attempt_generation(None, None)
-                self.assertEqual("a" * 32, self.jobs.watcher.capture_fence.call_args.kwargs["run_id"])
+                self.assertEqual(
+                    "a" * 32,
+                    self.jobs.watcher.capture_fence.call_args.kwargs["run_id"],
+                )
         self.jobs.watcher.capture_epoch.assert_called_with(trace=True)
 
     def test_replay_coverage_loss_discards_result_until_recovery(self):

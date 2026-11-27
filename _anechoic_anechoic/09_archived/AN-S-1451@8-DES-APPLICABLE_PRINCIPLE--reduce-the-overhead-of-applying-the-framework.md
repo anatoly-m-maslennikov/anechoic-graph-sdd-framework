@@ -1,0 +1,41 @@
+---
+atom_family: SPEC
+atom_id: AN-S-1451
+concern:
+  subject: Framework application overhead
+  path: Project Practice/Reuse and efficiency
+  relation: is_contained_by
+container:
+  component: C00
+tier: 1
+context:
+  lens: DES
+  template: applicable_principle
+state:
+  status: "archived"
+  version: 8
+  updated_at: "2026-11-27T13:13:59.019678+00:00"
+relations:
+  APPLIES:
+  - AN-S-1436
+  SERVES:
+  - AN-S-1233
+---
+
+**7.2**
+
+## Summary
+
+Reduce the overhead of applying the framework
+
+## Claim
+
+### Prose Claim
+
+Apply the framework using fewer LLM tokens, less Operator effort, and less waiting time, without weakening required Project outcomes.
+
+## Details
+
+### Examples
+
+An AI Agent reuses a recorded decision when it prepares a related task. The Operator does not have to repeat the decision, and the task retains the agreed outcome.

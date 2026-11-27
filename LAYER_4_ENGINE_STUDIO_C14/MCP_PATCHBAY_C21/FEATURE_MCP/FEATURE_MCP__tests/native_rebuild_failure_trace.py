@@ -1,4 +1,7 @@
-"""Trace a real saved-result rebuild failure through the Workbench HTTP route."""
+(
+    'Trace a real saved-result rebuild failure through the Workbench HTTP '
+    'route.'
+)
 
 import asyncio
 from contextlib import redirect_stderr
@@ -9,9 +12,15 @@ from unittest.mock import patch
 
 import httpx2
 
-from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import create_http_app as create_app
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import (
+    create_http_app as create_app,
+)
 from .native_query_test_support import create_native_gateway
-from .test_native_query_stdio import CONTROL, NativeQueryStdioTests, _native_inputs
+from .test_native_query_stdio import (
+    CONTROL,
+    NativeQueryStdioTests,
+    _native_inputs,
+)
 
 
 class DiagnosticSink(StringIO):
@@ -21,7 +30,10 @@ class DiagnosticSink(StringIO):
 
     def write(self, text):
         result = super().write(text)
-        if "Workbench rebuild failed" in self.getvalue() and "diagnostic" not in self.events:
+        if (
+            "Workbench rebuild failed" in self.getvalue()
+            and "diagnostic" not in self.events
+        ):
             self.events.append("diagnostic")
         return result
 
@@ -30,14 +42,22 @@ def response_body(response, events):
     try:
         body = response.json()
     except ValueError as error:
-        raise ValueError(f"Invalid HTTP observation: {response.status_code} non-JSON body") from error
+        raise ValueError(
+            f"Invalid HTTP observation: {response.status_code} non-JSON body"
+        ) from error
     if 200 <= response.status_code < 300:
         events.append("clientSuccess")
-    elif (400 <= response.status_code < 600 and isinstance(body, dict)
-          and isinstance(body.get("error"), str) and body["error"].strip()):
+    elif (
+        400 <= response.status_code < 600
+        and isinstance(body, dict)
+        and isinstance(body.get("error"), str)
+        and body["error"].strip()
+    ):
         events.append("clientError")
     else:
-        raise ValueError(f"Invalid HTTP observation: {response.status_code} {body!r}")
+        raise ValueError(
+            f"Invalid HTTP observation: {response.status_code} {body!r}"
+        )
     return body
 
 
@@ -45,7 +65,9 @@ def prepare_failure(store):
     store._connection.execute("CREATE TABLE input (value INTEGER)")
     store._connection.execute("INSERT INTO input VALUES (1)")
     store.run("SELECT value FROM input")
-    store._connection.execute("ALTER TABLE input RENAME COLUMN value TO renamed")
+    store._connection.execute(
+        "ALTER TABLE input RENAME COLUMN value TO renamed"
+    )
 
 
 async def trace():

@@ -3,7 +3,8 @@
   import { structureEntries } from './console_structure';
   import { atomTextParts, type AtomDestination } from './console_document';
   import type { QueryResult } from './types';
-  let { result, onOpen }: { result: QueryResult; onOpen: (ref: string, destination: AtomDestination) => void } = $props();
+  let { result, onOpen }: { result: QueryResult; onOpen: (ref:
+    string, destination: AtomDestination) => void } = $props();
   let entries = $derived(structureEntries(result));
 </script>
 
@@ -17,10 +18,13 @@
     {#each entries as entry (entry.id)}
       <li style:padding-left="{entry.depth * 1.5}rem">
         <strong>{entry.name}</strong> <span>({entry.id}, {entry.kind})</span>
-        {#if entry.purpose}<p>{#each atomTextParts(entry.purpose) as part}{#if part.ref}
-          <AtomLink refId={part.ref} {onOpen} />{:else}{part.text}{/if}{/each}</p>{/if}
+        {#if entry.purpose}<p>{#each atomTextParts(
+          entry.purpose) as part}{#if part.ref}
+          <AtomLink refId={part.ref}
+            {onOpen} />{:else}{part.text}{/if}{/each}</p>{/if}
         <div>
-          {#if entry.manifest}<AtomLink refId={entry.manifest} label="Manifest" {onOpen} />{/if}
+          {#if entry.manifest}<AtomLink refId={entry.manifest}
+            label="Manifest" {onOpen} />{/if}
           {#each entry.solutions as solution}
             {' '}<AtomLink refId={solution} label="Solution" {onOpen} />
           {/each}
@@ -32,6 +36,7 @@
 
 <style>
   ul { list-style: none; padding: 0; }
-  li { padding-top: .6rem; padding-bottom: .6rem; border-bottom: 1px solid var(--border, #ddd); }
+  li { padding-top: .6rem; padding-bottom: .6rem;
+    border-bottom: 1px solid var(--border, #ddd); }
   p { margin: .3rem 0; white-space: pre-wrap; }
 </style>

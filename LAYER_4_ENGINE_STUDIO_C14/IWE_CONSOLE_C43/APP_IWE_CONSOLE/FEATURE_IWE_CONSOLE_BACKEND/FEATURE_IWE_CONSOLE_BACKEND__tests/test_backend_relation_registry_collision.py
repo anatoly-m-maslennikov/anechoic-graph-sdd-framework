@@ -32,7 +32,12 @@ def atom(
         header["subjects"] = {"active": subjects}
     name = subjects.rsplit("//", 1)[-1] if subjects is not None else None
     body = (
-        f'## Claim\n### Formal Claim\n```python\nsubject_path(address="Relation//{name}")\n```\n'
+        (
+            '## Claim\n### Formal Claim\n```python\nsubject_path(address="Rela'
+            "tion//"
+            f"{name}"
+            '")\n```\n'
+        )
         if name
         else "# Claim\n\nOne claim.\n"
     )
@@ -131,11 +136,15 @@ class RelationRegistryCollisionTests(unittest.TestCase):
             "CA-R-10", subjects="Subject/Graph/Relation//IS_CONTAINED_BY"
         )
         direct["content_markdown"] = (
-            '## Claim\n### Formal Claim\n```python\nrelation(source="Relation//IS_CONTAINED_BY", name="HAS_INVERSE", target="Relation//CONTAINS")\n```\n'
+            '## Claim\n### Formal Claim\n```python\nrelation(source="Relat'
+            'ion//IS_CONTAINED_BY", name="HAS_INVERSE", '
+            'target="Relation//CONTAINS")\n```\n'
         )
         inverse = atom("CA-R-11", subjects="Subject/Graph/Relation//CONTAINS")
         inverse["content_markdown"] = (
-            '## Claim\n### Formal Claim\n```python\nrelation(source="Relation//CONTAINS", name="HAS_INVERSE", target="Relation//IS_CONTAINED_BY", reverse=True)\n```\n'
+            '## Claim\n### Formal Claim\n```python\nrelation(source="Relat'
+            'ion//CONTAINS", name="HAS_INVERSE", '
+            'target="Relation//IS_CONTAINED_BY", reverse=True)\n```\n'
         )
         parent = atom("CA-P-1")
         child = atom("CA-P-2", relations={"CONTAINS": ["CA-P-1"]})

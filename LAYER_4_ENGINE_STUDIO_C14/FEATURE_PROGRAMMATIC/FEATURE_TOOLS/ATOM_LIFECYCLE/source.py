@@ -13,7 +13,9 @@ from pydantic import ConfigDict, WrapValidator
 from pydantic.dataclasses import dataclass
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import carrier_read_view
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import ProjectSelection
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import (
+    ProjectSelection,
+)
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import read_scope_unit_declarations
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_carrier
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import CEILINGS, ReadContext, open_regular
@@ -125,15 +127,21 @@ def _candidate_paths(reader: ReadContext, selection: ProjectSelection, atom_id: 
     return _matching_paths(reader, selection, prefix)
 
 
-def _matching_paths(reader: ReadContext, selection: ProjectSelection, prefix: re.Pattern[str]) -> tuple[Path, ...]:
-    return _inventory_paths(reader, selection, lambda name: True if prefix.match(name) else None).get(True, ())
+def _matching_paths(
+    reader: ReadContext, selection: ProjectSelection, prefix: re.Pattern[str]
+) -> tuple[Path, ...]:
+    return _inventory_paths(
+        reader, selection, lambda name: True if prefix.match(name) else None
+    ).get(True, ())
 
 
 def _inventory_paths(reader: ReadContext, selection: ProjectSelection, classify) -> dict[Any, tuple[Path, ...]]:
     recursive = {selection.root / unit["authority_path"] / role
                  for unit in selection.structure["scope_units"] for role in active_placement().role_folders.values()}
     direct = {selection.control_root}
-    pending = [(directory, True) for directory in recursive] + [(directory, False) for directory in direct]
+    pending = [(directory, True) for directory in recursive] + [
+        (directory, False) for directory in direct
+    ]
     found: dict[Any, set[Path]] = {}
     while pending:
         directory, descend = pending.pop()

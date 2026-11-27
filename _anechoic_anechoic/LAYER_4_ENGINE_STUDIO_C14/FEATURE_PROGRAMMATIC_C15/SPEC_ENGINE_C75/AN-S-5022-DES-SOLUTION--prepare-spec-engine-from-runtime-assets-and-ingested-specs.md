@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-5022
+concern:
+  subject: "Model"
+  path: "ANECHOIC"
+  relation: "is_contained_by"
 container:
   component: C75
 tier: 0
@@ -11,9 +15,9 @@ relations:
   ANSWERS:
   - AN-S-3395@6
 state:
-  status: "active"
-  version: 6
-  updated_at: '2026-11-27T11:34:39.397809+00:00'
+  status: active
+  version: 8
+  updated_at: "2026-11-27T16:19:44.298791+00:00"
 ---
 ## Summary
 
@@ -90,7 +94,7 @@ component_workflow(component='C75', action='prepare_spec_engine', machine={
 component_workflow(component='C75', action='verify_formal_chain', machine={
     'id': 'c75_verify_formal_chain', 'initial': 'verify', 'states': {
         'verify': {'on': {
-            'verify_specs': {'to': 'return', 'expect': {'kind': 'effect', 'detail': {'component': 'C94', 'action': 'verify_pinned_specs', 'output': 'compared', 'manifest': 'AN-S-5020@4'}, 'target': 'C94.formal_verification', 'outcome': 'compared'}},
+            'verify_specs': {'to': 'return', 'expect': {'kind': 'effect', 'detail': {'component': 'C94', 'action': 'verify_pinned_specs', 'output': 'compared', 'manifest': 'AN-S-5020@5'}, 'target': 'C94.formal_verification', 'outcome': 'compared'}},
             'error': {'to': 'end', 'expect': {'kind': 'output', 'outcome': 'incomplete'}},
         }},
         'return': {'on': {'result': {'to': 'end', 'expect': {'kind': 'output', 'outcome': 'compared'}}}},
@@ -103,7 +107,7 @@ component_workflow(component='C75', action='verify_formal_chain', machine={
 component_workflow(component='C75', action='generate_framing_cases', machine={
     'id': 'c75_generate_framing_cases', 'initial': 'generate', 'states': {
         'generate': {'on': {
-            'generate_cases': {'to': 'return', 'expect': {'kind': 'effect', 'detail': {'component': 'C94', 'action': 'generate_pinned_cases', 'output': 'generated', 'manifest': 'AN-S-5020@4'}, 'target': 'C94.generated_cases', 'outcome': 'ready'}},
+            'generate_cases': {'to': 'return', 'expect': {'kind': 'effect', 'detail': {'component': 'C94', 'action': 'generate_pinned_cases', 'output': 'generated', 'manifest': 'AN-S-5020@5'}, 'target': 'C94.generated_cases', 'outcome': 'ready'}},
             'error': {'to': 'end', 'expect': {'kind': 'output', 'outcome': 'invalid'}},
         }},
         'return': {'on': {'result': {'to': 'end', 'expect': {'kind': 'output', 'outcome': 'generated'}}}},

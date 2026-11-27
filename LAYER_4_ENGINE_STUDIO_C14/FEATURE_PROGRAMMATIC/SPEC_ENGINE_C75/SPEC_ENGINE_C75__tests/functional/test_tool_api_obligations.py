@@ -78,8 +78,10 @@ class ToolApiObligationTests(unittest.TestCase):
         self.assertNotIn('outcomes.success', solution_tool_api(claim))
         transitions.pop()
         transitions.append(output(full))
-        self.assertEqual([200, 'result'], solution_tool_api(claim)['outcomes.success'])
-        for name in ('invalid_input', 'internal_error'):
+        self.assertEqual(
+            [200, "result"], solution_tool_api(claim)["outcomes.success"]
+        )
+        for name in ("invalid_input", "internal_error"):
             for transition in transitions:
                 transition['expect']['outcome'] = 'failed'
                 transition['expect']['detail']['http_outcome'] = name

@@ -7,9 +7,9 @@ tier: 2
 context:
   lens: SWD
 state:
-  status: "active"
-  version: 32
-  updated_at: "2026-11-25T22:32:17.448660+00:00"
+  status: active
+  version: 33
+  updated_at: "2026-11-27T16:29:34.309627+00:00"
 ---
 ## Summary
 
@@ -25,18 +25,7 @@ governed source **and** configuration. give **every** Tool-owned log, session, d
 service-state, **and** resumable-state Carrier an owned runtime descendant. these
 Carriers **may** preserve a non-reconstructible operational timeline.
 
-allocate a Tool-owned **and**, **when** concurrency is possible, run-specific
-descendant below `.anechoic_tmp/` for **every** temporary, scratch, staging,
-cache, Python bytecode cache, build, intermediate Evaluation, atomic-write intermediate, **and**
-interrupted-cleanup Carrier. pass that descendant explicitly **to** temporary-file
-APIs **and** configure **every** invoked dependency **to** use it. do **not** use the
-repository root, process working directory, source tree, Project control root,
-Runtime State root, **or** host temporary location as a fallback.
-
-for atomic replacement, stage below `.anechoic_tmp/` **and** verify the
-required same-filesystem atomicity precondition **before** mutation. stop with a
-stable boundary diagnostic **when** safe placement cannot be established. attempt
-bounded cleanup, but keep **every** cleanup remnant confined **to** temporary state.
+Apply AN-S-1245 and AN-S-1258 to temporary Carriers.
 
 keep both trees non-authoritative. deleting `.anechoic_tmp/` can lose **only**
 disposable state. deleting `.anechoic_runtime/` **may** require reinstallation **or**

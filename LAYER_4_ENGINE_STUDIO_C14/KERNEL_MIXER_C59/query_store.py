@@ -56,7 +56,9 @@ def _connect(extension_directory: Path | None, database_path: Path | None,
         initialize_journal(connection, database_path, journal_path, journal_disk)
     except Exception as exc:
         connection.close()
-        raise WorkbenchUnavailableError(f"Work Journal database initialization failed: {exc}") from exc
+        raise WorkbenchUnavailableError(
+            f"Work Journal database initialization failed: {exc}"
+        ) from exc
     try:
         attach_framework(connection)
     except Exception as exc:
@@ -150,9 +152,15 @@ class QueryStore(ProjectionPublication, QueryResults, QueryLifecycle, QueryObser
                 self._connection.execute("DROP PROPERTY GRAPH IF EXISTS anechoic")
                 self._connection.execute("DROP SCHEMA IF EXISTS internal CASCADE")
                 self._connection.execute("DROP TABLE IF EXISTS main.atoms")
-                self._connection.execute("DROP TABLE IF EXISTS main.scope_units")
-            self._connection.execute("DROP SCHEMA IF EXISTS workbench_results CASCADE")
-            self._connection.execute("DROP SCHEMA IF EXISTS lifecycle_private CASCADE")
+                self._connection.execute(
+                    "DROP TABLE IF EXISTS main.scope_units"
+                )
+            self._connection.execute(
+                "DROP SCHEMA IF EXISTS workbench_results CASCADE"
+            )
+            self._connection.execute(
+                "DROP SCHEMA IF EXISTS lifecycle_private CASCADE"
+            )
             self._connection.execute("DROP TABLE IF EXISTS main.change_log")
             self._connection.execute("DROP VIEW IF EXISTS main.query_log")
             for table in ("live_runs", "query_log_records", "runtime_diagnostics"):
@@ -183,12 +191,30 @@ class QueryStore(ProjectionPublication, QueryResults, QueryLifecycle, QueryObser
             self._connection.close()
             raise WorkbenchUnavailableError("query store initialization failed") from exc
 
-    def _replace_projection(self, atom_rows, scope_rows, relation_types, header_schema, content_schema, reuse):
+    def _replace_projection(
+        self,
+        atom_rows,
+        scope_rows,
+        relation_types,
+        header_schema,
+        content_schema,
+        reuse,
+    ):
         projection = None
         legacy_reuse = False
         if self._legacy_frontier is not None:
-            projection = snapshot(atom_rows, scope_rows, relation_types, header_schema, content_schema)
-            legacy_reuse = self._initialized and _legacy_projection_fingerprint(projection) == self._legacy_frontier
+            projection = snapshot(
+                atom_rows,
+                scope_rows,
+                relation_types,
+                header_schema,
+                content_schema,
+            )
+            legacy_reuse = (
+                self._initialized
+                and _legacy_projection_fingerprint(projection)
+                == self._legacy_frontier
+            )
             self._legacy_frontier = None
             reuse = legacy_reuse
         if self._initialized and not reuse:
@@ -224,9 +250,16 @@ class QueryStore(ProjectionPublication, QueryResults, QueryLifecycle, QueryObser
         except Exception:
             if is_one_tokenized_read_query(sql):
                 return
-            raise ValueError("public SQL must contain one native read query") from None
-        if len(statements) != 1 or statements[0].type is not duckdb.StatementType.SELECT:
-            raise ValueError("public SQL must contain exactly one native SELECT statement")
+            raise ValueError(
+                "public SQL must contain one native read query"
+            ) from None
+        if (
+            len(statements) != 1
+            or statements[0].type is not duckdb.StatementType.SELECT
+        ):
+            raise ValueError(
+                "public SQL must contain exactly one native SELECT statement"
+            )
 
     def _verify_read_only(self, sql: str) -> None:
         """Native planning under DuckDB's read-only transaction rejects writable CTEs."""
@@ -267,12 +300,19 @@ class QueryStore(ProjectionPublication, QueryResults, QueryLifecycle, QueryObser
                 "AND table_name = 'work_journal' ORDER BY ordinal_position"
             ).fetchall()
             if rows:
-                result["tables"]["work_journal"] = [{"name": name, "type": kind} for name, kind in rows]
+                result["tables"]["work_journal"] = [
+                    {"name": name, "type": kind} for name, kind in rows
+                ]
             return result
 
     def close(self, *, retain_projection: bool = True) -> None:
         with self._lock:
-            if self._retain_legacy and retain_projection and self._available and self._projection is not None:
+            if (
+                self._retain_legacy
+                and retain_projection
+                and self._available
+                and self._projection is not None
+            ):
                 try:
                     self._connection.execute(
                         "CREATE TABLE internal.legacy_frontier AS SELECT ?::VARCHAR AS fingerprint",

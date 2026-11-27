@@ -27,7 +27,12 @@ continuing the authorized Local Release.
 
 ## Progress
 
-The locked working-checkout Static run still fails on the remaining
-source findings. TypeScript, Mypy, and bytecode checks passed. The
-integrated focused run passed 51 tests, and the final focused run
-passed seven tests. An exact sealed candidate remains pending.
+The 2026-11-27 locked Static run exited 1 on the working checkout.
+Ruff lint, Ruff format, line length, and 45/300 still fail. The
+bytecode check found 454 ignored cache directories outside
+`.anechoic_tmp`. TypeScript, Mypy, Source Language, and both import
+checks passed.
+
+Focused checks passed for the affected files. The Static test-module
+check is still blocked by two source comment findings in Model
+Generator. An exact sealed candidate remains pending.

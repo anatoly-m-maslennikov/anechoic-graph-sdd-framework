@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-3378
+concern:
+  subject: "Projection"
+  path: "Model/Graph/Node//Artifact//Derived"
+  relation: "is_narrower_than"
 container:
   component: C61
 tier: 1
@@ -11,9 +15,9 @@ relations:
   IS_SOLUTION_FOR:
   - AN-S-3182@11
 state:
-  status: "active"
-  version: 2
-  updated_at: "2026-11-26T16:43:14.627748+00:00"
+  status: active
+  version: 5
+  updated_at: "2026-11-27T16:16:01.404965+00:00"
 ---
 
 ## Summary
@@ -60,5 +64,4 @@ component_workflow(
 
 ## Details
 
-This Solution defines the expected event sequence for the selected workflow.
-Trace conformance requires recorded evidence.
+Use AN-S-2686 for trace evidence.

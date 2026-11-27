@@ -6,8 +6,8 @@ import sys
 import tempfile
 import unittest
 
-TOOLS = Path(__file__).resolve().parents[1]
-sys.path[:0] = [str(TOOLS), str(TOOLS.parent)]
+sys.path.insert(0, str((TOOLS := Path(__file__).resolve().parents[1]).parent))
+sys.path.insert(0, str(TOOLS))
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import (
     active_selection,
     bind_selection,

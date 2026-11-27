@@ -35,8 +35,14 @@ def _graph_sources(atoms: list[dict]) -> list[dict]:
     return selected
 
 
-def _carrier_facts(row: dict, aliases: Mapping[str, str], registry: RelationRegistry) -> tuple[tuple, ...]:
-    outgoing = _outgoing_facts([], registry, {row["source_path"]: tuple(_atom_facts(row, aliases, registry))})
+def _carrier_facts(
+    row: dict, aliases: Mapping[str, str], registry: RelationRegistry
+) -> tuple[tuple, ...]:
+    outgoing = _outgoing_facts(
+        [],
+        registry,
+        {row["source_path"]: tuple(_atom_facts(row, aliases, registry))},
+    )
     return tuple(sorted(outgoing.get((ATOM, row.get("ref")), ())))
 
 
@@ -209,7 +215,10 @@ def _outgoing_facts(
     atom_direct_facts: Mapping[str, tuple[tuple, ...]],
 ) -> dict[tuple[str, str], set[tuple]]:
     outgoing: dict[tuple[str, str], set[tuple]] = defaultdict(set)
-    for fact in (*_scope_facts(scopes, registry), *(fact for facts in atom_direct_facts.values() for fact in facts)):
+    for fact in (
+        *_scope_facts(scopes, registry),
+        *(fact for facts in atom_direct_facts.values() for fact in facts),
+    ):
         outgoing[fact[:2]].add((*fact, False))
         if fact[2] in registry.inverse:
             reverse = (fact[3], fact[4], registry.inverse[fact[2]], fact[0], fact[1])
@@ -256,10 +265,15 @@ def _support_facts(
 
 
 def _materialize_atoms(
-    atoms: list[dict], outgoing: Mapping[tuple[str, str], set[tuple]], context: tuple,
-    atom_direct_facts: Mapping[str, tuple[tuple, ...]], previous_atoms: Mapping[str, dict[str, Any]],
-    support: Mapping[tuple[str, str], set[tuple]], graph_paths: set[str],
-    aliases: Mapping[str, str], registry: RelationRegistry,
+    atoms: list[dict],
+    outgoing: Mapping[tuple[str, str], set[tuple]],
+    context: tuple,
+    atom_direct_facts: Mapping[str, tuple[tuple, ...]],
+    previous_atoms: Mapping[str, dict[str, Any]],
+    support: Mapping[tuple[str, str], set[tuple]],
+    graph_paths: set[str],
+    aliases: Mapping[str, str],
+    registry: RelationRegistry,
 ) -> tuple[list[dict], dict[str, dict[str, Any]]]:
     next_atoms: dict[str, dict[str, Any]] = {}
     rows = []
@@ -281,8 +295,12 @@ def _materialize_atoms(
 
 
 def materialize_with_registry(
-    atoms: list[dict], scopes: list[dict], previous_atoms: Mapping[str, dict[str, Any]] | None = None,
-) -> tuple[list[dict], list[dict], set[str], dict[str, str], dict[str, dict[str, Any]]]:
+    atoms: list[dict],
+    scopes: list[dict],
+    previous_atoms: Mapping[str, dict[str, Any]] | None = None,
+) -> tuple[
+    list[dict], list[dict], set[str], dict[str, str], dict[str, dict[str, Any]]
+]:
     """Materialize one captured inventory and reuse unchanged Atom rows by identity."""
     graph_atoms = _graph_sources(atoms)
     registry = compile_relation_registry(graph_atoms)
@@ -299,8 +317,17 @@ def materialize_with_registry(
     outgoing = _outgoing_facts(scopes, registry, atom_direct_facts)
     support = _support_facts(graph_atoms, scopes, registry, atom_direct_facts)
     graph_paths = {row.get("source_path") for row in graph_atoms}
-    atom_rows, next_atoms = _materialize_atoms(atoms, outgoing, context, atom_direct_facts, prior, support,
-                                               graph_paths, scope_references, registry)
+    atom_rows, next_atoms = _materialize_atoms(
+        atoms,
+        outgoing,
+        context,
+        atom_direct_facts,
+        prior,
+        support,
+        graph_paths,
+        scope_references,
+        registry,
+    )
 
     scope_rows = []
     for source in scopes:

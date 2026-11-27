@@ -117,7 +117,8 @@ class QueryObservability:
             self._diagnostic_rows = values
 
     def audit_content_rows(self, paths: set[str]) -> dict:
-        "Copy projected values briefly under the database lock for background audit."
+        "Copy projected values briefly under the database lock for \
+background audit."
         from .audit_tables import query_content_rows
 
         with self._lock:

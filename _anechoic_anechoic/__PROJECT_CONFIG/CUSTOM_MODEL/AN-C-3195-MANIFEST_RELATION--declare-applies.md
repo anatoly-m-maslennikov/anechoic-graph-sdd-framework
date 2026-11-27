@@ -15,8 +15,8 @@ relations:
   - AN-S-3319
 state:
   status: active
-  version: 1
-  updated_at: '2026-11-26T16:50:12.598364+00:00'
+  version: 2
+  updated_at: '2026-11-27T17:50:26.618898+00:00'
 ---
 
 ## Summary
@@ -28,7 +28,7 @@ Declare APPLIES
 ### Prose Claim
 
 A Tier 1 Applicable Principle applies a Tier 0 Axiom as a premise
-within the scope of its Project Goal.
+within the scope of its Project purpose.
 The authored Relation points from the stated source to its target.
 The inverse is derived. Tier and Solution restrictions are authoring rules.
 

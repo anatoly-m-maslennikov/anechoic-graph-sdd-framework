@@ -21,9 +21,11 @@ result = {"findings": [], "unresolved": []}
 
 
 def fn(tree, name):
-    return next(
-        n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == name
-    )
+    matches = []
+    for node in tree.body:
+        if isinstance(node, ast.FunctionDef) and node.name == name:
+            matches.append(node)
+    return next(iter(matches))
 
 
 def match(node, text):
@@ -45,9 +47,11 @@ try:
     tree = ast.parse(source.read_text())
     read = fn(tree, "_read_ticket")
     change = fn(tree, "change_ticket_status")
-    if any(
-        isinstance(k, ast.arg) and k.arg == "close_epic" for k in read.args.kwonlyargs
-    ):
+    keyword_names = []
+    for keyword in read.args.kwonlyargs:
+        if isinstance(keyword, ast.arg):
+            keyword_names.append(keyword.arg)
+    if "close_epic" in keyword_names:
         assert assignment(change, "close_epic") == (
             "status == 'done' and native_header_view(selected['header_json'])."
             "get('context', {}).get('template') == 'epic'"
@@ -65,41 +69,45 @@ try:
         assert match(
             change,
             (
-                "_read_ticket(selection, target, selected, digest, path, close_epi"
-                "c=close_epic, placement=True)"
+                "_read_ticket(selection, target, selected, digest, path, "
+                "close_epic=close_epic, placement=True)"
             ),
         )
         assert match(
             change,
             (
-                "_move_ticket(selection, target, selected, digest, path, destinati"
-                "on, status, check_definition, close_epic=close_epic)"
+                "_move_ticket(selection, target, selected, digest, path, "
+                "destination, status, check_definition, close_epic=close_epic)"
             ),
         )
         code = (
-            "def closesTree (done epic : Bool) : Bool := done && epic\ndef reje"
+            "def closesTree (done epic : Bool) : Bool := done && epic\n"
+            "def reje"
             "cts (pending closeTree companion : Bool) : Bool := pending && !cl"
-            "oseTree\ndef selectChild (terminal childTerminal : Bool) : Bool :="
-            " false\ndef actionCanceled (parentCanceled isParent : Bool) : Bool"
+            "oseTree\ndef selectChild (terminal childTerminal : Bool) : "
+            "Bool :="
+            " false\ndef actionCanceled (parentCanceled isParent : "
+            "Bool) : Bool"
             " := false"
         )
     else:
-        assert assignment(change, "move_tree") == "template in ('task', 'epic')"
+        expected_template = "template in ('task', 'epic')"
+        assert assignment(change, "move_tree") == expected_template
         assert (
             assignment(change, "terminal")
             == "move_tree and status in ('done', 'canceled')"
         )
         assert (
             assignment(change, "planned")
-            == "_descendants(current_rows, selected['id']) if move_tree else []"
+            == "_descendants(current_rows, selected['id']) "
+            "if move_tree else []"
         )
         assert assignment(change, "actions") == (
             "[row for row in planned if terminal and row['status'] not in ('do"
             "ne', 'canceled')]"
         )
-        assert (
-            assignment(change, "action_status") == "status if is_parent else 'canceled'"
-        )
+        expected_action_status = "status if is_parent else 'canceled'"
+        assert assignment(change, "action_status") == expected_action_status
         assert any(
             isinstance(x, ast.If)
             and ast.unparse(x.test)
@@ -114,8 +122,8 @@ try:
         assert match(
             change,
             (
-                "_read_ticket(selection, target, selected, digest, path, close_tre"
-                "e=move_tree, placement=True)"
+                "_read_ticket(selection, target, selected, digest, path, "
+                "close_tree=move_tree, placement=True)"
             ),
         )
         assert match(change, "actions.append(selected)")
@@ -126,8 +134,9 @@ try:
             and match(
                 descendants,
                 (
-                    "stack.extend(((child, False) for child in reversed(sorted(childre"
-                    "n.get(row['id'], ()), key=lambda r: r['id']))))"
+                    "stack.extend(((child, False) for child in "
+                    "reversed(sorted("
+                    "children.get(row['id'], ()), key=lambda r: r['id']))))"
                 ),
             )
         )
@@ -150,17 +159,29 @@ try:
             for k, v in zip(read.args.kwonlyargs, read.args.kw_defaults)
         )
         code = (
-            "def closesTree (done epic : Bool) : Bool := epic\ndef rejects (pen"
+            "def closesTree (done epic : Bool) : Bool := epic\n"
+            "def rejects (pen"
             "ding closeTree companion : Bool) : Bool := pending && (!closeTree"
-            " || !companion)\ndef selectChild (terminal childTerminal : Bool) :"
-            " Bool := terminal && !childTerminal\ndef actionCanceled (parentCan"
+            " || !companion)\ndef selectChild (terminal childTerminal : "
+            "Bool) :"
+            " Bool := terminal && !childTerminal\n"
+            "def actionCanceled (parentCan"
             "celed isParent : Bool) : Bool := if isParent then parentCanceled "
             "else true"
         )
     lean = (
         """set_option linter.unusedVariables false\n"""
         + code
-        + """\n-- One valid Epic, one unfinished Current child, a valid companion; status is canceled.\ndef accepted : Bool := !(rejects true (closesTree false true) true)\n-- Independent invariant: an unfinished child is canceled before its parent.\n#eval accepted && selectChild true false && actionCanceled true false\n"""
+        + (
+            "\n-- One valid Epic, one unfinished Current child, a valid "
+            "companion; status is canceled.\n"
+            "def accepted : Bool := !(rejects true (closesTree false true) "
+            "true)\n"
+            "-- Independent invariant: an unfinished child is canceled before "
+            "its parent.\n"
+            "#eval accepted && selectChild true false && actionCanceled true "
+            "false\n"
+        )
     )
     with tempfile.TemporaryDirectory() as d:
         f = pathlib.Path(d) / "Check.lean"
@@ -175,7 +196,8 @@ try:
             {
                 "path": str(source.relative_to(a.checkout)),
                 "detail": (
-                    "Canceling an Epic with an unfinished child is rejected before the"
+                    "Canceling an Epic with an unfinished child is rejected "
+                    "before the"
                     " child can be canceled (Lean counterexample)."
                 ),
             }

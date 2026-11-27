@@ -135,27 +135,37 @@ class ScopeUnitDeclarationReaderTests(ScopeUnitFixture, unittest.TestCase):
             return original_read(path, **kwargs)
 
         reader.read = record  # type: ignore[method-assign]
-        result = read_scope_unit_declarations(self.root, self.control.name, reader=reader)
+        result = read_scope_unit_declarations(
+            self.root, self.control.name, reader=reader
+        )
         self.assertEqual(len(result.paths), 3)
         self.assertNotIn(projected, result.paths)
         self.assertNotIn(projected, read_paths)
 
-    def test_root_declaration_is_admitted_only_from_control_top_level(self) -> None:
+    def test_root_declaration_is_admitted_only_from_control_top_level(
+        self,
+    ) -> None:
         root_source, _, _ = self.complete_tree()
         result = read_scope_unit_declarations(self.root, self.control.name)
 
         self.assertEqual(result.root.source, root_source)
         self.assertEqual(root_source.parent, self.control)
 
-    def test_project_root_declaration_in_requirement_folder_refuses(self) -> None:
+    def test_project_root_declaration_in_requirement_folder_refuses(
+        self,
+    ) -> None:
         self.declaration("demo", "CA-R-1", project=True)
 
-        with self.assertRaisesRegex(ScopeDeclarationError, "no current Scope Unit Declarations"):
+        with self.assertRaisesRegex(
+            ScopeDeclarationError, "no current Scope Unit Declarations"
+        ):
             read_scope_unit_declarations(self.root, self.control.name)
 
     def test_non_requirement_delegations_use_matching_role_and_parent(self) -> None:
         _, _, child = self.complete_tree()
-        raw = child.read_text(encoding="utf-8").replace("form: Scope Unit Declaration", "form: Scope Delegation")
+        raw = child.read_text(encoding="utf-8").replace(
+            "form: Scope Unit Declaration", "form: Scope Delegation"
+        )
         start = raw.index("### Formal Claim")
         raw = (raw[:start] + "### Prose Claim\n\nDelegated responsibility.\n").replace(
             "---\n", "---\ncontainer:\n  scope_unit: CA-SU-1\n", 1)
@@ -164,14 +174,26 @@ class ScopeUnitDeclarationReaderTests(ScopeUnitFixture, unittest.TestCase):
             with self.subTest(role=role):
                 path = child.parent.parent / directory / f"CA-{letter}-4.md"
                 path.parent.mkdir()
-                carrier = raw.replace("CA-R-3", f"CA-{letter}-4").replace("role: Requirement", f"role: {role}")
+                carrier = raw.replace("CA-R-3", f"CA-{letter}-4").replace(
+                    "role: Requirement", f"role: {role}"
+                )
                 path.write_text(carrier, encoding="utf-8")
-                result = read_scope_unit_declarations(self.root, self.control.name)
-                self.assertEqual(role, result.by_name["CHILD"].delegations[0].role)
-                self.assertIn(path.relative_to(self.root).as_posix(), result.source_pins)
-                for invalid in (carrier.replace(f"CA-{letter}-4", "CA-R-4"),
-                                carrier.replace("scope_unit: CA-SU-1", "scope_unit: CA-SU-9"),
-                                carrier.replace(f"role: {role}", "role: Requirement")):
+                result = read_scope_unit_declarations(
+                    self.root, self.control.name
+                )
+                self.assertEqual(
+                    role, result.by_name["CHILD"].delegations[0].role
+                )
+                self.assertIn(
+                    path.relative_to(self.root).as_posix(), result.source_pins
+                )
+                for invalid in (
+                    carrier.replace(f"CA-{letter}-4", "CA-R-4"),
+                    carrier.replace(
+                        "scope_unit: CA-SU-1", "scope_unit: CA-SU-9"
+                    ),
+                    carrier.replace(f"role: {role}", "role: Requirement"),
+                ):
                     path.write_text(invalid, encoding="utf-8")
                     with self.assertRaises(ScopeDeclarationError):
                         read_scope_unit_declarations(self.root, self.control.name)

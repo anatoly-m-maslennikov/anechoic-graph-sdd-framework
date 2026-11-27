@@ -1,0 +1,41 @@
+---
+atom_family: SPEC
+atom_id: AN-S-476
+container:
+  component: C14
+tier: 3
+context:
+  lens: DEVOPS
+state:
+  status: "archived"
+  version: 20
+  updated_at: "2026-11-27T14:45:10.285943+00:00"
+---
+## Summary
+
+Place Local Environment Injection Carriers
+
+## Claim
+
+### Prose Claim
+
+
+secret values and local environment injection Carriers.
+
+
+secret values **must** be stored **only** **in**:
+
+- gitignored `.env` File Carriers; **or**
+- a dedicated secret vault.
+
+## Details
+
+### File placement
+
+- a repository-local `.env` File Carrier **must** remain outside **every** applicable Project authority Carrier root.
+- **every** real `.env` variant **must** be gitignored, untracked, **and** excluded from durable **or** shared Git history **and** ANECHOIC discovery. a Git ignore rule does **not** remove a previously tracked secret from history.
+- a tracked `.env.example` **may** contain variable names **and** unmistakable dummy placeholders **only**.
+
+### Runtime injection
+
+secret values **may** reach authorized runtime consumers through host injection from a permitted secret store; the injected value is **not** a separate persisted source.

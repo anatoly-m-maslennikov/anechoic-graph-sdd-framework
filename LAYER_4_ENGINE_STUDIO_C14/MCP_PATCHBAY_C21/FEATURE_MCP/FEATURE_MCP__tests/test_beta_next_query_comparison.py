@@ -42,7 +42,9 @@ def project(root):
 class BetaComparison(unittest.IsolatedAsyncioTestCase):
     async def test_web_and_mcp_follow_project_edit(self):
         with tempfile.TemporaryDirectory() as directory:
-            await self.run_role(Path(directory).resolve() / "beta_next", "beta_next")
+            await self.run_role(
+                Path(directory).resolve() / "beta_next", "beta_next"
+            )
 
     async def run_role(self, root, role):
         task = project(root)
@@ -64,10 +66,15 @@ class BetaComparison(unittest.IsolatedAsyncioTestCase):
             proc = subprocess.Popen([sys.executable, "-B", "-c", launcher, str(root), child], env=env,
                                     stdout=subprocess.DEVNULL, stderr=log)
             try:
-                async with httpx.AsyncClient(base_url=f"http://127.0.0.1:{port}", timeout=30) as http:
+                async with httpx.AsyncClient(
+                    base_url=f"http://127.0.0.1:{port}", timeout=30
+                ) as http:
                     await self.ready(http, proc)
                     timings = {"startup": time.monotonic() - start}
-                    async with streamable_http_client(f"http://127.0.0.1:{port}/anechoic/mcp", http_client=http) as streams:
+                    async with streamable_http_client(
+                        f"http://127.0.0.1:{port}/anechoic/mcp",
+                        http_client=http,
+                    ) as streams:
                         async with ClientSession(*streams) as client:
                             await client.initialize()
                             result = await self.compare(http, client, task, timings)
@@ -88,29 +95,42 @@ class BetaComparison(unittest.IsolatedAsyncioTestCase):
     async def ready(self, http, proc):
         async with asyncio.timeout(90):
             while True:
-                self.assertIsNone(proc.poll(), "supervisor exited before readiness")
+                self.assertIsNone(
+                    proc.poll(), "supervisor exited before readiness"
+                )
                 try:
-                    response = await http.get('/anechoic/health')
-                    if response.status_code == 200 and response.json().get("state") == "ready":
+                    response = await http.get("/anechoic/health")
+                    if (
+                        response.status_code == 200
+                        and response.json().get("state") == "ready"
+                    ):
                         return
                 except httpx.ConnectError:
                     pass
-                await asyncio.sleep(.2)
+                await asyncio.sleep(0.2)
 
     async def compare(self, http, client, task, timings):
         async def read():
             before = time.monotonic()
-            web = await http.post('/anechoic/Example/api/run', json={"sql": SQL, "result_delivery": "inline"})
+            web = await http.post(
+                "/anechoic/Example/api/run",
+                json={"sql": SQL, "result_delivery": "inline"},
+            )
             web.raise_for_status()
-            timings.setdefault('web', []).append(time.monotonic() - before)
+            timings.setdefault("web", []).append(time.monotonic() - before)
             before = time.monotonic()
-            mcp = await client.call_tool('query_run', {"sql": SQL, "result_delivery": "inline"})
+            mcp = await client.call_tool(
+                "query_run", {"sql": SQL, "result_delivery": "inline"}
+            )
             self.assertFalse(mcp.is_error, mcp.structured_content)
-            timings.setdefault('mcp', []).append(time.monotonic() - before)
-            return web.json()['rows'], mcp.structured_content['rows']
+            timings.setdefault("mcp", []).append(time.monotonic() - before)
+            return web.json()["rows"], mcp.structured_content["rows"]
+
         initial = await read()
         self.assertEqual((EXPECTED, EXPECTED), initial)
-        task.write_text(task.read_text().replace('Example task', 'Changed task'))
+        task.write_text(
+            task.read_text().replace("Example task", "Changed task")
+        )
         changed = [EXPECTED[0], ["EX-T-1", "Changed task"]]
         refresh_start = time.monotonic()
         async with asyncio.timeout(30):
@@ -118,8 +138,8 @@ class BetaComparison(unittest.IsolatedAsyncioTestCase):
                 final = await read()
                 if final == (changed, changed):
                     break
-                await asyncio.sleep(.2)
-        timings['refresh'] = time.monotonic() - refresh_start
+                await asyncio.sleep(0.2)
+        timings["refresh"] = time.monotonic() - refresh_start
         return initial, final
 
 

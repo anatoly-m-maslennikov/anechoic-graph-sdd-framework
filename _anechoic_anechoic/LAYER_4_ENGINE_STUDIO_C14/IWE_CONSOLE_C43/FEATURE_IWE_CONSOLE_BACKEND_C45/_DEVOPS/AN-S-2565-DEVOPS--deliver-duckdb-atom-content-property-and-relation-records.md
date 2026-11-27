@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-2565
+concern:
+  subject: "Projection"
+  path: "Model/Graph/Node//Artifact//Derived"
+  relation: "is_narrower_than"
 container:
   component: C45
 tier: 4
@@ -8,8 +12,8 @@ context:
   lens: DevOps
 state:
   status: active
-  version: 24
-  updated_at: '2026-11-13T10:20:38.152128+00:00'
+  version: 28
+  updated_at: "2026-11-27T16:16:01.404965+00:00"
 ---
 ## Summary
 
@@ -29,4 +33,4 @@ Parse complete YAML and actual Markdown heading paths, preserving missing/null/e
 
 In refresh mode, generate and validate `workbench_schema.json` from Current Declarations. In existing mode, build with the checkout asset unchanged. Load the delivered asset at startup. Keep its Content schema and Mode 1 Header schema fixed; Mode 2 selects observed Header paths at cold start. Ordinary Atom edits and explicit rereads refresh data under the selected schema. The running service does not compile model declarations.
 
-`atoms` identifies carrier path/filename, Current, Draft, Backlog or loaded Archive lifecycle, exact reference, typed `header.*`/`content.*`, native `header.relations` and deterministic row hash excluding `hash`. The `atoms` primary key is the physical pair `(relative_path, filename)`. Keep each readable matching carrier, including duplicate logical identities and revisions. Archive rows come from requested Scope Unit and Role folders under CA-D-718. `scope_units` identifies declared name/ID/parent/label/order, Current structural source path/version, native relations and the same hash rule. Relations use the CA-M-509 registry: exact canonical/declared inverse aliases or unique case-folded carrier spelling normalize once without source edits; ambiguity/case collision warns and omits affected projected links. References remain typed references, and direct/derived counterparts refresh with their supporting source while source bytes/Versions do not change. DuckPGQ uses typed Atom/Scope Unit identities and declared labels only; it is derived implementation state, not another table or authority.
+`atoms` identifies carrier path/filename, Current, Draft, Backlog or loaded Archive lifecycle, exact reference, typed `header.*`/`content.*`, native `header.relations` and deterministic row hash excluding `hash`. The `atoms` primary key is the physical pair `(relative_path, filename)`. Keep each readable matching carrier, including duplicate logical identities and revisions. Archive rows come from requested Scope Unit and Role folders under CA-D-718. `scope_units` identifies declared name/ID/parent/label/order, Current structural source path/version, native relations and the same hash rule. Use the Active Model for Relation names and derivation. Apply AN-S-3175 to Atom Relations. For admitted legacy carriers, use the CA-M-509 registry to normalize exact aliases or unique case-folded spelling once without changing source. Warn on ambiguity or case collisions and omit affected links. References remain typed references, and direct/derived counterparts refresh with their supporting source while source bytes/Versions do not change. DuckPGQ uses typed Atom/Scope Unit identities and declared labels only; it is derived implementation state, not another table or authority.

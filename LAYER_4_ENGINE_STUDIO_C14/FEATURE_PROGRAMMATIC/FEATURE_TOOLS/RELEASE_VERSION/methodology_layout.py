@@ -7,10 +7,15 @@ from pydantic.dataclasses import dataclass
 from pathlib import Path
 
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import active_selection
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import (
+    active_selection,
+)
 
 
-@dataclass(config=ConfigDict(strict=True, extra="forbid", hide_input_in_errors=True), frozen=True)
+@dataclass(
+    config=ConfigDict(strict=True, extra="forbid", hide_input_in_errors=True),
+    frozen=True,
+)
 class MethodologyLayout:
     source_root: str
     product_root: str
@@ -45,9 +50,15 @@ def resolve_methodology_layout(project_root: Path | str) -> MethodologyLayout:
         raise ValueError("Scope Unit Declarations must derive Scope Units")
 
     def unit(name: str) -> dict:
-        matches = [row for row in rows if isinstance(row, Mapping) and row.get("scope_unit_name") == name]
+        matches = [
+            row
+            for row in rows
+            if isinstance(row, Mapping) and row.get("scope_unit_name") == name
+        ]
         if len(matches) != 1:
-            raise ValueError(f"Scope Unit Declarations must register exactly one {name}")
+            raise ValueError(
+                f"Scope Unit Declarations must register exactly one {name}"
+            )
         return matches[0]
 
     framework = unit("FRAMEWORK_METHODOLOGY")
@@ -59,12 +70,18 @@ def resolve_methodology_layout(project_root: Path | str) -> MethodologyLayout:
     product = _relative(root, framework.get("delivery_path"))
     copied = _relative(root, sources.get("delivery_path"))
     compiled = _relative(root, applicable.get("delivery_path"))
-    installed = _relative(root, (control / "000_ANECHOIC_framework").as_posix())
+    installed = _relative(
+        root, (control / "000_ANECHOIC_framework").as_posix()
+    )
     if not Path(source).is_relative_to(control) or Path(source).is_relative_to(Path(installed)):
         raise ValueError("Release sources must be Project authority, not installed Methodology")
     if Path(copied).parent != Path(product) or Path(compiled).parent != Path(product):
         raise ValueError("Methodology source and applicable deliveries must be product children")
-    if Path(product).is_relative_to(control) or Path(source).is_relative_to(Path(product)):
-        raise ValueError("Methodology product must not enclose Project authority")
+    if Path(product).is_relative_to(control) or Path(source).is_relative_to(
+        Path(product)
+    ):
+        raise ValueError(
+            "Methodology product must not enclose Project authority"
+        )
     return MethodologyLayout(source, product, copied, compiled, control.as_posix(), installed,
                              selection.declaration_digest)

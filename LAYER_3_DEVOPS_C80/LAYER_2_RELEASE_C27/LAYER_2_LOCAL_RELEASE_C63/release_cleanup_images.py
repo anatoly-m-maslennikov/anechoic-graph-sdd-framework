@@ -20,7 +20,9 @@ from LAYER_1_RUNTIME_IMAGES_C81.LAYER_1_RUNTIME_IMAGES_C81__shared import (
     image_metadata,
     run_docker,
 )
-from LAYER_1_RUNTIME_IMAGES_C81.LAYER_1_RUNTIME_IMAGES_C81__shared import INSTALLATION_LOCK_PATH
+from LAYER_1_RUNTIME_IMAGES_C81.LAYER_1_RUNTIME_IMAGES_C81__shared import (
+    INSTALLATION_LOCK_PATH,
+)
 
 from .local_release_state import open_artifacts
 
@@ -40,9 +42,16 @@ def read_ready_images(path: Path, project_id: str) -> list[str]:
     if not path.exists():
         return []
     payload = json.loads(path.read_text(encoding="utf-8"))
-    if (not isinstance(payload, dict) or payload.get("project_id") != project_id
-            or not isinstance(payload.get("images"), list) or len(payload["images"]) > 3
-            or any(not isinstance(item, str) or IMAGE.fullmatch(item) is None for item in payload["images"])):
+    if (
+        not isinstance(payload, dict)
+        or payload.get("project_id") != project_id
+        or not isinstance(payload.get("images"), list)
+        or len(payload["images"]) > 3
+        or any(
+            not isinstance(item, str) or IMAGE.fullmatch(item) is None
+            for item in payload["images"]
+        )
+    ):
         raise ValueError("Local release image history is invalid")
     return payload["images"]
 
@@ -63,7 +72,9 @@ def record_ready_images(path: Path, project_id: str, current: str, previous: str
 
 
 def _has_owner(labels: dict[str, str], owner: dict[str, str]) -> bool:
-    return all(key in owner and labels.get(key) == owner[key] for key in _OWNER_KEYS)
+    return all(
+        key in owner and labels.get(key) == owner[key] for key in _OWNER_KEYS
+    )
 
 
 def _declares_owner(labels: dict[str, str]) -> bool:
@@ -83,7 +94,8 @@ def _foreign_owner(labels: dict[str, str], owner: dict[str, str]) -> bool:
         and re.fullmatch(r"[0-9a-f]{64}", project_id) is not None
         and Path(root).is_absolute()
         and ".." not in Path(root).parts
-        and control.startswith((".anechoic_", "_anechoic_")) and len(control) > len(".anechoic_")
+        and control.startswith((".anechoic_", "_anechoic_"))
+        and len(control) > len(".anechoic_")
         and len(Path(control).parts) == 1
     )
 
@@ -127,7 +139,11 @@ def _container_references(root: Path, runner: Runner | None, image: str) -> bool
 
 
 def _image_inventory(root, runner):
-    images = set(run_docker(root, runner, "image", "ls", "--all", "--no-trunc", "--quiet").splitlines())
+    images = set(
+        run_docker(
+            root, runner, "image", "ls", "--all", "--no-trunc", "--quiet"
+        ).splitlines()
+    )
     if any(IMAGE.fullmatch(image) is None for image in images):
         raise ValueError("Docker cleanup identifiers are invalid")
     return images
@@ -158,12 +174,20 @@ def _purge_test_images(root, runner, candidates, protected, cleanup):
     if removed:
         try:
             remaining = _image_inventory(root, runner)
-            cleanup.notes.extend(f"Purged test image {image}." for image in sorted(removed - remaining))
-            cleanup.notes.extend(f"Test image {image} still exists in Docker." for image in sorted(removed & remaining))
+            cleanup.notes.extend(
+                f"Purged test image {image}."
+                for image in sorted(removed - remaining)
+            )
+            cleanup.notes.extend(
+                f"Test image {image} still exists in Docker."
+                for image in sorted(removed & remaining)
+            )
             cleanup.pending |= bool(removed & remaining)
-        except (OSError, RuntimeError, ValueError, subprocess.TimeoutExpired):
+        except OSError, RuntimeError, ValueError, subprocess.TimeoutExpired:
             cleanup.pending = True
-            cleanup.notes.append("Docker test image removal could not be verified.")
+            cleanup.notes.append(
+                "Docker test image removal could not be verified."
+            )
 
 
 def _remove_image(
@@ -185,10 +209,14 @@ def _remove_image(
             )
         else:
             cleanup.pending = True
-            cleanup.notes.append(f"Image {image} retained without Project ownership evidence.")
+            cleanup.notes.append(
+                f"Image {image} retained without Project ownership evidence."
+            )
         return
     if _container_references(root, runner, image):
-        cleanup.notes.append(f"Image {image} retained: a container still uses it.")
+        cleanup.notes.append(
+            f"Image {image} retained: a container still uses it."
+        )
         cleanup.pending = True
         return
     run_docker(root, runner, "image", "rm", image)
@@ -232,23 +260,33 @@ def _discover_images(
     return owned, candidates
 
 
-def _retain_previous_images(root, runner, history, present, protected, cleanup):
+def _retain_previous_images(
+    root, runner, history, present, protected, cleanup
+):
     retained = 0
     for image in history:
         if image is None or image in protected:
             continue
         protected.add(image)
         if IMAGE.fullmatch(image) and image not in present:
-            cleanup.notes.append(f"Previous image {image} is absent from the selected Docker context.")
+            cleanup.notes.append(
+                f"Previous image {image} is absent from the selected Docker context."
+            )
             continue
         try:
-            if not _has_owner(image_labels(root, runner, image), cleanup.owner):
+            if not _has_owner(
+                image_labels(root, runner, image), cleanup.owner
+            ):
                 raise ValueError("Previous image ownership unproven")
             retained += 1
-            cleanup.notes.append(f"Image {image} retained: verified Project ownership.")
+            cleanup.notes.append(
+                f"Image {image} retained: verified Project ownership."
+            )
         except OSError, RuntimeError, ValueError, subprocess.TimeoutExpired:
             cleanup.pending = True
-            cleanup.notes.append(f"Image {image} retained: previous image ownership unproven.")
+            cleanup.notes.append(
+                f"Image {image} retained: previous image ownership unproven."
+            )
         if retained == 2:
             break
     return retained
@@ -274,7 +312,9 @@ def cleanup_obsolete_images(
         cleanup.notes.append("Runtime image discovery unavailable; unproven images retained.")
         return
     protected = {current_image}
-    retained = _retain_previous_images(root, runner, history, present, protected, cleanup)
+    retained = _retain_previous_images(
+        root, runner, history, present, protected, cleanup
+    )
     for image in owned:
         if retained == 2:
             break
@@ -282,9 +322,13 @@ def cleanup_obsolete_images(
             protected.add(image)
             retained += 1
     _purge_test_images(root, runner, candidates, protected, cleanup)
-    for image in sorted(cleanup.images - protected - candidates.keys() - active_images):
+    for image in sorted(
+        cleanup.images - protected - candidates.keys() - active_images
+    ):
         try:
             _remove_image(root, runner, image, current_image, cleanup)
         except OSError, RuntimeError, ValueError, subprocess.TimeoutExpired:
             cleanup.pending = True
-            cleanup.notes.append(f"Image {image} retained: inspection or removal failed.")
+            cleanup.notes.append(
+                f"Image {image} retained: inspection or removal failed."
+            )

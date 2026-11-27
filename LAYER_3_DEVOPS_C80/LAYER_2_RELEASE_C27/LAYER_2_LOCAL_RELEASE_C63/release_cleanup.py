@@ -15,7 +15,9 @@ from LAYER_1_RUNTIME_IMAGES_C81.LAYER_1_RUNTIME_IMAGES_C81__shared import (
     owner_labels,
     run_docker,
 )
-from .release_cleanup_images import cleanup_obsolete_images as cleanup_obsolete_images
+from .release_cleanup_images import (
+    cleanup_obsolete_images as cleanup_obsolete_images,
+)
 
 
 def _identifiers(output: str, pattern: re.Pattern[str]) -> set[str]:
@@ -56,7 +58,9 @@ def _remove_container(
         run_docker(root, runner, "container", "inspect", "--format", projection, identifier)
     )
     if not _owned(row, root, project_id, control):
-        cleanup.notes.append(f"Container {identifier} retained: Project ownership unproven.")
+        cleanup.notes.append(
+            f"Container {identifier} retained: Project ownership unproven."
+        )
         cleanup.pending = True
         return
     if (
@@ -74,7 +78,9 @@ def _remove_container(
     cleanup.images.add(row.Image)
     cleanup.attempted.add(identifier)
     run_docker(root, runner, "container", "rm", identifier)
-    cleanup.notes.append(f"Removed obsolete stopped Project container {identifier}.")
+    cleanup.notes.append(
+        f"Removed obsolete stopped Project container {identifier}."
+    )
 
 
 def cleanup_stopped_containers(
@@ -106,7 +112,9 @@ def cleanup_stopped_containers(
         )
     except OSError, RuntimeError, ValueError, subprocess.TimeoutExpired:
         cleanup.pending = True
-        cleanup.notes.append("Stopped-container discovery unavailable; resources retained.")
+        cleanup.notes.append(
+            "Stopped-container discovery unavailable; resources retained."
+        )
         return cleanup
     for identifier in sorted(identifiers):
         if identifier in cleanup.attempted:

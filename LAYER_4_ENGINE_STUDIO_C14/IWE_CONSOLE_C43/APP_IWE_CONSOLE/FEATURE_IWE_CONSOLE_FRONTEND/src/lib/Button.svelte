@@ -1,5 +1,6 @@
 <script lang="ts">
-  let { children, disabled = false, type = 'button', class: className = '', onclick }: {
+  let { children, disabled = false, type =
+    'button', class: className = '', onclick }: {
     children: import('svelte').Snippet;
     disabled?: boolean;
     type?: 'button' | 'submit';
@@ -8,4 +9,5 @@
   } = $props();
 </script>
 
-<button class={className} {type} {disabled} {onclick}>{@render children()}</button>
+<button class={className} {type} {disabled}
+  {onclick}>{@render children()}</button>

@@ -4,15 +4,23 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_3_LEAN_TRANSLATOR_C84._package__shared import framing_to_lean
-from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_3_MERMAID_RENDERER_C87._package__shared import framing_to_mermaid
-from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_2_SPEC_READING_C83.SPECIFICATION_MODEL_C85._package__shared import parse_framing
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_3_LEAN_TRANSLATOR_C84._package__shared import (
+    framing_to_lean,
+)
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_3_MERMAID_RENDERER_C87._package__shared import (
+    framing_to_mermaid,
+)
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_2_SPEC_READING_C83.SPECIFICATION_MODEL_C85._package__shared import (
+    parse_framing,
+)
 
-CONTRACT = 'declare_framing_contract(delimiter=[45,45,45], line_endings=[[10],[13,10]])'
-SOLUTION = ('declare_framing_solution(opening_prefixes=[[45,45,45,10],[45,45,45,13,10]], '
-            'closing_prefixes=[[13,10,45,45,45,13,10],[13,10,45,45,45,10],'
-            '[10,45,45,45,13,10],[10,45,45,45,10]])')
-LEAN = shutil.which('lean')
+CONTRACT = "declare_framing_contract(delimiter=[45,45,45], line_endings=[[10],[13,10]])"
+SOLUTION = (
+    "declare_framing_solution(opening_prefixes=[[45,45,45,10],[45,45,45,13,10]], "
+    "closing_prefixes=[[13,10,45,45,45,13,10],[13,10,45,45,45,10],"
+    "[10,45,45,45,13,10],[10,45,45,45,10]])"
+)
+LEAN = shutil.which("lean")
 WITNESSES = (
     (b'---\na: b\n---\nbody\x00\xff', (4, 8, 13), b'body\x00\xff'),
     (b'---\r\na: b\r\n---\r\nbody', (5, 9, 16), b'body'),
@@ -26,10 +34,13 @@ WITNESSES = (
 
 
 def _overlap_model():
-    source = ('declare_framing_solution(opening_prefixes=[[35,10]], '
-              'closing_prefixes=[[10,35],[10,35,10]])')
-    return framing_to_lean(parse_framing(source, 'solution'), 'solution').replace(
-        'CarrierBodySolution', 'OverlapSolution')
+    source = (
+        "declare_framing_solution(opening_prefixes=[[35,10]], "
+        "closing_prefixes=[[10,35],[10,35,10]])"
+    )
+    return framing_to_lean(
+        parse_framing(source, "solution"), "solution"
+    ).replace("CarrierBodySolution", "OverlapSolution")
 
 
 class CarrierFramingTests(unittest.TestCase):
@@ -47,7 +58,9 @@ class CarrierFramingTests(unittest.TestCase):
             with self.subTest(source=source), self.assertRaises(ValueError):
                 parse_framing(source, 'contract')
         with self.assertRaises(ValueError):
-            framing_to_lean({'delimiter': (45,), 'line_endings': ((10,),)}, 'solution')
+            framing_to_lean(
+                {"delimiter": (45,), "line_endings": ((10,),)}, "solution"
+            )
 
     def test_mermaid_shows_scanner_and_outcomes(self):
         diagram = framing_to_mermaid(parse_framing(SOLUTION, 'solution'))
@@ -57,8 +70,10 @@ class CarrierFramingTests(unittest.TestCase):
 
     @unittest.skipUnless(LEAN, 'Lean executable unavailable')
     def test_generated_models_match_formal_witnesses(self):
-        generated = [framing_to_lean(parse_framing(src, role), role)
-                     for src, role in ((CONTRACT, 'contract'), (SOLUTION, 'solution'))]
+        generated = [
+            framing_to_lean(parse_framing(src, role), role)
+            for src, role in ((CONTRACT, "contract"), (SOLUTION, "solution"))
+        ]
         checks = []
         for ns in ('CarrierBodyContract', 'CarrierBodySolution'):
             for raw, bounds, body in WITNESSES:
@@ -68,10 +83,19 @@ class CarrierFramingTests(unittest.TestCase):
                 checks.append(f'{ns}.bounds {value} == {bound_form}')
                 checks.append(f'{ns}.body {value} == {ns}.Outcome.{outcome}')
         alternate = (
-            ('contract', 'declare_framing_contract(delimiter=[35], line_endings=[[10]])',
-             'CarrierBodyContract'),
-            ('solution', ('declare_framing_solution(opening_prefixes=[[35,10]], '
-                          'closing_prefixes=[[10,35,10]])'), 'CarrierBodySolution'),
+            (
+                "contract",
+                "declare_framing_contract(delimiter=[35], line_endings=[[10]])",
+                "CarrierBodyContract",
+            ),
+            (
+                "solution",
+                (
+                    "declare_framing_solution(opening_prefixes=[[35,10]], "
+                    "closing_prefixes=[[10,35,10]])"
+                ),
+                "CarrierBodySolution",
+            ),
         )
         for role, source, ns in alternate:
             generated.append(framing_to_lean(parse_framing(source, role), role)

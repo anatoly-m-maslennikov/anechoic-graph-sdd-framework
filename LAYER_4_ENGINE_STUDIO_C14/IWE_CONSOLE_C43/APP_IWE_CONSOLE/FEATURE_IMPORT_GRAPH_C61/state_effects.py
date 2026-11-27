@@ -12,6 +12,7 @@ import tokenize
 
 from .python_state_cases import python_state_cases
 from .source import _stat_signature
+from .state_results import _finding, _lean_case, _unresolved
 from .web_state_cases import web_state_cases
 
 
@@ -38,21 +39,44 @@ def _declared_state(owner, ownership):
 
 def _policy(path, ownership):
     owner = ownership.owner(path) if ownership is not None else None
-    owner_name = owner["id"] if owner is not None else PurePosixPath(path).parent.as_posix()
+    owner_name = (
+        owner["id"]
+        if owner is not None
+        else PurePosixPath(path).parent.as_posix()
+    )
     value = _declared_state(owner, ownership)
     mode, channels = "local", {}
     if isinstance(value, str):
         mode = value
-    elif isinstance(value, Mapping) and not set(value) - {"mode", "channels", "reads", "writes"}:
+    elif isinstance(value, Mapping) and not set(value) - {
+        "mode",
+        "channels",
+        "reads",
+        "writes",
+    }:
         mode, channels = value.get("mode", "local"), value.get("channels", {})
     elif value is not None:
         raise ValueError("invalid boundaries.state declaration")
-    if (mode not in ("local", "pure") or not isinstance(channels, Mapping)
-            or any(not isinstance(name, str) or not name or access not in ("r", "w", "rw")
-                   for name, access in channels.items()) or (mode == "pure" and channels)):
+    if (
+        mode not in ("local", "pure")
+        or not isinstance(channels, Mapping)
+        or any(
+            not isinstance(name, str)
+            or not name
+            or access not in ("r", "w", "rw")
+            for name, access in channels.items()
+        )
+        or (mode == "pure" and channels)
+    ):
         raise ValueError("invalid boundaries.state mode or channel grant")
-    return {"kind": mode, "owner": owner_name,
-            "grants": [{"channel": name, "mode": access} for name, access in channels.items()]}
+    return {
+        "kind": mode,
+        "owner": owner_name,
+        "grants": [
+            {"channel": name, "mode": access}
+            for name, access in channels.items()
+        ],
+    }
 
 
 def _read(root, path, source):
@@ -68,7 +92,9 @@ def _read(root, path, source):
         else:
             content = file.read_text(encoding="utf-8")
     except FileNotFoundError as error:
-        raise _SourceVersionChanged("source removed after graph capture") from error
+        raise _SourceVersionChanged(
+            "source removed after graph capture"
+        ) from error
     if _stat_signature(file) != source.signature:
         raise _SourceVersionChanged("source changed during state analysis")
     return content
@@ -78,7 +104,11 @@ def _no_ops(cases, text, marker):
     lines = text.splitlines()
     for case in cases:
         line = case["line"] - 2
-        if case["action"] != "<module>" and 0 <= line < len(lines) and lines[line].strip() == marker:
+        if (
+            case["action"] != "<module>"
+            and 0 <= line < len(lines)
+            and lines[line].strip() == marker
+        ):
             case["declaredNoOp"] = True
     return cases
 
@@ -86,19 +116,32 @@ def _no_ops(cases, text, marker):
 def _call_sites(code_units, calls):
     if code_units is None:
         return None
-    paths = {key: module.removeprefix('module:') for key, module, *_ in code_units}
+    paths = {
+        key: module.removeprefix("module:") for key, module, *_ in code_units
+    }
     matches = defaultdict(lambda: defaultdict(set))
     for caller, callee, line, column in calls:
         matches[paths[caller]][line, column].add(callee)
-    return {path: {site: next(iter(targets)) for site, targets in sites.items() if len(targets) == 1}
-            for path, sites in matches.items()}
+    return {
+        path: {
+            site: next(iter(targets))
+            for site, targets in sites.items()
+            if len(targets) == 1
+        }
+        for path, sites in matches.items()
+    }
 
 
 def _web_cases(web, sites):
     if sites is None:
         return web_state_cases(web)
-    links = {path: [[line, column, unit] for (line, column), unit in sites.get(path, {}).items()]
-             for path in web}
+    links = {
+        path: [
+            [line, column, unit]
+            for (line, column), unit in sites.get(path, {}).items()
+        ]
+        for path in web
+    }
     return web_state_cases(web, links)
 
 
@@ -107,120 +150,168 @@ def _inputs(sources, ownership, read_source, sites):
     for path, source in sources.items():
         try:
             if source.status in ("read_error", "parse_error"):
-                raise ValueError(source.error_message or source.status.replace("_", " "))
+                raise ValueError(
+                    source.error_message or source.status.replace("_", " ")
+                )
             text = read_source(path)
             policies[path] = _policy(path, ownership)
             if source.language == "python":
                 calls = None if sites is None else sites.get(path, {})
-                python[path] = _no_ops(python_state_cases(text, calls), text, "# anechoic: no-op")
+                python[path] = _no_ops(
+                    python_state_cases(text, calls), text, "# anechoic: no-op"
+                )
             else:
                 web[path] = text
-        except (OSError, LookupError, UnicodeError, SyntaxError, ValueError) as error:
+        except (
+            OSError,
+            LookupError,
+            UnicodeError,
+            SyntaxError,
+            ValueError,
+        ) as error:
             problems[path] = str(error)
             _diagnostic(f"{path}: {error}")
     if web:
         try:
-            python.update({path: _no_ops(cases, web[path], "// anechoic: no-op")
-                           for path, cases in _web_cases(web, sites).items()})
+            python.update(
+                {
+                    path: _no_ops(cases, web[path], "// anechoic: no-op")
+                    for path, cases in _web_cases(web, sites).items()
+                }
+            )
         except (OSError, RuntimeError, ValueError) as error:
             _diagnostic(str(error))
             problems.update(dict.fromkeys(web, str(error)))
     return python, policies, problems
 
 
-def _lean_case(path, case, policy, units):
-    result = {
-        "sourcePath": path, "line": case["line"], "input": case["input"],
-        "reachable": case["reachable"], "declaredNoOp": case["declaredNoOp"],
-        "complete": case["complete"] and isinstance(case["input"], dict),
-        "events": [{**event, "name": policy["owner"] if event["name"] == "$owner" else event["name"]}
-                   for event in case["events"]],
-        "policy": policy,
-    }
-    if case.get('inlineable'):
-        unit = units.get((path, case['line'], case['column']))
-        if unit is not None:
-            result['unit'] = unit
-    return result
-
-
 def _check(lean, cases):
-    environment = {key: value for key, value in os.environ.items() if key not in {"LEAN_PATH", "LEAN_SRC_PATH"}}
+    environment = {
+        key: value
+        for key, value in os.environ.items()
+        if key not in {"LEAN_PATH", "LEAN_SRC_PATH"}
+    }
     timeout = None if os.getenv("ANECHOIC_TEST_IMAGE_DEADLINES") == "0" else 60
     result = subprocess.run(
-        [lean, "--run", str(_CHECKER)], input=json.dumps(cases, allow_nan=False), text=True,
-        capture_output=True, check=True, timeout=timeout, cwd=_CHECKER.parent, env=environment,
+        [lean, "--run", str(_CHECKER)],
+        input=json.dumps(cases, allow_nan=False),
+        text=True,
+        capture_output=True,
+        check=True,
+        timeout=timeout,
+        cwd=_CHECKER.parent,
+        env=environment,
     )
     output = json.loads(result.stdout)
     if not isinstance(output, list) or len(output) != len(cases):
         raise ValueError("Lean returned the wrong number of state results")
     for case, row in zip(cases, output, strict=True):
-        if not isinstance(row, dict) or any(row.get(key) != case[key] for key in ("sourcePath", "line", "input")):
+        if not isinstance(row, dict) or any(
+            row.get(key) != case[key]
+            for key in ("sourcePath", "line", "input")
+        ):
             raise ValueError("Lean result does not match its source case")
     return output
 
 
-def _unresolved(path, source, detail):
-    return (f"module:{path}", path, source.language, "<module>", 1, None,
-            "unresolved", False, "[]", "[]", detail)
+def _actions(paths, policies, code_units):
+    units = {
+        (module.removeprefix("module:"), line, column): key
+        for key, module, kind, _, line, column in code_units or ()
+        if kind != "class"
+    }
+    actions = [
+        (case["action"], _lean_case(path, case, policies[path], units))
+        for path, items in paths.items()
+        for case in items
+    ]
+    return actions
 
 
-def _finding(source, action, case, result, *, graph_mode):
-    path = case["sourcePath"]
-    status = result["status"]
-    detail = "Control flow, effects, or input are not fully modeled" if status == "unresolved" else None
-    witness = None if case["input"] is None else json.dumps(case["input"])
-    violations = result["violations"] if case["reachable"] and case["complete"] else []
-    events = result["events"] if graph_mode else case["events"]
-    for event in (*events, *violations):
-        if event.get('sourcePath') is None:
-            event.pop('sourcePath', None)
-    if action == "<module>" and status == "deadEnd":
-        return None
-    return (f"module:{path}", path, source.language, action, case["line"], witness, status,
-            status == "deadEnd", json.dumps(events), json.dumps(violations), detail)
+def _findings(problems, selected, actions, verified, code_units):
+    return [
+        *(
+            _unresolved(path, selected[path], detail)
+            for path, detail in problems.items()
+        ),
+        *(
+            finding
+            for (action, case), result in zip(actions, verified, strict=True)
+            if (
+                finding := _finding(
+                    selected[case["sourcePath"]],
+                    action,
+                    case,
+                    result,
+                    graph_mode=code_units is not None,
+                )
+            )
+            is not None
+        ),
+    ]
 
 
-def analyze_state(root, sources, ownership=None, *, read_source=None,
-                  code_units=None, calls=(), require_lean=False):
-    """Return checkable state evidence for the existing captured Module nodes."""
-    selected = {path: source for path, source in sources.items() if source.language in _LANGUAGES}
+def _find_lean(selected, require_lean):
     if not selected:
-        return []
+        return None
     lean = shutil.which(os.getenv("LEAN_BIN") or "lean")
     if lean is None:
         detail = "Lean executable unavailable on PATH"
         if require_lean:
             raise RuntimeError(detail)
         _diagnostic(detail)
-        return [_unresolved(path, source, detail) for path, source in selected.items()]
+        return None
+    return lean
+
+
+def _check_actions(lean, actions):
+    return _check(lean, [case for _, case in actions]) if actions else []
+
+
+def analyze_state(
+    root,
+    sources,
+    ownership=None,
+    *,
+    read_source=None,
+    code_units=None,
+    calls=(),
+    require_lean=False,
+):
+    """Return state evidence for captured Module nodes."""
+    selected = {
+        path: source
+        for path, source in sources.items()
+        if source.language in _LANGUAGES
+    }
+    lean = _find_lean(selected, require_lean)
+    if lean is None:
+        detail = "Lean executable unavailable on PATH"
+        return [
+            _unresolved(path, source, detail)
+            for path, source in selected.items()
+        ]
     if read_source is None:
         root = Path(root).resolve()
 
         def read_source(path):
             return _read(root, path, selected[path])
-    paths, policies, problems = _inputs(selected, ownership, read_source, _call_sites(code_units, calls))
+
+    paths, policies, problems = _inputs(
+        selected, ownership, read_source, _call_sites(code_units, calls)
+    )
     if require_lean and problems:
         raise RuntimeError("State inputs could not be analyzed; see stderr")
-    units = {(module.removeprefix('module:'), line, column): key
-             for key, module, kind, _, line, column in code_units or () if kind != 'class'}
-    actions = [
-        (case["action"], _lean_case(path, case, policies[path], units))
-        for path, items in paths.items()
-        for case in items
-    ]
-    cases = [case for _, case in actions]
+    actions = _actions(paths, policies, code_units)
     try:
-        verified = _check(lean, cases) if cases else []
+        verified = _check_actions(lean, actions)
     except (OSError, subprocess.SubprocessError, ValueError) as error:
         detail = getattr(error, "stderr", None) or str(error)
         if require_lean:
             raise RuntimeError(f"Lean check failed: {detail}") from error
         _diagnostic(f"Lean check failed: {detail}")
-        return [_unresolved(path, source, "Lean check failed") for path, source in selected.items()]
-    return [
-        *(_unresolved(path, selected[path], detail) for path, detail in problems.items()),
-        *(finding for (action, case), result in zip(actions, verified, strict=True)
-          if (finding := _finding(selected[case["sourcePath"]], action, case, result,
-                                  graph_mode=code_units is not None)) is not None),
-    ]
+        return [
+            _unresolved(path, source, "Lean check failed")
+            for path, source in selected.items()
+        ]
+    return _findings(problems, selected, actions, verified, code_units)

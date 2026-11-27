@@ -50,9 +50,10 @@ def _unique_object(pairs):
 class ProjectMcpBackend:
     """Default seam: build/inspect/start one HTTP MCP service, never a worker."""
 
-    def __init__(self, *, build_if_missing: bool = True, build_timeout: float = 600.0) -> None:
+    def __init__(self, *, build_if_missing: bool = True, build_timeout: float = 600.0, settings=None) -> None:
         self.build_if_missing = build_if_missing
         self.build_timeout = build_timeout
+        self.settings = settings
 
     @staticmethod
     def _native_package(source_root, project_root, control_root=None):
@@ -84,7 +85,20 @@ class ProjectMcpBackend:
         if selection is not None and self._native_selection != selection:
             raise ImageError("IMAGE_INPUT_UNAVAILABLE")
         self._native_source = source_root
-        manager = ImageManager(source_root, timeout=self.build_timeout, project_root=project_root)
+        options = {}
+        if self.settings is not None and self.settings.docker_context:
+            from MCP_PATCHBAY_C21.FEATURE_MCP.docker.image_docker_client import bounded_run
+
+            def executor(argv, **kwargs):
+                env = kwargs.get("env", {})
+                return bounded_run(
+                    [argv[0], "--context", self.settings.docker_context, *argv[1:]],
+                    cwd=kwargs["cwd"], timeout=kwargs["timeout"],
+                    capture_stdout=argv[1] != "build",
+                    buildx_config=env.get("BUILDX_CONFIG"),
+                )
+            options["executor"] = executor
+        manager = ImageManager(source_root, timeout=self.build_timeout, project_root=project_root, **options)
         image_id = manager.resolve(explicit_id=explicit_id, build_if_missing=self.build_if_missing,
                                    use_packaged_assets=True)
         packaged = True
@@ -151,12 +165,15 @@ class ProjectMcpBackend:
         return environment
 
     @staticmethod
-    def _docker_client_environment() -> dict[str, str]:
+    def _docker_client_environment(context=None) -> dict[str, str]:
         """Pass Docker client context without ambient service credentials."""
         environment = {"PATH": os.environ.get("PATH", "")}
         for name in _DOCKER_CLIENT_ENV:
             if name in os.environ:
                 environment[name] = os.environ[name]
+        if context is not None:
+            environment.pop("DOCKER_HOST", None)
+            environment["DOCKER_CONTEXT"] = context
         return environment
 
     @staticmethod
@@ -207,7 +224,8 @@ class ProjectMcpBackend:
             "docker", "ps", "--all", "--filter", f"label=org.anechoic.project={instance}",
             "--filter", "label=org.anechoic.service=mcp-http",
             "--format", "{{.ID}}",
-        ], timeout=remaining(), env=self._docker_client_environment())
+        ], timeout=remaining(), env=self._docker_client_environment(
+                self.settings.docker_context if self.settings is not None else None))
         identifiers = [line.strip() for line in listing.splitlines() if line.strip()]
         if len(identifiers) > 1 or any(_CONTAINER_ID.fullmatch(value) is None for value in identifiers):
             raise BackendError("DOCKER_PUBLICATION_FAILED")
@@ -215,7 +233,8 @@ class ProjectMcpBackend:
         for identifier in identifiers:
             raw = _bounded_run([
                 "docker", "container", "inspect", "--format", _INSPECT_FORMAT, identifier,
-            ], timeout=remaining(), env=self._docker_client_environment())
+            ], timeout=remaining(), env=self._docker_client_environment(
+                self.settings.docker_context if self.settings is not None else None))
             try:
                 value = json.loads(raw, object_pairs_hook=_unique_object)
                 if not isinstance(value, dict) or not self._projection_matches_selection(value, selection):
@@ -278,8 +297,15 @@ class ProjectMcpBackend:
             self._compose_project(selection), "-f", str(compose), "up", "-d", "--wait",
             "--wait-timeout", str(max(1, int(timeout))), "--no-recreate", "--no-deps", "mcp-http",
         ]
-        _bounded_run(command, timeout=float(timeout),
-                     env=self._environment(selection, image_id, fingerprint, port))
+        environment = self._environment(selection, image_id, fingerprint, port)
+        if self.settings is not None:
+            if self.settings.docker_context is not None:
+                environment.pop("DOCKER_HOST", None)
+                environment["DOCKER_CONTEXT"] = self.settings.docker_context
+            environment["ANECHOIC_LOG_LEVEL"] = self.settings.log_level
+            environment["ANECHOIC_WORKBENCH_STORAGE"] = self.settings.workbench_storage
+            environment["ANECHOIC_JOURNAL_STORAGE"] = self.settings.journal_storage
+        _bounded_run(command, timeout=float(timeout), env=environment)
 
     def start(self, selection, image_id, fingerprint, timeout, port):
         """Start development mode from its checked-in Compose carrier."""

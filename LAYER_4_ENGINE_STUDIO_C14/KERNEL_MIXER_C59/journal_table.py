@@ -199,7 +199,10 @@ def journal_events(connection: Any, author: str) -> list[Any]:
     if not exists:
         return []
     rows = connection.execute(
-        "SELECT event FROM main.work_journal WHERE author = ? ORDER BY position",
+        (
+            "SELECT event FROM main.work_journal WHERE author = ? ORDER BY "
+            "position"
+        ),
         [author],
     ).fetchall()
     return [json.loads(row[0]) for row in rows]

@@ -1,4 +1,7 @@
-"""Fast Functional selection retains whole packages and replays a Release seed."""
+(
+    'Fast Functional selection retains whole packages and replays a Release '
+    'seed.'
+)
 
 from datetime import datetime, timedelta, timezone
 import json
@@ -8,9 +11,13 @@ from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import patch
 
-from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.functional_history import select_fast
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.functional_history import (
+    select_fast,
+)
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.suite_cli import run_phase
-from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.suite_report import suite_report
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.suite_report import (
+    suite_report,
+)
 from unittest.mock import NonCallableMock
 
 
@@ -83,10 +90,13 @@ class FastSelectionTests(unittest.TestCase):
 
     def test_fast_rejected_for_nonfunctional_phase(self):
         args = NonCallableMock(
-            spec_set=['phase', 'functional_suite'],
+            spec_set=["phase", "functional_suite"],
             phase="unit",
-            functional_suite="fast")
-        self.assertEqual(1, run_phase(Path.cwd(), args, {}, lambda *args, **kwargs: 0))
+            functional_suite="fast",
+        )
+        self.assertEqual(
+            1, run_phase(Path.cwd(), args, {}, lambda *args, **kwargs: 0)
+        )
 
 
 if __name__ == "__main__":

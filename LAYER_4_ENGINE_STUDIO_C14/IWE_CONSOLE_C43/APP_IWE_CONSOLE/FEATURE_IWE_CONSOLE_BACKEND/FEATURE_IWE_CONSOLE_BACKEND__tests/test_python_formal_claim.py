@@ -73,7 +73,10 @@ class PythonFormalClaimTest(unittest.TestCase):
             'declare_relation(relation_name="PRECEDES", inverse_alias="FOLLOWS", '
             'source_endpoint={"level": "instances"}, target_endpoint={"level": "instances"})'
         )
-        python = 'relation(source="Relation//PRECEDES", name="HAS_INVERSE", target="Relation//FOLLOWS")'
+        python = (
+            'relation(source="Relation//PRECEDES", name="HAS_INVERSE", '
+            'target="Relation//FOLLOWS")'
+        )
         baseline = compile_relation_registry([declaration("python", native)])
         self.assertEqual(baseline.inverse, {"PRECEDES": "FOLLOWS"})
         self.assertEqual(
@@ -90,7 +93,10 @@ class PythonFormalClaimTest(unittest.TestCase):
             'source_endpoint={"level": %r}, target_endpoint={"level": %r})'
         )
         with patch(
-            "FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.legacy_claim_compiler__pub.compile_python_model_claim",
+            (
+                "FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.legacy_claim"
+                "_compiler__pub.compile_python_model_claim"
+            ),
             side_effect=AssertionError,
         ):
             instances = compile_relation_registry(

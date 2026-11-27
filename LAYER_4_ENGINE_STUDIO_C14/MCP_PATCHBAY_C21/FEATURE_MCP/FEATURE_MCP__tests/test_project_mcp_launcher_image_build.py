@@ -50,7 +50,9 @@ class ImageGoldenTests(ImageFixture, unittest.TestCase):
         self.assertEqual(IMAGE_ID, manager.resolve())
         self.assertEqual(1, len(list(parent.iterdir())))
 
-    def test_explicit_missing_or_symlink_build_root_refuses_without_fallback(self) -> None:
+    def test_explicit_missing_or_symlink_build_root_refuses_without_fallback(
+        self,
+    ) -> None:
         source = self.source_fixture()
         target = self.fixture_root / "real-temp"
         target.mkdir()
@@ -59,18 +61,29 @@ class ImageGoldenTests(ImageFixture, unittest.TestCase):
         for parent in (self.fixture_root / "missing-temp", alias):
             with self.subTest(parent=parent):
                 calls = []
+
                 def executor(argv, **_kwargs):
                     calls.append(tuple(argv))
                     return subprocess.CompletedProcess(argv, 0, "", "")
-                manager = ImageManager(source, executor=executor, uid=1000, gid=1000, platform="linux/amd64",
-                                       build_temp_root=parent, project_root=APP.parents[2])
+
+                manager = ImageManager(
+                    source,
+                    executor=executor,
+                    uid=1000,
+                    gid=1000,
+                    platform="linux/amd64",
+                    build_temp_root=parent,
+                    project_root=APP.parents[2],
+                )
                 with self.assertRaises(ImageError) as raised:
                     manager.resolve()
                 self.assertEqual("BUILD_FAILED", raised.exception.code)
                 self.assertFalse(any("build" in argv for argv in calls))
         self.assertEqual([], list(target.iterdir()))
 
-    def test_matching_image_requires_the_exact_schema_and_source_fingerprint_labels(self) -> None:
+    def test_matching_image_requires_the_exact_schema_and_source_fingerprint_labels(
+        self,
+    ) -> None:
         source = self.source_fixture()
         expected = self.manager(source, lambda *_a, **_k: None).identity()
         calls = []
@@ -78,28 +91,37 @@ class ImageGoldenTests(ImageFixture, unittest.TestCase):
         def executor(argv, **_kwargs):
             calls.append(tuple(argv))
             if "ls" in argv:
-                return subprocess.CompletedProcess(argv, 0, IMAGE_ID + "\n", "")
+                return subprocess.CompletedProcess(
+                    argv, 0, IMAGE_ID + "\n", ""
+                )
             labels = {
                 "org.anechoic.runtime.schema": "1",
                 "org.anechoic.runtime.fingerprint": expected.fingerprint,
                 "org.opencontainers.image.version": expected.version,
             }
-            inspection = json.dumps([{
-                "Id": IMAGE_ID,
-                "Created": "2026-10-21T14:15:16.987654321Z",
-                "RepoTags": [],
-                "Os": "linux",
-                "Architecture": "amd64",
-                "Config": {"Labels": labels},
-            }])
+            inspection = json.dumps(
+                [
+                    {
+                        "Id": IMAGE_ID,
+                        "Created": "2026-10-21T14:15:16.987654321Z",
+                        "RepoTags": [],
+                        "Os": "linux",
+                        "Architecture": "amd64",
+                        "Config": {"Labels": labels},
+                    }
+                ]
+            )
             return subprocess.CompletedProcess(argv, 0, inspection, "")
 
-        resolved = self.manager(source, executor).resolve(build_if_missing=False)
+        resolved = self.manager(source, executor).resolve(
+            build_if_missing=False
+        )
         self.assertEqual(IMAGE_ID, resolved)
         flattened = " ".join(" ".join(call) for call in calls)
         self.assertIn("label=org.anechoic.runtime.schema=1", flattened)
         self.assertIn(
-            f"label=org.anechoic.runtime.fingerprint={expected.fingerprint}", flattened
+            f"label=org.anechoic.runtime.fingerprint={expected.fingerprint}",
+            flattened,
         )
         self.assertNotIn(" build ", f" {flattened} ")
 
@@ -125,11 +147,16 @@ class ImageGoldenTests(ImageFixture, unittest.TestCase):
             }])
             return subprocess.CompletedProcess(argv, 0, inspection, "")
 
-        self.assertEqual(IMAGE_ID, self.manager(source, executor).resolve(build_if_missing=False))
+        self.assertEqual(
+            IMAGE_ID,
+            self.manager(source, executor).resolve(build_if_missing=False),
+        )
         self.assertFalse(any("build" in call for call in calls))
         self.assertFalse(any("prune" in call for call in calls))
 
-    def test_mutable_or_stale_explicit_images_refuse_without_docker_build(self) -> None:
+    def test_mutable_or_stale_explicit_images_refuse_without_docker_build(
+        self,
+    ) -> None:
         calls = []
 
         def executor(argv, **kwargs):
@@ -138,7 +165,10 @@ class ImageGoldenTests(ImageFixture, unittest.TestCase):
 
         manager = self.manager(APP.parents[2], executor)
         for value in ("anechoic-runtime:local", "sha256:" + "b" * 64):
-            with self.subTest(value=value), self.assertRaises(ImageError) as raised:
+            with (
+                self.subTest(value=value),
+                self.assertRaises(ImageError) as raised,
+            ):
                 manager.resolve(explicit_id=value)
             self.assertEqual("IMAGE_REFUSED", raised.exception.code)
         self.assertFalse(any("build" in command for command, _kwargs in calls))
@@ -205,7 +235,10 @@ class ImageGoldenTests(ImageFixture, unittest.TestCase):
     def test_packaged_assets_can_build_without_resolving_a_predecessor(self) -> None:
         source = self.source_fixture()
         assets = (TOOL_REGISTRY,)
-        payloads = {path: json.dumps({"asset": Path(path).stem}).encode() for path in assets}
+        payloads = {
+            path: json.dumps({"asset": Path(path).stem}).encode()
+            for path in assets
+        }
         for path, payload in payloads.items():
             (source / path).write_bytes(payload)
         builds = []
@@ -279,9 +312,13 @@ class ImageGoldenTests(ImageFixture, unittest.TestCase):
         with patch.dict(os.environ, caller, clear=True):
             self.assertEqual(IMAGE_ID, manager.resolve())
         self.assertEqual(identity, manager.identity())
-        build, build_kwargs = next((call for call in calls if "build" in call[0]))
+        build, build_kwargs = next(
+            (call for call in calls if "build" in call[0])
+        )
         state = Path(build_kwargs["env"]["BUILDX_CONFIG"])
-        self.assertEqual(build[build.index("--iidfile") + 1], str(state.parent / "image.id"))
+        self.assertEqual(
+            build[build.index("--iidfile") + 1], str(state.parent / "image.id")
+        )
         self.assertEqual("buildx", state.name)
         self.assertTrue(state.is_dir())
         self.assertEqual(dict(client, BUILDX_CONFIG=str(state)), build_kwargs["env"])

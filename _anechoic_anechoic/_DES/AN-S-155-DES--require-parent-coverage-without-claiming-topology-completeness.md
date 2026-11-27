@@ -8,8 +8,8 @@ context:
   lens: DES
 state:
   status: active
-  version: 30
-  updated_at: '2026-11-22T11:00:54.983176+00:00'
+  version: 31
+  updated_at: '2026-11-27T17:49:09.957980+00:00'
 relations:
   CONTRIBUTES_TO:
   - AN-S-1501
@@ -26,7 +26,8 @@ Require parent coverage without claiming topology completeness
 
 a permitted parent is:
 
-- the active Project Goal Atom for a Project-owned Tier 0 Atom;
+- the active Project Manifest for a Project-owned Tier 0 Atom, or the active
+  standalone Project Goal for an existing Project;
 - an applicable lower-global-tier Atom **in** the same structural scope, or a Tier 0 Requirement for a same-Scope Tier 0 Method, Evaluation, Delivery, or Operations Atom when the applicable typed relation admits it; **or**
 - an Atom permitted by the global tier topology **in** an ancestor structural scope.
 

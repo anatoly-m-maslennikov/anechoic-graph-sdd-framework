@@ -7,12 +7,31 @@ from starlette.concurrency import run_in_threadpool
 from starlette.responses import JSONResponse
 
 from .accepted_model import generation_rows
-from .carrier_checkpoint import archive_checkpoint_paths, checkpoint_exists, update_checkpoint
+from .carrier_checkpoint import (
+    archive_checkpoint_paths,
+    checkpoint_exists,
+    update_checkpoint,
+)
 from .generation import GenerationBaseChanged, _digest
 from .generation_batch import unpack_batch
-from .ingestion_issues import archive_path, clear_archive_failure, duplicate_dependencies, replace_issues
-from .native_atoms import DuplicateNativeAtom, stage_atom_rows, validate_native_snapshot, write_staged_atoms
-from .native_delta import DeltaReconciliationRequired, _inverse, _validate_edges, apply_native_delta
+from .ingestion_issues import (
+    archive_path,
+    clear_archive_failure,
+    duplicate_dependencies,
+    replace_issues,
+)
+from .native_atoms import (
+    DuplicateNativeAtom,
+    stage_atom_rows,
+    validate_native_snapshot,
+    write_staged_atoms,
+)
+from .native_delta import (
+    DeltaReconciliationRequired,
+    _inverse,
+    _validate_edges,
+    apply_native_delta,
+)
 from .native_graph import replace_native_graph
 from .realization_projection import has_table, restore_property_graph
 
@@ -20,7 +39,9 @@ from .realization_projection import has_table, restore_property_graph
 def archive_pending(connection):
     if not has_table(connection, "main", "ops_archive_state"):
         return False
-    row = connection.execute("SELECT pending FROM ops_archive_state").fetchone()
+    row = connection.execute(
+        "SELECT pending FROM ops_archive_state"
+    ).fetchone()
     return bool(row and row[0])
 
 
@@ -34,18 +55,26 @@ def refresh_archive_versions(connection):
 
 
 def seed_archive_versions(connection, versions):
-    if versions is None or has_table(connection, "main", "ops_archive_versions"):
+    if versions is None or has_table(
+        connection, "main", "ops_archive_versions"
+    ):
         return
     connection.execute("""CREATE TABLE main.ops_archive_versions
         (atom_id VARCHAR PRIMARY KEY, max_version BIGINT NOT NULL)""")
     if versions:
-        connection.execute("""INSERT INTO main.ops_archive_versions
-            SELECT unnest(?::VARCHAR[]), unnest(?::BIGINT[])""", [list(versions), list(versions.values())])
+        connection.execute(
+            """INSERT INTO main.ops_archive_versions
+            SELECT unnest(?::VARCHAR[]), unnest(?::BIGINT[])""",
+            [list(versions), list(versions.values())],
+        )
 
 
 def backfill_archive_versions(connection):
-    if (not has_table(connection, "main", "ops_archive_versions")
-            and not archive_pending(connection) and has_table(connection, "main", "mrt_atom_references")):
+    if (
+        not has_table(connection, "main", "ops_archive_versions")
+        and not archive_pending(connection)
+        and has_table(connection, "main", "mrt_atom_references")
+    ):
         refresh_archive_versions(connection)
 
 
@@ -78,11 +107,19 @@ def change_archive_pending(connection, base, pending):
     connection.execute("BEGIN TRANSACTION")
     try:
         row = connection.execute("SELECT id FROM ops_generation").fetchone()
-        if (row is None or row[0] != base or not has_table(connection, "native_graph", "int_labels")
-                or (not pending and not archive_pending(connection))):
-            raise GenerationBaseChanged("Generation base changed or archive is complete")
+        if (
+            row is None
+            or row[0] != base
+            or not has_table(connection, "native_graph", "int_labels")
+            or (not pending and not archive_pending(connection))
+        ):
+            raise GenerationBaseChanged(
+                "Generation base changed or archive is complete"
+            )
         if not checkpoint_exists(connection):
-            raise ValueError("Archive transition requires a retained carrier checkpoint")
+            raise ValueError(
+                "Archive transition requires a retained carrier checkpoint"
+            )
         if pending:
             backfill_archive_versions(connection)
         set_archive_pending(connection, pending)
@@ -102,15 +139,21 @@ def _prepare_archive(data, manifest_sha256, model):
     if "batch_artifact" in data:
         unpack_batch(data, "anechoic-archive-")
         if data.pop("graph") is not None:
-            raise ValueError("Archive admission cannot replace the Realization Graph")
+            raise ValueError(
+                "Archive admission cannot replace the Realization Graph"
+            )
     snapshot = data["snapshot"]
     if _digest(snapshot) != data["snapshot_sha256"]:
         raise ValueError("Archive snapshot digest mismatch")
     bindings = json.loads(model)["bindings"]
     try:
-        atoms, relations = validate_native_snapshot(snapshot, manifest_sha256, bindings)
+        atoms, relations = validate_native_snapshot(
+            snapshot, manifest_sha256, bindings
+        )
     except DuplicateNativeAtom as error:
-        raise DeltaReconciliationRequired("Archive snapshot contains a duplicate Atom group") from error
+        raise DeltaReconciliationRequired(
+            "Archive snapshot contains a duplicate Atom group"
+        ) from error
     if any(row.status_group != "Archived" for row in atoms):
         raise ValueError("Archive admission accepts only Archived Atoms")
     if snapshot.get("spec_sizes") or snapshot.get("lifecycle_lenses"):
@@ -119,11 +162,19 @@ def _prepare_archive(data, manifest_sha256, model):
     keys = ("source_kind", "source_ref", "target_kind", "target_ref", "relation_type", "derived")
     edges = [tuple(getattr(row, key) for key in keys) for row in relations]
     _validate_edges(edges, inverse)
-    if replacing and any("09_archived" not in a.relative_path.split("/") for a in atoms):
-        raise ValueError("Archive replacement requires canonical archive paths")
-    paths = [row["relative_path"] for row in snapshot.get("ingestion_issues", [])]
+    if replacing and any(
+        "09_archived" not in a.relative_path.split("/") for a in atoms
+    ):
+        raise ValueError(
+            "Archive replacement requires canonical archive paths"
+        )
+    paths = [
+        row["relative_path"] for row in snapshot.get("ingestion_issues", [])
+    ]
     if replacing and any(not archive_path(path) for path in paths):
-        raise ValueError("Archive replacement requires canonical archive issue paths")
+        raise ValueError(
+            "Archive replacement requires canonical archive issue paths"
+        )
     return replacing
 
 
@@ -148,14 +199,23 @@ def _validate_archive_issues(connection, snapshot):
 
 
 def _check_archive_duplicates(connection, snapshot):
-    excluded = [row["atom_ref"] for row in snapshot.get("ingestion_issues", []) if row["code"] == "duplicate_revision"]
-    collision = connection.execute('''SELECT 1 FROM main.mrt_atom_references n
+    excluded = [
+        row["atom_ref"]
+        for row in snapshot.get("ingestion_issues", [])
+        if row["code"] == "duplicate_revision"
+    ]
+    collision = connection.execute(
+        """SELECT 1 FROM main.mrt_atom_references n
         JOIN int_admission_atoms a USING (reference)
         UNION ALL SELECT 1 FROM main.mrt_atom_references n JOIN int_admission_atoms a USING (exact_ref)
         UNION ALL SELECT 1 FROM main.mrt_atom_references n
-        WHERE exact_ref IN (SELECT unnest(?::VARCHAR[])) LIMIT 1''', [excluded]).fetchone()
+        WHERE exact_ref IN (SELECT unnest(?::VARCHAR[])) LIMIT 1""",
+        [excluded],
+    ).fetchone()
     if collision or duplicate_dependencies(connection, snapshot, set()):
-        raise DeltaReconciliationRequired("Archive Atom collides with another Atom phase")
+        raise DeltaReconciliationRequired(
+            "Archive Atom collides with another Atom phase"
+        )
 
 
 def _insert_edges(connection, edges):
@@ -180,15 +240,22 @@ def _remove_canonical_archive(connection):
 
 def _archive_checkpoint_paths(connection, data, *, replacing):
     if not checkpoint_exists(connection):
-        raise ValueError("Archive admission requires a retained carrier checkpoint")
+        raise ValueError(
+            "Archive admission requires a retained carrier checkpoint"
+        )
     snapshot = data["snapshot"]
     paths = set(data["carrier_hashes"])
     if replacing:
         removed = archive_checkpoint_paths(connection)
         if duplicate_dependencies(connection, snapshot, removed):
-            raise DeltaReconciliationRequired("Archive replacement touches a duplicate Atom group")
+            raise DeltaReconciliationRequired(
+                "Archive replacement touches a duplicate Atom group"
+            )
         paths.update(removed)
-    return [[PurePosixPath(path).parent.as_posix(), PurePosixPath(path).name] for path in sorted(paths)]
+    return [
+        [PurePosixPath(path).parent.as_posix(), PurePosixPath(path).name]
+        for path in sorted(paths)
+    ]
 
 
 def admit_archive(connection, data, binding, replacing):
@@ -251,8 +318,12 @@ def archive_route(connection, instance_id, manifest_sha256, lock, read_object, e
                         generation = apply_native_delta(connection, data, manifest_sha256, archive=True)
                     else:
                         if data["unchanged"] is not True:
-                            raise ValueError("Invalid unchanged archive result")
-                        generation = change_archive_pending(connection, data["base_generation"], False)
+                            raise ValueError(
+                                "Invalid unchanged archive result"
+                            )
+                        generation = change_archive_pending(
+                            connection, data["base_generation"], False
+                        )
             return JSONResponse({"result": {"generation": generation}})
         except GenerationBaseChanged as error:
             return error_response("generation_base_changed", str(error), 409)

@@ -37,8 +37,12 @@ class ImportOwnershipTest(unittest.TestCase):
             {
                 "owner/process.py": "class Original: pass\n",
                 "owner/owner__shared.py": "from .process import Original\n",
-                "bridge/private.py": "from owner.owner__shared import Original as Forwarded\n",
-                "bridge/bridge__shared.py": "from .private import Forwarded as Alias\n",
+                "bridge/private.py": (
+                    "from owner.owner__shared import Original as Forwarded\n"
+                ),
+                "bridge/bridge__shared.py": (
+                    "from .private import Forwarded as Alias\n"
+                ),
                 "caller/bad.py": "from bridge.bridge__shared import Alias\n",
                 "caller/good.py": "from owner.owner__shared import Original\n",
                 "caller/caller__shared.py": "pass\n",
@@ -56,19 +60,23 @@ class ImportOwnershipTest(unittest.TestCase):
         result = _lint(
             {
                 "owner/owner__shared.py": "class Original: pass\n",
-                "bridge/bridge__shared.py": "from owner.owner__shared import Original as Alias\n"
-                "def Alias():\n    return 1\n"
-                "def wrap():\n    return Alias()\n",
-                "caller/good.py": "from bridge.bridge__shared import Alias, wrap\n",
+                "bridge/bridge__shared.py": (
+                    "from owner.owner__shared import Original as Alias\ndef "
+                    "Alias():\n    return 1\ndef wrap():\n    return Alia"
+                    "s()\n"
+                ),
+                "caller/good.py": (
+                    "from bridge.bridge__shared import Alias, wrap\n"
+                ),
                 "caller/caller__public.py": "pass\n",
             }
         )
         self.assertEqual(0, result.returncode, result.stderr)
 
     def test_web_forwarding_uses_the_exported_and_original_names(self):
-        frontend = (
-            ROOT
-            / "LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_FRONTEND"
+        frontend = ROOT / (
+            "LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEA"
+            "TURE_IWE_CONSOLE_FRONTEND"
         )
         if shutil.which("node") is None or not all(
             (frontend / "node_modules" / name / "package.json").is_file()
@@ -78,10 +86,18 @@ class ImportOwnershipTest(unittest.TestCase):
         result = _lint(
             {
                 "owner/private.ts": "export type Original = number;\n",
-                "owner/owner__shared.ts": "export type { Original } from './private';\n",
-                "bridge/bridge__shared.ts": "import type { Original as Local } from '../owner/owner__shared';\n"
-                "export type { Local as Alias };\n",
-                "caller/view.svelte": '<script lang="ts">import type { Alias } from "../bridge/bridge__shared";</script>',
+                "owner/owner__shared.ts": (
+                    "export type { Original } from './private';\n"
+                ),
+                "bridge/bridge__shared.ts": (
+                    "import type { Original as Local } from "
+                    "'../owner/owner__shared';\nexport type { Local as "
+                    "Alias };\n"
+                ),
+                "caller/view.svelte": (
+                    '<script lang="ts">import type { Alias } from '
+                    '"../bridge/bridge__shared";</script>'
+                ),
                 "caller/caller__shared.py": "pass\n",
             }
         )
@@ -126,7 +142,12 @@ class PackageEntryTest(unittest.TestCase):
             ("group", 0),
         ):
             self.assertIn(
-                f"Expected one __shared or __public entry in {folder}, found {count}",
+                (
+                    "Expected one __shared or __public entry in "
+                    f"{folder}"
+                    ", found "
+                    f"{count}"
+                ),
                 diagnostics,
             )
         for folder in (

@@ -25,7 +25,10 @@ def _validate_forbidden_status_pairs(declaration):
     )
     if node is None:
         return
-    message = "forbidden_status_pairs requires distinct source/target pairs of nonempty trimmed status strings"
+    message = (
+        "forbidden_status_pairs requires distinct source/target pairs "
+        "of nonempty trimmed status strings"
+    )
     try:
         pairs = ast.literal_eval(node)
     except ValueError:
@@ -76,7 +79,8 @@ def _validate_relation(
                 ):
                     _fail(
                         declaration,
-                        f"{field} must map nonempty trimmed axis names to values",
+                        f"{field} must map nonempty trimmed "
+                        "axis names to values",
                     )
         if "inverse_axes" in arguments and not arguments.get("inverse_alias"):
             _fail(declaration, "inverse_axes requires inverse_alias")
@@ -143,7 +147,8 @@ def _validate_relation_endpoints(arguments, declaration):
         ):
             _fail(
                 declaration,
-                "endpoint_pairs requires a nonempty collection and excludes single endpoints",
+                "endpoint_pairs requires a nonempty collection "
+                "and excludes single endpoints",
             )
         for pair in pairs:
             if not isinstance(pair, dict) or set(pair) != {
@@ -152,7 +157,8 @@ def _validate_relation_endpoints(arguments, declaration):
             }:
                 _fail(
                     declaration,
-                    "endpoint pair requires source_endpoint and target_endpoint",
+                    "endpoint pair requires source_endpoint "
+                    "and target_endpoint",
                 )
             for key in ("source_endpoint", "target_endpoint"):
                 _validate_endpoint(pair[key], key, declaration)

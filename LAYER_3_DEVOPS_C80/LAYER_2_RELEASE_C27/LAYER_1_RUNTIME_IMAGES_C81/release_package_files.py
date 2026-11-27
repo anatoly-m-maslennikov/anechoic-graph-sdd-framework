@@ -12,14 +12,21 @@ from pathlib import Path, PurePosixPath
 
 from .release_assets import LocalReleaseError
 
-_BOOTSTRAP = Path("LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/start_mcp.py")
+_BOOTSTRAP = Path(
+    (
+        "LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/"
+        "FEATURE_MCP/docker/start_mcp.py"
+    )
+)
 
 
 def _relative(value: object, *, label: str) -> Path:
     if not isinstance(value, str) or not value or "\x00" in value:
         raise LocalReleaseError(f"local-release-{label}-invalid")
     path = PurePosixPath(value)
-    if path.is_absolute() or any(part in {"", ".", ".."} for part in path.parts):
+    if path.is_absolute() or any(
+        part in {"", ".", ".."} for part in path.parts
+    ):
         raise LocalReleaseError(f"local-release-{label}-invalid")
     return Path(*path.parts)
 
@@ -29,13 +36,17 @@ def _root(value: Path | str) -> Path:
     try:
         root = supplied.resolve(strict=True)
     except OSError as error:
-        raise LocalReleaseError("local-release-project-root-invalid") from error
+        raise LocalReleaseError(
+            "local-release-project-root-invalid"
+        ) from error
     if supplied.is_symlink() or not root.is_dir() or root == Path(root.anchor):
         raise LocalReleaseError("local-release-project-root-invalid")
     return root
 
 
-def _project_path(root: Path, relative: Path, *, label: str, require_exists: bool = False) -> Path:
+def _project_path(
+    root: Path, relative: Path, *, label: str, require_exists: bool = False
+) -> Path:
     candidate = root / relative
     try:
         resolved = candidate.resolve(strict=require_exists)
@@ -51,42 +62,80 @@ def _project_path(root: Path, relative: Path, *, label: str, require_exists: boo
 
 
 def _ignored(name: str) -> bool:
-    return name == ".DS_Store" or name.startswith((".env", ".venv-")) or name.endswith(".env")
+    return (
+        name == ".DS_Store"
+        or name.startswith((".env", ".venv-"))
+        or name.endswith(".env")
+    )
 
 
-def _walk_regular_files(root: Path, *, excluded_directories: frozenset[str] = frozenset(),
-                        excluded_root_prefix: tuple[str, ...] = (),
-                        excluded_root_directories: frozenset[str] = frozenset(),
-                        excluded_root_files: frozenset[str] = frozenset()) -> list[Path]:
+def _regular_entries(
+    base: Path,
+    root: Path,
+    names: list[str],
+    excluded_root_files: frozenset[str],
+) -> list[Path]:
+    collected: list[Path] = []
+    for name in names:
+        if _ignored(name) or (base == root and name in excluded_root_files):
+            continue
+        child = base / name
+        try:
+            mode = child.lstat().st_mode
+        except OSError as error:
+            raise LocalReleaseError(
+                "local-release-source-read-failed"
+            ) from error
+        if stat.S_ISLNK(mode) or not stat.S_ISREG(mode):
+            raise LocalReleaseError("local-release-source-entry-unsafe")
+        collected.append(child)
+    return collected
+
+
+def _walk_regular_files(
+    root: Path,
+    *,
+    excluded_directories: frozenset[str] = frozenset(),
+    excluded_root_prefix: tuple[str, ...] = (),
+    excluded_root_directories: frozenset[str] = frozenset(),
+    excluded_root_files: frozenset[str] = frozenset(),
+) -> list[Path]:
     def fail(error: OSError) -> None:
         raise LocalReleaseError("local-release-source-read-failed") from error
 
     collected: list[Path] = []
-    for directory, directories, names in os.walk(root, followlinks=False, onerror=fail):
+    for directory, directories, names in os.walk(
+        root, followlinks=False, onerror=fail
+    ):
         base = Path(directory)
-        directories[:] = [name for name in directories if not _ignored(name)
-                          and name.casefold() not in excluded_directories
-                          and (base != root or name.casefold() not in excluded_root_directories)
-                          and (base != root or not excluded_root_prefix or not name.casefold().startswith(excluded_root_prefix))]
+        directories[:] = [
+            name
+            for name in directories
+            if not _ignored(name)
+            and name.casefold() not in excluded_directories
+            and (
+                base != root
+                or name.casefold() not in excluded_root_directories
+            )
+            and (
+                base != root
+                or not excluded_root_prefix
+                or not name.casefold().startswith(excluded_root_prefix)
+            )
+        ]
         for name in directories:
             child = base / name
             if child.is_symlink():
                 raise LocalReleaseError("local-release-source-link-unsafe")
-        for name in names:
-            if _ignored(name) or (base == root and name in excluded_root_files):
-                continue
-            child = base / name
-            try:
-                mode = child.lstat().st_mode
-            except OSError as error:
-                raise LocalReleaseError("local-release-source-read-failed") from error
-            if stat.S_ISLNK(mode) or not stat.S_ISREG(mode):
-                raise LocalReleaseError("local-release-source-entry-unsafe")
-            collected.append(child)
+        collected.extend(
+            _regular_entries(base, root, names, excluded_root_files)
+        )
     return sorted(collected)
 
 
-def _clear_target(target: Path, *, root: Path, preserve: frozenset[str], label: str) -> None:
+def _clear_target(
+    target: Path, *, root: Path, preserve: frozenset[str], label: str
+) -> None:
     if target == root or target.parent == target:
         raise LocalReleaseError(f"local-release-{label}-unsafe")
     if target.exists():
@@ -100,7 +149,9 @@ def _clear_target(target: Path, *, root: Path, preserve: frozenset[str], label: 
         _clear_owned(child, label=label)
 
 
-def _clear_owned(path: Path, *, label: str, remove_finder_metadata: bool = False) -> None:
+def _clear_owned(
+    path: Path, *, label: str, remove_finder_metadata: bool = False
+) -> None:
     """Clear one owned entry and retain ignored input files by default."""
 
     try:
@@ -116,11 +167,16 @@ def _clear_owned(path: Path, *, label: str, remove_finder_metadata: bool = False
         raise LocalReleaseError(f"local-release-{label}-unsafe")
     for child in path.iterdir():
         finder_metadata = (
-            remove_finder_metadata and child.name == ".DS_Store" and not child.is_symlink() and child.is_file()
+            remove_finder_metadata
+            and child.name == ".DS_Store"
+            and not child.is_symlink()
+            and child.is_file()
         )
         if _ignored(child.name) and not finder_metadata:
             continue
-        _clear_owned(child, label=label, remove_finder_metadata=remove_finder_metadata)
+        _clear_owned(
+            child, label=label, remove_finder_metadata=remove_finder_metadata
+        )
     try:
         path.rmdir()
     except OSError:
@@ -129,7 +185,14 @@ def _clear_owned(path: Path, *, label: str, remove_finder_metadata: bool = False
 
 def _target(root: Path, relative: Path, *, label: str) -> Path:
     target = _project_path(root, relative, label=label)
-    if target == root or target.parent == target or (target.parent == root and target.name.startswith((".anechoic_", "_anechoic_"))):
+    if (
+        target == root
+        or target.parent == target
+        or (
+            target.parent == root
+            and target.name.startswith((".anechoic_", "_anechoic_"))
+        )
+    ):
         raise LocalReleaseError("local-release-target-invalid")
     if target.exists() and (target.is_symlink() or not target.is_dir()):
         raise LocalReleaseError(f"local-release-{label}-unsafe")
@@ -151,14 +214,23 @@ def _copy_regular_file(entry: Path, source: Path, destination: Path) -> None:
     shutil.copy2(entry, target)
 
 
-def _copy_tree(source: Path, destination: Path, *, preserve: frozenset[str]) -> None:
-    if source.is_symlink() or not source.is_dir() or destination.is_symlink() or not destination.is_dir():
+def _copy_tree(
+    source: Path, destination: Path, *, preserve: frozenset[str]
+) -> None:
+    if (
+        source.is_symlink()
+        or not source.is_dir()
+        or destination.is_symlink()
+        or not destination.is_dir()
+    ):
         raise LocalReleaseError("local-release-copy-unsafe")
     for directory, directories, names in os.walk(source, followlinks=False):
         base = Path(directory)
         relative_directory = base.relative_to(source)
         directories[:] = [
-            name for name in directories if not _ignored(name) and not (base == source and name in preserve)
+            name
+            for name in directories
+            if not _ignored(name) and not (base == source and name in preserve)
         ]
         for name in directories:
             if (base / name).is_symlink():
@@ -179,29 +251,54 @@ def _copy_tree(source: Path, destination: Path, *, preserve: frozenset[str]) -> 
 
 
 def _file_identity(path: Path) -> tuple[str, int]:
-    return hashlib.sha256(path.read_bytes()).hexdigest(), stat.S_IMODE(path.stat().st_mode)
+    return hashlib.sha256(path.read_bytes()).hexdigest(), stat.S_IMODE(
+        path.stat().st_mode
+    )
 
 
-def _verify_package(package: Path, expected: Mapping[str, tuple[str, int]], *,
-                    preserve: frozenset[str] = frozenset()) -> None:
+def _verify_package(
+    package: Path,
+    expected: Mapping[str, tuple[str, int]],
+    *,
+    preserve: frozenset[str] = frozenset(),
+) -> None:
     preserved_directories = frozenset(name.casefold() for name in preserve)
-    actual = {entry.relative_to(package).as_posix(): _file_identity(entry)
-              for entry in _walk_regular_files(package, excluded_root_directories=preserved_directories,
-                                                excluded_root_files=preserve)}
+    actual = {
+        entry.relative_to(package).as_posix(): _file_identity(entry)
+        for entry in _walk_regular_files(
+            package,
+            excluded_root_directories=preserved_directories,
+            excluded_root_files=preserve,
+        )
+    }
     if actual != expected:
         raise LocalReleaseError("local-release-package-verification-failed")
 
 
-def _install_bootstrap(root: Path, package: Path, expected: Mapping[str, tuple[str, int]]) -> None:
+def _install_bootstrap(
+    root: Path, package: Path, expected: Mapping[str, tuple[str, int]]
+) -> None:
     """Copy the verified restart script as data."""
-    source = _project_path(root, (package / _BOOTSTRAP).relative_to(root), label="bootstrap-source")
-    target = _project_path(root, Path(".anechoic_runtime/start_mcp.py"), label="bootstrap-target")
+    source = _project_path(
+        root,
+        (package / _BOOTSTRAP).relative_to(root),
+        label="bootstrap-source",
+    )
+    target = _project_path(
+        root, Path(".anechoic_runtime/start_mcp.py"), label="bootstrap-target"
+    )
     if target.exists() and not target.is_file():
         raise LocalReleaseError("local-release-bootstrap-target-unsafe")
     digest, mode = expected[_BOOTSTRAP.as_posix()]
-    if not source.is_file() or not mode & 0o111 or _file_identity(source) != (digest, mode):
+    if (
+        not source.is_file()
+        or not mode & 0o111
+        or _file_identity(source) != (digest, mode)
+    ):
         raise LocalReleaseError("local-release-bootstrap-source-invalid")
-    with tempfile.NamedTemporaryFile(dir=target.parent, prefix=".start-mcp-", delete=False) as output:
+    with tempfile.NamedTemporaryFile(
+        dir=target.parent, prefix=".start-mcp-", delete=False
+    ) as output:
         temporary = Path(output.name)
     try:
         shutil.copy2(source, temporary)
@@ -210,5 +307,3 @@ def _install_bootstrap(root: Path, package: Path, expected: Mapping[str, tuple[s
         os.replace(temporary, target)
     finally:
         temporary.unlink(missing_ok=True)
-
-

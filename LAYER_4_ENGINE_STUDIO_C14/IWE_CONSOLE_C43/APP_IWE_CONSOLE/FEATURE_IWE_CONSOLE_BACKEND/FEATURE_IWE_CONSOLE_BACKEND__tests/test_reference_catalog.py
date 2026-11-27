@@ -16,7 +16,11 @@ class ReferenceSelectionTests(SourceReaderFixture, unittest.TestCase):
             form="Declaration",
             parts=(directory,),
             body=python_claim_body(
-                f"property_rule(address='Atom.Header.{header_field}', value_format='int', values='0..1')"
+                (
+                    "property_rule(address='Atom.Header."
+                    f"{header_field}"
+                    "', value_format='int', values='0..1')"
+                )
             ),
         )
 

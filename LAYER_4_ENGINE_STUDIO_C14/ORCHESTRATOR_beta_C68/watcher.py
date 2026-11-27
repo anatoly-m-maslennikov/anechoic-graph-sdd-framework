@@ -120,11 +120,13 @@ class SourceWatcher(WatcherCode, FileSystemEventHandler):
                 self.archive_observer.stop()
                 self.archive_observer.join()
                 self.archive_observer = None
-            observer = polling_observer(self._archives.entries, self._archives, archive=True)
+            observer = polling_observer(
+                self._archives.entries, self._archives, archive=True
+            )
             try:
                 observer.schedule(self, str(self.control_root), recursive=True)
                 observer.start()
-            except (OSError, RuntimeError):
+            except OSError, RuntimeError:
                 observer.stop()
                 if observer.is_alive():
                     observer.join()
@@ -134,7 +136,9 @@ class SourceWatcher(WatcherCode, FileSystemEventHandler):
 
     def capture_epoch(self, *, archive=False, trace=False, dispatched=False):
         observer = self.archive_observer if archive else self.observer
-        return self._proof.epoch(observer, archive=archive, trace=trace, dispatched=dispatched)
+        return self._proof.epoch(
+            observer, archive=archive, trace=trace, dispatched=dispatched
+        )
 
     def capture_fence(self, epoch, *, archive=False, timeout=45, run_id=None):
         """Wait for a normal poll that began after capture and dispatched its changes."""
@@ -223,16 +227,7 @@ class SourceWatcher(WatcherCode, FileSystemEventHandler):
         for path in paths:
             markdown = (not event.is_directory and path.suffix.casefold() == ".md" and
                         (path.is_relative_to(self.control_root) or path.parent == self.root))
-            code = False
-            if event.is_directory and self.watch_code and path.is_relative_to(self.root):
-                code = self._code_directory(path) or any(known.is_relative_to(path) for known in self.known_code)
-            elif self.watch_code and not event.is_directory:
-                current_code = self._code_path(path) and path.exists()
-                code = current_code or path in self.known_code
-                if current_code:
-                    self.known_code.add(path)
-                else:
-                    self.known_code.discard(path)
+            code = self._event_code(event, path)
             if code and self._archives.root_for(path) is None:
                 foreground = True
             boundary = event.is_directory and (path == self.control_root or path == self._archives.root_for(path))
@@ -248,6 +243,19 @@ class SourceWatcher(WatcherCode, FileSystemEventHandler):
             self.queue.put({"old_path": str(paths[0]), "new_path": str(paths[1]) if len(paths) > 1 else None,
                             "event_type": kind, "is_directory": event.is_directory, "observed_at": time.time()})
             self._foreground_events += foreground
+
+    def _event_code(self, event, path):
+        code = False
+        if event.is_directory and self.watch_code and path.is_relative_to(self.root):
+            code = self._code_directory(path) or any(known.is_relative_to(path) for known in self.known_code)
+        elif self.watch_code and not event.is_directory:
+            current_code = self._code_path(path) and path.exists()
+            code = current_code or path in self.known_code
+            if current_code:
+                self.known_code.add(path)
+            else:
+                self.known_code.discard(path)
+        return code
 
     def _ticket_path(self, path):
         if not path.is_relative_to(self.control_root) or path.suffix != ".md":

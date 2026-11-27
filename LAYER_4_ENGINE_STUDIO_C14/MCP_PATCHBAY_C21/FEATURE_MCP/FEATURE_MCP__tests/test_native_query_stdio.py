@@ -57,24 +57,40 @@ class NativeJournalOwnershipTests(unittest.TestCase):
         from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import NativeQueryOwner
 
         with tempfile.TemporaryDirectory() as root:
-            for journal in ("_anechoic_other/_journal", ".anechoic_other/_journal"):
+            for journal in (
+                "_anechoic_other/_journal",
+                ".anechoic_other/_journal",
+            ):
                 selection = NonCallableMock(
-                    spec_set=['root', 'control_relative', 'parameters'],
-                    root=Path(root).resolve(), control_relative=Path("_anechoic_anechoic"),
-                                            parameters={"paths": {"journal_root": journal}})
-                with self.subTest(journal=journal), self.assertRaisesRegex(ValueError, "another records tree"):
+                    spec_set=["root", "control_relative", "parameters"],
+                    root=Path(root).resolve(),
+                    control_relative=Path("_anechoic_anechoic"),
+                    parameters={"paths": {"journal_root": journal}},
+                )
+                with (
+                    self.subTest(journal=journal),
+                    self.assertRaisesRegex(ValueError, "another records tree"),
+                ):
                     NativeQueryOwner(selection, None)
             selection.parameters["paths"]["journal_root"] = "elsewhere/journal"
-            with patch("KERNEL_MIXER_C59.native_query_runtime.SavedQueryStore") as saved, \
-                    patch("KERNEL_MIXER_C59.native_query_runtime.WorkspaceStore"), \
-                    patch("KERNEL_MIXER_C59.native_query_runtime.QueryLog"):
+            with (
+                patch(
+                    "KERNEL_MIXER_C59.native_query_runtime.SavedQueryStore"
+                ) as saved,
+                patch("KERNEL_MIXER_C59.native_query_runtime.WorkspaceStore"),
+                patch("KERNEL_MIXER_C59.native_query_runtime.QueryLog"),
+            ):
                 NativeQueryOwner(selection, None)
-                self.assertEqual("elsewhere/journal", saved.call_args.kwargs["journal_root"])
+                self.assertEqual(
+                    "elsewhere/journal", saved.call_args.kwargs["journal_root"]
+                )
 
 class NativeQueryStdioTests(NativeQueryBehaviorCases, unittest.IsolatedAsyncioTestCase):
     def setUp(self):
         self.enterContext(polling_source_watcher())
-        self.root = Path(self.enterContext(tempfile.TemporaryDirectory())).resolve()
+        self.root = Path(
+            self.enterContext(tempfile.TemporaryDirectory())
+        ).resolve()
         self._write(MANIFEST, "AN-S-001", "active", 1, template="project_manifest", body="""
 ## Summary
 
@@ -94,7 +110,9 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
                     body="## Summary\n\nVerify the operator's runtime.\n")
         self._write("001_TICKETS/TASKS/archived/AN-T-009@1-TASK--verify-runtime.md", "AN-T-009", "archived", 1)
         self._write("001_TICKETS/TASKS/draft/AN-T-009@3-draft-TASK--verify-runtime.md", "AN-T-009", "draft", 3)
-        self._write("_PMETA/AN-P-001-WORKFLOW--fixture.md", "AN-P-001", "active", 1)
+        self._write(
+            "_PMETA/AN-P-001-WORKFLOW--fixture.md", "AN-P-001", "active", 1
+        )
         legacy = self.root / OLD_PATH
         legacy.parent.mkdir(parents=True)
         legacy.write_text("Legacy carrier held beside the selected native tree.\n", encoding="utf-8")
@@ -126,7 +144,9 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
             metadata["context"]["tier"] = structure_tier
             metadata["context"].setdefault("lens", "DES")
             metadata = canonical_native_header(metadata)
-        path.write_text(f"---\n{yaml.safe_dump(metadata)}---\n\n{body}", encoding="utf-8")
+        path.write_text(
+            f"---\n{yaml.safe_dump(metadata)}---\n\n{body}", encoding="utf-8"
+        )
 
     def _carrier_digests(self):
         return {path.relative_to(self.root): hashlib.sha256(path.read_bytes()).hexdigest()

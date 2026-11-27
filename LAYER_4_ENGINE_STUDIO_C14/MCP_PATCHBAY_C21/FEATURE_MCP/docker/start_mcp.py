@@ -9,7 +9,9 @@ import subprocess
 import re
 import tomllib
 
-LAUNCHER_PATH = Path("LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/runtime.py")
+LAUNCHER_PATH = Path(
+    "LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/runtime.py"
+)
 
 
 _RELEASE = re.compile(r"releases/[0-9a-f]{64}\Z")
@@ -42,27 +44,58 @@ def _selected_package(project_root: Path, local_package: Path) -> Path:
 
 
 def _installed_source_root(project_root: Path) -> Path:
-    local_package = project_root / ".anechoic_runtime" / "simple_local_release" / "package"
+    local_package = (
+        project_root / ".anechoic_runtime" / "simple_local_release" / "package"
+    )
     try:
-        if any(path.is_symlink() for path in (local_package, local_package.parent, local_package.parent.parent)):
+        if any(
+            path.is_symlink()
+            for path in (
+                local_package,
+                local_package.parent,
+                local_package.parent.parent,
+            )
+        ):
             raise ValueError()
         package = _selected_package(project_root, local_package)
-        if package.is_symlink() or not package.is_dir() or package.resolve(strict=True) != package:
+        if (
+            package.is_symlink()
+            or not package.is_dir()
+            or package.resolve(strict=True) != package
+        ):
             raise ValueError()
         launcher = package / LAUNCHER_PATH
         if not launcher.is_file() or launcher.resolve(strict=True) != launcher:
             raise ValueError()
         return package
-    except (OSError, UnicodeDecodeError, ValueError):
-        raise ValueError("installed Framework package launcher is unavailable") from None
+    except OSError, UnicodeDecodeError, ValueError:
+        raise ValueError(
+            "installed Framework package launcher is unavailable"
+        ) from None
 
 
 def _command(args, source, project, launcher):
     command = [
-        "uv", "run", "--project", str(source / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine"), "--locked", "--python", "3.14",
-        "--managed-python", "--no-env-file", "--no-default-groups", "--group", "runtime",
-        str(launcher), "--project-root", str(project),
-               "--source-root", str(source), "--output", "url"]
+        "uv",
+        "run",
+        "--project",
+        str(source / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine"),
+        "--locked",
+        "--python",
+        "3.14",
+        "--managed-python",
+        "--no-env-file",
+        "--no-default-groups",
+        "--group",
+        "runtime",
+        str(launcher),
+        "--project-root",
+        str(project),
+        "--source-root",
+        str(source),
+        "--output",
+        "url",
+    ]
     if args.control_root:
         command.extend(["--control-root", args.control_root])
     if args.port is not None:
@@ -77,21 +110,41 @@ def _command(args, source, project, launcher):
 
 def _run(command, project):
     environment = dict(os.environ)
-    for name in ("PYTHONHOME", "PYTHONPATH", "VIRTUAL_ENV", "CONDA_PREFIX",
-                 "ANECHOIC_MCP_HTTP_SECRET_TOKEN"):
+    for name in (
+        "PYTHONHOME",
+        "PYTHONPATH",
+        "VIRTUAL_ENV",
+        "CONDA_PREFIX",
+        "ANECHOIC_MCP_HTTP_SECRET_TOKEN",
+    ):
         environment.pop(name, None)
     environment["UV_PROJECT_ENVIRONMENT"] = str(
-        (project / "LAYER_4_ENGINE_STUDIO_C14/.venv-prod" if Path(command[3]) == project / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine"
-         else project / ".anechoic_runtime" / "launcher-venv"))
-    environment["UV_CACHE_DIR"] = str(project / ".anechoic_tmp" / "cache" / "uv")
+        (
+            project / "LAYER_4_ENGINE_STUDIO_C14/.venv-prod"
+            if Path(command[3])
+            == project / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine"
+            else project / ".anechoic_runtime" / "launcher-venv"
+        )
+    )
+    environment["UV_CACHE_DIR"] = str(
+        project / ".anechoic_tmp" / "cache" / "uv"
+    )
     environment["PYTHONNOUSERSITE"] = "1"
     try:
-        return subprocess.run(command, check=False, env=environment, timeout=1800).returncode
+        return subprocess.run(
+            command, check=False, env=environment, timeout=1800
+        ).returncode
     except subprocess.TimeoutExpired:
-        print("Project MCP launcher timed out; inspect its state before retrying.", file=os.sys.stderr)
+        print(
+            "Project MCP launcher timed out; inspect its state before retrying.",
+            file=os.sys.stderr,
+        )
         return 2
     except FileNotFoundError:
-        print("uv is required to run the Project MCP launcher.", file=os.sys.stderr)
+        print(
+            "uv is required to run the Project MCP launcher.",
+            file=os.sys.stderr,
+        )
         return 2
     except OSError:
         print("Could not run the uv Project MCP launcher.", file=os.sys.stderr)
@@ -100,20 +153,30 @@ def _run(command, project):
 
 def main(argv=None):
     script_path = Path(__file__).resolve()
-    script_source = None if script_path.parent.name == ".anechoic_runtime" else _source_root(script_path)
+    script_source = (
+        None
+        if script_path.parent.name == ".anechoic_runtime"
+        else _source_root(script_path)
+    )
     default_root = script_source or script_path.parent.parent
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--project-root", type=Path, default=default_root)
     parser.add_argument("--source-root", type=Path,
                         help="Framework source checkout (defaults to the selected installed package)")
     parser.add_argument("--control-root", help="Optional direct _anechoic_<project> or legacy .anechoic_<project> folder")
-    parser.add_argument("--port", type=int, help="Assert the Project Settings localhost port")
-    parser.add_argument("--image", help="Start the specified immutable sha256 image ID")
+    parser.add_argument(
+        "--port", type=int, help="Assert the Project Settings localhost port"
+    )
+    parser.add_argument(
+        "--image", help="Start the specified immutable sha256 image ID"
+    )
     parser.add_argument("--no-build", action="store_true", help="Use a matching existing image only")
     args = parser.parse_args(argv)
     if args.port is not None and not 1 <= args.port <= 65535:
         parser.error("--port must be between 1 and 65535")
-    if args.image is not None and not re.fullmatch(r"sha256:[0-9a-f]{64}", args.image):
+    if args.image is not None and not re.fullmatch(
+        r"sha256:[0-9a-f]{64}", args.image
+    ):
         parser.error("--image must be an immutable sha256 image ID")
 
     project = args.project_root.resolve()

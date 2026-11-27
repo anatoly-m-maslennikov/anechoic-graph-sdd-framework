@@ -34,7 +34,8 @@ def _scalar(value: Any) -> Any:
 
 
 def result_value(value: Any) -> Any:
-    """Return one public JSON-compatible value or raise for an unsupported value."""
+    """Return one public JSON-compatible value or raise \
+for an unsupported value."""
 
     scalar = _scalar(value)
     if scalar is not _UNREPRESENTABLE:
@@ -49,7 +50,8 @@ def result_value(value: Any) -> Any:
 
 
 def group_key(value: Any) -> str:
-    """Provide an equality key after conversion while keeping the original value public."""
+    """Provide an equality key after conversion while keeping \
+the original value public."""
 
     return json.dumps(
         value, ensure_ascii=False, separators=(",", ":"), sort_keys=True

@@ -1,32 +1,40 @@
 import { expect, test, type Page } from '@playwright/test';
-import { checkObservedEffects, formalCases, type Effect, type EffectCase } from './console-formal-cases';
+import { checkObservedEffects, formalCases, type Effect,
+  type EffectCase } from './console-formal-cases';
+import { toolReply, toolRequest } from './tool_rest_fixture';
 
 type RenderCase = EffectCase & { input: { transport: string; entry: string } };
-const { render_console_view: cases } = formalCases<RenderCase>('render_console_view');
+const { render_console_view: cases } =
+  formalCases<RenderCase>('render_console_view');
 const refusal = 'Query refused by the Project.';
 
 async function mockRun(page: Page, succeeds: boolean) {
-  const view = { id: 'v1', name: 'Source', sql: 'SELECT 1 AS value', cursor_position: 0, revision: 1 };
-  const workspace = { project_name: 'Fixture', workspace_id: 'test', active_view_id: view.id, views: [view] };
+  const view = { id: 'v1', name: 'Source', sql:
+    'SELECT 1 AS value', cursor_position: 0, revision: 1 };
+  const workspace = { project_name: 'Fixture', workspace_id:
+    'test', active_view_id: view.id, views: [view] };
   const query = { query_id: 'query-render', revision: view.revision };
-  await page.route('**/*', async route => {
-    const request = route.request();
-    if (request.method() !== 'POST') return route.continue();
-    const path = new URL(request.url()).pathname;
-    if (path.endsWith('/schema')) return route.fulfill({ json: { tables: {} } });
-    const { operation } = request.postDataJSON();
-    switch (operation) {
+  await page.route('**/tools', async route => {
+    if (route.request().method() !== 'POST') return route.fallback();
+    const { name } = toolRequest(route);
+    let value: unknown;
+    switch (name) {
+      case 'query_schema': value = { tables: {} }; break;
+      case 'iwe_console_status': value = { mode: 'unavailable' }; break;
+      case 'query_saved_list': case 'query_log_list': value = { items: [] }; break;
       case 'workspace_open':
-      case 'workspace_get': return route.fulfill({ json: workspace });
-      case 'view_run': return route.fulfill({
-        json: succeeds ? { ...query, status: 'success' } : { ...query, status: 'failed', error: refusal },
-      });
-      case 'view_fetch': return route.fulfill({ json: {
-        ...query, columns: [{ name: 'value', type: 'INTEGER', has_values: true }], rows: [[1]],
-        column_count: 1, row_count: 1, offset: 0, page_size: 100, has_more: false,
-      } });
-      default: return route.fulfill({ json: { items: [] } });
+      case 'workspace_get': value = workspace; break;
+      case 'view_run': value = succeeds ? { ...query, status: 'success' } :
+        { ...query, status: 'failed', error: refusal }; break;
+      case 'view_fetch': value = {
+        ...query, columns: [{ name: 'value', type:
+          'INTEGER', has_values: true }], rows: [[1]],
+        column_count: 1, row_count: 1, offset:
+          0, page_size: 100, has_more: false,
+      }; break;
+      default: return route.fallback();
     }
+    return route.fulfill({ json: toolReply(route, value) });
   });
 }
 
@@ -50,16 +58,20 @@ for (const scenario of cases) {
       observer.observe(panel, { childList: true, subtree: true });
     });
     await page.getByRole('button', { name: /^Run Cmd/ }).click();
-    if (succeeds) await expect(page.getByRole('grid').locator('.tabulator-cell').first()).toHaveText('1');
+    if (succeeds) await expect(page.getByRole('grid').locator(
+      '.tabulator-cell').first()).toHaveText('1');
     else await expect(page.getByRole('alert')).toHaveText(refusal);
     const displayed = await panel.getAttribute('data-formal-displayed');
     expect(displayed).not.toBeNull();
-    const observed: Effect[] = displayed === 'true' ? [['C46.console', 'view_displayed']] : [];
+    const observed: Effect[] = displayed === 'true' ?
+      [['C46.console', 'view_displayed']] : [];
     checkObservedEffects(scenario, observed);
   });
 }
 
-test('effect checks reject an omitted, forbidden, or out-of-order observation', () => {
+test(
+  'effect checks reject an omitted, forbidden, or out-of-order observation',
+    () => {
   const request: Effect = ['api', 'requested'];
   const receipt: Effect = ['api', 'succeeded'];
   const shown: Effect = ['view', 'displayed', { dirty: false }];
@@ -70,8 +82,12 @@ test('effect checks reject an omitted, forbidden, or out-of-order observation', 
     must_precede: [[request, receipt], [receipt, shown]],
   };
   checkObservedEffects(scenario, [request, receipt, shown]);
-  expect(() => checkObservedEffects(scenario, [receipt, shown])).toThrow(/missing effect/);
-  expect(() => checkObservedEffects(scenario, [request, receipt, ['view', 'displayed', { dirty: true }]])).toThrow(/missing effect/);
-  expect(() => checkObservedEffects(scenario, [request, receipt, shown, ['stale_view', 'displayed']])).toThrow(/forbidden effect/);
-  expect(() => checkObservedEffects(scenario, [receipt, request, shown])).toThrow(/must precede/);
+  expect(() => checkObservedEffects(scenario, [
+    receipt, shown])).toThrow(/missing effect/);
+  expect(() => checkObservedEffects(scenario, [request, receipt, [
+    'view', 'displayed', { dirty: true }]])).toThrow(/missing effect/);
+  expect(() => checkObservedEffects(scenario, [request, receipt,
+    shown, ['stale_view', 'displayed']])).toThrow(/forbidden effect/);
+  expect(() => checkObservedEffects(scenario, [
+    receipt, request, shown])).toThrow(/must precede/);
 });

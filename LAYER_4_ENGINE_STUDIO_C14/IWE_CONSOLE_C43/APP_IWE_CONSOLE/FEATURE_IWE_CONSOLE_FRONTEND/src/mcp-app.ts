@@ -11,6 +11,7 @@ void bridge.initialize().then((native) => {
 }).catch((error: unknown) => {
   const failure = document.createElement('p');
   failure.className = 'error'; failure.setAttribute('role', 'alert');
-  failure.textContent = error instanceof Error ? error.message : 'Native Workbench binding failed.';
+  failure.textContent = error instanceof Error ?
+    error.message : 'Native Workbench binding failed.';
   target.replaceChildren(failure);
 });

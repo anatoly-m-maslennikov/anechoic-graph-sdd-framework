@@ -9,7 +9,8 @@ function findings({ path, source }: Input): string[] {
     const messages: string[] = [];
     for (const script of [tree.module, tree.instance]) {
       if (!script?.content.body.length) continue;
-      const language = script.attributes.find((attribute) => attribute.name === 'lang')?.value;
+      const language = script.attributes.find((
+        attribute) => attribute.name === 'lang')?.value;
       if (Array.isArray(language) && language.length === 1 &&
           language[0].type === 'Text' && language[0].data === 'ts') continue;
       const line = source.slice(0, script.start).split(/\r\n?|\n/).length;

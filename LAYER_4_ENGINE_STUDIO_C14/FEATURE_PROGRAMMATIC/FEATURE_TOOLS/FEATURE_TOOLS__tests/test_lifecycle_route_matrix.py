@@ -11,7 +11,9 @@ import yaml
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import capture_native, parse_structure
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import canonical_native_header
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import native_carrier_path
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import NativeProjectSelection
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import (
+    NativeProjectSelection,
+)
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import LIFECYCLE_TOOLS, execute_native_lifecycle
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__tests.lifecycle_route_support import LifecycleRouteSupport
 
@@ -196,7 +198,9 @@ declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Te
         family, template, situation, contained, route = (case[k] for k in
             ('family', 'template', 'situation', 'contained', 'route'))
         version = 2 if family == 'PROJECT_CONFIG' and situation == 'draft' and template is not None and not contained else 1
-        ref = atom_id + ({'draft': f'@{version}-draft', 'archived': '@1'}.get(situation, ''))
+        ref = atom_id + (
+            {"draft": f"@{version}-draft", "archived": "@1"}.get(situation, "")
+        )
         target = {'ref_id': ref, 'version': version}
         values = {'template': template, 'container': container, 'body': body}
         if family == 'SPEC':
@@ -218,14 +222,22 @@ declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Te
         return args, status
 
     def _run_grid_case(self, case, directory, body, changed, assets, project_specs):
-        family, template, contained, route = (case[k] for k in ('family', 'template', 'contained', 'route'))
-        project, component, snapshot, owner_dir = self._grid_project(directory, body)
+        family, template, contained, route = (
+            case[k] for k in ("family", "template", "contained", "route")
+        )
+        project, component, snapshot, owner_dir = self._grid_project(
+            directory, body
+        )
         container = {'atom': 'AN-T-1'} if contained else {'component': 'C00' if template in project_specs or template == 'project_manifest' or family != 'SPEC' else 'C9'}
-        atom_id = self._grid_carrier(case, project, component, owner_dir, container, body)
+        atom_id = self._grid_carrier(
+            case, project, component, owner_dir, container, body
+        )
         capture = capture_native(project)
         self.assertFalse(capture.errors, capture.errors)
         before = self.files(project)
-        args, status = self._grid_arguments(case, atom_id, container, body, changed)
+        args, status = self._grid_arguments(
+            case, atom_id, container, body, changed
+        )
         expected = self._grid_expected(case, assets, project_specs)
         result = execute_native_lifecycle(
             project, 'atom_lifecycle_' + route, args, capture, None,
@@ -267,8 +279,12 @@ declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Te
             'draft' if situation == 'draft' else 'in_queue')
         self.assertEqual(expected_status, saved['status'].lower())
         expected_ref = (
-            f"{saved['atom_id']}@{expected_version}-draft" if expected_status == 'draft' else
-                        f"{saved['atom_id']}@{expected_version}" if expected_status == 'archived' else saved['atom_id'])
+            f"{saved['atom_id']}@{expected_version}-draft"
+            if expected_status == "draft"
+            else f"{saved['atom_id']}@{expected_version}"
+            if expected_status == "archived"
+            else saved["atom_id"]
+        )
         self.assertEqual(expected_ref, saved['ref_id'])
         operations = [
             effect['operation'] for effect in result['effects'] if effect.get('evidence') != 'directory']

@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-2424
+concern:
+  subject: "Atom"
+  path: "Model/Graph/Node//Artifact//SSOT//Prescribed/Content"
+  relation: "is_contained_by"
 container:
   component: C18
 tier: 3
@@ -8,8 +12,8 @@ context:
   lens: SWD
 state:
   status: active
-  version: 12
-  updated_at: 2026-11-11 09:03:52 +0400
+  version: 14
+  updated_at: "2026-11-27T16:16:01.404965+00:00"
 ---
 ## Summary
 
@@ -23,7 +27,7 @@ Explicit Property and list-entry edits within one Atom Action.
 
 ### Prose Claim
 
-For the Project Configuration Atom Lifecycle Workflows, identity, Version, Updated At and history follow those Workflows and CA-R-1432 and CA-R-1788. CA-E-521 checks those effects. Differing statements in this Atom on those matters apply only to other operations.
+Apply the Project Configuration lifecycle in AN-S-2481.
 
 **To** edit Atom Properties, the Action **must**:
 

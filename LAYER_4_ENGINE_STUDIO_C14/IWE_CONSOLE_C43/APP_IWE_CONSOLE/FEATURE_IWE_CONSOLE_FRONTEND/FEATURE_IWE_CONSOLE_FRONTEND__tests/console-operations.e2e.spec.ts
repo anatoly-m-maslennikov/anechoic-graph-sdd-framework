@@ -1,9 +1,13 @@
 import { mockGraph } from './console-graph-mock';
-import { checkObservedEffects, checkObservedValues, formalCases, type CorrelatedCase, type Effect } from './console-formal-cases';
-import { expect, test, type Page, type Request } from '@playwright/test';
+import { checkObservedEffects, checkObservedValues, formalCases,
+  type CorrelatedCase, type Effect } from './console-formal-cases';
+import { expect, test, type Page, type Request, type Route } from '@playwright/test';
+import { toolReply, toolRequest } from './tool_rest_fixture';
 
-type Case = CorrelatedCase & { input: Record<string, string>; effect: [string, string, Record<string, string>] };
-const cases = formalCases<Case>('edit_console_builder', 'run_console_builder', 'select_console_view', 'inspect_console_diagnostics');
+type Case = CorrelatedCase & { input: Record<string, string>;
+  effect: [string, string, Record<string, string>] };
+const cases = formalCases<Case>('edit_console_builder', 'run_console_builder',
+  'select_console_view', 'inspect_console_diagnostics');
 
 const builderEvents = {
   view_update: ['update_requested', 'update_returned', 'C21.view_update', 'succeeded'],
@@ -11,11 +15,13 @@ const builderEvents = {
   view_fetch: ['fetch_requested', 'first_page_received', 'C21.view_fetch', 'succeeded'],
 } as const;
 type BuilderObservation =
-  | { phase: 'request' | 'response'; request: Request; operation: keyof typeof builderEvents }
+  | { phase: 'request' | 'response'; request:
+    Request; operation: keyof typeof builderEvents }
   | { phase: 'display'; detail: Record<string, unknown> };
 
 function observeBuilderDisplay() {
-  const report = (window as typeof window & { reportBuilderDisplay(detail: Record<string, unknown>): Promise<void> })
+  const report = (window as typeof window & { reportBuilderDisplay(
+    detail: Record<string, unknown>): Promise<void> })
     .reportBuilderDisplay;
   const seen = new Set<string>();
   new MutationObserver(() => {
@@ -25,15 +31,18 @@ function observeBuilderDisplay() {
     if (!viewId || !revision || !queryId || !sql || seen.has(queryId)) return;
     seen.add(queryId);
     void report({ view_id: viewId, revision: Number(revision), query_id: queryId, sql });
-  }).observe(document, { childList: true, characterData: true, subtree: true, attributes: true });
+  }).observe(document, { childList: true, characterData:
+    true, subtree: true, attributes: true });
 }
 
 async function observeBuilder(page: Page) {
   const observations: BuilderObservation[] = [];
   function record(request: Request, phase: 'request' | 'response') {
-    if (request.method() !== 'POST' || !new URL(request.url()).pathname.endsWith('/interface')) return;
-    const { operation } = request.postDataJSON();
-    if (Object.hasOwn(builderEvents, operation)) observations.push({ request, operation, phase });
+    if (request.method() !== 'POST' || !new URL(request.url(
+      )).pathname.endsWith('/tools')) return;
+    const { name: operation } = request.postDataJSON();
+    if (Object.hasOwn(builderEvents,
+      operation)) observations.push({ request, operation, phase });
   }
   page.on('request', request => record(request, 'request'));
   page.on('requestfinished', request => record(request, 'response'));
@@ -44,43 +53,56 @@ async function observeBuilder(page: Page) {
   return observations;
 }
 
-async function builderEffect(observation: BuilderObservation): Promise<[string, Effect] | undefined> {
-  if (observation.phase === 'display') return ['result_displayed', ['workbench_display', 'shown', observation.detail]];
+async function builderEffect(observation:
+  BuilderObservation): Promise<[string, Effect] | undefined> {
+  if (observation.phase === 'display') return ['result_displayed',
+    ['workbench_display', 'shown', observation.detail]];
   const { request, operation, phase } = observation;
   const [requested, returned, target, outcome] = builderEvents[operation];
-  if (phase === 'request') return [requested, [`C21.${operation}`, 'requested', request.postDataJSON().arguments]];
+  if (phase === 'request') return [requested, [`C21.${operation}`,
+    'requested', request.postDataJSON().arguments]];
   const response = await request.response();
   if (!response?.ok()) return;
-  const detail = await response.json();
-  if (operation === 'view_run' && (typeof detail.query_id !== 'string' || !detail.query_id.trim())) return;
+  const { result } = await response.json();
+  const detail = result?.value;
+  if (!detail || operation === 'view_run' && (typeof detail.query_id !== 'string' ||
+    !detail.query_id.trim())) return;
   return [returned, [target, outcome, detail]];
 }
 
 async function builderFixture(page: Page, fault?: 'revision' | 'query_id') {
   const observations = await observeBuilder(page);
-  const view = { id: 'v1', name: 'View 1', sql: 'SELECT * FROM atoms LIMIT 5', cursor_position: 0, revision: 1 };
-  const workspace = { workspace_id: 'test', project_name: 'Fixture', active_view_id: view.id, views: [view] };
+  const view = { id: 'v1', name: 'View 1', sql:
+    'SELECT * FROM atoms LIMIT 5', cursor_position: 0, revision: 1 };
+  const workspace = { workspace_id: 'test', project_name:
+    'Fixture', active_view_id: view.id, views: [view] };
   let run = { view_id: '', revision: 0, query_id: '', sql: '' };
-  await page.route('**/*', async route => {
-    if (route.request().method() !== 'POST') return route.continue();
-    const path = new URL(route.request().url()).pathname;
-    if (!path.endsWith('/interface')) return route.fulfill({ json: path.endsWith('/schema') ? { tables: {} } : { items: [] } });
-    const request = route.request().postDataJSON();
-    let reply: unknown = { items: [] };
-    switch (request.operation) {
+  await page.route('**/tools', async route => {
+    if (route.request().method() !== 'POST') return route.fallback();
+    const { name, arguments: args } = toolRequest(route);
+    let reply: unknown;
+    switch (name) {
+      case 'query_schema': reply = { tables: {} }; break;
+      case 'iwe_console_status': reply = { mode: 'unavailable' }; break;
+      case 'query_saved_list': case 'query_log_list': reply = { items: [] }; break;
       case 'workspace_open': case 'workspace_get': reply = workspace; break;
       case 'view_update':
-        view.sql = request.arguments.sql; view.revision++; reply = { ...view }; break;
+        view.sql = args.sql as string; view.revision++; reply = { ...view }; break;
       case 'view_run':
-        run = { view_id: request.arguments.view_id, revision: view.revision, query_id: `query-${view.revision}`, sql: view.sql };
-        reply = { status: 'success', ...run, revision: fault === 'revision' ? run.revision - 1 : run.revision }; break;
+        run = { view_id: args.view_id as string, revision: view.revision,
+          query_id: `query-${view.revision}`, sql: view.sql };
+        reply = { status: 'success', ...run, revision:
+          fault === 'revision' ? run.revision - 1 : run.revision }; break;
       case 'view_fetch':
         reply = { query_id: fault === 'query_id' ? 'stale-query' : run.query_id,
-          columns: ['view_id', 'revision', 'query_id', 'sql'].map(name => ({ name, type: 'VARCHAR', has_values: true })),
-          rows: [[run.view_id, run.revision, run.query_id, run.sql]], row_count: 1, column_count: 4,
-          offset: 0, page_size: request.arguments.page_size, has_more: false }; break;
+          columns: ['view_id', 'revision', 'query_id', 'sql'].map(
+            name => ({ name, type: 'VARCHAR', has_values: true })),
+          rows: [[run.view_id, run.revision, run.query_id,
+            run.sql]], row_count: 1, column_count: 4,
+          offset: 0, page_size: args.page_size, has_more: false }; break;
+      default: return route.fallback();
     }
-    return route.fulfill({ json: reply });
+    return route.fulfill({ json: toolReply(route, reply) });
   });
   await page.goto(process.env.WORKBENCH_E2E_URL!);
   await expect(page.getByRole('textbox', { name: 'Query editor' })).toHaveText(view.sql);
@@ -105,8 +127,10 @@ for (const scenario of cases.run_console_builder) {
       await expect(editor).toContainText(fragment);
       const queryId = `query-${base + 1}`;
       await expect(cells.nth(2)).toHaveText(queryId);
-      await expect.poll(() => observations.some(entry => entry.phase === 'display' && entry.detail.query_id === queryId)).toBe(true);
-      const effects = (await Promise.all(observations.slice(start).map(builderEffect))).filter(effect => effect !== undefined);
+      await expect.poll(() => observations.some(entry =>
+        entry.phase === 'display' && entry.detail.query_id === queryId)).toBe(true);
+      const effects = (await Promise.all(observations.slice(start).map(
+        builderEffect))).filter(effect => effect !== undefined);
       checkObservedEffects(scenario, effects.map(([, effect]) => effect));
       const values: Record<string, Record<string, unknown>> = {};
       for (const [name, [, , detail]] of effects) values[name] ??= detail ?? {};
@@ -115,27 +139,43 @@ for (const scenario of cases.run_console_builder) {
         ...values,
       });
     }
-    const submitted = observations.filter(item => item.phase === 'request' && item.operation === 'view_run').length;
-    await builder.getByLabel('Limit').fill('bad'); await builder.getByLabel('Limit').blur();
-    await expect(page.getByRole('alert')).toHaveText('Limit must be a non-negative integer.');
+    const submitted = observations.filter(item =>
+      item.phase === 'request' && item.operation === 'view_run').length;
+    await builder.getByLabel('Limit').fill('bad');
+      await builder.getByLabel('Limit').blur();
+    await expect(page.getByRole('alert')).toHaveText(
+      'Limit must be a non-negative integer.');
     await expect(editor).toContainText('LIMIT 3');
-    expect(observations.filter(item => item.phase === 'request' && item.operation === 'view_run')).toHaveLength(submitted);
+    expect(observations.filter(item => item.phase === 'request' &&
+      item.operation === 'view_run')).toHaveLength(submitted);
   });
 
   for (const fault of ['revision', 'query_id'] as const) {
-    test(`formal Builder Run: ${scenario.name} refuses stale ${fault}`, async ({ page }) => {
+    test(`formal Builder Run: ${scenario.name} refuses stale ${fault}`,
+      async ({ page }) => {
       const { observations } = await builderFixture(page, fault);
       const limit = page.getByLabel('SQL builder').getByLabel('Limit');
       await limit.fill('3'); await limit.blur();
-      const error = fault === 'revision' ? 'The View changed before its query could be displayed.'
+      const error = fault === 'revision' ?
+        'The View changed before its query could be displayed.'
         : 'The View result changed before it could be displayed.';
       await expect(page.getByRole('alert')).toHaveText(error);
       await expect(page.getByRole('grid')).toHaveCount(0);
       expect(observations.some(item => item.phase === 'display')).toBe(false);
-      expect(observations.flatMap(item => item.phase === 'request' ? [item.operation] : [])).toEqual(fault === 'revision'
+      expect(observations.flatMap(item => item.phase === 'request' ?
+        [item.operation] : [])).toEqual(fault === 'revision'
         ? ['view_update', 'view_run'] : ['view_update', 'view_run', 'view_fetch']);
     });
   }
+}
+
+function refuseRebuild(route: Route) {
+  const message = 'Rebuild refused by fixture';
+  return route.fulfill({ json: {
+    error: { code: 'rebuild_failed', message, scope: 'tool',
+      tool_result: { outcome: 'failed', diagnostics: [`rebuild_failed: ${message}`] } },
+    project: toolReply(route, null).project,
+  } });
 }
 
 test('diagnostics displays health and reports both rebuild outcomes', async ({ page }) => {
@@ -143,25 +183,27 @@ test('diagnostics displays health and reports both rebuild outcomes', async ({ p
   const statusRequests: Record<string, unknown>[] = [];
   let unhealthy = false;
   const workspace = { workspace_id: 'test', project_name: 'Fixture', active_view_id: 'v1', views: [{ id: 'v1', name: 'View 1', sql: 'SELECT 1', cursor_position: 0, revision: 1 }] };
-  await page.route('**/*', async (route) => {
-    if (route.request().method() !== 'POST') return route.continue();
-    const path = new URL(route.request().url()).pathname;
-    if (path.endsWith('/status')) {
-      statusRequests.push(route.request().postDataJSON());
-      return route.fulfill({ json: unhealthy
-      ? { mode: 'unavailable', health: { state: 'degraded' }, last_synced_at: null, archive: { state: 'failed' }, ingestion_issues: [{ atom_ref: 'AN-S-1', message: 'Bad source' }] }
-      : { mode: 'live_index', health: { state: 'ready' }, last_synced_at: '2026-01-01T00:00:00Z', archive: { state: 'ready' }, ingestion_issues: [] } });
+  await page.route('**/tools', async (route) => {
+    if (route.request().method() !== 'POST') return route.fallback();
+    const { name, arguments: args } = toolRequest(route);
+    let value: unknown;
+    switch (name) {
+      case 'iwe_console_status':
+        statusRequests.push(args);
+        value = unhealthy
+          ? { mode: 'unavailable', health: { state: 'degraded' }, last_synced_at: null, archive: { state: 'failed' }, ingestion_issues: [{ atom_ref: 'AN-S-1', message: 'Bad source' }] }
+          : { mode: 'live_index', health: { state: 'ready' }, last_synced_at: '2026-01-01T00:00:00Z', archive: { state: 'ready' }, ingestion_issues: [] };
+        break;
+      case 'query_rebuild':
+        targets.push(args.target as string);
+        if (args.target === 'all') return refuseRebuild(route);
+        unhealthy = true; value = { outcome: 'completed' }; break;
+      case 'workspace_open': case 'workspace_get': value = workspace; break;
+      case 'query_schema': value = { tables: [] }; break;
+      case 'query_saved_list': case 'query_log_list': value = { items: [] }; break;
+      default: return route.fallback();
     }
-    if (path.endsWith('/rebuild')) {
-      const { target } = route.request().postDataJSON(); targets.push(target);
-      if (target === 'all') return route.fulfill({ status: 409, json: { error: 'Rebuild refused by fixture' } });
-      unhealthy = true; return route.fulfill({ json: { outcome: 'completed' } });
-    }
-    if (path.endsWith('/interface')) {
-      const { operation } = route.request().postDataJSON();
-      return route.fulfill({ json: operation === 'workspace_open' || operation === 'workspace_get' ? workspace : { items: [] } });
-    }
-    return route.fulfill({ json: path.endsWith('/schema') ? { tables: [] } : { items: [] } });
+    return route.fulfill({ json: toolReply(route, value) });
   });
   await page.goto(process.env.WORKBENCH_E2E_URL!);
   await page.getByRole('tab', { name: 'Diagnostics' }).click();
@@ -184,34 +226,41 @@ test('diagnostics displays health and reports both rebuild outcomes', async ({ p
   expect(targets).toEqual(['realization_graph', 'all']);
 });
 
-async function mockOperations(page: import('@playwright/test').Page, input: Case['input']) {
+async function mockOperations(page: import(
+  '@playwright/test').Page, input: Case['input']) {
   const { health_state: health = 'ready', target, reply, issue, ref } = input;
   let failedBuild = false;
-  const view = { id: 'v1', name: 'View 1', sql: input.sql ?? 'SELECT 1', cursor_position: 0, revision: 1 };
-  await page.route('**/*', async (route) => {
-    if (route.request().method() !== 'POST') return route.continue();
-    const path = new URL(route.request().url()).pathname;
-    if (path.endsWith('/status')) {
-      const message = failedBuild ? input.failure_issue : issue;
-      return route.fulfill({ json: {
-        mode: 'live_index', health: { state: health },
-        last_run_state: failedBuild ? 'failed' : null,
-        ingestion_issues: message ? [{ atom_ref: ref, message }] : [],
-      } });
+  const view = { id: 'v1', name: 'View 1', sql:
+    input.sql ?? 'SELECT 1', cursor_position: 0, revision: 1 };
+  const workspace = { workspace_id: 'test', project_name:
+    'Fixture', active_view_id: 'v1', views: [view] };
+  await page.route('**/tools', async (route) => {
+    if (route.request().method() !== 'POST') return route.fallback();
+    const { name, arguments: args } = toolRequest(route);
+    let value: unknown;
+    switch (name) {
+      case 'iwe_console_status': {
+        const message = failedBuild ? input.failure_issue : issue;
+        value = {
+          mode: 'live_index', health: { state: health },
+          last_run_state: failedBuild ? 'failed' : null,
+          ingestion_issues: message ? [{ atom_ref: ref, message }] : [],
+        };
+        break;
+      }
+      case 'query_rebuild':
+        expect(args.target).toBe(target);
+        failedBuild = reply === 'refused';
+        if (failedBuild) return refuseRebuild(route);
+        value = { status: 'ready', target, result_ids: {} }; break;
+      case 'view_update':
+        view.sql = args.sql as string; view.revision++; value = view; break;
+      case 'workspace_open': case 'workspace_get': value = workspace; break;
+      case 'query_schema': value = { tables: {} }; break;
+      case 'query_saved_list': case 'query_log_list': value = { items: [] }; break;
+      default: return route.fallback();
     }
-    if (path.endsWith('/rebuild')) {
-      expect(route.request().postDataJSON().target).toBe(target);
-      failedBuild = reply === 'refused';
-      return reply === 'refused' ? route.fulfill({ status: 409, json: { error: 'Rebuild refused by fixture' } })
-        : route.fulfill({ json: { status: 'ready', target, result_ids: {} } });
-    }
-    if (path.endsWith('/interface')) {
-      const { operation, arguments: args } = route.request().postDataJSON();
-      if (operation === 'view_update') { view.sql = args.sql; view.revision++; return route.fulfill({ json: view }); }
-      const workspace = { workspace_id: 'test', project_name: 'Fixture', active_view_id: 'v1', views: [view] };
-      return route.fulfill({ json: operation === 'workspace_open' || operation === 'workspace_get' ? workspace : { items: [] } });
-    }
-    return route.fulfill({ json: path.endsWith('/schema') ? { tables: {} } : { items: [] } });
+    return route.fulfill({ json: toolReply(route, value) });
   });
 }
 
@@ -219,10 +268,13 @@ for (const { name, input, effect } of cases.edit_console_builder) {
   test(`formal builder: ${name}`, async ({ page }) => {
     await builderFixture(page);
     const field = page.getByLabel('SQL builder').getByLabel(input.field);
-    await expect(page.getByRole('textbox', { name: 'Query editor' })).toHaveText(input.sql);
+    await expect(page.getByRole('textbox', { name:
+      'Query editor' })).toHaveText(input.sql);
     await field.fill(input.value); await field.blur();
-    await expect(page.getByRole('textbox', { name: 'Query editor' })).toHaveText(effect[2].sql);
-    if (effect[2].error) await expect(page.getByRole('alert')).toHaveText(effect[2].error);
+    await expect(page.getByRole('textbox', { name:
+      'Query editor' })).toHaveText(effect[2].sql);
+    if (effect[2].error) await expect(page.getByRole(
+      'alert')).toHaveText(effect[2].error);
   });
 }
 
@@ -231,15 +283,19 @@ for (const { name, input, effect } of cases.select_console_view) {
     const { kind, layout, error } = effect[2];
     await mockGraph(page, kind, layout, input.sql, undefined, input.other_ref);
     await page.goto(process.env.WORKBENCH_E2E_URL!);
-    await expect(page.getByRole('combobox', { name: 'View', exact: true })).toHaveValue(kind);
+    await expect(page.getByRole('combobox', { name:
+      'View', exact: true })).toHaveValue(kind);
     if (error) {
       await expect(page.getByRole('alert')).toHaveText(error);
       await expect(page.locator('.document-stack')).toHaveCount(0);
       await expect(page.getByRole('region', { name: 'Atom Graph' })).toHaveCount(0);
     } else if (kind === 'table') await expect(page.getByRole('grid')).toBeVisible();
-    else if (kind === 'document') await expect(page.locator('.document-stack')).toBeVisible();
-    else if (kind === 'structure') await expect(page.getByText('Component One', { exact: true })).toBeVisible();
-    else await expect(page.getByRole('region', { name: kind === 'graph' ? 'Atom Graph' : 'Imports Graph' }))
+    else if (kind === 'document') await expect(
+      page.locator('.document-stack')).toBeVisible();
+    else if (kind === 'structure') await expect(page.getByText(
+      'Component One', { exact: true })).toBeVisible();
+    else await expect(page.getByRole('region', { name:
+      kind === 'graph' ? 'Atom Graph' : 'Imports Graph' }))
       .toHaveAttribute('data-layout', layout);
   });
 }
@@ -247,18 +303,21 @@ for (const { name, input, effect } of cases.select_console_view) {
 for (const { name, input, effect } of cases.inspect_console_diagnostics) {
   test(`formal Diagnostics: ${name}`, async ({ page }) => {
     await mockOperations(page, input);
-    // Check the action's status refresh without help from the Workspace poll.
-    if (input.reply === 'refused') await page.addInitScript(() => { (window as Window).setInterval = () => 0; });
+    if (input.reply === 'refused') await page.addInitScript(
+      () => { (window as Window).setInterval = () => 0; });
     await page.goto(process.env.WORKBENCH_E2E_URL!);
     await page.getByRole('tab', { name: 'Diagnostics' }).click();
     const panel = page.getByRole('region', { name: 'Diagnostics' });
     if (effect[2].runtime) await expect(panel).toContainText(effect[2].runtime);
     if (input.target) {
-      await panel.getByRole('button', { name: input.target === 'all' ? 'Rebuild Project database from source' : 'Rebuild Realization Graph' }).click();
-      if (effect[2].error) await expect(panel.getByRole('alert')).toHaveText(effect[2].error);
+      await panel.getByRole('button', { name: input.target === 'all' ?
+        'Rebuild Project database from source' : 'Rebuild Realization Graph' }).click();
+      if (effect[2].error) await expect(panel.getByRole(
+        'alert')).toHaveText(effect[2].error);
       else await expect(panel.getByRole('status')).toHaveText(effect[2].message);
     }
-    if (effect[2].worker) await expect(panel.getByText(effect[2].worker, { exact: true })).toBeVisible();
+    if (effect[2].worker) await expect(panel.getByText(
+      effect[2].worker, { exact: true })).toBeVisible();
     if (effect[2].issue) {
       await panel.getByText('Ingestion issues', { exact: true }).last().click();
       await expect(panel).toContainText(effect[2].issue);

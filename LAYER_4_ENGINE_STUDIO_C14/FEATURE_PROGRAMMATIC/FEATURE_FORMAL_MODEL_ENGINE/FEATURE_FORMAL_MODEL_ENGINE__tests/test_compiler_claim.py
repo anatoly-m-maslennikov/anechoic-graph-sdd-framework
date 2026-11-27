@@ -73,12 +73,20 @@ declare_entity(entity_name="Dependencies", relation_name="IS_PROPERTY_OF",
         claim = """from anechoic.formal_claims import declare_entity
 declare_entity(entity_name="Node", allowed_axis_values={"Container": ("yes", "no")})
 """
-        self.assertEqual(("Node >| Container: yes", "Node >| Container: no"), _compile(claim))
-        for bad in ('("yes", "yes")', '()', '["yes"]'):
+        self.assertEqual(
+            ("Node >| Container: yes", "Node >| Container: no"),
+            _compile(claim),
+        )
+        for bad in ('("yes", "yes")', "()", '["yes"]'):
             with self.assertRaises(ValueError):
                 _compile(claim.replace('("yes", "no")', bad))
         with self.assertRaises(ValueError):
-            _compile(claim.replace('entity_name="Node",', 'entity_name="Node", axes={"Container": "yes"},'))
+            _compile(
+                claim.replace(
+                    'entity_name="Node",',
+                    'entity_name="Node", axes={"Container": "yes"},',
+                )
+            )
 
     def test_same_bearer_fallback_requires_a_declared_property(self):
         from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.FEATURE_FORMAL_MODEL_ENGINE__shared import (
@@ -89,13 +97,32 @@ declare_entity(entity_name="Node", allowed_axis_values={"Container": ("yes", "no
 declare_entity(entity_name="Label", relation_name="IS_PROPERTY_OF",
     base_path="Atom.Header.Context", value_format=str, fallback_property_name="Form")
 """
-        self.assertIn("$atom.Header.Context.Label ?== $atom.Header.Context.Form", _compile(claim))
-        addresses = {"Atom.Header.Context", "Atom.Header.Context.Label", "Atom.Header.Context.Form"}
+        self.assertIn(
+            "$atom.Header.Context.Label ?== $atom.Header.Context.Form",
+            _compile(claim),
+        )
+        addresses = {
+            "Atom.Header.Context",
+            "Atom.Header.Context.Label",
+            "Atom.Header.Context.Form",
+        }
         relations = {"IS_PROPERTY_OF"}
-        self.assertEqual((), lint_python_model_claim(claim, declared_addresses=addresses, relation_names=relations))
-        missing = addresses - {"Atom.Header.Context.Form"} | {"Other.Header.Context.Form"}
-        diagnostics = lint_python_model_claim(claim, declared_addresses=missing, relation_names=relations)
-        self.assertIn("unknown declared fallback Property: Atom.Header.Context.Form", diagnostics[0])
+        self.assertEqual(
+            (),
+            lint_python_model_claim(
+                claim, declared_addresses=addresses, relation_names=relations
+            ),
+        )
+        missing = addresses - {"Atom.Header.Context.Form"} | {
+            "Other.Header.Context.Form"
+        }
+        diagnostics = lint_python_model_claim(
+            claim, declared_addresses=missing, relation_names=relations
+        )
+        self.assertIn(
+            "unknown declared fallback Property: Atom.Header.Context.Form",
+            diagnostics[0],
+        )
 
     def test_base_status_claim_preserves_values_and_order_numbers(self):
         claim = """from anechoic.formal_claims import declare_entity
@@ -125,9 +152,16 @@ class Map(Projection):
 
 declare_entity(entity_class=Map, entity_name="Map", qualification_property_path="Projection.Form")
 """
-        self.assertEqual(("Projection.Form :: Map", "Projection/(.Form in (Map))"), _compile(claim))
+        self.assertEqual(
+            ("Projection.Form :: Map", "Projection/(.Form in (Map))"),
+            _compile(claim),
+        )
         with self.assertRaisesRegex(ValueError, "Projection as its sole base"):
-            _compile(claim.replace("import Projection", "import Atom").replace("Map(Projection)", "Map(Atom)"))
+            _compile(
+                claim.replace("import Projection", "import Atom").replace(
+                    "Map(Projection)", "Map(Atom)"
+                )
+            )
 
     def test_property_bearer_uses_a_qualified_model_path(self):
         def compile_property(base):
@@ -138,9 +172,17 @@ declare_entity(entity_class=Map, entity_name="Map", qualification_property_path=
 
         base = "Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Step).Content.Claim"
         self.assertEqual((f"{base}.Mermaid Scheme",), compile_property(base))
-        self.assertEqual(("Step.Content.Claim.Mermaid Scheme",), compile_property("Step.Content.Claim"))
+        self.assertEqual(
+            ("Step.Content.Claim.Mermaid Scheme",),
+            compile_property("Step.Content.Claim"),
+        )
         for invalid in ("Atom//Step", f"{base};Injected", f"{base}{{::1}}"):
-            with self.subTest(invalid=invalid), self.assertRaisesRegex(ValueError, "unsupported compiler name"):
+            with (
+                self.subTest(invalid=invalid),
+                self.assertRaisesRegex(
+                    ValueError, "unsupported compiler name"
+                ),
+            ):
                 compile_property(invalid)
 
 
@@ -157,16 +199,29 @@ declare_entity(entity_class=Map, entity_name="Map", qualification_property_path=
             f"{prefix}.Semantics ;> {prefix}.Details",
         )
         self.assertEqual(expected, _compile(native))
-        with self.assertRaisesRegex(ValueError, "invalid recursive_dependent_property_cardinality cardinality"):
-            _compile(native.replace("recursive_dependent_property_cardinality=Cardinality(minimum=0, maximum=None)",
-                                    "recursive_dependent_property_cardinality=-1"))
+        with self.assertRaisesRegex(
+            ValueError,
+            "invalid recursive_dependent_property_cardinality cardinality",
+        ):
+            _compile(
+                native.replace(
+                    "recursive_dependent_property_cardinality=Cardinality(minimum=0, maximum=None)",
+                    "recursive_dependent_property_cardinality=-1",
+                )
+            )
         with self.assertRaisesRegex(ValueError, "name format requires cardinality"):
             _compile(native.replace("recursive_dependent_property_cardinality=Cardinality(minimum=0, maximum=None),", ""))
         with self.assertRaisesRegex(ValueError, "must be acyclic"):
             _compile(native.replace('("Semantics", "Details")', '("Semantics", "Summary")'))
-        with self.assertRaisesRegex(ValueError, "must name distinct allowed children"):
-            _compile(native.replace('ordered_dependent_property_roles=(Requirement, Method, Evaluation, Delivery),',
-                                    'allowed_dependent_property_names=("Summary", "Claim"),'))
+        with self.assertRaisesRegex(
+            ValueError, "must name distinct allowed children"
+        ):
+            _compile(
+                native.replace(
+                    "ordered_dependent_property_roles=(Requirement, Method, Evaluation, Delivery),",
+                    'allowed_dependent_property_names=("Summary", "Claim"),',
+                )
+            )
 
 
 
@@ -193,7 +248,9 @@ declare_entity(entity_class=Map, entity_name="Map", qualification_property_path=
 
     def test_nested_header_property_preserves_single_role(self):
         native = ROLE_HEADER
-        with self.assertRaisesRegex(ValueError, "unsupported Property class selection"):
+        with self.assertRaisesRegex(
+            ValueError, "unsupported Property class selection"
+        ):
             _compile(native.replace("(Plan,)", "(Plan, Plan)"))
 
     def test_role_status_values_inherit_property_shape(self):
@@ -245,12 +302,16 @@ declare_entity(entity_name="Name", relation_name="IS_PROPERTY_OF", base_path="At
     def test_instance_check_cannot_be_silently_dropped(self):
         native = INSTANCE_CHECK
         parsed = parse_native_model_claim(native)
-        self.assertEqual("is_valid_atom", parsed["arguments"]["instance_check"])
-        with self.assertRaisesRegex(ValueError, "instance_check requires a typed validator"):
+        self.assertEqual(
+            "is_valid_atom", parsed["arguments"]["instance_check"]
+        )
+        with self.assertRaisesRegex(
+            ValueError, "instance_check requires a typed validator"
+        ):
             compiler_model_statements(parsed)
 
     def test_scope_level_schema_compiles_without_calling_its_check(self):
-        claim = '''from anechoic.formal_claims import declare_entity
+        claim = """from anechoic.formal_claims import declare_entity
 from anechoic.model import ScopeUnit
 
 def check_structural_level(unit: ScopeUnit) -> bool:
@@ -259,12 +320,14 @@ def check_structural_level(unit: ScopeUnit) -> bool:
 declare_entity(entity_name="structural_level", relation_name="IS_PROPERTY_OF",
                base_path="Scope Unit", property_occurrence_cardinality=1,
                value_format=int, value_cardinality=1, instance_check=check_structural_level)
-'''
+"""
         self.assertEqual(
             ("Scope Unit.structural_level{::1} :: [int]{::1}",),
             compile_python_model_claim(claim),
         )
-        with self.assertRaisesRegex(ValueError, "instance_check requires a typed validator"):
+        with self.assertRaisesRegex(
+            ValueError, "instance_check requires a typed validator"
+        ):
             _compile(claim)
 
 

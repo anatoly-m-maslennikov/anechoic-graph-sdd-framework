@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-2250
+concern:
+  subject: "Projection"
+  path: "Model/Graph/Node//Artifact//Derived"
+  relation: "is_narrower_than"
 container:
   component: C43
 tier: 3
@@ -8,8 +12,8 @@ context:
   lens: DES
 state:
   status: active
-  version: 8
-  updated_at: '2026-11-13T15:52:38.388129+00:00'
+  version: 10
+  updated_at: "2026-11-27T17:35:01.150345+00:00"
 ---
 ## Summary
 
@@ -26,7 +30,7 @@ The query Projection of governed Atom carriers, including selected Archive folde
 The query Projection **must**:
 
 - index Current, Draft and Backlog Atom carriers at Workbench startup.
-- load Archive contents on demand for one or more requested Scope Unit and Role pairs. Resolve each pair to the model-declared Archive folder and its admitted aliases. Add the selected Archive rows to `atoms` and report the loaded scope coverage. A new Workbench owner starts without loaded Archive scopes.
+- load Archive contents on demand for one or more requested Scope Unit and Role pairs. Resolve each pair to the model-declared Archive folder and its admitted aliases. Add the selected Archive rows to `atoms` and report loaded scope coverage under AN-S-1965. A new Workbench owner starts without loaded Archive scopes.
 - keep separate rows for physical files using Project-relative path and filename. A repeated load must not duplicate a physical file.
 - reserve Archive IDs and Versions from filename metadata while content rows are unloaded. Expose the highest Archived Version only for Atom IDs with a Current Atom or Draft, and the highest Archived Atom number per Role across all eligible Archive filenames. Apply the configured allocation range when choosing a new ID. If an exact historical selector or safe allocation needs an unloaded Archive, report that it is unloaded separately from a missing revision. A lifecycle operation may read an exact newly archived file it already identifies.
 - retain each indexed carrier's source locator, Atom identity, Version, lifecycle group, parsed Header, Markdown Content, and mapped Content Properties.

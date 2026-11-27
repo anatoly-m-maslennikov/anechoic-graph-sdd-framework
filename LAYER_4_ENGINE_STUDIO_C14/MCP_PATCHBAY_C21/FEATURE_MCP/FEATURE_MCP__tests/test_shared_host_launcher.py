@@ -47,7 +47,9 @@ class SharedHostLauncherTests(unittest.TestCase):
         result = SharedMcpLauncher(runner=runner).prepare(self.settings, IMAGE)
         self.assertEqual("dry-run", result["mode"])
         self.assertEqual("shared-mcp", result["service"])
-        self.assertEqual("54321", result["environment"]["ANECHOIC_MCP_HTTP_PORT"])
+        self.assertEqual(
+            "54321", result["environment"]["ANECHOIC_MCP_HTTP_PORT"]
+        )
         self.assertEqual("INFO", result["environment"]["ANECHOIC_LOG_LEVEL"])
         self.assertNotIn("ANECHOIC_PROJECT_ROOT", result["environment"])
         self.assertEqual([], runner.call_args_list)
@@ -86,7 +88,9 @@ class SharedHostLauncherTests(unittest.TestCase):
             f'schema_version=1\n[shared_mcp]\nproject_root="{root}"\nhttp_port=54321\n'
         )
         result = SharedMcpLauncher().prepare(self.settings, IMAGE)
-        self.assertEqual(str(root), result["environment"]["ANECHOIC_PROJECTS_ROOT"])
+        self.assertEqual(
+            str(root), result["environment"]["ANECHOIC_PROJECTS_ROOT"]
+        )
         self.assertEqual("420", result["command"][-2])
 
     def test_cli_dry_run_exits_success_without_docker(self):
@@ -119,7 +123,9 @@ class SharedHostLauncherTests(unittest.TestCase):
     def test_requires_explicit_immutable_image_without_docker(self):
         runner = unittest.mock.Mock()
         with self.assertRaises(ValueError):
-            SharedMcpLauncher(runner=runner).prepare(self.settings, "anechoic-runtime:local")
+            SharedMcpLauncher(runner=runner).prepare(
+                self.settings, "anechoic-runtime:local"
+            )
         runner.assert_not_called()
 
     def test_compose_is_one_loopback_service_with_two_exact_bind_mounts(self):
@@ -225,7 +231,9 @@ class SharedHostLauncherTests(unittest.TestCase):
 
         result = SharedMcpLauncher(
             runner=run,
-            opener=lambda *_args, **_kwargs: FakeResponse(b'{"state": "ready"}'),
+            opener=lambda *_args, **_kwargs: FakeResponse(
+                b'{"state": "ready"}'
+            ),
             sleeper=lambda _seconds: None,
             clock=clock,
         ).apply(self.settings, IMAGE, readiness_timeout=30)

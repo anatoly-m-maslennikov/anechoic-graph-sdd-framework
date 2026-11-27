@@ -8,8 +8,8 @@ context:
   lens: SWD
 state:
   status: active
-  version: 20
-  updated_at: '2026-11-12T01:59:14.433341+00:00'
+  version: 21
+  updated_at: "2026-11-27T15:50:51.353081+00:00"
 ---
 
 ## Summary
@@ -27,7 +27,7 @@ Keep technical diagnosis on structured stdout/stderr streams and record actual b
 
 ### Scope
 
-New or changed PROGRAMMATIC implementation, including Tools, Apps, MCP adapters and their public operation boundaries.
+Use the scope for changed PROGRAMMATIC implementation in AN-S-1252.
 
 1. Emit technical diagnostics through the shared logger with the actual Project prefix and sanitized context. The Docker runtime captures these streams under its bounded retention/back-pressure configuration; use stderr when stdout carries MCP/Tool protocol or result data.
    For the Project Atom Lifecycle backend, emit a stdout INFO event when each step starts and when it ends as done or failed. Include the step and elapsed time in the end event. Keep input values and carrier contents out of the log.

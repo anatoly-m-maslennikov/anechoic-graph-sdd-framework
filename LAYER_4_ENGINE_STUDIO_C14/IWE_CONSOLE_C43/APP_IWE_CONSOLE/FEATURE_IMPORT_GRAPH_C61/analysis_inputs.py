@@ -1,4 +1,4 @@
-"""Capture measured files and exact bindings from the Realization Graph inventory."""
+"""Capture measured files and exact Realization Graph inventory bindings."""
 
 from pathlib import PurePosixPath
 

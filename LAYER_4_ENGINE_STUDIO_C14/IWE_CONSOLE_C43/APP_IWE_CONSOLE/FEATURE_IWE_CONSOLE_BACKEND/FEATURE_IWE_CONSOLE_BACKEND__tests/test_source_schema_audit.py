@@ -20,11 +20,18 @@ def declaration(number, name, base_path, extra="", *, values=1):
         "from anechoic.formal_claims import Cardinality, declare_entity\n"
         "from anechoic.model import Concern\n"
         f'declare_entity(entity_name={name!r}, relation_name="IS_PROPERTY_OF", base_path={base_path!r}, '
-        f'property_occurrence_cardinality=1, value_cardinality={values}, {extra})\n```\n'
+        f"property_occurrence_cardinality=1, value_cardinality={values}, {extra})\n```\n"
     ).encode()
-    return {'id': reference, 'ref': reference, 'source_path': f'{reference}.md',
-            'version': 1, 'status_group': 'Current', 'role': 'Requirement',
-            'form': 'Declaration', '_content_bytes': body}
+    return {
+        "id": reference,
+        "ref": reference,
+        "source_path": f"{reference}.md",
+        "version": 1,
+        "status_group": "Current",
+        "role": "Requirement",
+        "form": "Declaration",
+        "_content_bytes": body,
+    }
 
 
 def auditor(*, container_constraint=False):
@@ -73,59 +80,135 @@ def auditor(*, container_constraint=False):
     return SourceSchemaAudit(schema, status)
 
 
-def atom(header, body, group='Current'):
-    return {'source_path': 'some/atom.md', 'status_group': group, 'header_json': header,
-            'role': header.get('role'), 'form': header.get('form'), '_content_bytes': body.encode(),
-            'content_properties_json': parse_content(body, tolerate_duplicate_siblings=True, compact=True)}
+def atom(header, body, group="Current"):
+    return {
+        "source_path": "some/atom.md",
+        "status_group": group,
+        "header_json": header,
+        "role": header.get("role"),
+        "form": header.get("form"),
+        "_content_bytes": body.encode(),
+        "content_properties_json": parse_content(
+            body, tolerate_duplicate_siblings=True, compact=True
+        ),
+    }
 
 
 
 class Tests(unittest.TestCase):
-    def test_valid_row_and_archived_row_are_both_audited_without_reparsing(self):
+    def test_valid_row_and_archived_row_are_both_audited_without_reparsing(
+        self,
+    ):
         audit = auditor()
-        body = '## Summary\nExample\n## Claim\n### Prose Claim\nText\n'
-        header = {'role': 'concern', 'form': 'problem', 'status': 'active', 'version': 1, 'priority': 'High'}
+        body = "## Summary\nExample\n## Claim\n### Prose Claim\nText\n"
+        header = {
+            "role": "concern",
+            "form": "problem",
+            "status": "active",
+            "version": 1,
+            "priority": "High",
+        }
         current = atom(header, body)
-        archived = atom({**header, 'status': 'archived', 'priority': 'Wrong'}, body, 'Archived')
-        with patch('FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared.parse_content', side_effect=AssertionError('reparsed')):
+        archived = atom(
+            {**header, "status": "archived", "priority": "Wrong"},
+            body,
+            "Archived",
+        )
+        with patch(
+            "FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared.parse_content",
+            side_effect=AssertionError("reparsed"),
+        ):
             assert audit.issues(current) == []
-            assert any(issue['field'] == 'priority' for issue in audit.issues(archived))
-
+            assert any(
+                issue["field"] == "priority"
+                for issue in audit.issues(archived)
+            )
 
     def test_reports_multiple_header_and_content_violations(self):
         audit = auditor()
-        row = atom({'role': 'concern', 'form': 'problem', 'status': 'bad', 'version': 'wrong'},
-                   '## Summary\n## Claim\n### Unexpected\nText\n')
+        row = atom(
+            {
+                "role": "concern",
+                "form": "problem",
+                "status": "bad",
+                "version": "wrong",
+            },
+            "## Summary\n## Claim\n### Unexpected\nText\n",
+        )
         issues = audit.issues(row)
-        assert {'status', 'header.state.version', 'priority', 'content.summary', 'content.claim'} <= {
-            issue['field'] for issue in issues}
-
+        assert {
+            "status",
+            "header.state.version",
+            "priority",
+            "content.summary",
+            "content.claim",
+        } <= {issue["field"] for issue in issues}
 
     def test_reports_duplicate_declared_fields_in_archived_sources(self):
         audit = auditor()
-        row = atom({'role': 'concern', 'form': 'problem', 'status': 'archived', 'version': 1, 'priority': 'High'},
-                   '## Summary\nOne\n## Summary\nTwo\n## Claim\n### Prose Claim\nText\n', 'Archived')
+        row = atom(
+            {
+                "role": "concern",
+                "form": "problem",
+                "status": "archived",
+                "version": 1,
+                "priority": "High",
+            },
+            "## Summary\nOne\n## Summary\nTwo\n## Claim\n### Prose Claim\nText\n",
+            "Archived",
+        )
         issues = audit.issues(row)
-        assert any('duplicate declared content property: summary' in issue['message'] for issue in issues)
-
+        assert any(
+            "duplicate declared content property: summary" in issue["message"]
+            for issue in issues
+        )
 
     def test_required_heading_and_direct_values_are_independent(self):
         audit = auditor()
-        row = atom({'role': 'concern', 'form': 'problem', 'status': 'active', 'version': 1, 'priority': 'High'},
-                   '## Summary\n## Claim\n### Prose Claim\nText\n')
+        row = atom(
+            {
+                "role": "concern",
+                "form": "problem",
+                "status": "active",
+                "version": 1,
+                "priority": "High",
+            },
+            "## Summary\n## Claim\n### Prose Claim\nText\n",
+        )
         issues = audit.issues(row)
-        assert any(issue['field'] == 'content.summary' and 'direct Markdown values' in issue['message'] for issue in issues)
-
+        assert any(
+            issue["field"] == "content.summary"
+            and "direct Markdown values" in issue["message"]
+            for issue in issues
+        )
 
     def test_null_is_not_a_valid_integer_even_when_property_is_present(self):
         audit = auditor()
-        row = atom({'role': 'concern', 'form': 'problem', 'status': 'active', 'version': None, 'priority': 'High'},
-                   '## Summary\nText\n## Claim\n### Prose Claim\nText\n')
-        assert any(issue['field'] == 'header.state.version' for issue in audit.issues(row))
-
+        row = atom(
+            {
+                "role": "concern",
+                "form": "problem",
+                "status": "active",
+                "version": None,
+                "priority": "High",
+            },
+            "## Summary\nText\n## Claim\n### Prose Claim\nText\n",
+        )
+        assert any(
+            issue["field"] == "header.state.version"
+            for issue in audit.issues(row)
+        )
 
     def test_undeclared_form_is_reported(self):
         audit = auditor()
-        row = atom({'role': 'concern', 'form': 'not_declared', 'status': 'active', 'version': 1, 'priority': 'High'},
-                   '## Summary\nText\n## Claim\n### Prose Claim\nText\n')
-        assert any(issue['field'] == 'form' for issue in audit.issues(row))
+        row = atom(
+            {
+                "role": "concern",
+                "form": "not_declared",
+                "status": "active",
+                "version": 1,
+                "priority": "High",
+            },
+            "## Summary\nText\n## Claim\n### Prose Claim\nText\n",
+        )
+        assert any(issue["field"] == "form" for issue in audit.issues(row))

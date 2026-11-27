@@ -9,19 +9,39 @@ import sys
 import tempfile
 import unittest
 
-from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75._package__shared import verify_formal_chain
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75._package__shared import (
+    verify_formal_chain,
+)
 
 ROOT = Path(__file__).resolve().parents[5]
-ENGINE = ROOT / 'LAYER_4_ENGINE_STUDIO_C14'
-BASE = '_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/'
-MANIFEST = {'path': BASE + '01_draft/AN-S-3056@68-draft-SPEC-COMPONENT_MANIFEST--declare-tools.md',
-            'atom_id': 'AN-S-3056', 'version': 68, 'status': 'draft', 'container_component': 'C15'}
-SOLUTION = {'path': BASE + 'FEATURE_TOOLS_C16/01_draft/AN-S-5042@1-draft-DES-SOLUTION--update-one-exact-draft.md',
-            'atom_id': 'AN-S-5042', 'version': 1, 'status': 'draft', 'container_component': 'C16'}
+ENGINE = ROOT / "LAYER_4_ENGINE_STUDIO_C14"
+BASE = "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/"
+MANIFEST = {
+    "path": BASE
+    + "01_draft/AN-S-3056@68-draft-SPEC-COMPONENT_MANIFEST--declare-tools.md",
+    "atom_id": "AN-S-3056",
+    "version": 68,
+    "status": "draft",
+    "container_component": "C15",
+}
+SOLUTION = {
+    "path": BASE
+    + "FEATURE_TOOLS_C16/01_draft/AN-S-5042@1-draft-DES-SOLUTION--update-one-exact-draft.md",
+    "atom_id": "AN-S-5042",
+    "version": 1,
+    "status": "draft",
+    "container_component": "C16",
+}
 
 
 def invoke(request, fault=None, target=None):
-    command = [sys.executable, '-B', '-P', '-m', 'FEATURE_PROGRAMMATIC.FEATURE_TOOLS.native_lifecycle_cli']
+    command = [
+        sys.executable,
+        "-B",
+        "-P",
+        "-m",
+        "FEATURE_PROGRAMMATIC.FEATURE_TOOLS.native_lifecycle_cli",
+    ]
     if fault:
         command = [sys.executable, '-B', '-P', '-c', """
 import os
@@ -67,30 +87,71 @@ def project(root):
     manifest = control / 'AN-S-1-PROJECT_MANIFEST--manifest.md'
     manifest.write_text('project fixture')
     digest = hashlib.sha256(manifest.read_bytes()).hexdigest()
-    binding = {'root': str(root), 'control_root': control.name,
-               'manifest_path': manifest.relative_to(root).as_posix(),
-               'manifest_sha256': digest, 'project_prefix': 'AN'}
-    request = {'binding': binding, 'name': 'atom_lifecycle_create_draft',
-               'arguments': {'newAtom': {'template': 'task', 'container': {'component': 'C00'},
-                                         'body': '\n## Summary\n\nExample\n\n## Work\n\nOriginal\n'}},
-               'indexed_task': {'max_number': '0', 'manifest_ref': 'AN-S-1@1',
-                                'component_ids': ['C00'], 'ticket_labels': ['Task']}}
-    created = invoke(request)['savedDraft']
+    binding = {
+        "root": str(root),
+        "control_root": control.name,
+        "manifest_path": manifest.relative_to(root).as_posix(),
+        "manifest_sha256": digest,
+        "project_prefix": "AN",
+    }
+    request = {
+        "binding": binding,
+        "name": "atom_lifecycle_create_draft",
+        "arguments": {
+            "newAtom": {
+                "template": "task",
+                "container": {"component": "C00"},
+                "body": "\n## Summary\n\nExample\n\n## Work\n\nOriginal\n",
+            }
+        },
+        "indexed_task": {
+            "max_number": "0",
+            "manifest_ref": "AN-S-1@1",
+            "component_ids": ["C00"],
+            "ticket_labels": ["Task"],
+        },
+    }
+    created = invoke(request)["savedDraft"]
     return binding, created
 
 
 def update_request(binding, draft, changes, expected):
-    ref = draft['ref_id']
-    carrier = {'ref': ref, '_exact_ref': ref, 'source_path': draft['path'], 'version': draft['version'],
-               'status': 'draft', 'status_group': 'Draft', 'id': draft['atom_id'],
-               'owner_kind': 'Component', 'owner_ref': 'C00', 'read': True}
-    structure = {'model_sha256': 'fixture', 'project': {'ref': 'AN-S-1@1', 'sha256': binding['manifest_sha256']},
-                 'components': {}, 'packages': {}}
-    return {'binding': binding, 'name': 'atom_lifecycle_update',
-            'arguments': {'target': {'ref_id': ref, 'version': draft['version']},
-                          'changes': changes, 'expectedUpdatedAt': expected},
-            'lifecycle_context': {'structure': structure, 'model': None, 'carriers': [carrier],
-                                  'max_numbers': {'T': '1', 'S': '1'}, 'lenses': [], 'ticket_labels': []}}
+    ref = draft["ref_id"]
+    carrier = {
+        "ref": ref,
+        "_exact_ref": ref,
+        "source_path": draft["path"],
+        "version": draft["version"],
+        "status": "draft",
+        "status_group": "Draft",
+        "id": draft["atom_id"],
+        "owner_kind": "Component",
+        "owner_ref": "C00",
+        "read": True,
+    }
+    structure = {
+        "model_sha256": "fixture",
+        "project": {"ref": "AN-S-1@1", "sha256": binding["manifest_sha256"]},
+        "components": {},
+        "packages": {},
+    }
+    return {
+        "binding": binding,
+        "name": "atom_lifecycle_update",
+        "arguments": {
+            "target": {"ref_id": ref, "version": draft["version"]},
+            "changes": changes,
+            "expectedUpdatedAt": expected,
+        },
+        "lifecycle_context": {
+            "structure": structure,
+            "model": None,
+            "carriers": [carrier],
+            "max_numbers": {"T": "1", "S": "1"},
+            "lenses": [],
+            "ticket_labels": [],
+        },
+    }
 
 
 class GeneratedExactDraftTests(unittest.TestCase):
@@ -115,15 +176,24 @@ class GeneratedExactDraftTests(unittest.TestCase):
         binding, draft = project(root)
         path = root / draft['path']
         before = path.read_bytes()
-        before_files = {p.relative_to(root) for p in root.rglob('*') if p.is_file()}
-        expected = 'stale' if variant == 'stale' else draft['updated_at']
-        body = '\n## Summary\n\nExample\n\n## Work\n\nSaved\n'
-        if variant == 'summary':
-            body = body.replace('Example', 'Changed')
-        changes = ({'removeRelations': [{'type': 'RELATES_TO', 'ref_id': 'AN-T-9'}]}
-                   if variant == 'unowned_relation' else {'body': body})
-        fault = case if case in ('write_rejected', 'effect_uncertain') else None
-        result = invoke(update_request(binding, draft, changes, expected), fault, path)
+        before_files = {
+            p.relative_to(root) for p in root.rglob("*") if p.is_file()
+        }
+        expected = "stale" if variant == "stale" else draft["updated_at"]
+        body = "\n## Summary\n\nExample\n\n## Work\n\nSaved\n"
+        if variant == "summary":
+            body = body.replace("Example", "Changed")
+        changes = (
+            {"removeRelations": [{"type": "RELATES_TO", "ref_id": "AN-T-9"}]}
+            if variant == "unowned_relation"
+            else {"body": body}
+        )
+        fault = (
+            case if case in ("write_rejected", "effect_uncertain") else None
+        )
+        result = invoke(
+            update_request(binding, draft, changes, expected), fault, path
+        )
         if fault:
             self.assert_write_failure(case, draft, result, before, path.read_bytes())
             self.assertEqual(before_files, {p.relative_to(root) for p in root.rglob('*') if p.is_file()})
@@ -151,9 +221,11 @@ class GeneratedExactDraftTests(unittest.TestCase):
             self.assertEqual([], result['effects'])
             self.assertEqual(before, after)
         else:
-            self.assertEqual('effect_uncertain', result['errors'][0]['code'])
-            receipt, = result['effects']
-            self.assertEqual(('modify', draft['path'], 'unknown'),
-                             (receipt['operation'], receipt['target'], receipt['state']))
+            self.assertEqual("effect_uncertain", result["errors"][0]["code"])
+            (receipt,) = result["effects"]
+            self.assertEqual(
+                ("modify", draft["path"], "unknown"),
+                (receipt["operation"], receipt["target"], receipt["state"]),
+            )
             self.assertNotEqual(before, after)
             self.assertIn(b'Saved', after)

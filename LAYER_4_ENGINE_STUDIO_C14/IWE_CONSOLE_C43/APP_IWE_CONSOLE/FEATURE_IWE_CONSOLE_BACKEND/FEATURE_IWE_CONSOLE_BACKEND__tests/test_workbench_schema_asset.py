@@ -7,7 +7,10 @@ from pathlib import Path
 import unittest
 
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (DeclarationSource)  # noqa: E402
-from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import HeaderRule, compile_header_rules  # noqa: E402
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (  # noqa: E402
+    HeaderRule,
+    compile_header_rules,
+)
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import WorkbenchUnavailableError  # noqa: E402
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (  # noqa: E402
     declared_header_schema,
@@ -52,13 +55,18 @@ property_rule(address="Atom.Header.Updated At", value_format="datetime", values=
         self.assertIn("header.state.updated_at", schema.names)
         self.assertNotIn("header.context.label", schema.names)
         self.assertNotIn("header.unknown_residue", schema.names)
-        self.assertEqual("Requirement", next(
-            schema.value(row, column)
-            for column in schema.columns if column.name == "header.context.role"
-        ))
+        self.assertEqual(
+            "Requirement",
+            next(
+                schema.value(row, column)
+                for column in schema.columns
+                if column.name == "header.context.role"
+            ),
+        )
 
         store = QueryStore(
-            extension_directory=extension_directory(APP_ROOT.parents[1]), database_path=self.database,
+            extension_directory=extension_directory(APP_ROOT.parents[1]),
+            database_path=self.database,
             schema_mode=1,
         )
         self.addCleanup(store.close)
@@ -70,12 +78,26 @@ property_rule(address="Atom.Header.Updated At", value_format="datetime", values=
         self._assert_declared_schema_changes(row, store, schema, rules)
 
     def _assert_declared_schema_changes(self, row, store, schema, rules):
-        changed = atom(header={**row["header_json"], "unknown residue": "changed"}, version=2)
-        self.assertFalse(store.apply([changed], [], relation_types=set(), header_schema=schema))
+        changed = atom(
+            header={**row["header_json"], "unknown residue": "changed"},
+            version=2,
+        )
+        self.assertFalse(
+            store.apply(
+                [changed], [], relation_types=set(), header_schema=schema
+            )
+        )
         self.assertFalse(store.schema_changed)
 
-        declared_change = declared_header_schema((*rules, *compile_header_rules([atom(
-            "CA-R-DECL-2", form="Declaration", body="""## Claim
+        declared_change = declared_header_schema(
+            (
+                *rules,
+                *compile_header_rules(
+                    [
+                        atom(
+                            "CA-R-DECL-2",
+                            form="Declaration",
+                            body="""## Claim
 
 ### Formal Claim
 
@@ -83,8 +105,19 @@ property_rule(address="Atom.Header.Updated At", value_format="datetime", values=
 property_rule(address="Atom.Header.Declared Later", value_format="string", values="1")
 ```
 """,
-        )])))
-        self.assertTrue(store.apply([changed], [], relation_types=set(), header_schema=declared_change))
+                        )
+                    ]
+                ),
+            )
+        )
+        self.assertTrue(
+            store.apply(
+                [changed],
+                [],
+                relation_types=set(),
+                header_schema=declared_change,
+            )
+        )
         self.assertTrue(store.schema_changed)
 
 
@@ -100,7 +133,10 @@ property_rule(address="Atom.Header.Context.Role", value_format="string", values=
 """,
         )]))
         with self.assertRaisesRegex(ValueError, "Conflicting Header aliases"):
-            schema.value(atom(header={"role": "Requirement", "content_role": "Method"}), schema.columns[0])
+            schema.value(
+                atom(header={"role": "Requirement", "content_role": "Method"}),
+                schema.columns[0],
+            )
         conflicting = [
             atom("CA-R-INT", form="Declaration", body="""## Claim
 
@@ -127,7 +163,11 @@ property_rule(address="Atom.Header.Version", value_format="string", values="1")
         SourceReaderFixture.setUp(self)
         reader = SourceReader(self.root, schema_mode=1)
         path = self._write_atom(
-            "MAIN", "04_requirement", "CA-R-3-header.md", atom_id="CA-R-3", form="Declaration",
+            "MAIN",
+            "04_requirement",
+            "CA-R-3-header.md",
+            atom_id="CA-R-3",
+            form="Declaration",
             body="""## Claim
 
 ### Formal Claim
@@ -142,36 +182,66 @@ declare_entity(entity_name="Example", relation_name="IS_PROPERTY_OF", base_path=
         reader.capture()
         self.assertEqual("BIGINT", reader.header_schema.columns[0].format)
         initial_shape = reader.header_schema.shape
-        change = [{"operation": "update", "new_path": path.relative_to(self.root).as_posix()}]
+        change = [
+            {
+                "operation": "update",
+                "new_path": path.relative_to(self.root).as_posix(),
+            }
+        ]
         original = path.read_text()
         path.write_text(original.replace("version: 1", "version: 2"))
         reader.capture(change)
         self.assertIsNotNone(reader.capture_delta)
         self.assertEqual(initial_shape, reader.header_schema.shape)
-        self.assertEqual(2, reader.header_schema.columns[0].rules[0].source.version)
-        path.write_text(original.replace("version: 1", "version: 3").replace("value_format=int", "value_format=str"))
+        self.assertEqual(
+            2, reader.header_schema.columns[0].rules[0].source.version
+        )
+        path.write_text(
+            original.replace("version: 1", "version: 3").replace(
+                "value_format=int", "value_format=str"
+            )
+        )
         reader.capture(change)
         self.assertIsNone(reader.capture_delta)
         self.assertEqual("VARCHAR", reader.header_schema.columns[0].format)
         self.assertNotEqual(initial_shape, reader.header_schema.shape)
 
 
-    def test_equal_header_validation_shapes_ignore_distinct_provenance(self) -> None:
+    def test_equal_header_validation_shapes_ignore_distinct_provenance(
+        self,
+    ) -> None:
         occurrence = DeclarationSource("CA-R-PROPERTY", 1, "property.md")
         first = DeclarationSource("CA-R-PARENT-1", 1, "parent-1.md")
         second = DeclarationSource("CA-R-PARENT-2", 1, "parent-2.md")
-        rule = HeaderRule(("context", "label"), "VARCHAR", frozenset({"Operations"}),
-                          frozenset({"Workflow"}), occurrence, provenance=(first,))
-        another = HeaderRule(("context", "label"), "VARCHAR", frozenset({"Operations"}),
-                             frozenset({"Workflow"}), occurrence, provenance=(second,))
+        rule = HeaderRule(
+            ("context", "label"),
+            "VARCHAR",
+            frozenset({"Operations"}),
+            frozenset({"Workflow"}),
+            occurrence,
+            provenance=(first,),
+        )
+        another = HeaderRule(
+            ("context", "label"),
+            "VARCHAR",
+            frozenset({"Operations"}),
+            frozenset({"Workflow"}),
+            occurrence,
+            provenance=(second,),
+        )
         single = declared_header_schema((rule,))
         both = declared_header_schema((rule, another))
         self.assertEqual(single.shape, both.shape)
         self.assertEqual(2, len(both.asset()["header_columns"][0]["rules"]))
 
 
-    def test_mode_one_same_shape_declaration_provenance_writes_after_commit(self) -> None:
-        declaration = atom("CA-R-DECL", form="Declaration", body="""## Claim
+    def test_mode_one_same_shape_declaration_provenance_writes_after_commit(
+        self,
+    ) -> None:
+        declaration = atom(
+            "CA-R-DECL",
+            form="Declaration",
+            body="""## Claim
 
 ### Formal Claim
 
@@ -180,21 +250,36 @@ from anechoic.formal_claims import declare_entity
 declare_entity(entity_name="Tier", relation_name="IS_PROPERTY_OF", base_path="Atom.Header",
                value_format=int, value_cardinality=1)
 ~~~
-""")
+""",
+        )
         header = declared_header_schema(compile_header_rules([declaration]))
         row = atom(header={"tier": 1})
         store = QueryStore(
-            extension_directory=extension_directory(APP_ROOT.parents[1]), database_path=self.database,
+            extension_directory=extension_directory(APP_ROOT.parents[1]),
+            database_path=self.database,
             schema_mode=1,
         )
         self.addCleanup(store.close)
         store.replace([row], [], header_schema=header)
-        changed = declared_header_schema(compile_header_rules([dict(declaration, version=2)]))
-        self.assertFalse(store.apply(
-            [dict(row, version=2)], [], relation_types=set(), header_schema=changed,
-        ))
-        payload = json.loads((self.database.parent / "projection-schema.json").read_text(encoding="utf-8"))
-        self.assertEqual(2, payload["header_columns"][0]["rules"][0]["source"]["version"])
+        changed = declared_header_schema(
+            compile_header_rules([dict(declaration, version=2)])
+        )
+        self.assertFalse(
+            store.apply(
+                [dict(row, version=2)],
+                [],
+                relation_types=set(),
+                header_schema=changed,
+            )
+        )
+        payload = json.loads(
+            (self.database.parent / "projection-schema.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        self.assertEqual(
+            2, payload["header_columns"][0]["rules"][0]["source"]["version"]
+        )
 
 
     def test_header_selector_without_a_literal_header_path_does_not_become_a_column(self) -> None:
@@ -209,8 +294,13 @@ subject_path(address="Atom/(.Header.Role: Operations)/Workflow")
         self.assertEqual((), compile_header_rules([selector]))
 
 
-    def test_mode_one_rejects_legacy_type_and_naive_timestamp_without_coercion(self) -> None:
-        declaration = atom("CA-R-DECL", form="Declaration", body="""## Claim
+    def test_mode_one_rejects_legacy_type_and_naive_timestamp_without_coercion(
+        self,
+    ) -> None:
+        declaration = atom(
+            "CA-R-DECL",
+            form="Declaration",
+            body="""## Claim
 
 ### Formal Claim
 
@@ -218,19 +308,27 @@ subject_path(address="Atom/(.Header.Role: Operations)/Workflow")
 property_rule(address="Atom.Header.Tier", value_format="int", values="1")
 property_rule(address="Atom.Header.Updated At", value_format="datetime", values="1")
 ```
-""")
+""",
+        )
         schema = declared_header_schema(compile_header_rules([declaration]))
         naive = atom(header={"updated_at": "2026-11-09 00:00:00"})
-        updated_at = next(column for column in schema.columns if column.reader == "updated_at")
+        updated_at = next(
+            column
+            for column in schema.columns
+            if column.reader == "updated_at"
+        )
         with self.assertRaisesRegex(ValueError, "offset-bearing"):
             schema.value(naive, updated_at)
         store = QueryStore(
-            extension_directory=extension_directory(APP_ROOT.parents[1]), database_path=self.database,
+            extension_directory=extension_directory(APP_ROOT.parents[1]),
+            database_path=self.database,
             schema_mode=1,
         )
         self.addCleanup(store.close)
         with self.assertRaises(WorkbenchUnavailableError):
-            store.replace([atom(header={"tier": "principle"})], [], header_schema=schema)
+            store.replace(
+                [atom(header={"tier": "principle"})], [], header_schema=schema
+            )
 
 if __name__ == "__main__":
     unittest.main()

@@ -38,11 +38,27 @@ class NativeQueryProjection:
                 raise ValueError(f"import_graph.{name} must be a list of Project-relative paths")
             for value in values:
                 path = Path(value)
-                if path.is_absolute() or ".." in path.parts or not (self._root / path).resolve().is_relative_to(self._root.resolve()):
-                    raise ValueError(f"import_graph.{name} paths must be inside the Project")
-                if name == "include" and (path == Path(".") or (self._root / path).is_dir()):
-                    raise ValueError("import_graph.include paths must name source files")
+                if (
+                    path.is_absolute()
+                    or ".." in path.parts
+                    or not (self._root / path)
+                    .resolve()
+                    .is_relative_to(self._root.resolve())
+                ):
+                    raise ValueError(
+                        f"import_graph.{name} paths must be inside the Project"
+                    )
+                if name == "include" and (
+                    path == Path(".") or (self._root / path).is_dir()
+                ):
+                    raise ValueError(
+                        "import_graph.include paths must name source files"
+                    )
             result.append(tuple(values))
+        validated = self._image_import_options(config)
+        return result[0], result[1], validated
+
+    def _image_import_options(self, config):
         image_imports = config.get("python_image_imports", {})
         if not isinstance(image_imports, dict):
             raise ValueError("import_graph.python_image_imports must be a mapping")
@@ -63,7 +79,7 @@ class NativeQueryProjection:
             ):
                 raise ValueError("import_graph.python_image_imports values must be lists of dotted Python module names")
             validated[value] = tuple(modules)
-        return result[0], result[1], validated
+        return validated
 
     def _prepare_realization(self, store, *, changes=None, force_parse=False, structure_changed=False):
         assert self._realization_options is not None
@@ -155,11 +171,22 @@ class NativeQueryProjection:
 
     def _watch_realization_changes(self, store: QueryStore, batch) -> None:
         try:
-            paths = {path for change in batch for key in ('old_path', 'new_path')
-                     if (path := change.get(key)) is not None}
-            if (paths and all(is_trace_path(path) and not realization_projection.test_asset_change(self._root, path)
-                              and not PurePosixPath(path).is_relative_to(self.selection.control_relative)
-                              for path in paths)):
+            paths = {
+                path
+                for change in batch
+                for key in ("old_path", "new_path")
+                if (path := change.get(key)) is not None
+            }
+            if paths and all(
+                is_trace_path(path)
+                and not realization_projection.test_asset_change(
+                    self._root, path
+                )
+                and not PurePosixPath(path).is_relative_to(
+                    self.selection.control_relative
+                )
+                for path in paths
+            ):
                 self._refresh_traces(store, paths)
                 return
             snapshot = self.selection.structure_snapshot
@@ -167,8 +194,12 @@ class NativeQueryProjection:
             prepared = self._prepare_realization(store, changes=batch, structure_changed=structure_changed)
             if prepared is not None:
                 def publish(graph, capture):
-                    bindings = realization_projection.publish(store, graph, prepared)
-                    self._publish_realization_metadata(store, capture, bindings)
+                    bindings = realization_projection.publish(
+                        store, graph, prepared
+                    )
+                    self._publish_realization_metadata(
+                        store, capture, bindings
+                    )
 
                 if structure_changed:
                     self._project(store, capture=self._capture, before_commit=publish)
@@ -226,15 +257,25 @@ class NativeQueryProjection:
                                   domains=self._inputs.status_domains), selection
         except NativeManifestChanged:
             selection = resolve_native_project(
-                self._root, self.selection.control_relative, validate_manifest=self._inputs.validate_manifest,
-                require_atom_state=self._inputs.require_atom_state, require_atom_header=self._inputs.require_atom_header,
+                self._root,
+                self.selection.control_relative,
+                validate_manifest=self._inputs.validate_manifest,
+                require_atom_state=self._inputs.require_atom_state,
+                require_atom_header=self._inputs.require_atom_header,
                 require_manifest_summary=self._inputs.require_manifest_summary,
             )
-            if (selection.project_name != self.selection.project_name
-                    or selection.project_prefix != self.selection.project_prefix
-                    or selection.manifest_ref.partition("@")[0] != self.selection.manifest_ref.partition("@")[0]):
-                raise ValueError("Project identity changed. Restart required.") from None
-            return capture_native(selection, domains=self._inputs.status_domains), selection
+            if (
+                selection.project_name != self.selection.project_name
+                or selection.project_prefix != self.selection.project_prefix
+                or selection.manifest_ref.partition("@")[0]
+                != self.selection.manifest_ref.partition("@")[0]
+            ):
+                raise ValueError(
+                    "Project identity changed. Restart required."
+                ) from None
+            return capture_native(
+                selection, domains=self._inputs.status_domains
+            ), selection
 
     def _refresh_atom_sources(self, store: QueryStore, paths: set[PurePosixPath] | None) -> NativeCapture:
         previous = self._capture
@@ -247,7 +288,7 @@ class NativeQueryProjection:
             if not project_native_delta(
                 store, capture, paths=paths, relation_types=self._inputs.relation_types,
                 inverses=self._inputs.inverses,
-                component_ids=self._component_ids(),
+                component_ids=self._component_ids(), selection=selection,
                 before_commit=lambda graph: self._publish_realization_metadata(store, capture, atoms_only=True),
             ):
                 self._project(store, capture=capture)
@@ -276,8 +317,8 @@ class NativeQueryProjection:
                 before_commit(graph, capture)
 
         project_native(store, capture, relation_types=self._inputs.relation_types, component_ids=self._component_ids(),
-                       inverses=self._inputs.inverses,
-                       use_retained=use_retained, before_commit=finish)
+                       inverses=self._inputs.inverses, selection=selection,
+                              use_retained=use_retained, before_commit=finish)
         self._projection_selection = selection
         return capture
 

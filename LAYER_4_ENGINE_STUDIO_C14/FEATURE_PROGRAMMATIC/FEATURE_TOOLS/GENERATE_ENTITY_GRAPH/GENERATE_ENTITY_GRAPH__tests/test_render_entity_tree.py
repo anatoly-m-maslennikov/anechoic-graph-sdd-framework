@@ -82,7 +82,7 @@ class RenderEntityTreeTests(unittest.TestCase):
     def source_bytes(self):
         return [path.read_bytes() for path in (self.source, self.snapshot)]
 
-    def test_stdout_and_published_markdown_use_current_atoms_and_preserve_inputs(
+    def _case_0(
         self,
     ):
         before = self.source_bytes()
@@ -309,6 +309,13 @@ class RenderEntityTreeTests(unittest.TestCase):
                 self.assertTrue(self.output.is_symlink())
                 self.assertFalse((self.root / self.output.name).exists())
                 self.assertEqual(before, self.source_bytes())
+
+
+setattr(
+    RenderEntityTreeTests,
+    "test_stdout_and_published_markdown_use_current_atoms_and_preserve_inputs",
+    RenderEntityTreeTests._case_0,
+)
 
 
 if __name__ == "__main__":

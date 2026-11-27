@@ -127,7 +127,8 @@ def main():
             original if original is not None else PurePosixPath(owner).stem
         )
         print(
-            f"{site.source_path}:{site.line}:{site.column + 1}: {name} passes through {site.target_path}. "
+            f"{site.source_path}:{site.line}:{site.column + 1}: "
+            f"{name} passes through {site.target_path}. "
             f"Import {symbol} from the defining Package's entry ({package}).",
             file=sys.stderr,
         )

@@ -16,7 +16,6 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from MCP_PATCHBAY_C21.FEATURE_MCP.docker.mcp_paths import MCP_PATH  # noqa: E402
 from MCP_PATCHBAY_C21.FEATURE_MCP.docker.shared_mcp_launch_support import (  # noqa: E402
     SharedLaunchError,
-    bounded,
     health_ready,
     inspect_runtime,
     prepare_config,
@@ -29,16 +28,24 @@ async def _probe(port, project_root):
     from mcp.client.streamable_http import streamable_http_client
 
     endpoint = f"http://127.0.0.1:{port}{MCP_PATH}"
-    async with AsyncClient(trust_env=False, follow_redirects=False, timeout=420) as client:
-        async with streamable_http_client(endpoint, http_client=client) as streams:
+    async with AsyncClient(
+        trust_env=False, follow_redirects=False, timeout=420
+    ) as client:
+        async with streamable_http_client(
+            endpoint, http_client=client
+        ) as streams:
             async with ClientSession(*streams) as session:
                 await session.initialize()
                 if project_root is not None:
                     result = await session.call_tool(
-                        "query_schema", {"project_root": str(project_root)}, read_timeout_seconds=400,
+                        "query_schema",
+                        {"project_root": str(project_root)},
+                        read_timeout_seconds=400,
                     )
                     if getattr(result, "is_error", True):
-                        raise ValueError("The runtime could not open the selected Project")
+                        raise ValueError(
+                            "The runtime could not open the selected Project"
+                        )
 
 
 class SharedMcpLauncher:
@@ -56,8 +63,14 @@ class SharedMcpLauncher:
         self.sleeper = sleeper
         self.clock = clock
 
-    def prepare(self, settings_path=None, image=None, *, compose_file=None, timeout=420):
-        return prepare_config(settings_path, image, compose_file=compose_file, timeout=timeout)
+    def prepare(
+        self, settings_path=None, image=None, *, compose_file=None, timeout=None,
+        mounted_folder=None, readiness_timeout=None,
+    ):
+        return prepare_config(
+            settings_path, image, compose_file=compose_file, timeout=timeout,
+            mounted_folder=mounted_folder, readiness_timeout=readiness_timeout,
+        )
 
     def _docker(self, command, environment, timeout):
         try:
@@ -78,13 +91,17 @@ class SharedMcpLauncher:
         image=None,
         *,
         compose_file=None,
-        timeout=420,
-        readiness_timeout=420,
+        timeout=None,
+        readiness_timeout=None,
+        mounted_folder=None,
         verify_mcp=False,
     ):
-        prepared = self.prepare(settings_path, image, compose_file=compose_file, timeout=timeout)
-        readiness_budget = bounded(readiness_timeout, "readiness_timeout", 420)
-        started = self._docker(prepared["command"], prepared["environment"], bounded(timeout, "startup_timeout", 420) + 10)
+        prepared = self.prepare(
+            settings_path, image, compose_file=compose_file, timeout=timeout,
+            mounted_folder=mounted_folder, readiness_timeout=readiness_timeout,
+        )
+        readiness_budget = prepared["readiness_timeout"]
+        started = self._docker(prepared["command"], prepared["environment"], prepared["startup_timeout"] + 10)
         if started is None or getattr(started, "returncode", 1) != 0:
             return {
                 key: prepared[key]
@@ -98,17 +115,29 @@ class SharedMcpLauncher:
         result = self._await_readiness(prepared, readiness_budget)
         if verify_mcp and result["ready"]:
             config = prepared["config"]
-            project_root = config.projects_root if config.single_project else None
+            project_root = (
+                config.projects_root if config.single_project else None
+            )
             try:
-                asyncio.run(asyncio.wait_for(_probe(config.http_port, project_root), timeout=420))
+                asyncio.run(
+                    asyncio.wait_for(
+                        _probe(config.http_port, project_root), timeout=420
+                    )
+                )
             except Exception:
-                return result | {"outcome": "failed", "ready": False, "condition": "mcp_verification_failed"}
+                return result | {
+                    "outcome": "failed",
+                    "ready": False,
+                    "condition": "mcp_verification_failed",
+                }
         return result
 
     def _await_readiness(self, prepared, readiness_budget):
         deadline = self.clock() + readiness_budget
         while self.clock() < deadline:
-            observed = inspect_runtime(self._docker, prepared, deadline, self.clock)
+            observed = inspect_runtime(
+                self._docker, prepared, deadline, self.clock
+            )
             if observed is False:
                 return {
                     "outcome": "failed",
@@ -118,7 +147,9 @@ class SharedMcpLauncher:
                 }
             if (
                 observed
-                and health_ready(self.opener, prepared["http_port"], deadline, self.clock)
+                and health_ready(
+                    self.opener, prepared["http_port"], deadline, self.clock
+                )
                 and self.clock() <= deadline
             ):
                 return {
@@ -154,7 +185,11 @@ def apply(settings_path=None, image=None, **kwargs):
 
 
 def _public_result(result):
-    public = {key: value for key, value in result.items() if key not in {"config", "environment"}}
+    public = {
+        key: value
+        for key, value in result.items()
+        if key not in {"config", "environment"}
+    }
     if result.get("mode") == "dry-run":
         public["environment"] = {
             key: value
@@ -166,11 +201,13 @@ def _public_result(result):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--host-settings", "--settings", dest="settings_path")
-    parser.add_argument("--image", required=True)
+    locator = parser.add_mutually_exclusive_group()
+    locator.add_argument("--host-settings", "--settings", dest="settings_path")
+    locator.add_argument("--mounted-folder", type=Path)
+    parser.add_argument("--image")
     parser.add_argument("--compose-file", type=Path)
-    parser.add_argument("--startup-timeout", type=int, default=420)
-    parser.add_argument("--readiness-timeout", type=int, default=420)
+    parser.add_argument("--startup-timeout", type=int, default=None)
+    parser.add_argument("--readiness-timeout", type=int, default=None)
     parser.add_argument("--apply", action="store_true")
     parser.add_argument("--verify-mcp", action="store_true")
     args = parser.parse_args(argv)
@@ -183,7 +220,15 @@ def main(argv=None):
             args.image,
             compose_file=args.compose_file,
             timeout=args.startup_timeout,
-            **({"readiness_timeout": args.readiness_timeout, "verify_mcp": args.verify_mcp} if args.apply else {}),
+            mounted_folder=args.mounted_folder,
+            readiness_timeout=args.readiness_timeout,
+            **(
+                {
+                    "verify_mcp": args.verify_mcp,
+                }
+                if args.apply
+                else {}
+            ),
         )
     except SharedLaunchError as error:
         result = {"outcome": "refused", "ready": False, "condition": str(error)}
@@ -194,7 +239,11 @@ def main(argv=None):
             separators=(",", ":"),
         )
     )
-    return 0 if result.get("mode") == "dry-run" or result.get("ready") is True else 1
+    return (
+        0
+        if result.get("mode") == "dry-run" or result.get("ready") is True
+        else 1
+    )
 
 
 if __name__ == "__main__":

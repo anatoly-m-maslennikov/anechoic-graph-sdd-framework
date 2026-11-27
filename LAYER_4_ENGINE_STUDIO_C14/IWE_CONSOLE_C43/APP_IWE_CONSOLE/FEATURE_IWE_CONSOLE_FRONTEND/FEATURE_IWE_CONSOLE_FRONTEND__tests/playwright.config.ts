@@ -3,7 +3,8 @@ import { browserTimeout, browserDeadlinesEnabled } from './browser-deadlines';
 
 const baseURL = process.env.WORKBENCH_E2E_URL;
 
-if (!baseURL) throw new Error('WORKBENCH_E2E_URL is required for Workbench browser E2E tests.');
+if (!baseURL) throw new Error(
+  'WORKBENCH_E2E_URL is required for Workbench browser E2E tests.');
 
 export default defineConfig({
   testDir: '.',

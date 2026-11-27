@@ -7,17 +7,21 @@
 FROM node:22.20.0-bookworm-slim AS workbench_frontend
 WORKDIR /frontend
 COPY \
-    LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_FRONTEND/package.json \
-     LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_FRONTEND/package-lock.json \
+    LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/\
+FEATURE_IWE_CONSOLE_FRONTEND/package.json \
+     LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/\
+FEATURE_IWE_CONSOLE_FRONTEND/package-lock.json \
     ./
 RUN npm ci
 COPY \
-    LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_FRONTEND \
+    LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/\
+FEATURE_IWE_CONSOLE_FRONTEND \
     ./
 RUN npm run build
 
 FROM \
-    python:3.14.7-slim@sha256:51dafde81dbdb6ebde285137a295cf18a47ca95234fe388a343719cb97305b3d \
+    python:3.14.7-slim@sha256:\
+51dafde81dbdb6ebde285137a295cf18a47ca95234fe388a343719cb97305b3d \
     AS runtime_build
 ARG RUNTIME_UID=1000
 ARG RUNTIME_GID=1000
@@ -37,12 +41,17 @@ RUN --mount=type=cache,id=anechoic-uv,target=/tmp/uv-cache uv sync --project \
     LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine --locked \
     --no-compile-bytecode --no-default-groups --group runtime
 RUN strip --strip-unneeded -o /tmp/cryptography-rust.so \
-    /opt/venv/lib/python3.14/site-packages/cryptography/hazmat/bindings/_rust.abi3.so \
+    /opt/venv/lib/python3.14/site-packages/cryptography/hazmat/bindings/\
+_rust.abi3.so \
     && mv /tmp/cryptography-rust.so \
-    /opt/venv/lib/python3.14/site-packages/cryptography/hazmat/bindings/_rust.abi3.so \
+    /opt/venv/lib/python3.14/site-packages/cryptography/hazmat/bindings/\
+_rust.abi3.so \
     && apt-get purge -y --auto-remove binutils
 RUN /opt/venv/bin/python -B -c \
-    "import duckdb; c=duckdb.connect(':memory:',config={'extension_directory':'/home/anechoic/.duckdb/extensions'}); c.execute('INSTALL duckpgq FROM community'); c.close()" \
+    "import duckdb; \
+c=duckdb.connect(':memory:',config={\
+'extension_directory':'/home/anechoic/.duckdb/extensions'}); \
+c.execute('INSTALL duckpgq FROM community'); c.close()" \
     && chown -R ${RUNTIME_UID}:${RUNTIME_GID} /home/anechoic/.duckdb
 RUN rm -rf /usr/local/bin/uv /usr/local/bin/uvx /usr/local/bin/pip* \
     /usr/local/lib/python3.14/site-packages/uv \
@@ -80,7 +89,8 @@ COPY LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43 \
 COPY LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_SKILLS/ane \
      ./LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_SKILLS/ane
 COPY --from=workbench_frontend /frontend/dist \
-     ./LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_FRONTEND/dist
+     ./LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/\
+FEATURE_IWE_CONSOLE_FRONTEND/dist
 RUN mkdir -p /var/lib/anechoic /workspace/.anechoic_install \
     /workspace/.anechoic_tmp /workspace/tmp /workspace/.anechoic_anechoic \
     && chmod -R a+rX /workspace/LAYER_1_META_ONTOLOGY_C9 \
@@ -103,9 +113,11 @@ ENTRYPOINT ["/opt/venv/bin/python", "-B", \
 FROM runtime_base AS beta_base
 COPY --from=workbench_frontend /usr/local/bin/node /usr/local/bin/node
 COPY --from=workbench_frontend /frontend/node_modules/typescript \
-    ./LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_FRONTEND/node_modules/typescript
+    ./LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/\
+FEATURE_IWE_CONSOLE_FRONTEND/node_modules/typescript
 COPY --from=workbench_frontend /frontend/node_modules/svelte \
-    ./LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_FRONTEND/node_modules/svelte
+    ./LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/\
+FEATURE_IWE_CONSOLE_FRONTEND/node_modules/svelte
 COPY LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_beta_C67 \
     ./LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_beta_C67
 COPY LAYER_4_ENGINE_STUDIO_C14/ORCHESTRATOR_beta_C68 \

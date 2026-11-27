@@ -28,7 +28,11 @@ _STRUCTURAL_FORM_HINT = re.compile(
     rf"^(?:form|type):[ \t]*{_STRUCTURAL_FORM_VALUE}[ \t]*(?:#.*)?$"
 )
 _FLOW_STRUCTURAL_FORM_HINT = re.compile(
-    rf"(?:^|[{{,][ \t]*)(?:form|type):[ \t]*{_STRUCTURAL_FORM_VALUE}(?=[ \t]*(?:,|}}|$))"
+    (
+        "(?:^|[{,][ \\t]*)(?:form|type):[ \\t]*"
+        f"{_STRUCTURAL_FORM_VALUE}"
+        "(?=[ \\t]*(?:,|}|$))"
+    )
 )
 _PROJECTION = re.compile(r"(?m)^projection:\s*(?:$|\{)")
 _STRUCTURAL_FORM_TEXT = re.compile(
@@ -72,6 +76,25 @@ class _UniqueSafeLoader(_SAFE_LOADER):
         return result
 
 
+def _validate_yaml_limits(frontmatter: str, source: Path) -> None:
+    depth = 0
+    for count, event in enumerate(
+        yaml.parse(frontmatter, Loader=_SAFE_LOADER), 1
+    ):
+        if isinstance(event, AliasEvent):
+            raise ScopeDeclarationError(
+                f"{source}: YAML aliases are unsupported"
+            )
+        if isinstance(event, (MappingStartEvent, SequenceStartEvent)):
+            depth += 1
+        if isinstance(event, (MappingEndEvent, SequenceEndEvent)):
+            depth -= 1
+        if depth > 64 or count > 100_000:
+            raise ScopeDeclarationError(
+                f"{source}: YAML exceeds parser safety limits"
+            )
+
+
 def read_scope_carrier(raw: bytes, source: Path) -> tuple[dict[str, Any], str]:
     """Read bounded YAML and apply the legacy Header aliases."""
     try:
@@ -86,22 +109,7 @@ def read_scope_carrier(raw: bytes, source: Path) -> tuple[dict[str, Any], str]:
                 f"{source}: declaration frontmatter is unterminated"
             )
         frontmatter, body = text[4:closing], text[closing + 5 :]
-        depth = 0
-        for count, event in enumerate(
-            yaml.parse(frontmatter, Loader=_SAFE_LOADER), 1
-        ):
-            if isinstance(event, AliasEvent):
-                raise ScopeDeclarationError(
-                    f"{source}: YAML aliases are unsupported"
-                )
-            if isinstance(event, (MappingStartEvent, SequenceStartEvent)):
-                depth += 1
-            if isinstance(event, (MappingEndEvent, SequenceEndEvent)):
-                depth -= 1
-            if depth > 64 or count > 100_000:
-                raise ScopeDeclarationError(
-                    f"{source}: YAML exceeds parser safety limits"
-                )
+        _validate_yaml_limits(frontmatter, source)
         metadata = yaml.load(frontmatter, Loader=_UniqueSafeLoader)
         if not isinstance(metadata, dict):
             raise ScopeDeclarationError(
@@ -117,7 +125,7 @@ def read_scope_carrier(raw: bytes, source: Path) -> tuple[dict[str, Any], str]:
 
 
 def has_scope_declaration_form(raw: bytes, source: Path | None = None) -> bool:
-    "Use the safe Header read view; a malformed structural hint fails closed later."
+    "Use the safe Header view. Malformed hints fail closed later."
     try:
         text = raw.decode("utf-8").replace("\r\n", "\n")
     except UnicodeDecodeError:
@@ -147,8 +155,17 @@ def has_scope_declaration_form(raw: bytes, source: Path | None = None) -> bool:
     )
 
 
+def _root_form_hint(stripped: str) -> tuple[bool, bool | None]:
+    key, separator, value = stripped.partition(":")
+    if key == "context" and separator:
+        if value.lstrip().startswith("{"):
+            return False, _FLOW_STRUCTURAL_FORM_HINT.search(value) is not None
+        return True, None
+    return False, True if _STRUCTURAL_FORM_HINT.fullmatch(stripped) else None
+
+
 def _structural_form_hint(frontmatter: str) -> bool:
-    "Fail closed for malformed canonical forms without treating nested data as authority."
+    "Use root authority. Reject malformed canonical forms."
     direct_indent: int | None = None
     child_indent: int | None = None
     for line in frontmatter.splitlines():
@@ -159,13 +176,11 @@ def _structural_form_hint(frontmatter: str) -> bool:
         if indent == 0:
             direct_indent = None
             child_indent = None
-            key, separator, value = stripped.partition(":")
-            if key == "context" and separator:
+            is_context, matched = _root_form_hint(stripped)
+            if matched is not None:
+                return matched
+            if is_context:
                 direct_indent = 0
-                if value.lstrip().startswith("{"):
-                    return _FLOW_STRUCTURAL_FORM_HINT.search(value) is not None
-            elif _STRUCTURAL_FORM_HINT.fullmatch(stripped):
-                return True
             continue
         if direct_indent is None:
             continue
@@ -183,7 +198,7 @@ def _structural_form_hint(frontmatter: str) -> bool:
 
 
 def has_projection_marker(raw: bytes) -> bool:
-    "Exclude the existing frontmatter projection marker before parsing authority."
+    "Exclude the frontmatter projection marker before parsing."
     try:
         text = raw.decode("utf-8").replace("\r\n", "\n")
     except UnicodeDecodeError:

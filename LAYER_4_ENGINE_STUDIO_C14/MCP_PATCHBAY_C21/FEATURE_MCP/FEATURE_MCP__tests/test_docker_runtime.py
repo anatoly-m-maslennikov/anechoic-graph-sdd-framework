@@ -45,14 +45,18 @@ class RuntimeTests(unittest.TestCase):
         runtime = Runtime(APP.parents[2])
         arguments = ("--profile", "stdio", "config", "--format", "json")
         expected_command = runtime.command(*arguments)
-        with patch("MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime.subprocess.run") as execute:
+        with patch(
+            "MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime.subprocess.run"
+        ) as execute:
             execute.return_value.returncode = 0
             execute.return_value.stdout = ""
             self.assertEqual("", runtime.call(*arguments))
         execute.assert_called_once()
         actual_command = execute.call_args.args[0]
         self.assertEqual(expected_command, actual_command)
-        self.assertEqual(runtime.environment(), execute.call_args.kwargs["env"])
+        self.assertEqual(
+            runtime.environment(), execute.call_args.kwargs["env"]
+        )
 
         config = yaml.safe_load((APP / "docker/compose.yaml").read_text())
         services = config["services"]
@@ -91,8 +95,13 @@ class RuntimeTests(unittest.TestCase):
             ("shared-mcp.compose.yaml", "shared-mcp"),
         ):
             with self.subTest(compose=compose_name, service=service):
-                config = yaml.safe_load((APP / "docker" / compose_name).read_text())
-                self.assertNotIn("ANECHOIC_HOT_RELOAD", config["services"][service]["environment"])
+                config = yaml.safe_load(
+                    (APP / "docker" / compose_name).read_text()
+                )
+                self.assertNotIn(
+                    "ANECHOIC_HOT_RELOAD",
+                    config["services"][service]["environment"],
+                )
 
     def test_prepare_accepts_visible_framework_control_root(self):
         with tempfile.TemporaryDirectory(dir=self.temporary) as directory:
@@ -120,15 +129,22 @@ class RuntimeTests(unittest.TestCase):
 
     def test_retired_worker_mode_returns_structured_warning(self):
         result = subprocess.run(
-            [sys.executable, "-B", str(APP / "docker/entrypoint.py"), "worker"],
+            [
+                sys.executable,
+                "-B",
+                str(APP / "docker/entrypoint.py"),
+                "worker",
+            ],
             capture_output=True,
             text=True,
             check=False,
         )
         self.assertEqual(1, result.returncode)
         self.assertNotIn("NameError", result.stderr)
-        self.assertEqual({"error": "invalid_runtime_mode", "severity": "WARNING"},
-                         json.loads(result.stderr.splitlines()[-1]))
+        self.assertEqual(
+            {"error": "invalid_runtime_mode", "severity": "WARNING"},
+            json.loads(result.stderr.splitlines()[-1]),
+        )
 
 if __name__ == "__main__":
     unittest.main()

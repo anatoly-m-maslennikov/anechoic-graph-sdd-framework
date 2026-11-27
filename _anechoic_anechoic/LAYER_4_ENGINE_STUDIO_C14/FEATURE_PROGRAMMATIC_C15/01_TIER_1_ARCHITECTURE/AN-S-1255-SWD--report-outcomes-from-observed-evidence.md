@@ -8,8 +8,8 @@ context:
   lens: SWD
 state:
   status: active
-  version: 14
-  updated_at: 2026-11-10 20:47:54 +0400
+  version: 16
+  updated_at: "2026-11-27T16:29:34.309627+00:00"
 ---
 
 ## Summary
@@ -33,7 +33,7 @@ New or changed PROGRAMMATIC implementation, including Tools, Apps, MCP adapters 
 
 - A returned call, scheduler completion or absence of reported errors does not alone establish the requested result.
 - A no-op means the requested state was already satisfied and remained unchanged; do not fabricate writes or history.
-- Preserve partial results, uncertainty, gaps and blockers honestly. Outcome reporting introduces no automatic retry or recovery policy. Do not infer that a resume is admitted from ordinary error text; use the existing lifecycle state and contract. When resume is admitted, retain successful partial work and do not replay completed steps.
+- Use the admitted lifecycle state and contract to decide if work can resume. Ordinary error text supplies no such authority.
 
 
 ### Retained partial-result presentation
@@ -44,7 +44,7 @@ When an operation has completed only part of the request, retain and present the
 
 ##### Scope
 
-New or changed PROGRAMMATIC implementation, including Tools, Apps, MCP adapters and their public operation boundaries.
+Use the scope for changed PROGRAMMATIC implementation in AN-S-1252.
 
 1. At the operation owner, retain actual completed items and observed effects as work proceeds. A general exception wrapper cannot reconstruct lost local progress or decide business commit boundaries.
 2. Return completed data together with errors in the same applicable response contract. Mark incompleteness or partial outcome explicitly and identify failed, skipped, unattempted and uncertain items where known. Do not discard useful verified data because another independent item failed.

@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1245
+concern:
+  subject: "Carrier"
+  path: "Model"
+  relation: "is_contained_by"
 container:
   component: C15
 tier: 1
@@ -8,8 +12,8 @@ context:
   lens: DES
 state:
   status: active
-  version: 22
-  updated_at: 2026-11-10 20:47:54 +0400
+  version: 23
+  updated_at: "2026-11-27T16:16:01.404965+00:00"
 ---
 ## Summary
 

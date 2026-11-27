@@ -30,11 +30,20 @@ example : CarrierBodySolution.body [97,98] =
 
 def model(solution):
     return {
-        'component_id': 'C52',
-        'manifest': {'source': {'atom_id': 'M'},
-                     'fields': {'component_id': 'C52', 'name': 'Core'}, 'boundaries': None},
-        'contract': {'source': {'atom_id': 'C'}, 'claims': [('python framing', CONTRACT)]},
-        'solution': {'source': {'atom_id': 'S'}, 'claims': [('python framing', solution)]},
+        "component_id": "C52",
+        "manifest": {
+            "source": {"atom_id": "M"},
+            "fields": {"component_id": "C52", "name": "Core"},
+            "boundaries": None,
+        },
+        "contract": {
+            "source": {"atom_id": "C"},
+            "claims": [("python framing", CONTRACT)],
+        },
+        "solution": {
+            "source": {"atom_id": "S"},
+            "claims": [("python framing", solution)],
+        },
     }
 
 
@@ -107,29 +116,60 @@ def actualDetail : Except String Lean.Json := do
                 lean_string('a' + surrogate + 'b')
 
     def test_framing_semantics_and_negative_control(self):
-        lean = os.environ.get('ANECHOIC_TEST_LEAN') or os.environ.get('LEAN_BIN') or shutil.which('lean')
-        self.assertTrue(lean, 'Set ANECHOIC_TEST_LEAN or LEAN_BIN, or put lean on PATH to run functional tests')
+        lean = (
+            os.environ.get("ANECHOIC_TEST_LEAN")
+            or os.environ.get("LEAN_BIN")
+            or shutil.which("lean")
+        )
+        self.assertTrue(
+            lean,
+            "Set ANECHOIC_TEST_LEAN or LEAN_BIN, or put lean on PATH to run functional tests",
+        )
         valid = compile_lean(model(SOLUTION))
-        changed = compile_lean(model(SOLUTION.replace('[10,45,45,45,10],', '')))
+        changed = compile_lean(
+            model(SOLUTION.replace("[10,45,45,45,10],", ""))
+        )
         for result in (valid, changed):
-            self.assertEqual(['manifest', 'contract', 'solution'], result['compiled_roles'])
-            self.assertFalse([gap for gap in result['unresolved']
-                              if gap['field'] in ('contract', 'solution')])
+            self.assertEqual(
+                ["manifest", "contract", "solution"], result["compiled_roles"]
+            )
+            self.assertFalse(
+                [
+                    gap
+                    for gap in result["unresolved"]
+                    if gap["field"] in ("contract", "solution")
+                ]
+            )
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / 'Translation.lean'
             for source, succeeds in ((valid['lean'] + ASSERTIONS, True),
                                      (changed['lean'], True),
                                      (changed['lean'] + ASSERTIONS, False)):
                 path.write_text(source)
-                checked = subprocess.run([lean, str(path)], capture_output=True, text=True, timeout=45)
+                checked = subprocess.run(
+                    [lean, str(path)],
+                    capture_output=True,
+                    text=True,
+                    timeout=45,
+                )
                 if succeeds:
-                    self.assertEqual(0, checked.returncode, checked.stdout + checked.stderr)
+                    self.assertEqual(
+                        0, checked.returncode, checked.stdout + checked.stderr
+                    )
                 else:
-                    self.assertNotEqual(0, checked.returncode, checked.stdout + checked.stderr)
+                    self.assertNotEqual(
+                        0, checked.returncode, checked.stdout + checked.stderr
+                    )
 
     def test_python_literals_survive_in_emitted_lean(self):
-        lean = os.environ.get('ANECHOIC_TEST_LEAN') or os.environ.get('LEAN_BIN') or shutil.which('lean')
-        self.assertTrue(lean, 'Set ANECHOIC_TEST_LEAN or LEAN_BIN, or put lean on PATH')
+        lean = (
+            os.environ.get("ANECHOIC_TEST_LEAN")
+            or os.environ.get("LEAN_BIN")
+            or shutil.which("lean")
+        )
+        self.assertTrue(
+            lean, "Set ANECHOIC_TEST_LEAN or LEAN_BIN, or put lean on PATH"
+        )
         boundary = model(SOLUTION)
         boundary['contract']['claims'] = [('python trace', r'''declare_trace_contract(
             action='run', output='done', must_effect=(('store', 'saved',
@@ -148,6 +188,13 @@ def actualDetail : Except String Lean.Json := do
             path = Path(tmp) / 'Literals.lean'
             for program, expected in ((source, 'true'), (mutated, 'false')):
                 path.write_text(program + oracle)
-                checked = subprocess.run([lean, str(path)], capture_output=True, text=True, timeout=45)
-                self.assertEqual(0, checked.returncode, checked.stdout + checked.stderr)
+                checked = subprocess.run(
+                    [lean, str(path)],
+                    capture_output=True,
+                    text=True,
+                    timeout=45,
+                )
+                self.assertEqual(
+                    0, checked.returncode, checked.stdout + checked.stderr
+                )
                 self.assertEqual(expected, checked.stdout.strip())

@@ -7,7 +7,9 @@ from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import patch
 
-from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.test_suite__shared import source_line_length as lint
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.test_suite__shared import (
+    source_line_length as lint,
+)
 
 
 def finding(path, start, additional_lines=0):
@@ -36,13 +38,21 @@ class SourceLineLengthTests(unittest.TestCase):
                 self.assertEqual(lint.main(), 0)
                 scan.assert_not_called()
 
-                config = Path(directory) / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/pyproject.toml"
+                config = (
+                    Path(directory)
+                    / (
+                        'LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/py'
+                        'project.toml'
+                    )
+                )
                 config.parent.mkdir(parents=True)
                 config.write_text(
                     "[tool.anechoic.test_suite]\n"
                     "enforce_source_line_length = true\n",
                 )
-                scan.return_value = [("LAYER_5_USER_SETUP_C65/new.py", 1, "Too long")]
+                scan.return_value = [
+                    ("LAYER_5_USER_SETUP_C65/new.py", 1, "Too long")
+                ]
                 self.assertEqual(lint.main(), 1)
                 scan.assert_called_once_with(Path(directory).resolve(), "HEAD")
 
@@ -100,12 +110,23 @@ class SourceLineLengthTests(unittest.TestCase):
             path = root / "LAYER_3_DEVOPS_C80/example.tsx"
             path.parent.mkdir()
             path.write_text("x" * 80 + "\n")
-            with patch.object(lint, "checker_findings", return_value=[
-                finding("LAYER_3_DEVOPS_C80/example.tsx", 1),
-            ]) as checker, redirect_stdout(StringIO()):
+            with (
+                patch.object(
+                    lint,
+                    "checker_findings",
+                    return_value=[
+                        finding("LAYER_3_DEVOPS_C80/example.tsx", 1),
+                    ],
+                ) as checker,
+                redirect_stdout(StringIO()),
+            ):
                 self.assertEqual(lint.check(root), 1)
-                self.assertIn("LAYER_3_DEVOPS_C80/example.tsx", checker.call_args[0][1])
-            with patch.object(lint, "checker_findings", side_effect=ValueError("broken")):
+                self.assertIn(
+                    "LAYER_3_DEVOPS_C80/example.tsx", checker.call_args[0][1]
+                )
+            with patch.object(
+                lint, "checker_findings", side_effect=ValueError("broken")
+            ):
                 self.assertEqual(lint.check(root), 2)
 
     def test_real_checker_counts_characters(self):

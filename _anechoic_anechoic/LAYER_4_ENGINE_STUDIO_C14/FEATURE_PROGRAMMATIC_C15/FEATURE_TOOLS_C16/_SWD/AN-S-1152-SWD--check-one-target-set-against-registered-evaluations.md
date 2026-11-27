@@ -8,8 +8,8 @@ context:
   lens: SWD
 state:
   status: active
-  version: 22
-  updated_at: 2026-11-02 19:46:47 +0400
+  version: 23
+  updated_at: "2026-11-27T16:29:34.309627+00:00"
 ---
 ## Summary
 
@@ -23,7 +23,7 @@ use this Method **when** `GRAPH_CHECK` **must** apply selected registered Evalua
 
 ## Procedure
 
-1. confirm that `GRAPH_CHECK` is registered as one `unordered_unit` Checker owned immediately by `TOOLS` at Structural level `4`, with prefix `GRAPH_CHECK`, address `LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/GRAPH_CHECK`, **and** realization path `LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/GRAPH_CHECK/`.
+1. Verify the `GRAPH_CHECK` registration against AN-S-1182.
 2. resolve one sealed target-set identity **and** selected registered Evaluation criteria.
 3. confirm that the target set retains its recorded membership, source frontier, **and** digest **before** beginning evaluation.
 4. apply **every** selected criterion **to** **every** applicable target **and** retain attributable issue, evidence, **and** verdict records **in** deterministic target-and-criterion order.

@@ -155,35 +155,46 @@ declare_entity(entity_name="Requirement", entity_class=Requirement,
 
     def test_sealed_core_declarations_compile(self):
         with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / 'schema.json'
+            path = Path(directory) / "schema.json"
             path.write_bytes(compile_candidate_schema(CORE))
             asset = json.loads(path.read_text())
-            self.assertTrue(asset['workbench']['sources'])
+            self.assertTrue(asset["workbench"]["sources"])
             compiled = load_candidate_schema(path)
             self.assertTrue(compiled.header(1).names)
             self.assertTrue(compiled.content.rules)
-            self.assertIn('IS_WORK_REPORT_FOR', compiled.header_relation_rules['names'])
-            self.assertNotIn('BLOCKS', compiled.header_relation_rules['names'])
-            self.assertIn(('Plan', 'Plan'), compiled.role_form.qualified)
-            compiled.validate_role_form('Plan', 'Plan')
-            with self.assertRaisesRegex(ValueError, 'not permitted for Form Plan'):
-                compiled.validate_role_form('Method', 'Plan')
-            compiled.validate_role_form('Method', 'Decision')
-            compiled.validate_role_form('Operations', 'Direct Policy')
-            compiled.validate_role_form('Operations', 'Workflow')
+            self.assertIn(
+                "IS_WORK_REPORT_FOR", compiled.header_relation_rules["names"]
+            )
+            self.assertNotIn("BLOCKS", compiled.header_relation_rules["names"])
+            self.assertIn(("Plan", "Plan"), compiled.role_form.qualified)
+            compiled.validate_role_form("Plan", "Plan")
+            with self.assertRaisesRegex(
+                ValueError, "not permitted for Form Plan"
+            ):
+                compiled.validate_role_form("Method", "Plan")
+            compiled.validate_role_form("Method", "Decision")
+            compiled.validate_role_form("Operations", "Direct Policy")
+            compiled.validate_role_form("Operations", "Workflow")
             with self.assertRaises(ValueError):
-                compiled.validate_role_form('Requirement', 'Decision')
+                compiled.validate_role_form("Requirement", "Decision")
             with self.assertRaises(ValueError):
-                compiled.validate_role_form('Method', 'Work Report')
+                compiled.validate_role_form("Method", "Work Report")
             with self.assertRaises(ValueError):
-                compiled.validate_role_form('Plan', 'Workflow')
-            self.assertIn(('Requirement', 'Declaration'), compiled.role_form.qualified)
-            self.assertIn('Work Report', compiled.role_form.forms)
+                compiled.validate_role_form("Plan", "Workflow")
+            self.assertIn(
+                ("Requirement", "Declaration"), compiled.role_form.qualified
+            )
+            self.assertIn("Work Report", compiled.role_form.forms)
 
     def test_codec_rejects_collisions(self):
-        schema = RoleFormSchema(frozenset(), frozenset({'Work Report', 'Work-Report'}), frozenset(), ())
-        with self.assertRaisesRegex(ValueError, 'Ambiguous'):
-            schema.encode('form', 'Work Report')
+        schema = RoleFormSchema(
+            frozenset(),
+            frozenset({"Work Report", "Work-Report"}),
+            frozenset(),
+            (),
+        )
+        with self.assertRaisesRegex(ValueError, "Ambiguous"):
+            schema.encode("form", "Work Report")
 
 
 if __name__ == '__main__':

@@ -8,8 +8,8 @@ context:
   lens: DES
 state:
   status: active
-  version: 4
-  updated_at: "2026-11-22T01:02:41.627072+00:00"
+  version: 5
+  updated_at: "2026-11-27T15:50:51.353081+00:00"
 ---
 
 ## Summary
@@ -22,7 +22,7 @@ Resolve imports and derive Module and Package relations
 
 Use the import relations as a dependency view of the selected Project's Realization Graph. Resolve each occurrence from the Module whose file contains the import. When one statement names distinct import targets, keep an occurrence for each target. Use declared Package boundaries, source roots, and alias mappings. Use the ordered Project-relative Python roots supplied by the selected launch profile in the Import Graph configuration. The default root is `.`. A later frontend parser uses the frontend's declared TypeScript resolution mode. Resolve a name in a Python `from` import as a submodule only when static evidence supports it. Use the selected environment or package declarations to identify external targets. Retain ambiguous and unresolved occurrences with their written specifiers and resolution status.
 
-Publish one local Package per folder with a direct executable file. Keep Python namespace targets available for import resolution.
+Publish local Packages under AN-S-3159 and AN-S-4837. Keep Python namespace targets available for import resolution.
 
 Keep distinct Module identities for files in different locations. Package discovery does not change language-specific import resolution. Use a Module's immediate directory for Package ownership. Keep language-specific resolution and the declared identity of external Packages. Leave Package ownership unset when evidence is missing. Attribute each import in a Package initializer to its source file. Use that file's Package for Package-level relations.
 

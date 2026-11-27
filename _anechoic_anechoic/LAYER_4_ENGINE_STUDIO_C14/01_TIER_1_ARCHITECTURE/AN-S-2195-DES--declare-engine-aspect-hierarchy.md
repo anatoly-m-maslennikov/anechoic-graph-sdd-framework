@@ -7,9 +7,9 @@ tier: 1
 context:
   lens: DES
 state:
-  status: active
-  version: 4
-  updated_at: '2026-11-13T03:40:14.389626+00:00'
+  status: "active"
+  version: 5
+  updated_at: "2026-11-27T14:43:25.838139+00:00"
 ---
 
 ## Summary
@@ -24,7 +24,8 @@ Engineering, UX, Documentation and Product topics used by the ANECHOIC Engine.
 
 ### Prose Claim
 
-ANECHOIC's Project Structure contains the following project-local Aspect hierarchy. Aspects is its grouping container; the other named nodes are concrete instances of Aspect. Each indentation is direct containment, not narrowing or automatic policy inheritance. An address begins with `PROJECT STRUCTURE//ANECHOIC  <+  Aspects` and continues with ` <+ ` and the names along that branch.
+Read each ` <+ ` as direct containment only. Containment carries
+no narrowing or policy inheritance.
 
 Frontend Engineering covers frontend construction. Libraries and Frameworks covers library, framework and build-tool choices; Component Authoring covers Svelte components and TypeScript; Code Style covers source organization, formatting and responsibility boundaries. Visual Design, query authoring and interface contracts retain their distinct topics.
 

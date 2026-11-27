@@ -9,15 +9,22 @@ import tempfile
 import unittest
 from unittest.mock import MagicMock, patch
 
-from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.test_suite__shared import full_suite_docker as docker
-from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS import test_suite__shared as full
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.test_suite__shared import (
+    full_suite_docker as docker,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS import (
+    test_suite__shared as full,
+)
 
 IMAGE = "sha256:" + "a" * 64
 
 
 class FullSuiteDockerTests(unittest.TestCase):
     def setUp(self):
-        parent = Path(__file__).resolve().parents[4] / ".anechoic_tmp/tests/full-suite-docker"
+        parent = (
+            Path(__file__).resolve().parents[4]
+            / ".anechoic_tmp/tests/full-suite-docker"
+        )
         parent.mkdir(parents=True, exist_ok=True)
         directory = tempfile.TemporaryDirectory(dir=parent)
         self.addCleanup(directory.cleanup)
@@ -26,8 +33,17 @@ class FullSuiteDockerTests(unittest.TestCase):
 
     def test_workbench_container_proof_uses_the_shared_image_lane(self):
         workbench = self.root / full.WORKBENCH / "APP_IWE_CONSOLE__tests"
-        self.assertTrue(full._docker_module(self.root, self.root / full.MCP_TESTS / "test_native_import_graph_docker_e2e.py"))
-        self.assertFalse(full._docker_module(self.root, workbench / "test_query_store.py"))
+        self.assertTrue(
+            full._docker_module(
+                self.root,
+                self.root
+                / full.MCP_TESTS
+                / "test_native_import_graph_docker_e2e.py",
+            )
+        )
+        self.assertFalse(
+            full._docker_module(self.root, workbench / "test_query_store.py")
+        )
 
     def test_build_calls_the_candidate_cli_once_and_cleans_up_the_same_attempt(self):
         with (patch.dict(docker.os.environ, {"PYTHONPATH": "foreign", "PYTHONHOME": "foreign",
@@ -75,50 +91,83 @@ class FullSuiteDockerTests(unittest.TestCase):
             )
 
     def test_owned_cleanup_runs_even_when_tests_raise(self):
-        with patch.object(docker, "_image_command", side_effect=(IMAGE, "")) as command:
+        with patch.object(
+            docker, "_image_command", side_effect=(IMAGE, "")
+        ) as command:
             with self.assertRaisesRegex(RuntimeError, "test failure"):
                 with docker.current_code_test_image(self.root) as environment:
                     scratch = Path(environment["TMPDIR"])
                     (scratch / "fixture.txt").write_text("failure output")
                     raise RuntimeError("test failure")
         build, cleanup = [call.args for call in command.call_args_list]
-        self.assertEqual((self.root, "build", build[2], "--scratch", str(scratch)), build)
-        self.assertEqual((self.root, "cleanup", build[2], "--image", IMAGE), cleanup)
+        self.assertEqual(
+            (self.root, "build", build[2], "--scratch", str(scratch)), build
+        )
+        self.assertEqual(
+            (self.root, "cleanup", build[2], "--image", IMAGE), cleanup
+        )
         self.assertFalse(scratch.exists())
 
     def test_image_deadlines_reach_build_cleanup_and_test_environment(self):
         switch = "ANECHOIC_TEST_IMAGE_DEADLINES"
-        for requested, observed, timeouts in (({}, "0", [None, None]), ({switch: "1"}, "1", [900, 120])):
+        for requested, observed, timeouts in (
+            ({}, "0", [None, None]),
+            ({switch: "1"}, "1", [900, 120]),
+        ):
             with (
-                self.subTest(requested=requested), patch.dict(docker.os.environ, requested, clear=True),
-                patch.object(docker.subprocess, "run", return_value=subprocess.CompletedProcess([], 0, IMAGE)) as run,
+                self.subTest(requested=requested),
+                patch.dict(docker.os.environ, requested, clear=True),
+                patch.object(
+                    docker.subprocess,
+                    "run",
+                    return_value=subprocess.CompletedProcess([], 0, IMAGE),
+                ) as run,
                 redirect_stdout(self.output),
             ):
                 with docker.current_code_test_image(self.root) as environment:
                     self.assertEqual(observed, environment[switch])
-                self.assertEqual(timeouts, [call.kwargs["timeout"] for call in run.call_args_list])
-                self.assertEqual([observed, observed], [call.kwargs["env"][switch] for call in run.call_args_list])
+                self.assertEqual(
+                    timeouts,
+                    [call.kwargs["timeout"] for call in run.call_args_list],
+                )
+                self.assertEqual(
+                    [observed, observed],
+                    [
+                        call.kwargs["env"][switch]
+                        for call in run.call_args_list
+                    ],
+                )
 
     def test_failed_or_invalid_image_build_removes_attempt_files(self):
         for result in (OSError("build failure"), "latest"):
             with self.subTest(result=result):
+
                 def build(_root, _operation, _attempt, _flag, directory):
                     (Path(directory) / "build.log").write_text("partial build")
                     if isinstance(result, Exception):
                         raise result
                     return result
 
-                with patch.object(docker, "_image_command", side_effect=build) as command:
-                    with self.assertRaisesRegex((OSError, ValueError), "build failure|immutable Docker image"):
+                with patch.object(
+                    docker, "_image_command", side_effect=build
+                ) as command:
+                    with self.assertRaisesRegex(
+                        (OSError, ValueError),
+                        "build failure|immutable Docker image",
+                    ):
                         with docker.current_code_test_image(self.root):
-                            self.fail("failed image setup yielded a test environment")
+                            self.fail(
+                                "failed image setup yielded a test environment"
+                            )
                 command.assert_called_once()
                 self.assertFalse(Path(command.call_args.args[-1]).exists())
 
     def test_symlink_scratch_parent_is_rejected_before_build(self):
         outside = self.root / "outside"
         outside.mkdir()
-        (self.root / ".anechoic_tmp").symlink_to(outside, target_is_directory=True)
+        (self.root / ".anechoic_tmp").symlink_to(
+            outside, target_is_directory=True
+        )
         with patch.object(docker, "_image_command") as command:
             with self.assertRaises(OSError):
                 with docker.current_code_test_image(self.root):
@@ -126,10 +175,16 @@ class FullSuiteDockerTests(unittest.TestCase):
             command.assert_not_called()
         self.assertEqual([], list(outside.iterdir()))
 
-    def test_full_suite_uses_image_environment_without_retired_launcher_gate(self):
-        module = self.root / docker.APP / "FEATURE_MCP__tests/test_docker_e2e.py"
+    def test_full_suite_uses_image_environment_without_retired_launcher_gate(
+        self,
+    ):
+        module = (
+            self.root / docker.APP / "FEATURE_MCP__tests/test_docker_e2e.py"
+        )
         lifecycle = MagicMock()
-        lifecycle.__enter__.return_value = {"ANECHOIC_FIRST_CUT_HTTP_IMAGE": IMAGE}
+        lifecycle.__enter__.return_value = {
+            "ANECHOIC_FIRST_CUT_HTTP_IMAGE": IMAGE
+        }
         with (
             patch.dict(
                 full.os.environ,
@@ -140,58 +195,103 @@ class FullSuiteDockerTests(unittest.TestCase):
             ),
             patch.object(full, "discover_test_modules", return_value=[module]),
             patch.object(full, "_run_static_checks", return_value=0),
-            patch.object(full, "current_code_test_image", return_value=lifecycle) as build,
-            patch.object(full, "run_module", return_value=(True, 2, 0, "", "", 0.0, None)) as run,
+            patch.object(
+                full, "current_code_test_image", return_value=lifecycle
+            ) as build,
+            patch.object(
+                full,
+                "run_module",
+                return_value=(True, 2, 0, "", "", 0.0, None),
+            ) as run,
             redirect_stdout(self.output),
             redirect_stderr(self.errors),
         ):
-            self.assertEqual(0, full.run_full_suite(self.root, image_mode="existing"))
+            self.assertEqual(
+                0, full.run_full_suite(self.root, image_mode="existing")
+            )
             build.assert_called_once_with(self.root, use_packaged_assets=True)
-            self.assertEqual(IMAGE, run.call_args.args[2]["ANECHOIC_FIRST_CUT_HTTP_IMAGE"])
+            self.assertEqual(
+                IMAGE, run.call_args.args[2]["ANECHOIC_FIRST_CUT_HTTP_IMAGE"]
+            )
             environment = run.call_args.args[2]
             self.assertNotIn("ANECHOIC_RELEASE_E2E_CONTEXT", environment)
             self.assertNotIn("ANECHOIC_CANDIDATE_IMAGE_DIGEST", environment)
             lifecycle.__exit__.assert_called_once()
 
     def test_release_phases_partition_discovery_and_preserve_candidate(self):
-        integration = self.root / docker.APP / "FEATURE_MCP__tests/test_docker_e2e.py"
+        integration = (
+            self.root / docker.APP / "FEATURE_MCP__tests/test_docker_e2e.py"
+        )
         ordinary = self.root / docker.APP / "FEATURE_MCP__tests/test_unit.py"
         with (
-            patch.object(full, "discover_test_modules", return_value=[ordinary, integration]),
+            patch.object(
+                full,
+                "discover_test_modules",
+                return_value=[ordinary, integration],
+            ),
             patch.object(full, "_run_static_checks", return_value=0) as lint,
             patch.object(full, "current_code_test_image") as build,
             patch.object(full, "_run_modules", return_value=0) as run,
-            patch.dict(full.os.environ, {"ANECHOIC_RELEASE_E2E_CONTEXT": "stale"}),
+            patch.dict(
+                full.os.environ, {"ANECHOIC_RELEASE_E2E_CONTEXT": "stale"}
+            ),
             redirect_stdout(self.output),
         ):
             self.assertEqual(0, full.run_full_suite(self.root, phase="unit"))
             self.assertEqual([ordinary], run.call_args.args[1])
-            self.assertEqual(0, full.run_full_suite(self.root, phase="e2e", candidate_image=IMAGE))
+            self.assertEqual(
+                0,
+                full.run_full_suite(
+                    self.root, phase="e2e", candidate_image=IMAGE
+                ),
+            )
             self.assertEqual([integration], run.call_args.args[1])
             environment = run.call_args.args[2]
-            for name in ("ANECHOIC_IMAGE", "ANECHOIC_FIRST_CUT_HTTP_IMAGE", "ANECHOIC_DOCKER_QUERY_IMAGE"):
+            for name in (
+                "ANECHOIC_IMAGE",
+                "ANECHOIC_FIRST_CUT_HTTP_IMAGE",
+                "ANECHOIC_DOCKER_QUERY_IMAGE",
+            ):
                 self.assertEqual(IMAGE, environment[name])
             self.assertNotIn("ANECHOIC_RELEASE_E2E_CONTEXT", environment)
             self.assertFalse(Path(environment["TMPDIR"]).exists())
             build.assert_not_called()
             lint.assert_not_called()
 
-    def test_release_phase_rejects_invalid_candidate_and_focused_selection(self):
-        with patch.object(full, "discover_test_modules") as discover, redirect_stderr(self.errors):
-            for options in ({"phase": "e2e"}, {"phase": "e2e", "candidate_image": "latest"},
-                            {"phase": "unit", "candidate_image": IMAGE},
-                            {"phase": "unit", "test_modules": ("test.py",), "required": True}):
+    def test_release_phase_rejects_invalid_candidate_and_focused_selection(
+        self,
+    ):
+        with (
+            patch.object(full, "discover_test_modules") as discover,
+            redirect_stderr(self.errors),
+        ):
+            for options in (
+                {"phase": "e2e"},
+                {"phase": "e2e", "candidate_image": "latest"},
+                {"phase": "unit", "candidate_image": IMAGE},
+                {
+                    "phase": "unit",
+                    "test_modules": ("test.py",),
+                    "required": True,
+                },
+            ):
                 self.assertEqual(1, full.run_full_suite(self.root, **options))
             discover.assert_not_called()
 
-    def test_missing_required_build_environment_fails_without_running_tests(self):
-        module = self.root / docker.APP / "FEATURE_MCP__tests/test_docker_e2e.py"
+    def test_missing_required_build_environment_fails_without_running_tests(
+        self,
+    ):
+        module = (
+            self.root / docker.APP / "FEATURE_MCP__tests/test_docker_e2e.py"
+        )
         lifecycle = MagicMock()
         lifecycle.__enter__.side_effect = OSError("Docker socket denied")
         with (
             patch.object(full, "discover_test_modules", return_value=[module]),
             patch.object(full, "_run_static_checks", return_value=0),
-            patch.object(full, "current_code_test_image", return_value=lifecycle),
+            patch.object(
+                full, "current_code_test_image", return_value=lifecycle
+            ),
             patch.object(full, "run_module") as run,
             redirect_stderr(self.errors),
         ):

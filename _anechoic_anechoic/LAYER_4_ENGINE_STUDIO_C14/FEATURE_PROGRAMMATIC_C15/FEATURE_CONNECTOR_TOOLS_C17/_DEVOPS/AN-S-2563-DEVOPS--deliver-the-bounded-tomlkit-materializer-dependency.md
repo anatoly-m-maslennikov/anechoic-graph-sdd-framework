@@ -8,8 +8,8 @@ context:
   lens: DevOps
 state:
   status: active
-  version: 15
-  updated_at: 2026-11-02 19:46:47 +0400
+  version: 16
+  updated_at: "2026-11-27T17:35:01.150345+00:00"
 ---
 # Summary
 
@@ -35,4 +35,4 @@ the Operator-approved selection is recorded under CA-P-2307. this active source 
 
 CA-D-250 retains ownership of the technical configuration Carrier **and** its declared dependency-record/Evaluation locations. this Delivery does **not** relocate those roots **or** claim they are installed. CA-E-254 blocks an incomplete exception. independent source acceptance **and** the affected Operator-approved FPF review precede dependent implementation; local tests do **not** establish installed admission.
 
-CA-D-625 **and** CA-D-631 remain unchanged. receiving Project Structure **and** Project Settings Workflows retain source/schema/currentness/permission decisions; storage publication, Run recording, live routing, Core migration **and** stronger publication guarantees remain outside this exception.
+CA-D-625 **and** CA-D-631 remain unchanged. Apply AN-S-2417 and AN-S-2425 to the receiving Project Structure **and** Project Settings Workflows. Storage publication, Run recording, live routing, Core migration **and** stronger publication guarantees remain outside this exception.

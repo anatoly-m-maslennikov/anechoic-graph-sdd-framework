@@ -54,7 +54,13 @@ class PythonBoundaryTests(unittest.TestCase):
     def test_dynamic_literals_and_relative_cross_child(self):
         self.write(
             f"{self.engine}/app.py",
-            f"import importlib\nimportlib.import_module('{self.setup}.run')\nfrom ..{self.release_module} import ship\n",
+            (
+                "import importlib\nimportlib.import_module('"
+                f"{self.setup}"
+                ".run')\nfrom .."
+                f"{self.release_module}"
+                " import ship\n"
+            ),
         )
         count, output = self.run_check()
         self.assertEqual(count, 2)

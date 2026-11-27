@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-5029
+concern:
+  subject: "Specification"
+  path: "Model/Graph/Node//Artifact//SSOT//Prescribed/Content/Atom"
+  relation: "is_narrower_than"
 container:
   component: C86
 tier: 0
@@ -11,9 +15,9 @@ relations:
   ANSWERS:
   - AN-S-4933@1
 state:
-  status: "active"
-  version: 2
-  updated_at: "2026-11-27T03:41:08.687503+00:00"
+  status: active
+  version: 3
+  updated_at: "2026-11-27T16:16:01.404965+00:00"
 ---
 
 ## Summary

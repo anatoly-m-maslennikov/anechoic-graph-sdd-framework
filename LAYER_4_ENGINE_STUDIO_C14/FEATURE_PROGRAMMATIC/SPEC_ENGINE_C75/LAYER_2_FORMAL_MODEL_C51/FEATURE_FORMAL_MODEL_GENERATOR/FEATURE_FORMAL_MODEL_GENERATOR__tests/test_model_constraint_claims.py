@@ -3,91 +3,233 @@
 from pathlib import Path
 import unittest
 
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.\
+    LAYER_2_FORMAL_MODEL_C51.FEATURE_FORMAL_MODEL_GENERATOR.\
+    FEATURE_FORMAL_MODEL_GENERATOR__shared import (
+    _check_manifest_property_bearers,
+)  # fmt: skip
+
 PROGRAMMATIC = Path(__file__).resolve().parents[4]
+
+
+def _refinement_records():
+    records = [
+        (
+            "parent",
+            "MODEL//ANECHOIC <+ Node",
+            {
+                "arguments": {
+                    "entity_kind": "Primary",
+                    "entity_name": "Node",
+                }
+            },
+        ),
+        (
+            "child",
+            "MODEL//ANECHOIC <+ Node//Child",
+            {
+                "arguments": {
+                    "entity_kind": "Primary",
+                    "entity_name": "Child",
+                }
+            },
+        ),
+    ]
+    prop = {
+        "entity_kind": "Property",
+        "entity_name": "Flag",
+        "base_path": "Node",
+        "applies_to_entity_classes": ("Node//Child",),
+    }
+    return records, prop
+
+
+def _constraint_records():
+    primary = {
+        "kind": "entity",
+        "arguments": {
+            "entity_name": "Atom",
+            "entity_class": "Atom",
+            "entity_kind": "Primary",
+        },
+    }
+    constraints = {
+        "kind": "entity",
+        "arguments": {
+            "entity_name": "Atom Constraints",
+            "constraints_for": "Atom",
+            "instance_relation_constraints": {
+                "LINK": {"targets_per_source": 1}
+            },
+        },
+    }
+    records = [
+        ("owner", "ANECHOIC_MODEL <+ Atom", primary),
+        ("rules", "ANECHOIC_MODEL <+ Rules", constraints),
+    ]
+    return primary, constraints, records
 
 
 class ConstraintClaimMergeTests(unittest.TestCase):
     def test_property_refinement_requires_the_exact_primary_path(self):
-        from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.FEATURE_FORMAL_MODEL_GENERATOR.FEATURE_FORMAL_MODEL_GENERATOR__shared import (
-            _check_manifest_property_bearers,
+        records, prop = _refinement_records()
+        records.append(
+            (
+                "property",
+                "MODEL//ANECHOIC <+ Node//Child.Flag",
+                {"arguments": prop},
+            )
         )
-
-        records = [
-            ("parent", "MODEL//ANECHOIC <+ Node",
-             {"arguments": {"entity_kind": "Primary", "entity_name": "Node"}}),
-            ("child", "MODEL//ANECHOIC <+ Node//Child",
-             {"arguments": {"entity_kind": "Primary", "entity_name": "Child"}}),
-        ]
-        prop = {"entity_kind": "Property", "entity_name": "Flag", "base_path": "Node",
-                "applies_to_entity_classes": ("Node//Child",)}
-        records.append(("property", "MODEL//ANECHOIC <+ Node//Child.Flag", {"arguments": prop}))
         _check_manifest_property_bearers(records)
-        records[-1] = ("property", "MODEL//ANECHOIC <+ Node.Flag", {"arguments": prop})
-        with self.assertRaisesRegex(ValueError, r"expected .*Node//Child.Flag.*actual Node.Flag"):
+        records[-1] = (
+            "property",
+            "MODEL//ANECHOIC <+ Node.Flag",
+            {"arguments": prop},
+        )
+        with self.assertRaisesRegex(
+            ValueError, r"expected .*Node//Child.Flag.*actual Node.Flag"
+        ):
             _check_manifest_property_bearers(records)
         prop.update(entity_name="Version", base_path="Node.State")
-        records[-1] = ("property", "MODEL//ANECHOIC <+ Node//Child.State.Version", {"arguments": prop})
+        records[-1] = (
+            "property",
+            "MODEL//ANECHOIC <+ Node//Child.State.Version",
+            {"arguments": prop},
+        )
         _check_manifest_property_bearers(records)
-        records[-1] = ("property", "MODEL//ANECHOIC <+ Node//Child.Version", {"arguments": prop})
-        with self.assertRaisesRegex(ValueError, r"expected .*Node//Child.State.Version.*actual Node//Child.Version"):
+        records[-1] = (
+            "property",
+            "MODEL//ANECHOIC <+ Node//Child.Version",
+            {"arguments": prop},
+        )
+        with self.assertRaisesRegex(
+            ValueError,
+            r"expected .*Node//Child.State.Version.*actual "
+            r"Node//Child.Version",
+        ):
             _check_manifest_property_bearers(records)
         prop["applies_to_entity_classes"] = ("Unknown//Child",)
-        with self.assertRaisesRegex(ValueError, "unresolved Property refinement owner"):
+        with self.assertRaisesRegex(
+            ValueError, "unresolved Property refinement owner"
+        ):
             _check_manifest_property_bearers(records)
 
     def test_property_scope_matches_bearer_name_and_refinement(self):
-        from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.FEATURE_FORMAL_MODEL_GENERATOR.FEATURE_FORMAL_MODEL_GENERATOR__shared import (
+        from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.\
+            LAYER_2_FORMAL_MODEL_C51.FEATURE_FORMAL_MODEL_GENERATOR.\
+            FEATURE_FORMAL_MODEL_GENERATOR__shared import (
             _check_manifest_property_bearers,
-        )
+        )  # fmt: skip
 
-        owner = ("owner", "MODEL//ANECHOIC <+ Node//Atom",
-                 {"arguments": {"entity_kind": "Primary", "entity_name": "Atom"}})
-        prop = {"entity_kind": "Property", "entity_name": "Version", "base_path": "Node//Atom.State"}
+        owner = (
+            "owner",
+            "MODEL//ANECHOIC <+ Node//Atom",
+            {"arguments": {"entity_kind": "Primary", "entity_name": "Atom"}},
+        )
+        prop = {
+            "entity_kind": "Property",
+            "entity_name": "Version",
+            "base_path": "Node//Atom.State",
+        }
+
         def check(subject):
-            _check_manifest_property_bearers([owner, ("property", "MODEL//ANECHOIC <+ " + subject,
-                                                       {"arguments": prop})])
+            _check_manifest_property_bearers(
+                [
+                    owner,
+                    (
+                        "property",
+                        "MODEL//ANECHOIC <+ " + subject,
+                        {"arguments": prop},
+                    ),
+                ]
+            )
+
         check("Node//Atom.State.Version")
-        with self.assertRaisesRegex(ValueError, r"expected .*Node//Atom.State.Version.*actual Node//Atom.State.Other"):
+        with self.assertRaisesRegex(
+            ValueError,
+            r"expected .*Node//Atom.State.Version.*actual "
+            r"Node//Atom.State.Other",
+        ):
             check("Node//Atom.State.Other")
-        with self.assertRaisesRegex(ValueError, r"expected .*Node//Atom.State.Version.*actual Node//Atom.Version"):
+        with self.assertRaisesRegex(
+            ValueError,
+            r"expected .*Node//Atom.State.Version.*actual Node//Atom.Version",
+        ):
             check("Node//Atom.Version")
         prop.update(entity_name="Atom ID", base_path="Node//Atom.Identity")
         check("Node//Atom.Identity.Atom ID")
 
     def test_primary_allows_carrier_metadata_but_not_constraints(self):
-        from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.FEATURE_FORMAL_MODEL_GENERATOR.model_constraint_claims import _constraint_owners
-        from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.FEATURE_FORMAL_MODEL_GENERATOR.manifest_property_fields import _index_classes
-        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_native_model_claim
+        from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.\
+            LAYER_2_FORMAL_MODEL_C51.FEATURE_FORMAL_MODEL_GENERATOR.\
+            model_constraint_claims import (
+            _constraint_owners,
+        )  # fmt: skip
+        from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.\
+            LAYER_2_FORMAL_MODEL_C51.FEATURE_FORMAL_MODEL_GENERATOR.\
+            manifest_property_fields import (
+            _index_classes,
+        )  # fmt: skip
+        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.\
+            ADAPTERS_C30__shared import (
+            parse_native_model_claim,
+        )  # fmt: skip
 
-        claim = ("from anechoic.formal_claims import declare_entity\nclass Atom:\n    pass\n"
-                 "declare_entity(entity_name='Atom', entity_class=Atom, entity_kind='Primary', "
-                 "ssot_carrier_path='Carrier//Markdown')\n")
+        claim = (
+            "from anechoic.formal_claims import "
+            "declare_entity\nclass Atom:\n    pass\n"
+            "declare_entity(entity_name='Atom', "
+            "entity_class=Atom, entity_kind='Primary', "
+            "ssot_carrier_path='Carrier//Markdown')\n"
+        )
         declaration = parse_native_model_claim(claim)
-        records = [('source', 'MODEL//ANECHOIC <+ Atom', declaration)]
+        records = [("source", "MODEL//ANECHOIC <+ Atom", declaration)]
         _constraint_owners(records)
         _index_classes([claim], [declaration])
-        declaration['arguments']['instance_relation_constraints'] = {}
-        with self.assertRaisesRegex(ValueError, 'contains constraints'):
+        declaration["arguments"]["instance_relation_constraints"] = {}
+        with self.assertRaisesRegex(ValueError, "contains constraints"):
             _constraint_owners(records)
-        with self.assertRaisesRegex(ValueError, 'whitelisted declaration'):
+        with self.assertRaisesRegex(ValueError, "whitelisted declaration"):
             _index_classes([claim], [declaration])
 
     def test_constraints_are_merged_without_mutating_primary(self):
-        from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.FEATURE_FORMAL_MODEL_GENERATOR.FEATURE_FORMAL_MODEL_GENERATOR__shared import _merge_constraint_claims
+        from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.\
+            LAYER_2_FORMAL_MODEL_C51.FEATURE_FORMAL_MODEL_GENERATOR.\
+            FEATURE_FORMAL_MODEL_GENERATOR__shared import (
+            _merge_constraint_claims,
+        )  # fmt: skip
 
-        primary = {"kind": "entity", "arguments": {"entity_name": "Atom", "entity_class": "Atom", "entity_kind": "Primary"}}
-        constraints = {"kind": "entity", "arguments": {"entity_name": "Atom Constraints", "constraints_for": "Atom", "instance_relation_constraints": {"LINK": {"targets_per_source": 1}}}}
-        records = [("owner", "ANECHOIC_MODEL <+ Atom", primary), ("rules", "ANECHOIC_MODEL <+ Rules", constraints)]
+        primary, constraints, records = _constraint_records()
         merged = _merge_constraint_claims(records)
-        self.assertEqual(merged[0][2]["arguments"]["instance_relation_constraints"], {"LINK": {"targets_per_source": 1}})
+        self.assertEqual(
+            merged[0][2]["arguments"]["instance_relation_constraints"],
+            {"LINK": {"targets_per_source": 1}},
+        )
         self.assertNotIn("instance_relation_constraints", primary["arguments"])
-        for changed, message in [({**constraints, "arguments": constraints["arguments"] | {"constraints_for": "Unknown"}}, "unknown constraint owner"),
-                                 ({**constraints, "arguments": constraints["arguments"] | {"entity_name": "Wrong"}}, "invalid constraint Declaration")]:
+        for changed, message in [
+            (
+                {
+                    **constraints,
+                    "arguments": constraints["arguments"]
+                    | {"constraints_for": "Unknown"},
+                },
+                "unknown constraint owner",
+            ),
+            (
+                {
+                    **constraints,
+                    "arguments": constraints["arguments"]
+                    | {"entity_name": "Wrong"},
+                },
+                "invalid constraint Declaration",
+            ),
+        ]:
             with self.assertRaisesRegex(ValueError, message):
-                _merge_constraint_claims([records[0], ("rules", records[1][1], changed)])
+                _merge_constraint_claims(
+                    [records[0], ("rules", records[1][1], changed)]
+                )
         with self.assertRaisesRegex(ValueError, "duplicate constraint owner"):
             _merge_constraint_claims([*records, records[1]])
-
 
 
 if __name__ == "__main__":

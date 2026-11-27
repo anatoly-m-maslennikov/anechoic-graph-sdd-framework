@@ -12,14 +12,18 @@ from unittest.mock import patch
 
 import yaml
 
-TOOLS = Path(__file__).resolve().parents[1]
-sys.path[:0] = [str(TOOLS), str(TOOLS.parent)]
+sys.path.insert(0, str((TOOLS := Path(__file__).resolve().parents[1]).parent))
+sys.path.insert(0, str(TOOLS))
 
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import validate_manifest  # noqa: E402
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import (  # noqa: E402
-    discover_native_project, legacy_settings_to_manifest, resolve_native_project,
+    discover_native_project,
+    legacy_settings_to_manifest,
+    resolve_native_project,
 )
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import resolve_project
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import (
+    resolve_project,
+)
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import ProjectSelectionError
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import write_scope_unit_declarations  # noqa: E402
 
@@ -38,7 +42,9 @@ class ManifestReaderBoundaryTests(unittest.TestCase):
 
 class NativeProjectSelectionTests(unittest.TestCase):
     def setUp(self):
-        self.root = Path(self.enterContext(tempfile.TemporaryDirectory())).resolve()
+        self.root = Path(
+            self.enterContext(tempfile.TemporaryDirectory())
+        ).resolve()
         self.native = self.root / ".anechoic_anechoic"
         self.native.mkdir()
 
@@ -51,17 +57,24 @@ class NativeProjectSelectionTests(unittest.TestCase):
                   "context": {"container": {"component": component}, "tier": tier, "template": "project_manifest"},
                   "state": {"status": status, "version": 3, "updated_at": "2026-11-19T00:00:00Z"}}
         claim_lenses = f", lens_whitelist={lens_whitelist!r}" if lens_whitelist is not None else ""
-        claim_parameters = f", parameters={parameters!r}" if parameters is not None else ""
-        path.write_text(f"---\n{yaml.safe_dump(header)}---\n\n## Summary\n\nDeclare Anechoic\n\n"
-                        "## Claim\n\n### Formal Claim\n\n```python\n"
-                        "from anechoic.formal_claims import declare_entity\n"
-                        "from anechoic.model import ProjectManifest\n"
-                        f"declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name={name!r}, "
-                        f"prefix={prefix!r}{claim_lenses}{claim_parameters}))\n```\n", encoding="utf-8")
+        claim_parameters = (
+            f", parameters={parameters!r}" if parameters is not None else ""
+        )
+        path.write_text(
+            f"---\n{yaml.safe_dump(header)}---\n\n## Summary\n\nDeclare Anechoic\n\n"
+            "## Claim\n\n### Formal Claim\n\n```python\n"
+            "from anechoic.formal_claims import declare_entity\n"
+            "from anechoic.model import ProjectManifest\n"
+            f"declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name={name!r}, "
+            f"prefix={prefix!r}{claim_lenses}{claim_parameters}))\n```\n",
+            encoding="utf-8",
+        )
         return path
 
     def select(self):
-        return resolve_native_project(self.root, self.native.name, validate_manifest=validate_manifest)
+        return resolve_native_project(
+            self.root, self.native.name, validate_manifest=validate_manifest
+        )
 
     def test_explicit_binding_pins_one_native_manifest_during_legacy_coexistence(self):
         legacy = self.root / ".anechoic_legacy"
@@ -94,6 +107,34 @@ class NativeProjectSelectionTests(unittest.TestCase):
         self.assertEqual(root_manifest, discover_native_project(
             self.root, manifest_validator=lambda: validate_manifest).manifest_path)
 
+    def test_root_component_manifest_preserves_project_fields(self):
+        path = self.carrier()
+        root_manifest = path.rename(self.root / path.name)
+        header = root_manifest.read_text().split("## Claim", 1)[0]
+        root_manifest.write_text(
+            header + "## Formal Manifest\n\n```python anechoic-edsl\n"
+            "from anechoic.model import ComponentManifest\n"
+            "ComponentManifest(name='Anechoic', prefix='AN', "
+            "lens_whitelist=['SPEC'], parameters={"
+            "'root': {'prefix': 'dot'}, "
+            "'project_mcp': {'inline_result_limit_kib': 8}, "
+            "'runtime': {'journal.storage': 'duckdb', "
+            "'duck_db.storage': 'disk'}})\n```\n",
+            encoding="utf-8",
+        )
+        selected = self.select()
+        self.assertEqual(root_manifest, selected.manifest_path)
+        self.assertEqual("Anechoic", selected.project_name)
+        self.assertEqual("AN", selected.project_prefix)
+        self.assertEqual(
+            {
+                "journal": {"storage": "duckdb"},
+                "iwe_console": {"storage": "disk", "inline_result_limit_kib": 8},
+            },
+            selected.parameters["runtime"],
+        )
+        self.assertEqual({"prefix": "dot"}, selected.parameters["project"]["root"])
+
     def test_project_selection_rejects_unsafe_tier_one_folder(self):
         for path in ("../OUTSIDE", "01_DRAFT", "01_LEVEL/NESTED", "01_ARCHITECTURE_C9"):
             with self.subTest(path=path):
@@ -102,17 +143,24 @@ class NativeProjectSelectionTests(unittest.TestCase):
                 with self.assertRaisesRegex(ProjectSelectionError, "folder_layout.active_spec_by_tier"):
                     self.select()
 
-    def test_root_candidate_refuses_bad_or_duplicate_and_does_not_fall_back(self):
+    def test_root_candidate_refuses_bad_or_duplicate_and_does_not_fall_back(
+        self,
+    ):
         legacy = self.carrier()
         root_manifest = self.root / legacy.name
         root_manifest.write_text("---\ninvalid: [\n---\n")
         with self.assertRaises(ProjectSelectionError):
             self.select()
-        root_manifest.write_text(legacy.read_text().replace("status: active", "status: draft"))
+        root_manifest.write_text(
+            legacy.read_text().replace("status: active", "status: draft")
+        )
         with self.assertRaises(ProjectSelectionError):
             self.select()
         root_manifest.write_text(legacy.read_text())
-        second = self.carrier("AN-S-002-PROJECT_MANIFEST--declare-anechoic.md", atom_id="AN-S-002")
+        second = self.carrier(
+            "AN-S-002-PROJECT_MANIFEST--declare-anechoic.md",
+            atom_id="AN-S-002",
+        )
         second.rename(self.root / second.name)
         with self.assertRaises(ProjectSelectionError):
             self.select()
@@ -127,14 +175,16 @@ class NativeProjectSelectionTests(unittest.TestCase):
     def test_canonical_manifest_header(self):
         path = self.carrier()
         text = path.read_text()
-        _, header, body = text.split('---', 2)
+        _, header, body = text.split("---", 2)
         metadata = yaml.safe_load(header)
-        metadata['atom_family'] = 'SPEC'
-        metadata['atom_id'] = metadata.pop('identity')['atom_id']
-        metadata['structure'] = {'container': metadata['context'].pop('container'),
-                                 'tier': metadata['context'].pop('tier')}
+        metadata["atom_family"] = "SPEC"
+        metadata["atom_id"] = metadata.pop("identity")["atom_id"]
+        metadata["structure"] = {
+            "container": metadata["context"].pop("container"),
+            "tier": metadata["context"].pop("tier"),
+        }
         path.write_text(f"---\n{yaml.safe_dump(metadata)}---{body}")
-        self.assertEqual('AN-S-001@3', self.select().manifest_ref)
+        self.assertEqual("AN-S-001@3", self.select().manifest_ref)
 
     def test_refuses_missing_and_ambiguous_active_manifest(self):
         self.carrier(status="draft")
@@ -202,7 +252,9 @@ class NativeProjectSelectionTests(unittest.TestCase):
                     self.assertEqual(lenses, manifest.lens_whitelist)
                     return manifest
 
-                resolve_native_project(self.root, self.native.name, validate_manifest=check)
+                resolve_native_project(
+                    self.root, self.native.name, validate_manifest=check
+                )
 
     def test_binds_validated_parameters_and_accepts_identity_only_validator(self):
         self.carrier(parameters={"paths": {"control_root": ".anechoic_anechoic"}, "values": [1, False]})
@@ -218,9 +270,13 @@ class NativeProjectSelectionTests(unittest.TestCase):
             validate_manifest(fields, component_id)
             return result(prefix="AN", parameters=validated)
 
-        selected = resolve_native_project(self.root, self.native.name, validate_manifest=check)
+        selected = resolve_native_project(
+            self.root, self.native.name, validate_manifest=check
+        )
         validated["effective"]["list"].append(2)
-        self.assertEqual({"effective": {"list": [1, False]}}, selected.parameters)
+        self.assertEqual(
+            {"effective": {"list": [1, False]}}, selected.parameters
+        )
         legacy = resolve_native_project(self.root, self.native.name,
                                         validate_manifest=lambda fields, component: result(prefix="AN"))
         self.assertEqual({"paths": {"control_root": ".anechoic_anechoic"}, "values": [1, False]},
@@ -302,7 +358,9 @@ class NativeProjectSelectionTests(unittest.TestCase):
         outside = self.carrier()
         renamed = outside.rename(self.root / "outside.md")
         outside.symlink_to(renamed)
-        with self.assertRaisesRegex(ProjectSelectionError, "invalid, or unsafe"):
+        with self.assertRaisesRegex(
+            ProjectSelectionError, "invalid, or unsafe"
+        ):
             self.select()
 
 

@@ -48,7 +48,13 @@ class PublicInsertTest(unittest.TestCase):
             },
         ]
 
-        insert_public_rows(self.connection, "rows", fields, rows, json_fields=frozenset({"payload"}))
+        insert_public_rows(
+            self.connection,
+            "rows",
+            fields,
+            rows,
+            json_fields=frozenset({"payload"}),
+        )
 
         self.assertEqual(fields, tuple(column[0] for column in self.connection.execute("SELECT * FROM rows").description))
         self.assertEqual(
@@ -63,8 +69,13 @@ class PublicInsertTest(unittest.TestCase):
     def test_empty_batch_is_a_no_op(self) -> None:
         self.connection.execute("CREATE TABLE main.rows(value VARCHAR)")
 
-        insert_public_rows(self.connection, "rows", ("value",), [], json_fields=frozenset())
-        self.assertEqual([(0,)], self.connection.execute("SELECT count(*) FROM rows").fetchall())
+        insert_public_rows(
+            self.connection, "rows", ("value",), [], json_fields=frozenset()
+        )
+        self.assertEqual(
+            [(0,)],
+            self.connection.execute("SELECT count(*) FROM rows").fetchall(),
+        )
 
     def test_single_row_matches_bulk_values_and_field_order(self) -> None:
         fields = ("row_id", "text_value", "payload", "day", "moment", "flag", "count", "ratio")
@@ -98,7 +109,11 @@ class PublicInsertTest(unittest.TestCase):
         ]
 
         insert_public_rows(
-            self.connection, "single_rows", fields, rows[:1], json_fields=frozenset({"payload"}),
+            self.connection,
+            "single_rows",
+            fields,
+            rows[:1],
+            json_fields=frozenset({"payload"}),
         )
         insert_public_rows(
             self.connection, "bulk_rows", fields,
@@ -110,19 +125,31 @@ class PublicInsertTest(unittest.TestCase):
     def _assert_single_matches_bulk(self, fields):
         self.assertEqual(
             fields,
-            tuple(column[0] for column in self.connection.execute("SELECT * FROM single_rows").description),
+            tuple(
+                column[0]
+                for column in self.connection.execute(
+                    "SELECT * FROM single_rows"
+                ).description
+            ),
         )
         self.assertEqual(
             self.connection.execute("SELECT * FROM single_rows").fetchall(),
-            self.connection.execute("SELECT * FROM bulk_rows ORDER BY row_id LIMIT 1").fetchall(),
+            self.connection.execute(
+                "SELECT * FROM bulk_rows ORDER BY row_id LIMIT 1"
+            ).fetchall(),
         )
 
 
     def test_constraint_failure_is_rolled_back_by_caller(self) -> None:
         fields = ("row_id", "value")
-        self.connection.execute("CREATE TABLE main.rows(row_id BIGINT PRIMARY KEY, value VARCHAR)")
+        self.connection.execute(
+            "CREATE TABLE main.rows(row_id BIGINT PRIMARY KEY, value VARCHAR)"
+        )
         insert_public_rows(
-            self.connection, "rows", fields, [{"row_id": 1, "value": "before"}],
+            self.connection,
+            "rows",
+            fields,
+            [{"row_id": 1, "value": "before"}],
             json_fields=frozenset(),
         )
 
@@ -131,13 +158,21 @@ class PublicInsertTest(unittest.TestCase):
                 self.connection.execute("BEGIN TRANSACTION")
                 with self.assertRaises(duckdb.ConstraintException):
                     insert_public_rows(
-                        self.connection, "rows", fields,
-                        [{"row_id": row_id, "value": "new"} for row_id in range(2, count + 1)]
+                        self.connection,
+                        "rows",
+                        fields,
+                        [
+                            {"row_id": row_id, "value": "new"}
+                            for row_id in range(2, count + 1)
+                        ]
                         + [{"row_id": 1, "value": "duplicate"}],
                         json_fields=frozenset(),
                     )
                 self.connection.execute("ROLLBACK")
-                self.assertEqual([(1, "before")], self.connection.execute("SELECT * FROM rows").fetchall())
+                self.assertEqual(
+                    [(1, "before")],
+                    self.connection.execute("SELECT * FROM rows").fetchall(),
+                )
 
 
 if __name__ == "__main__":

@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: "active"
-  version: 27
-  updated_at: '2026-11-27T13:06:47.329688+00:00'
+  version: 29
+  updated_at: "2026-11-27T14:45:10.285943+00:00"
 ---
 
 ## Summary
@@ -242,4 +242,4 @@ on success and clean up the disposable candidate resources.
 
 #### References
 
-AN-S-3055, AN-S-4734, AN-T-2944, and AN-T-2958.
+AN-S-3290, AN-T-2944, and AN-T-2958.

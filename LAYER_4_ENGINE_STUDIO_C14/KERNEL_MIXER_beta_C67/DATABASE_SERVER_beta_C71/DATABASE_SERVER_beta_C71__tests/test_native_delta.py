@@ -63,7 +63,9 @@ class NativeDeltaTest(unittest.TestCase):
                                  ("Project Config Atom", ["draft", "active", "archived"]))
         ]
         data["model"] = json.dumps(model)
-        data["receipt"]["model_descriptor_sha256"] = sha256(data["model"].encode()).hexdigest()
+        data["receipt"]["model_descriptor_sha256"] = sha256(
+            data["model"].encode()
+        ).hexdigest()
         with _server() as client:
             refused = client.put("/generation", json=data)
             self.assertEqual(400, refused.status_code, refused.text)
@@ -96,7 +98,9 @@ class NativeDeltaTest(unittest.TestCase):
             "reference": "AN-C-7", "exact_ref": "AN-C-7@1", "filename": "AN-C-7.md",
             "version": 1, "status": "reviewed", "status_group": "Current"})
         data["model"] = json.dumps(model)
-        data["receipt"]["model_descriptor_sha256"] = sha256(data["model"].encode()).hexdigest()
+        data["receipt"]["model_descriptor_sha256"] = sha256(
+            data["model"].encode()
+        ).hexdigest()
         data["receipt"]["snapshot_sha256"] = _digest(data["snapshot"])
         with _server() as client:
             admitted = client.put("/generation", json=data)
@@ -105,19 +109,31 @@ class NativeDeltaTest(unittest.TestCase):
             data["receipt"]["snapshot_sha256"] = _digest(data["snapshot"])
             refused = client.put("/generation", json=data)
             self.assertEqual(400, refused.status_code, refused.text)
-            self.assertIn("Invalid native Atom Status", refused.json()["error"]["message"])
+            self.assertIn(
+                "Invalid native Atom Status",
+                refused.json()["error"]["message"],
+            )
 
     def test_partial_and_invalid_family_status_bindings_fail(self):
-        args = {"entity_name": "Status", "entity_kind": "Property", "relation_name": "IS_PROPERTY_OF",
-                "base_path": "Node//Artifact//Atom.Header.State", "allowed_values": ["active"],
-                "applies_to_entity_classes": ["Node//Artifact//Atom//Ticket Atom"]}
+        args = {
+            "entity_name": "Status",
+            "entity_kind": "Property",
+            "relation_name": "IS_PROPERTY_OF",
+            "base_path": "Node//Artifact//Atom.Header.State",
+            "allowed_values": ["active"],
+            "applies_to_entity_classes": ["Node//Artifact//Atom//Ticket Atom"],
+        }
         data = base_generation()
         model = json.loads(data["model"])
 
         def submit(client):
-            model["bindings"]["declarations"] = [["subject", {"arguments": args}]]
+            model["bindings"]["declarations"] = [
+                ["subject", {"arguments": args}]
+            ]
             data["model"] = json.dumps(model)
-            data["receipt"]["model_descriptor_sha256"] = sha256(data["model"].encode()).hexdigest()
+            data["receipt"]["model_descriptor_sha256"] = sha256(
+                data["model"].encode()
+            ).hexdigest()
             return client.put("/generation", json=data)
 
         with duckdb.connect() as connection, TestClient(create_app(connection, "instance", PIN)) as client:
@@ -236,7 +252,23 @@ class NativeDeltaTest(unittest.TestCase):
             relations = [edge for atom in atoms for edge in edges(atom["reference"])]
             payload = delta(base, paths, atoms, relations)
             new_base = self.send(client, payload)
-            self.assertEqual(409, client.put("/generation/native-delta", json=payload).status_code)
+            def accepted_state():
+                return (
+                    client.get("/health").json()["result"]["generation"],
+                    [client.get(path, params=BINDING).content
+                     for path in ("/model", "/structure")],
+                    [_query(client, sql).json()["result"]["rows"] for sql in (
+                        "SELECT * FROM atoms ORDER BY ALL",
+                        "SELECT * FROM main.relations ORDER BY ALL LIMIT 1000",
+                        "SELECT * FROM main.relations ORDER BY ALL LIMIT 1000 OFFSET 1000",
+                    )],
+                )
+
+            before = accepted_state()
+            refused = client.put("/generation/native-delta", json=payload)
+            self.assertEqual((409, "generation_base_changed"),
+                             (refused.status_code, refused.json()["error"]["code"]))
+            self.assertEqual(before, accepted_state())
             self.assertEqual([[1002]], _query(client, "SELECT count(*) FROM main.relations").json()["result"]["rows"])
             sql = _query(client, "SELECT count(*), count(DISTINCT reference) FROM atoms")
             self.assertEqual([[502, 502]], sql.json()["result"]["rows"])

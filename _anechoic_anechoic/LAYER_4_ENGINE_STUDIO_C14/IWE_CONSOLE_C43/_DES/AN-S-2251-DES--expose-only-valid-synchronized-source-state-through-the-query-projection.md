@@ -1,15 +1,19 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-2251
+concern:
+  subject: "Projection"
+  path: "Model/Graph/Node//Artifact//Derived"
+  relation: "is_narrower_than"
 container:
   component: C43
 tier: 3
 context:
   lens: DES
 state:
-  status: "active"
-  version: 8
-  updated_at: "2026-11-25T22:33:46.721762+00:00"
+  status: active
+  version: 10
+  updated_at: "2026-11-27T17:35:01.150345+00:00"
 ---
 ## Summary
 
@@ -29,7 +33,7 @@ The query Projection **must**:
 - make valid selected sources available without exposing a partial update.
 - exclude an ordinary source that cannot be parsed or read stably and remove any older query row for that file. Keep parseable files queryable and report violations of the current declared schema separately.
 - leave unrelated valid sources queryable when another source is excluded.
-- report source-file errors with path and available location information through stderr and the queryable issue tables. Publish audits asynchronously after source rows commit. Expose audit progress and the elapsed time of the most recent audit so users can identify pending diagnostics.
+- Report source-file errors to stderr with path and available location information. Apply AN-S-1944 and AN-S-1948 for query-visible issues and audit state and AN-S-1967 for asynchronous audit publication.
 - skip an excluded source without automatic retry; a later actual source change may be considered on a later refresh.
 - remain distinct from source deletion: a source-file error is not proof that the source was deleted.
 
@@ -37,4 +41,4 @@ Use the Atom ID, Status, and Container from the Header. A parent’s Status does
 
 An invalid Current Scope Unit Declaration must not produce valid or partial projected structure.
 
-Report duplicate Atom IDs and Versions among selected Current and Archived rows. Drafts and Backlog rows are outside that duplicate check. Archive duplicate coverage is limited to the loaded folders and any exact archived files included in `atoms`.
+Apply AN-S-1967 to duplicate Atom ID and Version checks. Archive coverage includes only loaded folders and exact archived files included in `atoms`.

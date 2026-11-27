@@ -28,6 +28,8 @@ services:
       ANECHOIC_FRAMEWORK_DB_ROOT: /var/lib/anechoic
       ANECHOIC_RUNTIME_NAMESPACE: docker
       ANECHOIC_LOG_LEVEL: ${ANECHOIC_LOG_LEVEL-INFO}
+      ANECHOIC_WORKBENCH_STORAGE:
+      ANECHOIC_JOURNAL_STORAGE:
       ANECHOIC_CONTROL_ROOT: ${ANECHOIC_CONTROL_ROOT:?Selected control root is required}
       ANECHOIC_PROJECT_INSTANCE_ID: ${ANECHOIC_PROJECT_INSTANCE_ID:?Selected identity is required}
       ANECHOIC_HOST_PROJECT_ROOT: ${ANECHOIC_PROJECT_ROOT:?Selected Project root is required}
@@ -44,7 +46,7 @@ services:
       - type: bind
         source: ${ANECHOIC_PROJECT_ROOT}
         target: /project
-    ports: ["127.0.0.1:${ANECHOIC_MCP_HTTP_PORT:?Project Settings HTTP port is required}:8092"]
+    ports: ["127.0.0.1:${ANECHOIC_MCP_HTTP_PORT:?The container HTTP port is required}:8092"]
     healthcheck:
       test: [CMD, python, -B, -c, "import json,urllib.request; assert json.load(urllib.request.urlopen('http://127.0.0.1:8092/anechoic/health',timeout=3))['state'] == 'ready'"]
       interval: 2s

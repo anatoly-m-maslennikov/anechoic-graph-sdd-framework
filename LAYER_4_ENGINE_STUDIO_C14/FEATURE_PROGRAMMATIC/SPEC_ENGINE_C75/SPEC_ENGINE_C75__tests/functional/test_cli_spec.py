@@ -46,7 +46,9 @@ component_workflow(component='C2', action='run', machine={
     }})
 ```
 """
-_QUERY_CONTRACT = _CONTRACT.replace("path='suite.py'", "module='engine.suite'").replace(
+_QUERY_CONTRACT = _CONTRACT.replace(
+    "path='suite.py'", "module='engine.suite'"
+).replace(
     "outcomes={'succeeded': 'zero', 'failed': 'nonzero'}",
     """arguments=('--query', '<text>'), output_fields=('records', 'trace'),
     checks={'guarantees': {'priority': 'exact_name_first'},
@@ -82,15 +84,26 @@ component_workflow(component='C2', action='run', machine={
 
 
 def _carrier(root, atom_id, template, owner, relations, body):
-    path = root / f'{atom_id}.md'
-    tier = {'component_manifest': 4, 'component_contract': 0, 'decision': 1, 'solution': 0}[template.casefold()]
-    path.write_text(f'---\natom_family: SPEC\natom_id: {atom_id}\ncontainer: {{component: {owner}}}'
-                    f'\ntier: {tier}\ncontext: {{template: {template}}}\nrelations: {relations}'
-                    '\nstate: {status: active, version: 1}\n---\n\n' + body, encoding='utf-8')
-    return {'path': path.name, 'atom_id': atom_id, 'version': 1, 'status': 'active',
-            'container_component': owner}
-
-
+    path = root / f"{atom_id}.md"
+    tier = {
+        "component_manifest": 4,
+        "component_contract": 0,
+        "decision": 1,
+        "solution": 0,
+    }[template.casefold()]
+    path.write_text(
+        f"---\natom_family: SPEC\natom_id: {atom_id}\ncontainer: {{component: {owner}}}"
+        f"\ntier: {tier}\ncontext: {{template: {template}}}\nrelations: {relations}"
+        "\nstate: {status: active, version: 1}\n---\n\n" + body,
+        encoding="utf-8",
+    )
+    return {
+        "path": path.name,
+        "atom_id": atom_id,
+        "version": 1,
+        "status": "active",
+        "container_component": owner,
+    }
 
 
 class CliSpecTests(unittest.TestCase):
@@ -132,12 +145,15 @@ class CliSpecTests(unittest.TestCase):
                 parse_cli_contract(declaration % outcomes)
 
     def test_cli_exit_codes_distinguish_nonzero_values(self):
-        if shutil.which('lean') is None:
-            self.skipTest('Lean executable unavailable')
-        contract = _CONTRACT.replace("outcomes={'succeeded': 'zero', 'failed': 'nonzero'}",
-                                     "exit_codes={'succeeded': 0, 'failed': 1}")
-        solution = _SOLUTION.replace("'exit_status_class': 'zero'", "'exit_code': 0").replace(
-            "'exit_status_class': 'nonzero'", "'exit_code': 1")
+        if shutil.which("lean") is None:
+            self.skipTest("Lean executable unavailable")
+        contract = _CONTRACT.replace(
+            "outcomes={'succeeded': 'zero', 'failed': 'nonzero'}",
+            "exit_codes={'succeeded': 0, 'failed': 1}",
+        )
+        solution = _SOLUTION.replace(
+            "'exit_status_class': 'zero'", "'exit_code': 0"
+        ).replace("'exit_status_class': 'nonzero'", "'exit_code': 1")
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             pins = (
@@ -145,13 +161,25 @@ class CliSpecTests(unittest.TestCase):
                 _carrier(root, 'AN-S-2', 'component_contract', 'C2', '{ANSWERS: [AN-S-1]}', contract),
                 _carrier(root, 'AN-S-3', 'decision', 'C2', '{IS_SOLUTION_FOR: [AN-S-2@1]}', solution),
             )
-            self.assertEqual('matched',
-                             check_cli_spec(root, 'C2', *pins, interface='suite')['directions']['contract_solution']['status'])
-            path = root / pins[2]['path']
-            path.write_text(path.read_text(encoding='utf-8').replace("'exit_code': 1", "'exit_code': 130"),
-                            encoding='utf-8')
-            self.assertEqual('conflicting',
-                             check_cli_spec(root, 'C2', *pins, interface='suite')['directions']['contract_solution']['status'])
+            self.assertEqual(
+                "matched",
+                check_cli_spec(root, "C2", *pins, interface="suite")[
+                    "directions"
+                ]["contract_solution"]["status"],
+            )
+            path = root / pins[2]["path"]
+            path.write_text(
+                path.read_text(encoding="utf-8").replace(
+                    "'exit_code': 1", "'exit_code': 130"
+                ),
+                encoding="utf-8",
+            )
+            self.assertEqual(
+                "conflicting",
+                check_cli_spec(root, "C2", *pins, interface="suite")[
+                    "directions"
+                ]["contract_solution"]["status"],
+            )
 
     def test_cli_contract_rejects_invalid_exit_codes(self):
         declaration = ("declare_cli_contract(interface='suite', action='run', runner='uv', "
@@ -173,9 +201,25 @@ class CliSpecTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             pins = (
-                _carrier(root, 'AN-S-1', 'component_manifest', 'C1', '{}', manifest),
-                _carrier(root, 'AN-S-2', 'component_contract', 'C2', '{ANSWERS: [AN-S-1]}', contract),
-                _carrier(root, 'AN-S-3', 'decision', 'C2', '{IS_SOLUTION_FOR: [AN-S-2@1]}', _QUERY_SOLUTION),
+                _carrier(
+                    root, "AN-S-1", "component_manifest", "C1", "{}", manifest
+                ),
+                _carrier(
+                    root,
+                    "AN-S-2",
+                    "component_contract",
+                    "C2",
+                    "{ANSWERS: [AN-S-1]}",
+                    contract,
+                ),
+                _carrier(
+                    root,
+                    "AN-S-3",
+                    "decision",
+                    "C2",
+                    "{IS_SOLUTION_FOR: [AN-S-2@1]}",
+                    _QUERY_SOLUTION,
+                ),
             )
             path = root / pins[2]['path']
             initial = path.read_text(encoding='utf-8')
@@ -190,11 +234,21 @@ class CliSpecTests(unittest.TestCase):
                     self.assertEqual(expected, effect['status'])
 
     def test_cli_contract_requires_one_entry_point(self):
-        declaration = "declare_cli_contract(interface='suite', action='run', runner='uv'"
-        self.assertEqual('engine.suite', parse_cli_contract(declaration + ", module='engine.suite')")['module'])
-        for entry in ('', ", path='suite.py', module='engine.suite'"):
-            with self.subTest(entry=entry), self.assertRaisesRegex(ValueError, 'exactly one'):
-                parse_cli_contract(declaration + entry + ')')
+        declaration = (
+            "declare_cli_contract(interface='suite', action='run', runner='uv'"
+        )
+        self.assertEqual(
+            "engine.suite",
+            parse_cli_contract(declaration + ", module='engine.suite')")[
+                "module"
+            ],
+        )
+        for entry in ("", ", path='suite.py', module='engine.suite'"):
+            with (
+                self.subTest(entry=entry),
+                self.assertRaisesRegex(ValueError, "exactly one"),
+            ):
+                parse_cli_contract(declaration + entry + ")")
 
     def test_cli_subcommands_require_the_declared_first_dispatch(self):
         if shutil.which('lean') is None:

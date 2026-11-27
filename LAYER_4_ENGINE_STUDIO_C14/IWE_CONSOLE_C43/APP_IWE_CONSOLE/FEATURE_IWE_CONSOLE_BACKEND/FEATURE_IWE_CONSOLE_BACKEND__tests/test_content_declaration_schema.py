@@ -20,9 +20,9 @@ APP_ROOT = Path(__file__).resolve().parents[3]
 ASSETS = (
     Path(__file__).resolve().parent / "assets" / "content_declaration_schema"
 )
-SEALED_MODEL = (
-    APP_ROOT.parent
-    / "FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FEATURE_TOOLS__tests/assets/lifecycle_schema_declarations/04_requirement"
+SEALED_MODEL = APP_ROOT.parent / (
+    "FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FEATURE_TOOLS__tests/assets/lifecy"
+    "cle_schema_declarations/04_requirement"
 )
 
 
@@ -37,7 +37,10 @@ class ContentDeclarationSchemaTests(ContentSchemaFixture):
         summary = self.declaration("CA-R-1", SUMMARY_CLAIM)
         renamed = self.declaration(
             "CA-R-1",
-            "property_rule(address='Atom.Content.Title', occurrences='1', values='1')",
+            (
+                "property_rule(address='Atom.Content.Title', occurrences='1', "
+                "values='1')"
+            ),
         )
 
         self.assertEqual(
@@ -61,7 +64,10 @@ class ContentDeclarationSchemaTests(ContentSchemaFixture):
     def test_role_and_form_gate_the_declared_value(self) -> None:
         declaration = self.declaration(
             "CA-R-2",
-            "property_rule(address='Atom/(.Header.Role := Plan)/(.Header.Form := Epic).Content.Objective', values='1')",
+            (
+                "property_rule(address='Atom/(.Header.Role := "
+                "Plan)/(.Header.Form := Epic).Content.Objective', values='1')"
+            ),
         )
         schema = compile_content_schema([declaration])
         plan = self.atom(
@@ -150,7 +156,10 @@ class ContentDeclarationSchemaTests(ContentSchemaFixture):
     def test_unsupported_filter_refuses_to_widen_applicability(self) -> None:
         declaration = self.declaration(
             "CA-R-2",
-            "property_rule(address='Atom/(.Header.Role != Plan).Content.Objective', values='1')",
+            (
+                "property_rule(address='Atom/(.Header.Role != "
+                "Plan).Content.Objective', values='1')"
+            ),
         )
 
         with self.assertRaisesRegex(
@@ -161,7 +170,10 @@ class ContentDeclarationSchemaTests(ContentSchemaFixture):
     def test_unsupported_selector_refuses_to_widen_applicability(self) -> None:
         declaration = self.declaration(
             "CA-R-2",
-            "property_rule(address='Atom/(.Header.Status := Active).Content.Objective', values='1')",
+            (
+                "property_rule(address='Atom/(.Header.Status := "
+                "Active).Content.Objective', values='1')"
+            ),
         )
 
         with self.assertRaisesRegex(
@@ -203,15 +215,24 @@ class ContentDeclarationSchemaTests(ContentSchemaFixture):
     def test_named_kind_claim_requires_proven_form_membership(self) -> None:
         ancestry = self.declaration(
             "CA-R-5",
-            "subject_path(address='Atom/(.Header.Role := Operations)/Workflow')",
+            (
+                "subject_path(address='Atom/(.Header.Role := "
+                "Operations)/Workflow')"
+            ),
         )
         property_rule = self.declaration(
             "CA-R-6",
-            "property_rule(address='Workflow.Content.Mermaid Scheme', values='1')",
+            (
+                "property_rule(address='Workflow.Content.Mermaid Scheme', "
+                "values='1')"
+            ),
         )
         form_binding = self.declaration(
             "CA-R-7",
-            "allowed_values(address='Workflow.Header.Form', values=('Workflow',), occurrences='1')",
+            (
+                "allowed_values(address='Workflow.Header.Form', "
+                "values=('Workflow',), occurrences='1')"
+            ),
         )
         workflow = self.atom(
             "CA-O-1",

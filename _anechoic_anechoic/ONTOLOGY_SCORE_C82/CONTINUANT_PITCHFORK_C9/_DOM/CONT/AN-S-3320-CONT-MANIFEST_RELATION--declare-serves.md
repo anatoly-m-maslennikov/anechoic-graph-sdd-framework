@@ -13,8 +13,8 @@ context:
   lens: DOM/CONT
 state:
   status: "active"
-  version: 5
-  updated_at: "2026-11-26T15:52:34.611977+00:00"
+  version: 6
+  updated_at: '2026-11-27T17:49:09.957980+00:00'
 ---
 
 ## Summary
@@ -25,8 +25,9 @@ Declare SERVES
 
 ### Prose Claim
 
-A Tier 1 Applicable Principle or Tier 0 Project Contract serves a Project Goal
-when part of its purpose is to help achieve that Goal.
+A Tier 1 Applicable Principle or Tier 0 Project Contract serves a Project Manifest when part of its purpose is to help achieve the
+Project purpose. A standalone Project Goal remains a valid target for existing
+Projects.
 The authored Relation points from the stated source to its target.
 The inverse is derived. Tier and Solution restrictions are authoring rules.
 
@@ -35,11 +36,11 @@ The inverse is derived. Tier and Solution restrictions are authoring rules.
 ```python anechoic-edsl
 # Anechoic Python eDSL
 
-from anechoic.model import ApplicablePrinciple, ProjectContract, ProjectGoal, Relation
+from anechoic.model import ApplicablePrinciple, ProjectContract, ProjectGoal, ProjectManifest, Relation
 
 class Relation3320(Relation):
     name = 'SERVES'
     relation.inverse_alias = 'IS_SERVED_BY'
     relation.source_endpoint = {'level': 'instances', 'entity_paths': (ApplicablePrinciple, ProjectContract)}
-    relation.target_endpoint = {'level': 'instances', 'entity_paths': (ProjectGoal,)}
+    relation.target_endpoint = {'level': 'instances', 'entity_paths': (ProjectManifest, ProjectGoal)}
 ```

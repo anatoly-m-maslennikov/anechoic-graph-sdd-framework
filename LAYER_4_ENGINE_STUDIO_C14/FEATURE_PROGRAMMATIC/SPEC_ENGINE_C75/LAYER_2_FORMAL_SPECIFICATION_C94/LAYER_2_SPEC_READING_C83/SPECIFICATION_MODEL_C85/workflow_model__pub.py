@@ -6,13 +6,26 @@ import re
 
 def parse_workflow(source):
     tree = ast.parse(source)
-    call = tree.body[0].value if len(tree.body) == 1 and isinstance(tree.body[0], ast.Expr) else None
-    if (not isinstance(call, ast.Call) or not isinstance(call.func, ast.Name)
-            or call.func.id != "component_workflow" or call.args
-            or {item.arg for item in call.keywords} not in ({"component", "action", "machine"},
-                                                             {"component", "action", "machine", "startup"})
-            or len(call.keywords) != len({item.arg for item in call.keywords})):
-        raise ValueError("Expected component_workflow(component=..., action=..., machine=..., startup=...)")
+    call = (
+        tree.body[0].value
+        if len(tree.body) == 1 and isinstance(tree.body[0], ast.Expr)
+        else None
+    )
+    if (
+        not isinstance(call, ast.Call)
+        or not isinstance(call.func, ast.Name)
+        or call.func.id != "component_workflow"
+        or call.args
+        or {item.arg for item in call.keywords}
+        not in (
+            {"component", "action", "machine"},
+            {"component", "action", "machine", "startup"},
+        )
+        or len(call.keywords) != len({item.arg for item in call.keywords})
+    ):
+        raise ValueError(
+            "Expected component_workflow(component=..., action=..., machine=..., startup=...)"
+        )
     for node in ast.walk(call):
         if isinstance(node, ast.Dict):
             keys = [key.value for key in node.keys if isinstance(key, ast.Constant) and isinstance(key.value, str)]
@@ -25,7 +38,9 @@ def parse_workflow(source):
         raise ValueError("Invalid Component, action, or statechart")
     if "startup" in values:
         startup = values["startup"]
-        if not isinstance(startup, dict) or set(startup) != {"required_arguments"}:
+        if not isinstance(startup, dict) or set(startup) != {
+            "required_arguments"
+        }:
             raise ValueError("startup must contain only required_arguments")
         arguments = startup["required_arguments"]
         if (not isinstance(arguments, list)
@@ -45,8 +60,11 @@ def _fields(value, allowed, where):
 
 
 def _safe(value, where):
-    if (not isinstance(value, str) or not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_-]{0,63}", value)
-            or value in {"__proto__", "constructor", "prototype"}):
+    if (
+        not isinstance(value, str)
+        or not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_-]{0,63}", value)
+        or value in {"__proto__", "constructor", "prototype"}
+    ):
         raise ValueError(f"{where}: invalid identifier")
 
 
@@ -80,15 +98,22 @@ def _overlap(a, b):
         return json_equal(left, right)
 
     details = b.get("detail", {})
-    return (all(k not in a or k not in b or a[k] == b[k] for k in ("kind", "target", "outcome"))
-            and all(k not in details or compatible(v, details[k])
-                    for k, v in a.get("detail", {}).items()))
+    return all(
+        k not in a or k not in b or a[k] == b[k]
+        for k in ("kind", "target", "outcome")
+    ) and all(
+        k not in details or compatible(v, details[k])
+        for k, v in a.get("detail", {}).items()
+    )
 
 
 def _transition(event, branch, states):
     if isinstance(branch, dict) and ({"to", "expect"} & branch.keys()):
         _fields(branch, {"to", "expect"}, "transition")
-        branch = {"target": branch.get("to"), "guard": {"type": "matchesTrace", "params": branch.get("expect")}}
+        branch = {
+            "target": branch.get("to"),
+            "guard": {"type": "matchesTrace", "params": branch.get("expect")},
+        }
     _fields(branch, {"target", "guard"}, "transition")
     target = branch.get("target")
     _safe(target, "target")
@@ -99,13 +124,20 @@ def _transition(event, branch, states):
     if guard.get("type") != "matchesTrace":
         raise ValueError("guard must be matchesTrace")
     params = guard.get("params")
-    _fields(params, {"kind", "target", "outcome", "detail", "bind", "same_as"}, "guard.params")
+    _fields(
+        params,
+        {"kind", "target", "outcome", "detail", "bind", "same_as"},
+        "guard.params",
+    )
     if params.get("kind") not in ("trigger", "effect", "output"):
         raise ValueError("invalid trace kind")
     for field in ("target", "outcome"):
         value = params.get(field)
-        if value is not None and (not isinstance(value, str)
-                                  or len(value.encode("utf-16-le", errors="surrogatepass")) // 2 > 256):
+        if value is not None and (
+            not isinstance(value, str)
+            or len(value.encode("utf-16-le", errors="surrogatepass")) // 2
+            > 256
+        ):
             raise ValueError(f"{field} must be a string or null")
     if "detail" in params and not isinstance(params["detail"], dict):
         raise ValueError("detail must be an object")
@@ -161,9 +193,15 @@ def _normalize_states(source):
             raise ValueError(f"final state {name} cannot have transitions")
         if not final and "type" in state:
             raise ValueError(f"state {name}: unsupported type")
-        transitions = [] if final else _transitions(name, state.get("on"), source, remaining)
+        transitions = (
+            []
+            if final
+            else _transitions(name, state.get("on"), source, remaining)
+        )
         remaining -= len(transitions)
-        states.append({"name": name, "final": final, "transitions": transitions})
+        states.append(
+            {"name": name, "final": final, "transitions": transitions}
+        )
     return states
 
 
@@ -204,19 +242,28 @@ def _validate_graph(config, source, states):
         raise ValueError(f"unreachable states: {', '.join(missing)}")
     can_finish = {state["name"] for state in states if state["final"]}
     while True:
-        expanded = can_finish | {state["name"] for state in states
-                                 if any(t["target"] in can_finish for t in state["transitions"])}
+        expanded = can_finish | {
+            state["name"]
+            for state in states
+            if any(t["target"] in can_finish for t in state["transitions"])
+        }
         if expanded == can_finish:
             break
         can_finish = expanded
     dead = [name for name in source if name not in can_finish]
     if dead:
-        raise ValueError(f"states with no path to a final state: {', '.join(dead)}")
+        raise ValueError(
+            f"states with no path to a final state: {', '.join(dead)}"
+        )
     _validate_references(config["initial"], by_name)
 
 
 def _validate_references(initial, states):
-    if not any(t["expect"].get("same_as") for state in states.values() for t in state["transitions"]):
+    if not any(
+        t["expect"].get("same_as")
+        for state in states.values()
+        for t in state["transitions"]
+    ):
         return
     bound = {initial: set()}
     pending = [initial]
@@ -225,7 +272,9 @@ def _validate_references(initial, states):
         for transition in states[name]["transitions"]:
             expect, target = transition["expect"], transition["target"]
             incoming = bound[name] | expect.get("bind", {}).keys()
-            guaranteed = incoming & bound[target] if target in bound else incoming
+            guaranteed = (
+                incoming & bound[target] if target in bound else incoming
+            )
             if guaranteed != bound.get(target):
                 bound[target] = guaranteed
                 pending.append(target)
@@ -233,5 +282,7 @@ def _validate_references(initial, states):
         for transition in state["transitions"]:
             refs = set(transition["expect"].get("same_as", {}).values())
             if missing := sorted(refs - bound[name]):
-                raise ValueError(f"state {name}, event {transition['event']}: binding {missing[0]!r} "
-                                 "must be set on every path by an earlier event")
+                raise ValueError(
+                    f"state {name}, event {transition['event']}: binding {missing[0]!r} "
+                    "must be set on every path by an earlier event"
+                )

@@ -1,0 +1,203 @@
+"""Exercise Runtime Setup settings and project initialization."""
+
+from contextlib import redirect_stdout
+from io import StringIO
+import json
+from pathlib import Path
+import subprocess
+import tempfile
+import tomllib
+import unittest
+from unittest.mock import Mock, patch
+
+from RUNTIME_SETUP__shared import (
+    install,
+    main,
+    parse_arguments,
+    select_settings,
+    write_settings,
+)
+
+
+class RuntimeSetupSettingsTests(unittest.TestCase):
+    def setUp(self):
+        temporary = self.enterContext(tempfile.TemporaryDirectory())
+        self.base = Path(temporary).resolve()
+        self.settings = self.base / "config/runtime.toml"
+        self.project = self.base / "repository with spaces"
+        self.project.mkdir()
+        self.image = "sha256:" + "a" * 64
+
+    def arguments(self, *values):
+        options = ["install", "--settings", str(self.settings), *values]
+        return parse_arguments(options)
+
+    def test_settings_create_and_reuse_selected_mode_and_defaults(self):
+        original, fresh = select_settings(
+            self.arguments(
+                "--project",
+                str(self.project),
+                "--port",
+                "18092",
+                "--workbench-storage",
+                "memory",
+                "--journal-storage",
+                "duckdb",
+            )
+        )
+        self.assertTrue(fresh)
+        write_settings(original)
+        self.assertEqual((original, False), select_settings(self.arguments()))
+        saved = tomllib.loads(self.settings.read_text())
+        self.assertEqual(
+            str(self.project), saved["shared_mcp"]["project_root"]
+        )
+        self.assertEqual({"level": "INFO"}, saved["logging"])
+        self.assertEqual(0o600, self.settings.stat().st_mode & 0o777)
+        with self.assertRaisesRegex(ValueError, "conflicts"):
+            select_settings(
+                self.arguments("--projects-root", str(self.project))
+            )
+        with self.assertRaisesRegex(ValueError, "conflicts"):
+            select_settings(self.arguments("--port", "8092"))
+
+    def test_accepts_legacy_and_strict_logging_settings(self):
+        base = (
+            'schema_version=1\n[shared_mcp]\nproject_root="'
+            f"{self.project}"
+            '"\nhttp_port=8092\n'
+        )
+        cases = [
+            ("", "INFO"),
+            ("[logging]\n", "INFO"),
+            ('[logging]\nlevel="DEBUG"\n', "DEBUG"),
+        ]
+        for suffix, expected in cases:
+            with self.subTest(suffix=suffix):
+                self.settings.parent.mkdir(exist_ok=True)
+                self.settings.write_text(base + suffix)
+                values, new = select_settings(self.arguments())
+                self.assertFalse(new)
+                self.assertEqual(expected, values.log_level)
+        for suffix in (
+            '[logging]\nlevel="debug"\n',
+            "[logging]\nlevel=42\n",
+            "[logging]\nextra=true\n",
+        ):
+            with (
+                self.subTest(suffix=suffix),
+                self.assertRaisesRegex(ValueError, "Invalid|Unrecognized"),
+            ):
+                self.settings.write_text(base + suffix)
+                select_settings(self.arguments())
+
+    def test_settings_atomic_create_preserves_existing_configuration(self):
+        values, _ = select_settings(
+            self.arguments("--projects-root", str(self.project))
+        )
+        write_settings(values)
+        before = self.settings.read_bytes()
+        with self.assertRaises(FileExistsError):
+            write_settings(values)
+        self.assertEqual(before, self.settings.read_bytes())
+        link = self.base / "alias.toml"
+        link.symlink_to(self.settings)
+        with self.assertRaises(OSError):
+            select_settings(
+                parse_arguments(["install", "--settings", str(link)])
+            )
+
+    def test_existing_root_and_legacy_manifests_skip_initialization(self):
+        subprocess.run(("git", "init", "-q", str(self.project)), check=True)
+        arguments = self.arguments("--project", str(self.project))
+        for location in (self.project, self.project / ".anechoic_example"):
+            with self.subTest(location=location):
+                location.mkdir(exist_ok=True)
+                manifest = location / (
+                    "EX-S-1-SPEC-PROJECT_MANIFEST--declare-project.md"
+                )
+                manifest.write_text("existing")
+                with patch.dict(
+                    install.__globals__,
+                    {
+                        "_preflight": Mock(),
+                        "_run_json": Mock(
+                            side_effect=[
+                                {
+                                    "outcome": "completed",
+                                    "image_id": self.image,
+                                },
+                                {
+                                    "ready": True,
+                                    "image": self.image,
+                                    "http_port": 8092,
+                                },
+                            ]
+                        ),
+                    },
+                ):
+                    initialized = install(arguments, source=self.base)[
+                        "project_initialized"
+                    ]
+                    self.assertFalse(initialized)
+                manifest.unlink()
+
+    def test_single_initialization_carries_the_storage_defaults(self):
+        subprocess.run(("git", "init", "-q", str(self.project)), check=True)
+        argv = [
+            "install",
+            "--settings",
+            str(self.settings),
+            "--project",
+            str(self.project),
+            "--init-project",
+            "--name",
+            "Example",
+            "--prefix",
+            "EX",
+            "--workbench-storage",
+            "memory",
+            "--journal-storage",
+            "duckdb",
+        ]
+        output = StringIO()
+        with (
+            patch.dict(install.__globals__, {"_preflight": Mock()}),
+            patch.dict(
+                install.__globals__,
+                {
+                    "_run_json": Mock(
+                        side_effect=[
+                            {"outcome": "completed", "image_id": self.image},
+                            {
+                                "ready": True,
+                                "image": self.image,
+                                "http_port": 8092,
+                            },
+                        ]
+                    )
+                },
+            ),
+            redirect_stdout(output),
+        ):
+            self.assertEqual(main(argv), 0)
+        self.check_initialization(output)
+
+    def check_initialization(self, output):
+        result = json.loads(output.getvalue())
+        self.assertIs(result["project_initialized"], True)
+        self.assertEqual(
+            {"workbench_storage": "memory", "journal_storage": "duckdb"},
+            tomllib.loads(self.settings.read_text())["project_defaults"],
+        )
+        manifest = (
+            self.project / "EX-S-1-SPEC-PROJECT_MANIFEST--declare-project.md"
+        )
+        claim = manifest.read_text()
+        self.assertIn("name='Example'", claim)
+        self.assertIn("'duck_db.storage': 'memory'", claim)
+        self.assertIn("'journal.storage': 'duckdb'", claim)
+
+
+if __name__ == "__main__":
+    unittest.main()

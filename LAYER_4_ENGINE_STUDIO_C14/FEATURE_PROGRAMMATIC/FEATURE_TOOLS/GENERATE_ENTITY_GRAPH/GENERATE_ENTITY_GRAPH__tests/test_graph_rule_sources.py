@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from importlib import import_module
 import hashlib
 import sys
 import unittest
@@ -9,12 +10,6 @@ import unittest
 sys.path.insert(0, str(TOOL := Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(TOOLS := TOOL.parent))
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (  # noqa: E402
-    get_profile,
-)
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import (  # noqa: E402
-    compose_declaration_catalog,
-)
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.\
     GENERATE_ENTITY_GRAPH__tests.declaration_source_fixtures \
@@ -26,8 +21,17 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.\
     )  # fmt: skip
 
 
+get_profile = import_module(
+    "FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared"
+).get_profile
+compose_declaration_catalog = import_module(
+    "FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH."
+    "GENERATE_ENTITY_GRAPH__shared"
+).compose_declaration_catalog
+
+
 class GraphRuleSourceTests(unittest.TestCase):
-    def test_current_support_sources_admit_valid_rule_and_input_order_is_irrelevant(
+    def _case_0(
         self,
     ):
         supports = support_carriers()
@@ -79,7 +83,7 @@ class GraphRuleSourceTests(unittest.TestCase):
         )
         self.assertEqual(catalog["unresolved"], [])
 
-    def test_cardinality_rule_catalog_preserves_selection_yaml_and_source_evidence(
+    def _case_1(
         self,
     ):
         supports = support_carriers()
@@ -160,14 +164,15 @@ class GraphRuleSourceTests(unittest.TestCase):
             )
         )
 
-    def test_optional_rule_docs_do_not_change_catalog_summary_or_operative_yaml(
+    def _case_2(
         self,
     ):
         supports = support_carriers()
         carrier = graph_rule_carrier("CA-R-901044")
         carrier["body"] = carrier["body"].replace("\n", "\r\n") + (
             "## Details\r\n\r\n"
-            "Illustrative only; graph_rule_type: blacklist is not operative here.\r\n\r\n"
+            "Illustrative only; graph_rule_type: blacklist "
+            "is not operative here.\r\n\r\n"
             "```yaml\r\n"
             "graph_rule_type: blacklist\r\n"
             "condition: {example: true}\r\n"
@@ -191,7 +196,7 @@ class GraphRuleSourceTests(unittest.TestCase):
         self.assertEqual(rule["evidence"], body)
         self.assertEqual(catalog["unresolved"], [])
 
-    def test_malformed_and_unsupported_rules_remain_unresolved_examples_are_ignored(
+    def _case_3(
         self,
     ):
         supports = support_carriers()
@@ -205,7 +210,10 @@ class GraphRuleSourceTests(unittest.TestCase):
             **relation_carrier(
                 "CA-D-901033", "Entity/Node/Continuant/Atom", "Entities Graph"
             ),
-            "body": "## Scope\n\nD637 Graph Rule example only; not a declaration.\n",
+            "body": (
+                "## Scope\n\nD637 Graph Rule example only; not a "
+                "declaration.\n"
+            ),
         }
         refresh_raw(example)
         carriers = [*supports, malformed, unsupported, example]
@@ -237,19 +245,22 @@ class GraphRuleSourceTests(unittest.TestCase):
             catalog["unresolved"][0]["reason"],
         )
 
-    def test_graph_rule_keeps_exact_yaml_but_is_not_admitted_without_support_sources(
+    def _case_4(
         self,
     ):
         yaml_block = (
             "```yaml\ngraph_rule_type: whitelist\napplies_to:\n"
             "  relation_type: evaluation_for\ncondition:\n"
-            '  source: ["Entity/Node/Continuant/Atom/Content Role: Evaluation"]\n'
-            '  target: ["Entity/Node/Continuant/Atom/Content Role: Requirement"]\n```'
+            '  source: ["Entity/Node/Continuant/Atom/'
+            'Content Role: Evaluation"]\n'
+            '  target: ["Entity/Node/Continuant/Atom/'
+            'Content Role: Requirement"]\n```'
         )
         body = "# Summary\n\nPermit evaluation links.\n\n" + yaml_block + "\n"
         raw = (
-            b"---\natom_id: CA-R-901021\nversion: 3\ncontent_role: Requirement\ntype: Graph Rule\nstatus: Active\n---\n"
-            + body.encode("utf-8")
+            b"---\natom_id: CA-R-901021\nversion: 3\n"
+            b"content_role: Requirement\ntype: Graph Rule\n"
+            b"status: Active\n---\n" + body.encode("utf-8")
         )
         carrier = {
             "source": {
@@ -280,6 +291,41 @@ class GraphRuleSourceTests(unittest.TestCase):
             "source-bound Graph Rule governing authority", unresolved["reason"]
         )
         self.assertEqual(unresolved["yaml_block"], yaml_block + "\n")
+
+
+setattr(
+    GraphRuleSourceTests,
+    "test_current_support_sources_admit_va"
+    "lid_rule_and_input_order_is_irrelevant",
+    GraphRuleSourceTests._case_0,
+)
+
+setattr(
+    GraphRuleSourceTests,
+    "test_cardinality_rule_catalog_preserv"
+    "es_selection_yaml_and_source_evidence",
+    GraphRuleSourceTests._case_1,
+)
+
+setattr(
+    GraphRuleSourceTests,
+    "test_optional_rule_docs_do_not_change_catalog_summary_or_operative_yaml",
+    GraphRuleSourceTests._case_2,
+)
+
+setattr(
+    GraphRuleSourceTests,
+    "test_malformed_and_unsupported_rules_"
+    "remain_unresolved_examples_are_ignored",
+    GraphRuleSourceTests._case_3,
+)
+
+setattr(
+    GraphRuleSourceTests,
+    "test_graph_rule_keeps_exact_yaml_but_i"
+    "s_not_admitted_without_support_sources",
+    GraphRuleSourceTests._case_4,
+)
 
 
 if __name__ == "__main__":

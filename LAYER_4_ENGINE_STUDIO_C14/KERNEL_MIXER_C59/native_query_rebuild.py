@@ -15,33 +15,68 @@ from .spec_trace import remove_native_traces
 from .watcher_change_log import mirror_change_log
 
 
-
-ATOM_TABLES = frozenset({
-    "atoms", "relations", "native_references", "components",
-})
-REALIZATION_TABLES = frozenset({
-    "import_nodes", "module_imports", "import_edges", "package_imports", "package_external_imports", "test_edges", "tested_by_edges",
-    "import_read_issues", "implementation_rmedo", "component_metrics", "package_audit",
-    *boundary_tables.BOUNDARY_TABLES,
-})
-IMPORT_CACHE_TABLES = frozenset(f"_anechoic_import_cache.{name}" for name in ("sources", "sites", "version"))
-OBSERVATION_TABLES = frozenset({"change_log", "query_log", "live_runs", "runtime_diagnostics"})
-QUERY_TABLES = ATOM_TABLES | REALIZATION_TABLES | OBSERVATION_TABLES | frozenset(AUDIT_TABLES) | {"work_journal"}
-
+ATOM_TABLES = frozenset(
+    {
+        "atoms",
+        "relations",
+        "native_references",
+        "components",
+    }
+)
+REALIZATION_TABLES = frozenset(
+    {
+        "import_nodes",
+        "module_imports",
+        "import_edges",
+        "package_imports",
+        "package_external_imports",
+        "test_edges",
+        "tested_by_edges",
+        "import_read_issues",
+        "implementation_rmedo",
+        "component_metrics",
+        "package_audit",
+        *boundary_tables.BOUNDARY_TABLES,
+    }
+)
+IMPORT_CACHE_TABLES = frozenset(
+    f"_anechoic_import_cache.{name}"
+    for name in ("sources", "sites", "version")
+)
+OBSERVATION_TABLES = frozenset(
+    {"change_log", "query_log", "live_runs", "runtime_diagnostics"}
+)
+QUERY_TABLES = (
+    ATOM_TABLES
+    | REALIZATION_TABLES
+    | OBSERVATION_TABLES
+    | frozenset(AUDIT_TABLES)
+    | {"work_journal"}
+)
 
 
 class NativeQueryRebuild:
-    def _rebuild_observations(self, store: QueryStore, target: str, query_attempts) -> None:
+    def _rebuild_observations(
+        self, store: QueryStore, target: str, query_attempts
+    ) -> None:
         connection = store._connection
         if target in ("all", "change_log"):
-            mirror_change_log(connection, self._change_log, initialize=True, in_transaction=True)
+            mirror_change_log(
+                connection,
+                self._change_log,
+                initialize=True,
+                in_transaction=True,
+            )
         if target in ("all", "query_log"):
             connection.execute("DELETE FROM main.query_log_records")
             store.record_query_attempts(query_attempts)
         if target in ("all", "live_runs"):
             connection.execute("DELETE FROM main.live_runs")
             if store._live_runs:
-                connection.executemany("INSERT INTO main.live_runs VALUES (?, ?, ?, ?)", store._live_runs)
+                connection.executemany(
+                    "INSERT INTO main.live_runs VALUES (?, ?, ?, ?)",
+                    store._live_runs,
+                )
         if target in ("all", "runtime_diagnostics"):
             connection.execute("DELETE FROM main.runtime_diagnostics")
             if store._diagnostic_rows:
@@ -52,9 +87,13 @@ class NativeQueryRebuild:
         if target == "all" or target in AUDIT_TABLES:
             create_tables(connection)
 
-    def _rebuild_scope(self, store: QueryStore, target: str) -> tuple[str, str, set[str] | None]:
+    def _rebuild_scope(
+        self, store: QueryStore, target: str
+    ) -> tuple[str, str, set[str] | None]:
         if not isinstance(target, str):
-            raise ValueError("Workbench rebuild target must be a table name or all")
+            raise ValueError(
+                "Workbench rebuild target must be a table name or all"
+            )
         table = target.removeprefix("main.")
         if table == "all":
             return table, "all", None
@@ -62,15 +101,32 @@ class NativeQueryRebuild:
             return table, "results", None
         if re.fullmatch(r"(?:workbench_results\.)?(?:query_)?[a-f0-9]{32}", table):
             return table, "result", None
-        atom_tables = ATOM_TABLES | {"scope_units", "internal.reference", "internal.native_exact_refs",
-                                     "internal.native_frontier"}
-        atom_tables |= {f"internal.{name[1:-1]}" for name in store._projection.graph.tables.values()}
+        atom_tables = ATOM_TABLES | {
+            "scope_units",
+            "internal.reference",
+            "internal.native_exact_refs",
+            "internal.native_frontier",
+        }
+        atom_tables |= {
+            f"internal.{name[1:-1]}"
+            for name in store._projection.graph.tables.values()
+        }
         if table in atom_tables:
-            return table, "atoms", atom_tables | set(AUDIT_TABLES) | {"anechoic", "component_metrics", "package_audit"}
+            return (
+                table,
+                "atoms",
+                atom_tables
+                | set(AUDIT_TABLES)
+                | {"anechoic", "component_metrics", "package_audit"},
+            )
         if table in REALIZATION_TABLES or table in IMPORT_CACHE_TABLES:
             if self._realization_options is None:
                 raise ValueError("Realization Graph is disabled")
-            return table, "realization", set(REALIZATION_TABLES | IMPORT_CACHE_TABLES | {"anechoic"})
+            return (
+                table,
+                "realization",
+                set(REALIZATION_TABLES | IMPORT_CACHE_TABLES | {"anechoic"}),
+            )
         if table in ("query_log_records", "query_log"):
             return "query_log", "observation", {"query_log", "query_log_records"}
         if table in OBSERVATION_TABLES or table in AUDIT_TABLES:
@@ -103,9 +159,13 @@ class NativeQueryRebuild:
                         if scope == "atoms":
                             create_tables(store._connection)
                         if scope in ("all", "atoms", "realization"):
-                            self._publish_realization_metadata(store, capture, bindings)
-                        staged = store.prepare_result_rebuild(table if scope == "result" else None,
-                                                              tables=dependent_inputs)
+                            self._publish_realization_metadata(
+                                store, capture, bindings
+                            )
+                        staged = store.prepare_result_rebuild(
+                            table if scope == "result" else None,
+                            tables=dependent_inputs,
+                        )
 
                     if scope in ("all", "atoms"):
                         self._capture = self._project(store, before_commit=rebuild_dependents, read_only=True)

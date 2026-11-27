@@ -60,8 +60,11 @@ class _View(BaseModel):
     @field_validator("id", "sql", "name", mode="before")
     @classmethod
     def validate_text(cls, value, info):
-        return _text(value, "view_id" if info.field_name == "id" else info.field_name,
-                     nonempty=info.field_name != "sql")
+        return _text(
+            value,
+            "view_id" if info.field_name == "id" else info.field_name,
+            nonempty=info.field_name != "sql",
+        )
 
 
 class _Workspace(BaseModel):
@@ -152,7 +155,11 @@ class WorkspaceStore:
     def _open_directory(self, create):
         fd = os.open(self._root, _DIRECTORY_FLAGS)
         try:
-            for part in (*console_state_path(self._root).relative_to(self._root).parts, "beta", "workspaces"):
+            for part in (
+                *console_state_path(self._root).relative_to(self._root).parts,
+                "beta",
+                "workspaces",
+            ):
                 if create:
                     try:
                         os.mkdir(part, mode=0o700, dir_fd=fd)
@@ -163,7 +170,9 @@ class WorkspaceStore:
                 fd = child
                 info = os.fstat(fd)
                 if info.st_uid != os.getuid() or info.st_mode & 0o022:
-                    raise ValueError("workspace directory is unavailable or unsafe")
+                    raise ValueError(
+                        "workspace directory is unavailable or unsafe"
+                    )
             return fd
         except BaseException:
             os.close(fd)
@@ -171,8 +180,12 @@ class WorkspaceStore:
 
     def _read(self, directory, filename):
         try:
-            document = _Workspace.model_validate(_read_document(directory, filename))
-            if filename != _filename(document.workspace_id) or document.project_root != str(self._root):
+            document = _Workspace.model_validate(
+                _read_document(directory, filename)
+            )
+            if filename != _filename(
+                document.workspace_id
+            ) or document.project_root != str(self._root):
                 raise ValueError("invalid workspace document")
             return document
         except FileNotFoundError:
@@ -186,7 +199,7 @@ class WorkspaceStore:
             if filename.endswith(".json"):
                 try:
                     ids.append(self._read(directory, filename).workspace_id)
-                except (FileNotFoundError, ValueError):
+                except FileNotFoundError, ValueError:
                     continue
         return {"items": [{"workspace_id": value} for value in sorted(ids)]}
 
@@ -197,8 +210,12 @@ class WorkspaceStore:
             if not opening:
                 raise ValueError("unknown workspace_id") from error
             view = _new_view()
-            document = _Workspace(workspace_id=workspace_id, project_root=str(self._root),
-                                  active_view_id=view.id, views=[view])
+            document = _Workspace(
+                workspace_id=workspace_id,
+                project_root=str(self._root),
+                active_view_id=view.id,
+                views=[view],
+            )
             _write_document(directory, document)
         return document
 
@@ -210,7 +227,9 @@ class WorkspaceStore:
                 return None
             raise ValueError("unknown workspace_id") from error
         except OSError as error:
-            raise ValueError("workspace directory is unavailable or unsafe") from error
+            raise ValueError(
+                "workspace directory is unavailable or unsafe"
+            ) from error
         return directory
 
     def invoke(self, operation: str, arguments: dict) -> dict:
@@ -218,7 +237,10 @@ class WorkspaceStore:
         if not isinstance(operation, str) or operation not in _ARGUMENTS:
             raise ValueError("unknown Workbench interface operation")
         required, optional = _ARGUMENTS[operation]
-        if not isinstance(arguments, dict) or not required <= arguments.keys() <= required | optional:
+        if (
+            not isinstance(arguments, dict)
+            or not required <= arguments.keys() <= required | optional
+        ):
             raise ValueError(f"invalid {operation} arguments")
         opening = operation == "workspace_open"
         id_field = "session_id" if opening else "workspace_id"
@@ -238,7 +260,9 @@ class WorkspaceStore:
                 return document.model_dump(exclude_none=True)
             if operation == "view_list":
                 return _view_list(document)
-            return self._view_operation(operation, arguments, directory, document)
+            return self._view_operation(
+                operation, arguments, directory, document
+            )
         except OSError as error:
             raise ValueError("workspace is unavailable") from error
         finally:
@@ -291,19 +315,28 @@ class WorkspaceStore:
             document.active_view_id = view.id
         _write_document(directory, document)
         if operation in ("view_create", "view_duplicate"):
-            return document.model_dump(exclude_none=True) | {"view_id": view.id}
+            return document.model_dump(exclude_none=True) | {
+                "view_id": view.id
+            }
         if operation == "view_remove":
             return _view_list(document)
         if operation == "view_focus":
-            return {"workspace_id": document.workspace_id, "active_view_id": view.id}
+            return {
+                "workspace_id": document.workspace_id,
+                "active_view_id": view.id,
+            }
         return _view_response(document, view)
 
     @staticmethod
     def _update(view, arguments):
         if "cursor_position" in arguments:
-            view.cursor_position = _nonnegative(arguments["cursor_position"], "cursor_position")
+            view.cursor_position = _nonnegative(
+                arguments["cursor_position"], "cursor_position"
+            )
         sql = _text(arguments["sql"], "sql")
-        expected = _nonnegative(arguments["expected_revision"], "expected_revision")
+        expected = _nonnegative(
+            arguments["expected_revision"], "expected_revision"
+        )
         if view.revision != expected:
             raise ValueError("expected_revision does not match")
         view.sql = sql

@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: "active"
-  version: 30
-  updated_at: '2026-11-27T13:08:42.401628+00:00'
+  version: 31
+  updated_at: '2026-11-27T17:35:19.540236+00:00'
 ---
 ## Summary
 
@@ -53,6 +53,8 @@ ComponentManifest(
                       'ADAPTERS_C30__shared.journal_inbox',
                       'ADAPTERS_C30__shared.journal_storage',
                       'ADAPTERS_C30__shared.json_value',
+                      'ADAPTERS_C30__shared.manifest_inputs',
+                      'ADAPTERS_C30__shared.manifest_purpose',
                       'ADAPTERS_C30__shared.module_visibility',
                       'ADAPTERS_C30__shared.native_header_view',
                       'ADAPTERS_C30__shared.parse_component_manifest',

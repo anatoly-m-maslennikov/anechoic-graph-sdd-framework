@@ -1,12 +1,17 @@
 import unittest
 
-from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.FEATURE_FORMAL_MODEL_ENGINE__shared import (
+from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.\
+    FEATURE_FORMAL_MODEL_ENGINE__shared \
+    import (
     compile_python_model_claim,
     lint_python_model_claim,
-)
-from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import (
+)  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.\
+    FEATURE_PROJECT_TOOLS__tests.\
+    FEATURE_PROJECT_TOOLS__tests__shared \
+    import (
     WORKSPACE,
-)
+)  # fmt: skip
 
 
 class WorkspaceRelationTests(unittest.TestCase):
@@ -44,7 +49,11 @@ class WorkspaceRelationTests(unittest.TestCase):
             )
 
     def test_incoming_without_dataclass_contract_fails_closed(self):
-        bad = 'from anechoic.formal_claims import declare_entity\ndeclare_entity(entity_name="Workspace", incoming_model_relations=())'
+        bad = (
+            "from anechoic.formal_claims import "
+            'declare_entity\ndeclare_entity(entity_name="Workspace", '
+            "incoming_model_relations=())"
+        )
         with self.assertRaises(ValueError):
             compile_python_model_claim(bad)
 

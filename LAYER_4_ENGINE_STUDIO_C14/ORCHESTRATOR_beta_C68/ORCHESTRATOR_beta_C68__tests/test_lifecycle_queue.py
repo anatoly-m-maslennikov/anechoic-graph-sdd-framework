@@ -83,7 +83,9 @@ class LifecycleQueueTests(unittest.TestCase):
         source = str(self.jobs.watcher.control_root)
         started = monotonic_ns()
         self.jobs.watcher.observer.emitters[0]._snapshot_started = started
-        self.jobs.watcher.on_poll_complete(PollComplete(source, started=started, clean=clean))
+        self.jobs.watcher.on_poll_complete(
+            PollComplete(source, started=started, clean=clean)
+        )
 
     def fake_foreground(self):
         emitter = Mock(baseline_clean=True)
@@ -111,8 +113,12 @@ class LifecycleQueueTests(unittest.TestCase):
                 waiting.set()
             return proof
 
-        self.enterContext(patch.object(self.jobs, "_generate", side_effect=generate))
-        self.enterContext(patch.object(self.jobs, "_run_archive", side_effect=watching.set))
+        self.enterContext(
+            patch.object(self.jobs, "_generate", side_effect=generate)
+        )
+        self.enterContext(
+            patch.object(self.jobs, "_run_archive", side_effect=watching.set)
+        )
         self.enterContext(patch.object(self.jobs.watcher, "capture_epoch", side_effect=observe_coverage))
         self.jobs.thread = Thread(target=self.jobs._watch_queue, daemon=True)
         self.jobs.thread.start()
@@ -126,7 +132,9 @@ class LifecycleQueueTests(unittest.TestCase):
         self.assertFalse(request.is_alive())
         self.assertEqual(["coverage_recovered"], reconciled)
         self.assertEqual(200, replies[0][0])
-        self.assertEqual("reconciled", self.worker.call_args.args[0]["base_generation"])
+        self.assertEqual(
+            "reconciled", self.worker.call_args.args[0]["base_generation"]
+        )
         self.worker.assert_called_once()
 
     def test_clean_epoch_does_not_bypass_a_queued_recovery(self):
@@ -158,7 +166,9 @@ class LifecycleQueueTests(unittest.TestCase):
             coverage(**options)
 
         generate = self.enterContext(patch.object(self.jobs, "_generate", return_value={"state": "succeeded"}))
-        self.enterContext(patch.object(self.jobs, "_run_archive", side_effect=watching.set))
+        self.enterContext(
+            patch.object(self.jobs, "_run_archive", side_effect=watching.set)
+        )
         self.enterContext(patch.object(self.jobs, "_require_lifecycle_coverage", side_effect=inject_receipt))
         self.jobs.thread = Thread(target=self.jobs._watch_queue, daemon=True)
         self.jobs.thread.start()
@@ -228,9 +238,13 @@ class LifecycleQueueTests(unittest.TestCase):
     def test_pending_archive_accepts_allocation_after_first_checkpoint(self):
         self.jobs.deferred_archive = {}
         code, payload = self.jobs.lifecycle(self.request)
-        self.assertEqual((409, "archive_pending"), (code, payload["error"]["code"]))
+        self.assertEqual(
+            (409, "archive_pending"), (code, payload["error"]["code"])
+        )
         self.kernel.archive_versions = True
-        with patch.object(self.jobs, "_await_lifecycle", return_value=(200, {})) as accepted:
+        with patch.object(
+            self.jobs, "_await_lifecycle", return_value=(200, {})
+        ) as accepted:
             self.assertEqual((200, {}), self.jobs.lifecycle(self.request))
         job = accepted.call_args.args[0]
         self.assertTrue(job.archive_versions)

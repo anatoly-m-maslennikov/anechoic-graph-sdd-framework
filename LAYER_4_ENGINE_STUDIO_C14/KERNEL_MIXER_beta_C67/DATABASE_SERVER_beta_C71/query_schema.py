@@ -22,7 +22,8 @@ _TEMP = tuple(
 
 def public_schema(connection):
     rows = connection.execute(
-        "SELECT table_name, column_name, data_type FROM information_schema.columns "
+        "SELECT table_name, column_name, data_type "
+        "FROM information_schema.columns "
         "WHERE table_schema = 'main' AND ((table_catalog = current_database() "
         f"AND table_name IN {_MAIN!r}) "
         f"OR (table_catalog = 'temp' AND table_name IN {_TEMP!r})) "
@@ -49,12 +50,15 @@ def public_schema(connection):
 
 def _status_values(connection, table):
     rows = connection.execute(
-        f"""WITH values_by_status AS (
-                SELECT DISTINCT "header.state.status" AS value FROM main.{table}
-                WHERE "header.state.status" IS NOT NULL
-            ), sized AS (
-                SELECT value, max(octet_length(encode(value))) OVER () AS max_bytes FROM values_by_status
-            )
-            SELECT value FROM sized WHERE max_bytes <= 1024 ORDER BY value LIMIT 257"""
+        "WITH values_by_status AS (\n"
+        '                SELECT DISTINCT "header.state.status" AS value '
+        f"FROM main.{table}\n"
+        '                WHERE "header.state.status" IS NOT NULL\n'
+        "            ), sized AS (\n"
+        "                SELECT value, max(octet_length(encode(value))) "
+        "OVER () AS max_bytes FROM values_by_status\n"
+        "            )\n"
+        "            SELECT value FROM sized WHERE max_bytes <= 1024 "
+        "ORDER BY value LIMIT 257"
     ).fetchall()
     return [row[0] for row in rows] if len(rows) <= 256 else []

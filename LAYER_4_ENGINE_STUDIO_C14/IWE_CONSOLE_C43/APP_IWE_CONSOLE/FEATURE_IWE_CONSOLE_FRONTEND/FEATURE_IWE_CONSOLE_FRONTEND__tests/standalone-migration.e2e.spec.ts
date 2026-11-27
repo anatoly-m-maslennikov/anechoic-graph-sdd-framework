@@ -1,8 +1,10 @@
 
 import { expect, test, type Page } from '@playwright/test';
+import { toolReply, toolRequest } from './tool_rest_fixture';
 
 const url = process.env.WORKBENCH_E2E_URL!;
-const editor = (page: Page) => page.getByRole('textbox', { name: 'Query editor' });
+const editor = (page: Page) => page.getByRole('textbox', { name:
+  'Query editor' });
 const projectName = new URL(url).pathname.split('/').filter(Boolean).at(-1)!;
 
 async function replaceSql(page: Page, sql: string) {
@@ -14,55 +16,85 @@ async function replaceSql(page: Page, sql: string) {
   await input.pressSequentially(sql);
   await expect(input).toContainText(sql);
 }
-test('migrates one standalone draft without running it and keeps close protection after sync', async ({ browser }) => {
-  const context = await browser.newContext(); const page = await context.newPage();
+test('migrates one standalone draft without running it and keeps close protection after sync',
+  async ({ browser }) => {
+  const context = await browser.newContext(); const page =
+    await context.newPage();
   const legacyKey = `anechoic.workbench.${projectName}.workspace`;
-  await page.addInitScript(({ key }) => localStorage.setItem(key, JSON.stringify({ activeId: 'legacy', tabs: [{ id: 'legacy', title: 'View 1', sql: 'SELECT 41 AS migrated_draft', cursor: 0, dirty: true, savedSql: '' }] })), { key: legacyKey });
+  await page.addInitScript(({ key }) => localStorage.setItem(key,
+    JSON.stringify({ activeId: 'legacy', tabs: [{ id: 'legacy',
+    title: 'View 1', sql: 'SELECT 41 AS migrated_draft', cursor:
+      0, dirty: true, savedSql: '' }] })), { key: legacyKey });
   let runs = 0; const opened: string[] = [];
   page.on('request', (request) => {
-    if (request.method() !== 'POST' || !new URL(request.url()).pathname.endsWith('/interface')) return;
-    const payload = request.postDataJSON(); if (payload?.operation === 'view_run') runs += 1;
-    if (payload?.operation === 'workspace_open') opened.push(payload.arguments?.session_id);
+    if (request.method() !== 'POST' || !new URL(request.url(
+      )).pathname.endsWith('/tools')) return;
+    const payload = request.postDataJSON(); if (
+      payload?.name === 'view_run') runs += 1;
+    if (payload?.name === 'workspace_open') opened.push(
+      payload.arguments?.session_id);
   });
   try {
     await page.goto(url);
     await expect(editor(page)).toContainText('SELECT 41 AS migrated_draft');
     expect(new URL(page.url()).searchParams.get('workspace')).toBeNull();
-    const session = await page.evaluate(() => Object.entries(localStorage).find(([key]) => key.endsWith('.standalone-session'))?.[1]);
-    expect(session).toMatch(/^standalone-/); expect(opened).toEqual([session]); expect(runs).toBe(0);
-    await page.reload(); await expect(editor(page)).toContainText('SELECT 41 AS migrated_draft');
-    expect(new URL(page.url()).searchParams.get('workspace')).toBeNull(); await expect.poll(() => opened).toEqual([session, session]);
+    const session = await page.evaluate(() => Object.entries(
+      localStorage).find(([key]) => key.endsWith('.standalone-session'))?.[1]);
+    expect(session).toMatch(/^standalone-/); expect(
+      opened).toEqual([session]); expect(runs).toBe(0);
+    await page.reload(); await expect(editor(
+      page)).toContainText('SELECT 41 AS migrated_draft');
+    expect(new URL(page.url()).searchParams.get('workspace')).toBeNull(
+      ); await expect.poll(() => opened).toEqual([session, session]);
 
-    const update = page.waitForRequest((request) => request.method() === 'POST' && new URL(request.url()).pathname.endsWith('/interface') && request.postDataJSON()?.operation === 'view_update' && request.postDataJSON()?.arguments?.sql === 'SELECT 42 AS autosaved_draft');
+    const update = page.waitForRequest((request) => request.method(
+      ) === 'POST' && new URL(request.url()).pathname.endsWith('/tools') &&
+      request.postDataJSON()?.name === 'view_update' &&
+        request.postDataJSON(
+        )?.arguments?.sql === 'SELECT 42 AS autosaved_draft');
     await replaceSql(page, 'SELECT 42 AS autosaved_draft'); await update;
     const close = page.locator('button[aria-label^="Close "]').first();
-    let message = ''; page.once('dialog', (dialog) => { message = dialog.message(); void dialog.dismiss(); });
+    let message = ''; page.once('dialog', (dialog) => {
+      message = dialog.message(); void dialog.dismiss(); });
     await close.click(); expect(message).toContain('Close unsaved');
-    await expect(editor(page)).toContainText('SELECT 42 AS autosaved_draft'); expect(runs).toBe(0);
+    await expect(editor(page)).toContainText(
+      'SELECT 42 AS autosaved_draft'); expect(runs).toBe(0);
   } finally { await context.close(); }
 });
 
 async function call(operation: string, arguments_: Record<string, unknown>) {
-  const parsed = new URL(url); const endpoint = new URL(`${parsed.pathname.replace(/\/$/, '')}/interface`, parsed.origin).toString();
-  const response = await fetch(endpoint, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ operation, arguments: arguments_, ...(parsed.searchParams.get('project_root') ? { project_root: parsed.searchParams.get('project_root') } : {}) }) });
-  expect(response.ok, `${operation} failed`).toBeTruthy(); return response.json() as Promise<Record<string, any>>;
+  const parsed = new URL(url); const endpoint = new URL(
+    `${parsed.pathname.replace(/\/$/,
+      '')}/interface`, parsed.origin).toString();
+  const response = await fetch(endpoint, { method: 'POST', headers: {
+    'content-type': 'application/json' }, body: JSON.stringify({ operation,
+    arguments: arguments_, ...(parsed.searchParams.get('project_root') ? {
+      project_root: parsed.searchParams.get('project_root') } : {}) }) });
+  expect(response.ok, `${operation} failed`).toBeTruthy();
+    return response.json() as Promise<Record<string, any>>;
 }
 
 async function createImportedView(workspace: string) {
-  const imported = await call('view_create', { workspace_id: workspace, position: 'last' });
-  const target = imported.views.find((view: { id: string }) => view.id === imported.view_id);
+  const imported = await call('view_create', {
+    workspace_id: workspace, position: 'last' });
+  const target = imported.views.find((view: { id:
+    string }) => view.id === imported.view_id);
   await call('view_update', {
-    workspace_id: workspace, view_id: target.id, expected_revision: target.revision,
+    workspace_id: workspace, view_id: target.id,
+      expected_revision: target.revision,
     sql: 'SELECT 8 AS imported_once', cursor_position: 0,
   });
   return target;
 }
 
-test('resumes a partial standalone migration without overwriting existing Views or duplicate acknowledgements', async ({ browser }) => {
-  const context = await browser.newContext(); const page = await context.newPage(); const workspace = `standalone-existing-${Date.now()}`;
+test('resumes a partial standalone migration without overwriting existing Views or duplicate acknowledgements',
+  async ({ browser }) => {
+  const context = await browser.newContext(); const page = await context.newPage(
+    ); const workspace = `standalone-existing-${Date.now()}`;
   const root = new URL(url).searchParams.get('project_root') ?? projectName;
   const opened = await call('workspace_open', { session_id: workspace }); const initial = opened.views[0];
-  await call('view_update', { workspace_id: workspace, view_id: initial.id, sql: 'SELECT 7 AS existing_view', expected_revision: initial.revision, cursor_position: 0 });
+  await call('view_update', { workspace_id: workspace, view_id: initial.id, sql:
+    'SELECT 7 AS existing_view', expected_revision: initial.revision, cursor_position: 0 });
   const target = await createImportedView(workspace);
   const legacyKey = `anechoic.workbench.${projectName}.workspace`;
   const sessionKey = `anechoic.workbench.${root}.standalone-session`;
@@ -76,10 +108,15 @@ test('resumes a partial standalone migration without overwriting existing Views 
     for (const [key, value] of entries) localStorage.setItem(key, value);
   }, { entries: [[legacyKey, legacy], [sessionKey, workspace], [progressKey, progress]] });
   let failSecond = true;
-  await page.route('**/interface', async (route) => {
-    const request = route.request().postDataJSON() as { operation?: string; arguments?: { sql?: string } };
-    if (failSecond && request.operation === 'view_update' && request.arguments?.sql === 'SELECT 9 AS resumed_import') return route.fulfill({ status: 500, contentType: 'application/json', body: '{"error":"temporary import failure"}' });
-    await route.continue();
+  await page.route('**/tools', async (route) => {
+    const request = toolRequest(route);
+    if (!failSecond || request?.name !== 'view_update' ||
+      request.arguments.sql !== 'SELECT 9 AS resumed_import') return route.fallback();
+    const message = 'temporary import failure';
+    const { project } = toolReply(route, null);
+    await route.fulfill({ json: { project, error: { code: 'internal',
+      message, scope: 'tool', tool_result: {
+        outcome: 'failed', diagnostics: [message] } } } });
   });
   try {
     await page.goto(url); await expect(page.getByRole('alert')).toContainText('temporary import failure');
@@ -90,7 +127,8 @@ test('resumes a partial standalone migration without overwriting existing Views 
     state = await call('workspace_get', { workspace_id: workspace });
     expect(state.views.filter((item: { sql: string }) => item.sql === 'SELECT 7 AS existing_view')).toHaveLength(1);
     expect(state.views.filter((item: { sql: string }) => item.sql === 'SELECT 8 AS imported_once')).toHaveLength(1);
-    expect(state.views.filter((item: { sql: string }) => item.sql === 'SELECT 9 AS resumed_import')).toHaveLength(1);
+    expect(state.views.filter((item: { sql: string }) =>
+      item.sql === 'SELECT 9 AS resumed_import')).toHaveLength(1);
     expect(state.views).toHaveLength(3);
     const currentSession = `anechoic.iwe_console.${root}.standalone-session`;
     const keys = [currentSession, `${currentSession}.unbound-migrated`, legacyKey, progressKey];

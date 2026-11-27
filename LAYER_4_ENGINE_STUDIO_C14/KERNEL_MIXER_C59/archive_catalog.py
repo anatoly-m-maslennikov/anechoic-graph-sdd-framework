@@ -15,15 +15,26 @@ class ArchiveCatalog:
         self.dirty = True
         with lock:
             connection.execute(
-                "CREATE TEMP TABLE workbench_filename_catalog (path VARCHAR PRIMARY KEY, atom_id VARCHAR, role_marker VARCHAR, id_number VARCHAR, version VARCHAR, archived BOOLEAN)"
+                (
+                    "CREATE TEMP TABLE workbench_filename_catalog (path "
+                    "VARCHAR PRIMARY KEY, atom_id VARCHAR, role_marker "
+                    "VARCHAR, id_number VARCHAR, version VARCHAR, archived "
+                    "BOOLEAN)"
+                )
             )
             connection.execute("DROP TABLE IF EXISTS main.archive_version_max")
             connection.execute(
-                "CREATE TABLE main.archive_version_max (atom_id VARCHAR, max_version VARCHAR)"
+                (
+                    "CREATE TABLE main.archive_version_max (atom_id VARCHAR, "
+                    "max_version VARCHAR)"
+                )
             )
             connection.execute("DROP TABLE IF EXISTS main.archive_role_max")
             connection.execute(
-                "CREATE TABLE main.archive_role_max (role_marker VARCHAR, max_id_number VARCHAR)"
+                (
+                    "CREATE TABLE main.archive_role_max (role_marker VARCHAR, "
+                    "max_id_number VARCHAR)"
+                )
             )
 
     def begin(self):
@@ -38,7 +49,12 @@ class ArchiveCatalog:
             if self.batch:
                 columns = list(zip(*self.batch.values(), strict=False))
                 self.connection.execute(
-                    "INSERT INTO temp.main.workbench_filename_catalog SELECT unnest(?::VARCHAR[]), unnest(?::VARCHAR[]), unnest(?::VARCHAR[]), unnest(?::VARCHAR[]), unnest(?::VARCHAR[]), unnest(?::BOOLEAN[])",
+                    (
+                        "INSERT INTO temp.main.workbench_filename_catalog "
+                        "SELECT unnest(?::VARCHAR[]), unnest(?::VARCHAR[]), "
+                        "unnest(?::VARCHAR[]), unnest(?::VARCHAR[]), "
+                        "unnest(?::VARCHAR[]), unnest(?::BOOLEAN[])"
+                    ),
                     [list(column) for column in columns],
                 )
         self.batch = None
@@ -52,7 +68,10 @@ class ArchiveCatalog:
         else:
             with self.lock:
                 self.connection.execute(
-                    "INSERT OR REPLACE INTO temp.main.workbench_filename_catalog VALUES (?, ?, ?, ?, ?, ?)",
+                    (
+                        "INSERT OR REPLACE INTO temp.main.workbench_filename_c"
+                        "atalog VALUES (?, ?, ?, ?, ?, ?)"
+                    ),
                     row,
                 )
 
@@ -60,7 +79,10 @@ class ArchiveCatalog:
         relative = path.relative_to(self.root).as_posix()
         with self.lock:
             removed = self.connection.execute(
-                "DELETE FROM temp.main.workbench_filename_catalog WHERE path = ? OR starts_with(path, ?) RETURNING archived",
+                (
+                    "DELETE FROM temp.main.workbench_filename_catalog WHERE "
+                    "path = ? OR starts_with(path, ?) RETURNING archived"
+                ),
                 [relative, relative.rstrip("/") + "/"],
             ).fetchall()
             self.dirty |= any(row[0] for row in removed)
@@ -96,7 +118,10 @@ class ArchiveCatalog:
             parameters.extend((len(digits), digits))
         with self.lock:
             row = self.connection.execute(
-                "SELECT id_number FROM temp.main.workbench_filename_catalog WHERE role_marker = ?"
+                (
+                    "SELECT id_number FROM temp.main.workbench_filename_catalo"
+                    "g WHERE role_marker = ?"
+                )
                 + limit
                 + " ORDER BY length(id_number) DESC, id_number DESC LIMIT 1",
                 parameters,
@@ -109,12 +134,18 @@ class ArchiveCatalog:
         with self.lock:
             self.connection.execute("DELETE FROM main.archive_role_max")
             self.connection.execute(
-                "INSERT INTO main.archive_role_max SELECT role_marker, arg_max(id_number, (length(id_number), id_number)) FROM temp.main.workbench_filename_catalog WHERE archived GROUP BY role_marker"
+                (
+                    "INSERT INTO main.archive_role_max SELECT role_marker, "
+                    "arg_max(id_number, (length(id_number), id_number)) FROM "
+                    "temp.main.workbench_filename_catalog WHERE archived "
+                    "GROUP BY role_marker"
+                )
             )
             self.connection.execute("DELETE FROM main.archive_version_max")
             self.connection.execute(
                 "INSERT INTO main.archive_version_max "
                 "SELECT atom_id, arg_max(version, (length(version), version)) "
-                "FROM temp.main.workbench_filename_catalog WHERE archived AND version IS NOT NULL GROUP BY atom_id"
+                "FROM temp.main.workbench_filename_catalog WHERE archived "
+                "AND version IS NOT NULL GROUP BY atom_id"
             )
             self.dirty = False

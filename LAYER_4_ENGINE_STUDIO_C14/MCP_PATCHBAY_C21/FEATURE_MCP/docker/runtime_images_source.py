@@ -33,12 +33,15 @@ _BETA_REQUIRED = (
     "ORCHESTRATOR_beta_C68/warm_worker.py",
     "WORKERS_beta_C69/WORKERS_beta_C69__shared.py",
     "WORKERS_beta_C69/warm_worker.py",
-    "ORCHESTRATOR_beta_C68/project_peer_owner.py", "ORCHESTRATOR_beta_C68/shared_peer_owner.py",
-    "API_MIXER_beta_C91/API_MIXER_beta_C91__shared.py", "API_MIXER_beta_C91/shared_runtime.py",
+    "ORCHESTRATOR_beta_C68/project_peer_owner.py",
+    "ORCHESTRATOR_beta_C68/shared_peer_owner.py",
+    "API_MIXER_beta_C91/API_MIXER_beta_C91__shared.py",
+    "API_MIXER_beta_C91/shared_runtime.py",
 )
 _REPLACED_COMPONENTS = {
     ENGINE_ROOT + "/KERNEL_MIXER_C59",
-    ENGINE_ROOT + "/IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_BACKEND",
+    ENGINE_ROOT
+    + "/IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_BACKEND",
 }
 
 
@@ -58,7 +61,10 @@ class ImageSource:
 
     def _project_root(self) -> Path:
         try:
-            if self.project_root.is_symlink() or not self.project_root.is_dir():
+            if (
+                self.project_root.is_symlink()
+                or not self.project_root.is_dir()
+            ):
                 raise self._input_error()
             return self.project_root.resolve(strict=True)
         except (OSError, ValueError) as error:
@@ -78,16 +84,25 @@ class ImageSource:
             if state.is_symlink() or not state.is_dir():
                 raise self._input_error()
         try:
-            from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import select_runtime_project
+            from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import (
+                select_runtime_project,
+            )
+
             selection = select_runtime_project(root)
-            if (selection.root != root or not selection.control_root.is_relative_to(root)
-                    or selection.launcher_state != state / selection.instance_id):
-                raise ValueError("invalid Project launcher state")
-            if os.path.lexists(selection.launcher_state) and (
-                selection.launcher_state.is_symlink() or not selection.launcher_state.is_dir()
+            if (
+                selection.root != root
+                or not selection.control_root.is_relative_to(root)
+                or selection.launcher_state != state / selection.instance_id
             ):
                 raise ValueError("invalid Project launcher state")
-            image = ready_predecessor(selection, enforce_deadlines=self.timeout is not None)
+            if os.path.lexists(selection.launcher_state) and (
+                selection.launcher_state.is_symlink()
+                or not selection.launcher_state.is_dir()
+            ):
+                raise ValueError("invalid Project launcher state")
+            image = ready_predecessor(
+                selection, enforce_deadlines=self.timeout is not None
+            )
             self.previous_image = image
             self._previous_image_resolved = True
             return image
@@ -97,12 +112,27 @@ class ImageSource:
     def _refresh_model(self, root: Path) -> str:
         previous = self._build_predecessor()
         timeout = "none" if self.timeout is None else str(self.timeout)
-        command = [sys.executable, "-B", str(self._file(root, DOCKER_ROOT + "/native_model_refresh.py")),
-                   str(self._project_root()), timeout]
+        command = [
+            sys.executable,
+            "-B",
+            str(self._file(root, DOCKER_ROOT + "/native_model_refresh.py")),
+            str(self._project_root()),
+            timeout,
+        ]
         if previous is not None:
             command.append(previous)
-        process = subprocess.Popen(command, cwd=root, env={**{k: v for k, v in os.environ.items() if k != "PYTHONHOME"}, "PYTHONPATH": str(root / ENGINE_ROOT)}, stdin=subprocess.DEVNULL,
-                                   stdout=subprocess.PIPE, text=True, start_new_session=True)
+        process = subprocess.Popen(
+            command,
+            cwd=root,
+            env={
+                **{k: v for k, v in os.environ.items() if k != "PYTHONHOME"},
+                "PYTHONPATH": str(root / ENGINE_ROOT),
+            },
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            text=True,
+            start_new_session=True,
+        )
         try:
             output, _ = process.communicate(timeout=self.timeout)
         except subprocess.TimeoutExpired:
@@ -113,25 +143,40 @@ class ImageSource:
             process.communicate()
             raise
         fingerprint = output.strip()
-        if process.returncode or re.fullmatch(r"[0-9a-f]{64}", fingerprint) is None:
-            raise ImageError("IMAGE_INPUT_UNAVAILABLE", "Native Model refresh failed")
+        if (
+            process.returncode
+            or re.fullmatch(r"[0-9a-f]{64}", fingerprint) is None
+        ):
+            raise ImageError(
+                "IMAGE_INPUT_UNAVAILABLE", "Native Model refresh failed"
+            )
         return fingerprint
 
     def _build_parent(self) -> Path:
         temporary = self._project_root() / ".anechoic_tmp"
         parent = self.build_temp_root or temporary
         try:
-            if (temporary.is_symlink() or not temporary.is_dir()
-                    or parent.is_symlink() or not parent.is_dir()):
+            if (
+                temporary.is_symlink()
+                or not temporary.is_dir()
+                or parent.is_symlink()
+                or not parent.is_dir()
+            ):
                 raise OSError("unsafe private image temporary root")
             expected = temporary.resolve(strict=True)
             resolved = parent.resolve(strict=True)
-            if (not parent.is_absolute() or ".." in parent.parts or resolved != parent
-                    or not resolved.is_relative_to(expected)):
+            if (
+                not parent.is_absolute()
+                or ".." in parent.parts
+                or resolved != parent
+                or not resolved.is_relative_to(expected)
+            ):
                 raise OSError("unsafe private image temporary root")
             return resolved
         except (OSError, ValueError) as error:
-            raise ImageError("BUILD_FAILED", "Private image build context is unavailable") from error
+            raise ImageError(
+                "BUILD_FAILED", "Private image build context is unavailable"
+            ) from error
 
     def _file(self, root: Path, relative: str) -> Path:
         path = root
@@ -143,12 +188,22 @@ class ImageSource:
             raise self._input_error()
         return path
 
-    def _stack_input(self, root: Path) -> tuple[str, tuple[Path, ...], str | None]:
-        if not os.path.lexists(root / "LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/project.toml"):
+    def _stack_input(
+        self, root: Path
+    ) -> tuple[str, tuple[Path, ...], str | None]:
+        if not os.path.lexists(
+            root / "LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/project.toml"
+        ):
             return "current", (), None
-        path = self._file(root, "LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/project.toml")
+        path = self._file(
+            root, "LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/project.toml"
+        )
         try:
-            flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0)
+            flags = (
+                os.O_RDONLY
+                | getattr(os, "O_NOFOLLOW", 0)
+                | getattr(os, "O_NONBLOCK", 0)
+            )
             with os.fdopen(os.open(path, flags), "rb") as stream:
                 info = os.fstat(stream.fileno())
                 if not stat.S_ISREG(info.st_mode) or info.st_size > 65536:
@@ -158,9 +213,15 @@ class ImageSource:
                 raise ValueError("Invalid selector size")
             settings = tomllib.loads(raw.decode("utf-8"))
         except (OSError, ValueError) as error:
-            raise ImageError("IMAGE_INPUT_UNAVAILABLE", "Invalid project.toml build selector") from error
+            raise ImageError(
+                "IMAGE_INPUT_UNAVAILABLE",
+                "Invalid project.toml build selector",
+            ) from error
         if settings not in ({"stack": "current"}, {"stack": "beta_next"}):
-            raise ImageError("IMAGE_INPUT_UNAVAILABLE", 'project.toml must specify stack = "current" or "beta_next"')
+            raise ImageError(
+                "IMAGE_INPUT_UNAVAILABLE",
+                'project.toml must specify stack = "current" or "beta_next"',
+            )
         return settings["stack"], (path,), sha256(raw).hexdigest()
 
     def _source_layer_files(self, root, selected, unavailable):
@@ -169,7 +230,9 @@ class ImageSource:
             if source.is_symlink() or not source.is_dir():
                 raise self._input_error()
             count = 0
-            for current, directories, names in os.walk(source, followlinks=False, onerror=unavailable):
+            for current, directories, names in os.walk(
+                source, followlinks=False, onerror=unavailable
+            ):
                 for name in directories:
                     path = Path(current) / name
                     if path.is_symlink() or not path.is_dir():
@@ -178,7 +241,11 @@ class ImageSource:
                     if _excluded_file(name):
                         continue
                     path = Path(current) / name
-                    if path.is_symlink() or not path.is_file() or path.suffix != ".md":
+                    if (
+                        path.is_symlink()
+                        or not path.is_file()
+                        or path.suffix != ".md"
+                    ):
                         raise self._input_error()
                     selected.add(path)
                     count += 1
@@ -202,10 +269,22 @@ class ImageSource:
         return retained
 
     def _files(self, root: Path, stack_input=None) -> tuple[Path, ...]:
-        stack, selector, _ = self._stack_input(root) if stack_input is None else stack_input
-        required = tuple(self._file(root, relative) for relative in _REQUIRED) + selector
-        beta_roots, stack_required = (_BETA_ROOTS, _BETA_REQUIRED) if stack == "beta_next" else (frozenset(), ())
-        required += tuple(self._file(root, f"{ENGINE_ROOT}/{path}") for path in stack_required)
+        stack, selector, _ = (
+            self._stack_input(root) if stack_input is None else stack_input
+        )
+        required = (
+            tuple(self._file(root, relative) for relative in _REQUIRED)
+            + selector
+        )
+        beta_roots, stack_required = (
+            (_BETA_ROOTS, _BETA_REQUIRED)
+            if stack == "beta_next"
+            else (frozenset(), ())
+        )
+        required += tuple(
+            self._file(root, f"{ENGINE_ROOT}/{path}")
+            for path in stack_required
+        )
         engine = root / ENGINE_ROOT
         if engine.is_symlink() or not engine.is_dir():
             raise self._input_error()
@@ -214,7 +293,9 @@ class ImageSource:
         def unavailable(_error):
             raise self._input_error()
 
-        for current, directories, names in os.walk(engine, followlinks=False, onerror=unavailable):
+        for current, directories, names in os.walk(
+            engine, followlinks=False, onerror=unavailable
+        ):
             folder = Path(current)
             directories[:] = self._engine_directories(
                 folder, directories, root, engine, beta_roots

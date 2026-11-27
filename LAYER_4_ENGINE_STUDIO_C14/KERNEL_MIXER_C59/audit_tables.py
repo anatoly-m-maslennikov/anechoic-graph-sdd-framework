@@ -149,9 +149,17 @@ def collect_issues(
         for key in (item["scope_unit_name"], item["scope_unit_id"]) if isinstance(key, str)
     }
     scope_paths[project_scope_id] = control_root.relative_to(root).as_posix()
-    paths = source_paths if selected is None else {root / path for path in selected}
-    result: dict[str, list[tuple[str | None, ...]]] = {table: [] for table in TABLES}
-    layouts: dict[tuple[str | None, str | None], dict[tuple[str, ...], str]] = {}
+    paths = (
+        source_paths
+        if selected is None
+        else {root / path for path in selected}
+    )
+    result: dict[str, list[tuple[str | None, ...]]] = {
+        table: [] for table in TABLES
+    }
+    layouts: dict[
+        tuple[str | None, str | None], dict[tuple[str, ...], str]
+    ] = {}
     prefix = re.escape(project_scope_id.removesuffix("-SU-00"))
     atom_name = re.compile(rf"(?:[1-9][0-9]*-)?{prefix}-[A-Z]-[0-9]+")
     for path in sorted(paths & source_paths):

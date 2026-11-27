@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-38
+concern:
+  subject: "Projection"
+  path: "Model/Graph/Node//Artifact//Derived"
+  relation: "is_narrower_than"
 container:
   component: C16
 tier: 3
@@ -8,8 +12,8 @@ context:
   lens: DES
 state:
   status: active
-  version: 9
-  updated_at: 2026-10-27 20:00:04 +0400
+  version: 11
+  updated_at: "2026-11-27T16:29:34.309627+00:00"
 ---
 # Summary
 
@@ -31,7 +35,7 @@ The `terms_graph` namespace contains only Terms-graph nodes and admitted Relatio
 
 Reusable Term names across differently qualified Entity paths do not create qualified Terms, additional Term meanings, or a hierarchy. In particular, no `SUBKIND_OF` alias is inferred from Subject spelling, path containment, or a compatible endpoint. `NARROWER_THAN` is represented only when an admitted source-fact context supplies its Relation Kind, direction, endpoint context, source-pinned evidence, and the required definition implication; otherwise the affected coverage/validity remains unavailable or fails truthfully. Subject incidence and provenance remain distinct from native Terms-graph Relation facts.
 
-Construction is split from execution recording. The pure builder reads its admitted frontier and writes neither sources nor Journal. The shared executor appends actual Action/Run recording evidence to the existing Journal history without replacing it; missing actual recording remains a blocker rather than a reason to invent completion.
+Apply AN-S-2532 to separate projection construction from Run recording.
 
 `built` or `no_op` is permitted only when exact selected coverage, source/definition currentness, fidelity, graph validity, permission, and durable recording all pass. Any unmet quality condition returns its truthful non-complete outcome and affected frontier; an authorized limited diagnostic output remains non-authoritative and incomplete/invalid as applicable.
 

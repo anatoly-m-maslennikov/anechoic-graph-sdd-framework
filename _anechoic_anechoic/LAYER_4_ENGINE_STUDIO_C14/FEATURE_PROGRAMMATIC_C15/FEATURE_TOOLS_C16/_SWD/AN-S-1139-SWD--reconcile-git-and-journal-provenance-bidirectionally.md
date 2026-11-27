@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1139
+concern:
+  subject: "Event Record"
+  path: "Model/Graph/Node//Artifact//SSOT//Recorded"
+  relation: "is_narrower_than"
 container:
   component: C16
 tier: 2
@@ -8,8 +12,8 @@ context:
   lens: SWD
 state:
   status: active
-  version: 17
-  updated_at: 2026-11-02 19:44:26 +0400
+  version: 19
+  updated_at: "2026-11-27T16:29:34.309627+00:00"
 ---
 ## Summary
 
@@ -25,9 +29,8 @@ use this Method **when** comparing reachable Git change history with Work Journa
 
 1. seal a reachable Git frontier **and** the corresponding Journal batch frontier.
 2. normalize both sides **to** action, Initiative, commit SHA, event ID, subject path, subject revision, digest, batch SHA, **and** ordering facts.
-3. match Git real-change commits **to** Journal events **in** both directions **and** classify missing, duplicate, unreachable, digest-mismatched, revision-mismatched, **and** watermark-lag cases.
-4. append a recovered Journal event **only** **when** reachable history **and** sealed durable state prove **every** required field; **otherwise** keep the case blocked.
-5. re-run the comparison over the same frontier **and** emit a stable reconciliation report whose second unchanged run produces no new events.
+3. Match in both directions and classify and recover discrepancies under AN-S-1163.
+4. Re-run the comparison over the same frontier and emit a stable report. An unchanged run creates no events.
 
 ## Outcome
 

@@ -30,22 +30,26 @@ class QueryLifecycle:
             parameters.extend((under, under.rstrip("/") + "/"))
         with self._lock:
             return self._connection.execute(
-                "SELECT reference, relative_path, filename FROM (SELECT reference, relative_path, filename, "
-                f"split_part(reference, '@', 1) AS atom_id FROM main.atoms WHERE TRUE{self._native_atom_clause()}) WHERE "
+                "SELECT reference, relative_path, filename FROM (SELECT "
+                "reference, relative_path, filename, "
+                f"split_part(reference, '@', 1) AS atom_id FROM main.atoms "
+                f"WHERE TRUE{self._native_atom_clause()}) WHERE "
                 + " AND ".join(clauses)
                 + " ORDER BY relative_path || '/' || filename",
                 parameters,
             ).fetchall()
 
     def lifecycle_archive_candidates(self, atom_id: str):
-        """Return exact archived references in descending numeric Version order."""
+        "Return exact archived references in descending numeric Version order."
         with self._lock:
             return self._connection.execute(
                 "SELECT reference, relative_path, filename FROM main.atoms "
-                "WHERE status_group = 'Archived' AND split_part(reference, '@', 1) = ? "
+                "WHERE status_group = 'Archived' AND split_part(reference, "
+                "'@', 1) = ? "
                 "AND regexp_full_match(reference, '[^@]+@[1-9][0-9]*')"
                 f"{self._native_atom_clause()} "
-                "ORDER BY length(split_part(reference, '@', 2)) DESC, split_part(reference, '@', 2) DESC, "
+                "ORDER BY length(split_part(reference, '@', 2)) DESC, "
+                "split_part(reference, '@', 2) DESC, "
                 "relative_path || '/' || filename",
                 [atom_id],
             ).fetchall()
@@ -96,8 +100,10 @@ class QueryLifecycle:
             ]
             columns = ", ".join(map(quote_identifier, names))
             rows = self._connection.execute(
-                f"SELECT {columns} FROM main.atoms WHERE status_group IN ('Current', 'Backlog') "
-                f"AND reference = ?{self._native_atom_clause()} ORDER BY relative_path || '/' || filename",
+                f"SELECT {columns} FROM main.atoms WHERE status_group IN "
+                f"('Current', 'Backlog') "
+                f"AND reference = ?{self._native_atom_clause()} ORDER BY "
+                f"relative_path || '/' || filename",
                 [reference],
             ).fetchall()
         return [dict(zip(names, row, strict=False)) for row in rows]
@@ -114,10 +120,15 @@ class QueryLifecycle:
             parameters.extend([len(digits), digits])
         with self._lock:
             rows = self._connection.execute(
-                "SELECT atom_id, relative_path, filename FROM (SELECT relative_path, filename, split_part(reference, '@', 1) AS atom_id, "
-                "ltrim(substr(split_part(reference, '@', 1), ?), '0') AS number FROM main.atoms) "
-                "WHERE starts_with(atom_id, ?) AND regexp_full_match(substr(atom_id, ?), '[0-9]+') "
-                f"{limit}ORDER BY length(number) DESC, number DESC, atom_id DESC",
+                "SELECT atom_id, relative_path, filename FROM (SELECT "
+                "relative_path, filename, split_part(reference, '@', 1) AS "
+                "atom_id, "
+                "ltrim(substr(split_part(reference, '@', 1), ?), '0') AS "
+                "number FROM main.atoms) "
+                "WHERE starts_with(atom_id, ?) AND "
+                "regexp_full_match(substr(atom_id, ?), '[0-9]+') "
+                f"{limit}ORDER BY length(number) DESC, number DESC, atom_id "
+                f"DESC",
                 parameters,
             )
             while row := rows.fetchone():
@@ -128,19 +139,24 @@ class QueryLifecycle:
     def _create_atom_version_max(self) -> None:
         if not self._connection.execute(
             "SELECT count(*) FROM information_schema.tables "
-            "WHERE table_catalog = current_database() AND table_schema = 'main' "
+            "WHERE table_catalog = current_database() AND table_schema = "
+            "'main' "
             "AND table_name = 'archive_version_max'"
         ).fetchall()[0][0]:
             return
         source = revision_query(self._connection, stable_only=False)
         self._connection.execute(
-            f"CREATE OR REPLACE VIEW main.atom_version_max AS WITH revisions AS ({source}) "
-            "SELECT atom_id, arg_max(version, (length(version), version)) AS max_version FROM ("
-            "SELECT atom_id, cast(version AS VARCHAR) AS version FROM revisions "
+            f"CREATE OR REPLACE VIEW main.atom_version_max AS WITH "
+            f"revisions AS ({source}) "
+            "SELECT atom_id, arg_max(version, (length(version), version)) "
+            "AS max_version FROM ("
+            "SELECT atom_id, cast(version AS VARCHAR) AS version FROM "
+            "revisions "
             "JOIN main.atoms USING (reference, relative_path, filename) "
             "WHERE status_group = 'Current' AND version > 0 "
             f"{self._native_atom_clause()} "
-            "UNION ALL SELECT atom_id, max_version FROM main.archive_version_max"
+            "UNION ALL SELECT atom_id, max_version FROM "
+            "main.archive_version_max"
             ") GROUP BY atom_id"
         )
 
@@ -150,7 +166,8 @@ class QueryLifecycle:
         with self._lock:
             source = revision_query(self._connection, stable_only=False)
             rows = self._connection.execute(
-                f"SELECT revisions.version, revisions.relative_path, revisions.filename FROM ({source}) revisions "
+                f"SELECT revisions.version, revisions.relative_path, "
+                f"revisions.filename FROM ({source}) revisions "
                 "JOIN main.atoms USING (reference, relative_path, filename) "
                 "WHERE revisions.atom_id = ? AND revisions.version > 0 "
                 "AND status_group IN ('Current', 'Backlog', 'Draft') "
@@ -170,7 +187,8 @@ class QueryLifecycle:
         with self._lock:
             duplicates, extra = self._connection.execute(
                 "SELECT count(*), coalesce(sum(carriers - 1), 0) FROM "
-                "(SELECT count(*) AS carriers FROM main.atoms WHERE reference IS NOT NULL "
+                "(SELECT count(*) AS carriers FROM main.atoms WHERE "
+                "reference IS NOT NULL "
                 "GROUP BY reference HAVING count(*) > 1)"
             ).fetchone()
             issues = sum(
@@ -180,7 +198,10 @@ class QueryLifecycle:
                 for table in ATOM_AUDIT_TABLES
             )
             revisions = self._connection.execute(
-                "SELECT count(*) FROM (SELECT observed, expected FROM main.atom_duplicate_revision_issues GROUP BY ALL)"
+                (
+                    "SELECT count(*) FROM (SELECT observed, expected FROM "
+                    "main.atom_duplicate_revision_issues GROUP BY ALL)"
+                )
             ).fetchone()[0]
             return {
                 "duplicate_references": duplicates,
@@ -196,15 +217,19 @@ class QueryLifecycle:
             rows = self._connection.execute(
                 """
                 WITH RECURSIVE selected AS (
-                    SELECT DISTINCT ON (reference) reference, "header.relations"
-                    FROM main.atoms WHERE status_group <> 'Archived' AND reference IS NOT NULL
+                    SELECT DISTINCT ON (reference) reference, \
+"header.relations"
+                    FROM main.atoms WHERE status_group <> 'Archived' AND \
+reference IS NOT NULL
                     ORDER BY reference, relative_path || '/' || filename
                 ), reached(reference) AS (
-                    SELECT reference FROM selected WHERE reference IN (SELECT unnest(?::VARCHAR[]))
+                    SELECT reference FROM selected WHERE reference IN \
+(SELECT unnest(?::VARCHAR[]))
                     UNION
                     SELECT edge.value ->> 'reference'
                     FROM reached JOIN selected USING (reference),
-                         LATERAL json_each(selected."header.relations", ?) AS edge
+                         LATERAL json_each(selected."header.relations", ?) \
+AS edge
                     WHERE (edge.value ->> 'kind') = 'Atom'
                 )
                 SELECT reference FROM reached

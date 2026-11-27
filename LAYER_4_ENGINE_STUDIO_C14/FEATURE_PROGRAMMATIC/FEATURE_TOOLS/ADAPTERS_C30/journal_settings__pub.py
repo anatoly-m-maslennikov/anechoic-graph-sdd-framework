@@ -81,7 +81,8 @@ def _read_project_settings(
             raise RuntimeError("Project Settings requires paths.control_root")
         if _settings_control_relative(declared) != relative:
             raise RuntimeError(
-                "paths.control_root must be exactly the selected settings carrier's Project child"
+                "paths.control_root must be exactly the selected "
+                "settings carrier's Project child"
             )
         if reader.currentness()["state"] != "unchanged":
             raise RuntimeError("Project Settings changed during resolution")

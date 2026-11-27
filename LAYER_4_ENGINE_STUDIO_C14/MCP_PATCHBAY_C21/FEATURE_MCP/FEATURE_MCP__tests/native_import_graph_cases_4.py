@@ -14,7 +14,9 @@ from starlette.applications import Starlette
 
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import read_import_sources
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import publish_imports
-from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import workbench_routes as routes
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import (
+    workbench_routes as routes,
+)
 
 
 _INVERSE_TEST_COMPONENT = """
@@ -32,7 +34,9 @@ _TESTS_COMPONENT = """
 class ImportGraphCases4:
     async def test_component_test_package_and_unmarked_package(self):
         self._source("src/UNIT_C1/UNIT_C1__tests/test_e2e.py", "pass\n")
-        implementation = self._source("src/UNIT_C1/service_pkg1/main.py", "pass\n")
+        implementation = self._source(
+            "src/UNIT_C1/service_pkg1/main.py", "pass\n"
+        )
         self._source("src/UNIT_C1/service_pkg1/service_pkg1__tests/test_main.py", "pass\n")
         self._source("src/group/group__tests/test_e2e.py", "pass\n")
         structure = self._source(".anechoic_tmp/structure.json", json.dumps({
@@ -81,20 +85,29 @@ class ImportGraphCases4:
         self._source("src/to_source.py", "")
         gateway = await self._gateway()
         stderr = StringIO()
-        with redirect_stderr(stderr), patch("KERNEL_MIXER_C59.realization_projection.replace_imports", side_effect=ValueError("fixture write")) as write:
+        with (
+            redirect_stderr(stderr),
+            patch(
+                "KERNEL_MIXER_C59.realization_projection.replace_imports",
+                side_effect=ValueError("fixture write"),
+            ) as write,
+        ):
             self._source("src/new_source.py", "")
             async with asyncio.timeout(6):
                 while "fixture write" not in stderr.getvalue():
-                    await asyncio.sleep(.03)
+                    await asyncio.sleep(0.03)
             self.assertEqual(write.call_count, 1)
         store = gateway._native_query._owner()
         duplicate = ("duplicate", "module", "python", "new.py", "ok", None)
         with self.assertRaises(duckdb.ConstraintException):
             publish_imports(store, [duplicate, duplicate], [], [])
         with store._lock:
-            self.assertEqual(store._connection.execute(
-                "SELECT relative_path FROM import_nodes ORDER BY relative_path",
-            ).fetchall(), [("src",), ("src/from_source.py",), ("src/to_source.py",)])
+            self.assertEqual(
+                store._connection.execute(
+                    "SELECT relative_path FROM import_nodes ORDER BY relative_path",
+                ).fetchall(),
+                [("src",), ("src/from_source.py",), ("src/to_source.py",)],
+            )
 
 
     async def _check_disk_rebuild(self, gateway, store, post, view_call, view, first, independent, expected, test_directory):
@@ -104,15 +117,25 @@ class ImportGraphCases4:
         second = rebuilt["result_ids"][first]
         self.assertNotEqual(first, second)
         self.assertNotIn(independent, rebuilt["result_ids"])
-        fetched = await view_call("view_fetch", view | {"result_delivery": "inline"})
+        fetched = await view_call(
+            "view_fetch", view | {"result_delivery": "inline"}
+        )
         self.assertEqual((second, []), (fetched["query_id"], fetched["rows"]))
         self.assertTrue(store._results[second].pinned)
         stderr = StringIO()
-        with redirect_stderr(stderr), patch.object(store, "prepare_result_rebuild",
-                                                   side_effect=ValueError("fixture rebuild failure")):
+        with (
+            redirect_stderr(stderr),
+            patch.object(
+                store,
+                "prepare_result_rebuild",
+                side_effect=ValueError("fixture rebuild failure"),
+            ),
+        ):
             await post("rebuild", {"target": "test_edges"}, 400)
         self.assertIn("fixture rebuild failure", stderr.getvalue())
-        fetched = await view_call("view_fetch", view | {"result_delivery": "inline"})
+        fetched = await view_call(
+            "view_fetch", view | {"result_delivery": "inline"}
+        )
         self.assertEqual((second, []), (fetched["query_id"], fetched["rows"]))
         moved.rename(test_directory)
         mcp = await gateway.call(None, types.CallToolRequestParams(
@@ -120,13 +143,20 @@ class ImportGraphCases4:
         ))
         self.assertFalse(mcp.is_error, mcp.structured_content)
         third = mcp.structured_content["result_ids"][second]
-        fetched = await view_call("view_fetch", view | {"result_delivery": "inline"})
-        self.assertEqual((third, expected), (fetched["query_id"], fetched["rows"]))
-        single = await post("rebuild", {"target": f"workbench_results.query_{third}"})
+        fetched = await view_call(
+            "view_fetch", view | {"result_delivery": "inline"}
+        )
+        self.assertEqual(
+            (third, expected), (fetched["query_id"], fetched["rows"])
+        )
+        single = await post(
+            "rebuild", {"target": f"workbench_results.query_{third}"}
+        )
         self.assertIn(third, single["result_ids"])
 
-
-    async def _check_disk_http(self, gateway, store, database, test_directory, sql):
+    async def _check_disk_http(
+        self, gateway, store, database, test_directory, sql
+    ):
         app = Starlette(routes=routes(gateway))
         async with httpx2.AsyncClient(transport=httpx2.ASGITransport(app=app),
                                      base_url="http://127.0.0.1:18093") as client:
@@ -140,9 +170,16 @@ class ImportGraphCases4:
             async def view_call(operation, arguments):
                 return await post("interface", {"operation": operation, "arguments": arguments})
 
-            workspace = await view_call("workspace_open", {"session_id": "realization"})
-            view = {"workspace_id": workspace["workspace_id"], "view_id": workspace["active_view_id"]}
-            await view_call("view_update", view | {"sql": sql, "expected_revision": 0})
+            workspace = await view_call(
+                "workspace_open", {"session_id": "realization"}
+            )
+            view = {
+                "workspace_id": workspace["workspace_id"],
+                "view_id": workspace["active_view_id"],
+            }
+            await view_call(
+                "view_update", view | {"sql": sql, "expected_revision": 0}
+            )
             first = (await view_call("view_run", view))["query_id"]
             independent = (await post("run", {"sql": "SELECT 7", "result_delivery": "inline"}))["query_id"]
             expected = [["src/app", "src/app/app__tests", "Test Package"]]
@@ -170,7 +207,9 @@ class ImportGraphCases4:
     async def test_disk_reopen_rebuild_and_test_relations(self):
         self._source("src/app/main.py", "import dep.helper\n")
         self._source("src/dep/helper.py", "")
-        test_directory = self._source("src/app/app__tests/test_app.py", "pass\n").parent
+        test_directory = self._source(
+            "src/app/app__tests/test_app.py", "pass\n"
+        ).parent
         gateway = await self._gateway()
         owner = gateway._native_query
         store = owner._owner()
@@ -181,7 +220,9 @@ class ImportGraphCases4:
             FROM tested_by_edges e JOIN import_nodes parent ON parent.node_key = e.source_key
             JOIN import_nodes test ON test.node_key = e.target_key
         """
-        await self._check_disk_http(gateway, store, database, test_directory, sql)
+        await self._check_disk_http(
+            gateway, store, database, test_directory, sql
+        )
 
         await gateway.close()
         self._source("src/dep/helper.py", "import app.main\n")
@@ -205,7 +246,9 @@ class ImportGraphCases4:
             ).fetchall())
         await reopened.close()
         disabled = await self._gateway(enabled=False)
-        self.assertNotIn("test_edges", disabled._native_query.schema()["tables"])
+        self.assertNotIn(
+            "test_edges", disabled._native_query.schema()["tables"]
+        )
         disabled_store = disabled._native_query._owner()
         with disabled_store._lock:
             self.assertFalse(read_import_sources(disabled_store._connection))
@@ -220,39 +263,64 @@ class ImportGraphCases4:
                 raise PermissionError("fixture read denied")
             return read_bytes(path)
 
-        with patch.object(Path, "read_bytes", read), redirect_stderr(StringIO()) as errors:
+        with (
+            patch.object(Path, "read_bytes", read),
+            redirect_stderr(StringIO()) as errors,
+        ):
             gateway = await self._gateway()
         self.assertIn("fixture read denied", errors.getvalue())
         sql = "SELECT relative_path, error_message FROM import_read_issues"
         owner = gateway._native_query
         self.assertIn("import_read_issues", owner.schema()["tables"])
-        self.assertEqual([["src/app/main.py", "fixture read denied"]],
-                         owner.run(sql, result_delivery="inline")["rows"])
+        self.assertEqual(
+            [["src/app/main.py", "fixture read denied"]],
+            owner.run(sql, result_delivery="inline")["rows"],
+        )
         owner.rebuild("import_read_issues")
         self.assertEqual([], owner.run(sql, result_delivery="inline")["rows"])
 
 
-    async def test_graph_rebuild_failure_disables_queries_at_the_public_boundary(self):
+    async def test_graph_rebuild_failure_disables_queries_at_the_public_boundary(
+        self,
+    ):
         self._source("src/main.py", "")
         gateway = await self._gateway()
         owner = gateway._native_query
         store = owner._owner()
-        async with httpx2.AsyncClient(transport=httpx2.ASGITransport(app=Starlette(routes=routes(gateway))),
-                                     base_url="http://127.0.0.1:18093") as client:
+        async with httpx2.AsyncClient(
+            transport=httpx2.ASGITransport(
+                app=Starlette(routes=routes(gateway))
+            ),
+            base_url="http://127.0.0.1:18093",
+        ) as client:
             stderr = StringIO()
-            with redirect_stderr(stderr), patch(
-                "KERNEL_MIXER_C59.query_store.insert_rows",
-                side_effect=OSError("fixture atom insert blocked"),
+            with (
+                redirect_stderr(stderr),
+                patch(
+                    "KERNEL_MIXER_C59.query_store.insert_rows",
+                    side_effect=OSError("fixture atom insert blocked"),
+                ),
             ):
-                failure = await client.post("/anechoic/Anechoic/api/rebuild", json={"target": "atoms"})
+                failure = await client.post(
+                    "/anechoic/Anechoic/api/rebuild", json={"target": "atoms"}
+                )
             self.assertEqual(400, failure.status_code)
             self.assertIn("restart required", failure.json()["error"])
             self.assertIn("fixture atom insert blocked", stderr.getvalue())
-            response = await gateway.call(None, types.CallToolRequestParams(
-                name="query_run", arguments={"sql": "SELECT count(*) FROM atoms"},
-            ))
+            response = await gateway.call(
+                None,
+                types.CallToolRequestParams(
+                    name="query_run",
+                    arguments={"sql": "SELECT count(*) FROM atoms"},
+                ),
+            )
             self.assertTrue(response.is_error)
             self.assertIn("restart required", str(response.structured_content))
         with store._lock:
-            self.assertGreater(store._connection.execute("SELECT count(*) FROM atoms").fetchone()[0], 0)
+            self.assertGreater(
+                store._connection.execute(
+                    "SELECT count(*) FROM atoms"
+                ).fetchone()[0],
+                0,
+            )
 

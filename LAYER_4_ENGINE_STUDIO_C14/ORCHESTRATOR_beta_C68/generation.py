@@ -42,22 +42,37 @@ def worker_failure(stdout, detail, *, run_id=None):
     try:
         payload = json.loads(stdout)
         diagnostic = payload["ingestion_failure"]
-        if (diagnostic["source"] in ("atom", "build") and isinstance(diagnostic["issues"], list)
-                and diagnostic["issues"]):
+        if (
+            diagnostic["source"] in ("atom", "build")
+            and isinstance(diagnostic["issues"], list)
+            and diagnostic["issues"]
+        ):
             first_issue = diagnostic["issues"][0]
-            if (diagnostic["source"] == "build" and isinstance(first_issue, dict)
-                    and first_issue.get("code") == "realization_scan_failed"):
-                report_graph_consistency(payload.get("graph_consistency"), run_id)
+            if (
+                diagnostic["source"] == "build"
+                and isinstance(first_issue, dict)
+                and first_issue.get("code") == "realization_scan_failed"
+            ):
+                report_graph_consistency(
+                    payload.get("graph_consistency"), run_id
+                )
             model_diagnostics = payload.get("model_diagnostics")
-            if model_diagnostics is not None and (diagnostic["source"] != "build" or not isinstance(model_diagnostics, list)):
+            if model_diagnostics is not None and (
+                diagnostic["source"] != "build"
+                or not isinstance(model_diagnostics, list)
+            ):
                 raise ValueError("Invalid Model diagnostics")
-            return WorkerIngestionFailure("Worker failed: " + detail, diagnostic, model_diagnostics)
-    except (TypeError, ValueError, KeyError):
+            return WorkerIngestionFailure(
+                "Worker failed: " + detail, diagnostic, model_diagnostics
+            )
+    except TypeError, ValueError, KeyError:
         pass
     return RuntimeError("Worker failed: " + detail)
 
 
-def replace_ingestion_issues(socket_path, instance_id, source, issues, *, model_diagnostics=None):
+def replace_ingestion_issues(
+    socket_path, instance_id, source, issues, *, model_diagnostics=None
+):
     data = {"instance_id": instance_id, "source": source, "issues": issues}
     if model_diagnostics is not None:
         data["model_diagnostics"] = model_diagnostics
@@ -158,7 +173,7 @@ def read_reuse(socket_path, instance_id, scope=None):
                 or any(key in result and not isinstance(result[key], dict) for key in ("carrier_hashes", "folder_hashes"))):
             return None
         return ReuseRecord.model_validate(result)
-    except (OSError, ValueError, TypeError, KeyError, http.client.HTTPException):
+    except OSError, ValueError, TypeError, KeyError, http.client.HTTPException:
         return None
     finally:
         if connection is not None:
@@ -204,13 +219,19 @@ def read_structure(socket_path, instance_id, reuse):
     connection = None
     try:
         connection = UnixConnection(socket_path)
-        connection.request("GET", "/structure?" + urlencode({"instance_id": instance_id}))
+        connection.request(
+            "GET", "/structure?" + urlencode({"instance_id": instance_id})
+        )
         response = connection.getresponse()
-        if response.status != 200 or response.getheader("x-anechoic-generation") != reuse["base_generation"]:
+        if (
+            response.status != 200
+            or response.getheader("x-anechoic-generation")
+            != reuse["base_generation"]
+        ):
             return None
         structure = json.loads(response.read())
         return structure if isinstance(structure, dict) else None
-    except (OSError, ValueError, TypeError, KeyError, http.client.HTTPException):
+    except OSError, ValueError, TypeError, KeyError, http.client.HTTPException:
         return None
     finally:
         if connection is not None:
@@ -222,22 +243,29 @@ def confirm_reuse(socket_path, instance_id, result):
         return admit_generation(socket_path, instance_id, None, result, None)
     current = read_reuse(socket_path, instance_id)
     if current is None or current.base_generation != result["base_generation"]:
-        raise GenerationBaseChanged("Kernel generation changed during revalidation")
+        raise GenerationBaseChanged(
+            "Kernel generation changed during revalidation"
+        )
     return {"generation": result["base_generation"], "kind": "reused"}
 
 
 def _admission_error(status, body, kind):
-    message = "Kernel rejected generation: " + body.decode("utf-8", "replace")[:2048]
+    message = (
+        "Kernel rejected generation: " + body.decode("utf-8", "replace")[:2048]
+    )
     if kind != "full" and status == 409:
         try:
             code = json.loads(body)["error"]["code"]
-        except (ValueError, TypeError, KeyError):
+        except ValueError, TypeError, KeyError:
             code = None
         if kind == "compiler_refresh" and code == "model_columns_changed":
             return CompilerColumnsChanged(message)
         if kind != "compiler_refresh" and code == "generation_base_changed":
             return GenerationBaseChanged(message)
-        if kind in ("native_delta", "archive") and code == "delta_full_reconciliation":
+        if (
+            kind in ("native_delta", "archive")
+            and code == "delta_full_reconciliation"
+        ):
             return DeltaRequiresReconciliation(message)
     return RuntimeError(message)
 
@@ -270,7 +298,9 @@ def admit_generation(socket_path, instance_id, directory, result, target, *, arc
             payload[field] = (Path(directory) / f"{field}.json").read_bytes().decode("utf-8")
     if kind in ("full", "archive") and "batch_artifact" in payload:
         artifact = Path(directory) / "generation-batches.jsonl"
-        payload["batch_artifact"] = payload["batch_artifact"] | {"path": str(artifact)}
+        payload["batch_artifact"] = payload["batch_artifact"] | {
+            "path": str(artifact)
+        }
     if target is not None:
         payload["refresh_target"] = target
     connection = UnixConnection(socket_path)
@@ -281,17 +311,21 @@ def admit_generation(socket_path, instance_id, directory, result, target, *, arc
         body = response.read()
         if response.status != 200:
             raise _admission_error(response.status, body, kind)
-        result = json.loads(body)["result"]
-        if not isinstance(result["generation"], str) or not result["generation"]:
-            raise ValueError("Kernel returned invalid generation result")
-        admitted = {"generation": result["generation"], "kind": kind}
-        if target is not None:
-            if not isinstance(result["result_ids"], dict):
-                raise ValueError("Kernel returned invalid generation result")
-            admitted["result_ids"] = result["result_ids"]
-        return admitted
+        return _admitted_result(body, kind, target)
     finally:
         connection.close()
+
+
+def _admitted_result(body, kind, target):
+    result = json.loads(body)["result"]
+    if not isinstance(result["generation"], str) or not result["generation"]:
+        raise ValueError("Kernel returned invalid generation result")
+    admitted = {"generation": result["generation"], "kind": kind}
+    if target is not None:
+        if not isinstance(result["result_ids"], dict):
+            raise ValueError("Kernel returned invalid generation result")
+        admitted["result_ids"] = result["result_ids"]
+    return admitted
 
 
 def wait_build(job, timeout):

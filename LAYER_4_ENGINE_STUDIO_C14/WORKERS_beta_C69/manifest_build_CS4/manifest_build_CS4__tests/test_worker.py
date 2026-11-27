@@ -1,133 +1,20 @@
-import json
-import os
-import signal
-import subprocess
-import sys
 import tempfile
-import time
 import unittest
 from hashlib import sha256
-from pathlib import Path
 from unittest.mock import patch
 
 from ..manifest_build_CS4__shared import (
-    _COMPILER_SOURCE_DIRECTORIES, _REVIEWED_CLAIMS,
+    _COMPILER_SOURCE_DIRECTORIES,
+    _REVIEWED_CLAIMS,
     _compiler_sha256,
-    compile_generation,
     manifest_input_signature,
 )
-from .manifest_build_CS4__tests__shared import fixture, run_worker
+from ._manifest_build_cases import ManifestBuildCases
+from .manifest_build_CS4__tests__shared import WORKER_MODULE, fixture
 
-ENGINE = Path(__file__).resolve().parents[3]
 
-
-class BuildTests(unittest.TestCase):
-    def test_ingested_model_diagnostics_use_final_stderr_record(self):
-        diagnostics = [{"code": "invalid_model_source"}]
-        stderr = ("ANECHOIC_STARTUP_TIMING phase=load\n"
-                  + json.dumps({"model_diagnostics": diagnostics}) + "\n")
-        failure = subprocess.CompletedProcess([], 1, b"", stderr.encode())
-        binding = {"root": "/project", "control_root": "control",
-                   "manifest_sha256": "a" * 64, "project_prefix": "AN"}
-        with patch.object(subprocess, "run", return_value=failure):
-            with self.assertRaises(ValueError) as context:
-                compile_generation(binding, Path("generation"), model_inputs={})
-        self.assertEqual(diagnostics, context.exception.model_diagnostics)
-        self.assertEqual(
-            "Manifest compiler failed: " + stderr, str(context.exception)
-        )
-
-    def test_cli_build_and_verify_generation(self):
-        with tempfile.TemporaryDirectory() as directory:
-            binding, output, _ = fixture(directory)
-            env = os.environ.copy()
-            env['PYTHONPATH'] = str(ENGINE)
-            result = subprocess.run([sys.executable, "-B", '-m', 'WORKERS_beta_C69.manifest_build_CS4.manifest_build_CS4__shared',
-                                     '--output-dir', str(output)], input=json.dumps(binding),
-                                    text=True, capture_output=True, env=env, check=False)
-            self.assertEqual(0, result.returncode, result.stderr)
-            receipt = json.loads(result.stdout)
-            self.assertEqual(binding['manifest_sha256'], receipt['manifest_sha256'])
-            self.assertEqual(receipt['structure_sha256'], sha256((output / 'structure.json').read_bytes()).hexdigest())
-            self.assertEqual(binding['manifest_sha256'], json.loads((output / 'structure.json').read_bytes())['project']['sha256'])
-            descriptor = (output / 'model.json').read_bytes()
-            self.assertEqual(receipt['model_descriptor_sha256'], sha256(descriptor).hexdigest())
-            model = json.loads(descriptor)
-            self.assertEqual(receipt['model_sha256'], model['model_sha256'])
-            for module, digest in model['modules'].items():
-                self.assertEqual(digest, sha256((output / 'anechoic_runtime_model' / module).read_bytes()).hexdigest())
-
-    def test_project_root_manifest_uses_project_relative_binding(self):
-        with tempfile.TemporaryDirectory() as directory:
-            binding, output, manifest = fixture(directory)
-            root_manifest = Path(binding['root']) / manifest.name
-            manifest.rename(root_manifest)
-            binding['manifest_path'] = root_manifest.name
-            result = run_worker(binding, output)
-            self.assertEqual(0, result.returncode, result.stderr)
-            receipt = json.loads(result.stdout)
-            self.assertEqual(binding['manifest_sha256'], receipt['manifest_sha256'])
-            self.assertEqual(binding['manifest_sha256'], json.loads((output / 'structure.json').read_bytes())['project']['sha256'])
-
-    def test_changed_pin_leaves_output_empty(self):
-        with tempfile.TemporaryDirectory() as directory:
-            binding, output, manifest = fixture(directory)
-            env = os.environ.copy()
-            env['PYTHONPATH'] = str(ENGINE)
-            process = subprocess.Popen([sys.executable, "-B", '-m', 'WORKERS_beta_C69.manifest_build_CS4.manifest_build_CS4__shared',
-                                        '--output-dir', str(output)], stdin=subprocess.PIPE,
-                                       stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=env)
-            process.stdin.write(json.dumps(binding))
-            process.stdin.close()
-            process.stdin = None
-            stopped = None
-            deadline = time.monotonic() + 10
-            try:
-                while time.monotonic() < deadline and process.poll() is None:
-                    if list(output.parent.glob('.manifest-build-*')):
-                        try:
-                            os.kill(process.pid, signal.SIGSTOP)
-                            stopped = process.pid
-                        except ProcessLookupError:
-                            pass
-                        break
-                    time.sleep(0.001)
-                self.assertIsNotNone(stopped, 'Compiler process was not observed')
-                manifest.write_bytes(manifest.read_bytes() + b'\n')
-                os.kill(stopped, signal.SIGCONT)
-                stopped = None
-                stdout, stderr = process.communicate(timeout=30)
-                self.assertNotEqual(0, process.returncode, stdout + stderr)
-            finally:
-                if stopped:
-                    os.kill(stopped, signal.SIGCONT)
-                if process.poll() is None:
-                    process.kill()
-                    process.communicate()
-            self.assertEqual([], list(output.iterdir()))
-
-    def test_rejects_symlinked_manifest_and_control(self):
-        with tempfile.TemporaryDirectory() as directory:
-            binding, output, manifest = fixture(directory)
-            target = manifest.with_suffix('.target')
-            manifest.rename(target)
-            manifest.symlink_to(target)
-            self.assertNotEqual(0, run_worker(binding, output).returncode)
-            manifest.unlink()
-            target.rename(manifest)
-            control = manifest.parent
-            moved = control.with_name('moved-control')
-            control.rename(moved)
-            control.symlink_to(moved, target_is_directory=True)
-            self.assertNotEqual(0, run_worker(binding, output).returncode)
-            self.assertEqual([], list(output.iterdir()))
-
-    def test_rejects_nonempty_output(self):
-        with tempfile.TemporaryDirectory() as directory:
-            binding, output, _ = fixture(directory)
-            (output / 'keep').write_text('keep')
-            self.assertNotEqual(0, run_worker(binding, output).returncode)
-            self.assertEqual('keep', (output / 'keep').read_text())
+class BuildTests(ManifestBuildCases, unittest.TestCase):
+    pass
 
 
 class InputSignatureTests(unittest.TestCase):
@@ -143,27 +30,32 @@ class InputSignatureTests(unittest.TestCase):
     def test_ticket_tree_changes_preserve_the_signature(self):
         before = self.signature()
         self.assertIsNotNone(before)
-        ticket = self.control / '__TICKETS/TASKS/EPIC_C123/AN-T-1-TASK--change.md'
+        ticket = (
+            self.control / "__TICKETS/TASKS/EPIC_C123/AN-T-1-TASK--change.md"
+        )
         ticket.parent.mkdir(parents=True)
-        ticket.write_text('Created')
+        ticket.write_text("Created")
         self.assertEqual(before, self.signature())
-        ticket.write_text('Edited')
+        ticket.write_text("Edited")
         self.assertEqual(before, self.signature())
-        ticket = ticket.rename(ticket.with_name('AN-T-1-TASK--renamed.md'))
+        ticket = ticket.rename(ticket.with_name("AN-T-1-TASK--renamed.md"))
         self.assertEqual(before, self.signature())
         ticket.unlink()
         self.assertEqual(before, self.signature())
 
-    def test_candidate_content_and_component_topology_affect_the_signature(self):
+    def test_candidate_content_and_component_topology_affect_the_signature(
+        self,
+    ):
         sources = (
-            'LAYER_1_META_ONTOLOGY_C9/_SPEC/model.md',
-            'ONTOLOGY_SCORE_C91/CONTINUANT_PITCHFORK_C9/_DES/model.md',
-            'ONTOLOGY_SCORE_C91/CONTINUANT_PITCHFORK_C9/_DOM/CONT/model.md',
-            '__PROJECT_CONFIG/CUSTOM_MODEL/config.md',
-            '002_PROJECT_CONFIG/CUSTOM_MODEL/compatibility.md',
-            'LAYER_C3/CHILD_C4/_SPEC/AN-S-1-canonical-component.md',
-            'LAYER_C3/CHILD_C4/AN-S-2-SPEC-COMPONENT_SEED_MANIFEST--seed.md',
-            'LAYER_C3/01_OTHER_ARCHITECTURE/AN-S-3-SPEC-COMPONENT_MANIFEST--component.md',
+            "LAYER_1_META_ONTOLOGY_C9/_SPEC/model.md",
+            "ONTOLOGY_SCORE_C91/CONTINUANT_PITCHFORK_C9/_DES/model.md",
+            "ONTOLOGY_SCORE_C91/CONTINUANT_PITCHFORK_C9/_DOM/CONT/model.md",
+            "__PROJECT_CONFIG/CUSTOM_MODEL/config.md",
+            "002_PROJECT_CONFIG/CUSTOM_MODEL/compatibility.md",
+            "LAYER_C3/CHILD_C4/_SPEC/AN-S-1-canonical-component.md",
+            "LAYER_C3/CHILD_C4/AN-S-2-SPEC-COMPONENT_SEED_MANIFEST--seed.md",
+            "LAYER_C3/01_OTHER_ARCHITECTURE/"
+            "AN-S-3-SPEC-COMPONENT_MANIFEST--component.md",
         )
         for source in sources:
             with self.subTest(source=source):
@@ -171,127 +63,166 @@ class InputSignatureTests(unittest.TestCase):
                 candidate.parent.mkdir(parents=True, exist_ok=True)
                 before = self.signature()
                 self.assertIsNotNone(before)
-                candidate.write_text('First')
+                candidate.write_text("First")
                 added = self.signature()
                 self.assertNotEqual(before, added)
-                candidate.write_text('Other')
+                candidate.write_text("Other")
                 edited = self.signature()
                 self.assertNotEqual(added, edited)
-                moved = candidate.rename(candidate.with_name(candidate.stem + '-renamed.md'))
+                moved = candidate.rename(
+                    candidate.with_name(candidate.stem + "-renamed.md")
+                )
                 self.assertNotEqual(edited, self.signature())
                 moved.unlink()
                 self.assertEqual(before, self.signature())
         before = self.signature()
-        empty = self.control / 'LAYER_C3/EMPTY_C5'
+        empty = self.control / "LAYER_C3/EMPTY_C5"
         empty.mkdir()
         self.assertNotEqual(before, self.signature())
         empty.rmdir()
         self.assertEqual(before, self.signature())
 
     def test_tier_one_changes_affect_signature_with_configured_layout(self):
-        for folder in ('01_TIER_1_ARCHITECTURE', '01_CUSTOM_ARCHITECTURE'):
+        for folder in ("01_TIER_1_ARCHITECTURE", "01_CUSTOM_ARCHITECTURE"):
             with self.subTest(folder=folder):
-                if folder != '01_TIER_1_ARCHITECTURE':
+                if folder != "01_TIER_1_ARCHITECTURE":
                     text = self.manifest.read_text().replace(
-                        "lens_whitelist=['SPEC']", "lens_whitelist=['SPEC'], parameters={'project': {'folder_layout': "
-                        "{'active_spec_by_tier': {'0': '.', '1': '01_CUSTOM_ARCHITECTURE', '2+': '_{lens}/{sublenses}'}}}}")
+                        "lens_whitelist=['SPEC']",
+                        "lens_whitelist=['SPEC'], "
+                        "parameters={'project': {'folder_layout': "
+                        "{'active_spec_by_tier': {'0': '.', "
+                        "'1': '01_CUSTOM_ARCHITECTURE', "
+                        "'2+': '_{lens}/{sublenses}'}}}}",
+                    )
                     self.manifest.write_text(text)
-                    self.binding['manifest_sha256'] = sha256(self.manifest.read_bytes()).hexdigest()
-                for owner in (self.control, self.control / 'LAYER_C3'):
+                    self.binding["manifest_sha256"] = sha256(
+                        self.manifest.read_bytes()
+                    ).hexdigest()
+                for owner in (self.control, self.control / "LAYER_C3"):
                     directory = owner / folder
                     directory.mkdir(parents=True, exist_ok=True)
-                    candidate = directory / 'AN-S-2-SPEC-COMPONENT_MANIFEST--component.md'
+                    candidate = (
+                        directory
+                        / "AN-S-2-SPEC-COMPONENT_MANIFEST--component.md"
+                    )
                     before = self.signature()
                     self.assertIsNotNone(before)
-                    candidate.write_text('Before edit')
+                    candidate.write_text("Before edit")
                     added = self.signature()
                     self.assertNotEqual(before, added)
-                    candidate.write_text('After edit')
+                    candidate.write_text("After edit")
                     self.assertNotEqual(added, self.signature())
                     candidate.unlink()
                     self.assertEqual(before, self.signature())
 
     def test_project_selection_precedence_and_pin(self):
-        shadow = self.control / 'alternate.md'
+        shadow = self.control / "alternate.md"
         before = self.signature()
-        shadow.write_text('A native Project Manifest could use this compatibility path')
+        shadow.write_text(
+            "A native Project Manifest could use this compatibility path"
+        )
         self.assertNotEqual(before, self.signature())
         root_manifest = self.root / self.manifest.name
         self.manifest.rename(root_manifest)
         before = self.signature()
         self.assertIsNotNone(before)
-        shadow.write_text('A root Manifest takes precedence over this file')
+        shadow.write_text("A root Manifest takes precedence over this file")
         self.assertEqual(before, self.signature())
-        another_root = self.root / 'AN-S-2-PROJECT_MANIFEST--alternate.md'
-        another_root.write_text('Alternate root candidate')
+        another_root = self.root / "AN-S-2-PROJECT_MANIFEST--alternate.md"
+        another_root.write_text("Alternate root candidate")
         self.assertNotEqual(before, self.signature())
-        root_manifest.write_text('Changed binding')
+        root_manifest.write_text("Changed binding")
         self.assertIsNone(self.signature())
 
-    def test_replacing_a_candidate_with_identical_bytes_preserves_the_signature(self):
-        candidate = self.control / 'AN-S-1-canonical-component.md'
-        candidate.write_text('Component')
+    def _identical_candidate_retains_signature(
+        self,
+    ):
+        candidate = self.control / "AN-S-1-canonical-component.md"
+        candidate.write_text("Component")
         before = self.signature()
         self.assertIsNotNone(before)
-        replacement = candidate.with_suffix('.tmp')
+        replacement = candidate.with_suffix(".tmp")
         replacement.write_bytes(candidate.read_bytes())
         replacement.replace(candidate)
         self.assertEqual(before, self.signature())
 
     def compiler_sources(self):
-        engine = self.root / 'engine'
-        generator = engine / 'FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/LAYER_2_FORMAL_MODEL_C51/FEATURE_FORMAL_MODEL_GENERATOR'
-        compiler = generator / 'manifest_compiler_CS1/compiler.py'
+        engine = self.root / "engine"
+        generator = (
+            engine
+            / "FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75"
+            / "LAYER_2_FORMAL_MODEL_C51"
+            / "FEATURE_FORMAL_MODEL_GENERATOR"
+        )
+        compiler = generator / "manifest_compiler_CS1/compiler.py"
         compiler.parent.mkdir(parents=True)
-        compiler.write_text('IMPLEMENTATION = 1')
-        coordinator = engine / 'FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/compile_project__pub.py'
-        coordinator.write_text('COORDINATOR = 1')
-        structure = engine / 'FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/LAYER_2_PROJECT_STRUCTURE_C93/LAYER_2_PROJECT_STRUCTURE_C93__shared.py'
+        compiler.write_text("IMPLEMENTATION = 1")
+        coordinator = (
+            engine
+            / "FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/compile_project__pub.py"
+        )
+        coordinator.write_text("COORDINATOR = 1")
+        structure = (
+            engine
+            / "FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75"
+            / "LAYER_2_PROJECT_STRUCTURE_C93"
+            / "LAYER_2_PROJECT_STRUCTURE_C93__shared.py"
+        )
         structure.parent.mkdir(parents=True)
-        structure.write_text('STRUCTURE = 1')
+        structure.write_text("STRUCTURE = 1")
         for relative in _COMPILER_SOURCE_DIRECTORIES:
             (engine / relative).mkdir(parents=True, exist_ok=True)
-        reviewed = engine / 'reviewed'
+        reviewed = engine / "reviewed"
         reviewed.mkdir()
         for name in _REVIEWED_CLAIMS:
-            (reviewed / name).write_text('{}')
+            (reviewed / name).write_text("{}")
         return engine, generator, compiler, coordinator, structure, reviewed
 
     def test_compiler_sources_affect_the_signature_and_tests_do_not(self):
-        engine, generator, compiler, coordinator, structure, reviewed = self.compiler_sources()
-        with patch('WORKERS_beta_C69.manifest_build_CS4.manifest_build_CS4__shared.ENGINE', engine), \
-                patch('WORKERS_beta_C69.manifest_build_CS4.manifest_build_CS4__shared._REVIEWED_MODEL', reviewed):
+        engine, generator, compiler, coordinator, structure, reviewed = (
+            self.compiler_sources()
+        )
+        with (
+            patch(
+                f"{WORKER_MODULE}.ENGINE",
+                engine,
+            ),
+            patch(
+                f"{WORKER_MODULE}._REVIEWED_MODEL",
+                reviewed,
+            ),
+        ):
             before = self.signature()
             self.assertIsNotNone(before)
             compiler_digest = _compiler_sha256()
-            structure.write_text('STRUCTURE = 2')
+            structure.write_text("STRUCTURE = 2")
             self.assertNotEqual(before, self.signature())
             self.assertNotEqual(compiler_digest, _compiler_sha256())
             compiler_digest = _compiler_sha256()
-            coordinator.write_text('COORDINATOR = 2')
+            coordinator.write_text("COORDINATOR = 2")
             self.assertNotEqual(compiler_digest, _compiler_sha256())
             before = self.signature()
-            compiler.write_text('IMPLEMENTATION = 2')
+            compiler.write_text("IMPLEMENTATION = 2")
             changed = self.signature()
             self.assertIsNotNone(changed)
             self.assertNotEqual(before, changed)
-            helper = generator / 'manifest_property_fields.py'
-            helper.write_text('FIELDS = ()')
+            helper = generator / "manifest_property_fields.py"
+            helper.write_text("FIELDS = ()")
             added = self.signature()
             self.assertIsNotNone(added)
             self.assertNotEqual(changed, added)
-            suite = compiler.parent / 'manifest_compiler_CS1__tests'
+            suite = compiler.parent / "manifest_compiler_CS1__tests"
             suite.mkdir()
-            (suite / 'test_compiler.py').write_text('assert False')
+            (suite / "test_compiler.py").write_text("assert False")
             self.assertEqual(added, self.signature())
             compiler.unlink()
             self.assertIsNone(self.signature())
-            compiler.write_text('IMPLEMENTATION = 2')
+            compiler.write_text("IMPLEMENTATION = 2")
             coordinator.unlink()
             self.assertIsNone(self.signature())
 
     def test_uncertain_candidates_do_not_admit_reuse(self):
-        manifest = self.control / 'AN-S-1-canonical-component.md'
+        manifest = self.control / "AN-S-1-canonical-component.md"
         manifest.symlink_to(self.manifest)
         self.assertIsNone(self.signature())
         manifest.unlink()
@@ -301,10 +232,13 @@ class InputSignatureTests(unittest.TestCase):
 
         def change_after_read(path, _limit):
             data = path.read_bytes()
-            (self.control / 'NEW_C5').mkdir(exist_ok=True)
+            (self.control / "NEW_C5").mkdir(exist_ok=True)
             return sha256(data).hexdigest(), len(data), ()
 
-        with patch('WORKERS_beta_C69.manifest_build_CS4.manifest_build_CS4__shared._read_digest', side_effect=change_after_read):
+        with patch(
+            f"{WORKER_MODULE}._read_digest",
+            side_effect=change_after_read,
+        ):
             self.assertIsNone(self.signature())
 
     def test_watcher_guarded_signature_samples_once(self):
@@ -318,10 +252,23 @@ class InputSignatureTests(unittest.TestCase):
             data = path.read_bytes()
             return sha256(data).hexdigest(), len(data), ()
 
-        with patch('WORKERS_beta_C69.manifest_build_CS4.manifest_build_CS4__shared._read_digest', side_effect=read_once):
-            self.assertEqual(expected, manifest_input_signature(self.binding, watcher_guarded=True))
+        with patch(
+            f"{WORKER_MODULE}._read_digest",
+            side_effect=read_once,
+        ):
+            self.assertEqual(
+                expected,
+                manifest_input_signature(self.binding, watcher_guarded=True),
+            )
         self.assertIn(self.manifest, paths)
 
 
-if __name__ == '__main__':
+setattr(
+    InputSignatureTests,
+    "test_replacing_a_candidate_with_identical_bytes_preserves_the_signature",
+    InputSignatureTests._identical_candidate_retains_signature,
+)
+
+
+if __name__ == "__main__":
     unittest.main()

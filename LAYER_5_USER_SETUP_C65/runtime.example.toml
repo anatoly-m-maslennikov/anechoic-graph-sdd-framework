@@ -1,13 +1,16 @@
 schema_version = 1
 
-[shared_mcp]
-projects_root = "/absolute/path/to/repositories"
-http_port = 8092
+[container]
+mode = "projects"
+http_port = 7777
+# image = "sha256:<64 lowercase hex digits>"
+# docker_context = "orbstack"
+# control_root = "_anechoic_anechoic"
+build_if_missing = true
+build_timeout_seconds = 600
+startup_timeout_seconds = 420
+readiness_timeout_seconds = 420
 max_loaded_projects = 2
-
-[project_defaults]
 workbench_storage = "disk"
-journal_storage = "files"
-
-[logging]
-level = "INFO"
+journal_storage = "duckdb"
+log_level = "INFO"

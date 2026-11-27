@@ -21,9 +21,17 @@ from .warm_worker import WarmLifecycleUnavailable, run_lifecycle
 
 LIFECYCLE_DEADLINE_SECONDS = 300
 LIFECYCLE_WAIT_SECONDS = 610
-LIFECYCLE_TOOLS = frozenset({"atom_lifecycle_create_draft", "atom_lifecycle_update",
-                             "atom_lifecycle_promote_draft", "atom_lifecycle_change_status", "atom_lifecycle_archive",
-                             "atom_lifecycle_direct_update", "atom_lifecycle_create_asset"})
+LIFECYCLE_TOOLS = frozenset(
+    {
+        "atom_lifecycle_create_draft",
+        "atom_lifecycle_update",
+        "atom_lifecycle_promote_draft",
+        "atom_lifecycle_change_status",
+        "atom_lifecycle_archive",
+        "atom_lifecycle_direct_update",
+        "atom_lifecycle_create_asset",
+    }
+)
 
 
 class ArchiveHistoryPending(ValueError):
@@ -31,7 +39,9 @@ class ArchiveHistoryPending(ValueError):
 
 
 class _NativeLifecycle(BaseModel):
-    model_config = ConfigDict(strict=True, extra="allow", hide_input_in_errors=True)
+    model_config = ConfigDict(
+        strict=True, extra="allow", hide_input_in_errors=True
+    )
     outcome: str
     effects: list[Any] = Field(default_factory=list)
     warnings: list[Any] = Field(default_factory=list)
@@ -40,7 +50,9 @@ class _NativeLifecycle(BaseModel):
 
 
 class _LifecycleReply(BaseModel):
-    model_config = ConfigDict(strict=True, extra="forbid", hide_input_in_errors=True)
+    model_config = ConfigDict(
+        strict=True, extra="forbid", hide_input_in_errors=True
+    )
     lifecycle: _NativeLifecycle
     delta: dict[str, Any] | None
     projection_error: str | None
@@ -112,13 +124,23 @@ class LifecycleJobs:
         return status, {"error": {"code": code, "message": message + "; no lifecycle write was attempted"}}
 
     def _run_lifecycle(self, job, base_generation, structure_sha256, facts):
-        request = {"binding": self.binding, "name": job.name, "base_generation": base_generation,
-                   "structure_sha256": structure_sha256, "arguments": job.arguments, **facts}
+        request = {
+            "binding": self.binding,
+            "name": job.name,
+            "base_generation": base_generation,
+            "structure_sha256": structure_sha256,
+            "arguments": job.arguments,
+            **facts,
+        }
         if facts and self.worker_socket is not None:
             try:
-                outcome = run_lifecycle(self.worker_socket, self.worker_load_seconds, request,
-                                        self._register_warm_capture,
-                                        operation_timeout(LIFECYCLE_DEADLINE_SECONDS))
+                outcome = run_lifecycle(
+                    self.worker_socket,
+                    self.worker_load_seconds,
+                    request,
+                    self._register_warm_capture,
+                    operation_timeout(LIFECYCLE_DEADLINE_SECONDS),
+                )
             finally:
                 with self.lock:
                     self.warm_capture = None
@@ -128,12 +150,16 @@ class LifecycleJobs:
             if not isinstance(outcome, dict):
                 raise ValueError
             return _LifecycleReply.model_validate(outcome)
-        except (ValueError, ValidationError):
-            raise ValueError("Lifecycle worker returned an invalid outcome") from None
+        except ValueError, ValidationError:
+            raise ValueError(
+                "Lifecycle worker returned an invalid outcome"
+            ) from None
 
     def _run_cold_lifecycle(self, request):
         if self.skip_archives:
-            raise RuntimeError("archive_disabled: Lifecycle requires archived Atom history")
+            raise RuntimeError(
+                "archive_disabled: Lifecycle requires archived Atom history"
+            )
         env = {key: value for key, value in os.environ.items() if key != "PYTHONHOME"}
         env["PYTHONPATH"] = str(ENGINE)
         env["ANECHOIC_BETA_WORKER_PARENT_PID"] = str(os.getpid())
@@ -172,7 +198,9 @@ class LifecycleJobs:
             raise ArchiveHistoryPending("Archived Atom history is incomplete")
         reuse = self.generation_reuse
         if reuse is None:
-            raise ValueError("An admitted generation is required for lifecycle writes")
+            raise ValueError(
+                "An admitted generation is required for lifecycle writes"
+            )
         self._require_lifecycle_coverage()
         reuse = reuse.model_dump(exclude_unset=True)
         base = reuse["base_generation"]
@@ -195,7 +223,9 @@ class LifecycleJobs:
         structure = context["structure"]
         full_capture = (requires_project_capture(job, context, self.binding["control_root"])
                         or context.get("model") is None and not isinstance(reuse.get("status_domains"), dict))
-        if archive_pending and (full_capture or needs_exact_archive(job, context)):
+        if archive_pending and (
+            full_capture or needs_exact_archive(job, context)
+        ):
             raise ArchiveHistoryPending("Archived Atom history is incomplete")
         if full_capture:
             return base, structure, {}

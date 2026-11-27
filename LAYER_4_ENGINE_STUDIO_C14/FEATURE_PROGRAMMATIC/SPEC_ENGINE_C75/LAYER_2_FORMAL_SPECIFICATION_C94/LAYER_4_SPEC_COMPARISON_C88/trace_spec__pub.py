@@ -118,8 +118,14 @@ def _solution_binding(workflow, binding):
 
 
 def _binding_directions(sources, claims, contract, workflow, lean):
-    binding = _IN_PROCESS_TRACE_BINDING if contract['transport'] == 'in_process' else _HTTP_TRACE_BINDING
-    public_in_process = contract['transport'] == 'in_process' and 'entry' not in contract
+    binding = (
+        _IN_PROCESS_TRACE_BINDING
+        if contract["transport"] == "in_process"
+        else _HTTP_TRACE_BINDING
+    )
+    public_in_process = (
+        contract["transport"] == "in_process" and "entry" not in contract
+    )
     public_binding = binding[:2] if public_in_process else binding
     obligations = {'manifest': _manifest_binding(claims.get('manifest', {}), contract),
                    'contract': {key: contract[key] for key in public_binding},

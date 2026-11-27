@@ -14,9 +14,18 @@ from .launcher_images_test_support import ImageFixture
 APP = Path(__file__).resolve().parents[1]
 DOCKER = APP / "docker"
 
-from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import DOCKERIGNORE, RETIRED_ASSETS  # noqa: E402
-from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import ImageError, ImageManager, TOOL_REGISTRY  # noqa: E402
-from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import ProjectMcpBackend  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import (  # noqa: E402
+    DOCKERIGNORE,
+    RETIRED_ASSETS,
+)
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import (  # noqa: E402
+    ImageError,
+    ImageManager,
+    TOOL_REGISTRY,
+)
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import (  # noqa: E402
+    ProjectMcpBackend,
+)
 
 
 IMAGE_ID = "sha256:" + "a" * 64
@@ -34,21 +43,40 @@ class ImageGoldenTests(ImageFixture, unittest.TestCase):
 
         project_state = self.fixture_root / "project" / ".anechoic_demo"
         project_state.mkdir(parents=True)
-        (project_state / "anechoic_project_settings.toml").write_text("changed", encoding="utf-8")
-        (project_state / "generated-output.json").write_text("changed", encoding="utf-8")
+        (project_state / "anechoic_project_settings.toml").write_text(
+            "changed", encoding="utf-8"
+        )
+        (project_state / "generated-output.json").write_text(
+            "changed", encoding="utf-8"
+        )
         other_project = project_state.parent
-        after = ImageManager(source, executor=no_docker, timeout=7, uid=1000, gid=1000,
-                             platform="linux/amd64", project_root=other_project).identity()
+        after = ImageManager(
+            source,
+            executor=no_docker,
+            timeout=7,
+            uid=1000,
+            gid=1000,
+            platform="linux/amd64",
+            project_root=other_project,
+        ).identity()
 
         self.assertEqual(before.fingerprint, after.fingerprint)
         self.assertEqual("linux/amd64", before.platform)
         self.assertTrue(before.manifest)
         paths = {row.path for row in before.manifest}
-        self.assertIn("LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/server.py", paths)
-        docker = "LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/"
+        self.assertIn(
+            "LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/server.py",
+            paths,
+        )
+        docker = (
+            "LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/"
+        )
         self.assertIn(docker + "docker__shared.py", paths)
         self.assertNotIn(docker + "runtime_images.py", paths)
-        self.assertIn("LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_FRONTEND/package.json", paths)
+        self.assertIn(
+            "LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_FRONTEND/package.json",
+            paths,
+        )
         context = self.fixture_root / "real-context"
         context.mkdir()
         self.manager(source, no_docker)._assemble(context, before)
@@ -57,7 +85,9 @@ class ImageGoldenTests(ImageFixture, unittest.TestCase):
 
     def test_retired_assets_stay_out_of_context_and_fingerprint(self) -> None:
         source = self.source_fixture()
-        manager = self.manager(source, lambda *_a, **_k: self.fail("Docker is not needed"))
+        manager = self.manager(
+            source, lambda *_a, **_k: self.fail("Docker is not needed")
+        )
         before = manager.identity()
         for relative in RETIRED_ASSETS:
             path = source / relative
@@ -67,17 +97,29 @@ class ImageGoldenTests(ImageFixture, unittest.TestCase):
         context = self.fixture_root / "context"
         context.mkdir()
         manager._assemble(context, before)
-        self.assertEqual(before.tool_registry, (context / TOOL_REGISTRY).read_bytes())
-        self.assertTrue(all(not (context / path).exists() for path in RETIRED_ASSETS))
-        with patch.object(ImageManager, "_refresh_model", return_value="b" * 64):
-            self.assertEqual(before.fingerprint, manager.identity().fingerprint)
+        self.assertEqual(
+            before.tool_registry, (context / TOOL_REGISTRY).read_bytes()
+        )
+        self.assertTrue(
+            all(not (context / path).exists() for path in RETIRED_ASSETS)
+        )
+        with patch.object(
+            ImageManager, "_refresh_model", return_value="b" * 64
+        ):
+            self.assertEqual(
+                before.fingerprint, manager.identity().fingerprint
+            )
             with self.assertRaises(ImageError):
                 manager._current(before)
 
-    def test_context_removes_empty_directories_and_regular_finder_metadata(self) -> None:
+    def test_context_removes_empty_directories_and_regular_finder_metadata(
+        self,
+    ) -> None:
         source = self.source_fixture()
         (source / DOCKERIGNORE).write_text(".git\n")
-        manager = self.manager(source, lambda *_a, **_k: self.fail("Docker is not needed"))
+        manager = self.manager(
+            source, lambda *_a, **_k: self.fail("Docker is not needed")
+        )
         identity = manager.identity()
         context = self.fixture_root / "context"
         context.mkdir()
@@ -97,27 +139,37 @@ class ImageGoldenTests(ImageFixture, unittest.TestCase):
 
     def test_visible_control_root_is_excluded_from_image_context(self) -> None:
         source = self.source_fixture()
-        manager = self.manager(source, lambda *_a, **_k: self.fail("Docker is not needed"))
+        manager = self.manager(
+            source, lambda *_a, **_k: self.fail("Docker is not needed")
+        )
         before = manager.identity()
         control = source / "_anechoic_other"
         control.mkdir()
         (control / "private.py").write_text("secret")
         self.assertEqual(before.fingerprint, manager.identity().fingerprint)
-        self.assertNotIn("_anechoic_other/private.py", [item.path for item in manager.identity().manifest])
+        self.assertNotIn(
+            "_anechoic_other/private.py",
+            [item.path for item in manager.identity().manifest],
+        )
 
     def test_admitted_source_change_changes_fingerprint(self) -> None:
         source = self.source_fixture()
         def no_docker(*_args, **_kwargs):
             return self.fail("identity must not invoke Docker")
         before = self.manager(source, no_docker).identity()
-        server = source / "LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/server.py"
+        server = (
+            source
+            / "LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/server.py"
+        )
         server.write_text("SERVER = 'two'\n", encoding="utf-8")
         after = self.manager(source, no_docker).identity()
         self.assertNotEqual(before.fingerprint, after.fingerprint)
 
     def test_test_package_stays_outside_image_identity(self) -> None:
         source = self.source_fixture()
-        manager = self.manager(source, lambda *_a, **_k: self.fail("Docker is not needed"))
+        manager = self.manager(
+            source, lambda *_a, **_k: self.fail("Docker is not needed")
+        )
         before = manager.identity(use_packaged_assets=True)
         suite = source / APP.relative_to(APP.parents[2]) / "FEATURE_MCP__tests"
         assets = suite / "assets"
@@ -126,13 +178,19 @@ class ImageGoldenTests(ImageFixture, unittest.TestCase):
         (assets / "input.json").write_text("{}", encoding="utf-8")
         self.assertEqual(before, manager.identity(use_packaged_assets=True))
 
-    def test_backend_refuses_checkout_changed_after_image_resolution(self) -> None:
+    def test_backend_refuses_checkout_changed_after_image_resolution(
+        self,
+    ) -> None:
         source = self.source_fixture()
-        identity = self.manager(source, lambda *_a, **_k: None).identity(use_packaged_assets=True)
+        identity = self.manager(source, lambda *_a, **_k: None).identity(
+            use_packaged_assets=True
+        )
 
         def executor(argv, **_kwargs):
             if "ls" in argv:
-                return subprocess.CompletedProcess(argv, 0, IMAGE_ID + "\n", "")
+                return subprocess.CompletedProcess(
+                    argv, 0, IMAGE_ID + "\n", ""
+                )
             return subprocess.CompletedProcess(argv, 0, json.dumps([{
                 "Id": IMAGE_ID, "Created": "2026-10-21T14:15:16Z", "Os": "linux",
                 "Architecture": "amd64", "Config": {"Labels": {
@@ -146,17 +204,31 @@ class ImageGoldenTests(ImageFixture, unittest.TestCase):
         resolve = manager.resolve
         def resolve_then_change(**kwargs):
             image = resolve(**kwargs)
-            (source / "LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/server.py").write_text("changed")
+            (
+                source
+                / "LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/server.py"
+            ).write_text("changed")
             return image
 
-        with patch("MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared.ImageManager", return_value=manager), \
-             patch.object(ProjectMcpBackend, "_native_package", return_value=object()), \
-             patch.object(manager, "resolve", side_effect=resolve_then_change):
+        with (
+            patch(
+                "MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared.ImageManager",
+                return_value=manager,
+            ),
+            patch.object(
+                ProjectMcpBackend, "_native_package", return_value=object()
+            ),
+            patch.object(manager, "resolve", side_effect=resolve_then_change),
+        ):
             with self.assertRaises(ImageError) as refused:
-                ProjectMcpBackend(build_if_missing=False).resolve_image(source, None, project_root=APP.parents[2])
+                ProjectMcpBackend(build_if_missing=False).resolve_image(
+                    source, None, project_root=APP.parents[2]
+                )
         self.assertEqual("IMAGE_REFUSED", refused.exception.code)
 
-    def test_missing_or_changed_required_source_input_is_attributable(self) -> None:
+    def test_missing_or_changed_required_source_input_is_attributable(
+        self,
+    ) -> None:
         missing_source = self.fixture_root / "missing-source"
         missing_source.mkdir()
         with self.assertRaises(ImageError) as raised:

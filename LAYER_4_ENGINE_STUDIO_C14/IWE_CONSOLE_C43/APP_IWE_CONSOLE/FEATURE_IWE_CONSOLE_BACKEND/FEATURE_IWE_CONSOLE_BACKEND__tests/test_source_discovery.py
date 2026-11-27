@@ -33,8 +33,12 @@ class SourceDiscoveryTests(unittest.TestCase):
         return path
 
     def test_root_discovery_includes_loose_and_unregistered_sources_only_inside_boundary(self):
-        current = self.source("retired-owner/04_requirement/current.md", "CA-R-780")
-        draft = self.source("loose/draft/proposal.md", "CA-R-781", status="Draft")
+        current = self.source(
+            "retired-owner/04_requirement/current.md", "CA-R-780"
+        )
+        draft = self.source(
+            "loose/draft/proposal.md", "CA-R-781", status="Draft"
+        )
         copied = self.source("installed-copy/custom/record.md", "CA-R-782")
         additional = [
             self.source("retired-owner/archive/old.md", "CA-R-783"),
@@ -46,7 +50,9 @@ class SourceDiscoveryTests(unittest.TestCase):
             self.source("000_ANECHOIC_framework/applicable_methodology/copy.md", "CA-R-788"),
         ]
         outside = self.root / "CA-R-786-outside.md"
-        outside.write_bytes(current.read_bytes().replace(b"CA-R-780", b"CA-R-786"))
+        outside.write_bytes(
+            current.read_bytes().replace(b"CA-R-780", b"CA-R-786")
+        )
         atoms, scopes, diagnostics = self.fixture._capture()
         self.assertEqual("", diagnostics)
         paths = {row["source_path"] for row in atoms}
@@ -55,7 +61,9 @@ class SourceDiscoveryTests(unittest.TestCase):
         for path in generated:
             self.assertNotIn(path.relative_to(self.root).as_posix(), paths)
         self.assertNotIn(outside.relative_to(self.root).as_posix(), paths)
-        self.assertEqual({"fixture", "MAIN", "CHILD"}, {row["name"] for row in scopes})
+        self.assertEqual(
+            {"fixture", "MAIN", "CHILD"}, {row["name"] for row in scopes}
+        )
         self.assertEqual("Draft", next(row for row in atoms if row["id"] == "CA-R-781")["status_group"])
 
     def test_generated_copies_stay_excluded_during_incremental_changes(self):
@@ -126,7 +134,9 @@ class SourceDiscoveryTests(unittest.TestCase):
             "operation": "move", "old_path": original.relative_to(self.root).as_posix(),
             "new_path": archive.relative_to(self.root).as_posix(),
         }])
-        selected = {row["source_path"]: row for row in rows if row["id"] == "CA-R-790"}
+        selected = {
+            row["source_path"]: row for row in rows if row["id"] == "CA-R-790"
+        }
         self.assertEqual({duplicate.relative_to(self.root).as_posix(), archive.relative_to(self.root).as_posix()},
                          set(selected))
         self.assertEqual("CA-R-790@1", selected[archive.relative_to(self.root).as_posix()]["ref"])
@@ -156,7 +166,9 @@ class SourceDiscoveryTests(unittest.TestCase):
             "MAIN", "05_method", "CA-M-803-delegation.md", atom_id="CA-M-803", form="Scope Delegation",
             body="## Claim\n\n### Prose Claim\n\nDeliver the child capability.\n",
         )
-        raw = source.read_text().replace('role: "Requirement"', 'role: "Method"')
+        raw = source.read_text().replace(
+            'role: "Requirement"', 'role: "Method"'
+        )
         raw = raw.replace("subjects: {}", f"container:\n  scope_unit: {parent.scope_unit_id}\n"
                           "topics:\n  main_subject: Scope Unit//CHILD")
         source.write_text(raw)
@@ -164,7 +176,9 @@ class SourceDiscoveryTests(unittest.TestCase):
             "operation": "create", "old_path": None, "new_path": source.relative_to(self.root).as_posix(),
         }])
         self.assertIn("CA-M-803", {row["id"] for row in atoms})
-        self.assertEqual({"fixture", "MAIN", "CHILD"}, {row["name"] for row in scopes})
+        self.assertEqual(
+            {"fixture", "MAIN", "CHILD"}, {row["name"] for row in scopes}
+        )
         self.assertEqual(
             [source.resolve()],
             [item.source for item in self.reader._declarations.by_name["CHILD"].delegations],
@@ -212,9 +226,13 @@ relation(source="Relation//INVERSE", name="HAS_INVERSE", target="Relation//DIREC
         self.assertEqual(schema_data, generate_asset(self.root, "generate_workbench_schema.py"))
         schema = json.loads(schema_data)
         columns = schema["modes"]["2"]["content"]["content_columns"]
-        self.assertEqual(["content.summary"], [column["name"] for column in columns])
+        self.assertEqual(
+            ["content.summary"], [column["name"] for column in columns]
+        )
         self.assertIn(declaration.relative_to(self.root).as_posix(), {item["path"] for item in schema["sources"]})
-        registry_data = generate_asset(self.root, "generate_relation_registry.py")
+        registry_data = generate_asset(
+            self.root, "generate_relation_registry.py"
+        )
         self.assertEqual(registry_data, generate_asset(self.root, "generate_relation_registry.py"))
         registry = json.loads(registry_data)
         self.assertEqual(["DIRECT", "INVERSE"], registry["registered_names"])

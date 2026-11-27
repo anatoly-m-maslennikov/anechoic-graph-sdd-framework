@@ -19,7 +19,10 @@ from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.FEATURE_IWE_CON
 class SourceReaderTests(SourceReaderFixture, unittest.TestCase):
     def test_duplicate_declared_content_property_is_excluded(self) -> None:
         self._write_atom(
-            "MAIN", "04_requirement", "CA-R-490-content-model.md", atom_id="CA-R-490",
+            "MAIN",
+            "04_requirement",
+            "CA-R-490-content-model.md",
+            atom_id="CA-R-490",
             form="Declaration",
             body="""## Claim
 
@@ -42,11 +45,17 @@ declare_entity(entity_name="Summary", relation_name="IS_PROPERTY_OF", base_path=
 
         atoms, _scopes, stderr = self._capture()
 
-        self.assertNotIn(path.relative_to(self.root).as_posix(), {row["source_path"] for row in atoms})
+        self.assertNotIn(
+            path.relative_to(self.root).as_posix(),
+            {row["source_path"] for row in atoms},
+        )
         self.assertIn("duplicate declared content property: summary", stderr)
 
         atoms_again, _scopes_again, second_stderr = self._capture()
-        self.assertEqual({row["source_path"] for row in atoms_again}, {row["source_path"] for row in atoms})
+        self.assertEqual(
+            {row["source_path"] for row in atoms_again},
+            {row["source_path"] for row in atoms},
+        )
         self.assertEqual(second_stderr, "")
         self.assertEqual(self.reader.excluded_count, 1)
 
@@ -64,19 +73,23 @@ declare_entity(entity_name="Summary", relation_name="IS_PROPERTY_OF", base_path=
 
         path.write_text(
             "---\natom_id: CA-R-410\nrole: Requirement\nform: Definition\n"
-            "status: Active\nversion: 2\nupdated_at: \"2026-11-04 00:00:00 +0000\"\n"
+            'status: Active\nversion: 2\nupdated_at: "2026-11-04 00:00:00 +0000"\n'
             "subjects: {}\nrelations: {}\n---\n# Summary\nRepaired.\n",
             encoding="utf-8",
         )
         atoms, _scopes, stderr = self._capture()
 
         self.assertEqual(stderr, "")
-        self.assertEqual(next(row["version"] for row in atoms if row["id"] == "CA-R-410"), 2)
+        self.assertEqual(
+            next(row["version"] for row in atoms if row["id"] == "CA-R-410"), 2
+        )
         self.assertEqual(self.reader.excluded_count, 0)
 
 
     def test_unchanged_success_reuses_row_but_changed_invalid_source_drops_it(self) -> None:
-        path = self._write_atom("MAIN", "02_analysis", "cached.md", atom_id="CA-R-411")
+        path = self._write_atom(
+            "MAIN", "02_analysis", "cached.md", atom_id="CA-R-411"
+        )
         with self.source_reads() as reads:
             atoms, _scopes, stderr = self._capture()
             first_calls = reads.count(path.resolve())
@@ -86,7 +99,10 @@ declare_entity(entity_name="Summary", relation_name="IS_PROPERTY_OF", base_path=
             atoms_again, _scopes_again, stderr_again = self._capture()
             self.assertEqual(stderr_again, "")
             self.assertEqual(first_calls, reads.count(path.resolve()))
-            self.assertIn(path.relative_to(self.root).as_posix(), {row["source_path"] for row in atoms_again})
+            self.assertIn(
+                path.relative_to(self.root).as_posix(),
+                {row["source_path"] for row in atoms_again},
+            )
 
             path.write_text(
                 "---\natom_id: CA-R-411\natom_id: CA-R-412\nrole: Requirement\n"
@@ -94,8 +110,13 @@ declare_entity(entity_name="Summary", relation_name="IS_PROPERTY_OF", base_path=
                 encoding="utf-8",
             )
             changed_atoms, _scopes_changed, changed_stderr = self._capture()
-            self.assertNotIn(path.relative_to(self.root).as_posix(), {row["source_path"] for row in changed_atoms})
-            self.assertIn(path.relative_to(self.root).as_posix(), changed_stderr)
+            self.assertNotIn(
+                path.relative_to(self.root).as_posix(),
+                {row["source_path"] for row in changed_atoms},
+            )
+            self.assertIn(
+                path.relative_to(self.root).as_posix(), changed_stderr
+            )
             self.assertEqual(first_calls + 1, reads.count(path.resolve()))
             self.assertEqual(self.reader.excluded_count, 1)
 
@@ -112,8 +133,12 @@ declare_entity(entity_name="Summary", relation_name="IS_PROPERTY_OF", base_path=
         self.assertEqual(self.reader.excluded_count, 0)
 
 
-    def test_release_cache_reparses_successes_but_keeps_failed_signatures(self) -> None:
-        valid = self._write_atom("MAIN", "01_concern", "valid.md", atom_id="CA-R-415")
+    def test_release_cache_reparses_successes_but_keeps_failed_signatures(
+        self,
+    ) -> None:
+        valid = self._write_atom(
+            "MAIN", "01_concern", "valid.md", atom_id="CA-R-415"
+        )
         invalid = self._path("MAIN", "02_analysis", "CA-R-416-bad.md")
         invalid.write_text(
             "---\natom_id: CA-R-416\natom_id: CA-R-417\nrole: Requirement\n"
@@ -124,8 +149,13 @@ declare_entity(entity_name="Summary", relation_name="IS_PROPERTY_OF", base_path=
         with self.source_reads() as reads:
             atoms, _scopes, first_stderr = self._capture()
             first_call_count = len(reads)
-            self.assertIn(valid.relative_to(self.root).as_posix(), {row["source_path"] for row in atoms})
-            self.assertIn(invalid.relative_to(self.root).as_posix(), first_stderr)
+            self.assertIn(
+                valid.relative_to(self.root).as_posix(),
+                {row["source_path"] for row in atoms},
+            )
+            self.assertIn(
+                invalid.relative_to(self.root).as_posix(), first_stderr
+            )
 
             self.reader.release_cache()
             atoms_again, _scopes_again, second_stderr = self._capture()
@@ -133,14 +163,24 @@ declare_entity(entity_name="Summary", relation_name="IS_PROPERTY_OF", base_path=
             second_reads = reads[first_call_count:]
             self.assertIn(valid.resolve(), second_reads)
             self.assertNotIn(invalid.resolve(), second_reads)
-            self.assertIn(valid.relative_to(self.root).as_posix(), {row["source_path"] for row in atoms_again})
-            self.assertNotIn(invalid.relative_to(self.root).as_posix(), {row["source_path"] for row in atoms_again})
+            self.assertIn(
+                valid.relative_to(self.root).as_posix(),
+                {row["source_path"] for row in atoms_again},
+            )
+            self.assertNotIn(
+                invalid.relative_to(self.root).as_posix(),
+                {row["source_path"] for row in atoms_again},
+            )
             self.assertEqual(second_stderr, "")
             self.assertEqual(self.reader.excluded_count, 1)
 
 
-    def test_unrepresentable_source_and_nonregular_source_only_exclude_themselves(self) -> None:
-        valid = self._write_atom("CHILD", "06_evaluation", "valid.md", atom_id="CA-R-420")
+    def test_unrepresentable_source_and_nonregular_source_only_exclude_themselves(
+        self,
+    ) -> None:
+        valid = self._write_atom(
+            "CHILD", "06_evaluation", "valid.md", atom_id="CA-R-420"
+        )
         unsupported = self._path("CHILD", "06_evaluation", "unsupported.md")
         unsupported.write_text(
             "---\natom_id: CA-R-421\nrole: Requirement\nform: Definition\n"
@@ -148,22 +188,38 @@ declare_entity(entity_name="Summary", relation_name="IS_PROPERTY_OF", base_path=
             "# Summary\nUnsupported JSON value.\n",
             encoding="utf-8",
         )
-        nonregular = self._path("CHILD", "06_evaluation", "CA-E-422-directory.md")
+        nonregular = self._path(
+            "CHILD", "06_evaluation", "CA-E-422-directory.md"
+        )
         nonregular.mkdir()
 
         atoms, _scopes, stderr = self._capture()
 
-        self.assertIn(valid.relative_to(self.root).as_posix(), {row["source_path"] for row in atoms})
-        self.assertNotIn(unsupported.relative_to(self.root).as_posix(), {row["source_path"] for row in atoms})
-        self.assertNotIn(nonregular.relative_to(self.root).as_posix(), {row["source_path"] for row in atoms})
+        self.assertIn(
+            valid.relative_to(self.root).as_posix(),
+            {row["source_path"] for row in atoms},
+        )
+        self.assertNotIn(
+            unsupported.relative_to(self.root).as_posix(),
+            {row["source_path"] for row in atoms},
+        )
+        self.assertNotIn(
+            nonregular.relative_to(self.root).as_posix(),
+            {row["source_path"] for row in atoms},
+        )
         self.assertIn(unsupported.relative_to(self.root).as_posix(), stderr)
         self.assertIn(nonregular.relative_to(self.root).as_posix(), stderr)
 
 
-    def test_plain_review_markdown_is_ignored_without_a_diagnostic(self) -> None:
+    def test_plain_review_markdown_is_ignored_without_a_diagnostic(
+        self,
+    ) -> None:
         for name in ("README.md", "REPORT.md"):
             path = self._path("MAIN", "02_analysis", name, "draft")
-            path.write_text("This is review prose, not an Atom carrier.\n", encoding="utf-8")
+            path.write_text(
+                "This is review prose, not an Atom carrier.\n",
+                encoding="utf-8",
+            )
         copied_atom = self._write_atom(
             "MAIN",
             "02_analysis",
@@ -177,22 +233,32 @@ declare_entity(entity_name="Summary", relation_name="IS_PROPERTY_OF", base_path=
         self.assertEqual(stderr, "")
         self.assertNotIn("README.md", {row["source_path"] for row in atoms})
         self.assertNotIn("REPORT.md", {row["source_path"] for row in atoms})
-        self.assertIn(copied_atom.relative_to(self.root).as_posix(), {row["source_path"] for row in atoms})
+        self.assertIn(
+            copied_atom.relative_to(self.root).as_posix(),
+            {row["source_path"] for row in atoms},
+        )
         self.assertEqual(self.reader.excluded_count, 0)
 
 
-    def test_unterminated_plain_review_markdown_is_ignored_without_a_diagnostic(self) -> None:
+    def test_unterminated_plain_review_markdown_is_ignored_without_a_diagnostic(
+        self,
+    ) -> None:
         path = self._path("MAIN", "02_analysis", "README.md", "draft")
         path.write_text("---\nReview prose.\nrole: prose\n", encoding="utf-8")
 
         atoms, _scopes, stderr = self._capture()
 
         self.assertEqual(stderr, "")
-        self.assertNotIn(path.relative_to(self.root).as_posix(), {row["source_path"] for row in atoms})
+        self.assertNotIn(
+            path.relative_to(self.root).as_posix(),
+            {row["source_path"] for row in atoms},
+        )
         self.assertEqual(self.reader.excluded_count, 0)
 
 
-    def test_lifecycle_group_uses_paths_relative_to_the_selected_project(self) -> None:
+    def test_lifecycle_group_uses_paths_relative_to_the_selected_project(
+        self,
+    ) -> None:
         for parent_name in ("archive", "archived", "draft", "drafts"):
             root = self.root.parent / parent_name / "project"
             root.mkdir(parents=True)
@@ -205,15 +271,21 @@ declare_entity(entity_name="Summary", relation_name="IS_PROPERTY_OF", base_path=
             )
             declarations = write_scope_unit_declarations(
                 root,
-                ({
-                    "scope_unit_name": "MAIN",
-                    "scope_unit_type": "Ordered",
-                    "scope_unit_label": "LAYER",
-                    "local_order": 1,
-                },),
+                (
+                    {
+                        "scope_unit_name": "MAIN",
+                        "scope_unit_type": "Ordered",
+                        "scope_unit_label": "LAYER",
+                        "local_order": 1,
+                    },
+                ),
                 control_root=control,
             )
-            source = Path(declarations["MAIN"]["authority_path"]) / "04_requirement" / "CA-R-701-current.md"
+            source = (
+                Path(declarations["MAIN"]["authority_path"])
+                / "04_requirement"
+                / "CA-R-701-current.md"
+            )
             source.parent.mkdir(parents=True, exist_ok=True)
             source.write_text(
                 "---\natom_id: CA-R-701\nrole: Requirement\nform: Definition\n"

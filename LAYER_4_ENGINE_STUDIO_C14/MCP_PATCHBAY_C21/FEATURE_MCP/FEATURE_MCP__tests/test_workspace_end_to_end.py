@@ -16,12 +16,19 @@ from watchdog.observers.polling import PollingObserver
 
 
 REPOSITORY = Path(__file__).resolve().parents[4]
-PROGRAMMATIC = REPOSITORY / "LAYER_4_ENGINE_STUDIO_C14" / "FEATURE_PROGRAMMATIC"
+PROGRAMMATIC = (
+    REPOSITORY / "LAYER_4_ENGINE_STUDIO_C14" / "FEATURE_PROGRAMMATIC"
+)
 MCP = REPOSITORY / "LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP"
 APP = REPOSITORY / "LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE"
 
-from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import MCP_PATH, WORKBENCH_PATH  # noqa: E402
-from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import create_http_app as create_app  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import (  # noqa: E402
+    MCP_PATH,
+    WORKBENCH_PATH,
+)
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import (  # noqa: E402
+    create_http_app as create_app,
+)
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import extension_directory  # noqa: E402
 
 
@@ -50,12 +57,16 @@ class WorkspaceEndToEndTests(unittest.IsolatedAsyncioTestCase):
 
     @asynccontextmanager
     async def session(self):
-        async with self.app.starlette_app.router.lifespan_context(self.app.starlette_app):
+        async with self.app.starlette_app.router.lifespan_context(
+            self.app.starlette_app
+        ):
             async with httpx2.AsyncClient(
-                transport=httpx2.ASGITransport(app=self.app), base_url="http://127.0.0.1:18093",
+                transport=httpx2.ASGITransport(app=self.app),
+                base_url="http://127.0.0.1:18093",
             ) as client:
                 transport = streamable_http_client(
-                    "http://127.0.0.1:18093" + MCP_PATH, http_client=client,
+                    "http://127.0.0.1:18093" + MCP_PATH,
+                    http_client=client,
                 )
                 streams = await transport.__aenter__()
                 session = ClientSession(*streams)
@@ -67,7 +78,9 @@ class WorkspaceEndToEndTests(unittest.IsolatedAsyncioTestCase):
                     await session.__aexit__(None, None, None)
                     await transport.__aexit__(None, None, None)
 
-    async def tool(self, session: ClientSession, name: str, arguments: dict) -> dict:
+    async def tool(
+        self, session: ClientSession, name: str, arguments: dict
+    ) -> dict:
         response = await session.call_tool(name, arguments)
         self.assertFalse(response.is_error, response.structured_content)
         return response.structured_content
@@ -173,12 +186,18 @@ class WorkspaceEndToEndTests(unittest.IsolatedAsyncioTestCase):
         http_state_response = await self.interface_call(client, "workspace_get", {
             "workspace_id": workspace_id,
         })
-        self.assertEqual(200, http_state_response.status_code, http_state_response.text)
+        self.assertEqual(
+            200, http_state_response.status_code, http_state_response.text
+        )
         http_state = http_state_response.json()
-        self.assertEqual(http_duplicate.json()["view_id"], http_state["active_view_id"])
+        self.assertEqual(
+            http_duplicate.json()["view_id"], http_state["active_view_id"]
+        )
         self.assertEqual(
             http_state,
-            await self.tool(session, "workspace_get", {"workspace_id": workspace_id}),
+            await self.tool(
+                session, "workspace_get", {"workspace_id": workspace_id}
+            ),
         )
 
         invalid_mcp = await session.call_tool("view_duplicate", {
@@ -191,7 +210,9 @@ class WorkspaceEndToEndTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(400, invalid_http.status_code)
         self.assertEqual(
             http_state,
-            await self.tool(session, "workspace_get", {"workspace_id": workspace_id}),
+            await self.tool(
+                session, "workspace_get", {"workspace_id": workspace_id}
+            ),
         )
 
     async def test_workspaces_are_isolated_and_guarded_by_ids_and_revisions(self) -> None:

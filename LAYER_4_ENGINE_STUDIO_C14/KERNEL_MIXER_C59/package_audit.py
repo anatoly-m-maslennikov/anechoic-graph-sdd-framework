@@ -5,14 +5,28 @@ from pathlib import Path, PurePosixPath
 import sys
 from types import SimpleNamespace
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import component_contract_fences
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_component_manifest
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import native_header_view
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import read_component_contract
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    component_contract_fences,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    parse_component_manifest,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    native_header_view,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    read_component_contract,
+)
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import module_visibility
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import read_structure
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import read_component_seed_manifest
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    module_visibility,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    read_structure,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    read_component_seed_manifest,
+)
 from .component_metrics import realization_component_paths
 
 
@@ -22,18 +36,30 @@ def _embedded_contract(row, path, carrier, embedded_contracts):
     try:
         fields, _ = parse_component_manifest(carrier.body, tier=1)
         if component_contract_fences(carrier.body) is not None:
-            embedded_contracts[fields['component_id']].append(row['_exact_ref'])
+            embedded_contracts[fields["component_id"]].append(
+                row["_exact_ref"]
+            )
     except ValueError as error:
         print(f'Invalid Component Manifest {path}: {error}', file=sys.stderr)
 
 
 def _contract_context(row, edge):
-    if row["status_group"] != "Current" or edge.get("target_kind") != "Component":
+    if (
+        row["status_group"] != "Current"
+        or edge.get("target_kind") != "Component"
+    ):
         return None
     context = native_header_view(row["header_json"]).get("context", {})
-    if context.get("template") not in ("component_contract", "component_seed_manifest", "component_manifest"):
+    if context.get("template") not in (
+        "component_contract",
+        "component_seed_manifest",
+        "component_manifest",
+    ):
         return None
-    if context.get("template") != "component_contract" and context.get("lens") != "SPEC":
+    if (
+        context.get("template") != "component_contract"
+        and context.get("lens") != "SPEC"
+    ):
         return None
     return context
 
@@ -58,7 +84,9 @@ def _contract_candidates(selection, capture):
             continue
         if context.get('template') == 'component_contract':
             try:
-                fields = read_component_contract(path, carrier, edge['target_ref'], selection.project_prefix)
+                fields = read_component_contract(
+                    path, carrier, edge["target_ref"], selection.project_prefix
+                )
             except ValueError as error:
                 print(f'Invalid Component Contract {path}: {error}', file=sys.stderr)
                 continue
@@ -66,12 +94,19 @@ def _contract_candidates(selection, capture):
                 component_contracts[edge['target_ref']].append(fields['ref_id'])
             continue
         try:
-            fields = read_component_seed_manifest(path, carrier, edge['target_ref'], selection.project_prefix)
+            fields = read_component_seed_manifest(
+                path, carrier, edge["target_ref"], selection.project_prefix
+            )
         except ValueError as error:
-            print(f'Invalid Component Seed Manifest {path}: {error}', file=sys.stderr)
+            print(
+                f"Invalid Component Seed Manifest {path}: {error}",
+                file=sys.stderr,
+            )
             continue
         if fields:
-            specs[(edge['target_ref'], fields['component_seed_id'])].append(fields['ref_id'])
+            specs[(edge["target_ref"], fields["component_seed_id"])].append(
+                fields["ref_id"]
+            )
 
     component_contracts.update(embedded_contracts)
     return specs, component_contracts
@@ -83,9 +118,13 @@ def _contract_refs(selection, capture, package_paths):
         return {}, {}
     try:
         snapshot = read_structure(snapshot_path)
-        components = realization_component_paths(selection, snapshot, package_paths)
+        components = realization_component_paths(
+            selection, snapshot, package_paths
+        )
     except (OSError, ValueError) as error:
-        print(f'Package Contract ownership unavailable: {error}', file=sys.stderr)
+        print(
+            f"Package Contract ownership unavailable: {error}", file=sys.stderr
+        )
         return {}, {}
 
     specs, component_contracts = _contract_candidates(selection, capture)
@@ -94,9 +133,13 @@ def _contract_refs(selection, capture, package_paths):
     for path in package_paths:
         directory = PurePosixPath(path)
         parent = components.get(directory.parent.as_posix())
-        matches = [ref for (component, package_id), refs in specs.items()
-                   if component == parent and directory.name.endswith('_' + package_id)
-                   for ref in refs]
+        matches = [
+            ref
+            for (component, package_id), refs in specs.items()
+            if component == parent
+            and directory.name.endswith("_" + package_id)
+            for ref in refs
+        ]
         if len(matches) == 1:
             contracts[path] = matches[0]
     component_refs = {}
@@ -107,12 +150,26 @@ def _contract_refs(selection, capture, package_paths):
                 break
             component = components.get(ancestor.as_posix())
             if component is not None:
-                component_refs[path] = sorted(component_contracts.get(component, []))
+                component_refs[path] = sorted(
+                    component_contracts.get(component, [])
+                )
                 break
     return contracts, component_refs
 
 
-def _audit_rows(packages, binding_states, pins, exact, selection, contracts, component_contracts, test_packages, test_sources, test_targets, markers):
+def _audit_rows(
+    packages,
+    binding_states,
+    pins,
+    exact,
+    selection,
+    contracts,
+    component_contracts,
+    test_packages,
+    test_sources,
+    test_targets,
+    markers,
+):
     result = []
     for key, path in packages:
         state = binding_states.get(path, 'missing')
@@ -155,10 +212,21 @@ def replace_package_audit(connection, selection, capture, nodes, binding_states=
     connection.execute('ALTER TABLE main.package_audit ADD COLUMN IF NOT EXISTS test_issue VARCHAR')
     connection.execute('ALTER TABLE main.package_audit ADD COLUMN IF NOT EXISTS component_contracts JSON')
     if binding_states is None:
-        binding_states = dict(connection.execute('SELECT relative_path, binding_status FROM main.package_audit').fetchall())
-    packages = [(node[0], node[3]) for node in nodes if node[1] == 'package' and node[3]]
-    test_packages = {node[0] for node in nodes if node[6] == 'Test Package'}
-    test_sources, test_targets = {source for source, _ in tests}, {target for _, target in tests}
+        binding_states = dict(
+            connection.execute(
+                "SELECT relative_path, binding_status FROM main.package_audit"
+            ).fetchall()
+        )
+    packages = [
+        (node[0], node[3])
+        for node in nodes
+        if node[1] == "package" and node[3]
+    ]
+    test_packages = {node[0] for node in nodes if node[6] == "Test Package"}
+    test_sources, test_targets = (
+        {source for source, _ in tests},
+        {target for _, target in tests},
+    )
     markers = defaultdict(set)
     for node in nodes:
         if node[1] == 'module' and node[3]:
@@ -174,7 +242,9 @@ def replace_package_audit(connection, selection, capture, nodes, binding_states=
         if binding_states.get(owner) == 'valid':
             pins[owner].append((kind, f'{atom}@{version}'))
 
-    contracts, component_contracts = _contract_refs(selection, capture, {path for _, path in packages})
+    contracts, component_contracts = _contract_refs(
+        selection, capture, {path for _, path in packages}
+    )
 
     result = _audit_rows(packages, binding_states, pins, exact, selection, contracts, component_contracts,
                          test_packages, test_sources, test_targets, markers)

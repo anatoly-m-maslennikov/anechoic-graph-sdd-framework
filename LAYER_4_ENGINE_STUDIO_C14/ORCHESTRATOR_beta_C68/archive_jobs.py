@@ -81,9 +81,13 @@ class ArchiveJobs:
     def _needs_foreground(self, result):
         if "paths" not in result:
             return True
-        return (any(atom["status_group"] == "Archived" for atom in result["snapshot"]["atoms"])
-                or any(str(Path(parent) / name) in self.deferred_archive["carrier_hashes"]
-                       for parent, name in result["paths"]))
+        return any(
+            atom["status_group"] == "Archived"
+            for atom in result["snapshot"]["atoms"]
+        ) or any(
+            str(Path(parent) / name) in self.deferred_archive["carrier_hashes"]
+            for parent, name in result["paths"]
+        )
 
     @staticmethod
     def _include_archive_pending(result, deferred):
@@ -99,7 +103,10 @@ class ArchiveJobs:
             return False
         control = Path(self.binding["root"]) / self.binding["control_root"]
         location = Path(path)
-        return location.is_relative_to(control) and "09_archived" in location.relative_to(control).parts
+        return (
+            location.is_relative_to(control)
+            and "09_archived" in location.relative_to(control).parts
+        )
 
     def _partition_archive_changes(self, changes):
         if self.skip_archives:
@@ -130,9 +137,13 @@ class ArchiveJobs:
     def _accept_live_generation(self, generation, result, deferred):
         self.live_generation = generation
         self.startup_capture = False
-        full = "batch_artifact" in result or ("snapshot" in result and "paths" not in result)
+        full = "batch_artifact" in result or (
+            "snapshot" in result and "paths" not in result
+        )
         if deferred is not None or full:
-            self._accept_deferred_archive(deferred if "archive_pending" in result else None)
+            self._accept_deferred_archive(
+                deferred if "archive_pending" in result else None
+            )
             self.unconfirmed_lifecycle_write = False
 
     def _accept_deferred_archive(self, deferred):
@@ -159,7 +170,9 @@ class ArchiveJobs:
         with self.lock:
             self.archive_dirty = False
             if self.deferred_archive is not None:
-                self.archive_run = _Run(state="running", started_at=time.time(), run_id=uuid4().hex)
+                self.archive_run = _Run(
+                    state="running", started_at=time.time(), run_id=uuid4().hex
+                )
             self.archive_thread = threading.Thread(
                 target=self._capture_archive, args=(self.deferred_archive,), daemon=True)
             self.archive_thread.start()

@@ -10,40 +10,127 @@ import unittest
 
 ENGINE = Path(__file__).resolve().parents[5]
 ROOT = ENGINE.parent
-MODULE = "FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.FEATURE_MODEL_VALIDATION.project_admission__pub"
+MODULE = (
+    "FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51."
+    "FEATURE_MODEL_VALIDATION.project_admission__pub"
+)
+
+
+_MANIFEST = (
+    "---\n"
+    "atom_family: SPEC\n"
+    "atom_id: AN-S-001\n"
+    "container:\n"
+    "  component: C00\n"
+    "tier: -1\n"
+    "context:\n"
+    "  template: project_manifest\n"
+    "  lens: SPEC\n"
+    "state:\n"
+    "  status: active\n"
+    "  version: 3\n"
+    "  updated_at: '2026-11-19T00:00:00Z'\n"
+    "---\n"
+    "\n"
+    "## Summary\n"
+    "\n"
+    "Declare Anechoic\n"
+    "\n"
+    "## Claim\n"
+    "\n"
+    "### Formal Claim\n"
+    "\n"
+    "```python\n"
+    "from anechoic.formal_claims import declare_entity\n"
+    "from anechoic.model import ProjectManifest\n"
+    "declare_entity(entity_name='Project Manifest', "
+    "instance=ProjectManifest(name='Anechoic', prefix='AN'))\n"
+    "```\n"
+)
 
 
 class ProjectAdmissionTests(unittest.TestCase):
+    def test_direct_component_constructor_uses_project_validation(self):
+        declaration = (
+            "## Formal Manifest\n\n```python\n"
+            "from anechoic.model import ComponentManifest\n"
+            "ComponentManifest(name='Anechoic', prefix='AN')\n```\n"
+        )
+        manifest = _MANIFEST[:_MANIFEST.index("## Claim")] + declaration
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            control = root / "_anechoic_anechoic"
+            control.mkdir()
+            carrier = control / "AN-S-001-PROJECT_MANIFEST--declare-anechoic.md"
+            request = json.dumps({
+                "project_root": str(root),
+                "control_root": None,
+                "instance_id": None,
+                "host_root": None,
+            }) + "\n"
+            for content, valid in (
+                (manifest, True),
+                (manifest.replace("prefix='AN'", "prefix=' '"), False),
+            ):
+                carrier.write_text(content, encoding="utf-8")
+                result = subprocess.run(
+                    [sys.executable, "-B", "-P", "-m", MODULE],
+                    cwd=ROOT,
+                    env={**os.environ, "PYTHONPATH": str(ENGINE)},
+                    input=request,
+                    capture_output=True,
+                    text=True,
+                    timeout=30,
+                    check=True,
+                )
+                response = json.loads(result.stdout)
+                self.assertEqual(valid, "result" in response, response)
+                if valid:
+                    self.assertEqual("AN", response["result"]["project_prefix"])
+
     def test_native_manifest_and_binding_rejection(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory).resolve()
             control = root / "_anechoic_anechoic"
             control.mkdir()
-            (control / "AN-S-001-PROJECT_MANIFEST--declare-anechoic.md").write_text(
-                "---\natom_family: SPEC\natom_id: AN-S-001\ncontainer:\n  component: C00\ntier: -1\n"
-                "context:\n  template: project_manifest\n  lens: SPEC\nstate:\n  status: active\n  version: 3\n"
-                "  updated_at: '2026-11-19T00:00:00Z'\n---\n\n## Summary\n\nDeclare Anechoic\n\n"
-                "## Claim\n\n### Formal Claim\n\n```python\n"
-                "from anechoic.formal_claims import declare_entity\n"
-                "from anechoic.model import ProjectManifest\n"
-                "declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Anechoic', prefix='AN'))\n```\n",
+            (
+                control / "AN-S-001-PROJECT_MANIFEST--declare-anechoic.md"
+            ).write_text(
+                _MANIFEST,
                 encoding="utf-8",
             )
-            request = {"project_root": str(root), "control_root": None, "instance_id": None, "host_root": None}
+            request = {
+                "project_root": str(root),
+                "control_root": None,
+                "instance_id": None,
+                "host_root": None,
+            }
             bad = {**request, "host_root": str(root)}
             result = subprocess.run(
-                [sys.executable, "-B", "-P", "-m", MODULE], cwd=ROOT,
+                [sys.executable, "-B", "-P", "-m", MODULE],
+                cwd=ROOT,
                 env={**os.environ, "PYTHONPATH": str(ENGINE)},
                 input=json.dumps(request) + "\n" + json.dumps(bad) + "\n{}\n",
-                capture_output=True, text=True, timeout=30, check=True,
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=True,
             )
-            good, rejected, malformed = map(json.loads, result.stdout.splitlines())
+            good, rejected, malformed = map(
+                json.loads, result.stdout.splitlines()
+            )
             self.assertIn("result", good, good)
             self.assertEqual("AN", good["result"]["project_prefix"])
             self.assertEqual("AN-S-001@3", good["result"]["manifest_ref"])
-            self.assertEqual("_anechoic_anechoic", good["result"]["control_relative"])
-            self.assertEqual("project_selection_error", rejected["error"]["code"])
-            self.assertEqual("project_selection_error", malformed["error"]["code"])
+            self.assertEqual(
+                "_anechoic_anechoic", good["result"]["control_relative"]
+            )
+            self.assertEqual(
+                "project_selection_error", rejected["error"]["code"]
+            )
+            self.assertEqual(
+                "project_selection_error", malformed["error"]["code"]
+            )
 
 
 if __name__ == "__main__":

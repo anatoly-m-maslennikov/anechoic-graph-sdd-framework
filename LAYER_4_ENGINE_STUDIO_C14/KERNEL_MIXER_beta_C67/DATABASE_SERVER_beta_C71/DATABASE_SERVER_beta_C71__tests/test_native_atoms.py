@@ -13,24 +13,51 @@ from .DATABASE_SERVER_beta_C71__tests__shared import BINDING, PIN, _generation, 
 
 
 def _digest(value):
-    return sha256(json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+    return sha256(
+        json.dumps(
+            value, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+        ).encode()
+    ).hexdigest()
 
 
 def _native_generation():
     data = _generation()
     model = json.loads(data["model"])
-    model["bindings"]["endpoints"] = {"CONTAINED_BY": [{}, False], "CONTAINS": [{}, True]}
+    model["bindings"]["endpoints"] = {
+        "CONTAINED_BY": [{}, False],
+        "CONTAINS": [{}, True],
+    }
     data["model"] = json.dumps(model)
-    data["receipt"]["model_descriptor_sha256"] = sha256(data["model"].encode()).hexdigest()
-    atom = {"reference": "AN-T-1", "exact_ref": "AN-T-1@2", "summary": "second",
-            "filename": "AN-T-1-TASK.md", "relative_path": "_anechoic_anechoic", "status_group": "Current",
-            "status": "active", "version": 2}
+    data["receipt"]["model_descriptor_sha256"] = sha256(
+        data["model"].encode()
+    ).hexdigest()
+    atom = {
+        "reference": "AN-T-1",
+        "exact_ref": "AN-T-1@2",
+        "summary": "second",
+        "filename": "AN-T-1-TASK.md",
+        "relative_path": "_anechoic_anechoic",
+        "status_group": "Current",
+        "status": "active",
+        "version": 2,
+    }
     archived = atom | {"reference": "AN-T-1@1", "exact_ref": "AN-T-1@1", "status_group": "Archived",
                       "status": "archived", "version": 1, "filename": "AN-T-1@1-TASK.md", "summary": "first"}
-    relationship = {"source_kind": "Atom", "source_ref": "AN-T-1", "target_kind": "Component",
-                    "target_ref": "C00", "relation_type": "CONTAINED_BY", "derived": False}
-    data["snapshot"] = {"schema_version": 2, "manifest_sha256": PIN, "atoms": [atom, archived],
-                        "relations": [relationship], "relation_types": ["CONTAINED_BY", "CONTAINS"]}
+    relationship = {
+        "source_kind": "Atom",
+        "source_ref": "AN-T-1",
+        "target_kind": "Component",
+        "target_ref": "C00",
+        "relation_type": "CONTAINED_BY",
+        "derived": False,
+    }
+    data["snapshot"] = {
+        "schema_version": 2,
+        "manifest_sha256": PIN,
+        "atoms": [atom, archived],
+        "relations": [relationship],
+        "relation_types": ["CONTAINED_BY", "CONTAINS"],
+    }
     data["receipt"]["snapshot_sha256"] = _digest(data["snapshot"])
     return data
 
@@ -167,33 +194,66 @@ class NativeSchemaTest(unittest.TestCase):
         native["receipt"]["snapshot_sha256"] = _digest(native["snapshot"])
         expected = {
             "mrt_spec_atoms": ([["AN-S-2"]], ["active"]),
-            "mrt_ticket_atoms": ([["AN-T-1"], ["AN-T-1@1"]], ["active", "archived"]),
-            "mrt_project_config_atoms": ([["AN-C-4@1-draft"], ["AN-P-3"]], ["active", "draft"]),
+            "mrt_ticket_atoms": (
+                [["AN-T-1"], ["AN-T-1@1"]],
+                ["active", "archived"],
+            ),
+            "mrt_project_config_atoms": (
+                [["AN-C-4@1-draft"], ["AN-P-3"]],
+                ["active", "draft"],
+            ),
         }
         with _server() as client:
             response = client.put("/generation", json=native)
             self.assertEqual(200, response.status_code, response.text)
-            tables = client.get("/schema", params={"instance_id": "instance"}).json()["result"]["tables"]
+            tables = client.get(
+                "/schema", params={"instance_id": "instance"}
+            ).json()["result"]["tables"]
             for table, (rows, values) in expected.items():
                 with self.subTest(table=table):
                     self.assertEqual(rows, _query(client, f"SELECT reference FROM {table} ORDER BY 1").json()["result"]["rows"])
                     status = next(column for column in tables[table] if column["name"] == "header.state.status")
                     self.assertEqual(values, status["values"])
 
-    def test_schema_hints_follow_admitted_generation_without_query_history(self):
+    def test_schema_hints_follow_admitted_generation_without_query_history(
+        self,
+    ):
         with TemporaryDirectory(dir="/tmp") as directory:
             root = Path(directory).resolve()
             with _server(None, "--project-root", str(root)) as client:
-                self.assertEqual(409, client.get("/schema", params={"instance_id": "instance"}).status_code)
-                self.assertEqual(403, client.get("/schema", params={"instance_id": "other"}).status_code)
+                self.assertEqual(
+                    409,
+                    client.get(
+                        "/schema", params={"instance_id": "instance"}
+                    ).status_code,
+                )
+                self.assertEqual(
+                    403,
+                    client.get(
+                        "/schema", params={"instance_id": "other"}
+                    ).status_code,
+                )
                 native = _native_generation()
-                self.assertEqual(200, client.put("/generation", json=native).status_code)
+                self.assertEqual(
+                    200, client.put("/generation", json=native).status_code
+                )
                 self.assert_values(client, ["active", "archived"])
                 native["snapshot"]["atoms"][0]["status"] = "done"
-                native["receipt"]["snapshot_sha256"] = _digest(native["snapshot"])
-                self.assertEqual(200, client.put("/generation", json=native).status_code)
+                native["receipt"]["snapshot_sha256"] = _digest(
+                    native["snapshot"]
+                )
+                self.assertEqual(
+                    200, client.put("/generation", json=native).status_code
+                )
                 self.assert_values(client, ["archived", "done"])
-                history = client.post("/workspace", json={"instance_id": "instance", "operation": "query_log_list", "arguments": {}})
+                history = client.post(
+                    "/workspace",
+                    json={
+                        "instance_id": "instance",
+                        "operation": "query_log_list",
+                        "arguments": {},
+                    },
+                )
                 self.assertEqual(200, history.status_code, history.text)
                 self.assertEqual([], history.json()["result"]["items"])
 
@@ -203,31 +263,56 @@ class NativeSchemaTest(unittest.TestCase):
         tables = result.json()["result"]["tables"]
         self.assertIn("native_references", tables)
         self.assertNotIn("generation", tables)
-        status = next(column for column in tables["atoms"] if column["name"] == "header.state.status")
+        status = next(
+            column
+            for column in tables["atoms"]
+            if column["name"] == "header.state.status"
+        )
         self.assertEqual(expected, status["values"])
 
 class StagedNativeAtomsTest(unittest.TestCase):
     def test_mixed_order_empty_revisions_and_atomic_refusal(self):
         data = _native_generation()
         current, archived = data["snapshot"]["atoms"]
-        draft = archived | {"reference": "AN-T-2@1-draft", "exact_ref": "AN-T-2@1-draft",
-                            "status_group": "Draft", "status": "draft", "filename": "draft.md"}
-        data["snapshot"]["atoms"] = [current, dict(reversed(list(draft.items()))), archived]
+        draft = archived | {
+            "reference": "AN-T-2@1-draft",
+            "exact_ref": "AN-T-2@1-draft",
+            "status_group": "Draft",
+            "status": "draft",
+            "filename": "draft.md",
+        }
+        data["snapshot"]["atoms"] = [
+            current,
+            dict(reversed(list(draft.items()))),
+            archived,
+        ]
         data["snapshot"]["relations"] = []
         data["receipt"]["snapshot_sha256"] = _digest(data["snapshot"])
         sql = "SELECT stable_ref, exact_ref FROM mrt_atom_references ORDER BY reference"
-        expected = [["AN-T-1", "AN-T-1@2"], [None, "AN-T-1@1"], [None, "AN-T-2@1-draft"]]
+        expected = [
+            ["AN-T-1", "AN-T-1@2"],
+            [None, "AN-T-1@1"],
+            [None, "AN-T-2@1-draft"],
+        ]
         with _server() as client:
-            admitted = client.put('/generation', json=data)
+            admitted = client.put("/generation", json=data)
             self.assertEqual(200, admitted.status_code, admitted.text)
-            self.assertEqual(expected, _query(client, sql).json()['result']['rows'])
+            self.assertEqual(
+                expected, _query(client, sql).json()["result"]["rows"]
+            )
             invalid = deepcopy(data)
             invalid["snapshot"]["atoms"].append(current)
-            invalid["receipt"]["snapshot_sha256"] = _digest(invalid["snapshot"])
-            self.assertEqual(400, client.put('/generation', json=invalid).status_code)
-            self.assertEqual(expected, _query(client, sql).json()['result']['rows'])
+            invalid["receipt"]["snapshot_sha256"] = _digest(
+                invalid["snapshot"]
+            )
+            self.assertEqual(
+                400, client.put("/generation", json=invalid).status_code
+            )
+            self.assertEqual(
+                expected, _query(client, sql).json()["result"]["rows"]
+            )
             data["snapshot"]["atoms"] = []
             data["receipt"]["snapshot_sha256"] = _digest(data["snapshot"])
-            empty = client.put('/generation', json=data)
+            empty = client.put("/generation", json=data)
             self.assertEqual(200, empty.status_code, empty.text)
-            self.assertEqual([], _query(client, sql).json()['result']['rows'])
+            self.assertEqual([], _query(client, sql).json()["result"]["rows"])

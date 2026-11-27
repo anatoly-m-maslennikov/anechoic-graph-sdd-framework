@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 4
-  updated_at: '2026-11-27T11:36:18.749955+00:00'
+  version: 5
+  updated_at: "2026-11-27T16:19:44.298791+00:00"
 ---
 ## Summary
 
@@ -58,7 +58,8 @@ pin is absent, use the request Manifest as context. Compare the validated
 Lean declarations and render the validated Solution projection.
 Compare the SHA-256 of the actual rendering input to the validated
 Solution's digest. Render the selected Action when one is requested.
-For ordinary comparison, bind the C88 input to that Model. For bounded
+Accept the translation only after validating the selected Model. For
+ordinary comparison, bind the C88 input to that Model. For bounded
 framing, bind the C86 framing comparison to that Model and report its finite
 result. Keep the digest of the validated claims and finite result together
 through the return. Do not require C88 on that path.
@@ -67,16 +68,14 @@ through the return. Do not require C88 on that path.
 declare_trace_contract(action='verify_pinned_specs', cases={
     'compared': {
         'must_effect': (('C83.pinned_sources', 'loaded'), ('C84.lean_source', 'generated'),
-                        ('C86.translation_validation', 'validated'), ('C94.translation', 'accepted'), ('C87.mermaid_diagram', 'rendered'),
+                        ('C94.translation', 'accepted'), ('C87.mermaid_diagram', 'rendered'),
                         ('C94.formal_verification', 'compared')),
         'must_precede': ((('C83.pinned_sources', 'loaded'), ('C84.lean_source', 'generated')),
-                         (('C84.lean_source', 'generated'), ('C86.translation_validation', 'validated')),
-                         (('C86.translation_validation', 'validated'), ('C94.translation', 'accepted')),
+                         (('C84.lean_source', 'generated'), ('C94.translation', 'accepted')),
                          (('C94.translation', 'accepted'), ('C87.mermaid_diagram', 'rendered'))),
         'same_values': (
             (('C83.pinned_sources', 'source_set'), ('C94.formal_verification', 'source_set')),
-            (('C84.lean_source', 'model_pin'), ('C86.translation_validation', 'model_pin')),
-            (('C86.translation_validation', 'model_pin'), ('C94.translation', 'model_pin')),
+            (('C84.lean_source', 'model_pin'), ('C94.translation', 'model_pin')),
             (('C94.translation', 'solution_pin'), ('C87.mermaid_diagram', 'solution_pin')),
             (('C94.translation', 'model_pin'), ('C94.formal_verification', 'model_pin')),
         ),
@@ -84,7 +83,6 @@ declare_trace_contract(action='verify_pinned_specs', cases={
             ('C83.pinned_sources', 'source_set'): 'nonempty_array',
             ('C94.formal_verification', 'source_set'): 'nonempty_array',
             ('C84.lean_source', 'model_pin'): 'nonempty_string',
-            ('C86.translation_validation', 'model_pin'): 'nonempty_string',
             ('C94.translation', 'model_pin'): 'nonempty_string',
             ('C94.translation', 'solution_pin'): 'nonempty_string',
             ('C87.mermaid_diagram', 'solution_pin'): 'nonempty_string',
@@ -102,12 +100,12 @@ declare_trace_contract(action='verify_pinned_specs', cases={
 
 ### Generate cases from a pinned formal chain
 
-Generate bounded Python framing cases through Test Generation. Preserve
-the source pins. Raise an explicit error when the chain is invalid.
+Return bounded Python framing cases and their exact source pins.
+Raise an explicit error when the chain is invalid.
 
 ```python trace
 declare_trace_contract(action='generate_pinned_cases', cases={
-    'generated': {'must_effect': (('C92.framing_cases', 'generated'),)},
-    'invalid': {'forbid_effect': ('C92.framing_cases',)},
+    'generated': {'must_effect': (('C94.generated_cases', 'ready'),)},
+    'invalid': {'forbid_effect': ('C94.generated_cases',)},
 })
 ```

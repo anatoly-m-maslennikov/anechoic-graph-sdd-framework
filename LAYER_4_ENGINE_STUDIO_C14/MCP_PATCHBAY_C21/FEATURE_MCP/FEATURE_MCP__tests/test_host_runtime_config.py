@@ -25,7 +25,11 @@ class HostRuntimeConfigTests(unittest.TestCase):
         self.base = Path(self.temp.name).resolve()
         self.projects = self.base / "My_Repos"
         self.projects.mkdir()
-        self.config = self.base / "config" / "MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime.toml"
+        self.config = (
+            self.base
+            / "config"
+            / "MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime.toml"
+        )
         self._make_project("alpha")
         self._make_project("beta")
 
@@ -35,10 +39,14 @@ class HostRuntimeConfigTests(unittest.TestCase):
     def _make_project(self, name: str, prefix: str = "DUP") -> Path:
         root = self.projects / name
         control = root / f".anechoic_{name}"
-        RuntimeSelectionTests.manifest(self, control, name=name, prefix=prefix, component="C00")
+        RuntimeSelectionTests.manifest(
+            self, control, name=name, prefix=prefix, component="C00"
+        )
         return root
 
-    def _write_config(self, body: str | None = None, path: Path | None = None) -> Path:
+    def _write_config(
+        self, body: str | None = None, path: Path | None = None
+    ) -> Path:
         path = path or self.config
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(
@@ -56,7 +64,9 @@ class HostRuntimeConfigTests(unittest.TestCase):
         self.assertEqual(self.projects, config.projects_root)
         self.assertEqual(2, config.max_loaded_projects)
         self.assertEqual("INFO", config.log_level)
-        self.assertEqual(hashlib.sha256(path.read_bytes()).hexdigest(), config.raw_sha256)
+        self.assertEqual(
+            hashlib.sha256(path.read_bytes()).hexdigest(), config.raw_sha256
+        )
         self.assertEqual(64, len(config.shared_runtime_id))
         self.assertTrue(config.shared_runtime_id == config.shared_runtime_id)
 
@@ -64,18 +74,34 @@ class HostRuntimeConfigTests(unittest.TestCase):
         original = self._write_config().read_text()
         for level in ("DEBUG", "INFO", "WARNING", "ERROR"):
             with self.subTest(level=level):
-                path = self._write_config(original + f'[logging]\nlevel="{level}"\n')
-                self.assertEqual(level, load_host_runtime_config(path).log_level)
-        for suffix in ('level="ERROR "\n', 'level=""\n', 'level=20\n', 'other="DEBUG"\n'):
-            with self.subTest(suffix=suffix), self.assertRaisesRegex(HostRuntimeConfigError, "logging"):
-                load_host_runtime_config(self._write_config(original + "[logging]\n" + suffix))
+                path = self._write_config(
+                    original + f'[logging]\nlevel="{level}"\n'
+                )
+                self.assertEqual(
+                    level, load_host_runtime_config(path).log_level
+                )
+        for suffix in (
+            'level="ERROR "\n',
+            'level=""\n',
+            "level=20\n",
+            'other="DEBUG"\n',
+        ):
+            with (
+                self.subTest(suffix=suffix),
+                self.assertRaisesRegex(HostRuntimeConfigError, "logging"),
+            ):
+                load_host_runtime_config(
+                    self._write_config(original + "[logging]\n" + suffix)
+                )
 
     def test_optional_capacity_and_default_xdg_path_do_not_write(self):
         path = self._write_config(
             f'schema_version = 1\n[shared_mcp]\nprojects_root = "{self.projects}"\n'
             "http_port = 1\nmax_loaded_projects = 64\n"
         )
-        self.assertEqual(64, load_host_runtime_config(path).max_loaded_projects)
+        self.assertEqual(
+            64, load_host_runtime_config(path).max_loaded_projects
+        )
         xdg = self.base / "xdg"
         default = xdg / "anechoic/runtime.toml"
         self._write_config(path=default)
@@ -97,13 +123,19 @@ class HostRuntimeConfigTests(unittest.TestCase):
             f'schema_version = 1\n[shared_mcp]\nprojects_root = "{self.projects}"\nmax_loaded_projects = 65\n',
         )
         for body in cases:
-            with self.subTest(body=body), self.assertRaises(HostRuntimeConfigError):
+            with (
+                self.subTest(body=body),
+                self.assertRaises(HostRuntimeConfigError),
+            ):
                 load_host_runtime_config(self._write_config(body))
 
     def test_rejects_unsafe_roots_and_config_files(self):
         for root in (self.base / "missing", Path("/")):
             body = f'schema_version = 1\n[shared_mcp]\nprojects_root = "{root}"\nhttp_port = 1\n'
-            with self.subTest(root=root), self.assertRaises(HostRuntimeConfigError):
+            with (
+                self.subTest(root=root),
+                self.assertRaises(HostRuntimeConfigError),
+            ):
                 load_host_runtime_config(self._write_config(body))
         target = self.base / "real.toml"
         self._write_config(path=target)
@@ -124,7 +156,9 @@ class HostRuntimeConfigTests(unittest.TestCase):
         self.assertEqual("DUP", alpha.project_prefix)
         self.assertEqual("DUP", beta.project_prefix)
 
-    def test_resolve_rejects_outside_parent_traversal_and_symlink_aliases(self):
+    def test_resolve_rejects_outside_parent_traversal_and_symlink_aliases(
+        self,
+    ):
         config = load_host_runtime_config(self._write_config())
         outside = self.base / "outside"
         outside.mkdir()
@@ -137,7 +171,10 @@ class HostRuntimeConfigTests(unittest.TestCase):
             self.projects / "..",
             link,
         ):
-            with self.subTest(candidate=candidate), self.assertRaises(ValueError):
+            with (
+                self.subTest(candidate=candidate),
+                self.assertRaises(ValueError),
+            ):
                 resolve_host_project(config, candidate)
 
     def test_single_project_and_defaults_are_applied_without_overriding_manifest(self):
@@ -149,26 +186,42 @@ class HostRuntimeConfigTests(unittest.TestCase):
         config = load_host_runtime_config(path)
         self.assertTrue(config.single_project)
         selection = resolve_host_project(config, root)
-        self.assertEqual("memory", selection.parameters["runtime"]["iwe_console"]["storage"])
-        self.assertEqual("duckdb", selection.parameters["runtime"]["journal"]["storage"])
+        self.assertEqual(
+            "memory", selection.parameters["runtime"]["iwe_console"]["storage"]
+        )
+        self.assertEqual(
+            "duckdb", selection.parameters["runtime"]["journal"]["storage"]
+        )
         with self.assertRaises(ValueError):
             resolve_host_project(config, self.projects / "beta")
         with self.assertRaises(ValueError):
             resolve_host_project(config, root / ".anechoic_alpha")
         from dataclasses import replace
-        with patch("IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.project_admission.select_runtime_project", return_value=replace(
-            selection, parameters={"runtime": {"workbench": {"storage": "disk"}}}
-        )):
+        with patch(
+            "IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.project_admission.select_runtime_project",
+            return_value=replace(
+                selection,
+                parameters={"runtime": {"workbench": {"storage": "disk"}}},
+            ),
+        ):
             resolved = resolve_host_project(config, root)
-        self.assertEqual("disk", resolved.parameters["runtime"]["workbench"]["storage"])
-        self.assertEqual("duckdb", resolved.parameters["runtime"]["journal"]["storage"])
+        self.assertEqual(
+            "disk", resolved.parameters["runtime"]["workbench"]["storage"]
+        )
+        self.assertEqual(
+            "duckdb", resolved.parameters["runtime"]["journal"]["storage"]
+        )
         with patch("IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.project_admission.select_runtime_project", return_value=replace(
             selection, parameters={"runtime": {"workbench": {"storage": "memory"},
                                                "iwe_console": {"storage": "disk"}}}
         )):
             resolved = resolve_host_project(config, root)
-        self.assertEqual("disk", resolved.parameters["runtime"]["iwe_console"]["storage"])
-        self.assertEqual("memory", resolved.parameters["runtime"]["workbench"]["storage"])
+        self.assertEqual(
+            "disk", resolved.parameters["runtime"]["iwe_console"]["storage"]
+        )
+        self.assertEqual(
+            "memory", resolved.parameters["runtime"]["workbench"]["storage"]
+        )
 
     def test_rejects_ambiguous_roots_and_invalid_defaults(self):
         prefix = f'schema_version = 1\n[shared_mcp]\nproject_root = "{self.projects}"\nhttp_port = 1\n'
@@ -178,7 +231,10 @@ class HostRuntimeConfigTests(unittest.TestCase):
             '[project_defaults]\njournal_storage = "other"\n',
             '[project_defaults]\nunknown = "disk"\n',
         ):
-            with self.subTest(suffix=suffix), self.assertRaises(HostRuntimeConfigError):
+            with (
+                self.subTest(suffix=suffix),
+                self.assertRaises(HostRuntimeConfigError),
+            ):
                 load_host_runtime_config(self._write_config(prefix + suffix))
 
     def test_resolve_requires_the_declared_prefix(self):

@@ -45,8 +45,7 @@ class CompactContentCacheTests(unittest.TestCase):
                     "status_group": "Current",
                     "_content_bytes": declaration_body.encode("utf-8"),
                     "content_properties_json": parse_content(
-                        declaration_body,
-                        tolerate_duplicate_siblings=True,
+                        declaration_body, tolerate_duplicate_siblings=True
                     ),
                 }
             ]
@@ -59,9 +58,7 @@ class CompactContentCacheTests(unittest.TestCase):
             "form": "Rule",
             "content_markdown": body,
             "content_properties_json": parse_content(
-                body,
-                tolerate_duplicate_siblings=True,
-                compact=compact,
+                body, tolerate_duplicate_siblings=True, compact=compact
             ),
         }
         if compact:
@@ -83,11 +80,7 @@ class CompactContentCacheTests(unittest.TestCase):
             (0, 1, 3),
             tuple(
                 compact[0][key]
-                for key in (
-                    "_start_line",
-                    "_body_start_line",
-                    "_end_line",
-                )
+                for key in ("_start_line", "_body_start_line", "_end_line")
             ),
         )
 
@@ -144,7 +137,10 @@ Keep this prose.
             compact["content.claim.prose_claim"] or "",
         )
         self.assertEqual(
-            "```python\nproperty_rule(address='Atom.Header.Status', value_format='string', values='1')\n```",
+            (
+                "```python\nproperty_rule(address='Atom.Header.Status', "
+                "value_format='string', values='1')\n```"
+            ),
             compact["content.claim.formal_claim"],
         )
 

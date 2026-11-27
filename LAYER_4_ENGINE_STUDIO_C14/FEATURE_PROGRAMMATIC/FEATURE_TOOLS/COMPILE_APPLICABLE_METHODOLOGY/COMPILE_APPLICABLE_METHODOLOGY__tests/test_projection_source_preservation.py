@@ -28,7 +28,10 @@ class ProjectionSourcePreservationTest(unittest.TestCase):
             role_directory="04_requirement",
             atom_id="CA-R-001",
             version=2,
-            source_path=".control/sources/001_CORE_META_MODEL/04_requirement/CA-R-001.md",
+            source_path=(
+                ".control/sources/001_CORE_META_MODEL/04_requirement/CA-R-001."
+                "md"
+            ),
             source_sha256="a" * 64,
             basename="CA-R-001.md",
             priority=None,

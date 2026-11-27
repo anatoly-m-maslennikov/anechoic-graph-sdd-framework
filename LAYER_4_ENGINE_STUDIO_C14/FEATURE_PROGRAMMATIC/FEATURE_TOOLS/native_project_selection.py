@@ -13,15 +13,31 @@ from typing import Protocol
 from pydantic import ConfigDict
 from pydantic.dataclasses import dataclass
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import native_header_view
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import spec_folder_layout
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
-    ProjectSelectionError, active_manifest_carriers, select_manifest_carriers, manifest_inputs,
-    manifest_sources, manifest_state_fields,
+    native_header_view,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    spec_folder_layout,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    ProjectSelectionError,
+    active_manifest_carriers,
+    select_manifest_carriers,
+    manifest_inputs,
+    manifest_sources,
+    manifest_state_fields,
 )
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.project_manifest__pub import manifest_summary_fields
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.project_selection import _instance_id, _project_root
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import CEILINGS, ReadContext, open_regular, protected
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.project_selection import (
+    _instance_id,
+    _project_root,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    CEILINGS,
+    ReadContext,
+    open_regular,
+    protected,
+)
 
 
 def is_native_control_name(name: str) -> bool:
@@ -51,28 +67,51 @@ class NativeProjectSelection:
 
     @property
     def launcher_state(self) -> Path:
-        return self.root / ".anechoic_runtime/runtime/project_mcp" / self.instance_id
+        return (
+            self.root
+            / ".anechoic_runtime/runtime/project_mcp"
+            / self.instance_id
+        )
 
     @property
     def compose_project(self) -> str:
         return "anechoic-mcp-" + self.instance_id[:24]
 
 
-def rebind_native_selection(selection: NativeProjectSelection, instance_id: str, *,
-                            host_root: str | Path | None = None) -> NativeProjectSelection:
+def rebind_native_selection(
+    selection: NativeProjectSelection,
+    instance_id: str,
+    *,
+    host_root: str | Path | None = None,
+) -> NativeProjectSelection:
     """Retain the admitted host identity after container path translation."""
-    if not isinstance(selection, NativeProjectSelection) or not isinstance(instance_id, str) or not re.fullmatch(r"[0-9a-f]{64}", instance_id):
+    if (
+        not isinstance(selection, NativeProjectSelection)
+        or not isinstance(instance_id, str)
+        or not re.fullmatch(r"[0-9a-f]{64}", instance_id)
+    ):
         raise ProjectSelectionError("Transported Project identity is invalid")
-    host = selection.host_root if instance_id == selection.instance_id else None
+    host = (
+        selection.host_root if instance_id == selection.instance_id else None
+    )
     if host_root is not None:
         try:
             host = Path(host_root)
         except (TypeError, ValueError) as error:
-            raise ProjectSelectionError("Transported host root is invalid") from error
-        if (not host.is_absolute() or ".." in host.parts or str(host_root) != host.as_posix()
-                or host.as_posix().startswith("//") or protected(host)
-                or _instance_id(host, selection.control_relative) != instance_id):
-            raise ProjectSelectionError("Transported Project identity contradicts its host binding")
+            raise ProjectSelectionError(
+                "Transported host root is invalid"
+            ) from error
+        if (
+            not host.is_absolute()
+            or ".." in host.parts
+            or str(host_root) != host.as_posix()
+            or host.as_posix().startswith("//")
+            or protected(host)
+            or _instance_id(host, selection.control_relative) != instance_id
+        ):
+            raise ProjectSelectionError(
+                "Transported Project identity contradicts its host binding"
+            )
         if os.path.lexists(host):
             _project_root(host)
     return replace(selection, instance_id=instance_id, host_root=host)
@@ -82,20 +121,40 @@ def rebind_native_selection(selection: NativeProjectSelection, instance_id: str,
 def _validate_manifest_paths(fields, parameters, relative, manifest):
     for values in (fields.get("parameters", {}), parameters):
         project = values.get("project") if isinstance(values, dict) else None
-        project_root = project.get("root") if isinstance(project, dict) else None
+        project_root = (
+            project.get("root") if isinstance(project, dict) else None
+        )
         if isinstance(project_root, dict) and "prefix" in project_root:
-            marker = {"dot": ".", "underscore": "_"}.get(project_root["prefix"])
-            if marker is None or relative.name != f"{marker}anechoic_{manifest.name.casefold()}":
-                raise ProjectSelectionError("Project Manifest root prefix contradicts the selection")
+            marker = {"dot": ".", "underscore": "_"}.get(
+                project_root["prefix"]
+            )
+            if (
+                marker is None
+                or relative.name
+                != f"{marker}anechoic_{manifest.name.casefold()}"
+            ):
+                raise ProjectSelectionError(
+                    "Project Manifest root prefix contradicts the selection"
+                )
         paths = values.get("paths") if isinstance(values, dict) else None
-        if isinstance(paths, dict) and "control_root" in paths and paths["control_root"] != relative.as_posix():
-            raise ProjectSelectionError("Project Manifest control_root contradicts the selection")
+        if (
+            isinstance(paths, dict)
+            and "control_root" in paths
+            and paths["control_root"] != relative.as_posix()
+        ):
+            raise ProjectSelectionError(
+                "Project Manifest control_root contradicts the selection"
+            )
 
 
-def _manifest_validation_fields(path, carrier, require_state, require_header, require_summary):
+def _manifest_validation_fields(
+    path, carrier, require_state, require_header, require_summary
+):
     fields, component_id = manifest_inputs(path, carrier)
     if require_state or require_header:
-        fields.update(manifest_state_fields(carrier, include_header=require_header))
+        fields.update(
+            manifest_state_fields(carrier, include_header=require_header)
+        )
     if require_summary:
         fields.update(manifest_summary_fields(carrier))
     return fields, component_id
@@ -156,9 +215,15 @@ _RESERVED |= {"_" + name[1:] for name in _RESERVED}
 def _has_manifest(reader: ReadContext, control: Path) -> bool:
     for path, carrier in manifest_sources(reader, control):
         context = native_header_view(carrier.metadata).get("context")
-        if (isinstance(context, dict) and context.get("template") == "project_manifest"):
+        if (
+            isinstance(context, dict)
+            and context.get("template") == "project_manifest"
+        ):
             return True
-        if "atom_family" not in carrier.metadata and "PROJECT_MANIFEST" in path.name:
+        if (
+            "atom_family" not in carrier.metadata
+            and "PROJECT_MANIFEST" in path.name
+        ):
             return True
     return False
 
@@ -170,13 +235,20 @@ def _control_roots(root, reader):
             controls = []
             for entry in entries:
                 reader.checkpoint()
-                if is_native_control_name(entry.name) and entry.name not in _RESERVED:
+                if (
+                    is_native_control_name(entry.name)
+                    and entry.name not in _RESERVED
+                ):
                     if entry.is_symlink():
-                        raise ProjectSelectionError("Project control candidates must not be symlinks")
+                        raise ProjectSelectionError(
+                            "Project control candidates must not be symlinks"
+                        )
                     if entry.is_dir(follow_symlinks=False):
                         controls.append(Path(entry.name))
                         if len(controls) > 64:
-                            raise ProjectSelectionError("Project control candidates exceed the host ceiling")
+                            raise ProjectSelectionError(
+                                "Project control candidates exceed the host ceiling"
+                            )
         return sorted(controls)
     finally:
         os.close(descriptor)
@@ -186,20 +258,29 @@ def _root_manifest_matches(reader, root, controls):
     sources = active_manifest_carriers(reader, root, root_candidates=True)
     candidate = next(sources, None)
     if candidate is None or next(sources, None) is not None:
-        raise ProjectSelectionError("A unique native Project Manifest is required")
+        raise ProjectSelectionError(
+            "A unique native Project Manifest is required"
+        )
     fields, _ = manifest_inputs(*candidate)
     name = fields["name"].casefold()
     parameters = fields.get("parameters", {})
-    project = parameters.get("project") if isinstance(parameters, dict) else None
+    project = (
+        parameters.get("project") if isinstance(parameters, dict) else None
+    )
     root_settings = project.get("root") if isinstance(project, dict) else None
     markers = [".", "_"]
     if isinstance(root_settings, dict) and "prefix" in root_settings:
         marker = {"dot": ".", "underscore": "_"}.get(root_settings["prefix"])
         if marker is None:
-            raise ProjectSelectionError("Project Manifest root prefix contradicts the selection")
+            raise ProjectSelectionError(
+                "Project Manifest root prefix contradicts the selection"
+            )
         markers = [marker]
-    return [relative for relative in controls
-            if relative.name in {f"{marker}anechoic_{name}" for marker in markers}]
+    return [
+        relative
+        for relative in controls
+        if relative.name in {f"{marker}anechoic_{name}" for marker in markers}
+    ]
 
 
 def discover_native_project(project_root, control_root=None, *, manifest_validator):
@@ -208,11 +289,15 @@ def discover_native_project(project_root, control_root=None, *, manifest_validat
     reader = ReadContext(roots=[str(root)], limits=dict(CEILINGS))
 
     def native(relative):
-        return resolve_native_project(root, relative, validate_manifest=manifest_validator())
+        return resolve_native_project(
+            root, relative, validate_manifest=manifest_validator()
+        )
 
     def finish(selection):
         if reader.currentness()["state"] != "unchanged":
-            raise ProjectSelectionError("Project carriers changed during selection")
+            raise ProjectSelectionError(
+                "Project carriers changed during selection"
+            )
         return selection
 
     try:
@@ -231,9 +316,19 @@ def discover_native_project(project_root, control_root=None, *, manifest_validat
             raise ProjectSelectionError("A unique native Project Manifest is required")
         selected = finish(natives[0])
         if _control_roots(root, reader) != controls:
-            raise ProjectSelectionError("Project control candidates changed during selection")
+            raise ProjectSelectionError(
+                "Project control candidates changed during selection"
+            )
         return selected
     except ProjectSelectionError:
         raise
-    except (OSError, RuntimeError, TypeError, ValueError, AttributeError) as error:
-        raise ProjectSelectionError("Project discovery is unavailable, invalid, or unsafe") from error
+    except (
+        OSError,
+        RuntimeError,
+        TypeError,
+        ValueError,
+        AttributeError,
+    ) as error:
+        raise ProjectSelectionError(
+            "Project discovery is unavailable, invalid, or unsafe"
+        ) from error

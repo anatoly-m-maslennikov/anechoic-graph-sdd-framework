@@ -4,8 +4,12 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_4_SPEC_COMPARISON_C88.DELEGATION_VERIFICATION_C89._package__shared import check_sibling_binding
-from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.SPEC_ENGINE_C75__tests.functional.test_cli_spec import _carrier
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_4_SPEC_COMPARISON_C88.DELEGATION_VERIFICATION_C89._package__shared import (
+    check_sibling_binding,
+)
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.SPEC_ENGINE_C75__tests.functional.test_cli_spec import (
+    _carrier,
+)
 
 
 MANIFEST = """## Formal Manifest
@@ -48,64 +52,130 @@ INTERFACE = 'compiler_worker'
 def carriers(root, component, offset, io, trigger, effect, binding=''):
     manifest, contract, solution = (f'AN-S-{offset + n}' for n in range(3))
     return (
-        _carrier(root, manifest, 'component_manifest', 'C1', '{}',
-                 MANIFEST.format(component=component, io=io)),
-        _carrier(root, contract, 'component_contract', component, f'{{ANSWERS: [{manifest}]}}',
-                 CONTRACT.format(binding=binding)),
-        _carrier(root, solution, 'decision', component, f'{{IS_SOLUTION_FOR: [{contract}@1]}}',
-                 SOLUTION.format(component=component, trigger=trigger, effect=effect)),
+        _carrier(
+            root,
+            manifest,
+            "component_manifest",
+            "C1",
+            "{}",
+            MANIFEST.format(component=component, io=io),
+        ),
+        _carrier(
+            root,
+            contract,
+            "component_contract",
+            component,
+            f"{{ANSWERS: [{manifest}]}}",
+            CONTRACT.format(binding=binding),
+        ),
+        _carrier(
+            root,
+            solution,
+            "decision",
+            component,
+            f"{{IS_SOLUTION_FOR: [{contract}@1]}}",
+            SOLUTION.format(
+                component=component, trigger=trigger, effect=effect
+            ),
+        ),
     )
 
 
 class InProcessDelegationTests(unittest.TestCase):
     def setUp(self):
-        self.lean = os.environ.get('ANECHOIC_TEST_LEAN') or shutil.which('lean')
+        self.lean = os.environ.get("ANECHOIC_TEST_LEAN") or shutil.which(
+            "lean"
+        )
         if not self.lean:
             self.skipTest('Lean executable unavailable')
         directory = tempfile.TemporaryDirectory()
         self.addCleanup(directory.cleanup)
         self.root = Path(directory.name)
-        caller_effect = {'kind': 'effect', 'target': 'C3', 'outcome': 'called',
-                         'detail': {'interface': INTERFACE, **BINDING}}
-        self.caller = carriers(self.root, 'C2', 1,
-                               {'client': [{'component': 'C3', 'interface': INTERFACE}]},
-                               {'kind': 'trigger', 'target': 'caller'}, caller_effect)
-        self.provider = carriers(self.root, 'C3', 4, {'server': {INTERFACE: BINDING}},
-                                 {'kind': 'trigger', 'target': INTERFACE, 'detail': BINDING},
-                                 {'kind': 'effect', 'target': 'C3', 'outcome': 'called'},
-                                 ", interface='compiler_worker', transport='in_process', "
-                                 "entry='Orchestrator.run_worker'")
+        caller_effect = {
+            "kind": "effect",
+            "target": "C3",
+            "outcome": "called",
+            "detail": {"interface": INTERFACE, **BINDING},
+        }
+        self.caller = carriers(
+            self.root,
+            "C2",
+            1,
+            {"client": [{"component": "C3", "interface": INTERFACE}]},
+            {"kind": "trigger", "target": "caller"},
+            caller_effect,
+        )
+        self.provider = carriers(
+            self.root,
+            "C3",
+            4,
+            {"server": {INTERFACE: BINDING}},
+            {"kind": "trigger", "target": INTERFACE, "detail": BINDING},
+            {"kind": "effect", "target": "C3", "outcome": "called"},
+            ", interface='compiler_worker', transport='in_process', "
+            "entry='Orchestrator.run_worker'",
+        )
 
     def check(self):
-        return check_sibling_binding(self.root, self.caller, 'C3', self.provider,
-                                        event='invoke', interface=INTERFACE, lean=self.lean)
+        return check_sibling_binding(
+            self.root,
+            self.caller,
+            "C3",
+            self.provider,
+            event="invoke",
+            interface=INTERFACE,
+            lean=self.lean,
+        )
 
     def statuses(self):
-        return {name: direction['status'] for name, direction in self.check()['directions'].items()}
+        return {
+            name: direction["status"]
+            for name, direction in self.check()["directions"].items()
+        }
 
     def test_provider_declarations_match_and_solution_entry_conflicts(self):
-        matched = {'caller_manifest': 'matched', 'caller_contract': 'matched', 'caller_solution': 'matched'}
+        matched = {
+            "caller_manifest": "matched",
+            "caller_contract": "matched",
+            "caller_solution": "matched",
+        }
         self.assertEqual(matched, self.statuses())
-        path = self.root / self.provider[2]['path']
-        path.write_text(path.read_text().replace('Orchestrator.run_worker', 'Orchestrator.other'))
-        self.assertEqual({**matched, 'caller_solution': 'conflicting'}, self.statuses())
+        path = self.root / self.provider[2]["path"]
+        path.write_text(
+            path.read_text().replace(
+                "Orchestrator.run_worker", "Orchestrator.other"
+            )
+        )
+        self.assertEqual(
+            {**matched, "caller_solution": "conflicting"}, self.statuses()
+        )
 
     def test_missing_caller_detail_is_unresolved(self):
-        path = self.root / self.caller[2]['path']
-        path.write_text(path.read_text().replace("'interface': 'compiler_worker', ", ''))
-        self.assertTrue(all(status == 'unresolved' for status in self.statuses().values()))
+        path = self.root / self.caller[2]["path"]
+        path.write_text(
+            path.read_text().replace("'interface': 'compiler_worker', ", "")
+        )
+        self.assertTrue(
+            all(status == "unresolved" for status in self.statuses().values())
+        )
 
     def test_rejects_non_sibling_and_undeclared_dependency(self):
         path = self.root / self.provider[0]['path']
         original = path.read_text()
-        path.write_text(original.replace('container: {component: C1}', 'container: {component: C9}'))
-        self.provider[0]['container_component'] = 'C9'
+        path.write_text(
+            original.replace(
+                "container: {component: C1}", "container: {component: C9}"
+            )
+        )
+        self.provider[0]["container_component"] = "C9"
         with self.assertRaises(ValueError):
             self.check()
         path.write_text(original)
-        self.provider[0]['container_component'] = 'C1'
-        path = self.root / self.caller[0]['path']
-        path.write_text(path.read_text().replace("'component': 'C3'", "'component': 'C4'"))
+        self.provider[0]["container_component"] = "C1"
+        path = self.root / self.caller[0]["path"]
+        path.write_text(
+            path.read_text().replace("'component': 'C3'", "'component': 'C4'")
+        )
         with self.assertRaises(ValueError):
             self.check()
 
@@ -119,13 +189,32 @@ class HttpSiblingBindingTests(unittest.TestCase):
         detail = {'interface': 'database', 'transport': 'http', 'route': route}
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            caller = carriers(root, 'C2', 1, {'client': {'database': {
-                'component': 'C3', 'transport': 'http', 'routes': [route]}}},
-                {'kind': 'trigger', 'target': 'caller'},
-                {'kind': 'effect', 'target': 'C3', 'outcome': 'called', 'detail': detail})
-            for routes, expected in (({'query': 'POST /database'}, 'matched'),
-                                     ({'archive': 'POST /archive'}, 'conflicting'),
-                                     (['archive'], 'conflicting')):
+            caller = carriers(
+                root,
+                "C2",
+                1,
+                {
+                    "client": {
+                        "database": {
+                            "component": "C3",
+                            "transport": "http",
+                            "routes": [route],
+                        }
+                    }
+                },
+                {"kind": "trigger", "target": "caller"},
+                {
+                    "kind": "effect",
+                    "target": "C3",
+                    "outcome": "called",
+                    "detail": detail,
+                },
+            )
+            for routes, expected in (
+                ({"query": "POST /database"}, "matched"),
+                ({"archive": "POST /archive"}, "conflicting"),
+                (["archive"], "conflicting"),
+            ):
                 with self.subTest(routes=routes):
                     provider = carriers(root, 'C3', 4, {'server': {'database': {
                         'transport': 'http', 'routes': routes}}},
@@ -162,14 +251,28 @@ class HttpSiblingBindingTests(unittest.TestCase):
                 path.write_text(original + '\n' + second.replace(route, 'POST /other'))
 
             def check(action):
-                return check_sibling_binding(root, caller, 'C3', provider, event='invoke',
-                                             interface='tools', route=route, action=action, lean=lean)
+                return check_sibling_binding(
+                    root,
+                    caller,
+                    "C3",
+                    provider,
+                    event="invoke",
+                    interface="tools",
+                    route=route,
+                    action=action,
+                    lean=lean,
+                )
 
-            self.assertEqual('matched', check('run')['status'])
-            self.assertEqual('unresolved', check('other')['status'])
-            solution = root / provider[2]['path']
-            solution.write_text(solution.read_text().replace(route, 'POST /other'))
-            self.assertEqual('conflicting', check('run')['directions']['caller_solution']['status'])
+            self.assertEqual("matched", check("run")["status"])
+            self.assertEqual("unresolved", check("other")["status"])
+            solution = root / provider[2]["path"]
+            solution.write_text(
+                solution.read_text().replace(route, "POST /other")
+            )
+            self.assertEqual(
+                "conflicting",
+                check("run")["directions"]["caller_solution"]["status"],
+            )
 
     def test_http_route_and_unsupported_caller_route(self):
         lean = os.environ.get('ANECHOIC_TEST_LEAN') or shutil.which('lean')
@@ -191,8 +294,16 @@ class HttpSiblingBindingTests(unittest.TestCase):
                 ", interface='jobs', transport='http', route='POST /jobs/build', operation='run'")
 
             def check():
-                return check_sibling_binding(root, caller, 'C3', provider, event='invoke',
-                                             interface='jobs', route=route, lean=lean)
+                return check_sibling_binding(
+                    root,
+                    caller,
+                    "C3",
+                    provider,
+                    event="invoke",
+                    interface="jobs",
+                    route=route,
+                    lean=lean,
+                )
 
             def statuses():
                 return {name: row['status'] for name, row in check()['directions'].items()}

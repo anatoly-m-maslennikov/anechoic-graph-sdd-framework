@@ -9,8 +9,13 @@ class PythonCodeUnitTests(unittest.TestCase):
         texts = {
             "dep.py": "def leaf():\n    pass\ndef middle():\n    leaf()\n",
             "main.py": (
-                "from dep import middle as run\ndef start():\n    run()\n"
-                "def shadow(run):\n    run()\ndef dynamic(obj):\n    obj.run()\n"
+                "from dep import middle as run\n"
+                "def start():\n"
+                "    run()\n"
+                "def shadow(run):\n"
+                "    run()\n"
+                "def dynamic(obj):\n"
+                "    obj.run()\n"
             ),
         }
         units, calls = python_code_units(
@@ -59,7 +64,9 @@ class PythonCodeUnitTests(unittest.TestCase):
     def test_relative_child_module_alias(self):
         texts = {
             "pkg/dep.py": "def leaf():\n    pass\n",
-            "pkg/main.py": "from . import dep as target\ndef call():\n    target.leaf()\n",
+            ("pkg/main.py"): (
+                "from . import dep as target\ndef call():\n    target.leaf()\n"
+            ),
         }
         units, calls = python_code_units(
             texts, {"pkg/main.py": {(1, "."): "pkg/dep.py"}}
@@ -79,9 +86,14 @@ class PythonCodeUnitTests(unittest.TestCase):
 
     def test_nonlocal_rebinding_suppresses_call(self):
         source = (
-            "def outer():\n    def target():\n        pass\n"
-            "    def replace():\n        nonlocal target\n        target = other\n"
-            "    def caller():\n        target()\n"
+            "def outer():\n"
+            "    def target():\n"
+            "        pass\n"
+            "    def replace():\n"
+            "        nonlocal target\n"
+            "        target = other\n"
+            "    def caller():\n"
+            "        target()\n"
         )
         _, calls = python_code_units({"a.py": source}, {})
         self.assertEqual(calls, [])

@@ -24,10 +24,20 @@ def _project_mount_is_exact(row: Mapping[str, Any], selection: object) -> bool:
     if "Mounts" not in row:
         return True
     mounts = row.get("Mounts")
-    if not isinstance(mounts, list) or len(mounts) != 2 or not all(isinstance(m, Mapping) for m in mounts):
+    if (
+        not isinstance(mounts, list)
+        or len(mounts) != 2
+        or not all(isinstance(m, Mapping) for m in mounts)
+    ):
         return False
-    volume = [m for m in mounts if m.get("Type") == "volume" and m.get("Name") == "anechoic-framework-db"
-              and m.get("Destination") == "/var/lib/anechoic" and m.get("RW") is True]
+    volume = [
+        m
+        for m in mounts
+        if m.get("Type") == "volume"
+        and m.get("Name") == "anechoic-framework-db"
+        and m.get("Destination") == "/var/lib/anechoic"
+        and m.get("RW") is True
+    ]
     if len(volume) != 1:
         return False
     mount = next(m for m in mounts if m is not volume[0])
@@ -41,8 +51,9 @@ def _project_mount_is_exact(row: Mapping[str, Any], selection: object) -> bool:
     )
 
 
-def _project_labels_are_exact(labels: Mapping[str, Any], row: Mapping[str, Any],
-                              selection: object) -> bool:
+def _project_labels_are_exact(
+    labels: Mapping[str, Any], row: Mapping[str, Any], selection: object
+) -> bool:
     """Bind real Docker inspect rows to exactly the selected Project.
 
     The frozen backend seam intentionally supplies the small common subset of
@@ -57,10 +68,11 @@ def _project_labels_are_exact(labels: Mapping[str, Any], row: Mapping[str, Any],
     control = getattr(selection, "control_relative", None)
     if not isinstance(control, Path) or control.is_absolute():
         return False
-    return (
-        labels.get("org.anechoic.control_root") == control.as_posix()
-        and labels.get("org.anechoic.host_project_root") == str(_selection_root(selection))
-    )
+    return labels.get(
+        "org.anechoic.control_root"
+    ) == control.as_posix() and labels.get(
+        "org.anechoic.host_project_root"
+    ) == str(_selection_root(selection))
 
 
 def _publisher(row: Mapping[str, Any]) -> tuple[str, int] | None:
@@ -69,18 +81,33 @@ def _publisher(row: Mapping[str, Any]) -> tuple[str, int] | None:
     if not isinstance(ports, Mapping) or set(ports) != {"8092/tcp"}:
         return None
     rows = ports.get("8092/tcp")
-    if not isinstance(rows, list) or len(rows) != 1 or not isinstance(rows[0], Mapping):
+    if (
+        not isinstance(rows, list)
+        or len(rows) != 1
+        or not isinstance(rows[0], Mapping)
+    ):
         return None
     publisher = rows[0]
     value = publisher.get("HostPort")
-    if publisher.get("HostIp") != "127.0.0.1" or not isinstance(value, str) or not value.isdecimal():
+    if (
+        publisher.get("HostIp") != "127.0.0.1"
+        or not isinstance(value, str)
+        or not value.isdecimal()
+    ):
         return None
     port = int(value)
-    return ("http://127.0.0.1:" + value + MCP_PATH, port) if 1 <= port <= 65535 else None
+    return (
+        ("http://127.0.0.1:" + value + MCP_PATH, port)
+        if 1 <= port <= 65535
+        else None
+    )
 
 
-def _attribution(selection: object | None, image_id: str | None = None,
-                 fingerprint: str | None = None) -> dict[str, Any]:
+def _attribution(
+    selection: object | None,
+    image_id: str | None = None,
+    fingerprint: str | None = None,
+) -> dict[str, Any]:
     """Return only fields that remain safe if a launch stops early."""
     root = control = project_id = None
     if selection is not None:
@@ -98,9 +125,15 @@ def _attribution(selection: object | None, image_id: str | None = None,
         "project_root": root,
         "control_root": control,
         "project_id": project_id,
-        "image_id": image_id if isinstance(image_id, str) and _IMAGE.fullmatch(image_id) else None,
-        "fingerprint": (fingerprint if isinstance(fingerprint, str)
-                        and _FINGERPRINT.fullmatch(fingerprint) else None),
+        "image_id": image_id
+        if isinstance(image_id, str) and _IMAGE.fullmatch(image_id)
+        else None,
+        "fingerprint": (
+            fingerprint
+            if isinstance(fingerprint, str)
+            and _FINGERPRINT.fullmatch(fingerprint)
+            else None
+        ),
         "container_id": None,
         "service": "mcp-http",
         "port": None,
@@ -133,8 +166,12 @@ def _admit_runtime(rows: object, selection: object, image_id: str, fingerprint: 
         return "RUNTIME_MISMATCH"
     state = row.get("State")
     health = state.get("Health") if isinstance(state, Mapping) else None
-    if not (isinstance(state, Mapping) and state.get("Status") == "running"
-            and isinstance(health, Mapping) and health.get("Status") == "healthy"):
+    if not (
+        isinstance(state, Mapping)
+        and state.get("Status") == "running"
+        and isinstance(health, Mapping)
+        and health.get("Status") == "healthy"
+    ):
         return "RUNTIME_UNHEALTHY"
     publisher = _publisher(row)
     if publisher is None:
@@ -144,5 +181,10 @@ def _admit_runtime(rows: object, selection: object, image_id: str, fingerprint: 
     container = row.get("Id")
     if not isinstance(container, str) or not container:
         return "DOCKER_PUBLICATION_FAILED"
-    return {"row": row, "container_id": container, "url": publisher[0], "port": publisher[1]}
+    return {
+        "row": row,
+        "container_id": container,
+        "url": publisher[0],
+        "port": publisher[1],
+    }
 

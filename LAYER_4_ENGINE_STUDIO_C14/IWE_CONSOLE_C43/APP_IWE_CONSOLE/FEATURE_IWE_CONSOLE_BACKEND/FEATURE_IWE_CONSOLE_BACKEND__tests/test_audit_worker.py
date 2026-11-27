@@ -7,10 +7,12 @@ import time
 from types import SimpleNamespace
 import unittest
 
-from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.FEATURE_IWE_CONSOLE_BACKEND__shared import (
-    AuditSnapshot,
-    AuditWorker,
-)
+from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.\
+    FEATURE_IWE_CONSOLE_BACKEND__shared \
+    import (
+        AuditSnapshot,
+        AuditWorker,
+    )  # fmt: skip
 
 
 class Store:

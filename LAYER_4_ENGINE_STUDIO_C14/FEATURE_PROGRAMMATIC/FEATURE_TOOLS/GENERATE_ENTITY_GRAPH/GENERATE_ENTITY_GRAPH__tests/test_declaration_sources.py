@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from importlib import import_module
 import hashlib
 import sys
 import unittest
@@ -9,11 +10,6 @@ import unittest
 sys.path.insert(0, str(TOOL := Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(TOOLS := TOOL.parent))
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import (  # noqa: E402
-    compose_declaration_catalog,
-    resolve_relation_authorities,
-)
-
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.\
     GENERATE_ENTITY_GRAPH__tests.declaration_source_fixtures \
@@ -21,6 +17,14 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.\
         refresh_raw,
         relation_carrier,
     )  # fmt: skip
+
+
+_graph = import_module(
+    "FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH."
+    "GENERATE_ENTITY_GRAPH__shared"
+)
+compose_declaration_catalog = _graph.compose_declaration_catalog
+resolve_relation_authorities = _graph.resolve_relation_authorities
 
 
 def _relation_identity_carriers() -> list[dict]:
@@ -53,13 +57,48 @@ def _relation_identity_carriers() -> list[dict]:
         },
     ]
     carriers[2]["body"] = (
-        "## Scope\n\nAn IS_BORNE_BY Relation from Entity A to Entity B **in** the Entities Graph.\n"
+        "## Scope\n\nAn IS_BORNE_BY Relation from Entity A to "
+        "Entity B **in** the Entities Graph.\n"
         "\n## Claim\nText."
     )
     refresh_raw(carriers[2])
     carriers[-2]["body"] = carriers[-2]["body"].replace("in the", "within the")
     refresh_raw(carriers[-2])
     return carriers
+
+
+def _migrated_relation_carrier():
+    body = (
+        "## Scope\n\nRUN Relation in the Entities Graph.\n\n## Claim\nText.\n"
+    )
+    raw = (
+        "---\natom_id: CA-R-901090\nversion: 1\nstatus: Active\n"
+        "role: Requirement\nform: Relation Definition\nsubjects:\n"
+        "  active: Entity/CFEL <+ Relation//RUN\n  passive: []\n---\n" + body
+    ).encode("utf-8")
+    carrier = {
+        "source": {
+            "atom_id": "CA-R-901090",
+            "version": 1,
+            "path": "CA-R-901090.md",
+            "sha256": hashlib.sha256(raw).hexdigest(),
+        },
+        "metadata": {
+            "atom_id": "CA-R-901090",
+            "version": 1,
+            "status": "Active",
+            "role": "Requirement",
+            "form": "Relation Definition",
+        },
+        "subjects": {
+            "active": "Entity/CFEL <+ Relation//RUN",
+            "passive": [],
+        },
+        "body": body,
+        "raw_body": body,
+        "raw": raw,
+    }
+    return carrier
 
 
 class DeclarationSourcesTests(unittest.TestCase):
@@ -113,7 +152,8 @@ class DeclarationSourcesTests(unittest.TestCase):
             "CA-R-901012", "Entity/Relation/Type: CONTAINS", "Entities Graph"
         )
         ambiguous_scope["body"] = (
-            "## Scope\n\nCONTAINS Relation in the Entities Graph and in the Terms Graph.\n"
+            "## Scope\n\nCONTAINS Relation in the Entities Graph "
+            "and in the Terms Graph.\n"
         )
         refresh_raw(missing_scope)
         refresh_raw(ambiguous_scope)
@@ -134,14 +174,17 @@ class DeclarationSourcesTests(unittest.TestCase):
             "CA-R-901013", "IS_BORNE_BY", "Entities Graph"
         )
         incidental["body"] = (
-            "## Scope\n\nIS_BORNE_BY Relation is described here. The check applies to the Entities Graph.\n"
+            "## Scope\n\nIS_BORNE_BY Relation is described here. "
+            "The check applies to the Entities Graph.\n"
         )
         refresh_raw(incidental)
         carriers = [incidental]
         for index, body in enumerate(
             (
-                "```markdown\n## Scope\n\nIS_BORNE_BY Relation in the Entities Graph.\n```\n",
-                "Scope\n-----\n\nIS_BORNE_BY Relation in the Entities Graph.\n",
+                "```markdown\n## Scope\n\nIS_BORNE_BY Relation "
+                "in the Entities Graph.\n```\n",
+                "Scope\n-----\n\nIS_BORNE_BY Relation "
+                "in the Entities Graph.\n",
                 "   ## Scope\n\nIS_BORNE_BY Relation in the Entities Graph.\n",
             ),
             start=901014,
@@ -160,7 +203,7 @@ class DeclarationSourcesTests(unittest.TestCase):
         self.assertEqual(catalog["relation_types"], [])
         self.assertEqual(len(catalog["unresolved"]), len(carriers))
 
-    def test_approved_relation_identity_resolver_requires_exact_unique_active_definition(
+    def _case_0(
         self,
     ):
         def definition(atom_id):
@@ -173,7 +216,8 @@ class DeclarationSourcesTests(unittest.TestCase):
             raw = carrier["raw"].replace(
                 b"status: Active\n---",
                 b"status: Active\ntype: Relation Definition\nsubjects:\n"
-                b"  governs: Entity/Graph Syntax <+ Relation//IS_PROPERTY_OF\n---",
+                b"  governs: Entity/Graph Syntax <+ "
+                b"Relation//IS_PROPERTY_OF\n---",
             )
             carrier["raw"] = raw
             carrier["source"]["sha256"] = hashlib.sha256(raw).hexdigest()
@@ -202,38 +246,10 @@ class DeclarationSourcesTests(unittest.TestCase):
                         ["IS_PROPERTY_OF"],
                     )
 
-    def test_migrated_role_form_relation_definition_stays_in_the_relation_catalog(
+    def _case_1(
         self,
     ):
-        body = "## Scope\n\nRUN Relation in the Entities Graph.\n\n## Claim\nText.\n"
-        raw = (
-            "---\natom_id: CA-R-901090\nversion: 1\nstatus: Active\n"
-            "role: Requirement\nform: Relation Definition\nsubjects:\n"
-            "  active: Entity/CFEL <+ Relation//RUN\n  passive: []\n---\n"
-            + body
-        ).encode("utf-8")
-        carrier = {
-            "source": {
-                "atom_id": "CA-R-901090",
-                "version": 1,
-                "path": "CA-R-901090.md",
-                "sha256": hashlib.sha256(raw).hexdigest(),
-            },
-            "metadata": {
-                "atom_id": "CA-R-901090",
-                "version": 1,
-                "status": "Active",
-                "role": "Requirement",
-                "form": "Relation Definition",
-            },
-            "subjects": {
-                "active": "Entity/CFEL <+ Relation//RUN",
-                "passive": [],
-            },
-            "body": body,
-            "raw_body": body,
-            "raw": raw,
-        }
+        carrier = _migrated_relation_carrier()
 
         self.assertEqual(
             carrier["source"],
@@ -247,3 +263,18 @@ class DeclarationSourcesTests(unittest.TestCase):
                 for row in catalog["relation_types"]
             ],
         )
+
+
+setattr(
+    DeclarationSourcesTests,
+    "test_approved_relation_identity_resolver"
+    "_requires_exact_unique_active_definition",
+    DeclarationSourcesTests._case_0,
+)
+
+setattr(
+    DeclarationSourcesTests,
+    "test_migrated_role_form_relation_def"
+    "inition_stays_in_the_relation_catalog",
+    DeclarationSourcesTests._case_1,
+)

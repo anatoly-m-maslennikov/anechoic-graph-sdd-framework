@@ -47,14 +47,23 @@ class BridgeHTTPTests(BridgeHTTPFixture):
         reader = self.collect_turn(connection, response, output)
         reader.join(timeout=5)
         self.assertFalse(reader.is_alive())
-        packets = [item["event"] for item in output["events"] if item.get("type") == "event"]
-        messages = [packet["params"]["sequence"] for packet in packets
-                    if packet.get("method") == "item/burst"]
+        packets = [
+            item["event"]
+            for item in output["events"]
+            if item.get("type") == "event"
+        ]
+        messages = [
+            packet["params"]["sequence"]
+            for packet in packets
+            if packet.get("method") == "item/burst"
+        ]
         self.assertEqual(list(range(100)), messages)
         self.assertEqual("turn/completed", packets[-1]["method"])
         self.assertEqual("finished", output["events"][-1]["type"])
 
-    def test_persistent_thread_streams_native_ids_and_interactions(self) -> None:
+    def test_persistent_thread_streams_native_ids_and_interactions(
+        self,
+    ) -> None:
         status, first = self.json_request("GET", "/conversation")
         self.assertEqual(200, status)
         self.assertEqual("native-thread-1", first["thread_id"])
@@ -79,37 +88,53 @@ class BridgeHTTPTests(BridgeHTTPFixture):
         reader.join(timeout=5)
         self.assertFalse(reader.is_alive())
         events = output["events"]
-        started = next(item for item in events if item.get("type") == "started")
+        started = next(
+            item for item in events if item.get("type") == "started"
+        )
         streamed = next(
-            item for item in events
-            if item.get("type") == "event" and item.get("event", {}).get("method") == "item/agentMessage"
+            item
+            for item in events
+            if item.get("type") == "event"
+            and item.get("event", {}).get("method") == "item/agentMessage"
         )
         completed_native = next(
-            item for item in events
-            if item.get("type") == "event" and item.get("event", {}).get("method") == "turn/completed"
+            item
+            for item in events
+            if item.get("type") == "event"
+            and item.get("event", {}).get("method") == "turn/completed"
         )["event"]
-        finished = next(item for item in events if item.get("type") == "finished")
+        finished = next(
+            item for item in events if item.get("type") == "finished"
+        )
         self.assertEqual("native-thread-1", started["thread_id"])
         self.assertEqual(started["turn_id"], streamed["turn_id"])
         self.assertEqual("item/agentMessage", streamed["event"]["method"])
-        self.assertEqual("native-thread-1", completed_native["params"]["threadId"])
+        self.assertEqual(
+            "native-thread-1", completed_native["params"]["threadId"]
+        )
         self.assertEqual("completed", finished["status"])
 
     def _assert_approval_turn(self) -> None:
         connection, response = self.open_turn("approval")
         approval_output: dict[str, list[dict[str, Any]]] = {"events": []}
-        approval_reader = self.collect_turn(connection, response, approval_output)
+        approval_reader = self.collect_turn(
+            connection, response, approval_output
+        )
         self.wait_for_pending("native-approval-request")
         status, _ = self.json_request(
-            "POST", "/respond", {"id": "native-approval-request", "result": {"approved": True}}
+            "POST",
+            "/respond",
+            {"id": "native-approval-request", "result": {"approved": True}},
         )
         self.assertEqual(200, status)
         approval_reader.join(timeout=5)
         self.assertFalse(approval_reader.is_alive())
         approval_event = next(
-            item for item in approval_output["events"]
+            item
+            for item in approval_output["events"]
             if item.get("type") == "event"
-            and item.get("event", {}).get("method") == "item/commandExecution/requestApproval"
+            and item.get("event", {}).get("method")
+            == "item/commandExecution/requestApproval"
         )["event"]
         self.assertEqual(
             {"threadId", "turnId", "itemId", "reason"},
@@ -121,7 +146,11 @@ class BridgeHTTPTests(BridgeHTTPFixture):
         )
         self.assertEqual(
             "completed",
-            next(item for item in approval_output["events"] if item.get("type") == "finished")["status"],
+            next(
+                item
+                for item in approval_output["events"]
+                if item.get("type") == "finished"
+            )["status"],
         )
 
     def _assert_user_input_turn(self) -> None:
@@ -138,9 +167,11 @@ class BridgeHTTPTests(BridgeHTTPFixture):
         input_reader.join(timeout=5)
         self.assertFalse(input_reader.is_alive())
         input_event = next(
-            item for item in input_output["events"]
+            item
+            for item in input_output["events"]
             if item.get("type") == "event"
-            and item.get("event", {}).get("method") == "item/tool/requestUserInput"
+            and item.get("event", {}).get("method")
+            == "item/tool/requestUserInput"
         )["event"]
         self.assertEqual(
             {"threadId", "turnId", "itemId", "questions"},
@@ -156,13 +187,19 @@ class BridgeHTTPTests(BridgeHTTPFixture):
         )
         self.assertEqual(
             "completed",
-            next(item for item in input_output["events"] if item.get("type") == "finished")["status"],
+            next(
+                item
+                for item in input_output["events"]
+                if item.get("type") == "finished"
+            )["status"],
         )
 
     def _assert_elicitation_turn(self) -> None:
         connection, response = self.open_turn("elicitation")
         elicitation_output: dict[str, list[dict[str, Any]]] = {"events": []}
-        elicitation_reader = self.collect_turn(connection, response, elicitation_output)
+        elicitation_reader = self.collect_turn(
+            connection, response, elicitation_output
+        )
         self.wait_for_pending("native-elicitation-request")
         status, _ = self.json_request(
             "POST",
@@ -176,20 +213,30 @@ class BridgeHTTPTests(BridgeHTTPFixture):
         elicitation_reader.join(timeout=5)
         self.assertFalse(elicitation_reader.is_alive())
         elicitation_event = next(
-            item for item in elicitation_output["events"]
+            item
+            for item in elicitation_output["events"]
             if item.get("type") == "event"
-            and item.get("event", {}).get("method") == "mcpServer/elicitation/request"
+            and item.get("event", {}).get("method")
+            == "mcpServer/elicitation/request"
         )["event"]
-        self.assertEqual("mcpServer/elicitation/request", elicitation_event["method"])
+        self.assertEqual(
+            "mcpServer/elicitation/request", elicitation_event["method"]
+        )
         self.assertEqual(
             "completed",
-            next(item for item in elicitation_output["events"] if item.get("type") == "finished")["status"],
+            next(
+                item
+                for item in elicitation_output["events"]
+                if item.get("type") == "finished"
+            )["status"],
         )
 
     def _assert_interrupted_turn(self) -> None:
         connection, response = self.open_turn("interrupt")
         interrupt_output: dict[str, list[dict[str, Any]]] = {"events": []}
-        interrupt_reader = self.collect_turn(connection, response, interrupt_output)
+        interrupt_reader = self.collect_turn(
+            connection, response, interrupt_output
+        )
         deadline = time.monotonic() + 5
         turn_id = None
         while time.monotonic() < deadline and turn_id is None:
@@ -198,15 +245,23 @@ class BridgeHTTPTests(BridgeHTTPFixture):
             if turn_id is None:
                 time.sleep(0.05)
         self.assertIsInstance(turn_id, str)
-        status, _ = self.json_request("POST", "/interrupt", {"turn_id": "not-the-active-turn"})
+        status, _ = self.json_request(
+            "POST", "/interrupt", {"turn_id": "not-the-active-turn"}
+        )
         self.assertEqual(400, status)
-        status, _ = self.json_request("POST", "/interrupt", {"turn_id": turn_id})
+        status, _ = self.json_request(
+            "POST", "/interrupt", {"turn_id": turn_id}
+        )
         self.assertEqual(200, status)
         interrupt_reader.join(timeout=5)
         self.assertFalse(interrupt_reader.is_alive())
         self.assertEqual(
             "interrupted",
-            next(item for item in interrupt_output["events"] if item.get("type") == "finished")["status"],
+            next(
+                item
+                for item in interrupt_output["events"]
+                if item.get("type") == "finished"
+            )["status"],
         )
 
     def _assert_final_conversation(self) -> None:
@@ -220,23 +275,32 @@ class BridgeHTTPTests(BridgeHTTPFixture):
     def test_origin_guard_health_route_and_runtime_state(self) -> None:
         status, _ = self.json_request("GET", "/conversation")
         self.assertEqual(200, status)
-        status, _, _ = self.request("GET", "/conversation", origin="http://attacker.invalid")
+        status, _, _ = self.request(
+            "GET", "/conversation", origin="http://attacker.invalid"
+        )
         self.assertEqual(403, status)
         status, health = self.json_request("GET", "/health", origin=None)
         self.assertEqual(200, status)
         self.assertTrue(health.get("ready"))
 
         state = json.loads(
-            (self.root / ".anechoic_runtime/iwe_console/codex/thread.json").read_text(encoding="utf-8")
+            (
+                self.root / ".anechoic_runtime/iwe_console/codex/thread.json"
+            ).read_text(encoding="utf-8")
         )
         self.assertEqual({"thread_id"}, set(state))
         self.assertEqual("native-thread-1", state["thread_id"])
 
-        audit = [json.loads(line) for line in self.audit.read_text(encoding="utf-8").splitlines()]
+        audit = [
+            json.loads(line)
+            for line in self.audit.read_text(encoding="utf-8").splitlines()
+        ]
         argv = next(item["argv"] for item in audit if "argv" in item)
         self.assertEqual("app-server", argv[-1])
         self.assertIn("-c", argv)
-        self.assertTrue(any(item.startswith("mcp_servers.anechoic.url=") for item in argv))
+        self.assertTrue(
+            any(item.startswith("mcp_servers.anechoic.url=") for item in argv)
+        )
         forbidden_flags = ("--model", "--tool", "--tools", "--auth", "--sandbox", "--approval")
         self.assertFalse(any(item == flag or item.startswith(flag + "=") for item in argv for flag in forbidden_flags))
         thread_starts = [

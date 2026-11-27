@@ -8,8 +8,8 @@ context:
   lens: SWD
 state:
   status: active
-  version: 21
-  updated_at: 2026-11-02 19:46:47 +0400
+  version: 22
+  updated_at: "2026-11-27T16:29:34.309627+00:00"
 ---
 ## Summary
 
@@ -23,7 +23,7 @@ use this Method **when** `PROJECTION_REBUILD` **must** refresh Projections affec
 
 ## Procedure
 
-1. confirm that `PROJECTION_REBUILD` is registered as one `unordered_unit` Doer owned immediately by `TOOLS` at Structural level `4`, with prefix `PROJECTION_REBUILD`, address `LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/PROJECTION_REBUILD`, **and** realization path `LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/PROJECTION_REBUILD/`.
+1. Verify the `PROJECTION_REBUILD` registration against AN-S-1183.
 2. resolve the changed source frontiers **and** derive the complete affected Projection set using declared Projection dependencies.
 3. order affected Projections by those dependencies **and** reject an unresolved **or** cyclic dependency order.
 4. preview **every** derived output effect, including output identity, source frontier, **and** expected currentness state.

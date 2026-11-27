@@ -136,9 +136,16 @@ class ManifestReload:
 
     def configure(self, selected, version, owner, backend, commands):
         owner.command, backend.command = commands
-        backend.environment = {**backend.environment, "ANECHOIC_BETA_DIRECT_MANIFEST": json.dumps({
-            "path": str(selected.manifest_path), "version": version, "gate": str(self.gate),
-        })}
+        backend.environment = {
+            **backend.environment,
+            "ANECHOIC_BETA_DIRECT_MANIFEST": json.dumps(
+                {
+                    "path": str(selected.manifest_path),
+                    "version": version,
+                    "gate": str(self.gate),
+                }
+            ),
+        }
         self.selection, self.version = selected, version
 
     def children(self, environment):
@@ -163,9 +170,13 @@ class ManifestReload:
         self.gate.write_text("project_manifest_reloading", encoding="ascii")
         try:
             selected = self.select()
-            if (selected.manifest_path, selected.instance_id) != (self.selection.manifest_path,
-                                                                  self.selection.instance_id):
-                raise ValueError("The selected Project Manifest binding changed")
+            if (selected.manifest_path, selected.instance_id) != (
+                self.selection.manifest_path,
+                self.selection.instance_id,
+            ):
+                raise ValueError(
+                    "The selected Project Manifest binding changed"
+                )
             sealed = _sealed_version(selected)
             commands = self.arguments(selected, backend.socket)
         except (AttributeError, OSError, RuntimeError, TypeError, ValueError) as error:
@@ -188,19 +199,53 @@ class ManifestReload:
         return True
 
     def wait_for_lifecycle(self, owner):
-        if not _lifecycle_idle(owner, self.directory / "jobs.sock", self.selection.instance_id):
-            print("Waiting for the Project lifecycle before Manifest reload", file=sys.stderr, flush=True)
-            while not _lifecycle_idle(owner, self.directory / "jobs.sock", self.selection.instance_id):
+        if not _lifecycle_idle(
+            owner, self.directory / "jobs.sock", self.selection.instance_id
+        ):
+            print(
+                "Waiting for the Project lifecycle before Manifest reload",
+                file=sys.stderr,
+                flush=True,
+            )
+            while not _lifecycle_idle(
+                owner, self.directory / "jobs.sock", self.selection.instance_id
+            ):
                 sleep(0.25)
 
 
-def _run_services(owner, backend, mcp, ready, stopping, *, restart_owner, reload=None, diagnostics=None):
+def _start_transports(backend, mcp, diagnostics):
+    backend.ensure()
+    if diagnostics is not None and diagnostics.process is not None:
+        if not backend.socket.is_socket():
+            return False
+        diagnostics.stop()
+    mcp.ensure()
+    return True
+
+
+def _recover_owner(owner, stopping, restart):
+    if not restart:
+        return owner.process.returncode or 1
+    if stopping.wait(0.5):
+        return 0
+    owner.ensure()
+    return None
+
+
+def _run_services(
+    owner, backend, mcp, ready, stopping, *, restart_owner, reload=None,
+    diagnostics=None,
+):
     admitted = serving = False
     if owner.command:
         owner.ensure()
     while not stopping.is_set():
-        if reload is not None and not reload.refresh(owner, backend, mcp, stopping):
-            if diagnostics is not None and (mcp.process is None or mcp.process.poll() is not None):
+        if reload is not None and not reload.refresh(
+            owner, backend, mcp, stopping
+        ):
+            if diagnostics is not None and (
+                mcp.process is None or mcp.process.poll() is not None
+            ):
                 diagnostics.ensure()
             stopping.wait(0.25)
             continue
@@ -208,24 +253,20 @@ def _run_services(owner, backend, mcp, ready, stopping, *, restart_owner, reload
             break
         owner_exited = owner.process.poll() is not None
         if not owner_exited and ready():
-            backend.ensure()
-            if diagnostics is not None and diagnostics.process is not None:
-                if not backend.socket.is_socket():
-                    stopping.wait(0.25)
-                    continue
-                diagnostics.stop()
-            mcp.ensure()
+            if not _start_transports(backend, mcp, diagnostics):
+                stopping.wait(0.25)
+                continue
             admitted = serving = True
         elif restart_owner and serving:
             mcp.stop()
             backend.stop()
             serving = False
-        if owner_exited:
-            if not restart_owner or not admitted:
-                return owner.process.returncode or 1
-            if stopping.wait(0.5):
-                break
-            owner.ensure()
+        if owner_exited and (
+            exit_code := _recover_owner(
+                owner, stopping, restart_owner and admitted
+            )
+        ) is not None:
+            return exit_code
         stopping.wait(0.25)
     return 0
 
@@ -243,8 +284,16 @@ def _supervise(command, environment, configure, *, restart_owner=False):
             mcp_environment = {**environment, "ANECHOIC_BETA_BACKEND_SOCKET": str(backend.socket)}
             diagnostics = None
             if reload is not None:
-                mcp_environment["ANECHOIC_BETA_DIRECT_TRANSPORT_GATE"] = str(reload.gate)
-                diagnostics = Child(command, {**mcp_environment, "ANECHOIC_BETA_DIRECT_DIAGNOSTICS": "1"})
+                mcp_environment["ANECHOIC_BETA_DIRECT_TRANSPORT_GATE"] = str(
+                    reload.gate
+                )
+                diagnostics = Child(
+                    command,
+                    {
+                        **mcp_environment,
+                        "ANECHOIC_BETA_DIRECT_DIAGNOSTICS": "1",
+                    },
+                )
                 stack.callback(diagnostics.stop)
             mcp = Child(command, mcp_environment)
             for service in (owner, backend, mcp):
@@ -284,9 +333,12 @@ def supervise_project(command, environment, project_root):
     from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import select_runtime_project
 
     def select():
-        return select_runtime_project(project_root, environment.get("ANECHOIC_CONTROL_ROOT"),
-                                      instance_id=environment.get("ANECHOIC_PROJECT_INSTANCE_ID"),
-                                      host_root=environment.get("ANECHOIC_HOST_PROJECT_ROOT"))
+        return select_runtime_project(
+            project_root,
+            environment.get("ANECHOIC_CONTROL_ROOT"),
+            instance_id=environment.get("ANECHOIC_PROJECT_INSTANCE_ID"),
+            host_root=environment.get("ANECHOIC_HOST_PROJECT_ROOT"),
+        )
 
     def configure(directory):
         reload = ManifestReload(select, _direct_arguments, directory)

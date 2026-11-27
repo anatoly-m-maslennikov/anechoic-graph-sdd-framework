@@ -66,8 +66,11 @@ class ContentRule:
 
     def applies(self, row: Mapping[str, Any]) -> bool:
         return (
-            (self.roles is None or matches_carrier_label(row.get("role"), self.roles))
-            and (self.forms is None or matches_carrier_label(row.get("form"), self.forms))
+            self.roles is None
+            or matches_carrier_label(row.get("role"), self.roles)
+        ) and (
+            self.forms is None
+            or matches_carrier_label(row.get("form"), self.forms)
         )
 
 
@@ -90,8 +93,16 @@ class ContentSchema:
     columns: tuple[ContentColumn, ...]
     rules: tuple[ContentRule, ...]
     sources: tuple[DeclarationSource, ...]
-    _layouts: Annotated[dict[tuple[str | None, str | None], tuple[Any, frozenset[tuple[str, ...]]]], WrapValidator(_retain_mapping)] = field(
-        default_factory=dict, compare=False, repr=False,
+    _layouts: Annotated[
+        dict[
+            tuple[str | None, str | None],
+            tuple[Any, frozenset[tuple[str, ...]]],
+        ],
+        WrapValidator(_retain_mapping),
+    ] = field(
+        default_factory=dict,
+        compare=False,
+        repr=False,
     )
 
     @property
@@ -117,7 +128,9 @@ class ContentSchema:
         if not isinstance(records, list):
             records = parse_content(body, tolerate_duplicate_siblings=True) if isinstance(body, str) else []
         elif isinstance(body, str) and any(
-            not isinstance(record, Mapping) or content_record_span(record) is None for record in records
+            not isinstance(record, Mapping)
+            or content_record_span(record) is None
+            for record in records
         ):
             records = parse_content(body, tolerate_duplicate_siblings=True)
         values = records_by_path(records)
@@ -150,7 +163,11 @@ class ContentSchema:
         records = row.get("content_properties_json")
         if not isinstance(records, list):
             body = source_markdown(row)
-            records = parse_content(body, tolerate_duplicate_siblings=True) if isinstance(body, str) else []
+            records = (
+                parse_content(body, tolerate_duplicate_siblings=True)
+                if isinstance(body, str)
+                else []
+            )
         self._validate(records_by_path(records), row)
 
     def _validate(
@@ -194,8 +211,12 @@ class ContentSchema:
                     "format": "VARCHAR",
                     "rules": [
                         {
-                            "roles": sorted(rule.roles) if rule.roles is not None else None,
-                            "forms": sorted(rule.forms) if rule.forms is not None else None,
+                            "roles": sorted(rule.roles)
+                            if rule.roles is not None
+                            else None,
+                            "forms": sorted(rule.forms)
+                            if rule.forms is not None
+                            else None,
                             "source": rule.source.asset(),
                             "provenance": [source.asset() for source in rule.provenance],
                         }
@@ -209,7 +230,10 @@ class ContentSchema:
 
     def write(self, path: Path | None) -> None:
         if path is not None:
-            path.write_text(json.dumps(self.asset(), ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+            path.write_text(
+                json.dumps(self.asset(), ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
 
 
 def content_schema_asset_path(database_path: Path | None) -> Path | None:

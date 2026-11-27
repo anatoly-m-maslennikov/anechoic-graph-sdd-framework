@@ -8,9 +8,9 @@ context:
   template: STANDARD
   lens: QA
 state:
-  status: "active"
-  version: 3
-  updated_at: '2026-11-26T16:36:43.706262+00:00'
+  status: active
+  version: 5
+  updated_at: "2026-11-27T16:29:34.309627+00:00"
 
 ---
 
@@ -36,9 +36,8 @@ from other phases against the isolated production candidate.
 
 #### Load
 
-For a relevant change, run a Load check separately from other phases in an
-external development harness. Exclude the harness from candidate resource
-measurements.
+For a relevant change, run a Load check separately from other phases.
+Exclude the harness from candidate resource measurements.
 
 #### Soak
 
@@ -73,6 +72,13 @@ aspiration, distinct from the existing 1.5 s Workbench single-operation case.
 The archived Workbench plan
 AN-S-1355@7 is historical context only. Use no numeric limit from it unless a
 current runnable test declares and verifies that limit.
+
+#### Fast Local Release timing
+
+Measure from the first start to production readiness, including fixes and
+continuations. The ideal target is 10 minutes. The mandatory performance
+limit is 15 minutes. Report whether each target was met. An overrun is a QA
+performance miss. Tests and delivery proceed under their normal gates.
 
 #### Startup timing
 

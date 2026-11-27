@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-3360
+concern:
+  subject: "Module/(.Language := python)"
+  path: "Model/Graph/Node//Artifact//SSOT//Realization/Content"
+  relation: "is_contained_by"
 container:
   component: C14
 tier: 3
@@ -8,8 +12,8 @@ context:
   lens: DevOps
 state:
   status: active
-  version: 5
-  updated_at: "2026-11-23T01:48:06.203636+00:00"
+  version: 6
+  updated_at: "2026-11-27T16:16:01.404965+00:00"
 ---
 ## Summary
 

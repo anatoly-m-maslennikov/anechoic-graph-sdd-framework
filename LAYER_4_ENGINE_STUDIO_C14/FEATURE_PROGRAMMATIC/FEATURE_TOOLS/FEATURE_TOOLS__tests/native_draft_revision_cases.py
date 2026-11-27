@@ -102,16 +102,31 @@ class FirstSpecRevisionCases:
 
 
     def test_first_spec_preserves_other_drafts(self):
-        old = self.spec('UNIT_C9/01_draft/AN-S-8@1-draft-DES--example.md', 'AN-S-8')
-        old.write_text(old.read_text().replace('status: active', 'status: draft'))
-        draft = self.spec('UNIT_C9/01_draft/AN-S-8@2-draft-DES--example.md', 'AN-S-8')
-        draft.write_text(draft.read_text().replace('status: active', 'status: draft').replace('version: 1', 'version: 2'))
+        old = self.spec(
+            "UNIT_C9/01_draft/AN-S-8@1-draft-DES--example.md", "AN-S-8"
+        )
+        old.write_text(
+            old.read_text().replace("status: active", "status: draft")
+        )
+        draft = self.spec(
+            "UNIT_C9/01_draft/AN-S-8@2-draft-DES--example.md", "AN-S-8"
+        )
+        draft.write_text(
+            draft.read_text()
+            .replace("status: active", "status: draft")
+            .replace("version: 1", "version: 2")
+        )
         original = old.read_bytes()
-        result = promote_draft(self.selection,
-            {'target': {'ref_id': 'AN-S-8@2-draft', 'version': 2}, 'targetStatus': 'ready'},
-            current_rows=capture_native(self.selection).atoms)
-        self.assertEqual('completed', result['outcome'])
-        self.assertEqual(2, result['artifact']['version'])
+        result = promote_draft(
+            self.selection,
+            {
+                "target": {"ref_id": "AN-S-8@2-draft", "version": 2},
+                "targetStatus": "ready",
+            },
+            current_rows=capture_native(self.selection).atoms,
+        )
+        self.assertEqual("completed", result["outcome"])
+        self.assertEqual(2, result["artifact"]["version"])
         self.assertEqual(original, old.read_bytes())
         self.assertFalse(draft.exists())
 
@@ -119,11 +134,20 @@ class FirstSpecRevisionCases:
     def test_first_spec_rejects_unsafe_or_stale_inputs(self):
         for case in ('owner', 'lens', 'template', 'manifest_name', 'filename', 'history', 'stale', 'status'):
             with self.subTest(case=case):
-                name = ('SPEC-PROJECT_MANIFEST--example.md' if case == 'manifest_name' else
-                        'SWD--example.md' if case == 'filename' else 'DES--example.md')
-                draft = self.spec(f'UNIT_C9/01_draft/AN-S-8@1-draft-{name}', 'AN-S-8',
-                                  'invalid/lens!' if case == 'lens' else 'DES', 'C8' if case == 'owner' else 'C9')
-                header, body = draft.read_text().split('---\n', 2)[1:]
+                name = (
+                    "SPEC-PROJECT_MANIFEST--example.md"
+                    if case == "manifest_name"
+                    else "SWD--example.md"
+                    if case == "filename"
+                    else "DES--example.md"
+                )
+                draft = self.spec(
+                    f"UNIT_C9/01_draft/AN-S-8@1-draft-{name}",
+                    "AN-S-8",
+                    "invalid/lens!" if case == "lens" else "DES",
+                    "C8" if case == "owner" else "C9",
+                )
+                header, body = draft.read_text().split("---\n", 2)[1:]
                 data = yaml.safe_load(header)
                 data['state']['status'] = 'draft'
                 if case == 'filename':
@@ -150,7 +174,9 @@ class FirstSpecRevisionCases:
 
 
     def test_template_recode_preserves_old_draft_and_archive_name(self):
-        current = self.spec('UNIT_C9/_SPEC/AN-S-44-SPEC--example.md', 'AN-S-44', 'SPEC')
+        current = self.spec(
+            "UNIT_C9/_SPEC/AN-S-44-SPEC--example.md", "AN-S-44", "SPEC"
+        )
         _, text, body = current.read_text().split('---', 2)
         metadata = yaml.safe_load(text)
         metadata['context']['tier'] = 2
@@ -160,10 +186,14 @@ class FirstSpecRevisionCases:
         def rows():
             return capture_native(self.selection).atoms
         params = {'sourceCurrent': {'ref_id': 'AN-S-44', 'version': 1}}
-        first = create_draft(self.selection, params, current_rows=rows())['savedDraft']
+        first = create_draft(self.selection, params, current_rows=rows())[
+            "savedDraft"
+        ]
         old_draft = self.root / first['path']
         old_bytes = old_draft.read_bytes()
-        second = create_draft(self.selection, params, current_rows=rows())['savedDraft']
+        second = create_draft(self.selection, params, current_rows=rows())[
+            "savedDraft"
+        ]
         draft = self.root / second['path']
         _, text, _ = draft.read_text().split('---', 2)
         metadata = yaml.safe_load(text)
@@ -171,8 +201,14 @@ class FirstSpecRevisionCases:
         typed_body = ('\n## Summary\n\nExample\n\n## Claim scope\n\nMODEL//ANECHOIC <+ Graph/Relation//LINK\n\n'
                       '## Formal Manifest\n\n```python anechoic-edsl\nfrom anechoic.model import Relation\n'
                       'class Link(Relation):\n    name = "LINK"\n    source_endpoint = {"level": "model_entities"}\n    target_endpoint = {"level": "model_entities"}\n```\n')
-        draft.rename(draft.with_name('AN-S-44@3-draft-SPEC-MANIFEST_RELATION--example.md'))
-        draft = draft.with_name('AN-S-44@3-draft-SPEC-MANIFEST_RELATION--example.md')
+        draft.rename(
+            draft.with_name(
+                "AN-S-44@3-draft-SPEC-MANIFEST_RELATION--example.md"
+            )
+        )
+        draft = draft.with_name(
+            "AN-S-44@3-draft-SPEC-MANIFEST_RELATION--example.md"
+        )
         draft.write_text('---\n' + yaml.safe_dump(metadata, sort_keys=False) + '---' + typed_body)
         result = promote_draft(self.selection, {'target': {'ref_id': 'AN-S-44@3-draft', 'version': 3},
                                                'targetStatus': 'ready'}, current_rows=rows())
@@ -206,11 +242,22 @@ class FirstSpecRevisionCases:
                 'from anechoic.model import Node\nclass Atom(Node):\n    pass\n```\n')
         self.assertTrue(is_c9_typed_manifest(header))
         _validate_c9_typed_manifest(header, body)
-        for concern in (None, {}, {'subject': 'Atom'}, {**header['concern'], 'relation': 'unknown'}):
+        for concern in (
+            None,
+            {},
+            {"subject": "Atom"},
+            {**header["concern"], "relation": "unknown"},
+        ):
             with self.subTest(concern=concern), self.assertRaises(InputError):
-                _validate_c9_typed_manifest({**header, 'concern': concern}, body)
+                _validate_c9_typed_manifest(
+                    {**header, "concern": concern}, body
+                )
         with self.assertRaises(InputError):
-            _validate_c9_typed_manifest(header, '## Claim scope\n\nMODEL//ANECHOIC <+ Graph/Node//Atom\n\n' + body)
+            _validate_c9_typed_manifest(
+                header,
+                "## Claim scope\n\nMODEL//ANECHOIC <+ Graph/Node//Atom\n\n"
+                + body,
+            )
 
     def test_continuant_revision_accepts_legacy_typed_header_migration(self):
         from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.native_draft_revision import _check_revision_headers
@@ -242,22 +289,39 @@ class FirstSpecRevisionCases:
     def test_continuant_revision_promotes_legacy_typed_manifest(self):
         current = self.control / 'UNIT_C9/_SPEC/AN-S-4856-SPEC-MANIFEST_PROPERTY--declare-artifact-kind-classification.md'
         current.parent.mkdir(parents=True, exist_ok=True)
-        current.write_text(DRAFT_4856.replace('status: draft', 'status: active'))
+        current.write_text(
+            DRAFT_4856.replace("status: draft", "status: active")
+        )
         def rows():
             return capture_native(self.selection).atoms
-        saved = create_draft(self.selection, {'sourceCurrent': {'ref_id': 'AN-S-4856', 'version': 1}},
-                             current_rows=rows())['savedDraft']
+        saved = create_draft(
+            self.selection,
+            {"sourceCurrent": {"ref_id": "AN-S-4856", "version": 1}},
+            current_rows=rows(),
+        )["savedDraft"]
         draft = self.root / saved['path']
         _, text, body = draft.read_text().split('---\n', 2)
         header = yaml.safe_load(text)
         header['context']['lens'] = 'DOM/CONT'
-        header['concern'] = {'subject': 'Artifact Kind', 'path': 'Model/Graph/Classification', 'relation': 'classifies'}
+        header["concern"] = {
+            "subject": "Artifact Kind",
+            "path": "Model/Graph/Classification",
+            "relation": "classifies",
+        }
         body = body.replace('## Claim scope\n\nMODEL//ANECHOIC <+ Graph/Classification >| Artifact Kind\n\n', '')
         draft.rename(draft.with_name('AN-S-4856@2-draft-CONT-MANIFEST_PROPERTY--declare-artifact-kind-classification.md'))
         draft = draft.with_name('AN-S-4856@2-draft-CONT-MANIFEST_PROPERTY--declare-artifact-kind-classification.md')
-        draft.write_text('---\n' + yaml.safe_dump(header, sort_keys=False) + '---\n' + body)
-        result = promote_draft(self.selection, {'target': {'ref_id': 'AN-S-4856@2-draft', 'version': 2},
-                                               'targetStatus': 'ready'}, current_rows=rows())
+        draft.write_text(
+            "---\n" + yaml.safe_dump(header, sort_keys=False) + "---\n" + body
+        )
+        result = promote_draft(
+            self.selection,
+            {
+                "target": {"ref_id": "AN-S-4856@2-draft", "version": 2},
+                "targetStatus": "ready",
+            },
+            current_rows=rows(),
+        )
         self.assertEqual('completed', result['outcome'], result)
         self.assertTrue((self.control / 'UNIT_C9/09_archived/AN-S-4856@1-SPEC-MANIFEST_PROPERTY--declare-artifact-kind-classification.md').exists())
         self.assertTrue((self.root / result['artifact']['path']).exists())

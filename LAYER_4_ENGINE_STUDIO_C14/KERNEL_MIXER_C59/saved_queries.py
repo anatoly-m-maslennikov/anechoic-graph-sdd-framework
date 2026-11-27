@@ -23,12 +23,16 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import
 
 
 _LEGACY_ID = re.compile(r"^(?P<kind>[qw])_(?P<token>[0-9a-f]{32})$")
-_LEGACY_FILE = re.compile(r"^(?P<id>[qw]_[0-9a-f]{32})\.(?P<extension>sql|json)$")
+_LEGACY_FILE = re.compile(
+    r"^(?P<id>[qw]_[0-9a-f]{32})\.(?P<extension>sql|json)$"
+)
 _JOURNAL_AUTHOR = "workbench-saved-items"
 
 
 class _SavedQueryRow(BaseModel):
-    model_config = ConfigDict(strict=True, extra="forbid", hide_input_in_errors=True)
+    model_config = ConfigDict(
+        strict=True, extra="forbid", hide_input_in_errors=True
+    )
 
     saved_query_id: str
     kind: Literal["query", "view", "worksheet"]
@@ -41,14 +45,20 @@ class SavedQueryStore:
     """Own saved items under one Project's Journal and legacy runtime files."""
 
     def __init__(
-        self, root: Path, *, journal_root: str | None = None, journal_mode: str = "files",
+        self,
+        root: Path,
+        *,
+        journal_root: str | None = None,
+        journal_mode: str = "files",
         read_journal_events: Callable[[str], Iterable[object]] | None = None,
     ) -> None:
         self._root = Path(root)
         self._journal_root = journal_root
         self._journal_mode = journal_mode
         self._read_journal_events = read_journal_events
-        self._legacy_directory = console_state_path(self._root) / "saved_queries"
+        self._legacy_directory = (
+            console_state_path(self._root) / "saved_queries"
+        )
 
     @staticmethod
     def _sql(value: object) -> str:
@@ -97,16 +107,29 @@ class SavedQueryStore:
 
     def _legacy_path(self, saved_query_id: str) -> Path:
         kind, value = self._legacy_id(saved_query_id)
-        return self._legacy_directory / f"{value}.{'sql' if kind == 'q' else 'json'}"
+        return (
+            self._legacy_directory
+            / f"{value}.{'sql' if kind == 'q' else 'json'}"
+        )
 
     @staticmethod
     def _now() -> str:
         return dt.datetime.now(dt.UTC).isoformat()
 
-    def _record(self, sql: object, kind: Literal["query", "view"], name: object) -> dict[str, Any]:
-        value, saved_name, saved_at = self._sql(sql), self._name(name), self._now()
+    def _record(
+        self, sql: object, kind: Literal["query", "view"], name: object
+    ) -> dict[str, Any]:
+        value, saved_name, saved_at = (
+            self._sql(sql),
+            self._name(name),
+            self._now(),
+        )
         record = _SavedQueryRow(
-            saved_query_id=str(uuid.uuid7()), kind=kind, sql=value, saved_at=saved_at, name=saved_name,
+            saved_query_id=str(uuid.uuid7()),
+            kind=kind,
+            sql=value,
+            saved_at=saved_at,
+            name=saved_name,
         ).model_dump(exclude_none=True)
         try:
             append_sealed_events(
@@ -116,7 +139,11 @@ class SavedQueryStore:
                 local_date=saved_at[:10],
                 timezone="UTC",
                 journal_root=self._journal_root,
-                **({"storage": self._journal_mode} if self._journal_mode == "duckdb" else {}),
+                **(
+                    {"storage": self._journal_mode}
+                    if self._journal_mode == "duckdb"
+                    else {}
+                ),
             )
         except Exception as error:
             raise ValueError(f"saved query failed: {error}") from error
@@ -130,7 +157,9 @@ class SavedQueryStore:
 
     @staticmethod
     def _reference(value: object) -> str:
-        if isinstance(value, str) and (_LEGACY_ID.fullmatch(value) or _is_uuid7(value)):
+        if isinstance(value, str) and (
+            _LEGACY_ID.fullmatch(value) or _is_uuid7(value)
+        ):
             return value
         if not isinstance(value, str):
             raise ValueError("saved query reference is invalid")
@@ -140,8 +169,11 @@ class SavedQueryStore:
         return values[0]
 
     def _journal_paths(self) -> list[Path]:
-        directory = self._root / (configured_journal_root(self._root) if self._journal_root is None
-                                  else validated_journal_root(self._root, self._journal_root))
+        directory = self._root / (
+            configured_journal_root(self._root)
+            if self._journal_root is None
+            else validated_journal_root(self._root, self._journal_root)
+        )
         if not directory.is_dir():
             return []
         return sorted(directory.glob(f"{_JOURNAL_AUTHOR}-*-part-*.ndjson"))
@@ -155,7 +187,11 @@ class SavedQueryStore:
         if keys not in (expected, expected | {"name"}):
             raise ValueError("saved query record is invalid")
         saved_query_id = SavedQueryStore._uuid7(value["saved_query_id"])
-        if not isinstance(value["kind"], str) or value["kind"] not in {"query", "view", "worksheet"}:
+        if not isinstance(value["kind"], str) or value["kind"] not in {
+            "query",
+            "view",
+            "worksheet",
+        }:
             raise ValueError("saved query record is invalid")
         if not isinstance(value["saved_at"], str):
             raise ValueError("saved query record is invalid")
@@ -173,7 +209,9 @@ class SavedQueryStore:
                 if self._journal_root is None:
                     lines = path.read_text(encoding="utf-8").splitlines()
                 else:
-                    with os.fdopen(open_regular(path.absolute()), "r", encoding="utf-8") as stream:
+                    with os.fdopen(
+                        open_regular(path.absolute()), "r", encoding="utf-8"
+                    ) as stream:
                         lines = stream.read().splitlines()
             except (OSError, UnicodeError) as error:
                 print(f"saved query skipped: {path}: {error}", file=sys.stderr)
@@ -182,27 +220,51 @@ class SavedQueryStore:
                 try:
                     items.append(self._journal_record(json.loads(line)))
                 except (ValueError, json.JSONDecodeError) as error:
-                    print(f"saved query skipped: {path}:{line_number}: {error}", file=sys.stderr)
+                    print(
+                        f"saved query skipped: {path}:{line_number}: {error}",
+                        file=sys.stderr,
+                    )
         if self._read_journal_events is not None:
-            for index, value in enumerate(self._read_journal_events(_JOURNAL_AUTHOR), 1):
+            for index, value in enumerate(
+                self._read_journal_events(_JOURNAL_AUTHOR), 1
+            ):
                 try:
                     items.append(self._journal_record(value))
                 except ValueError as error:
-                    print(f"saved query skipped: journal:{index}: {error}", file=sys.stderr)
+                    print(
+                        f"saved query skipped: journal:{index}: {error}",
+                        file=sys.stderr,
+                    )
         return items
 
     def _legacy_read(self, saved_query_id: str) -> dict[str, Any]:
         kind, _ = self._legacy_id(saved_query_id)
         try:
             if kind == "q":
-                sql = self._legacy_path(saved_query_id).read_text(encoding="utf-8")
-                return {"saved_query_id": saved_query_id, "kind": "query", "sql": sql}
-            value = json.loads(self._legacy_path(saved_query_id).read_text(encoding="utf-8"))
+                sql = self._legacy_path(saved_query_id).read_text(
+                    encoding="utf-8"
+                )
+                return {
+                    "saved_query_id": saved_query_id,
+                    "kind": "query",
+                    "sql": sql,
+                }
+            value = json.loads(
+                self._legacy_path(saved_query_id).read_text(encoding="utf-8")
+            )
         except (OSError, UnicodeError, json.JSONDecodeError) as error:
             raise ValueError("saved query is unavailable") from error
-        if not isinstance(value, dict) or set(value) != {"sql"} or not isinstance(value["sql"], str):
+        if (
+            not isinstance(value, dict)
+            or set(value) != {"sql"}
+            or not isinstance(value["sql"], str)
+        ):
             raise ValueError("saved query is unavailable")
-        return {"saved_query_id": saved_query_id, "kind": "view", "sql": value["sql"]}
+        return {
+            "saved_query_id": saved_query_id,
+            "kind": "view",
+            "sql": value["sql"],
+        }
 
     def load(self, reference: object) -> dict[str, Any]:
         saved_query_id = self._reference(reference)
@@ -221,21 +283,34 @@ class SavedQueryStore:
         items: list[dict[str, Any]] = []
         for path in self._legacy_directory.iterdir():
             match = _LEGACY_FILE.fullmatch(path.name)
-            if match is None or (match.group("id")[0] == "q") != (match.group("extension") == "sql"):
-                print(f"saved query skipped: {path}: invalid filename", file=sys.stderr)
+            if match is None or (match.group("id")[0] == "q") != (
+                match.group("extension") == "sql"
+            ):
+                print(
+                    f"saved query skipped: {path}: invalid filename",
+                    file=sys.stderr,
+                )
                 continue
             try:
                 item = self._legacy_read(path.stem)
-                item["saved_at"] = dt.datetime.fromtimestamp(path.stat().st_mtime, tz=dt.UTC).isoformat()
+                item["saved_at"] = dt.datetime.fromtimestamp(
+                    path.stat().st_mtime, tz=dt.UTC
+                ).isoformat()
                 items.append(item)
             except (ValueError, OSError) as error:
                 print(f"saved query skipped: {path}: {error}", file=sys.stderr)
         return items
 
     def list(self, limit: object = 20) -> dict[str, list[dict[str, Any]]]:
-        if isinstance(limit, bool) or not isinstance(limit, int) or not 1 <= limit <= 1000:
+        if (
+            isinstance(limit, bool)
+            or not isinstance(limit, int)
+            or not 1 <= limit <= 1000
+        ):
             raise ValueError("limit must be an integer from 1 to 1000")
-        items = self._journal_items() + (self._legacy_items() if self._journal_root is None else [])
+        items = self._journal_items() + (
+            self._legacy_items() if self._journal_root is None else []
+        )
         items.sort(key=lambda item: item["saved_at"], reverse=True)
         return {"items": [
             {

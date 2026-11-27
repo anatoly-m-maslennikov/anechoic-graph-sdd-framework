@@ -9,7 +9,7 @@ from typing import Any
 
 from starlette.requests import Request
 from starlette.responses import (
-    FileResponse,
+    HTMLResponse,
     JSONResponse,
     Response,
     StreamingResponse,
@@ -25,7 +25,10 @@ from MCP_PATCHBAY_C21.FEATURE_MCP.http_paths import (
 from MCP_PATCHBAY_C21.FEATURE_MCP.backend_client import ToolProtocolError
 
 from MCP_PATCHBAY_C21.FEATURE_MCP.mcp_startup_boundary import warning
-from MCP_PATCHBAY_C21.FEATURE_MCP.project_tool_context import native_arguments
+from MCP_PATCHBAY_C21.FEATURE_MCP.project_tool_context import (
+    native_arguments,
+    valid_project_instance,
+)
 from MCP_PATCHBAY_C21.FEATURE_MCP.shared_backend import SharedGatewayRefusal
 
 
@@ -204,14 +207,33 @@ def _page(gateway, shared, frontend):
             return JSONResponse({"error": str(error)}, status_code=400)
         if not _project_name_matches(selection, project_name):
             return _unknown_project()
-        if not (frontend / "index.html").is_file():
-            return JSONResponse(
-                {"error": "Workbench frontend is unavailable; build required"},
-                status_code=503,
-            )
-        return FileResponse(frontend / "index.html")
+        return _frontend_page(frontend, selection)
 
     return page
+
+
+def _frontend_page(frontend, selection):
+    instance = (
+        selection.get("instance_id")
+        if isinstance(selection, dict)
+        else getattr(selection, "instance_id", None)
+    )
+    if not valid_project_instance(instance):
+        return _error(ToolProtocolError(
+            "tool_runtime_failure", "Invalid Workbench Project selection"
+        ))
+    try:
+        html = (frontend / "index.html").read_text(encoding="utf-8")
+    except (OSError, UnicodeError):
+        html = ""
+    if "</head>" not in html:
+        return JSONResponse(
+            {"error": "Workbench frontend is unavailable; build required"},
+            status_code=503,
+        )
+    meta = f'<meta name="anechoic-project-instance" content="{instance}">'
+    return HTMLResponse(html.replace("</head>", f"{meta}</head>", 1),
+                        headers={"Cache-Control": "no-store"})
 
 
 def _operation(gateway, shared, fixed_name=None):

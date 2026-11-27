@@ -11,6 +11,9 @@ from typing import Any, Callable, Mapping
 from MCP_PATCHBAY_C21.FEATURE_MCP.docker.mcp_paths import HEALTH_PATH
 
 from .host_runtime_settings import load_host_runtime_settings
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.container_settings__pub import (
+    CONTAINER_SETTINGS_FILENAME,
+)
 
 
 ROOT = Path(__file__).resolve().parents[4]
@@ -44,10 +47,15 @@ def _path(value):
 
 
 def _environment(config, image):
+    native = config.source_path.name == CONTAINER_SETTINGS_FILENAME
+    docker = {
+        name: os.environ[name] for name in DOCKER_ENV if name in os.environ
+    }
+    if config.docker_context:
+        docker.pop("DOCKER_HOST", None)
+        docker["DOCKER_CONTEXT"] = config.docker_context
     return {
-        **{
-            name: os.environ[name] for name in DOCKER_ENV if name in os.environ
-        },
+        **docker,
         "ANECHOIC_IMAGE": image,
         "ANECHOIC_HOST_SETTINGS": str(config.source_path),
         "ANECHOIC_PROJECTS_ROOT": str(config.projects_root),
@@ -55,10 +63,10 @@ def _environment(config, image):
         "ANECHOIC_MAX_LOADED_PROJECTS": str(config.max_loaded_projects),
         "ANECHOIC_SHARED_RUNTIME_ID": config.shared_runtime_id,
         "ANECHOIC_LOG_LEVEL": config.log_level,
-        "ANECHOIC_WORKBENCH_STORAGE": os.environ.get(
+        "ANECHOIC_WORKBENCH_STORAGE": config.workbench_storage if native else os.environ.get(
             "ANECHOIC_WORKBENCH_STORAGE", config.workbench_storage
         ),
-        "ANECHOIC_JOURNAL_STORAGE": os.environ.get(
+        "ANECHOIC_JOURNAL_STORAGE": config.journal_storage if native else os.environ.get(
             "ANECHOIC_JOURNAL_STORAGE", config.journal_storage
         ),
     }
@@ -81,15 +89,21 @@ def _prefix(compose, project):
 
 
 def prepare_config(
-    settings_path=None, image=None, *, compose_file=None, timeout=420
+    settings_path=None, image=None, *, compose_file=None, timeout=None,
+    mounted_folder=None, readiness_timeout=None,
 ):
     try:
-        config = load_host_runtime_settings(settings_path, base=ROOT)
+        config = load_host_runtime_settings(
+            settings_path, base=ROOT, mounted_folder=mounted_folder
+        )
     except (OSError, RuntimeError, ValueError, TypeError) as error:
         raise SharedLaunchError("invalid_host_settings") from error
-    image = _image(image)
+    image = _image(image if image is not None else config.image)
     compose = _path(compose_file or COMPOSE)
-    timeout = bounded(timeout, "startup_timeout")
+    timeout = bounded(
+        timeout if timeout is not None else config.startup_timeout_seconds,
+        "startup_timeout", 420,
+    )
     project = "anechoic-shared-" + config.shared_runtime_id[:16]
     environment = _environment(config, image)
     prefix = _prefix(compose, project)
@@ -101,6 +115,11 @@ def prepare_config(
         "projects_root": str(config.projects_root),
         "http_port": config.http_port,
         "max_loaded_projects": config.max_loaded_projects,
+        "startup_timeout": timeout,
+        "readiness_timeout": bounded(
+            readiness_timeout if readiness_timeout is not None
+            else config.readiness_timeout_seconds, "readiness_timeout", 420
+        ),
         "shared_runtime_id": config.shared_runtime_id,
         "compose_file": str(compose),
         "command": prefix

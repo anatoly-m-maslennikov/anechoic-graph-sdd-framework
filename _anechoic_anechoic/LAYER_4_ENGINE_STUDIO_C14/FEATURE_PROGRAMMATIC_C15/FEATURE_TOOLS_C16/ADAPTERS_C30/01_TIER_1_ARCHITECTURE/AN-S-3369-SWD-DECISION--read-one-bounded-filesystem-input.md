@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-3369
+concern:
+  subject: "File"
+  path: "Model/Carrier"
+  relation: "is_contained_by"
 container:
   component: C30
 tier: 1
@@ -11,9 +15,9 @@ relations:
   IS_SOLUTION_FOR:
   - AN-S-3303@15
 state:
-  status: "active"
-  version: 2
-  updated_at: "2026-11-26T16:43:14.664651+00:00"
+  status: active
+  version: 4
+  updated_at: "2026-11-27T16:16:01.404965+00:00"
 ---
 
 ## Summary
@@ -60,5 +64,4 @@ component_workflow(
 
 ## Details
 
-This Solution defines the expected event sequence for the selected workflow.
-Trace conformance requires recorded evidence.
+Use AN-S-2686 for trace evidence.

@@ -10,12 +10,15 @@ export async function loadLib() {
     plugins: [{
       name: 'test-tabulator', enforce: 'pre',
       resolveId: (id) => id === 'tabulator-tables' ? '\0test-tabulator' : null,
-      load: (id) => id === '\0test-tabulator' ? 'export class TabulatorFull {}' : null,
+      load: (id) => id === '\0test-tabulator' ?
+        'export class TabulatorFull {}' : null,
     }],
   });
   try {
-    const lib = await server.ssrLoadModule('/src/lib/lib__shared.ts') as WorkbenchLib;
-    const { render } = await server.ssrLoadModule('svelte/server') as SvelteServer;
+    const lib = await server.ssrLoadModule(
+      '/src/lib/lib__shared.ts') as WorkbenchLib;
+    const { render } = await server.ssrLoadModule(
+      'svelte/server') as SvelteServer;
     return { ...lib, render };
   }
   finally { await server.close(); }

@@ -8,8 +8,8 @@ context:
   lens: DES
 state:
   status: active
-  version: 23
-  updated_at: 2026-11-10 20:47:54 +0400
+  version: 24
+  updated_at: "2026-11-27T16:29:34.309627+00:00"
 ---
 
 ## Summary
@@ -26,4 +26,6 @@ For ANECHOIC Markdown Atom Doers, MCP **must** pass through the canonical Tool's
 
 ## Details
 
-Use MCP as a replaceable protocol adapter: pass the canonical request/result and Markdown Atom Doer's sealed target set, expected revision/digest, Initiative action envelope, and receipt unchanged. Stop when adaptation would broaden authority, alter cardinality, or obscure a Tool failure.
+Pass the sealed Markdown Atom Doer target set, expected revision and
+digest, Initiative envelope, and receipt unchanged. Refuse an adapter
+transformation that would change cardinality.

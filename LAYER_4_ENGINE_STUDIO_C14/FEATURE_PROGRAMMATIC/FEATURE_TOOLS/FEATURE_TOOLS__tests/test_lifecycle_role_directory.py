@@ -24,7 +24,13 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__tests.\
 
 
 def order(role, number):
-    return f"Atom/(.Header.Context.Role := {role}) >| (Role Order Number == {number})"
+    return (
+        "Atom/(.Header.Context.Role := "
+        f"{role}"
+        ") >| (Role Order Number == "
+        f"{number}"
+        ")"
+    )
 
 
 class RoleDirectoryTests(unittest.TestCase):
@@ -56,7 +62,10 @@ class RoleDirectoryTests(unittest.TestCase):
             [(order("Concern", "not_a_number"), "A")],
             [
                 (
-                    "Atom/(.Header.Context.Role := Concern) >| (Role Order Number = 1)",
+                    (
+                        "Atom/(.Header.Context.Role := Concern) >| (Role "
+                        "Order Number = 1)"
+                    ),
                     "A",
                 )
             ],

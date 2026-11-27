@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 
 from .models import Page, Query
+from ._shared_runtime_support import TOOL_REST_PATH
 
 ROOT = Path(__file__).resolve().parents[2]
 SCHEMA_PATH = Path(__file__).with_name("query_run.schema.json")
@@ -64,6 +65,7 @@ def typescript_text():
     page = Page.model_json_schema()
     return "\n".join(
         (
+            f"export const TOOL_REST_PATH = {json.dumps(TOOL_REST_PATH)};\n",
             _typescript_declaration("QueryRun", query_schema()),
             _typescript_declaration("QueryColumn", page["$defs"]["Column"]),
             _typescript_declaration("QueryPageCore", page, page["required"]),

@@ -1,7 +1,6 @@
 """Build Lean checks for a normalized executable shape claim."""
 
-
-_PARAMETER_CHECKS = '''
+_PARAMETER_CHECKS = """
   let rec params (expr : Lean.Expr) (count : Nat) (mode : Lean.BinderInfo) : Option Lean.Expr :=
     match count, expr with
     | 0, _ => some expr
@@ -22,20 +21,20 @@ _PARAMETER_CHECKS = '''
           | none => false
         | _ => false
       | _ => false
-'''
+"""
 
 
 def shape_checks(claim, role):
     """Print shape metadata and exact projection type checks as JSON."""
-    namespace = f'Shape_{role}'
-    record = f'{namespace}.«R_{claim["record"]}»'
-    subtype = f'{namespace}.«S_{claim["subtype"]}»'
-    fields = ', '.join(f'`«f_{name}»' for name in claim['fields'])
-    parents = f'#[`{record}]' if claim['base'] == claim['record'] else '#[]'
-    subfields = 1 if claim['base'] == claim['record'] else 0
-    types = sorted(set(claim['fields'].values()))
-    subtype_params = len(types) if claim['base'] == claim['record'] else 0
-    checks = f'''
+    namespace = f"Shape_{role}"
+    record = f"{namespace}.«R_{claim['record']}»"
+    subtype = f"{namespace}.«S_{claim['subtype']}»"
+    fields = ", ".join(f"`«f_{name}»" for name in claim["fields"])
+    parents = f"#[`{record}]" if claim["base"] == claim["record"] else "#[]"
+    subfields = 1 if claim["base"] == claim["record"] else 0
+    types = sorted(set(claim["fields"].values()))
+    subtype_params = len(types) if claim["base"] == claim["record"] else 0
+    checks = f"""
 run_cmd do
   let env ← Lean.getEnv
 {_PARAMETER_CHECKS}
@@ -48,9 +47,9 @@ run_cmd do
     | _, _, _, _ => false
   let results ← Lean.Elab.Command.liftTermElabM do
     let mut results := #[metadata]
-'''
-    for name, typ in claim['fields'].items():
-        checks += f'''
+"""
+    for name, typ in claim["fields"].items():
+        checks += f"""
     let field := match env.find? `{record}.«f_{name}» with
       | some info => info.type
       | none => Lean.mkConst ``False
@@ -58,17 +57,20 @@ run_cmd do
       if args.size != {len(types) + 1} then return false
       Lean.Meta.isDefEq result args[{types.index(typ)}]!
     results := results.push same
-'''
-    if claim['base'] == claim['record']:
-        checks += _parent_check(record, subtype, claim['record'], len(types))
-    return checks + '''
+"""
+    if claim["base"] == claim["record"]:
+        checks += _parent_check(record, subtype, claim["record"], len(types))
+    return (
+        checks
+        + """
     return results
   liftM <| IO.print ((Lean.toJson results).compress ++ ",")
-'''
+"""
+    )
 
 
 def _parent_check(record, subtype, name, count):
-    return f'''
+    return f"""
     let parent := match env.find? `{subtype}.«toR_{name}» with
       | some info => info.type
       | none => Lean.mkConst ``False
@@ -77,4 +79,4 @@ def _parent_check(record, subtype, name, count):
       let expected := Lean.mkAppN (Lean.mkConst `{record}) (args.extract 0 {count})
       Lean.Meta.isDefEq result expected
     results := results.push same
-'''
+"""

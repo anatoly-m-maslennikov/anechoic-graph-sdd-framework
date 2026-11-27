@@ -17,8 +17,14 @@ ROOT = ENGINE.parent
 
 
 def process_env():
-    return {**os.environ, "PYTHONPATH": str(ENGINE), "ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY":
-            os.environ.get("ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY", str(ROOT / ".anechoic_tmp/workbench/extensions"))}
+    return {
+        **os.environ,
+        "PYTHONPATH": str(ENGINE),
+        "ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY": os.environ.get(
+            "ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY",
+            str(ROOT / ".anechoic_tmp/workbench/extensions"),
+        ),
+    }
 
 
 def write_project(root):
@@ -52,16 +58,35 @@ async def _response(reader):
 
 async def _admit(roots):
     process = await asyncio.create_subprocess_exec(
-        sys.executable, "-B", "-P", "-m", _ADMISSION, env=process_env(),
-        stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE,
+        sys.executable,
+        "-B",
+        "-P",
+        "-m",
+        _ADMISSION,
+        env=process_env(),
+        stdin=asyncio.subprocess.PIPE,
+        stdout=asyncio.subprocess.PIPE,
     )
-    requests = [_line({"project_root": str(root), "control_root": None, "instance_id": None, "host_root": None})
-                for root in roots]
+    requests = [
+        _line(
+            {
+                "project_root": str(root),
+                "control_root": None,
+                "instance_id": None,
+                "host_root": None,
+            }
+        )
+        for root in roots
+    ]
     try:
         async with asyncio.timeout(30):
             output, _ = await process.communicate(b"".join(requests))
         replies = [json.loads(line) for line in output.splitlines()]
-        if process.returncode or len(replies) != len(roots) or any("result" not in reply for reply in replies):
+        if (
+            process.returncode
+            or len(replies) != len(roots)
+            or any("result" not in reply for reply in replies)
+        ):
             raise AssertionError(f"Project admission failed: {replies}")
         return [reply["result"] for reply in replies]
     finally:

@@ -5,7 +5,11 @@ import ast
 from .contract_literals import _call, _checks, _literal_string
 from .http_contract import parse_contract as parse_contract
 from .trace_contract import TRACE_FIELDS, trace_profile
-from .trace_manifest__pub import HTTP_BINDING_FIELDS, HTTP_BINDING_INPUTS, http_binding
+from .trace_manifest__pub import (
+    HTTP_BINDING_FIELDS,
+    HTTP_BINDING_INPUTS,
+    http_binding,
+)
 
 
 def exit_status_class(value):
@@ -43,9 +47,11 @@ def _cli_sequences(args, names):
         if not isinstance(sequence, (ast.List, ast.Tuple)):
             raise ValueError(f'expected a literal sequence for {name}')
         values = [_literal_string(item) for item in sequence.elts]
-        if not all(values) or (name != 'arguments' and len(set(values)) != len(values)):
-            raise ValueError(f'empty or duplicate item in {name}')
-        fields[name] = sorted(values) if name == 'output_fields' else values
+        if not all(values) or (
+            name != "arguments" and len(set(values)) != len(values)
+        ):
+            raise ValueError(f"empty or duplicate item in {name}")
+        fields[name] = sorted(values) if name == "output_fields" else values
     return fields
 
 
@@ -55,15 +61,20 @@ def _cli_subcommands(node):
     pairs = [(_literal_string(key), _literal_string(value))
              for key, value in zip(node.keys, node.values)]
     routes = dict(pairs)
-    if len(routes) != len(pairs) or any(not command.strip() or not target.strip() for command, target in pairs):
-        raise ValueError('empty or duplicate subcommand binding')
+    if len(routes) != len(pairs) or any(
+        not command.strip() or not target.strip() for command, target in pairs
+    ):
+        raise ValueError("empty or duplicate subcommand binding")
     return routes
 
 
 def _cli_stdout(node):
     if isinstance(node, ast.Dict):
-        return {f'stdout.{name}': value for name, value in _cli_subcommands(node).items()}
-    return {'stdout': _literal_string(node)}
+        return {
+            f"stdout.{name}": value
+            for name, value in _cli_subcommands(node).items()
+        }
+    return {"stdout": _literal_string(node)}
 
 
 def parse_cli_contract(source, *, public=False):
@@ -76,19 +87,30 @@ def parse_cli_contract(source, *, public=False):
                  protocol.union(sequences, TRACE_FIELDS, implementation))
     entry = {'path', 'module'} & args.keys()
     if not public and len(entry) != 1:
-        raise ValueError('expected exactly one CLI path or module')
-    claim = {key: _literal_string(args[key]) for key in sorted(binding | entry)}
-    for key in ('command', 'stdin', 'stdout'):
+        raise ValueError("expected exactly one CLI path or module")
+    claim = {
+        key: _literal_string(args[key]) for key in sorted(binding | entry)
+    }
+    for key in ("command", "stdin", "stdout"):
         if key in args:
-            claim.update(_cli_stdout(args[key]) if key == 'stdout' else {key: _literal_string(args[key])})
-    if 'subcommands' in args:
-        claim['subcommands'] = _cli_subcommands(args['subcommands'])
-    if any(not value.strip() for value in claim.values() if isinstance(value, str)):
-        raise ValueError('CLI binding fields must be nonempty')
+            claim.update(
+                _cli_stdout(args[key])
+                if key == "stdout"
+                else {key: _literal_string(args[key])}
+            )
+    if "subcommands" in args:
+        claim["subcommands"] = _cli_subcommands(args["subcommands"])
+    if any(
+        not value.strip() for value in claim.values() if isinstance(value, str)
+    ):
+        raise ValueError("CLI binding fields must be nonempty")
     claim.update(_cli_sequences(args, sequences))
-    if {'outcomes', 'exit_codes'} <= args.keys():
-        raise ValueError('declare exit codes or exit status classes')
-    for key, validator in (('outcomes', exit_status_class), ('exit_codes', exit_code)):
+    if {"outcomes", "exit_codes"} <= args.keys():
+        raise ValueError("declare exit codes or exit status classes")
+    for key, validator in (
+        ("outcomes", exit_status_class),
+        ("exit_codes", exit_code),
+    ):
         if key in args:
             claim[key] = _cli_outcomes(args[key], validator)
     claim.update(trace_profile(args, claim['action']))
@@ -102,19 +124,26 @@ _IN_PROCESS_TRACE_BINDING = ('interface', 'transport', 'entry')
 
 def parse_trace_contract(source, *, public=False):
     """Read the action, terminal output and required effects of a trace Contract."""
-    in_process = _IN_PROCESS_TRACE_BINDING[:2] if public else _IN_PROCESS_TRACE_BINDING
+    in_process = (
+        _IN_PROCESS_TRACE_BINDING[:2] if public else _IN_PROCESS_TRACE_BINDING
+    )
     binding = set(in_process)
     args = _call(source, 'declare_trace_contract', {'action'},
                  TRACE_FIELDS | binding | HTTP_BINDING_INPUTS)
     present = binding & args.keys()
     fields = {key: _literal_string(args[key]) for key in present}
-    literals = {key: _literal_string(args[key]) for key in HTTP_BINDING_INPUTS & args.keys()}
+    literals = {
+        key: _literal_string(args[key])
+        for key in HTTP_BINDING_INPUTS & args.keys()
+    }
     fields.update(http_binding(literals))
-    profiles = {'http': _HTTP_TRACE_BINDING, 'in_process': in_process}
-    if fields and (set(profiles.get(fields.get('transport'), ())) != fields.keys()
-                   or any(not value.strip() for value in fields.values())):
-        raise ValueError('invalid trace interface binding')
-    action = _literal_string(args['action'])
+    profiles = {"http": _HTTP_TRACE_BINDING, "in_process": in_process}
+    if fields and (
+        set(profiles.get(fields.get("transport"), ())) != fields.keys()
+        or any(not value.strip() for value in fields.values())
+    ):
+        raise ValueError("invalid trace interface binding")
+    action = _literal_string(args["action"])
     if not action.strip():
         raise ValueError('expected nonempty action')
     profile = trace_profile(args, action)

@@ -48,7 +48,11 @@ class WorkspaceStore:
         if value is None and not required:
             return None
         if not isinstance(value, str) or required and not value.strip():
-            raise ValueError(f"{field} must be a non-empty string" if required else f"{field} must be a string")
+            raise ValueError(
+                f"{field} must be a non-empty string"
+                if required
+                else f"{field} must be a string"
+            )
         try:
             value.encode("utf-8")
         except UnicodeEncodeError as error:
@@ -68,7 +72,10 @@ class WorkspaceStore:
         return value
 
     def _path(self, workspace_id: str) -> Path:
-        return self._directory / f"{hashlib.sha256(workspace_id.encode()).hexdigest()}.json"
+        return self._directory / (
+            f'{hashlib.sha256(workspace_id.encode()).hexdigest()}'
+            '.json'
+        )
 
     def _write(self, document: WorkspaceDocument) -> None:
         exclude = None
@@ -84,7 +91,10 @@ class WorkspaceStore:
         path = self._path(document.workspace_id)
         temporary = path.with_suffix(".tmp")
         value = document.model_dump(exclude_unset=True, exclude=exclude)
-        temporary.write_text(json.dumps(value, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+        temporary.write_text(
+            json.dumps(value, ensure_ascii=False, separators=(",", ":")),
+            encoding="utf-8",
+        )
         temporary.replace(path)
 
     def _read(self, workspace_id: object) -> WorkspaceDocument:
@@ -128,7 +138,8 @@ class WorkspaceStore:
 
     def _state(self, document: WorkspaceDocument) -> dict[str, Any]:
         return {
-            "workspace_id": document.workspace_id, "project_root": document.project_root,
+            "workspace_id": document.workspace_id,
+            "project_root": document.project_root,
             "active_view_id": document.active_view_id,
             "views": [self._public_view(view, True) for view in document.views],
         }
@@ -141,8 +152,16 @@ class WorkspaceStore:
             if str(error) != "unknown workspace_id":
                 raise
         view_id = str(uuid.uuid7())
-        document = WorkspaceDocument(workspace_id=workspace_id, project_root=str(self._root), active_view_id=view_id,
-                                     views=[WorkspaceView(id=view_id, sql="", cursor_position=0, revision=0)])
+        document = WorkspaceDocument(
+            workspace_id=workspace_id,
+            project_root=str(self._root),
+            active_view_id=view_id,
+            views=[
+                WorkspaceView(
+                    id=view_id, sql="", cursor_position=0, revision=0
+                )
+            ],
+        )
         self._write(document)
         return self._state(document)
 
@@ -156,7 +175,11 @@ class WorkspaceStore:
         for path in self._directory.glob("*.json"):
             try:
                 value = json.loads(path.read_text(encoding="utf-8"))
-                if isinstance(value, dict) and isinstance(value.get("workspace_id"), str) and value["workspace_id"]:
+                if (
+                    isinstance(value, dict)
+                    and isinstance(value.get("workspace_id"), str)
+                    and value["workspace_id"]
+                ):
                     ids.append(value["workspace_id"])
             except (OSError, UnicodeError, json.JSONDecodeError):
                 continue
@@ -198,8 +221,13 @@ class WorkspaceStore:
 
     def list_views(self, workspace_id: object) -> dict[str, Any]:
         document = self._read(workspace_id)
-        return {"workspace_id": document.workspace_id, "active_view_id": document.active_view_id,
-                "views": [self._public_view(view, False) for view in document.views]}
+        return {
+            "workspace_id": document.workspace_id,
+            "active_view_id": document.active_view_id,
+            "views": [
+                self._public_view(view, False) for view in document.views
+            ],
+        }
 
     def get_view(self, workspace_id: object, view_id: object) -> dict[str, Any]:
         document = self._read(workspace_id)
@@ -237,7 +265,9 @@ class WorkspaceStore:
         self._write(document)
         return self.get_view(workspace_id, view_id), prior
 
-    def set_result(self, workspace_id: object, view_id: object, result: dict[str, Any]) -> dict[str, Any]:
+    def set_result(
+        self, workspace_id: object, view_id: object, result: dict[str, Any]
+    ) -> dict[str, Any]:
         document = self._read(workspace_id)
         self._view(document, view_id).result = result
         self._write(document)

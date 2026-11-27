@@ -36,7 +36,11 @@ declare_entity(entity_name="Status", relation_name="IS_PROPERTY_OF", base_path="
                 )
 
                 def body(claim):
-                    return f"## Claim\n\n### Formal Claim\n\n```python\n{claim}\n```\n"
+                    return (
+                        "## Claim\n\n### Formal Claim\n\n```python\n"
+                        f"{claim}"
+                        "\n```\n"
+                    )
 
                 self.assertEqual(
                     relation_declaration(

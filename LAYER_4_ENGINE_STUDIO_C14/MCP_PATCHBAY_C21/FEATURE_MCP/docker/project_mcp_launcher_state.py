@@ -185,7 +185,8 @@ def _atomic_metadata(
 def _record_safe_metadata(
     selection: object, result: Mapping[str, Any]
 ) -> None:
-    """Persist only attributable lifecycle metadata; credentials and URL stay out."""
+    ("Persist only attributable lifecycle metadata; "
+     "credentials and URL stay out.")  # fmt: skip
     try:
         state = _state_root(selection)
         metadata = {key: result.get(key) for key in _SAFE_RESULT_KEYS}

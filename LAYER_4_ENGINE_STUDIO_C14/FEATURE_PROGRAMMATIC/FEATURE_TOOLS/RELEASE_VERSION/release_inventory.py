@@ -53,7 +53,11 @@ def refuse_secret_path(path: str | Path) -> None:
         if _is_secret_name(component):
             raise ReleaseInventoryError(
                 "release-inventory-secret-refused",
-                f"secret-shaped path is not admitted to a release inventory: {value.as_posix()}",
+                (
+                    "secret-shaped path is not admitted to a release "
+                    "inventory: "
+                    f"{value.as_posix()}"
+                ),
             )
 
 
@@ -86,7 +90,10 @@ def _retain_directories(
         if not path.is_dir():
             raise ReleaseInventoryError(
                 "release-inventory-invalid",
-                f"inventory directory is not a regular directory: {relative.as_posix()}",
+                (
+                    "inventory directory is not a regular directory: "
+                    f"{relative.as_posix()}"
+                ),
             )
         retained_directories.append(name)
     directories[:] = retained_directories
@@ -127,7 +134,10 @@ def persistent_regular_files(root: Path, directory: Path) -> list[Path]:
             if not path.is_file():
                 raise ReleaseInventoryError(
                     "release-inventory-invalid",
-                    f"inventory entry is not a regular file: {relative.as_posix()}",
+                    (
+                        "inventory entry is not a regular file: "
+                        f"{relative.as_posix()}"
+                    ),
                 )
             files.append(path)
     return sorted(

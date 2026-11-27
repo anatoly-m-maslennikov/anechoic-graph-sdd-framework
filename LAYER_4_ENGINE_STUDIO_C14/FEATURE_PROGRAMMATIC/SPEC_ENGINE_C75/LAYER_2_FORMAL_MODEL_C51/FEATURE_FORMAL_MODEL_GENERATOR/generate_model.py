@@ -7,19 +7,35 @@ import sys
 PROGRAMMATIC = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(Path(__file__).resolve().parents[4]))
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import atomic_write  # noqa: E402
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import read_current_model_carriers  # noqa: E402
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import resolve_project  # noqa: E402
-from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.FEATURE_FORMAL_MODEL_GENERATOR.model_class_assembly import (  # noqa: E402
-    build_model_class_source,
+# fmt: off
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.\
+    FEATURE_TOOLS__shared import (  # noqa: E402
+    atomic_write, resolve_project,
 )
+# fmt: on
+# fmt: off
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.\
+    ADAPTERS_C30__shared import (  # noqa: E402
+        read_current_model_carriers,
+    )
+# fmt: on
+# fmt: off
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.\
+    FEATURE_FORMAL_MODEL_GENERATOR.model_class_assembly import (  # noqa: E402
+        build_model_class_source,
+    )
+# fmt: on
 
 
 def build_project_model(project_root: Path) -> str:
     selection = resolve_project(project_root)
-    authority = {selection.root / unit["authority_path"] for unit in selection.structure["scope_units"]}
+    authority = {
+        selection.root / unit["authority_path"]
+        for unit in selection.structure["scope_units"]
+    }
     carriers = read_current_model_carriers(
-        selection.control_root, selection.root,
+        selection.control_root,
+        selection.root,
         include_source=lambda path: path.parent.parent in authority,
     )
     return build_model_class_source(carriers)

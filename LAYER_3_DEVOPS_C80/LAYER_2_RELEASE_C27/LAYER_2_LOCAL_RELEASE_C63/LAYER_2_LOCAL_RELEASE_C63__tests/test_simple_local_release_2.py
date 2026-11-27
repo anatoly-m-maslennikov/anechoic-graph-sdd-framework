@@ -74,13 +74,16 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
 
 
     def test_preserved_ds_store_directories_do_not_block_replacement(self):
-        kept, removed = (path.relative_to(self.control) for path in self.native_sources)
+        kept, removed = (
+            path.relative_to(self.control) for path in self.native_sources
+        )
         self.native_sources[1].unlink()
         retained = (
             self.root / kept.parts[0],
             self.root / kept.parent,
             self.installed / "obsolete",
-            self.runtime / "simple_local_release/package/LAYER_4_ENGINE_STUDIO_C14",
+            self.runtime
+            / "simple_local_release/package/LAYER_4_ENGINE_STUDIO_C14",
         )
         for directory in retained:
             directory.mkdir(parents=True, exist_ok=True)
@@ -90,7 +93,9 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
         result = run_local_release(self.root, run_id="ds-store", runner=runner)
         self.assertEqual("completed", result["outcome"])
         for directory in retained:
-            self.assertEqual(b"ignored", (directory / ".DS_Store").read_bytes())
+            self.assertEqual(
+                b"ignored", (directory / ".DS_Store").read_bytes()
+            )
             self.assertFalse((directory / "obsolete.txt").exists())
         self.assertTrue((self.root / kept).is_file())
         for target in (self.root, self.installed):

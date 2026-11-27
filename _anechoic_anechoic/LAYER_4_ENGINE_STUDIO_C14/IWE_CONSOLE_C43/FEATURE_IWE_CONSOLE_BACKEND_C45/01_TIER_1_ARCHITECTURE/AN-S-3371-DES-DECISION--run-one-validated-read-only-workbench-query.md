@@ -11,9 +11,9 @@ relations:
   IS_SOLUTION_FOR:
   - AN-S-3185@11
 state:
-  status: "active"
-  version: 2
-  updated_at: "2026-11-26T16:43:14.613972+00:00"
+  status: active
+  version: 5
+  updated_at: "2026-11-27T15:50:51.353081+00:00"
 ---
 
 ## Summary
@@ -21,11 +21,6 @@ state:
 Run one validated read-only Workbench query
 
 ## Claim
-
-### Prose Claim
-
-Backend validates Run arguments and delegates the query to the selected
-Project Kernel, then returns its result or failure.
 
 ### Formal Claim
 
@@ -60,7 +55,11 @@ component_workflow(
 )
 ```
 
+## Semantics
+
+Delegate only to the Kernel bound to the selected Project.
+
+
 ## Details
 
-This Solution defines the expected event sequence for the selected workflow.
-Trace conformance requires recorded evidence.
+Use AN-S-2686 for trace evidence.

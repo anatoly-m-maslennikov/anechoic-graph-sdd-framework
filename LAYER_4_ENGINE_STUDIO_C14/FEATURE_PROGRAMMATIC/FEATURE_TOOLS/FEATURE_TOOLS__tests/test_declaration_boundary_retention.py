@@ -1,4 +1,4 @@
-"""Retained declaration evidence survives elapsed budgets, never source drift."""
+"Retained declaration evidence survives elapsed budgets, never source drift."
 
 from pathlib import Path
 import sys
@@ -48,7 +48,10 @@ class DeclarationBoundaryRetentionTests(unittest.TestCase):
         foreign = self.declarations["PARENT"]["delivery_path"]
         foreign.mkdir(parents=True, exist_ok=True)
         (foreign / "anechoic_project_settings.toml").write_text(
-            '[project]\nname="anechoic"\n[paths]\ncontrol_root=".anechoic_empty"\n'
+            (
+                '[project]\nname="anechoic"\n[paths]\ncontrol_root=".anechoic_'
+                'empty"\n'
+            )
         )
 
     def test_selection_recheck_gets_fresh_budget_but_keeps_original_absence(

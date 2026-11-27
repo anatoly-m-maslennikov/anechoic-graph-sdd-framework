@@ -8,8 +8,8 @@ context:
   lens: SWD
 state:
   status: active
-  version: 11
-  updated_at: 2026-11-02 19:44:26 +0400
+  version: 12
+  updated_at: "2026-11-27T16:29:34.309627+00:00"
 ---
 ## Summary
 
@@ -27,7 +27,5 @@ To construct results, the Tool **must** order snapshot matches deterministically
 
 ## Details
 
-The next-page token remains bound to the source snapshot, source/prefix hashes,
-result selection, and configured limits. Before any continuation it revalidates
-captured members and rejects changed, deleted, unreadable, or truncated captured
-data, while allowing append strictly after the sealed prefix.
+Bind the page token to the sealed source, result selection, and limits.
+Apply AN-S-2364 to snapshot revalidation.

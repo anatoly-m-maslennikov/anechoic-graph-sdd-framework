@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-2397
+concern:
+  subject: "Atom"
+  path: "Model/Graph/Node//Artifact//SSOT//Prescribed/Content"
+  relation: "is_contained_by"
 container:
   component: C35
 tier: 1
@@ -8,8 +12,8 @@ context:
   lens: DES
 state:
   status: active
-  version: 5
-  updated_at: 2026-10-27 20:00:08 +0400
+  version: 6
+  updated_at: "2026-11-27T16:16:01.404965+00:00"
 ---
 ## Summary
 

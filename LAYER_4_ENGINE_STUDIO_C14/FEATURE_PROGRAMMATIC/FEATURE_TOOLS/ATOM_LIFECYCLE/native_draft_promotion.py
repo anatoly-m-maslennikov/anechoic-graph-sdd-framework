@@ -34,12 +34,14 @@ def _promote_new(selection, target, status, draft, current_rows, previous_captur
     relative = Path(relative)
     path = selection.root / relative
     root = next((selection.control_root / name for name in (TICKET_DIRECTORY, '001_TICKETS', '__TKT') if path.is_relative_to(selection.control_root / name)), selection.control_root / TICKET_DIRECTORY) / 'TASKS'
-    if (not selection.root.is_absolute() or not selection.control_root.is_relative_to(selection.root)
+    if (not selection.root.is_absolute()
+            or not selection.control_root.is_relative_to(selection.root)
             or selection.manifest_path.parent not in {selection.root, selection.control_root}
-            or relative.is_absolute() or '..' in relative.parts or not path.is_relative_to(root)
-            or path.parent.name not in {DRAFT_DIRECTORY, '000_draft'}
-            or not re.fullmatch(re.escape(target['ref_id']) + r'-.+--.+\.md', path.name)):
-        raise common.SourceChanged('Task Draft path is invalid.')
+            or relative.is_absolute() or ".." in relative.parts
+            or not path.is_relative_to(root)
+            or path.parent.name not in {DRAFT_DIRECTORY, "000_draft"}
+            or not re.fullmatch(re.escape(target["ref_id"]) + r"-.+--.+\.md", path.name)):
+        raise common.SourceChanged("Task Draft path is invalid.")
     root = root if path.parent in {root / DRAFT_DIRECTORY, root / '000_draft'} else None
     with _project_write_lock(selection.root):
         capture, destination, promoted = _preflight_new(
@@ -205,8 +207,8 @@ def _cleanup_published_draft(selection, target, status, draft, current, structur
                 or not re.fullmatch(re.escape(marker) + r'-.+\.md', path.name)):
             raise common.SourceChanged('Carrier path is invalid.')
         paths.append(path)
-    if paths[0].name[len(target['ref_id']):] != paths[1].name[len(atom_id):]:
-        raise common.InputError('target', 'Published carrier filename differs from the Draft.')
+    if paths[0].name[len(target["ref_id"]) :] != paths[1].name[len(atom_id) :]:
+        raise common.InputError("target", "Published carrier filename differs from the Draft.")
     with _project_write_lock(selection.root):
         companion = paths[0].with_suffix('')
         if '-T-' in atom_id and (companion.exists() or companion.is_symlink()):
@@ -226,12 +228,7 @@ def _preflight_cleanup(selection, target, status, draft, current, current_rows,
         capture = revalidate_native(selection, previous_capture)
         if capture.errors:
             raise common.SourceChanged('Native carrier capture is incomplete.')
-        for row in (draft, current):
-            fresh = [item for item in capture.atoms if item.get('_exact_ref') == row.get('_exact_ref')]
-            if len(fresh) != 1 or any(fresh[0].get(key) != row.get(key) for key in (
-                    'source_path', 'id', 'ref', '_exact_ref', 'version', 'status', 'status_group',
-                    'header_json', '_content_bytes', '_source_sha256')):
-                raise common.SourceChanged('Draft or published carrier changed after selection.')
+        _check_cleanup_rows(capture, draft, current)
         reader = ReadContext(roots=[str(selection.control_root)], limits=dict(CEILINGS))
         for row, path in zip((draft, current), paths, strict=False):
             raw = reader.read(path)
@@ -245,13 +242,7 @@ def _preflight_cleanup(selection, target, status, draft, current, current_rows,
                 'Draft or published carrier changed after selection.'
             )
         draft_header, current_header = draft['header_json'], current['header_json']
-        if '-T-' in atom_id:
-            owner = _check_owner(selection, native_header_view(current_header)['context'].get('container'), current_rows, capture)
-        if '-T-' in atom_id and 'atom_family' in current_header:
-            body = draft['_content_bytes'].decode('utf-8')
-            if (paths[0] != _task_path(selection, draft_header, body, 'draft', version, owner, root)
-                    or paths[1] != _task_path(selection, current_header, body, status, version, owner, root)):
-                raise common.InputError('target', 'Task paths disagree with their authored Headers and Summary.')
+        _check_cleanup_task_paths(selection, draft, current_rows, capture, atom_id, version, root, paths, status, draft_header, current_header)
         if (_revision_header(draft_header) != _revision_header(current_header)
                 or draft['_content_bytes'] != current['_content_bytes']):
             raise common.InputError('target', 'Published carrier differs from the Draft.')
@@ -260,24 +251,29 @@ def _preflight_cleanup(selection, target, status, draft, current, current_rows,
     except (OSError, RuntimeError, TypeError, ValueError) as error:
         raise common.SourceChanged('Native source is unavailable or changed.') from error
 
+def _check_cleanup_task_paths(selection, draft, current_rows, capture, atom_id, version, root, paths, status, draft_header, current_header):
+    if '-T-' in atom_id:
+        owner = _check_owner(selection, native_header_view(current_header)['context'].get('container'), current_rows, capture)
+    if '-T-' in atom_id and 'atom_family' in current_header:
+        body = draft['_content_bytes'].decode('utf-8')
+        if (paths[0] != _task_path(selection, draft_header, body, 'draft', version, owner, root)
+                or paths[1] != _task_path(selection, current_header, body, status, version, owner, root)):
+            raise common.InputError('target', 'Task paths disagree with their authored Headers and Summary.')
+
+
+def _check_cleanup_rows(capture, draft, current):
+    for row in (draft, current):
+        fresh = [item for item in capture.atoms if item.get('_exact_ref') == row.get('_exact_ref')]
+        if len(fresh) != 1 or any(fresh[0].get(key) != row.get(key) for key in (
+                'source_path', 'id', 'ref', '_exact_ref', 'version', 'status', 'status_group',
+                'header_json', '_content_bytes', '_source_sha256')):
+            raise common.SourceChanged('Draft or published carrier changed after selection.')
+
+
 def promote_draft(selection, params, *, current_rows, structure_snapshot=None, previous_capture=None,
                   validate_project_spec_model=None):
     """Publish a native Draft."""
-    if not isinstance(params, dict) or set(params) != {'target', 'targetStatus'}:
-        raise common.InputError('target', 'Supply an exact Draft target and Current Status.')
-    target, status = params['target'], params['targetStatus']
-    if (not isinstance(target, dict) or set(target) != {'ref_id', 'version'}
-            or not isinstance(target['ref_id'], str) or type(target['version']) is not int
-            or target['version'] < 1):
-        raise common.InputError('target', 'Supply an exact Draft reference and Version.')
-    match = re.fullmatch(rf'({re.escape(selection.project_prefix)}-[STPC]-[0-9]+)@([1-9][0-9]*)-draft', target['ref_id'])
-    if match is None or int(match[2]) != target['version']:
-        raise common.InputError('target', 'Supply an exact Draft reference and matching Version.')
-    if (not isinstance(status, str) or status not in {'active', 'ready', 'in_queue', 'backlog', 'done', 'canceled', 'resolved'}
-            or ('-S-' in match[1] and status != 'ready')
-            or (('-P-' in match[1] or '-C-' in match[1]) and status != 'active')
-            or ('-T-' in match[1] and status in {'ready', 'in_queue'})):
-        raise common.InputError('targetStatus', 'Supply an applicable Current Status.')
+    target, status, match = _promotion_input(selection, params)
     atom_id, version = match[1], target['version']
     chosen = [row for row in current_rows if row.get('_exact_ref') == target['ref_id'] and row.get('status_group') == 'Draft']
     predecessors = [row for row in current_rows if row.get('id') == atom_id and row.get('status_group') == 'Current']
@@ -303,6 +299,25 @@ def promote_draft(selection, params, *, current_rows, structure_snapshot=None, p
         raise common.InputError('target', 'Draft Version must be newer than its Current predecessor.')
     return _promote_revision(selection, target, status, draft, previous, current_rows,
                              structure_snapshot, previous_capture, validate_project_spec_model)
+
+
+def _promotion_input(selection, params):
+    if not isinstance(params, dict) or set(params) != {'target', 'targetStatus'}:
+        raise common.InputError('target', 'Supply an exact Draft target and Current Status.')
+    target, status = params['target'], params['targetStatus']
+    if (not isinstance(target, dict) or set(target) != {'ref_id', 'version'}
+            or not isinstance(target['ref_id'], str) or type(target['version']) is not int
+            or target['version'] < 1):
+        raise common.InputError('target', 'Supply an exact Draft reference and Version.')
+    match = re.fullmatch(rf'({re.escape(selection.project_prefix)}-[STPC]-[0-9]+)@([1-9][0-9]*)-draft', target['ref_id'])
+    if match is None or int(match[2]) != target['version']:
+        raise common.InputError('target', 'Supply an exact Draft reference and matching Version.')
+    if (not isinstance(status, str) or status not in {'active', 'ready', 'in_queue', 'backlog', 'done', 'canceled', 'resolved'}
+            or ('-S-' in match[1] and status != 'ready')
+            or (('-P-' in match[1] or '-C-' in match[1]) and status != 'active')
+            or ('-T-' in match[1] and status in {'ready', 'in_queue'})):
+        raise common.InputError('targetStatus', 'Supply an applicable Current Status.')
+    return target, status, match
 
 
 def _is_custom_replacement(header):

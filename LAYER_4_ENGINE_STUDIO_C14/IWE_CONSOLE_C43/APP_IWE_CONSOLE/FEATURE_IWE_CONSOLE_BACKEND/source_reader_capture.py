@@ -10,7 +10,10 @@ from .source_rows import (
 )
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import project_identity  # noqa: E402
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (  # noqa: E402
-    DELEGATION_ROLE_FOLDERS, ScopeDeclarationError, has_projection_marker, has_scope_declaration_form,
+    DELEGATION_ROLE_FOLDERS,
+    ScopeDeclarationError,
+    has_projection_marker,
+    has_scope_declaration_form,
 )
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import read_scope_unit_declarations  # noqa: E402
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import CEILINGS, ReadContext, open_regular  # noqa: E402
@@ -33,9 +36,13 @@ class SourceReaderCapture:
         for path in sorted(affected):
             if path in self._source_paths:
                 self._refresh_path(path, reader)
-        affected.update(self._prune_missing_reference_aliases(affected, previous))
+        affected.update(
+            self._prune_missing_reference_aliases(affected, previous)
+        )
         content_paths = self._references.update(
-            {path: item[1] for path, item in previous.items()}, self._cached_row, affected,
+            {path: item[1] for path, item in previous.items()},
+            self._cached_row,
+            affected,
         )
         if self._compiled_schema is None and self._update_content_bindings(content_paths):
             return self._capture_full(reader, revalidate_content=True)
@@ -58,22 +65,36 @@ class SourceReaderCapture:
                 return self._capture_full(reader)
         return self._finish_incremental_capture(reader, previous, affected, content_paths)
 
-    def _finish_incremental_capture(self, reader, previous, affected, content_paths):
-        before_validation = {path: self._cached_row(path) for path in affected | content_paths}
-        invalid = self._exclude_invalid_header_sources([
-            row for path in affected | content_paths
-            if (row := self._cached.get(path, (None, None))[1]) is not None
-        ])
+    def _finish_incremental_capture(
+        self, reader, previous, affected, content_paths
+    ):
+        before_validation = {
+            path: self._cached_row(path) for path in affected | content_paths
+        }
+        invalid = self._exclude_invalid_header_sources(
+            [
+                row
+                for path in affected | content_paths
+                if (row := self._cached.get(path, (None, None))[1]) is not None
+            ]
+        )
         if invalid:
-            content_paths |= self._references.update(before_validation, self._cached_row, invalid)
-            if self._compiled_schema is None and self._content_schema.update(self._accepted_updates(content_paths)):
+            content_paths |= self._references.update(
+                before_validation, self._cached_row, invalid
+            )
+            if self._compiled_schema is None and self._content_schema.update(
+                self._accepted_updates(content_paths)
+            ):
                 return self._capture_full(reader, revalidate_content=True)
         self.capture_delta = {
-            path.relative_to(self.root).as_posix(): self._cached.get(path, (None, None))[1]
+            path.relative_to(self.root).as_posix(): self._cached.get(
+                path, (None, None)
+            )[1]
             for path in affected | content_paths
         }
         self.audit_delta = {
-            path.relative_to(self.root).as_posix() for path in affected | content_paths | invalid
+            path.relative_to(self.root).as_posix()
+            for path in affected | content_paths | invalid
         }
         self.excluded_count = len(self._failed)
         self.capture_changed = any(
@@ -83,13 +104,22 @@ class SourceReaderCapture:
         return self._rows(), self._scopes()
     def _accepted_updates(self, paths):
         accepted = self._references.accepted_paths(paths)
-        return {path.relative_to(self.root).as_posix(): self._cached_row(path) if path in accepted else None
-                for path in paths}
+        return {
+            path.relative_to(self.root).as_posix(): self._cached_row(path)
+            if path in accepted
+            else None
+            for path in paths
+        }
     def _update_content_bindings(self, paths):
         prior = dict(self._content_schema._bindings)
-        return self._content_schema.update(self._accepted_updates(paths)) or prior != self._content_schema._bindings
+        return (
+            self._content_schema.update(self._accepted_updates(paths))
+            or prior != self._content_schema._bindings
+        )
     def _prune_missing_reference_aliases(
-        self, affected: set[Path], previous: dict[Path, tuple[tuple[int, ...], dict[str, Any]]],
+        self,
+        affected: set[Path],
+        previous: dict[Path, tuple[tuple[int, ...], dict[str, Any]]],
     ) -> set[Path]:
         """Drop a cached path that disappeared before its move event arrived."""
         references = {
@@ -107,7 +137,10 @@ class SourceReaderCapture:
                     removed.update(self._remove_paths(path))
         return removed
     def _capture_full(
-        self, reader: ReadContext, *, revalidate_content: bool = False,
+        self,
+        reader: ReadContext,
+        *,
+        revalidate_content: bool = False,
     ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         self.capture_changed = True
         self.capture_delta = None
@@ -124,7 +157,9 @@ class SourceReaderCapture:
             if path in self._source_paths
         }
         self._diagnostics = {
-            path: message for path, message in self._diagnostics.items() if path in self._source_paths
+            path: message
+            for path, message in self._diagnostics.items()
+            if path in self._source_paths
         }
         self._cached = {
             path: cached
@@ -150,13 +185,17 @@ class SourceReaderCapture:
             self._error(self.root, error)
             raise
         self._declarations = declarations
-        self._lifecycle_scopes = {self.root / row["authority_path"]: row
-                                  for row in declarations.as_structure()["scope_units"]}
+        self._lifecycle_scopes = {
+            self.root / row["authority_path"]: row
+            for row in declarations.as_structure()["scope_units"]
+        }
         prefix, project_name = project_identity(self.root, control_relative=self.control_root.relative_to(self.root))
         root_declaration = None
         if declarations.root.name == project_name:
             root_path = declarations.root.source
-            root_pin = declarations.source_pins[root_path.relative_to(self.root).as_posix()]
+            root_pin = declarations.source_pins[
+                root_path.relative_to(self.root).as_posix()
+            ]
             root_declaration = (root_path, root_pin["sha256"])
         if root_declaration != self._project_root_declaration:
             for identity in (self._project_root_declaration, root_declaration):
@@ -194,7 +233,9 @@ class SourceReaderCapture:
             folders.extend(Path(role_folder) / name for name in archived)
         return folders
     def _refresh_inventory(self, reader: ReadContext) -> None:
-        ordered = sorted(self._source_paths, key=lambda path: (path.parent, path.name))
+        ordered = sorted(
+            self._source_paths, key=lambda path: (path.parent, path.name)
+        )
         for directory, paths in groupby(ordered, key=lambda path: path.parent):
             try:
                 descriptor = open_regular(directory, directory=True)
@@ -207,14 +248,21 @@ class SourceReaderCapture:
                 if descriptor is not None:
                     os.close(descriptor)
     def _declarations_changed(
-        self, changes: list[dict[str, str | None]], reader: ReadContext,
+        self,
+        changes: list[dict[str, str | None]],
+        reader: ReadContext,
     ) -> bool:
         for change in changes:
             old = self._change_path(change.get("old_path"))
             new = self._change_path(change.get("new_path"))
-            if change.get("operation") in {"remove", "move", "rename"} and old in self._scope_authority_boundaries:
+            if (
+                change.get("operation") in {"remove", "move", "rename"}
+                and old in self._scope_authority_boundaries
+            ):
                 return True
-            if self._touches_declaration(old) or self._touches_declaration(new):
+            if self._touches_declaration(old) or self._touches_declaration(
+                new
+            ):
                 return True
             if new is not None and self._is_declaration_candidate(new, reader):
                 return True
@@ -224,16 +272,23 @@ class SourceReaderCapture:
             declaration == path or declaration.is_relative_to(path)
             for declaration in self._declaration_paths
         )
-    def _is_declaration_candidate(self, path: Path, reader: ReadContext) -> bool:
+    def _is_declaration_candidate(
+        self, path: Path, reader: ReadContext
+    ) -> bool:
         if (
             path.suffix != ".md"
             or path.parent not in self._declaration_directories
-            or (path.parent == self.control_root and not path.name.startswith("CA-R-"))
+            or (
+                path.parent == self.control_root
+                and not path.name.startswith("CA-R-")
+            )
             or self._has_symlink_ancestor(path)
         ):
             return False
         try:
             raw = reader.read(path)
-        except (OSError, RuntimeError):
+        except OSError, RuntimeError:
             return False
-        return has_scope_declaration_form(raw) and not has_projection_marker(raw)
+        return has_scope_declaration_form(raw) and not has_projection_marker(
+            raw
+        )

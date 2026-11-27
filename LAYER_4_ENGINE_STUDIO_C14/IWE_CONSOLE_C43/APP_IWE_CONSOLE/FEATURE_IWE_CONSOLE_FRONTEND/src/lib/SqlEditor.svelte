@@ -1,17 +1,20 @@
 <script lang="ts">
-  import { autocompletion, type Completion, type CompletionContext } from '@codemirror/autocomplete';
+  import { autocompletion, type Completion,
+    type CompletionContext } from '@codemirror/autocomplete';
   import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
   import { syntaxHighlighting, syntaxTree } from '@codemirror/language';
   import { classHighlighter } from '@lezer/highlight';
   import { schemaCompletionSource, sql } from '@codemirror/lang-sql';
-  import { Annotation, Compartment, EditorState, Prec } from '@codemirror/state';
+  import { Annotation, Compartment, EditorState,
+    Prec } from '@codemirror/state';
   import { EditorView, keymap } from '@codemirror/view';
   import { onMount } from 'svelte';
   import { statusCompletion } from './editor_helpers';
   import type { Schema } from './types';
 
   type Action = 'run' | 'check';
-  let { value = $bindable(''), cursor = 0, disabled = false, schema = { tables: {} }, onchange, onaction }: {
+  let { value = $bindable(''), cursor = 0, disabled =
+    false, schema = { tables: {} }, onchange, onaction }: {
     value?: string; cursor?: number; disabled?: boolean; schema?: Schema;
     onchange?: (value: string, cursor: number) => void;
     onaction?: (action: Action, cursor: number) => void;
@@ -23,37 +26,57 @@
   const externalUpdate = Annotation.define<boolean>();
   const editability = (disabled: boolean) => [
     EditorView.editable.of(!disabled),
-    EditorView.contentAttributes.of({ 'aria-label': 'Query editor', 'aria-readonly': String(disabled) }),
+    EditorView.contentAttributes.of({ 'aria-label':
+      'Query editor', 'aria-readonly': String(disabled) }),
   ];
 
   const quoted = (name: string) => `"${name.replaceAll('"', '""')}"`;
   function options(currentSchema: Schema, qualifier?: string): Completion[] {
     return Object.entries(currentSchema.tables).flatMap(([table, columns]) => [
       ...(!qualifier ? [{ label: table, type: 'class' }] : []),
-      ...columns.map((column) => ({ label: qualifier ? quoted(column.name) : `${table}.${quoted(column.name)}`, apply: quoted(column.name), detail: column.type, type: 'property' })),
+      ...columns.map((column) => ({ label: qualifier ?
+        quoted(column.name) : `${table}.${quoted(
+        column.name)}`, apply: quoted(column.name),
+          detail: column.type, type: 'property' })),
     ]);
   }
   function source(context: CompletionContext, currentSchema = schema) {
     const token = syntaxTree(context.state).resolveInner(context.pos, -1);
-    const status = statusCompletion(context.state.doc.toString(), context.pos, currentSchema, token.name === 'String' ? token.to : undefined);
+    const status = statusCompletion(context.state.doc.toString(), context.pos,
+      currentSchema, token.name === 'String' ? token.to : undefined);
     if (status) {
-      return { from: status.from, to: status.to, filter: false, options: status.values.map((value) => ({ label: value, apply: `${value.replaceAll("'", "''")}'`, type: 'enum' })) };
+      return { from: status.from, to: status.to, filter:
+        false, options: status.values.map((value) =>
+        ({ label: value, apply: `${value.replaceAll(
+          "'", "''")}'`, type: 'enum' })) };
     }
     const word = context.matchBefore(/[\w."]*/);
     if (!context.explicit && (!word || word.from === word.to)) return null;
-    const schemaSource = schemaCompletionSource({ schema: Object.fromEntries(Object.entries(currentSchema.tables).map(([table, columns]) => [table,
-      columns.map((column) => ({ label: column.name, apply: quoted(column.name), detail: column.type, type: 'property' }))])) });
-    const qualified = token.parent?.name === 'CompositeIdentifier' ? schemaSource(context) : null;
-    const tokenEnd = ['Identifier', 'QuotedIdentifier'].includes(token.name) ? token.to : context.pos;
-    if (qualified instanceof Promise) return qualified.then((result) => result && ({ ...result, to: Math.max(result.to ?? context.pos, tokenEnd) }));
-    if (qualified) return { ...qualified, to: Math.max(qualified.to ?? context.pos, tokenEnd) };
+    const schemaSource = schemaCompletionSource({ schema: Object.fromEntries(
+      Object.entries(currentSchema.tables).map(([table, columns]) => [table,
+      columns.map((column) => ({ label: column.name, apply: quoted(
+        column.name), detail: column.type, type: 'property' }))])) });
+    const qualified = token.parent?.name === 'CompositeIdentifier' ?
+      schemaSource(context) : null;
+    const tokenEnd = ['Identifier', 'QuotedIdentifier'].includes(
+      token.name) ? token.to : context.pos;
+    if (qualified instanceof Promise) return qualified.then(
+      (result) => result &&
+      ({ ...result, to: Math.max(result.to ?? context.pos, tokenEnd) }));
+    if (qualified) return { ...qualified, to: Math.max(
+      qualified.to ?? context.pos, tokenEnd) };
     const candidate = word?.text.match(/^(?:"(?:[^"]|"")*"|[\w]+)\./)?.[0];
-    const qualifier = candidate && !Object.values(currentSchema.tables).some((columns) => columns.some((column) => column.name.startsWith(candidate))) ? candidate : undefined;
-    return { from: (word?.from ?? context.pos) + (qualifier?.length ?? 0), to: tokenEnd, options: options(currentSchema, qualifier) };
+    const qualifier = candidate && !Object.values(
+      currentSchema.tables).some((columns) =>
+      columns.some((column) => column.name.startsWith(
+        candidate))) ? candidate : undefined;
+    return { from: (word?.from ?? context.pos) + (qualifier?.length ?? 0),
+      to: tokenEnd, options: options(currentSchema, qualifier) };
   }
   const position = () => view?.state.selection.main.head ?? cursor;
   function shortcut(event: KeyboardEvent) {
-    if (disabled || event.repeat || !event.metaKey || event.ctrlKey || event.altKey || event.key !== 'Enter') return false;
+    if (disabled || event.repeat || !event.metaKey || event.ctrlKey ||
+      event.altKey || event.key !== 'Enter') return false;
     event.preventDefault();
     onaction?.(event.shiftKey ? 'check' : 'run', position());
     return true;
@@ -65,12 +88,16 @@
       state: EditorState.create({
         doc: value, selection: { anchor: Math.min(cursor, value.length) },
         extensions: [
-          sql(), syntaxHighlighting(classHighlighter), history(), keymap.of([...defaultKeymap, ...historyKeymap]),
+          sql(), syntaxHighlighting(classHighlighter), history(
+            ), keymap.of([...defaultKeymap, ...historyKeymap]),
           editable.of(editability(disabled)),
           completion.of(autocompletion({ override: [source] })),
           Prec.highest(EditorView.domEventHandlers({ keydown: shortcut })),
           EditorView.updateListener.of((update) => {
-            if ((update.docChanged || update.selectionSet) && !update.transactions.some((transaction) => transaction.annotation(externalUpdate))) onchange?.(update.state.doc.toString(), update.state.selection.main.head);
+            if ((update.docChanged || update.selectionSet) &&
+              !update.transactions.some((transaction) =>
+              transaction.annotation(externalUpdate))) onchange?.(
+                update.state.doc.toString(), update.state.selection.main.head);
           }),
         ],
       }),
@@ -82,15 +109,21 @@
     if (!view) return;
     const current = view.state.doc.toString();
     const nextCursor = Math.min(cursor, value.length);
-    if (current !== value) view.dispatch({ changes: { from: 0, to: current.length, insert: value }, selection: { anchor: nextCursor }, annotations: externalUpdate.of(true) });
-    else if (view.state.selection.main.head !== nextCursor) view.dispatch({ selection: { anchor: nextCursor }, annotations: externalUpdate.of(true) });
+    if (current !== value) view.dispatch({ changes:
+      { from: 0, to: current.length, insert:
+      value }, selection: { anchor: nextCursor },
+        annotations: externalUpdate.of(true) });
+    else if (view.state.selection.main.head !== nextCursor) view.dispatch({
+      selection: { anchor: nextCursor },
+        annotations: externalUpdate.of(true) });
   });
   $effect(() => {
     const currentSchema = schema;
     if (!view) return;
     view.dispatch({ effects: [
       editable.reconfigure(editability(disabled)),
-      completion.reconfigure(autocompletion({ override: [(context) => source(context, currentSchema)] })),
+      completion.reconfigure(autocompletion({ override: [
+        (context) => source(context, currentSchema)] })),
     ] });
   });
 </script>

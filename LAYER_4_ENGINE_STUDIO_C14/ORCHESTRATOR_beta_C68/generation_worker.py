@@ -128,8 +128,11 @@ class GenerationWorker:
 
     def health(self):
         status = super().health()
-        status["watcher_active"] = (self.thread is not None and self.thread.is_alive()
-                                    and self.watcher.capture_epoch() is not None)
+        status["watcher_active"] = (
+            self.thread is not None
+            and self.thread.is_alive()
+            and self.watcher.capture_epoch() is not None
+        )
         return status
 
     def _recover_watcher_coverage(self, target):
@@ -178,8 +181,11 @@ class GenerationWorker:
                 raise ForegroundCoverageLost(FOREGROUND_FENCE_MESSAGE)
             return {"foreground": True, "watcher_guarded": True, "defer_graph": True,
                     "incremental": not self.skip_archives and compatible_checkpoint(reuse)}, epoch
-        options, epoch = (({}, None) if reconciliation and not self.skip_archives else
-                          self._capture_options(reuse, paths, explicit=explicit))
+        options, epoch = (
+            ({}, None)
+            if reconciliation and not self.skip_archives
+            else self._capture_options(reuse, paths, explicit=explicit)
+        )
         if strict:
             epoch = None
             if options:

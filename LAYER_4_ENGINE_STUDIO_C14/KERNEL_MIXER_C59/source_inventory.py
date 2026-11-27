@@ -109,32 +109,38 @@ def markdown_paths(
         directory = pending.pop()
         if directory != root and directory.is_symlink():
             continue
-        try:
-            with os.scandir(directory) as entries:
-                for entry in entries:
-                    try:
-                        if entry.is_symlink():
-                            continue
-                        is_directory = entry.is_dir(follow_symlinks=False)
-                    except OSError:
-                        is_directory = False
-                    if (
-                        is_directory
-                        and not include_archived
-                        and archived((entry.name,))
-                    ):
+        yield from _scan_markdown(
+            directory, pending, include_archived, excluded_directories
+        )
+
+
+def _scan_markdown(directory, pending, include_archived, excluded_directories):
+    try:
+        with os.scandir(directory) as entries:
+            for entry in entries:
+                try:
+                    if entry.is_symlink():
                         continue
-                    if not is_directory and not entry.name.endswith(".md"):
+                    is_directory = entry.is_dir(follow_symlinks=False)
+                except OSError:
+                    is_directory = False
+                if (
+                    is_directory
+                    and not include_archived
+                    and archived((entry.name,))
+                ):
+                    continue
+                if not is_directory and not entry.name.endswith(".md"):
+                    continue
+                path = directory / entry.name
+                if is_directory:
+                    if path in excluded_directories:
                         continue
-                    path = directory / entry.name
-                    if is_directory:
-                        if path in excluded_directories:
-                            continue
-                        pending.append(path)
-                    if path.suffix == ".md":
-                        yield path
-        except OSError:
-            continue
+                    pending.append(path)
+                if path.suffix == ".md":
+                    yield path
+    except OSError:
+        return
 
 
 def rejected_diagnostic(

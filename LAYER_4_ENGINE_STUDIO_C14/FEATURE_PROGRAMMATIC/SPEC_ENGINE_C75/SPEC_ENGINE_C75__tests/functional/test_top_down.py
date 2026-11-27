@@ -3,7 +3,9 @@ import shutil
 import unittest
 from unittest.mock import patch
 
-from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_4_SPEC_COMPARISON_C88._package__shared import compare_obligations
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_4_SPEC_COMPARISON_C88._package__shared import (
+    compare_obligations,
+)
 
 
 class TopDownTests(unittest.TestCase):
@@ -21,39 +23,70 @@ class TopDownTests(unittest.TestCase):
             'solution': {},
         }
         result = compare_obligations(sources, obligations, lean=lean)
-        self.assertEqual(sources, result['sources'])
-        direction = result['directions']['manifest_contract']
-        self.assertEqual('conflicting', direction['status'])
-        self.assertEqual({'different': 'conflicting', 'equal': 'matched', 'missing': 'unresolved',
-                          'boolean': 'conflicting', 'precise': 'conflicting', 'zero': 'matched'},
-                         {fact['key']: fact['status'] for fact in direction['facts']})
-        self.assertEqual('unresolved', result['directions']['contract_solution']['status'])
-        empty = compare_obligations(sources, {role: {} for role in sources}, lean=lean)
-        self.assertEqual('unresolved', empty['status'])
-        self.assertTrue(all(direction['status'] == 'unresolved'
-                            for direction in empty['directions'].values()))
+        self.assertEqual(sources, result["sources"])
+        direction = result["directions"]["manifest_contract"]
+        self.assertEqual("conflicting", direction["status"])
+        self.assertEqual(
+            {
+                "different": "conflicting",
+                "equal": "matched",
+                "missing": "unresolved",
+                "boolean": "conflicting",
+                "precise": "conflicting",
+                "zero": "matched",
+            },
+            {fact["key"]: fact["status"] for fact in direction["facts"]},
+        )
+        self.assertEqual(
+            "unresolved", result["directions"]["contract_solution"]["status"]
+        )
+        empty = compare_obligations(
+            sources, {role: {} for role in sources}, lean=lean
+        )
+        self.assertEqual("unresolved", empty["status"])
+        self.assertTrue(
+            all(
+                direction["status"] == "unresolved"
+                for direction in empty["directions"].values()
+            )
+        )
 
     def test_lean_failure_is_explicit(self):
-        roles = ('manifest', 'contract', 'solution')
-        with patch('subprocess.run', side_effect=FileNotFoundError('missing Lean')):
-            with self.assertRaisesRegex(ValueError, 'Lean comparison failed'):
-                compare_obligations({role: {} for role in roles}, {role: {} for role in roles})
+        roles = ("manifest", "contract", "solution")
+        with patch(
+            "subprocess.run", side_effect=FileNotFoundError("missing Lean")
+        ):
+            with self.assertRaisesRegex(ValueError, "Lean comparison failed"):
+                compare_obligations(
+                    {role: {} for role in roles}, {role: {} for role in roles}
+                )
 
     def test_malformed_obligations_are_rejected_before_lean(self):
         sources = {role: {} for role in ('manifest', 'contract', 'solution')}
         for malformed in (None, {1: 'value'}):
             obligations = {**sources, 'solution': malformed}
             with self.subTest(malformed=malformed):
-                with self.assertRaisesRegex(ValueError, 'contain each comparison role'):
-                    compare_obligations(sources, obligations, lean='/missing/lean')
+                with self.assertRaisesRegex(
+                    ValueError, "contain each comparison role"
+                ):
+                    compare_obligations(
+                        sources, obligations, lean="/missing/lean"
+                    )
 
     def test_malformed_lean_rows_are_rejected(self):
-        sources = {role: {} for role in ('manifest', 'contract', 'solution')}
-        obligations = {role: {'value': 1} for role in sources}
-        for output in ('null', '[["matched"]]', '[null, ["matched"], ["matched"]]',
-                       '[[], ["matched"], ["matched"]]', '[["mismatch"], ["matched"], ["matched"]]'):
-            with self.subTest(output=output), patch('subprocess.run') as run:
+        sources = {role: {} for role in ("manifest", "contract", "solution")}
+        obligations = {role: {"value": 1} for role in sources}
+        for output in (
+            "null",
+            '[["matched"]]',
+            '[null, ["matched"], ["matched"]]',
+            '[[], ["matched"], ["matched"]]',
+            '[["mismatch"], ["matched"], ["matched"]]',
+        ):
+            with self.subTest(output=output), patch("subprocess.run") as run:
                 run.return_value.returncode = 0
                 run.return_value.stdout = output
-                with self.assertRaisesRegex(ValueError, 'unexpected Lean comparison output'):
+                with self.assertRaisesRegex(
+                    ValueError, "unexpected Lean comparison output"
+                ):
                     compare_obligations(sources, obligations)

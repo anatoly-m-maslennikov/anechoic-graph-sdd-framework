@@ -15,7 +15,9 @@ SCRIPT = APP / "docker" / "start_mcp.py"
 
 class StartMcpScriptTests(unittest.TestCase):
     def _module(self, script: Path):
-        specification = importlib.util.spec_from_file_location("start_mcp_fixture", script)
+        specification = importlib.util.spec_from_file_location(
+            "start_mcp_fixture", script
+        )
         self.assertIsNotNone(specification)
         module = importlib.util.module_from_spec(specification)
         self.assertIsNotNone(specification.loader)
@@ -35,19 +37,41 @@ class StartMcpScriptTests(unittest.TestCase):
         root = APP.parents[2]
         image = "sha256:" + "a" * 64
 
-        with patch.object(module.subprocess, "run", return_value=SimpleNamespace(returncode=0)) as run:
-            self.assertEqual(0, module.main([
-                "--project-root", str(root), "--source-root", str(root),
-                "--port", "56317", "--image", image, "--no-build",
-            ]))
+        with patch.object(
+            module.subprocess,
+            "run",
+            return_value=SimpleNamespace(returncode=0),
+        ) as run:
+            self.assertEqual(
+                0,
+                module.main(
+                    [
+                        "--project-root",
+                        str(root),
+                        "--source-root",
+                        str(root),
+                        "--port",
+                        "56317",
+                        "--image",
+                        image,
+                        "--no-build",
+                    ]
+                ),
+            )
 
         command = run.call_args.args[0]
         self.assertEqual(1800, run.call_args.kwargs["timeout"])
         self.assertEqual("uv", command[0])
         self.assertIn("--locked", command)
         self.assertIn("project-mcp", command)
-        self.assertEqual(["--output", "url"], command[command.index("--output"):command.index("--output") + 2])
-        self.assertEqual(["--port", "56317"], command[command.index("--port"):command.index("--port") + 2])
+        self.assertEqual(
+            ["--output", "url"],
+            command[command.index("--output") : command.index("--output") + 2],
+        )
+        self.assertEqual(
+            ["--port", "56317"],
+            command[command.index("--port") : command.index("--port") + 2],
+        )
         self.assertEqual(image, command[command.index("--image") + 1])
         self.assertIn("--no-build", command)
         self.assertNotIn("docker", command)
@@ -57,69 +81,126 @@ class StartMcpScriptTests(unittest.TestCase):
     def test_launcher_timeout_is_reported(self) -> None:
         module = self._module(SCRIPT)
         root = APP.parents[2]
-        with patch.object(module.subprocess, "run", side_effect=subprocess.TimeoutExpired("uv", 1800)):
-            self.assertEqual(2, module.main(["--project-root", str(root), "--source-root", str(root)]))
+        with patch.object(
+            module.subprocess,
+            "run",
+            side_effect=subprocess.TimeoutExpired("uv", 1800),
+        ):
+            self.assertEqual(
+                2,
+                module.main(
+                    ["--project-root", str(root), "--source-root", str(root)]
+                ),
+            )
 
     def test_deployed_bootstrap_uses_the_selected_installed_package_without_a_checkout(self) -> None:
-        with tempfile.TemporaryDirectory(prefix="anechoic-start-mcp-", ignore_cleanup_errors=True) as temporary:
+        with tempfile.TemporaryDirectory(
+            prefix="anechoic-start-mcp-", ignore_cleanup_errors=True
+        ) as temporary:
             root = Path(temporary).resolve()
             deployed = root / ".anechoic_runtime" / "start_mcp.py"
             deployed.parent.mkdir(parents=True)
             deployed.write_bytes(SCRIPT.read_bytes())
             digest = "a" * 64
             package = root / ".anechoic_install" / "releases" / digest
-            launcher = package / "LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/runtime.py"
+            launcher = (
+                package
+                / "LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/runtime.py"
+            )
             launcher.parent.mkdir(parents=True)
-            launcher.write_text("# installed launcher fixture\n", encoding="utf-8")
+            launcher.write_text(
+                "# installed launcher fixture\n", encoding="utf-8"
+            )
             (root / ".anechoic_install" / "current.toml").write_text(
-                f'schema_version = 1\nrelease_relpath = "releases/{digest}"\n', encoding="utf-8"
+                f'schema_version = 1\nrelease_relpath = "releases/{digest}"\n',
+                encoding="utf-8",
             )
             module = self._module(deployed)
 
-            with patch.object(module.subprocess, "run", return_value=SimpleNamespace(returncode=0)) as run:
+            with patch.object(
+                module.subprocess,
+                "run",
+                return_value=SimpleNamespace(returncode=0),
+            ) as run:
                 self.assertEqual(0, module.main(["--project-root", str(root)]))
 
         command = run.call_args.args[0]
         self.assertEqual(str(package.resolve() / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine"), command[command.index("--project") + 1])
         self.assertIn(str(launcher), command)
-        self.assertEqual(["--source-root", str(package.resolve())],
-                         command[command.index("--source-root"):command.index("--source-root") + 2])
+        self.assertEqual(
+            ["--source-root", str(package.resolve())],
+            command[
+                command.index("--source-root") : command.index("--source-root")
+                + 2
+            ],
+        )
         self.assertNotIn("worker", command)
         self.assertNotIn("workflow", command)
 
     def test_deployed_bootstrap_defaults_to_the_simple_local_package_and_target_runtime_paths(self) -> None:
-        with tempfile.TemporaryDirectory(prefix="anechoic-start-mcp-", ignore_cleanup_errors=True) as temporary:
+        with tempfile.TemporaryDirectory(
+            prefix="anechoic-start-mcp-", ignore_cleanup_errors=True
+        ) as temporary:
             root = Path(temporary).resolve()
             deployed = root / ".anechoic_runtime" / "start_mcp.py"
             deployed.parent.mkdir(parents=True)
             deployed.write_bytes(SCRIPT.read_bytes())
-            package = root / ".anechoic_runtime" / "simple_local_release" / "package"
-            launcher = package / "LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/runtime.py"
+            package = (
+                root / ".anechoic_runtime" / "simple_local_release" / "package"
+            )
+            launcher = (
+                package
+                / "LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/runtime.py"
+            )
             launcher.parent.mkdir(parents=True)
-            launcher.write_text("# simple local package launcher\n", encoding="utf-8")
+            launcher.write_text(
+                "# simple local package launcher\n", encoding="utf-8"
+            )
             module = self._module(deployed)
 
-            with patch.object(module.subprocess, "run", return_value=SimpleNamespace(returncode=0)) as run:
+            with patch.object(
+                module.subprocess,
+                "run",
+                return_value=SimpleNamespace(returncode=0),
+            ) as run:
                 self.assertEqual(0, module.main(["--project-root", str(root)]))
 
         command = run.call_args.args[0]
         environment = run.call_args.kwargs["env"]
-        self.assertEqual(str(package.resolve() / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine"), command[command.index("--project") + 1])
+        self.assertEqual(
+            str(
+                package.resolve()
+                / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine"
+            ),
+            command[command.index("--project") + 1],
+        )
         self.assertIn(str(launcher.resolve()), command)
         self.assertEqual(str(root / ".anechoic_runtime" / "launcher-venv"),
                          environment["UV_PROJECT_ENVIRONMENT"])
-        self.assertEqual(str(root / ".anechoic_tmp" / "cache" / "uv"), environment["UV_CACHE_DIR"])
+        self.assertEqual(
+            str(root / ".anechoic_tmp" / "cache" / "uv"),
+            environment["UV_CACHE_DIR"],
+        )
 
-    def test_malformed_installed_selector_fails_closed_without_fallback(self) -> None:
-        with tempfile.TemporaryDirectory(prefix="anechoic-start-mcp-", ignore_cleanup_errors=True) as temporary:
+    def test_malformed_installed_selector_fails_closed_without_fallback(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory(
+            prefix="anechoic-start-mcp-", ignore_cleanup_errors=True
+        ) as temporary:
             repository = Path(temporary).resolve() / "repository"
             root = repository / "project"
             deployed = root / ".anechoic_runtime" / "start_mcp.py"
             deployed.parent.mkdir(parents=True)
             deployed.write_bytes(SCRIPT.read_bytes())
-            enclosing_launcher = repository / "LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/runtime.py"
+            enclosing_launcher = (
+                repository
+                / "LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/runtime.py"
+            )
             enclosing_launcher.parent.mkdir(parents=True)
-            enclosing_launcher.write_text("# enclosing checkout launcher\n", encoding="utf-8")
+            enclosing_launcher.write_text(
+                "# enclosing checkout launcher\n", encoding="utf-8"
+            )
             (root / ".anechoic_install").mkdir()
             (root / ".anechoic_install" / "current.toml").write_text(
                 'release_relpath = "releases/not-a-digest"\n', encoding="utf-8"
@@ -133,29 +214,48 @@ class StartMcpScriptTests(unittest.TestCase):
         run.assert_not_called()
 
     def test_nested_project_prefers_its_selected_package_over_enclosing_checkout(self) -> None:
-        with tempfile.TemporaryDirectory(prefix="anechoic-start-mcp-", ignore_cleanup_errors=True) as temporary:
+        with tempfile.TemporaryDirectory(
+            prefix="anechoic-start-mcp-", ignore_cleanup_errors=True
+        ) as temporary:
             repository = Path(temporary).resolve() / "repository"
             root = repository / "project"
             deployed = root / ".anechoic_runtime" / "start_mcp.py"
             deployed.parent.mkdir(parents=True)
             deployed.write_bytes(SCRIPT.read_bytes())
-            enclosing_launcher = repository / "LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/runtime.py"
+            enclosing_launcher = (
+                repository
+                / "LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/runtime.py"
+            )
             enclosing_launcher.parent.mkdir(parents=True)
-            enclosing_launcher.write_text("# enclosing checkout launcher\n", encoding="utf-8")
+            enclosing_launcher.write_text(
+                "# enclosing checkout launcher\n", encoding="utf-8"
+            )
             digest = "b" * 64
             package = root / ".anechoic_install" / "releases" / digest
-            launcher = package / "LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/runtime.py"
+            launcher = (
+                package
+                / "LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/runtime.py"
+            )
             launcher.parent.mkdir(parents=True)
-            launcher.write_text("# selected package launcher\n", encoding="utf-8")
+            launcher.write_text(
+                "# selected package launcher\n", encoding="utf-8"
+            )
             (root / ".anechoic_install" / "current.toml").write_text(
-                f'schema_version = 1\nrelease_relpath = "releases/{digest}"\n', encoding="utf-8"
+                f'schema_version = 1\nrelease_relpath = "releases/{digest}"\n',
+                encoding="utf-8",
             )
             module = self._module(deployed)
-            with patch.object(module.subprocess, "run", return_value=SimpleNamespace(returncode=0)) as run:
+            with patch.object(
+                module.subprocess,
+                "run",
+                return_value=SimpleNamespace(returncode=0),
+            ) as run:
                 self.assertEqual(0, module.main([]))
 
         command = run.call_args.args[0]
-        self.assertEqual(str(root.resolve()), command[command.index("--project-root") + 1])
+        self.assertEqual(
+            str(root.resolve()), command[command.index("--project-root") + 1]
+        )
         self.assertEqual(str(package.resolve() / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine"), command[command.index("--project") + 1])
         self.assertIn(str(launcher.resolve()), command)
 

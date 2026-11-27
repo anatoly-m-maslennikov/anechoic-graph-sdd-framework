@@ -14,7 +14,9 @@ from starlette.applications import Starlette
 from . import test_native_query_stdio as fixture
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import read_import_sources
 from .native_query_test_support import create_native_gateway
-from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import workbench_routes as routes
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import (
+    workbench_routes as routes,
+)
 
 
 class ImportGraphCases2:
@@ -54,7 +56,9 @@ class ImportGraphCases2:
     async def _check_graph_updates(self, gateway, rows, graph):
         owner = gateway._native_query
         with owner._owner()._lock:
-            importer = read_import_sources(owner._owner()._connection)["src/app/main.py"]
+            importer = read_import_sources(owner._owner()._connection)[
+                "src/app/main.py"
+            ]
         target = self._source("src/missing.py", "")
         sql = "SELECT resolution_status FROM module_imports WHERE written_specifier = 'missing'"
         async with asyncio.timeout(6):
@@ -74,11 +78,16 @@ class ImportGraphCases2:
 
         self._write("001_TICKETS/TASKS/AN-T-010-TASK--external.md", "AN-T-010", "active", 1)
         async with asyncio.timeout(6):
-            while not await rows("SELECT 1 FROM atoms WHERE reference = 'AN-T-010'"):
-                await asyncio.sleep(.03)
+            while not await rows(
+                "SELECT 1 FROM atoms WHERE reference = 'AN-T-010'"
+            ):
+                await asyncio.sleep(0.03)
         self.assertGreater((await rows(graph))[0][0], 0)
 
-        owner._inputs = replace(owner._inputs, relation_types=owner._inputs.relation_types | {"TEST_LINK"})
+        owner._inputs = replace(
+            owner._inputs,
+            relation_types=owner._inputs.relation_types | {"TEST_LINK"},
+        )
         owner._refresh_after_write(owner._owner())
         self.assertGreater((await rows(graph))[0][0], 0)
 
@@ -88,9 +97,15 @@ class ImportGraphCases2:
         self._source("src/app/util.py", "")
         self._source("src/dep/__init__.py", "")
         self._source("src/dep/helper.py", "import app.main\n")
-        self._source("src/app/main.py", "import dep.helper\nimport dep\nimport missing\nimport dep.helper\n"
-                     "if False:\n    from . import util as helper\nimport declared\n")
-        self._source("pyproject.toml", '[dependency-groups]\nworkbench = ["declared>=1"]\n')
+        self._source(
+            "src/app/main.py",
+            "import dep.helper\nimport dep\nimport missing\nimport dep.helper\n"
+            "if False:\n    from . import util as helper\nimport declared\n",
+        )
+        self._source(
+            "pyproject.toml",
+            '[dependency-groups]\nworkbench = ["declared>=1"]\n',
+        )
         self._source("src/unsupported.go", "package example\n")
         self._source("src/generated/ignored.py", "import dep\n")
         self._source("src/invalid.py", "import\n")
@@ -121,7 +136,9 @@ class ImportGraphCases2:
             view = {"workspace_id": workspace["workspace_id"], "view_id": workspace["active_view_id"]}
             await workbench("view_update", view | {"sql": counts, "expected_revision": 0})
             await workbench("view_run", view)
-            result = await workbench("view_fetch", view | {"result_delivery": "inline"})
+            result = await workbench(
+                "view_fetch", view | {"result_delivery": "inline"}
+            )
             self.assertEqual(result["rows"], await rows(counts))
 
             await self._check_graph_updates(gateway, rows, graph)
@@ -129,44 +146,67 @@ class ImportGraphCases2:
 
     async def test_spec_bindings_are_indexed_and_follow_sidecar_changes(self):
         self._source("src/app/main.py", "pass\n")
-        sidecar = self._source("src/app/app__spec_bind.yaml", "implements:\n  - AN-S-001@1\n")
-        self._source("src/app/main.py.spec_trace.md", "## Implements\n- AN-S-10@2\n")
+        sidecar = self._source(
+            "src/app/app__spec_bind.yaml", "implements:\n  - AN-S-001@1\n"
+        )
+        self._source(
+            "src/app/main.py.spec_trace.md", "## Implements\n- AN-S-10@2\n"
+        )
         gateway = await self._gateway()
         app = Starlette(routes=routes(gateway))
-        async with httpx2.AsyncClient(transport=httpx2.ASGITransport(app=app),
-                                     base_url="http://127.0.0.1:18093") as client:
+        async with httpx2.AsyncClient(
+            transport=httpx2.ASGITransport(app=app),
+            base_url="http://127.0.0.1:18093",
+        ) as client:
             base = "/anechoic/Anechoic/api"
             schema = await client.post(f"{base}/schema", json={})
             self.assertEqual(schema.status_code, 200, schema.text)
             self.assertIn("implementation_rmedo", schema.json()["tables"])
 
             async def pins():
-                result = await client.post(f"{base}/run", json={
-                    "sql": "SELECT owner_path, entry_kind, atom_id, version FROM implementation_rmedo ORDER BY 1",
-                    "result_delivery": "inline",
-                })
+                result = await client.post(
+                    f"{base}/run",
+                    json={
+                        "sql": "SELECT owner_path, entry_kind, atom_id, version FROM implementation_rmedo ORDER BY 1",
+                        "result_delivery": "inline",
+                    },
+                )
                 self.assertEqual(result.status_code, 200, result.text)
                 return result.json()["rows"]
 
             module = ["src/app/main.py", "implements", "AN-S-10", 2]
-            self.assertEqual(await pins(), [["src/app", "implements", "AN-S-001", 1], module])
+            self.assertEqual(
+                await pins(),
+                [["src/app", "implements", "AN-S-001", 1], module],
+            )
             sidecar.write_text("applies:\n  - AN-S-007@3\n", encoding="utf-8")
             async with asyncio.timeout(6):
-                while await pins() != [["src/app", "applies", "AN-S-007", 3], module]:
-                    await asyncio.sleep(.03)
+                while await pins() != [
+                    ["src/app", "applies", "AN-S-007", 3],
+                    module,
+                ]:
+                    await asyncio.sleep(0.03)
             sidecar.unlink()
             async with asyncio.timeout(6):
                 while await pins() != [module]:
-                    await asyncio.sleep(.03)
+                    await asyncio.sleep(0.03)
 
 
     def _prepare_sidecars(self):
-        self._source('src/app/main.py', 'pass\n')
-        self._source('src/other/other.py', 'pass\n')
-        sidecar = self._source('src/app/app__spec_bind.yaml', 'implements: [AN-S-001@1]\n')
-        other_sidecar = self._source('src/other/other__spec_bind.yaml', 'implements: [AN-S-001@1]\n')
-        module_sidecar = self._source('src/app/main.py.spec_trace.md', '## Implements\n- AN-S-10@2\n')
-        gateway = create_native_gateway(self.root, fixture.CONTROL, fixture._native_inputs())
+        self._source("src/app/main.py", "pass\n")
+        self._source("src/other/other.py", "pass\n")
+        sidecar = self._source(
+            "src/app/app__spec_bind.yaml", "implements: [AN-S-001@1]\n"
+        )
+        other_sidecar = self._source(
+            "src/other/other__spec_bind.yaml", "implements: [AN-S-001@1]\n"
+        )
+        module_sidecar = self._source(
+            "src/app/main.py.spec_trace.md", "## Implements\n- AN-S-10@2\n"
+        )
+        gateway = create_native_gateway(
+            self.root, fixture.CONTROL, fixture._native_inputs()
+        )
         owner = gateway._native_query
         owner.start()
         self.addCleanup(owner.close)
@@ -187,17 +227,22 @@ class ImportGraphCases2:
     def _trace_snapshot(self, store):
         with store._lock:
             pins = store._connection.execute(
-                'SELECT owner_path, entry_kind, atom_id, version FROM implementation_rmedo ORDER BY 1'
+                "SELECT owner_path, entry_kind, atom_id, version FROM implementation_rmedo ORDER BY 1"
             ).fetchall()
-            states = dict(store._connection.execute(
-                'SELECT relative_path, binding_status FROM package_audit').fetchall())
+            states = dict(
+                store._connection.execute(
+                    "SELECT relative_path, binding_status FROM package_audit"
+                ).fetchall()
+            )
         return pins, states
 
 
     async def test_sidecar_only_refresh_reads_only_affected_owner_and_updates_audit(self):
         from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IMPORT_GRAPH_C61.import_graph__shared import _read_pins
 
-        owner, store, sidecar, other_sidecar, module_sidecar = self._prepare_sidecars()
+        owner, store, sidecar, other_sidecar, module_sidecar = (
+            self._prepare_sidecars()
+        )
 
         def snapshot():
             return self._trace_snapshot(store)
@@ -246,12 +291,17 @@ class ImportGraphCases2:
         self._source("src/UNIT_C1/main.py", "pass\npass\n")
         self._source("src/UNIT_C1/tests/test_legacy.py", "pass\n")
         self._source("src/UNIT_C1/UNIT_C1__tests/test_main.py", "pass\n")
-        asset = self._source("src/UNIT_C1/UNIT_C1__tests/assets/input.txt", "x\n")
+        asset = self._source(
+            "src/UNIT_C1/UNIT_C1__tests/assets/input.txt", "x\n"
+        )
         body = "## Summary\n\nDescribe C1.\n"
-        spec = self._source(f"{fixture.CONTROL}/UNIT_C1/AN-S-007-SPEC--description.md", (
-            "---\nidentity: {atom_id: AN-S-007}\ncontext: {container: {component: C1}, lens: SPEC}\n"
-            "state: {status: active, version: 1}\n---\n" + body
-        ))
+        spec = self._source(
+            f"{fixture.CONTROL}/UNIT_C1/AN-S-007-SPEC--description.md",
+            (
+                "---\nidentity: {atom_id: AN-S-007}\ncontext: {container: {component: C1}, lens: SPEC}\n"
+                "state: {status: active, version: 1}\n---\n" + body
+            ),
+        )
         structure = self._source(".anechoic_tmp/structure.json", json.dumps({
             "model_sha256": "fixture", "project": {"ref": "AN-S-001@1", "sha256": "fixture"},
             "components": {"C1": {"parent": "C00", "ref": "AN-S-006@1", "sha256": "fixture",
@@ -269,8 +319,13 @@ class ImportGraphCases2:
             self.assertFalse(response.is_error, response.structured_content)
             return response.structured_content["rows"]
 
-        populations = {"implementation": (10, 2), "implementation_and_tests": (17, 4),
-                       "test_assets": (2, 1), "test_code": (5, 1), "tests": (7, 2)}
+        populations = {
+            "implementation": (10, 2),
+            "implementation_and_tests": (17, 4),
+            "test_assets": (2, 1),
+            "test_code": (5, 1),
+            "tests": (7, 2),
+        }
         expected = [[kind, size / 1000, lines, spec.stat().st_size / size, len(body) / size, 3 / lines]
                     for kind, (size, lines) in sorted(populations.items())]
         self.assertEqual(expected, await ratios())

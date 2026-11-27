@@ -14,25 +14,51 @@ from .test_native_delta import base_generation, delta, edges
 
 def request(base, data):
     compiler = {key: data[key] for key in ("model", "structure")}
-    compiler["receipt"] = {key: data["receipt"][key] for key in
-                           ("manifest_sha256", "model_sha256", "model_descriptor_sha256", "structure_sha256")}
-    return BINDING | {"base_generation": base, "compiler": compiler,
-                      "reuse": {"inputs": {"manifest": "a" * 64, "graph": "b" * 64},
-                                "graph_config": {}, "endpoints": json.loads(data["model"])["bindings"]["endpoints"]}}
+    compiler["receipt"] = {
+        key: data["receipt"][key]
+        for key in (
+            "manifest_sha256",
+            "model_sha256",
+            "model_descriptor_sha256",
+            "structure_sha256",
+        )
+    }
+    return BINDING | {
+        "base_generation": base,
+        "compiler": compiler,
+        "reuse": {
+            "inputs": {"manifest": "a" * 64, "graph": "b" * 64},
+            "graph_config": {},
+            "endpoints": json.loads(data["model"])["bindings"]["endpoints"],
+        },
+    }
 
 
 class CompilerRefreshTest(unittest.TestCase):
-    def assert_invalid_delta_preserves_generation(self, client, connection, refresh, generation):
+    def assert_invalid_delta_preserves_generation(
+        self, client, connection, refresh, generation
+    ):
         bad = deepcopy(refresh)
         bad["delta"]["snapshot_sha256"] = "0" * 64
-        self.assertEqual(400, client.put("/generation/compiler", json=bad).status_code)
-        query = 'SELECT "content.summary" FROM mrt_atoms WHERE reference = \'AN-T-1\''
+        self.assertEqual(
+            400, client.put("/generation/compiler", json=bad).status_code
+        )
+        query = (
+            'SELECT "content.summary" FROM mrt_atoms WHERE reference = '
+            "'AN-T-1'"
+        )
         self.assertEqual("second", connection.execute(query).fetchone()[0])
         late_failure = deepcopy(refresh)
         late_failure["reuse"]["endpoints"] = {}
-        self.assertEqual(400, client.put("/generation/compiler", json=late_failure).status_code)
+        self.assertEqual(
+            400,
+            client.put("/generation/compiler", json=late_failure).status_code,
+        )
         self.assertEqual("second", connection.execute(query).fetchone()[0])
-        self.assertEqual(generation, connection.execute("SELECT id FROM ops_generation").fetchone()[0])
+        self.assertEqual(
+            generation,
+            connection.execute("SELECT id FROM ops_generation").fetchone()[0],
+        )
 
     def test_refresh_delta_and_failures_preserve_last_good(self):
         data = base_generation()
@@ -49,7 +75,9 @@ class CompilerRefreshTest(unittest.TestCase):
             descriptor = json.loads(updated["model"])
             descriptor["modules"]["another.py"] = "e" * 64
             updated["model"] = json.dumps(descriptor)
-            updated["receipt"]["model_descriptor_sha256"] = sha256(updated["model"].encode()).hexdigest()
+            updated["receipt"]["model_descriptor_sha256"] = sha256(
+                updated["model"].encode()
+            ).hexdigest()
             payload = request(base, updated)
             response = client.put("/generation/compiler", json=payload)
             self.assertEqual(200, response.status_code, response.text)
@@ -68,7 +96,10 @@ class CompilerRefreshTest(unittest.TestCase):
             response = client.put("/generation/compiler", json=refresh)
             self.assertEqual(200, response.status_code, response.text)
             generation = response.json()["result"]["generation"]
-            self.assertEqual("changed", connection.execute('SELECT "content.summary" FROM mrt_atoms WHERE reference = \'AN-T-1\'').fetchone()[0])
+            self.assertEqual("changed", connection.execute((
+                'SELECT "content.summary" FROM mrt_atoms WHERE reference = '
+                "'AN-T-1'"
+            )).fetchone()[0])
             self.assertEqual({path: "b" * 64, archive_path: "c" * 64}, client.get("/generation/reuse", params=BINDING).json()["result"]["carrier_hashes"])
             connection.execute("ALTER TABLE mrt_atoms ADD COLUMN unexpected VARCHAR")
             rejected = client.put("/generation/compiler", json=request(generation, updated))
@@ -77,20 +108,39 @@ class CompilerRefreshTest(unittest.TestCase):
 
     def test_rejects_incompatible_relations(self):
         data = base_generation()
-        with open_database() as connection, TestClient(create_app(connection, "instance", PIN)) as client:
-            base = client.put("/generation", json=data).json()["result"]["generation"]
+        with (
+            open_database() as connection,
+            TestClient(create_app(connection, "instance", PIN)) as client,
+        ):
+            base = client.put("/generation", json=data).json()["result"][
+                "generation"
+            ]
             payload = request(base, data)
             model = json.loads(payload["compiler"]["model"])
-            del model["bindings"]["endpoints"]["CONTAINED_BY"][0]["inverse_alias"]
+            del model["bindings"]["endpoints"]["CONTAINED_BY"][0][
+                "inverse_alias"
+            ]
             payload["compiler"]["model"] = json.dumps(model)
-            payload["compiler"]["receipt"]["model_descriptor_sha256"] = sha256(payload["compiler"]["model"].encode()).hexdigest()
-            self.assertEqual(400, client.put("/generation/compiler", json=payload).status_code)
-            self.assertEqual(base, connection.execute("SELECT id FROM ops_generation").fetchone()[0])
+            payload["compiler"]["receipt"]["model_descriptor_sha256"] = sha256(
+                payload["compiler"]["model"].encode()
+            ).hexdigest()
+            self.assertEqual(
+                400,
+                client.put("/generation/compiler", json=payload).status_code,
+            )
+            self.assertEqual(
+                base,
+                connection.execute("SELECT id FROM ops_generation").fetchone()[
+                    0
+                ],
+            )
 
     def test_component_change_archive_pending_and_status_rejection(self):
         data = base_generation()
-        data["carrier_hashes"] = {atom["relative_path"] + "/" + atom["filename"]: "a" * 64
-                                  for atom in data["snapshot"]["atoms"]}
+        data["carrier_hashes"] = {
+            atom["relative_path"] + "/" + atom["filename"]: "a" * 64
+            for atom in data["snapshot"]["atoms"]
+        }
         with open_database() as connection, TestClient(create_app(connection, "instance", PIN)) as client:
             initial = client.put("/generation", json=data)
             self.assertEqual(200, initial.status_code, initial.text)
@@ -99,13 +149,18 @@ class CompilerRefreshTest(unittest.TestCase):
             structure = json.loads(payload["compiler"]["structure"])
             structure["components"]["C42"] = {"parent": "C00"}
             payload["compiler"]["structure"] = json.dumps(structure)
-            payload["compiler"]["receipt"]["structure_sha256"] = sha256(payload["compiler"]["structure"].encode()).hexdigest()
+            payload["compiler"]["receipt"]["structure_sha256"] = sha256(
+                payload["compiler"]["structure"].encode()
+            ).hexdigest()
             payload["archive_pending"] = True
             response = client.put("/generation/compiler", json=payload)
             self.assertEqual(200, response.status_code, response.text)
             base = response.json()["result"]["generation"]
             self.assertTrue(client.get("/generation/reuse", params=BINDING).json()["result"]["archive_pending"])
-            self.assertEqual([(1,)], connection.execute("SELECT count(*) FROM native_graph.int_reference WHERE ref = 'C42'").fetchall())
+            self.assertEqual([(1,)], connection.execute((
+                'SELECT count(*) FROM native_graph.int_reference WHERE ref = '
+                "'C42'"
+            )).fetchall())
             self.assertEqual(2, connection.execute("SELECT count(*) FROM mrt_atoms").fetchone()[0])
             payload["base_generation"] = base
             model = json.loads(payload["compiler"]["model"])
@@ -116,7 +171,9 @@ class CompilerRefreshTest(unittest.TestCase):
                 for name, values in (("Spec Atom", ["active", "archived"]), ("Ticket Atom", ["done", "archived"]),
                                      ("Project Config Atom", ["active", "archived"]))]
             payload["compiler"]["model"] = json.dumps(model)
-            payload["compiler"]["receipt"]["model_descriptor_sha256"] = sha256(payload["compiler"]["model"].encode()).hexdigest()
+            payload["compiler"]["receipt"]["model_descriptor_sha256"] = sha256(
+                payload["compiler"]["model"].encode()
+            ).hexdigest()
             rejected = client.put("/generation/compiler", json=payload)
             self.assertEqual(400, rejected.status_code, rejected.text)
             self.assertIn("Status", rejected.text)

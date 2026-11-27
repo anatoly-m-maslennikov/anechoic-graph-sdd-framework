@@ -13,10 +13,25 @@ from typing import Any
 
 import yaml
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import carrier_read_view
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import GROUP_ORDER, GROUP_FIELDS, ROLE_FIELDS, equal_values, header_field_paths, header_path, header_value, path_value
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import effective_root_container_header
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_carrier
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    carrier_read_view,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    GROUP_ORDER,
+    GROUP_FIELDS,
+    ROLE_FIELDS,
+    equal_values,
+    header_field_paths,
+    header_path,
+    header_value,
+    path_value,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import (
+    effective_root_container_header,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    parse_carrier,
+)
 
 
 def _set(metadata: dict[str, Any], path: tuple[str, ...], value: Any) -> None:
@@ -25,7 +40,9 @@ def _set(metadata: dict[str, Any], path: tuple[str, ...], value: Any) -> None:
         if part not in parent:
             parent[part] = {}
         if not isinstance(parent[part], dict):
-            raise ValueError(f"Header {'.'.join(path[:-1])} must be a mapping.")
+            raise ValueError(
+                f"Header {'.'.join(path[:-1])} must be a mapping."
+            )
         parent = parent[part]
     parent[path[-1]] = deepcopy(value)
 
@@ -36,39 +53,59 @@ def _source_parts(raw: bytes) -> tuple[dict[str, Any], str, str, str]:
     if not match:
         raise ValueError("Carrier frontmatter boundary is unsupported.")
     newline = "\r\n" if parsed.text.startswith("---\r\n") else "\n"
-    return deepcopy(parsed.metadata), match.group(), parsed.text[match.end():], newline
+    return (
+        deepcopy(parsed.metadata),
+        match.group(),
+        parsed.text[match.end() :],
+        newline,
+    )
 
 
 def _apply_fields(metadata: dict[str, Any], fields: dict[str, Any]) -> None:
-    names = sorted(fields, key=lambda name: name not in ("role", "content_role", "context.role"))
+    names = sorted(
+        fields,
+        key=lambda name: name not in ("role", "content_role", "context.role"),
+    )
     touched: set[tuple[str, ...]] = set()
     for name in names:
         paths = header_field_paths(name, metadata)
         present = [path for path in paths if path_value(metadata, path)[0]]
         for path in present or [header_path(name, metadata)]:
-            if any(path[:len(other)] == other or other[:len(path)] == path for other in touched):
-                raise ValueError("Overlapping Header field updates are ambiguous.")
+            if any(
+                path[: len(other)] == other or other[: len(path)] == path
+                for other in touched
+            ):
+                raise ValueError(
+                    "Overlapping Header field updates are ambiguous."
+                )
             _set(metadata, path, fields[name])
             touched.add(path)
 
 
 def logical_view(metadata, model):
     view = carrier_read_view(metadata)
-    schema = getattr(model, 'candidate_schema', None)
+    schema = getattr(model, "candidate_schema", None)
     if schema is not None:
-        for field, alias in (('role', 'content_role'), ('form', 'type')):
+        for field, alias in (("role", "content_role"), ("form", "type")):
             if field in view:
-                view[field] = view[alias] = schema.role_form.decode(field, view[field])
+                view[field] = view[alias] = schema.role_form.decode(
+                    field, view[field]
+                )
     return view
 
 
 def effective_header(selection, metadata, raw, path):
-    root_path = getattr(selection, 'root_declaration_path', None)
+    root_path = getattr(selection, "root_declaration_path", None)
     if root_path is None or path != root_path:
         return metadata
-    pin = selection.declaration_source_pins.get(path.relative_to(selection.root).as_posix())
+    pin = selection.declaration_source_pins.get(
+        path.relative_to(selection.root).as_posix()
+    )
     return effective_root_container_header(
-        metadata, path=path, raw=raw, root_declaration_path=root_path,
+        metadata,
+        path=path,
+        raw=raw,
+        root_declaration_path=root_path,
         root_declaration_pin=pin,
     )
 
@@ -91,21 +128,31 @@ def _remove_header_path(metadata, path):
 
 
 def same_authored_carrier(left_raw, right_raw, model):
-    """Compare authored properties and body, excluding revision-generated fields."""
+    (
+        'Compare authored properties and body, excluding revision-generated '
+        'fields.'
+    )
+
     def normalized(raw):  # noqa: C901
-        parsed = parse_carrier(raw, Path('<carrier>'))
+        parsed = parse_carrier(raw, Path("<carrier>"))
         metadata = deepcopy(parsed.metadata)
         logical = {}
-        names = (*GROUP_FIELDS['identity'], *GROUP_FIELDS['context'], *GROUP_FIELDS['state'],
-                 *ROLE_FIELDS['concern'], *ROLE_FIELDS['plan'], 'destination')
-        excluded = {'ref_id', 'version', 'updated_at', 'destination', 'status'}
+        names = (
+            *GROUP_FIELDS["identity"],
+            *GROUP_FIELDS["context"],
+            *GROUP_FIELDS["state"],
+            *ROLE_FIELDS["concern"],
+            *ROLE_FIELDS["plan"],
+            "destination",
+        )
+        excluded = {"ref_id", "version", "updated_at", "destination", "status"}
         for name in names:
             present, value = header_value(metadata, name)
             if not present:
                 continue
             if name not in excluded:
-                if name in {'role', 'form'}:
-                    schema = getattr(model, 'candidate_schema', None)
+                if name in {"role", "form"}:
+                    schema = getattr(model, "candidate_schema", None)
                     if schema is not None:
                         value = schema.role_form.decode(name, value)
                     elif isinstance(value, str):
@@ -117,19 +164,30 @@ def same_authored_carrier(left_raw, right_raw, model):
 
     left = normalized(left_raw)
     right = normalized(right_raw)
-    return equal_values(left[0], right[0]) and equal_values(left[1], right[1]) and left[2] == right[2]
+    return (
+        equal_values(left[0], right[0])
+        and equal_values(left[1], right[1])
+        and left[2] == right[2]
+    )
 
 
 
 def _render_fields(fields, body, model):
-    if not isinstance(fields, dict) or any(not isinstance(k, str) or not k or any(not p for p in k.split('.')) for k in fields):
+    if not isinstance(fields, dict) or any(
+        not isinstance(k, str) or not k or any(not p for p in k.split("."))
+        for k in fields
+    ):
         raise ValueError("Header fields must have nonempty string paths.")
     if body is not None and not isinstance(body, str):
         raise ValueError("Body must be a string.")
-    schema = getattr(model, 'candidate_schema', None)
+    schema = getattr(model, "candidate_schema", None)
     if schema is not None:
-        fields = {field: schema.role_form.encode(field, value) if field in {'role', 'form'} else value
-                  for field, value in fields.items()}
+        fields = {
+            field: schema.role_form.encode(field, value)
+            if field in {"role", "form"}
+            else value
+            for field, value in fields.items()
+        }
     return schema, fields
 
 def render_carrier(raw: bytes | None, fields: dict[str, Any], *, body: str | None = None, model=None) -> bytes:  # noqa: C901
@@ -153,10 +211,14 @@ def render_carrier(raw: bytes | None, fields: dict[str, Any], *, body: str | Non
             fields = {key: value for key, value in fields.items() if key != 'relations'}
         _apply_fields(metadata, fields)
         if raw is None:
-            if not metadata['identity']:
-                del metadata['identity']
-            metadata = {key: metadata[key] for key in GROUP_ORDER if key in metadata} | {
-                key: value for key, value in metadata.items() if key not in GROUP_ORDER
+            if not metadata["identity"]:
+                del metadata["identity"]
+            metadata = {
+                key: metadata[key] for key in GROUP_ORDER if key in metadata
+            } | {
+                key: value
+                for key, value in metadata.items()
+                if key not in GROUP_ORDER
             }
         ordering = getattr(schema, 'header_ordering', None)
         if ordering is not None:
@@ -169,6 +231,8 @@ def render_carrier(raw: bytes | None, fields: dict[str, Any], *, body: str | Non
             raise ValueError("Header values cannot be serialized safely.") from error
         prefix = "---" + newline + header.replace("\n", newline) + "---" + newline
     assert prefix is not None
-    result = (prefix + (original_body if body is None else body)).encode("utf-8")
+    result = (prefix + (original_body if body is None else body)).encode(
+        "utf-8"
+    )
     parse_carrier(result, Path("<carrier>"))
     return result

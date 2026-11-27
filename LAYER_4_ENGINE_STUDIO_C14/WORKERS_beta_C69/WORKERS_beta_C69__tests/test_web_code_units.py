@@ -70,7 +70,10 @@ class WebCodeUnitTests(unittest.TestCase):
     def test_imports_methods_shadowing_and_ambiguous_imports(self):
         data = {
             "sources": {
-                "a.ts": "export const f = () => 1; export class C { static m() {} }",
+                "a.ts": (
+                    "export const f = () => 1; export class C { static m() {} "
+                    "}"
+                ),
                 "b.ts": (
                     "import * as x from './a'; function g(f: () => void) { "
                     "f(); x.f(); x.C.m(); new x.C(); } x.f();"

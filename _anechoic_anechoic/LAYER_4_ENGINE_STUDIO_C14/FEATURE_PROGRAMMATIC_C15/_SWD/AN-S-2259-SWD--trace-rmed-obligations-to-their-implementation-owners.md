@@ -8,8 +8,8 @@ context:
   lens: SWD
 state:
   status: active
-  version: 3
-  updated_at: '2026-11-13T12:16:59.633843+00:00'
+  version: 4
+  updated_at: "2026-11-27T15:50:51.353081+00:00"
 ---
 ## Summary
 
@@ -23,7 +23,7 @@ The admitted PROGRAMMATIC implementation boundary, including descendant Tools, A
 
 ### Prose Claim
 
-Record implementation ownership with exact, versioned RMEDO Atom IDs. An owner materially implements the cited Claim in the existing implementation. Calling, importing, re-exporting, or applying a Claim as guidance does not make a module its implementation owner. A test module owns an Evaluation when it implements the check or its verification behavior.
+Record implementation ownership with exact native revision references under AN-S-3014 and AN-S-2256. An owner materially implements the cited Claim in the existing implementation. Calling, importing, re-exporting, or applying a Claim as guidance does not make a module its implementation owner. A test module owns an Evaluation when it implements the check or its verification behavior.
 
 Use one record per owner:
 
@@ -33,6 +33,6 @@ Use one record per owner:
 
 ## Details
 
-Resolve the actual Atom version and owner before recording a pin. Keep each pin in the form `CA-R-123@4`. Include RMEDO Atoms that have actual implementation owners. Report missing or ambiguous ownership and unresolved pins without guessing. Trace links identify where to inspect and do not establish conformance.
+Resolve the actual Atom version and owner before recording a pin. Use native pins such as `AN-S-123@4` for Specs with verified implementation owners. Report missing or ambiguous ownership and unresolved pins without guessing. Trace links identify where to inspect and do not establish conformance.
 
 Use the Markdown spec reference format defined by the PROGRAMMATIC trace policy. During migration, a source header pin remains valid until its owning sidecar replaces it. Keep each migrated pin in one place.

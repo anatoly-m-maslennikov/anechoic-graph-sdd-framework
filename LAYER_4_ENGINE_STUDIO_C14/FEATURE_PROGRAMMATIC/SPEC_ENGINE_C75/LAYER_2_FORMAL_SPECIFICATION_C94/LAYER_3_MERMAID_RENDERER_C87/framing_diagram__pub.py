@@ -1,13 +1,20 @@
-from ..LAYER_2_SPEC_READING_C83.SPECIFICATION_MODEL_C85._package__shared import _validate
+from ..LAYER_2_SPEC_READING_C83.SPECIFICATION_MODEL_C85._package__shared \
+    import _validate  # fmt: skip
 
 
 def framing_to_mermaid(claim):
     """Show the solution scanner and its framing outcomes."""
-    claim = _validate(claim, 'solution')
-    opening = ', '.join(str(list(pattern)) for pattern in claim['opening_prefixes'])
-    closing = ', '.join(str(list(pattern)) for pattern in claim['closing_prefixes'])
-    return (f'flowchart TD\n  A[Raw bytes] --> B{{"Opening prefix: {opening}"}}\n'
-            f'  B -->|matched| C["Scan from opening minus one: {closing}"]\n'
-            '  B -->|missing| M[Missing delimiter]\n'
-            '  C -->|first match| D[Bounds and unchanged body tail]\n'
-            '  C -->|missing| M\n')
+    claim = _validate(claim, "solution")
+    opening = ", ".join(
+        str(list(pattern)) for pattern in claim["opening_prefixes"]
+    )
+    closing = ", ".join(
+        str(list(pattern)) for pattern in claim["closing_prefixes"]
+    )
+    return (
+        f'flowchart TD\n  A[Raw bytes] --> B{{"Opening prefix: {opening}"}}\n'
+        f'  B -->|matched| C["Scan from opening minus one: {closing}"]\n'
+        "  B -->|missing| M[Missing delimiter]\n"
+        "  C -->|first match| D[Bounds and unchanged body tail]\n"
+        "  C -->|missing| M\n"
+    )

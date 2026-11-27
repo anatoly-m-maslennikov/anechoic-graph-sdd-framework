@@ -68,7 +68,9 @@ class Candidate:
         record = {
             **self.frontier_record(),
             "content_role": self.role,
-            "output_path": f"{self.output_relative}/{self.role_directory}/{self.basename}",
+            "output_path": (
+                f"{self.output_relative}/{self.role_directory}/{self.basename}"
+            ),
         }
         if self.definition_term is not None:
             record["definition_term"] = (

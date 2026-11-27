@@ -56,9 +56,15 @@ class BetaLifecycleFamilies(unittest.IsolatedAsyncioTestCase):
             subprocess.run(["git", "init", "--quiet", str(project)], check=True)
             make_project(project)
             control = project / "_anechoic_anechoic"
-            task = control / "__TICKETS/TASKS/AN-T-9999-TASK--promotion-canary.md"
-            contract = control / "AN-S-9998-SPEC-PROJECT_CONTRACT--promotion-canary.md"
-            contract.write_text("---\natom_family: SPEC\natom_id: AN-S-9998\ncontainer: {component: C00}\n"
+            task = (
+                control / "__TICKETS/TASKS/AN-T-9999-TASK--promotion-canary.md"
+            )
+            contract = (
+                control
+                / "AN-S-9998-SPEC-PROJECT_CONTRACT--promotion-canary.md"
+            )
+            contract.write_text(
+                "---\natom_family: SPEC\natom_id: AN-S-9998\ncontainer: {component: C00}\n"
                 "tier: 0\ncontext: {template: project_contract, lens: SPEC}\n"
                 "state: {status: active, version: 1, updated_at: '2026-11-19T00:00:00Z'}\n---\n"
                 "\n## Summary\n\nPromotion canary\n\n## Guarantee\n\nThe Task can be promoted.\n")
@@ -86,23 +92,38 @@ class BetaLifecycleFamilies(unittest.IsolatedAsyncioTestCase):
                             AND outcome = 'succeeded'
                     ) e USING (run_id)
             WHERE t.component = 'C68' AND t.kind = 'trigger'"""
-        before = await client.call_tool("query_run", {"sql": witness, "result_delivery": "inline"})
+        before = await client.call_tool(
+            "query_run", {"sql": witness, "result_delivery": "inline"}
+        )
         started = monotonic()
         reply = await client.call_tool(name, arguments)
         self.assertFalse(reply.is_error, reply.structured_content)
-        self.assertEqual(status, reply.structured_content["status"], reply.structured_content)
+        self.assertEqual(
+            status,
+            reply.structured_content["status"],
+            reply.structured_content,
+        )
         print(f"{name}: {monotonic() - started:.3f}s", flush=True)
-        after = await client.call_tool("query_run", {"sql": witness, "result_delivery": "inline"})
+        after = await client.call_tool(
+            "query_run", {"sql": witness, "result_delivery": "inline"}
+        )
         self.assertFalse(after.is_error, after.structured_content)
         delta, refresh = before.structured_content["rows"][0]
-        self.assertEqual([[delta + 1, refresh]], after.structured_content["rows"])
+        self.assertEqual(
+            [[delta + 1, refresh]], after.structured_content["rows"]
+        )
         return reply.structured_content
 
     async def _rows(self, client, atom):
-        reply = await client.call_tool("query_run", {"sql":
-            'SELECT reference, "header.state.version", "header.state.status" FROM atoms '
-            f"WHERE reference = '{atom}' OR reference LIKE '{atom}@%' "
-            'ORDER BY "header.state.version", reference', "result_delivery": "inline"})
+        reply = await client.call_tool(
+            "query_run",
+            {
+                "sql": 'SELECT reference, "header.state.version", "header.state.status" FROM atoms '
+                f"WHERE reference = '{atom}' OR reference LIKE '{atom}@%' "
+                'ORDER BY "header.state.version", reference',
+                "result_delivery": "inline",
+            },
+        )
         self.assertFalse(reply.is_error, reply.structured_content)
         return reply.structured_content["rows"]
 
@@ -154,9 +175,13 @@ class BetaLifecycleFamilies(unittest.IsolatedAsyncioTestCase):
 
     async def _snapshot(self, client):
         results = []
-        for sql in ("SELECT * FROM atoms WHERE reference LIKE 'AN-T-9999%' ORDER BY reference",
-                    "SELECT * FROM relations WHERE source_ref LIKE 'AN-T-9999%' ORDER BY source_ref, target_ref"):
-            result = await client.call_tool("query_run", {"sql": sql, "result_delivery": "inline"})
+        for sql in (
+            "SELECT * FROM atoms WHERE reference LIKE 'AN-T-9999%' ORDER BY reference",
+            "SELECT * FROM relations WHERE source_ref LIKE 'AN-T-9999%' ORDER BY source_ref, target_ref",
+        ):
+            result = await client.call_tool(
+                "query_run", {"sql": sql, "result_delivery": "inline"}
+            )
             self.assertFalse(result.is_error, result.structured_content)
             results.append(result.structured_content["rows"])
         return results
@@ -182,7 +207,9 @@ class BetaLifecycleFamilies(unittest.IsolatedAsyncioTestCase):
         states = [value for key, value in node.value if key.value == "state"]
         self.assertEqual(1, len(states))
         self.assertIsInstance(states[0], yaml.MappingNode)
-        statuses = [value for key, value in states[0].value if key.value == "status"]
+        statuses = [
+            value for key, value in states[0].value if key.value == "status"
+        ]
         self.assertEqual(1, len(statuses))
         self.assertIsInstance(statuses[0], yaml.ScalarNode)
         return yaml.safe_load(header)
@@ -196,35 +223,95 @@ class BetaLifecycleFamilies(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(old_body, new_body)
 
     async def _spec(self, client):
-        created = await self._call(client, "atom_lifecycle_create_draft", {"newAtom": {
-            "template": "axiom", "container": {"component": "C00"}, "lens": "SPEC",
-            "body": "## Summary\n\nBeta Spec canary.\n"}}, "completed")
+        created = await self._call(
+            client,
+            "atom_lifecycle_create_draft",
+            {
+                "newAtom": {
+                    "template": "axiom",
+                    "container": {"component": "C00"},
+                    "lens": "SPEC",
+                    "body": "## Summary\n\nBeta Spec canary.\n",
+                }
+            },
+            "completed",
+        )
         draft = created["savedDraft"]
         atom = draft["atom_id"]
-        self.assertEqual([[draft["ref_id"], 1, "draft"]], await self._rows(client, atom))
-        await self._call(client, "atom_lifecycle_promote_draft", {"target": {"ref_id": draft["ref_id"],
-            "version": 1}, "targetStatus": "ready"}, "completed")
+        self.assertEqual(
+            [[draft["ref_id"], 1, "draft"]], await self._rows(client, atom)
+        )
+        await self._call(
+            client,
+            "atom_lifecycle_promote_draft",
+            {
+                "target": {"ref_id": draft["ref_id"], "version": 1},
+                "targetStatus": "ready",
+            },
+            "completed",
+        )
         self.assertEqual([[atom, 1, "ready"]], await self._rows(client, atom))
-        await self._call(client, "atom_lifecycle_change_status", {"target": {"ref_id": atom, "version": 1},
-            "targetStatus": "active"}, "completed")
+        await self._call(
+            client,
+            "atom_lifecycle_change_status",
+            {
+                "target": {"ref_id": atom, "version": 1},
+                "targetStatus": "active",
+            },
+            "completed",
+        )
         self.assertEqual([[atom, 1, "active"]], await self._rows(client, atom))
 
     async def _component_contract(self, client):
-        reply = await client.call_tool("atom_lifecycle_create_draft", {"newAtom": {
-            "template": "component_contract", "container": {"component": "C9"}, "lens": "DES",
-            "body": "## Summary\n\nBeta Component contract canary.\n\n## Guarantee\n\nThe canary works.\n"}})
+        reply = await client.call_tool(
+            "atom_lifecycle_create_draft",
+            {
+                "newAtom": {
+                    "template": "component_contract",
+                    "container": {"component": "C9"},
+                    "lens": "DES",
+                    "body": "## Summary\n\nBeta Component contract canary.\n\n## Guarantee\n\nThe canary works.\n",
+                }
+            },
+        )
         result = reply.structured_content
         self.assertEqual("failed", result["status"], result)
         self.assertEqual([], result["effects"], result)
         self.assertEqual("invalid_input", result["errors"][0]["code"])
-        self.assertEqual("Add the Component Contract to the Component Manifest.", result["errors"][0]["message"])
+        self.assertEqual(
+            "Add the Component Contract to the Component Manifest.",
+            result["errors"][0]["message"],
+        )
 
     async def _config(self, client, source):
-        body = source.read_text(encoding="utf-8").split("---", 2)[2] + "\nBeta config canary.\n"
-        revised = await self._call(client, "atom_lifecycle_update", {"sourceCurrent": {"ref_id": "AN-P-63", "version": 16},
-            "changes": {"body": body}}, "draft_created")
+        body = (
+            source.read_text(encoding="utf-8").split("---", 2)[2]
+            + "\nBeta config canary.\n"
+        )
+        revised = await self._call(
+            client,
+            "atom_lifecycle_update",
+            {
+                "sourceCurrent": {"ref_id": "AN-P-63", "version": 16},
+                "changes": {"body": body},
+            },
+            "draft_created",
+        )
         config = revised["savedDraft"]
-        self.assertEqual([["AN-P-63", 16, "active"], [config["ref_id"], 17, "draft"]], await self._rows(client, "AN-P-63"))
-        await self._call(client, "atom_lifecycle_promote_draft", {"target": {"ref_id": config["ref_id"],
-            "version": 17}, "targetStatus": "active"}, "completed")
-        self.assertEqual([["AN-P-63@16", 16, "archived"], ["AN-P-63", 17, "active"]], await self._rows(client, "AN-P-63"))
+        self.assertEqual(
+            [["AN-P-63", 16, "active"], [config["ref_id"], 17, "draft"]],
+            await self._rows(client, "AN-P-63"),
+        )
+        await self._call(
+            client,
+            "atom_lifecycle_promote_draft",
+            {
+                "target": {"ref_id": config["ref_id"], "version": 17},
+                "targetStatus": "active",
+            },
+            "completed",
+        )
+        self.assertEqual(
+            [["AN-P-63@16", 16, "archived"], ["AN-P-63", 17, "active"]],
+            await self._rows(client, "AN-P-63"),
+        )

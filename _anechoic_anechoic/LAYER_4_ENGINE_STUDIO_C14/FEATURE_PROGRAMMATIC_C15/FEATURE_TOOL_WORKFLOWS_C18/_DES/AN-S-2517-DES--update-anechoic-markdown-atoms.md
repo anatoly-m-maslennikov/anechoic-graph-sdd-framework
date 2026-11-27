@@ -1,15 +1,19 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-2517
+concern:
+  subject: "Atom"
+  path: "Model/Graph/Node//Artifact//SSOT//Prescribed/Content"
+  relation: "is_contained_by"
 container:
   component: C18
 tier: 3
 context:
   lens: DES
 state:
-  status: "active"
-  version: 49
-  updated_at: "2026-11-25T20:25:07.100858+00:00"
+  status: active
+  version: 53
+  updated_at: "2026-11-27T17:35:01.150345+00:00"
 ---
 ## Summary
 
@@ -44,7 +48,7 @@ is not admitted. An Atom item using `subject_patches` must not also request
 complete-frontmatter or body replacement. The selected files must be unique
 within the payload.
 
-Logical Property edits additionally support explicit add, replace and remove; list edits support entry add/remove, replacement by unique current value or complete-set replacement under CA-R-1934-TOOL_WORKFLOWS-CORE-REQUIREMENT--edit-atom-properties-by-current-values. Section edits follow CA-R-1933-TOOL_WORKFLOWS-CORE-REQUIREMENT--edit-one-explicit-atom-section. Every Summary value change requires a new Atom ID and predecessor archival through the replacement Workflow, even when the Claim remains unchanged.
+Logical Property edits additionally support explicit add, replace and remove; list edits support entry add/remove, replacement by unique current value or complete-set replacement under CA-R-1934-TOOL_WORKFLOWS-CORE-REQUIREMENT--edit-atom-properties-by-current-values. Section edits follow CA-R-1933-TOOL_WORKFLOWS-CORE-REQUIREMENT--edit-one-explicit-atom-section.
 
 Subject-only preview **must** select a complete original Atom Carrier with a stable Atom ID, excluding Draft and archived carriers by both carried Status and placement. Both the pinned source and proposed result **must** pass existing complete-carrier validation, including the applicable Content Role/Type Status model and correct Carrier placement. Preserve the carried Status byte-for-byte; do not activate the source or perform a lifecycle transition. Missing, ambiguous, unsupported, or stale validation authority **must** fail closed.
 
@@ -98,7 +102,7 @@ AN-S-1771@32's explicitly source-pinned edit draft is the full proposed next Rev
 
 For promotion, bind the exact Draft bytes to an explicit target and expected state. An existing marker such as `CA-R-123@4-draft` requires target `CA-R-123`, an exact current predecessor at Version 3, and a proposed Version 4; legacy `CA-R-123@draft` supplies the same binding explicitly in the request. Archive the exact current predecessor bytes, materialize the canonical target at the proposed Version with its original admitted Status, and remove the Draft carrier. An ID-free or `CA-R-draft` Draft uses an explicitly admitted fresh next-unreused canonical ID. Any target, Version, digest, marker, placement or destination drift refuses before effects. No retained Draft history, lineage or Journal append is a gate; Journal records observations after the independent effect.
 
-The existing `atom_update` Tool accepts `{operation: "stage_subject_batch", subject_batch: {path, digest}, limit?}` under CA-D-531. `limit` is a strict integer 1..10, default 10. Each call creates at most that many drafts with normal safe create-only/no-follow file checks and readback, changes no canonical/history files, and returns compact actual progress: `operation`, `state: "staging"|"staged"|"stopped"`, `count`, `completed`, `remaining`, `stage_run_id`, and `reviewed_packet: {path, digest}|null`, plus actual failure evidence. Only completed staging returns the final packet pinning every draft, preserving its schema1 or schema2 version and exact declared profiles. Preserve truthful partial artifacts; never report partial work as completed.
+Use the staged-batch interface in AN-S-2519.
 
 For this batch, local carrier parsing, exact descriptors, explicit old-value patches, selected grammar, safe layout, deterministic byte materialization and conditional-write/readback are the normal checks; do not repeatedly revalidate unchanged body content or build a global reference inventory for every member. The existing final graph operation remains separate.
 
@@ -106,11 +110,11 @@ No separate full-candidate validation, content-review or confirmation round foll
 
 ### Ordinary one-target Subject update
 
-The existing Project-local MCP `update_atom` route **must** also accept the closed Subject-only parameter variant defined by CA-D-531: `{target, subject_patches, subject_intent_sha256, subject_profile?, semantic_assessment_report?}`. It selects exactly one complete current original Carrier and reuses the preview's eligibility, exact scalar-patch, same-profile, complete-carrier and byte-preservation checks. Reject mixed generic replacement fields, unknown fields, projection or delivered copies, owner/path mismatch, competing non-archived originals, and an unsafe or unverifiable claimed competing owner. Bulk preview does not authorize bulk lifecycle execution.
+The existing Project-local MCP `update_atom` route must accept the closed Subject-only parameters in AN-S-1472 (CA-D-531). Reuse the preview's eligibility, exact scalar patch, same profile, complete Carrier and byte-preservation checks on one Current original. Reject owner or path mismatch, competing non-archived originals, and an unsafe or unverifiable claimed competing owner. Bulk preview grants no bulk lifecycle execution.
 
 The mutation-free preparation **must** return CA-D-425's deterministic `subject_intent` and `subject_intent_sha256`. For a value change, derive the complete intended proposal by changing only Subjects while retaining the old Version and Updated At for CA-O-067's assessment. Reuse current completed assessment evidence from a shared review package or a Done Analysis Report, and the exact CA-O-145 assessment under CA-R-1892 and CA-D-585; syntax validation and a caller-supplied class are not identity or lineage evidence. An unresolved, replacement-required, stale, or mismatched assessment prevents this effect.
 
-Application **must** consume CA-D-527's exact authorized execute envelope through the existing selected route, actual selected execution session and actual CA-O-030 Action start retained in the selected Run, with the exact completed CA-O-145 assessment. A caller Boolean, adapter envelope, local preview, candidate acceptance, or direct internal call grants no apply authority. Recheck all source, grammar, report, validation, definition, permission and destination evidence before effects.
+Apply the authorized execute envelope, selected session and actual CA-O-030 Action start under AN-S-1472 and CA-D-527. Require the exact completed CA-O-145 assessment. A caller Boolean, adapter envelope, local preview, candidate acceptance, or direct internal call grants no apply authority. Recheck source, grammar, report, validation, definition, permission and destination evidence before effects.
 
 A changed current Carrier **must** retain ID, Summary, Status, path, filename, every unrelated byte and line ending; set Version exactly to `N+1`; and materialize Updated At once from actual Project time at the effect. Preserve the exact predecessor bytes at Version `N` in the existing Delivery-governed history location, classified as archived history by placement, without a second Version increment or invented status/time edit. Verify actual after bytes and hash and bind them to the intended hash in the shared result. No-op creates no Carrier/history/change event; retain the actual Run observation without inventing a change. A caught publication/postcondition error requires an attempt to restore the verified mutable before-frontier and remove attempt-owned history only; failed or unverified restoration is not success and never permits automatic effect replay. Journal append/read has no prior-history, chain, validation, receipt, deduplication, retry or recovery prerequisite and does not gate or prove source-effect completion; report any actual recording I/O failure truthfully without replaying the effect. Abrupt crash or interruption is not crash-atomic: retain interrupted disposition and inspect actual affected current/history files and Run evidence before any separately admitted continuation. The local `ATOM_UPDATE --apply` guard and generic request behavior remain unchanged.
 
@@ -140,12 +144,20 @@ The instructed Subjects-only batch admits `source_subject_profile: "legacy"` wit
 
 An existing schema1 packet has no `source_subject_profile` field and keeps the selected-profile validation of both source and result. A transition schema2 packet requires the exact string `"legacy"`; missing, `null`, empty, unknown and every other value are rejected. No profile is inferred and no parser fallback is permitted.
 
-The existing closed schema1 batch packet is unchanged and rejects `source_subject_profile`. The explicit transition uses a separate closed packet with exactly `schema_version: 2`, `subject_profile: "approved"`, `source_subject_profile: "legacy"`, `git_checkpoint` and `atoms`; existing member and draft descriptors are unchanged. The outer `{subject_batch: {path, digest}}` request and every ordinary public preview, direct preparation and singleton request remain unchanged; those ordinary requests reject `source_subject_profile`.
+Use the closed schema-2 packet in AN-S-1471. The ordinary public preview, direct preparation, and singleton requests remain unchanged and reject the source profile.
 
 The exact active batch context must bind the packet digest, selected target, ordered patches, request and both declared profiles before the planner may validate source Subjects under `legacy`. Every resulting governs and depends_on value must validate under `approved`, including values left unchanged by the patches. Preserve final complete-carrier validation and all existing eligibility, identity, placement, Status, unrelated-byte and effect checks.
 
-Retain separate source and target grammar evidence. Each evidence object contains exactly `grammar_pins` and `native_admission: "not_performed"`; every pin contains `atom_id`, positive `version`, canonical Project-relative `path` and `sha256`. The source profile binds the five existing historical legacy grammar definitions; the target profile binds the five actual Current approved grammar definitions at that operation's Scope epoch. Reopen and revalidate both sets at staging, materialization and effect; drift or unavailable authority refuses the attempt without rebinding or fallback.
+Use AN-S-2519's separate source and target grammar evidence. Bind the five historical legacy definitions and five Current approved definitions at the operation's Scope epoch. Revalidate both sets at staging, materialization, and effect. Refuse drift or unavailable authority without rebinding or fallback.
 
-For this explicit transition only, the private Subject intent uses `schema_version: 2`: the existing schema1 fields plus exactly `source_subject_profile` and `source_subject_profile_evidence`. Its `subject_profile` and `subject_profile_evidence` remain the approved target pair. Seal both pairs and every existing intent field in the same canonical-JSON SHA-256 calculation. The ordinary same-profile path continues to produce the unchanged closed schema1 intent. Reject unknown fields, mixed versions, a mismatched profile pair or reuse outside the exact active packet member and request.
+Use the closed schema-2 intent and seal in AN-S-2519 for this transition only. Retain schema1 for ordinary same-profile intent. Refuse unknown fields, mixed versions, a mismatched profile pair, or use outside the bound active member and request.
 
-Recognize this permission only from this operative section in the uniquely resolved Current M371, R866 and O030 authority carriers, each with its actual positive Version, canonical path and SHA-256 bound to the operation. A Draft, historical citation, prohibition, keyword mention or unknown clause is not permission. The delivery bindings in D425 and D531 must also agree with these closed shapes. Source authoring alone does not activate the route or establish implementation acceptance.
+Recognize the transition only when the uniquely resolved Current Method
+AN-S-2516 and Action AN-S-1547 adopt this rule. Require the Current
+AN-S-1471 packet binding and AN-S-2519 intent binding. CA-D-531
+(AN-S-1472) remains the dispatch owner, with the shared Delivery
+contract in AN-S-1916. Bind AN-S-2517 and each required authority by
+actual positive Version, canonical path, and SHA-256. Drafts,
+historical citations, prohibitions, unknown clauses, and keyword matches
+grant no permission. Source authoring grants no runtime activation or
+implementation acceptance.

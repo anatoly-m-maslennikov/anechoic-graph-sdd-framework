@@ -8,8 +8,8 @@ context:
   lens: DES
 state:
   status: active
-  version: 4
-  updated_at: '2026-11-13T02:56:51.366605+00:00'
+  version: 5
+  updated_at: "2026-11-27T16:29:34.309627+00:00"
 ---
 
 ## Summary
@@ -17,10 +17,6 @@ state:
 Declare State Synchronization Aspect
 
 ## Claim
-
-### Prose Claim
-
-State Synchronization is an Engineering Aspect within Data Handling.
 
 ### Formal Claim
 

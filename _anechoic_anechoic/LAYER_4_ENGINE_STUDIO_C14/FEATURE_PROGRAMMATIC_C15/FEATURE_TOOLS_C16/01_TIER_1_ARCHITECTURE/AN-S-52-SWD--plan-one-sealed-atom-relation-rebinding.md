@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-52
+concern:
+  subject: "Relations"
+  path: "Model/Graph/Node//Artifact//SSOT//Prescribed/Content/Atom.Header"
+  relation: "is_property_of"
 container:
   component: C16
 tier: 1
@@ -8,8 +12,8 @@ context:
   lens: SWD
 state:
   status: active
-  version: 20
-  updated_at: 2026-11-02 19:44:26 +0400
+  version: 21
+  updated_at: "2026-11-27T16:16:01.404965+00:00"
 ---
 ## Summary
 

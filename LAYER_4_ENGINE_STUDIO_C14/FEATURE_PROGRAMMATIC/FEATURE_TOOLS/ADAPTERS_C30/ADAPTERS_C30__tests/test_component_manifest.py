@@ -7,37 +7,40 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
     )  # fmt: skip
 
 
-CANONICAL = """## Summary
-
-Declare Example
-
-## Purpose
-
-Maintain the selected examples.
-
-## Component Identity
-
-```python
-from anechoic.model import ComponentManifest
-ComponentManifest(component_id='C14', name='Example', layer=4, lens_whitelist=['SPEC'])
-```
-
-## Component Boundaries
-
-```python
-{'io': {'server': {'test': (1, None)}}, 'code': {'imports': ['C30']}}
-```
-
-## Component Contract
-
-```python contract
-declare_contract()
-```
-
-```python trace
-declare_trace_contract()
-```
-"""
+CANONICAL = (
+    "## Summary\n"
+    "\n"
+    "Declare Example\n"
+    "\n"
+    "## Purpose\n"
+    "\n"
+    "Maintain the selected examples.\n"
+    "\n"
+    "## Component Identity\n"
+    "\n"
+    "```python\n"
+    "from anechoic.model import ComponentManifest\n"
+    "ComponentManifest(component_id='C14', "
+    "name='Example', layer=4, lens_whitelist=['SPEC'])\n"
+    "```\n"
+    "\n"
+    "## Component Boundaries\n"
+    "\n"
+    "```python\n"
+    "{'io': {'server': {'test': (1, None)}}, 'code': "
+    "{'imports': ['C30']}}\n"
+    "```\n"
+    "\n"
+    "## Component Contract\n"
+    "\n"
+    "```python contract\n"
+    "declare_contract()\n"
+    "```\n"
+    "\n"
+    "```python trace\n"
+    "declare_trace_contract()\n"
+    "```\n"
+)
 
 
 class ComponentManifestTests(unittest.TestCase):
@@ -69,8 +72,13 @@ class ComponentManifestTests(unittest.TestCase):
 
     def test_legacy_manifest_remains_readable_at_tier_four(self):
         body = (
-            "## Formal Manifest\n\n```python\nfrom anechoic.model import ComponentManifest\n"
-            "ComponentManifest(component_id='C14', name='Example')\n```\n"
+            "## Formal Manifest\n"
+            "\n"
+            "```python\n"
+            "from anechoic.model import ComponentManifest\n"
+            "ComponentManifest(component_id='C14', "
+            "name='Example')\n"
+            "```\n"
         )
         self.assertEqual(
             parse_component_manifest(body, tier=4),
@@ -103,9 +111,9 @@ class ComponentManifestTests(unittest.TestCase):
 
     def test_component_contract_preserves_prose_and_formal_claims(self):
         base, contracts = CANONICAL.split("## Component Contract", 1)
-        body = (
-            base
-            + "## Component Contract\n\n### Guarantee\n\nReturn the selected examples.\n"
+        body = base + (
+            "## Component Contract\n\n### Guarantee\n\nReturn the "
+            "selected examples.\n"
         )
         self.assertEqual(component_contract_fences(body), ())
         self.assertEqual(

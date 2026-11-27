@@ -1,4 +1,5 @@
-"""The SQL descriptor binds only source bytes that passed module attestation."""
+"The SQL descriptor binds only source bytes that passed module attestation."
+
 import copy
 import json
 import os
@@ -8,7 +9,9 @@ import sys
 from tempfile import TemporaryDirectory
 import unittest
 
-from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.FEATURE_MODEL_VALIDATION.FEATURE_MODEL_VALIDATION__shared import open_serialized_model
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.\
+    FEATURE_MODEL_VALIDATION.FEATURE_MODEL_VALIDATION__shared \
+    import open_serialized_model  # fmt: skip
 
 
 class SerializedModelTests(unittest.TestCase):
@@ -16,11 +19,19 @@ class SerializedModelTests(unittest.TestCase):
         with TemporaryDirectory() as directory:
             root = Path(directory)
             engine = Path(__file__).resolve().parents[5]
-            compiler = ("FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.FEATURE_FORMAL_MODEL_GENERATOR."
-                        "manifest_compiler_CS1.image_model_compile")
-            generated = subprocess.run([sys.executable, "-B", "-P", "-m", compiler, str(root)],
-                                       env={**os.environ, "PYTHONPATH": str(engine)},
-                                       capture_output=True, text=True, check=True)
+            compiler = (
+                "FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75."
+                "LAYER_2_FORMAL_MODEL_C51."
+                "FEATURE_FORMAL_MODEL_GENERATOR."
+                "manifest_compiler_CS1.image_model_compile"
+            )
+            generated = subprocess.run(
+                [sys.executable, "-B", "-P", "-m", compiler, str(root)],
+                env={**os.environ, "PYTHONPATH": str(engine)},
+                capture_output=True,
+                text=True,
+                check=True,
+            )
             fingerprint = generated.stdout.strip()
             descriptor = json.loads((root / "model.json").read_text())
             descriptor["module_sources"] = {
@@ -30,7 +41,9 @@ class SerializedModelTests(unittest.TestCase):
             with open_serialized_model(descriptor) as model:
                 self.assertEqual(fingerprint, model.fingerprint)
             bad = copy.deepcopy(descriptor)
-            name = next(name for name in bad["modules"] if name != "__init__.py")
+            name = next(
+                name for name in bad["modules"] if name != "__init__.py"
+            )
             bad["module_sources"][name] += "\nraise RuntimeError('executed')\n"
             with self.assertRaisesRegex(ValueError, "hash mismatch"):
                 with open_serialized_model(bad):

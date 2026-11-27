@@ -188,7 +188,10 @@ class SourceReaderArchive:
                 or self._has_symlink_ancestor(folder)
             ):
                 raise ValueError(
-                    "Archive folder must be inside the Project authority folder"
+                    (
+                        "Archive folder must be inside the Project authority "
+                        "folder"
+                    )
                 )
             if folder.exists() and not folder.is_dir():
                 raise ValueError("Archive folder is not a directory")

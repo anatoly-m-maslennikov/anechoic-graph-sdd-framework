@@ -145,6 +145,9 @@ For a focused Engine Studio run, use `--phase unit --test-module PATH`. Use
 repository-relative test paths and repeat `--test-module` to select more modules.
 The default unit phase runs discovered host tests. Component test packages may
 place tests in `static/`, `unit/`, and `image/`; flat host tests remain unit tests.
+Image discovery also accepts root `*_docker_e2e.py` and
+`test_selected_query_mcp_e2e.py` modules in the Workbench and MCP test packages.
+The Canary runs through the separate `_release_canary.py` harness.
 When `lean` is on PATH, static checks reject confirmed state-boundary violations
 and witnessed silent actions. An `anechoic: no-op` comment directly above an action
 declares intentional silence. Workbench and MCP expose the ordered evidence in

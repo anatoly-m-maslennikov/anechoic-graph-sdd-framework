@@ -1,4 +1,5 @@
 """Safe, transport-local process and diagnostic boundaries."""
+
 from concurrent.futures import CancelledError
 from datetime import datetime, timezone
 import json
@@ -34,15 +35,36 @@ def runtime_log_level():
 class _HttpFormatter(logging.Formatter):
     def format(self, record):
         level = record.levelname
-        outcome = "failed" if level == "ERROR" else "degraded" if level == "WARNING" else "observed"
-        return _render(level, "http_server_" + record.funcName.lstrip("_"), "http_server", outcome, {})
+        outcome = (
+            "failed"
+            if level == "ERROR"
+            else "degraded"
+            if level == "WARNING"
+            else "observed"
+        )
+        return _render(
+            level,
+            "http_server_" + record.funcName.lstrip("_"),
+            "http_server",
+            outcome,
+            {},
+        )
 
 
 def http_log_config():
-    return {"version": 1, "disable_existing_loggers": False, "formatters": {"safe": {"()": _HttpFormatter}},
-            "handlers": {"default": {"class": "logging.StreamHandler", "formatter": "safe",
-                                     "stream": "ext://sys.stderr"}},
-            "loggers": {"uvicorn": {"handlers": ["default"], "propagate": False}}}
+    return {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "formatters": {"safe": {"()": _HttpFormatter}},
+        "handlers": {
+            "default": {
+                "class": "logging.StreamHandler",
+                "formatter": "safe",
+                "stream": "ext://sys.stderr",
+            }
+        },
+        "loggers": {"uvicorn": {"handlers": ["default"], "propagate": False}},
+    }
 
 
 class ExplicitStartupFailure(Exception):
@@ -58,12 +80,20 @@ def warning(code):
     return _emit("WARNING", code, "transport", "degraded")
 
 
-def _emit(severity, code, operation, outcome, *, elapsed_ms=None, threshold=None):
+def _emit(
+    severity, code, operation, outcome, *, elapsed_ms=None, threshold=None
+):
     try:
-        if _LEVELS.index(severity) < _LEVELS.index(threshold or runtime_log_level()):
+        if _LEVELS.index(severity) < _LEVELS.index(
+            threshold or runtime_log_level()
+        ):
             return None
-        details = {} if elapsed_ms is None else {"elapsed_ms": round(elapsed_ms, 3)}
-        getattr(logger, severity.lower())("%s", _render(severity, code, operation, outcome, details))
+        details = (
+            {} if elapsed_ms is None else {"elapsed_ms": round(elapsed_ms, 3)}
+        )
+        getattr(logger, severity.lower())(
+            "%s", _render(severity, code, operation, outcome, details)
+        )
     except CancelledError:
         raise
     except Exception:
@@ -72,9 +102,17 @@ def _emit(severity, code, operation, outcome, *, elapsed_ms=None, threshold=None
 
 
 def _render(severity, code, operation, outcome, details):
-    record = {"timestamp": datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z"),
-              "severity": severity, "event": code, "component": "C21", "operation": operation,
-              "outcome": outcome, "details": details}
+    record = {
+        "timestamp": datetime.now(timezone.utc)
+        .isoformat(timespec="milliseconds")
+        .replace("+00:00", "Z"),
+        "severity": severity,
+        "event": code,
+        "component": "C21",
+        "operation": operation,
+        "outcome": outcome,
+        "details": details,
+    }
     return json.dumps(record, separators=(",", ":"))
 
 
@@ -82,7 +120,13 @@ def run_startup(callback, *, operation):
     try:
         runtime_log_level()
     except ValueError:
-        _emit("WARNING", "invalid_log_level", operation, "failed", threshold="INFO")
+        _emit(
+            "WARNING",
+            "invalid_log_level",
+            operation,
+            "failed",
+            threshold="INFO",
+        )
         return 2
     started = monotonic()
     _emit("INFO", operation + "_started", operation, "started")
@@ -92,11 +136,21 @@ def run_startup(callback, *, operation):
         raise
     except Exception as error:
         blocked = isinstance(error, ExplicitStartupFailure)
-        severity = "WARNING" if isinstance(error, ValueError) and not blocked else "ERROR"
-        _emit(severity, operation + ("_blocked" if blocked else "_failed"), operation,
-              "failed", elapsed_ms=(monotonic() - started) * 1_000)
+        severity = (
+            "WARNING"
+            if isinstance(error, ValueError) and not blocked
+            else "ERROR"
+        )
+        _emit(
+            severity,
+            operation + ("_blocked" if blocked else "_failed"),
+            operation,
+            "failed",
+            elapsed_ms=(monotonic() - started) * 1_000,
+        )
         try:
-            sys.stderr.write("anechoic: " + ("runtime failure" if isinstance(error, ExplicitStartupFailure) else "operation failed") + "\n")
+            message = "runtime failure" if blocked else "operation failed"
+            sys.stderr.write(f"anechoic: {message}\n")
             sys.stderr.flush()
         except Exception:
             pass

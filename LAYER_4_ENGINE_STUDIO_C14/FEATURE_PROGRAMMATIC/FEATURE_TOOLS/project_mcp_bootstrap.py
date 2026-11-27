@@ -12,7 +12,10 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.project_runtime import repository_root
 
 
 BOOTSTRAP_RELATIVE = Path(
-    "LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/start_mcp.py"
+    (
+        'LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/start_m'
+        'cp.py'
+    )
 )
 TARGET_RELATIVE = Path(".anechoic_runtime/start_mcp.py")
 
@@ -25,7 +28,9 @@ def _directory(path: Path) -> None:
     try:
         mode = path.lstat().st_mode
     except OSError as error:
-        raise ProjectMcpBootstrapError("project-mcp-bootstrap-path-unavailable") from error
+        raise ProjectMcpBootstrapError(
+            "project-mcp-bootstrap-path-unavailable"
+        ) from error
     if path.is_symlink() or not stat.S_ISDIR(mode):
         raise ProjectMcpBootstrapError("project-mcp-bootstrap-path-unsafe")
 
@@ -34,7 +39,9 @@ def _regular(path: Path) -> None:
     try:
         mode = path.lstat().st_mode
     except OSError as error:
-        raise ProjectMcpBootstrapError("project-mcp-bootstrap-source-unavailable") from error
+        raise ProjectMcpBootstrapError(
+            "project-mcp-bootstrap-source-unavailable"
+        ) from error
     if path.is_symlink() or not stat.S_ISREG(mode):
         raise ProjectMcpBootstrapError("project-mcp-bootstrap-source-unsafe")
 
@@ -47,9 +54,13 @@ def _validate_bootstrap_source(package, source):
         try:
             mode = cursor.lstat().st_mode
         except OSError as error:
-            raise ProjectMcpBootstrapError("project-mcp-bootstrap-source-unavailable") from error
+            raise ProjectMcpBootstrapError(
+                "project-mcp-bootstrap-source-unavailable"
+            ) from error
         if cursor.is_symlink() or not stat.S_ISDIR(mode):
-            raise ProjectMcpBootstrapError("project-mcp-bootstrap-source-unsafe")
+            raise ProjectMcpBootstrapError(
+                "project-mcp-bootstrap-source-unsafe"
+            )
     _regular(source)
     if not source.stat().st_mode & 0o111:
         raise ProjectMcpBootstrapError("project-mcp-bootstrap-source-unsafe")

@@ -1,5 +1,6 @@
 -- valid abstracts the regex fullmatch result. Versions are the strings after
--- the source rsplit and removesuffix operations. Prior path checks have passed.
+-- the source rsplit and removesuffix operations.
+-- Prior path checks have passed.
 def reject (valid seen : Bool) (_oldVersion _targetVersion : String) : Bool :=
   (!valid) || seen
 

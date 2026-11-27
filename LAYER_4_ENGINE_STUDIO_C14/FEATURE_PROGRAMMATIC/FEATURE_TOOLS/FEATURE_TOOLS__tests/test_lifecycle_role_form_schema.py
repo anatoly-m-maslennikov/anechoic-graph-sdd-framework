@@ -16,7 +16,9 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared im
 def row(source, claim):
     return {
         "id": source,
-        "_content_bytes": f"## Claim\n### Formal Claim\n```python\n{claim}\n```\n".encode(),
+        "_content_bytes": (
+            f"## Claim\n### Formal Claim\n```python\n{claim}\n```\n"
+        ).encode(),
     }
 
 

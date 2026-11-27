@@ -34,8 +34,10 @@ export type QueryResult = Omit<QueryPageCore, 'columns'> & {
 };
 
 export type GridSort = { column: number; direction: 'asc' | 'desc' };
-export type GridFilter = { column: number; operator: 'contains'; value: string };
-export type GridState = { sort: GridSort[]; filters: GridFilter[]; group_by?: GridSort };
+export type GridFilter = { column: number; operator: 'contains'; value:
+  string };
+export type GridState = { sort: GridSort[]; filters: GridFilter[]; group_by?:
+  GridSort };
 export type ResultDisplayPreferences = {
   rowSizing: 'adaptive' | 'fixed';
   fixedPageSize: number;
@@ -43,8 +45,10 @@ export type ResultDisplayPreferences = {
   contentLimit: number;
 };
 
-export type CheckResult = { valid: boolean; row_count: number; column_count: number };
-export type Schema = { tables: Record<string, Array<{ name: string; type: string; values?: string[] }>> };
+export type CheckResult = { valid: boolean; row_count: number; column_count:
+  number };
+export type Schema = { tables: Record<string, Array<{ name: string; type:
+  string; values?: string[] }>> };
 export type SavedItem = {
   saved_query_id: string;
   saved_query_url: string;
@@ -98,11 +102,15 @@ export type QueryLogItem = {
   column_count?: number | null;
 };
 
-export type SourceSyncStatus = { mode?: 'startup_snapshot' | 'live_index' | 'unavailable'; syncing?: boolean; last_synced_at?: string | null;
-  health?: { state: 'ready' | 'pending' | 'degraded' | 'unavailable'; error?: { message?: string } };
+export type SourceSyncStatus = { mode?: 'startup_snapshot' | 'live_index' |
+  'unavailable'; syncing?: boolean; last_synced_at?: string | null;
+  health?: { state: 'ready' | 'pending' | 'degraded' | 'unavailable'; error?:
+    { message?: string } };
   watcher_queue_depth?: number | null; last_run_state?: string | null;
-  archive?: { state?: string }; ingestion_issues?: Array<{ atom_ref?: string; message?: string; code?: string; relative_path?: string }>;
+  archive?: { state?: string }; ingestion_issues?: Array<{ atom_ref?:
+    string; message?: string; code?: string; relative_path?: string }>;
 };
 
-export type Command = { id: string; label: string; shortcut?: string; enabled: boolean; run: () => void };
+export type Command = { id: string; label: string; shortcut?:
+  string; enabled: boolean; run: () => void };
 export type PreferenceCommand = { id: string; label: string; run: () => void };

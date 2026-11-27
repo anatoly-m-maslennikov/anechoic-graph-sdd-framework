@@ -8,8 +8,8 @@ context:
   lens: DevOps
 state:
   status: active
-  version: 14
-  updated_at: 2026-10-27 19:59:27 +0400
+  version: 16
+  updated_at: "2026-11-27T16:29:34.309627+00:00"
 ---
 ## Summary
 
@@ -30,6 +30,16 @@ Connectors use the same request/result roles for explicit query, read, create an
 ### Named direct Subject lookup exception
 
 Only CA-D-424's direct read-only ATOM_SEARCH Subject lookup uses its separately closed public criteria instead of the seven-member inner request. It accepts no caller root, physical selector, authorization/context reference, approval flag or Session ID. The canonical root-bound provider validates the actual definition, grammar, Project boundary and selected-source evidence; no synthetic references or new authorization protocol substitute for those checks. It returns the same four logical result roles with no effects. This direct observation creates no Session, Action Run or Journal record and is not a recorded Action execution; an actual enclosing Workflow retains applicable Tool-call recording. This exception does not change the existing Session-based realization, D527's envelope within the selected service, any other connector operation, or staging/publication admission and recording.
+
+### Legacy Delivery bindings
+
+Apply AN-S-2471 for Workflow admission and connector checks. Apply
+AN-S-1604 to Version and Updated At.
+
+A future Feature Delivery root does not move or change an existing binding.
+
+Re-pin changed Current source paths and Versions before use. Preserve the
+original evidence of existing receipts, historical pins, and installed copies.
 
 ### Logical request
 

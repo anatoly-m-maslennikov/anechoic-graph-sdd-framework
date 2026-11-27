@@ -35,11 +35,21 @@ def target(ref, version=1):
 
 
 def prepare_project(root):
-    shutil.copytree(Path(__file__).with_name("assets") / "lifecycle_latency", root, dirs_exist_ok=True)
+    shutil.copytree(
+        Path(__file__).with_name("assets") / "lifecycle_latency",
+        root,
+        dirs_exist_ok=True,
+    )
     ontology = Path("_anechoic_anechoic/LAYER_2_META_METHODOLOGY_C58/_DOM/MTD")
-    source = ROOT / "_anechoic_anechoic/ONTOLOGY_SCORE_C82/OCCURRENT_METRONOME_C58/_DOM/MTD"
+    source = (
+        ROOT
+        / (
+            '_anechoic_anechoic/ONTOLOGY_SCORE_C82/OCCURRENT_METRONOME_C58/_DO'
+            'M/MTD'
+        )
+    )
     for atom in ("AN-S-1928", "AN-S-1834", "AN-S-1831"):
-        original, = source.rglob(f"{atom}-MTD-*.md")
+        (original,) = source.rglob(f"{atom}-MTD-*.md")
         path = root / ontology / original.name
         path.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(original, path)
@@ -60,12 +70,16 @@ def operation_metrics(label, samples):
 
 
 def lifecycle_metrics(samples):
-    operations = [operation_metrics(label, times) for label, times in samples.items()]
+    operations = [
+        operation_metrics(label, times) for label, times in samples.items()
+    ]
     return {
         "operations": operations,
         "overall": {
             "max_ms": max(metrics["max_ms"] for metrics in operations),
-            "samples_above_500_ms": sum(metrics["samples_above_500_ms"] for metrics in operations),
+            "samples_above_500_ms": sum(
+                metrics["samples_above_500_ms"] for metrics in operations
+            ),
         },
     }
 
@@ -74,12 +88,21 @@ class LifecycleLatencyImageTest(unittest.TestCase):
     def test_single_atom_lifecycle_latency(self):
         with archive_project(self, prepare_project) as project:
             report = asyncio.run(self._measure(project.url + MCP_PATH))
-        print("ANECHOIC_TEST_METRICS " + json.dumps({"lifecycle_latency": report}), flush=True)
+        print(
+            "ANECHOIC_TEST_METRICS "
+            + json.dumps({"lifecycle_latency": report}),
+            flush=True,
+        )
 
     async def _measure(self, endpoint):
-        async with image_mcp_transport(endpoint) as streams, ClientSession(*streams) as client:
+        async with (
+            image_mcp_transport(endpoint) as streams,
+            ClientSession(*streams) as client,
+        ):
             await client.initialize()
-            initial_atoms = (await self._sql(client, "SELECT count(*) FROM atoms"))[0][0]
+            initial_atoms = (
+                await self._sql(client, "SELECT count(*) FROM atoms")
+            )[0][0]
             before = dict(await self._sql(client, GENERATIONS))
             baseline = await self._sql(client, NON_DELTA_RUNS)
             samples = {}
@@ -88,11 +111,24 @@ class LifecycleLatencyImageTest(unittest.TestCase):
                 await self._asset(client, samples)
                 await self._contract(client, samples)
             after = dict(await self._sql(client, GENERATIONS))
-            expected = before | {"native_delta": before.get("native_delta", 0) + 13 * TRIALS}
-            diagnostics = await self._mismatch_diagnostics(client, baseline) if expected != after else None
+            expected = before | {
+                "native_delta": before.get("native_delta", 0) + 13 * TRIALS
+            }
+            diagnostics = (
+                await self._mismatch_diagnostics(client, baseline)
+                if expected != after
+                else None
+            )
         self.assertEqual(13, len(samples))
-        self.assertTrue(all(len(values) == TRIALS for values in samples.values()))
-        self.assertEqual(expected, after, "Lifecycle trials must use only incremental admission; " + str(diagnostics))
+        self.assertTrue(
+            all(len(values) == TRIALS for values in samples.values())
+        )
+        self.assertEqual(
+            expected,
+            after,
+            "Lifecycle trials must use only incremental admission; "
+            + str(diagnostics),
+        )
         return {
             "initial_atoms": initial_atoms,
             "measurement": "MCP request to SQL readback",
@@ -104,51 +140,104 @@ class LifecycleLatencyImageTest(unittest.TestCase):
             after = await self._sql(client, NON_DELTA_RUNS)
             baseline_ids = {row[0] for row in baseline}
             new = [row for row in after if row[0] not in baseline_ids]
-            ids = [row[0] for row in new if isinstance(row[0], str) and re.fullmatch(r"[0-9a-f]{32}", row[0])]
+            ids = [
+                row[0]
+                for row in new
+                if isinstance(row[0], str)
+                and re.fullmatch(r"[0-9a-f]{32}", row[0])
+            ]
             events = []
             if ids:
                 selected = ", ".join("'" + value + "'" for value in ids)
-                events = await self._sql(client, f"""SELECT run_id, sequence, kind, name, outcome,
+                events = await self._sql(
+                    client,
+                    f"""SELECT run_id, sequence, kind, name, outcome,
                     json_extract_string(detail, '$.kind'), json_extract_string(detail, '$.code')
                     FROM flow_events WHERE component = 'C68' AND run_id IN ({selected})
-                    ORDER BY run_id, sequence LIMIT 24""")
-            return {"baseline_non_delta": baseline, "new_non_delta": new, "events": events,
-                    "run_limit": 32, "event_limit": 24}
+                    ORDER BY run_id, sequence LIMIT 24""",
+                )
+            return {
+                "baseline_non_delta": baseline,
+                "new_non_delta": new,
+                "events": events,
+                "run_limit": 32,
+                "event_limit": 24,
+            }
         except Exception as error:
-            return {"baseline_non_delta": baseline, "diagnostic_error": str(error)}
+            return {
+                "baseline_non_delta": baseline,
+                "diagnostic_error": str(error),
+            }
 
     async def _sql(self, client, query):
-        reply = await client.call_tool("query_run", {"sql": query, "result_delivery": "inline"})
+        reply = await client.call_tool(
+            "query_run", {"sql": query, "result_delivery": "inline"}
+        )
         self.assertFalse(reply.is_error, reply.structured_content)
         return reply.structured_content["rows"]
 
-    async def _run(self, client, samples, label, operation, arguments, status, exact=None):
+    async def _run(
+        self, client, samples, label, operation, arguments, status, exact=None
+    ):
         started = monotonic()
-        reply = await client.call_tool(f"atom_lifecycle_{operation}", arguments)
+        reply = await client.call_tool(
+            f"atom_lifecycle_{operation}", arguments
+        )
         receipt = reply.structured_content
         self.assertFalse(reply.is_error, receipt)
-        self.assertIn(receipt["status"], ("completed", "draft_created"), receipt)
+        self.assertIn(
+            receipt["status"], ("completed", "draft_created"), receipt
+        )
         if exact is None:
-            exact = (receipt.get("savedDraft") or receipt["artifact"])["ref_id"]
-        self.assertRegex(exact, r"\AAN-[TS]-[0-9]+(?:@[1-9][0-9]*(?:-draft)?)?\Z")
-        rows = await self._sql(client, f"""SELECT n.exact_ref, a."header.state.status"
+            exact = (receipt.get("savedDraft") or receipt["artifact"])[
+                "ref_id"
+            ]
+        self.assertRegex(
+            exact, r"\AAN-[TS]-[0-9]+(?:@[1-9][0-9]*(?:-draft)?)?\Z"
+        )
+        rows = await self._sql(
+            client,
+            f"""SELECT n.exact_ref, a."header.state.status"
             FROM atoms a JOIN native_references n USING (reference)
-            WHERE n.exact_ref = '{exact}' OR n.reference = '{exact}'""")
+            WHERE n.exact_ref = '{exact}' OR n.reference = '{exact}'""",
+        )
         elapsed_ms = (monotonic() - started) * 1000
         self.assertEqual(1, len(rows), (label, receipt, rows))
-        self.assertEqual(exact if "@" in exact else f"{exact}@1", rows[0][0], receipt)
+        self.assertEqual(
+            exact if "@" in exact else f"{exact}@1", rows[0][0], receipt
+        )
         self.assertEqual(status, rows[0][1], (label, receipt, rows))
         samples.setdefault(label, []).append(elapsed_ms)
         return rows[0][0]
 
     async def _task(self, client, samples):
-        draft = await self._run(client, samples, "Create Task Draft", "create_draft", {"newAtom": {
-            "template": "task", "container": {"component": "C00"}, "body": SUMMARY,
-        }}, "draft")
+        draft = await self._run(
+            client,
+            samples,
+            "Create Task Draft",
+            "create_draft",
+            {
+                "newAtom": {
+                    "template": "task",
+                    "container": {"component": "C00"},
+                    "body": SUMMARY,
+                }
+            },
+            "draft",
+        )
         atom = draft.split("@")[0]
-        await self._run(client, samples, "Publish Task Draft", "promote_draft", {
-            "target": target(draft), "targetStatus": "backlog",
-        }, "backlog", f"{atom}@1")
+        await self._run(
+            client,
+            samples,
+            "Publish Task Draft",
+            "promote_draft",
+            {
+                "target": target(draft),
+                "targetStatus": "backlog",
+            },
+            "backlog",
+            f"{atom}@1",
+        )
         await self._run(client, samples, "Queue Task", "change_status", {
             "target": target(atom), "targetStatus": "in_queue",
         }, "in_queue", f"{atom}@1")
@@ -160,17 +249,48 @@ class LifecycleLatencyImageTest(unittest.TestCase):
         }, "backlog", f"{atom}@2")
 
     async def _asset(self, client, samples):
-        asset = await self._run(client, samples, "Create Ticket Asset", "create_asset", {"newAtom": {
-            "template": "work_report", "body": SUMMARY,
-        }}, "in_queue")
-        await self._run(client, samples, "Update Asset body", "direct_update", {
-            "target": target(asset.split("@")[0]), "changes": {"body": SUMMARY + "\nResult.\n"},
-        }, "in_queue", asset)
+        asset = await self._run(
+            client,
+            samples,
+            "Create Ticket Asset",
+            "create_asset",
+            {
+                "newAtom": {
+                    "template": "work_report",
+                    "body": SUMMARY,
+                }
+            },
+            "in_queue",
+        )
+        await self._run(
+            client,
+            samples,
+            "Update Asset body",
+            "direct_update",
+            {
+                "target": target(asset.split("@")[0]),
+                "changes": {"body": SUMMARY + "\nResult.\n"},
+            },
+            "in_queue",
+            asset,
+        )
 
     async def _contract(self, client, samples):
-        draft = await self._run(client, samples, "Create Contract Draft", "create_draft", {"newAtom": {
-            "template": "component_contract", "container": {"component": "C00"}, "lens": "SPEC", "body": CONTRACT,
-        }}, "draft")
+        draft = await self._run(
+            client,
+            samples,
+            "Create Contract Draft",
+            "create_draft",
+            {
+                "newAtom": {
+                    "template": "component_contract",
+                    "container": {"component": "C00"},
+                    "lens": "SPEC",
+                    "body": CONTRACT,
+                }
+            },
+            "draft",
+        )
         atom = draft.split("@")[0]
         await self._run(client, samples, "Publish Contract Draft", "promote_draft", {
             "target": target(draft), "targetStatus": "ready",
@@ -178,9 +298,18 @@ class LifecycleLatencyImageTest(unittest.TestCase):
         await self._run(client, samples, "Activate Contract", "change_status", {
             "target": target(atom), "targetStatus": "active",
         }, "active", f"{atom}@1")
-        revised = await self._run(client, samples, "Revise Contract", "update", {
-            "sourceCurrent": target(atom), "changes": {"body": CONTRACT + "\nRevised.\n"},
-        }, "draft", f"{atom}@2-draft")
+        revised = await self._run(
+            client,
+            samples,
+            "Revise Contract",
+            "update",
+            {
+                "sourceCurrent": target(atom),
+                "changes": {"body": CONTRACT + "\nRevised.\n"},
+            },
+            "draft",
+            f"{atom}@2-draft",
+        )
         await self._run(client, samples, "Archive Contract Draft", "archive", {
             "target": target(revised, 2),
         }, "archived", f"{atom}@2")

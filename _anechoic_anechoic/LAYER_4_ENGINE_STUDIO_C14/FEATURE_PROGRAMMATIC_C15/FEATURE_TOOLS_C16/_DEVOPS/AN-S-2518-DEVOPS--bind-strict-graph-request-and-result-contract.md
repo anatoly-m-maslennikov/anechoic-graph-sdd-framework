@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-2518
+concern:
+  subject: "Contract"
+  path: "Model/Graph/Node//Artifact//SSOT//Prescribed/Content/Atom//Specification"
+  relation: "is_narrower_than"
 container:
   component: C16
 tier: 4
@@ -8,8 +12,8 @@ context:
   lens: DevOps
 state:
   status: active
-  version: 4
-  updated_at: '2026-11-26T18:37:07.233389+00:00'
+  version: 6
+  updated_at: "2026-11-27T17:35:01.150345+00:00"
 ---
 ## Summary
 
@@ -37,7 +41,7 @@ An explicitly present selection with `atom_ids: []` is admissible when the curre
 
 Omitting `output_destination` permits a non-persisting Tool description/construction result with `output_effects.state: none`; it does not invent a destination or prove a completed graph Action. Persist only to an explicitly authorized derived path or a current, unambiguous registered destination. A configured projection root or conventional filename alone is not registration. An existing destination with different bytes requires current evidence for that exact prior output before replacement. Actual destination existence and before/after bytes determine `created`, `replaced`, or `unchanged`, not presence of an optional request field.
 
-`subject_profile`, when present, is exactly `legacy` or `approved`. Omission selects `legacy`; reject null, Boolean/numeric/container values, empty strings and unknown names at both the public descriptor and native request boundary. The builder does not infer a profile from source text, try another profile after a parse failure, or translate between profiles. This selection controls Subject syntax and Atom-incidence extraction only. Both graph kinds use the selected parser profile. In the approved profile, `/` denotes broader-to-narrower specialization with applicable inheritance, `//` names an instance of a kind, and `.` addresses a bearer's Property. `X: Y` means Y is an allowed value of X regardless of X's kind or preceding path; it is not assignment. `X/(.Y: Z)` qualifies the whole X by its own relative Property Y and allowed value Z: the qualified X is narrower than X and inherits its applicable features and constraints, while Y does not become a Property subtype of X. `@` calls an already declared Entity, not only a kind, and parentheses provide logical grouping. `Part +> Whole` and `Whole <+ Part` express the same containment fact, with direct IS_CONTAINED_BY and derived CONTAINS; containment supplies no inheritance. `X >| Y` and `Y |< X` express the same `HAS_AXIS` fact, with Y as the Axis. The separate `HAS_AXIS_VALUE` Relation records membership in an Axis value. `Source ((RELATION_TYPE)) Target` retains the exact registered named-Relation notation. Direct Property values use `Property[format]{count}`; Relation counts use `Source {forward-count}RELATION{reverse-count} Target`, counting Relation instances per written Source before the operator and reverse instances per Target after it. `{n}`, `{n+}` and `{n..m}` mean exact count, minimum and inclusive range; missing Relation slots remain unspecified, and the counts are neither Relation arity nor distinct-target counts. The registered initial lowercase `atom(...)` forms remain case-significant selector syntax; that initial reservation does not reserve an ordinary noninitial Name `atom`. `Atom` remains a case-significant lexical component of its full admitted canonical Entity expression, not a case-folded selector alias. Grouping and syntax recognition do not add a Boolean expression language or settle otherwise unspecified mixed-chain binding. Retain full decoded Subject and selected-owner literals. Syntax recognition does not admit a native Entity, Term, Property or Relation, resolve a selector, or alter the existing native recognition/admission profiles and their decisions.
+`subject_profile`, when present, is exactly `legacy` or `approved`. Omission selects `legacy`; reject null, Boolean/numeric/container values, empty strings and unknown names at both the public descriptor and native request boundary. The builder does not infer a profile from source text, try another profile after a parse failure, or translate between profiles. This selection controls Subject syntax and Atom-incidence extraction only. Both graph kinds use the selected parser profile. Recognize the approved Subject syntax from the grammar pins below. Preserve the case and lexical roles of initial lowercase `atom(...)`, ordinary noninitial `atom`, and canonical `Atom`. Grouping does not add a Boolean expression language or assign unspecified mixed-chain binding. Retain full decoded Subject and selected-owner literals. Syntax recognition does not admit a native Entity, Term, Property or Relation, resolve a selector, or alter the existing native recognition/admission profiles and their decisions.
 
 Before parsing an approved request, bind the profile's grammar source identities in declared order: CA-R-1931, CA-R-1321, CA-R-1324, CA-M-228 and CA-E-833. At the start of the operation's bound source scope, read each identity's actual Current original carrier and bind its actual positive integer Version, repository-relative original path and SHA-256 digest. A Draft or retained historical carrier is not a Current pin. Keep that exact ordered pin set immutable for the operation; this binding changes neither the legacy profile's frozen pins nor the caller's selected profile. Reject missing, unreadable, changed or symlinked pins, including a symlink in any parent path; a matching source digest does not admit native facts. Recheck these pins at the end of construction and immediately before publication or confirmation of an unchanged output. Drift returns truthful stale/failed evidence with no new output effect and preserves an existing output; it cannot be repaired by silently refreshing the selected profile or its pins.
 

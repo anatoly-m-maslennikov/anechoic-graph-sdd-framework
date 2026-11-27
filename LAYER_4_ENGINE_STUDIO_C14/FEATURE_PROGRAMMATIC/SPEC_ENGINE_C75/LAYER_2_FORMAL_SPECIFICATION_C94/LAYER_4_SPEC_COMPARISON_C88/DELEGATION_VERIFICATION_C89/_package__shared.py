@@ -1,4 +1,6 @@
-from .cli_delegation__pub import check_cli_child_dispatch as check_cli_child_dispatch
+from .cli_delegation__pub import (
+    check_cli_child_dispatch as check_cli_child_dispatch,
+)
 from .sibling_delegation__pub import (
     _declares_client as _declares_client,
     check_sibling_binding as check_sibling_binding,

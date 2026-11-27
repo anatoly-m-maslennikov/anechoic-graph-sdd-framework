@@ -2,9 +2,14 @@
 
 
 def finding(source, field, message):
-    return {'source': source, 'field': field, 'message': message}
+    return {"source": source, "field": field, "message": message}
 
 
 def verdict(statuses):
-    return ('conflicting' if 'conflicting' in statuses else
-            'unresolved' if not statuses or 'unresolved' in statuses else 'matched')
+    return (
+        "conflicting"
+        if "conflicting" in statuses
+        else "unresolved"
+        if not statuses or "unresolved" in statuses
+        else "matched"
+    )

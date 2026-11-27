@@ -1,101 +1,141 @@
-import { expect, type Locator, type Page, type Request, type Response } from '@playwright/test';
+import { expect, type Locator, type Page, type Request,
+  type Response } from '@playwright/test';
 import type { Effect } from './console-formal-cases';
+import { toolReply, toolRequest } from './tool_rest_fixture';
 
 const authoredRelation = { type: 'IS_SOLUTION_FOR', ref_id: 'AN-S-1' };
 const readOnlyRelations = [
-  { type: 'CONTAINED_BY', ref_id: 'C00', direction: 'outgoing', derived: false },
+  { type: 'CONTAINED_BY', ref_id: 'C00',
+    direction: 'outgoing', derived: false },
   { type: 'DERIVED', ref_id: 'AN-S-2', direction: 'outgoing', derived: true },
-  { type: 'INCOMING', ref_id: 'AN-S-3', direction: 'incoming', derived: false },
+  { type: 'INCOMING', ref_id: 'AN-S-3',
+    direction: 'incoming', derived: false },
 ];
 
 function lifecycleTable(ref: string, inline?: boolean) {
   const run = { query_id: 'current', revision: 1, status: 'success' };
-  const active = { id: 'view', name: 'Active View', sql: 'SELECT reference FROM atoms' + (inline ? ' VIEW DOCUMENT' : ''),
+  const active = { id: 'view', name: 'Active View', sql:
+    'SELECT reference FROM atoms' + (inline ? ' VIEW DOCUMENT' : ''),
     revision: 1, cursor_position: 0, result: run };
-  const other = { id: 'other', name: 'Other View', sql: 'SELECT 2', revision: 1, cursor_position: 0 };
-  const workspace = { workspace_id: 'test', project_name: 'Test', active_view_id: active.id, views: inline ? [active, other] : [active] };
-  const result = { query_id: run.query_id, columns: [{ name: 'reference', type: 'VARCHAR' }],
+  const other = { id: 'other', name: 'Other View',
+    sql: 'SELECT 2', revision: 1, cursor_position: 0 };
+  const workspace = { workspace_id: 'test', project_name: 'Test',
+    active_view_id: active.id, views: inline ? [active, other] : [active] };
+  const result = { query_id: run.query_id, columns:
+    [{ name: 'reference', type: 'VARCHAR' }],
     rows: [[ref]], row_count: 1, offset: 0, page_size: 100, has_more: false };
   return { workspace, result, other };
 }
 
-function lifecycleDocuments(family: string, hasDraft: boolean, highest: number, ticketStatuses?: string[]) {
+function lifecycleDocuments(family: string, hasDraft:
+  boolean, highest: number, ticketStatuses?: string[]) {
   const stable = `AN-${family}-1`;
   const draftVersion = hasDraft ? 1 : highest + 1;
   const exact = `${stable}@${draftVersion}-draft`;
   const publishStatus = family === 'S' ? 'ready' : 'backlog';
-  let body = '## Summary\n\nCreated\n'; let stamp = 'one'; let removed = false; let currentStatus = publishStatus;
+  let body = '## Summary\n\nCreated\n'; let stamp = 'one';
+    let removed = false; let currentStatus = publishStatus;
   const history = [
-    { ref_id: stable, version: 1, status: publishStatus, filename: 'current.md' },
-    ...(highest > 1 ? [{ ref_id: `${stable}@${highest}`, version: highest, status: 'archived', filename: 'archived.md' }] : []),
-    { ref_id: exact, version: draftVersion, status: 'draft', filename: 'draft.md' },
+    { ref_id: stable, version: 1, status:
+      publishStatus, filename: 'current.md' },
+    ...(highest > 1 ? [{ ref_id: `${stable}@${highest}`, version:
+      highest, status: 'archived', filename: 'archived.md' }] : []),
+    { ref_id: exact, version: draftVersion,
+      status: 'draft', filename: 'draft.md' },
   ].filter((revision) => hasDraft || revision.status !== 'draft');
-  const document = (ref: string) => ({ ref_id: stable, exact_ref: ref === exact ? exact : stable,
-    version: ref === exact ? draftVersion : 1, status: ref === exact ? 'draft' : currentStatus, filename: ref === exact ? 'draft.md' : 'current.md',
-    ...(ticketStatuses && ref !== exact ? { ticket_statuses: ticketStatuses } : {}),
+  const document = (ref: string) => ({ ref_id:
+    stable, exact_ref: ref === exact ? exact : stable,
+    version: ref === exact ? draftVersion :
+      1, status: ref === exact ? 'draft' :
+      currentStatus, filename: ref === exact ? 'draft.md' : 'current.md',
+    ...(ticketStatuses && ref !== exact ? {
+      ticket_statuses: ticketStatuses } : {}),
     authored_relations: ref === exact && !removed ? [authoredRelation] : [],
-    body, updated_at: stamp, template: family === 'S' ? 'axiom' : 'task', history, contained: [],
+    body, updated_at: stamp, template: family === 'S' ?
+      'axiom' : 'task', history, contained: [],
     relations: removed ? readOnlyRelations : [
-      { ...authoredRelation, direction: 'outgoing', derived: false }, ...readOnlyRelations,
+      { ...authoredRelation, direction: 'outgoing',
+        derived: false }, ...readOnlyRelations,
     ] });
-  function save(changes: { body?: string; removeRelations?: unknown[] }, refuse?: boolean) {
+  function save(changes: { body?: string;
+    removeRelations?: unknown[] }, refuse?: boolean) {
     if (refuse) {
       body = '## Summary\n\nCreated\n\nChanged on server\n'; stamp = 'newer';
-      return { status: 'failed', errors: [{ code: 'source_changed', message: 'Draft updated_at does not match the expected timestamp.' }] };
+      return { status: 'failed', errors: [{ code: 'source_changed', message:
+        'Draft updated_at does not match the expected timestamp.' }] };
     }
     if (changes.body) body = changes.body;
     if (changes.removeRelations) removed = true;
-    stamp = 'two'; return { status: 'completed', artifact: { ref_id: exact, updated_at: stamp } };
+    stamp = 'two'; return { status: 'completed',
+      artifact: { ref_id: exact, updated_at: stamp } };
   }
   return { stable, exact, draftVersion, publishStatus, document, save,
     changeStatus(status: string) { currentStatus = status; } };
 }
 
-export async function lifecycleFixture(page: Page, family = 'T', hasDraft = true, ticketStatuses?: string[],
-  options: { inline?: boolean; refuseSave?: boolean; refuseCreate?: boolean; highestVersion?: number } = {}) {
+export async function lifecycleFixture(page: Page,
+  family = 'T', hasDraft = true, ticketStatuses?: string[],
+  options: { inline?: boolean; refuseSave?: boolean;
+    refuseCreate?: boolean; highestVersion?: number } = {}) {
   const calls: { operation: string; arguments: any; reply: any }[] = [];
-  const docs = lifecycleDocuments(family, hasDraft, options.highestVersion ?? 1, ticketStatuses);
+  const docs = lifecycleDocuments(family, hasDraft,
+    options.highestVersion ?? 1, ticketStatuses);
   const { stable, exact, draftVersion, publishStatus } = docs;
   const table = lifecycleTable(options.inline ? exact : stable, options.inline);
-  await page.route('**/*', async (route) => {
-    const request = route.request();
-    if (request.method() !== 'POST') return route.continue();
-    const path = new URL(request.url()).pathname;
-    if (!path.endsWith('/interface')) {
-      return route.fulfill({ json: path.endsWith('/schema') ? { tables: {} } : path.endsWith('/status') ? { mode: 'unavailable' } : { items: [] } });
-    }
-    const input = request.postDataJSON();
-    const args = input.arguments;
-    let result: unknown = {};
-    switch (input.operation) {
-      case 'workspace_open': case 'workspace_get': result = table.workspace; break;
-      case 'view_rename': table.other.name = args.name; result = { ...table.other }; break;
+  await page.route('**/tools', async (route) => {
+    if (route.request().method() !== 'POST') return route.fallback();
+    const { name, arguments: args } = toolRequest(route);
+    let result: unknown;
+    switch (name) {
+      case 'query_schema': return route.fulfill(
+        { json: toolReply(route, { tables: {} }) });
+      case 'iwe_console_status': return route.fulfill(
+        { json: toolReply(route, { mode: 'unavailable' }) });
+      case 'query_saved_list': return route.fulfill(
+        { json: toolReply(route, { items: [] }) });
+      case 'workspace_open': case 'workspace_get':
+        result = table.workspace; break;
+      case 'view_rename': table.other.name =
+        args.name as string; result = { ...table.other }; break;
+      case 'view_focus': result = { workspace_id: table.workspace.workspace_id,
+        active_view_id: args.view_id }; break;
       case 'view_fetch': result = table.result; break;
-      case 'iwe_console_atom_document': result = docs.document(args.ref_id); break;
-      case 'atom_lifecycle_create_draft': result = options.refuseCreate ? { status: 'failed', errors: [{ message: 'fixture stop' }] }
-        : { status: 'completed', savedDraft: { ref_id: exact, version: draftVersion } }; break;
-      case 'atom_lifecycle_update': result = docs.save(args.changes, options.refuseSave); break;
-      case 'atom_lifecycle_promote_draft': expect(args.targetStatus).toBe(publishStatus); result = { status: 'completed', artifact: { ref_id: stable } }; break;
-      case 'atom_lifecycle_change_status': expect(args.targetStatus).toBe(ticketStatuses ? ticketStatuses[1] : family === 'S' ? 'active' : 'in_queue'); docs.changeStatus(args.targetStatus); result = { status: 'completed', artifact: { ref_id: stable } }; break;
+      case 'iwe_console_atom_document': result =
+        docs.document(args.ref_id as string); break;
+      case 'atom_lifecycle_create_draft': result = options.refuseCreate ?
+        { status: 'failed', errors: [{ message: 'fixture stop' }] }
+        : { status: 'completed', savedDraft: { ref_id:
+          exact, version: draftVersion } }; break;
+      case 'atom_lifecycle_update': result = docs.save(
+        args.changes as Parameters<typeof docs.save>[0], options.refuseSave); break;
+      case 'atom_lifecycle_promote_draft': expect(args.targetStatus).toBe(publishStatus);
+        result = { status: 'completed', artifact: { ref_id: stable } }; break;
+      case 'atom_lifecycle_change_status': expect(args.targetStatus).toBe(ticketStatuses ? ticketStatuses[1] : family === 'S' ? 'active' :
+        'in_queue'); docs.changeStatus(args.targetStatus as string); result = { status: 'completed', artifact: { ref_id: stable } }; break;
       case 'query_log_list': result = { items: [] }; break;
+      default: return route.fallback();
     }
-    calls.push({ ...input, reply: result });
-    return route.fulfill({ json: result });
+    calls.push({ operation: name, arguments: args, reply: result });
+    return route.fulfill({ json: toolReply(route, result) });
   });
   return { calls, stable, exact };
 }
 
-function interfaceOperation(request: Request): string | undefined {
-  if (request.method() !== 'POST' || !new URL(request.url()).pathname.endsWith('/interface')) return;
-  return request.postDataJSON().operation;
+function requestedTool(request: Request): string | undefined {
+  if (request.method() !== 'POST' || !new URL(request.url(
+    )).pathname.endsWith('/tools')) return;
+  return request.postDataJSON().name;
 }
 
-async function observeReply(operation: string, response: Response): Promise<Effect | undefined> {
+async function observeReply(operation: string,
+  response: Response): Promise<Effect | undefined> {
   const target = `C21.${operation}`;
   if (!response.ok()) return [target, 'failed'];
-  const result = await response.json();
-  if (result.status === 'failed') return [target, 'failed'];
-  if (result.status === 'completed' || (operation === 'view_rename' && result.id && result.name)) {
+  const { result, error } = await response.json();
+  const value = result?.value;
+  if (error || value?.status === 'failed') return [target, 'failed'];
+  if (value?.status === 'completed' || (
+    operation === 'view_rename' && value?.id && value.name)) {
     return [target, 'succeeded'];
   }
 }
@@ -105,23 +145,27 @@ type Observation = Effect | Promise<Effect | undefined>;
 export async function observeLifecycle(page: Page) {
   const observations: Observation[] = [];
   page.on('request', request => {
-    const operation = interfaceOperation(request);
+    const operation = requestedTool(request);
     if (operation) observations.push([`C21.${operation}`, 'requested']);
   });
   page.on('response', response => {
-    const operation = interfaceOperation(response.request());
-    if (operation && ['atom_lifecycle_create_draft', 'atom_lifecycle_update', 'view_rename'].includes(operation)) {
-      // Keep the response event in place while Playwright reads its body.
+    const operation = requestedTool(response.request());
+    if (operation && ['atom_lifecycle_create_draft',
+      'atom_lifecycle_update', 'view_rename'].includes(operation)) {
       observations.push(observeReply(operation, response));
     }
   });
-  await page.exposeFunction('reportLifecycleEffect', (effect: Effect) => { observations.push(effect); });
-  return async () => (await Promise.all(observations)).filter((effect): effect is Effect => !!effect);
+  await page.exposeFunction('reportLifecycleEffect', (
+    effect: Effect) => { observations.push(effect); });
+  return async () => (await Promise.all(observations)).filter(
+    (effect): effect is Effect => !!effect);
 }
 
-type LifecycleWindow = typeof window & { reportLifecycleEffect(effect: Effect): Promise<void> };
+type LifecycleWindow = typeof window & {
+  reportLifecycleEffect(effect: Effect): Promise<void> };
 
-export async function watchAppearance(page: Page, selector: string, effect: Effect, text?: string) {
+export async function watchAppearance(page: Page,
+  selector: string, effect: Effect, text?: string) {
   await page.evaluate(({ selector, effect, text }) => {
     const observer = new MutationObserver(() => {
       const shown = Array.from(document.querySelectorAll(selector)).some(
@@ -131,7 +175,8 @@ export async function watchAppearance(page: Page, selector: string, effect: Effe
       observer.disconnect();
       void (window as LifecycleWindow).reportLifecycleEffect(effect);
     });
-    observer.observe(document.body, { childList: true, characterData: true, subtree: true });
+    observer.observe(document.body, { childList:
+      true, characterData: true, subtree: true });
   }, { selector, effect, text });
 }
 
@@ -144,12 +189,15 @@ export async function watchDraft(body: Locator) {
       const status = section.querySelector(':scope > span')?.textContent;
       if (!editor.isConnected) {
         observer.disconnect();
-        void report(['C46.draft_editor', 'unmounted', { dirty: status !== 'Saved' }]);
+        void report(['C46.draft_editor', 'unmounted',
+          { dirty: status !== 'Saved' }]);
       } else if (!retained && section.querySelector('[role="alert"]')) {
         retained = true;
-        void report(['C46.draft_editor', 'retained', { dirty: status === 'Unsaved changes' }]);
+        void report(['C46.draft_editor', 'retained',
+          { dirty: status === 'Unsaved changes' }]);
       }
     });
-    observer.observe(document.body, { childList: true, characterData: true, subtree: true });
+    observer.observe(document.body, { childList:
+      true, characterData: true, subtree: true });
   });
 }

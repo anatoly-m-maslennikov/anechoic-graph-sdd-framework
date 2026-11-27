@@ -62,14 +62,28 @@ class NativeRefreshTest(unittest.TestCase):
 
     def assert_refused(self, client, base, generation, snapshot):
         stale = client.put("/generation/native", json=request(base, snapshot))
-        self.assertEqual((409, "generation_base_changed"), (stale.status_code, stale.json()["error"]["code"]))
-        bad_digest = request(generation, snapshot) | {"snapshot_sha256": "0" * 64}
-        self.assertEqual(400, client.put("/generation/native", json=bad_digest).status_code)
+        self.assertEqual(
+            (409, "generation_base_changed"),
+            (stale.status_code, stale.json()["error"]["code"]),
+        )
+        bad_digest = request(generation, snapshot) | {
+            "snapshot_sha256": "0" * 64
+        }
+        self.assertEqual(
+            400, client.put("/generation/native", json=bad_digest).status_code
+        )
         bad_types = deepcopy(snapshot)
         bad_types["relation_types"] = ["CONTAINED_BY"]
-        self.assertEqual(400, client.put("/generation/native", json=request(generation, bad_types)).status_code)
+        self.assertEqual(
+            400,
+            client.put(
+                "/generation/native", json=request(generation, bad_types)
+            ).status_code,
+        )
         foreign = request(generation, snapshot) | {"instance_id": "foreign"}
-        self.assertEqual(403, client.put("/generation/native", json=foreign).status_code)
+        self.assertEqual(
+            403, client.put("/generation/native", json=foreign).status_code
+        )
         self.assert_current(client, generation)
 
     def test_native_refresh_replaces_graph_atomically_and_persists(self):
@@ -127,7 +141,9 @@ class NativeRefreshTest(unittest.TestCase):
                 self.assertEqual({"base_generation": base, **witness}, client.get("/generation/reuse", params=BINDING).json()["result"])
                 payload = request(base, data["snapshot"]) | {"graph": data["graph"], "graph_sha256": _digest(data["graph"])}
                 witness["inputs"]["graph"] = "c" * 64
-                updated = client.put("/generation/native", json=payload | {"reuse": witness})
+                updated = client.put(
+                    "/generation/native", json=payload | {"reuse": witness}
+                )
                 self.assertEqual(200, updated.status_code, updated.text)
                 base = updated.json()["result"]["generation"]
                 self.assertEqual({"base_generation": base, **witness}, client.get("/generation/reuse", params=BINDING).json()["result"])
@@ -201,13 +217,22 @@ class NativeRefreshTest(unittest.TestCase):
             legacy = client.put("/generation", json=_generation())
             base = legacy.json()["result"]["generation"]
             native = _native_generation()
-            refused = client.put("/generation/native", json=request(base, native["snapshot"]))
-            self.assertEqual((409, "generation_base_changed"), (refused.status_code, refused.json()["error"]["code"]))
+            refused = client.put(
+                "/generation/native", json=request(base, native["snapshot"])
+            )
+            self.assertEqual(
+                (409, "generation_base_changed"),
+                (refused.status_code, refused.json()["error"]["code"]),
+            )
             admitted = client.put("/generation", json=native)
             base = admitted.json()["result"]["generation"]
-            updated = client.put("/generation/native", json=request(base, native["snapshot"]))
+            updated = client.put(
+                "/generation/native", json=request(base, native["snapshot"])
+            )
             self.assertEqual(200, updated.status_code, updated.text)
-            self.assertEqual(400, _query(client, "SELECT * FROM import_nodes").status_code)
+            self.assertEqual(
+                400, _query(client, "SELECT * FROM import_nodes").status_code
+            )
 
 class PendingGraphTest(unittest.TestCase):
     def assert_graph_publish_rejections(self, client, payload):
@@ -224,8 +249,11 @@ class PendingGraphTest(unittest.TestCase):
         graph = data['graph']
         data['graph'] = None
         data['receipt']['graph_sha256'] = _digest(None)
-        witness = {'inputs': {'manifest': 'a' * 64, 'graph': 'pending'},
-                   'graph_config': {}, 'endpoints': json.loads(data['model'])['bindings']['endpoints']}
+        witness = {
+            "inputs": {"manifest": "a" * 64, "graph": "pending"},
+            "graph_config": {},
+            "endpoints": json.loads(data["model"])["bindings"]["endpoints"],
+        }
         with _server() as client:
             response = client.put('/generation', json=data | {'reuse': witness})
             self.assertEqual(200, response.status_code, response.text)

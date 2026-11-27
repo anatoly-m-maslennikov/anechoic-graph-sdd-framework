@@ -16,8 +16,12 @@ from mcp.client.stdio import StdioServerParameters, stdio_client
 from unittest.mock import NonCallableMock
 from .test_beta_next_query_comparison import project
 MCP = Path(__file__).resolve().parents[1]
-from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import ProjectAdmissionError  # noqa: E402
-from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import create_http_app as create_app  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import (  # noqa: E402
+    ProjectAdmissionError,
+)
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import (  # noqa: E402
+    create_http_app as create_app,
+)
 
 
 class DefaultMCPRuntimeTests(unittest.IsolatedAsyncioTestCase):
@@ -25,15 +29,24 @@ class DefaultMCPRuntimeTests(unittest.IsolatedAsyncioTestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory).resolve()
             owner = NonCallableMock(
-                spec_set=['selection', 'start', 'close'],
-                selection=NonCallableMock(spec_set=['root', 'parameters'], root=root, parameters={}),
-                                    start=lambda: None, close=lambda: None)
+                spec_set=["selection", "start", "close"],
+                selection=NonCallableMock(
+                    spec_set=["root", "parameters"], root=root, parameters={}
+                ),
+                start=lambda: None,
+                close=lambda: None,
+            )
             gateway = local_gateway(root, native_query=owner)
-            with patch("asyncio.create_subprocess_exec", side_effect=AssertionError("unexpected child")):
+            with patch(
+                "asyncio.create_subprocess_exec",
+                side_effect=AssertionError("unexpected child"),
+            ):
                 self.assertFalse(gateway.ready)
                 await gateway.initialize()
                 self.assertTrue(gateway.ready)
-                from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.registry_lifecycle_provider import LIFECYCLE_TOOL_NAMES
+                from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.registry_lifecycle_provider import (
+                    LIFECYCLE_TOOL_NAMES,
+                )
 
                 names = {tool.name for tool in gateway.tools}
                 self.assertIn("query_run", names)
@@ -51,18 +64,42 @@ class DefaultMCPRuntimeTests(unittest.IsolatedAsyncioTestCase):
         with tempfile.TemporaryDirectory(dir="/tmp") as directory:
             root = Path(directory).resolve() / "project"
             project(root)
-            env = {**os.environ, "PYTHONPATH": str(engine),
-                   "ANECHOIC_RUNTIME_PROFILE": "dev-local", "PYTHONDONTWRITEBYTECODE": "1",
-                   "ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY": os.environ.get(
-                       "ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY", str(engine.parent / ".anechoic_tmp/workbench/extensions"))}
+            env = {
+                **os.environ,
+                "PYTHONPATH": str(engine),
+                "ANECHOIC_RUNTIME_PROFILE": "dev-local",
+                "PYTHONDONTWRITEBYTECODE": "1",
+                "ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY": os.environ.get(
+                    "ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY",
+                    str(engine.parent / ".anechoic_tmp/workbench/extensions"),
+                ),
+            }
             env.pop("ANECHOIC_RUNTIME_STACK", None)
-            params = StdioServerParameters(command=sys.executable, cwd=engine.parent, env=env,
-                args=["-B", "-P", "-m", "MCP_PATCHBAY_C21.FEATURE_MCP.server", "--project-root", str(root)])
-            async with asyncio.timeout(120), stdio_client(params) as streams, ClientSession(*streams) as client:
+            params = StdioServerParameters(
+                command=sys.executable,
+                cwd=engine.parent,
+                env=env,
+                args=[
+                    "-B",
+                    "-P",
+                    "-m",
+                    "MCP_PATCHBAY_C21.FEATURE_MCP.server",
+                    "--project-root",
+                    str(root),
+                ],
+            )
+            async with (
+                asyncio.timeout(120),
+                stdio_client(params) as streams,
+                ClientSession(*streams) as client,
+            ):
                 await client.initialize()
                 self.assertIn("query_run", {tool.name for tool in (await client.list_tools()).tools})
                 reply = await client.call_tool("query_run", {
-                    "sql": 'SELECT reference, "content.summary" FROM atoms ORDER BY reference',
+                    "sql": (
+                        'SELECT reference, "content.summary" FROM atoms ORDER '
+                        'BY reference'
+                    ),
                     "result_delivery": "inline"})
                 self.assertFalse(reply.is_error, reply.structured_content)
                 self.assertEqual([["EX-S-1", "Declare Example"], ["EX-T-1", "Example task"]],

@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1237
+concern:
+  subject: "Summary"
+  path: "Model/Graph/Node//Artifact//SSOT//Prescribed/Content/Atom.Content"
+  relation: "is_property_of"
 container:
   component: C14
 tier: 1
@@ -8,8 +12,8 @@ context:
   lens: SWD
 state:
   status: active
-  version: 2
-  updated_at: 2026-11-10 20:47:54 +0400
+  version: 3
+  updated_at: "2026-11-27T16:16:01.404965+00:00"
 ---
 
 ## Summary

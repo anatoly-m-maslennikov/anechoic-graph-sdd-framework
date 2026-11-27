@@ -16,7 +16,10 @@ try:
     from .image_reference import IMMUTABLE_IMAGE, image_reference
     from .mcp_paths import MCP_PATH
 except ImportError:
-    from MCP_PATCHBAY_C21.FEATURE_MCP.docker.image_reference import IMMUTABLE_IMAGE, image_reference
+    from MCP_PATCHBAY_C21.FEATURE_MCP.docker.image_reference import (
+        IMMUTABLE_IMAGE,
+        image_reference,
+    )
     from MCP_PATCHBAY_C21.FEATURE_MCP.docker.mcp_paths import MCP_PATH
 
 DIRECTORY = Path(__file__).resolve().parent
@@ -34,13 +37,20 @@ def _startup_diagnostic(value: object) -> str:
         "[redacted]",
         value,
     )
-    value = re.sub(r"(?i)\b([a-z][a-z0-9+.-]*://)[^/\s@]+@", r"\1[redacted]@", value)
+    value = re.sub(
+        r"(?i)\b([a-z][a-z0-9+.-]*://)[^/\s@]+@", r"\1[redacted]@", value
+    )
     return value[-_DIAGNOSTIC_LIMIT:]
 class Runtime:
     def __init__(self, root, *, image=None):
         self.root = Path(root).resolve(strict=True)
-        if image is not None and (not isinstance(image, str) or IMMUTABLE_IMAGE.fullmatch(image) is None):
-            raise ValueError("Runtime image must be an immutable sha256 image ID")
+        if image is not None and (
+            not isinstance(image, str)
+            or IMMUTABLE_IMAGE.fullmatch(image) is None
+        ):
+            raise ValueError(
+                "Runtime image must be an immutable sha256 image ID"
+            )
         self.image = image
         self.project = "anechoic-" + hashlib.sha256(str(self.root).encode()).hexdigest()[:12]
 
@@ -98,9 +108,15 @@ class Runtime:
         try:
             from .docker__shared import ImageManager
         except ImportError:
-            from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import ImageManager
-        return ImageManager(SOURCE_ROOT, project_root=self.root, timeout=timeout,
-                            build_temp_root=self._project_temp_root(create=create_temp))
+            from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import (
+                ImageManager,
+            )
+        return ImageManager(
+            SOURCE_ROOT,
+            project_root=self.root,
+            timeout=timeout,
+            build_temp_root=self._project_temp_root(create=create_temp),
+        )
 
     def _ensure_launch_image(self):
         if self.image is not None:
@@ -112,15 +128,25 @@ class Runtime:
         return self.image
 
     def build(self, *, use_packaged_assets=False, timeout=600):
-        self.image = self._image_manager(create_temp=True, timeout=timeout).resolve(use_packaged_assets=use_packaged_assets)
+        self.image = self._image_manager(
+            create_temp=True, timeout=timeout
+        ).resolve(use_packaged_assets=use_packaged_assets)
         return self.image
 
     def prepare(self):
         for relative in (".anechoic_anechoic", "_anechoic_anechoic", ".git"):
             if (self.root / relative).is_symlink():
                 raise ValueError("Runtime mounts must not be symlinks")
-        if not any((self.root / name).is_dir() for name in (".anechoic_anechoic", "_anechoic_anechoic")) or not (self.root / ".git").is_dir():
-            raise ValueError("Project authority and a directory Git repository are required")
+        if (
+            not any(
+                (self.root / name).is_dir()
+                for name in (".anechoic_anechoic", "_anechoic_anechoic")
+            )
+            or not (self.root / ".git").is_dir()
+        ):
+            raise ValueError(
+                "Project authority and a directory Git repository are required"
+            )
         for relative in (".anechoic_install", ".anechoic_tmp", "tmp"):
             path = self.root / relative
             if path.is_symlink():
@@ -137,7 +163,9 @@ class Runtime:
         try:
             port = int(value)
         except ValueError as error:
-            raise ValueError("Set ANECHOIC_MCP_HTTP_PORT to an integer in 1..65535") from error
+            raise ValueError(
+                "Set ANECHOIC_MCP_HTTP_PORT to an integer in 1..65535"
+            ) from error
         if not 1 <= port <= 65535:
             raise ValueError("Set ANECHOIC_MCP_HTTP_PORT to an integer in 1..65535")
         return port
@@ -183,9 +211,15 @@ class Runtime:
 
     def mcp_http_status(self):
         raw = self.call("ps", "--all", "--format", "json", http=True)
-        services = [json.loads(line) for line in raw.splitlines() if line.strip()]
-        result = {"runtime": "docker", "service": "mcp-http", "project_name": self.project,
-                  "services": services}
+        services = [
+            json.loads(line) for line in raw.splitlines() if line.strip()
+        ]
+        result = {
+            "runtime": "docker",
+            "service": "mcp-http",
+            "project_name": self.project,
+            "services": services,
+        }
         try:
             result["url"] = f"http://127.0.0.1:{self._http_port()}{MCP_PATH}"
         except ValueError:
@@ -197,9 +231,13 @@ def _project_mcp_port(value):
     try:
         port = int(value)
     except (TypeError, ValueError) as error:
-        raise argparse.ArgumentTypeError("--port must be an integer in 1..65535") from error
+        raise argparse.ArgumentTypeError(
+            "--port must be an integer in 1..65535"
+        ) from error
     if not 1 <= port <= 65535:
-        raise argparse.ArgumentTypeError("--port must be an integer in 1..65535")
+        raise argparse.ArgumentTypeError(
+            "--port must be an integer in 1..65535"
+        )
     return port
 
 
@@ -209,14 +247,33 @@ def _parser():
     parser.add_argument("--image", help=argparse.SUPPRESS)
     parser.add_argument("--control-root", help="Direct _anechoic_<project> or legacy .anechoic_<project> folder, when explicit selection is needed")
     parser.add_argument("--source-root", type=Path, help="Explicit Framework checkout with image build inputs; required for project-mcp")
-    parser.add_argument("--startup-timeout", type=float, default=420, help="Bound startup/readiness seconds (maximum 420)")
-    parser.add_argument("--build-timeout", type=float, default=600, help="Bound image build seconds (maximum 600)")
-    parser.add_argument("--no-build", action="store_true", help="Refuse a missing compatible image instead of building")
+    parser.add_argument(
+        "--startup-timeout",
+        type=float,
+        default=420,
+        help="Bound startup/readiness seconds (maximum 420)",
+    )
+    parser.add_argument(
+        "--build-timeout",
+        type=float,
+        default=600,
+        help="Bound image build seconds (maximum 600)",
+    )
+    parser.add_argument(
+        "--no-build",
+        action="store_true",
+        help="Refuse a missing compatible image instead of building",
+    )
     parser.add_argument("--image-mode", choices=("refresh", "existing"),
                         help="Asset selection for build (default: refresh)")
     parser.add_argument("--port", type=_project_mcp_port,
                         help="Assert the Project Settings HTTP port for project-mcp (1..65535)")
-    parser.add_argument("--output", choices=["json", "url"], default="json", help="Project MCP result format")
+    parser.add_argument(
+        "--output",
+        choices=["json", "url"],
+        default="json",
+        help="Project MCP result format",
+    )
     parser.add_argument(
         "operation", choices=["build", "status", "logs", "mcp",
                               "mcp-http-start", "mcp-http-stop", "mcp-http-status", "project-mcp"]
@@ -241,7 +298,12 @@ def main():
     if args.operation == "build":
         if not 0 < args.build_timeout <= 600:
             parser.error("--build-timeout must be within (0, 600]")
-        print(runtime.build(use_packaged_assets=args.image_mode == "existing", timeout=args.build_timeout))
+        print(
+            runtime.build(
+                use_packaged_assets=args.image_mode == "existing",
+                timeout=args.build_timeout,
+            )
+        )
     elif args.operation == "status":
         print(json.dumps(runtime.status()))
     elif args.operation == "logs":

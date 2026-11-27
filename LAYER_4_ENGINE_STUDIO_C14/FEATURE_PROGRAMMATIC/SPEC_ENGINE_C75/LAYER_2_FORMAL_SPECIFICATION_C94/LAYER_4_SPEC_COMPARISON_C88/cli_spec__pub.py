@@ -239,12 +239,22 @@ def _outcome_stdout(terminals):
                 and isinstance(event.get('outcome'), str) and event['outcome'].strip()}
     facts = {}
     for outcome in outcomes:
-        events = [event for event in expected if event['kind'] != 'output'
-                  or event.get('outcome') in (outcome, None)]
-        values = [event.get('detail', {}).get('stdout') for event in events]
-        if (all(event['kind'] == 'output' and event.get('outcome') == outcome for event in events)
-                and all(isinstance(value, str) and value.strip() for value in values)):
-            facts[f'stdout.{outcome}'] = values[0] if len(set(values)) == 1 else values
+        events = [
+            event
+            for event in expected
+            if event["kind"] != "output"
+            or event.get("outcome") in (outcome, None)
+        ]
+        values = [event.get("detail", {}).get("stdout") for event in events]
+        if all(
+            event["kind"] == "output" and event.get("outcome") == outcome
+            for event in events
+        ) and all(
+            isinstance(value, str) and value.strip() for value in values
+        ):
+            facts[f"stdout.{outcome}"] = (
+                values[0] if len(set(values)) == 1 else values
+            )
     return facts
 
 

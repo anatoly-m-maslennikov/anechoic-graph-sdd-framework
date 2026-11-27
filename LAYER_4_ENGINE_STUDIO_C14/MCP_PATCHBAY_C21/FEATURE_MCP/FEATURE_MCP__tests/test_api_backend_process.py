@@ -25,11 +25,17 @@ from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__tests.FEATURE_MCP__tests__shared 
 MCP = Path(__file__).resolve().parents[1]
 ROOT = MCP.parents[2]
 
-from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import native_runtime_gateway  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import (  # noqa: E402
+    native_runtime_gateway,
+)
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import BackendClient  # noqa: E402
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import ToolProtocolError  # noqa: E402
-from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import select_runtime_project  # noqa: E402
-from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import workbench_routes as routes  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import (  # noqa: E402
+    select_runtime_project,
+)
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import (  # noqa: E402
+    workbench_routes as routes,
+)
 
 CONTROL = "_anechoic_anechoic"
 QUERY = "SELECT 42 AS answer"
@@ -95,8 +101,16 @@ def _kernel_pid(owner):
     response.raise_for_status()
     health = response.json()
     pid = health["kernel_pid"]
-    if (health["pid"] != owner.backend_pid or health["instance_id"] != owner.selection.instance_id or type(pid) is not int or pid <= 1 or pid in {owner.backend_pid, os.getpid()}):
-        raise AssertionError("Kernel PID is outside the admitted Backend binding")
+    if (
+        health["pid"] != owner.backend_pid
+        or health["instance_id"] != owner.selection.instance_id
+        or type(pid) is not int
+        or pid <= 1
+        or pid in {owner.backend_pid, os.getpid()}
+    ):
+        raise AssertionError(
+            "Kernel PID is outside the admitted Backend binding"
+        )
     return pid
 
 
@@ -136,21 +150,29 @@ class ApiBackendProcessTests(unittest.IsolatedAsyncioTestCase):
         await self._assert_process_failure(kernel_exits=True)
 
     async def _assert_process_failure(self, *, kernel_exits):
-        with (tempfile.TemporaryDirectory() as temporary,
-              patch.dict(os.environ, _test_environment())):
+        with (
+            tempfile.TemporaryDirectory() as temporary,
+            patch.dict(os.environ, _test_environment()),
+        ):
             root = Path(temporary).resolve()
             _project(root)
-            with native_runtime_gateway(select_runtime_project(root, CONTROL)) as gateway:
+            with native_runtime_gateway(
+                select_runtime_project(root, CONTROL)
+            ) as gateway:
                 try:
                     await gateway.initialize()
                     process = gateway._native_query._process
                     kernel = _kernel_pid(gateway._native_query)
-                    os.kill(kernel if kernel_exits else process.pid, signal.SIGTERM)
+                    os.kill(
+                        kernel if kernel_exits else process.pid, signal.SIGTERM
+                    )
                     await asyncio.to_thread(process.wait, 15)
                     self.assertFalse(gateway.ready)
                     with self.assertRaises(ToolProtocolError) as caught:
                         await gateway.workbench.call_tool("query_schema", {})
-                    self.assertEqual("tool_runtime_failure", caught.exception.code)
+                    self.assertEqual(
+                        "tool_runtime_failure", caught.exception.code
+                    )
                 finally:
                     await gateway.close()
                 _assert_process_stopped(self, kernel)
@@ -189,9 +211,13 @@ class ApiBackendProcessTests(unittest.IsolatedAsyncioTestCase):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary).resolve()
             _project(root)
-            selection = replace(select_runtime_project(root, CONTROL), manifest_sha256="0" * 64)
+            selection = replace(
+                select_runtime_project(root, CONTROL), manifest_sha256="0" * 64
+            )
             with native_runtime_gateway(selection) as gateway:
-                with self.assertRaisesRegex(RuntimeError, "Backend did not start"):
+                with self.assertRaisesRegex(
+                    RuntimeError, "Backend did not start"
+                ):
                     await gateway.initialize()
                 self.assertFalse(gateway.ready)
                 self.assertEqual(1, gateway._native_query._process.returncode)

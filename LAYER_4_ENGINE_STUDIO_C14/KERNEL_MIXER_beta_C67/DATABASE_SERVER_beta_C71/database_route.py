@@ -4,7 +4,14 @@ from itertools import combinations
 from typing import Annotated, Literal
 
 import duckdb
-from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, ValidationError, field_validator
+from pydantic import (
+    BaseModel,
+    BeforeValidator,
+    ConfigDict,
+    Field,
+    ValidationError,
+    field_validator,
+)
 from starlette.responses import JSONResponse
 
 from .query_results import ProjectGraphPending, query, validate_preview
@@ -50,12 +57,24 @@ class _PageRequest(_PagedRequest):
 
 
 def _variants(model):
-    required = frozenset(name for name, field in model.model_fields.items() if field.is_required())
+    required = frozenset(
+        name
+        for name, field in model.model_fields.items()
+        if field.is_required()
+    )
     optional = model.model_fields.keys() - required
-    return (required.union(keys) for count in range(len(optional) + 1) for keys in combinations(optional, count))
+    return (
+        required.union(keys)
+        for count in range(len(optional) + 1)
+        for keys in combinations(optional, count)
+    )
 
 
-_REQUESTS = {fields: shape for shape in (_SqlRequest, _RunRequest, _PageRequest) for fields in _variants(shape)}
+_REQUESTS = {
+    fields: shape
+    for shape in (_SqlRequest, _RunRequest, _PageRequest)
+    for fields in _variants(shape)
+}
 _SAVE_FIELDS = {"save", "name"}
 _MESSAGES = {
     "save": "save must be a boolean",
@@ -72,14 +91,19 @@ def _admit(shape, data):
     try:
         return shape.model_validate(data), None
     except ValidationError as invalid:
-        issue = min(invalid.errors(include_url=False), key=lambda item: item["loc"][0] not in _SAVE_FIELDS)
+        issue = min(
+            invalid.errors(include_url=False),
+            key=lambda item: item["loc"][0] not in _SAVE_FIELDS,
+        )
         field = issue["loc"][0]
         if field == "result_format":
             try:
                 validate_delivery("inline", issue["input"])
             except (TypeError, ValueError) as exc:
                 return None, (field, str(exc))
-        message = issue.get("ctx", {}).get("error", _MESSAGES.get(field, "Invalid request fields"))
+        message = issue.get("ctx", {}).get(
+            "error", _MESSAGES.get(field, "Invalid request fields")
+        )
         return None, (field, str(message))
 
 
@@ -88,11 +112,29 @@ def _result(connection, queries, data, root, saved_queries):
         return query(connection, data.sql)
     full = isinstance(data, _RunRequest)
     if full:
-        page = queries.run(connection, data.sql, data.page_size, data.grid, preview=data.preview)
+        page = queries.run(
+            connection,
+            data.sql,
+            data.page_size,
+            data.grid,
+            preview=data.preview,
+        )
     else:
-        size = min(data.page_size, data.preview) if data.preview is not None else data.page_size
+        size = (
+            min(data.page_size, data.preview)
+            if data.preview is not None
+            else data.page_size
+        )
         page = queries.page(data.query_id, data.offset, size, data.grid)
-    result = deliver(queries, root, page, data.result_delivery, data.result_format, full=full, grid=data.grid)
+    result = deliver(
+        queries,
+        root,
+        page,
+        data.result_delivery,
+        data.result_format,
+        full=full,
+        grid=data.grid,
+    )
     if full and data.save:
         result.update(save_run_fields(saved_queries, data.sql, data.name))
     return result
@@ -103,25 +145,40 @@ def database_route(connection, instance_id, lock, queries, journal_sync, project
         try:
             data = await read_object(request, 65536, *_REQUESTS)
             if data["instance_id"] != instance_id:
-                return error("foreign_instance", "Instance does not match", 403)
+                return error(
+                    "foreign_instance", "Instance does not match", 403
+                )
             shape = _REQUESTS[frozenset(data)]
             admitted, issue = _admit(shape, data)
             if issue is not None and issue[0] in _SAVE_FIELDS:
                 return error("invalid_query", issue[1], 400)
             with lock:
-                if connection.execute("SELECT id FROM ops_generation").fetchone() is None:
-                    return error("generation_required", "Generation admission required", 409)
+                if (
+                    connection.execute(
+                        "SELECT id FROM ops_generation"
+                    ).fetchone()
+                    is None
+                ):
+                    return error(
+                        "generation_required",
+                        "Generation admission required",
+                        409,
+                    )
                 if journal_sync is not None and shape is not _PageRequest:
                     journal_sync()
                 if issue is not None:
                     return error("invalid_query", issue[1], 400)
-                result = _result(connection, queries, admitted, project_root, saved_queries)
+                result = _result(
+                    connection, queries, admitted, project_root, saved_queries
+                )
             return JSONResponse({"result": result})
         except ProjectGraphPending as exc:
             return error("project_graph_pending", str(exc), 409)
         except (ValueError, TypeError, duckdb.Error) as exc:
             return error("invalid_query", str(exc), 400)
-        except (OSError, RuntimeError):
-            return error("journal_unavailable", "Work Journal is unavailable", 409)
+        except OSError, RuntimeError:
+            return error(
+                "journal_unavailable", "Work Journal is unavailable", 409
+            )
 
     return database

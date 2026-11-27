@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-2495
+concern:
+  subject: "Atom"
+  path: "Model/Graph/Node//Artifact//SSOT//Prescribed/Content"
+  relation: "is_contained_by"
 container:
   component: C18
 tier: 4
@@ -8,8 +12,8 @@ context:
   lens: DevOps
 state:
   status: active
-  version: 13
-  updated_at: 2026-11-11 09:03:52 +0400
+  version: 15
+  updated_at: "2026-11-27T16:16:01.404965+00:00"
 ---
 ## Summary
 
@@ -17,7 +21,7 @@ Deliver logical Atom modifications
 
 ## Scope
 
-Workflow admission owns identity, Version/time, lifecycle and complete schema decisions. Connector calls use CA-D-625 only to verify the supplied request, source preconditions and permission and to perform the explicit mechanical operation. A connector does not choose those decisions.
+Apply the shared connector boundary in AN-S-2478.
 
 Required serialization for explicit section, Property and list edits on one logical Atom, inside the existing service and currentness/permission envelope.
 
@@ -25,7 +29,7 @@ Required serialization for explicit section, Property and list edits on one logi
 
 ### Prose Claim
 
-For the Project Configuration Atom Lifecycle Workflows, identity, Version, Updated At and history follow those Workflows and CA-R-1432 and CA-R-1788. CA-E-521 checks those effects. Differing statements in this Atom on those matters apply only to other operations.
+Apply the Project Configuration lifecycle in AN-S-2481.
 
 The workflow supplies an explicit edit operation, exact logical target/value and admitted metadata delta to CA-D-625's modify connector. Atom ID, Version and source-state evidence bind the surrounding Atom; they are not a list-position selector. Workflow admission completely validates every proposed final Atom before an authorized connector effect.
 

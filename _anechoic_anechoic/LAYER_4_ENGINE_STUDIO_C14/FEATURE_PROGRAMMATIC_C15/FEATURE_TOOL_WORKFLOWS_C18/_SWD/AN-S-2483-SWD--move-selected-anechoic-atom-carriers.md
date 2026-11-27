@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-2483
+concern:
+  subject: "Atom"
+  path: "Model/Graph/Node//Artifact//SSOT//Prescribed/Content"
+  relation: "is_contained_by"
 container:
   component: C18
 tier: 4
@@ -8,8 +12,8 @@ context:
   lens: SWD
 state:
   status: active
-  version: 24
-  updated_at: 2026-11-02 19:44:26 +0400
+  version: 25
+  updated_at: "2026-11-27T16:16:01.404965+00:00"
 ---
 ## Summary
 

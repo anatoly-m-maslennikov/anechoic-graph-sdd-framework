@@ -9,13 +9,19 @@ from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import patch
 
-from LAYER_2_LOCAL_RELEASE_C63.LAYER_2_LOCAL_RELEASE_C63__shared import run_local_release, run_snapshot_release
+from LAYER_2_LOCAL_RELEASE_C63.LAYER_2_LOCAL_RELEASE_C63__shared import (
+    run_local_release,
+    run_snapshot_release,
+)
 from LAYER_2_LOCAL_RELEASE_C63.LAYER_2_LOCAL_RELEASE_C63__tests.LAYER_2_LOCAL_RELEASE_C63__tests__shared import (
     SimpleReleaseFixture,
 )
 
 
-_SUITE = Path("LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/test_suite__pub.py")
+_SUITE = Path((
+    'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/test'
+    '_suite__pub.py'
+))
 _MANIFEST = Path(".anechoic_anechoic/AN-S-001-PROJECT_MANIFEST--declare.md")
 _ANE = Path(".agents/skills/ane/SKILL.md")
 _SETTINGS = Path(".anechoic_runtime/anechoic_runtime_settings.toml")
@@ -29,9 +35,15 @@ class SnapshotReleaseFixture(SimpleReleaseFixture):
         shutil.copytree(self.root, self.source, dirs_exist_ok=True)
         (self.source / _SUITE).parent.mkdir(parents=True)
         (self.source / _SUITE).write_text("# tool from sealed checkout\n")
-        (self.source / "version.toml").write_text('[framework]\nversion = "0.4.2"\n')
-        (self.source / _MANIFEST).write_text((self.source / _MANIFEST).read_text().replace("12345", "54321"))
-        (self.source / ".gitignore").write_text((self.source / ".gitignore").read_text() + "ignored-local.txt\n")
+        (self.source / "version.toml").write_text(
+            '[framework]\nversion = "0.4.2"\n'
+        )
+        (self.source / _MANIFEST).write_text(
+            (self.source / _MANIFEST).read_text().replace("12345", "54321")
+        )
+        (self.source / ".gitignore").write_text(
+            (self.source / ".gitignore").read_text() + "ignored-local.txt\n"
+        )
         relative = self.native_sources[0].relative_to(self.root)
         authored = (self.source / relative).read_text().replace("Native source", "Source checkout active spec")
         (self.source / relative).write_text(authored)
@@ -49,9 +61,24 @@ class SnapshotReleaseFixture(SimpleReleaseFixture):
         self.target_manifest = (self.root / _MANIFEST).read_bytes()
 
     def git(self, root, *args):
-        return subprocess.run(("git", "-c", "user.name=Release Test", "-c", "user.email=release@example.invalid",
-                               "-c", "core.hooksPath=/dev/null", "-c", "commit.gpgSign=false", *args),
-                              cwd=root, check=True, capture_output=True, text=True).stdout
+        return subprocess.run(
+            (
+                "git",
+                "-c",
+                "user.name=Release Test",
+                "-c",
+                "user.email=release@example.invalid",
+                "-c",
+                "core.hooksPath=/dev/null",
+                "-c",
+                "commit.gpgSign=false",
+                *args,
+            ),
+            cwd=root,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout
 
     def initialize_git(self, root):
         self.git(root, "init", "-q")
@@ -76,12 +103,20 @@ class SnapshotReleaseFixture(SimpleReleaseFixture):
             self.on_image()
         if phase == "canary":
             self.assert_release_gate(argv)
-            output = "ANECHOIC_CANARY_ENDPOINT http://127.0.0.1:49152/anechoic/mcp\n"
+            output = (
+                'ANECHOIC_CANARY_ENDPOINT http://127.0.0.1:49152/anechoic/mcp'
+                '\n'
+            )
         return subprocess.CompletedProcess(argv, int(self.fail_phase == phase), output, "")
 
     def assert_release_gate(self, argv):
-        self.assertEqual(self.image_id, argv[argv.index("--candidate-image") + 1])
-        self.assertIn(("--canary-project-root", str(self.root)), tuple(zip(argv, argv[1:], strict=False)))
+        self.assertEqual(
+            self.image_id, argv[argv.index("--candidate-image") + 1]
+        )
+        self.assertIn(
+            ("--canary-project-root", str(self.root)),
+            tuple(zip(argv, argv[1:], strict=False)),
+        )
         handoff = json.loads(argv[argv.index("--canary-selection") + 1])
         self.assertEqual(_MANIFEST.as_posix(), handoff["manifest_path"])
         settings = self.root / _SETTINGS
@@ -108,9 +143,16 @@ class SnapshotReleaseFixture(SimpleReleaseFixture):
     def assert_git_unchanged(self):
         self.assertEqual(self.source_revision, self.git(self.source, "rev-parse", "HEAD").strip())
         self.assertEqual("", self.git(self.source, "status", "--porcelain"))
-        self.assertEqual(self.target_revision, self.git(self.root, "rev-parse", "HEAD").strip())
-        self.assertEqual("", self.git(self.root, "diff", "--cached", "--name-only"))
-        self.assertEqual(self.target_manifest, (self.root / _MANIFEST).read_bytes())
+        self.assertEqual(
+            self.target_revision,
+            self.git(self.root, "rev-parse", "HEAD").strip(),
+        )
+        self.assertEqual(
+            "", self.git(self.root, "diff", "--cached", "--name-only")
+        )
+        self.assertEqual(
+            self.target_manifest, (self.root / _MANIFEST).read_bytes()
+        )
         self.assertEqual("target authoring\n", self.target_marker.read_text())
         self.assertEqual('[framework]\nversion = "0.4.1"\n', (self.root / "version.toml").read_text())
 
@@ -139,10 +181,23 @@ class SnapshotReleaseTests(SnapshotReleaseFixture, unittest.TestCase):
         self.assertEqual(self.image_id, result["evidence"]["image_id"])
         prepare = self.image_factory.call_args_list[0]
         self.assertEqual(self.root, prepare.kwargs["project_root"])
-        self.assertEqual(self.source_revision, prepare.kwargs["build_provenance"]["head_commit"])
-        self.assertEqual(str(self.root), prepare.kwargs["build_provenance"]["project_root"])
+        self.assertEqual(
+            self.source_revision,
+            prepare.kwargs["build_provenance"]["head_commit"],
+        )
+        self.assertEqual(
+            str(self.root), prepare.kwargs["build_provenance"]["project_root"]
+        )
         args = self.start_container.call_args.args
         self.assertEqual((self.root, self.image_id, 12345), (args[0], args[2], args[4]))
+
+    def test_delivery_uses_target_mounted_port(self):
+        config = self.root / ".anechoic_runtime_config.toml"
+        config.write_text('schema_version = 1\n[container]\nhttp_port = 7777\n')
+        result = self.release()
+        self.assertEqual("completed", result["outcome"], result)
+        self.assertEqual(7777, self.start_container.call_args.args[4])
+        self.assertIn("http_port = 7777", config.read_text())
 
     def test_failed_image_gate_keeps_prior_installation_and_resumes_image(self):
         self.fail_phase = "image-tests"
@@ -196,8 +251,14 @@ class SnapshotReleaseTests(SnapshotReleaseFixture, unittest.TestCase):
         overlap = self.release(target_root=self.source)
         self.assertEqual("local-release-source-target-overlap", overlap["error"], overlap)
         abbreviated = self.release(source_revision=self.source_revision[:12])
-        self.assertEqual("local-release-source-revision-invalid", abbreviated["error"], abbreviated)
-        (self.source / "version.toml").write_text('[framework]\nversion = "0.4.3"\n')
+        self.assertEqual(
+            "local-release-source-revision-invalid",
+            abbreviated["error"],
+            abbreviated,
+        )
+        (self.source / "version.toml").write_text(
+            '[framework]\nversion = "0.4.3"\n'
+        )
         dirty = self.release()
         self.assertEqual("local-release-source-worktree-not-clean", dirty["error"], dirty)
         self.git(self.source, "update-index", "--assume-unchanged", "version.toml")
@@ -253,17 +314,32 @@ class SnapshotReleaseTests(SnapshotReleaseFixture, unittest.TestCase):
         with patch.object(self, "assert_release_gate"):
             result = self.release()
 
-        self.assertEqual("local-release-target-managed-files-changed", result["error"], result)
-        self.assertEqual("custom skill content", (self.root / _ANE).read_text())
+        self.assertEqual(
+            "local-release-target-managed-files-changed",
+            result["error"],
+            result,
+        )
+        self.assertEqual(
+            "custom skill content", (self.root / _ANE).read_text()
+        )
         self.start_container.assert_not_called()
 
     def test_legacy_resume_cannot_reopen_split_journal(self):
         self.fail_phase = "functional"
         self.assertEqual("failed", self.release()["outcome"])
         self.calls.clear()
-        with patch("LAYER_2_LOCAL_RELEASE_C63.local_release_recovery._git_checkpoint") as checkpoint:
-            refused = run_local_release(self.root, run_id="snapshot", resume=True, runner=self.run_command)
-        self.assertEqual("local-release-resume-binding-changed", refused["error"], refused)
+        with patch(
+            "LAYER_2_LOCAL_RELEASE_C63.local_release_recovery._git_checkpoint"
+        ) as checkpoint:
+            refused = run_local_release(
+                self.root,
+                run_id="snapshot",
+                resume=True,
+                runner=self.run_command,
+            )
+        self.assertEqual(
+            "local-release-resume-binding-changed", refused["error"], refused
+        )
         checkpoint.assert_not_called()
         self.assertEqual([], self.phases())
 

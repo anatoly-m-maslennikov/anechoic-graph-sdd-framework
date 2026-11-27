@@ -35,7 +35,9 @@ class NativeDeltaParityTest(unittest.TestCase):
                     self.assertEqual(200, response.status_code, response.text)
                     base = response.json()["result"]["generation"]
                 full = deepcopy(data)
-                full["snapshot"]["relations"] = edges("AN-T-1") * count + incoming
+                full["snapshot"]["relations"] = (
+                    edges("AN-T-1") * count + incoming
+                )
                 full["receipt"]["snapshot_sha256"] = _digest(full["snapshot"])
                 response = rebuilt.put("/generation", json=full)
                 self.assertEqual(200, response.status_code, response.text)

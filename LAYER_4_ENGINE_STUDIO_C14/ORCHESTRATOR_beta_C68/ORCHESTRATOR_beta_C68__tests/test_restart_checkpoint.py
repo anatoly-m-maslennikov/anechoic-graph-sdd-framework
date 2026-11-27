@@ -22,7 +22,10 @@ def graph_worker(result, requests):
 
 class RestartCheckpointTests(RestartCheckpointCases, unittest.TestCase):
     def setUp(self):
-        model = patch("ORCHESTRATOR_beta_C68.generation_worker.read_accepted_model", return_value=None)
+        model = patch(
+            "ORCHESTRATOR_beta_C68.generation_worker.read_accepted_model",
+            return_value=None,
+        )
         model.start()
         self.addCleanup(model.stop)
 
@@ -69,7 +72,9 @@ class RestartCheckpointTests(RestartCheckpointCases, unittest.TestCase):
             refusal = jobs._execute_lifecycle(job)
         self.assertEqual("known", refusal["write_state"])
         self.assertEqual("blocked", refusal["lifecycle"]["outcome"])
-        self.assertEqual("write_blocked", refusal["lifecycle"]["errors"][0]["code"])
+        self.assertEqual(
+            "write_blocked", refusal["lifecycle"]["errors"][0]["code"]
+        )
         self.assertEqual("blocked", refusal["projection"]["state"])
         lookup.assert_called_once()
         worker.assert_called_once()
@@ -100,7 +105,10 @@ class RestartCheckpointTests(RestartCheckpointCases, unittest.TestCase):
         jobs = self._jobs("test id")
         witness = {"base_generation": "old", "inputs": {}, "graph_config": None, "endpoints": {},
                    "carrier_hashes": {"control/a.md": "a" * 64}}
-        reuse = witness | {"archive_pending": True, "checkpoint_scope": "foreground"}
+        reuse = witness | {
+            "archive_pending": True,
+            "checkpoint_scope": "foreground",
+        }
         calls = []
         class Connection:
             def __init__(self, path): pass
@@ -113,13 +121,21 @@ class RestartCheckpointTests(RestartCheckpointCases, unittest.TestCase):
             def close(self): pass
         def generate(*args, **kwargs):
             self.assertTrue(jobs.watcher.started)
-            self.assertEqual(reuse, jobs.generation_reuse.model_dump(exclude_unset=True))
+            self.assertEqual(
+                reuse, jobs.generation_reuse.model_dump(exclude_unset=True)
+            )
             self.assertEqual({"startup": True}, kwargs)
             self.assertFalse(jobs.watcher.has_archive_roots())
-            self.assertTrue(jobs._capture_options(reuse, None)[0]["foreground"])
+            self.assertTrue(
+                jobs._capture_options(reuse, None)[0]["foreground"]
+            )
             reply = {"base_generation": "old", "unchanged": True}
-            with patch.object(jobs, "_communicate_worker", return_value=json.dumps(reply)) as worker:
-                self.assertEqual(reply, jobs._run_worker(jobs.binding["root"], reuse, None))
+            with patch.object(
+                jobs, "_communicate_worker", return_value=json.dumps(reply)
+            ) as worker:
+                self.assertEqual(
+                    reply, jobs._run_worker(jobs.binding["root"], reuse, None)
+                )
             self.assertEqual(witness, worker.call_args.args[1]["reuse"])
             jobs.stopping.set()
             return {"state": "succeeded"}
@@ -214,12 +230,17 @@ class RestartCheckpointTests(RestartCheckpointCases, unittest.TestCase):
                           "model_source": {"accepted_model": None,
                                            "spec_database": {"socket": str(jobs.database_socket),
                                                              "instance_id": "test id"}}, "batch_full": True}, requests[0])
-        self.assertEqual(("GET", "/structure?instance_id=test+id"), calls[0][:2])
+        self.assertEqual(
+            ("GET", "/structure?instance_id=test+id"), calls[0][:2]
+        )
         self.assertEqual("/generation/native", calls[1][1])
         self.assertEqual({"instance_id", "base_generation", "snapshot", "snapshot_sha256", "graph", "graph_sha256", "reuse"},
                          set(calls[1][2]))
         self.assertEqual("graph_refresh", outcome["kind"])
-        self.assertEqual({**witness, "base_generation": "new"}, jobs.generation_reuse.model_dump(exclude_unset=True))
+        self.assertEqual(
+            {**witness, "base_generation": "new"},
+            jobs.generation_reuse.model_dump(exclude_unset=True),
+        )
         self.assertEqual(witness, calls[1][2]["reuse"])
 
     def test_checkpoint_worker_shapes_and_derived_paths(self):
@@ -267,7 +288,9 @@ class RestartCheckpointTests(RestartCheckpointCases, unittest.TestCase):
                 patch.object(jobs, "_run_worker", return_value=result):
             outcome = jobs._attempt_generation(None, reuse)
         self.assertEqual("reused", outcome["kind"])
-        self.assertEqual([("GET", "/generation/reuse?instance_id=test")], calls)
+        self.assertEqual(
+            [("GET", "/generation/reuse?instance_id=test")], calls
+        )
         self.assertNotIn("carrier_hashes", jobs.generation_reuse)
         reuse["base_generation"] = "new"
         with patch("ORCHESTRATOR_beta_C68.generation.UnixConnection", Connection), \

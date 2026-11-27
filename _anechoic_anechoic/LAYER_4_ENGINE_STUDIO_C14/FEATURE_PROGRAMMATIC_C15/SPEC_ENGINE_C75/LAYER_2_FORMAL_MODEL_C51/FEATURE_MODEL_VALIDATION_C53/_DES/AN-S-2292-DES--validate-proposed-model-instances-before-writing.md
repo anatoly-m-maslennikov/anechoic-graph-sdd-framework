@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-2292
+concern:
+  subject: "Model"
+  path: "ANECHOIC"
+  relation: "is_contained_by"
 container:
   component: C53
 tier: 3
@@ -8,8 +12,8 @@ context:
   lens: DES
 state:
   status: active
-  version: 1
-  updated_at: '2026-11-13T15:38:33.283869+00:00'
+  version: 2
+  updated_at: "2026-11-27T16:16:01.404965+00:00"
 ---
 ## Summary
 

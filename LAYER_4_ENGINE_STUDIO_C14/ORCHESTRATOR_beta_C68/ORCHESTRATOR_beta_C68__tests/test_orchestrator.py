@@ -33,7 +33,10 @@ class UnixConnection(http.client.HTTPConnection):
 
 class OrchestratorTests(unittest.TestCase):
     def setUp(self):
-        model = patch("ORCHESTRATOR_beta_C68.generation_worker.read_accepted_model", return_value=None)
+        model = patch(
+            "ORCHESTRATOR_beta_C68.generation_worker.read_accepted_model",
+            return_value=None,
+        )
         model.start()
         self.addCleanup(model.stop)
 
@@ -156,6 +159,7 @@ class OrchestratorTests(unittest.TestCase):
             self.addCleanup(thread.join)
             self.addCleanup(server.server_close)
             self.addCleanup(server.shutdown)
+
             def call(method, target, body=None):
                 connection = UnixConnection(path)
                 connection.request(method, target, body=body)
@@ -163,11 +167,14 @@ class OrchestratorTests(unittest.TestCase):
                 result = response.status, json.loads(response.read())
                 connection.close()
                 return result
+
             status, health = call("GET", "/health")
             self.assertEqual(200, status)
             self.assertEqual("test", health["result"]["instance_id"])
             self.assertIs(False, health["result"]["lifecycle_active"])
-            self.assertEqual(409, call("GET", "/jobs/worker-runs?instance_id=other")[0])
+            self.assertEqual(
+                409, call("GET", "/jobs/worker-runs?instance_id=other")[0]
+            )
             self.assertEqual(400, call("POST", "/jobs/build", "{}")[0])
             binding = {key: "bad" for key in module.FIELDS}
             binding["instance_id"] = "test"
@@ -194,13 +201,21 @@ class OrchestratorTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory).resolve()
             control, manifest = project(root)
-            binding = {"instance_id": "test", "root": str(root), "control_root": control.name,
-                       "manifest_path": manifest.name, "manifest_sha256": sha256(manifest.read_bytes()).hexdigest(),
-                       "project_prefix": "AN"}
+            binding = {
+                "instance_id": "test",
+                "root": str(root),
+                "control_root": control.name,
+                "manifest_path": manifest.name,
+                "manifest_sha256": sha256(manifest.read_bytes()).hexdigest(),
+                "project_prefix": "AN",
+            }
             jobs = module.Jobs("test")
             status, result = jobs.build(binding)
             self.assertEqual(200, status, result)
-            self.assertEqual([{"reference": "AN-S-1", "summary": "Anechoic"}], result["result"]["atoms"])
+            self.assertEqual(
+                [{"reference": "AN-S-1", "summary": "Anechoic"}],
+                result["result"]["atoms"],
+            )
             self.assertEqual("succeeded", jobs.status()["latest"]["state"])
 
     def test_single_active_build_and_timeout(self):
@@ -208,13 +223,17 @@ class OrchestratorTests(unittest.TestCase):
         request = {key: "x" for key in module.FIELDS}
         request["instance_id"] = "test"
         started, release = threading.Event(), threading.Event()
+
         def worker(*args, **kwargs):
             started.set()
             release.wait(5)
-            return subprocess.CompletedProcess([], 0, '{"atoms": []}', '')
+            return subprocess.CompletedProcess([], 0, '{"atoms": []}', "")
+
         result = []
         with patch.object(subprocess, "run", side_effect=worker):
-            thread = threading.Thread(target=lambda: result.append(jobs.build(request)))
+            thread = threading.Thread(
+                target=lambda: result.append(jobs.build(request))
+            )
             thread.start()
             self.assertTrue(started.wait(5))
             active = jobs.status()["active"]
@@ -227,8 +246,15 @@ class OrchestratorTests(unittest.TestCase):
             release.set()
             thread.join(5)
         self.assertEqual((200, {"result": {"atoms": []}}), result[0])
-        self.assertEqual({"state", "started_at", "finished_at"}, set(jobs.status()["latest"]))
-        with patch.object(subprocess, "run", side_effect=subprocess.TimeoutExpired("worker", 1)):
+        self.assertEqual(
+            {"state", "started_at", "finished_at"},
+            set(jobs.status()["latest"]),
+        )
+        with patch.object(
+            subprocess,
+            "run",
+            side_effect=subprocess.TimeoutExpired("worker", 1),
+        ):
             self.assertEqual(504, jobs.build(request)[0])
         self.assertEqual("worker_timeout", jobs.status()["latest"]["code"])
 
@@ -246,13 +272,25 @@ class OrchestratorTests(unittest.TestCase):
 
         classify = module.ticket_delta_paths
         expected = sorted([old.relative_to(root).as_posix(), new.relative_to(root).as_posix()])
-        self.assertEqual(expected, classify(binding, [event(old, new, "moved"), event(new)]))
-        for other in ({}, event(root / "AN-T-5--external.md"), event(old, directory=True),
-                      event(old, kind="moved"), event(old, new), event(old.with_suffix(".py")),
-                      event(control / "__TKT" / "README.md"), event(control / "AN-T-5--other.md")):
+        self.assertEqual(
+            expected, classify(binding, [event(old, new, "moved"), event(new)])
+        )
+        for other in (
+            {},
+            event(root / "AN-T-5--external.md"),
+            event(old, directory=True),
+            event(old, kind="moved"),
+            event(old, new),
+            event(old.with_suffix(".py")),
+            event(control / "__TKT" / "README.md"),
+            event(control / "AN-T-5--other.md"),
+        ):
             with self.subTest(event=other):
                 self.assertIsNone(classify(binding, [event(old), other]))
-        paths = [event(old.with_name(f"AN-T-{index}--task.md")) for index in range(1025)]
+        paths = [
+            event(old.with_name(f"AN-T-{index}--task.md"))
+            for index in range(1025)
+        ]
         self.assertEqual(500, len(classify(binding, paths[:500])))
         self.assertEqual(1024, len(classify(binding, paths[:1024])))
         self.assertIsNone(classify(binding, paths))

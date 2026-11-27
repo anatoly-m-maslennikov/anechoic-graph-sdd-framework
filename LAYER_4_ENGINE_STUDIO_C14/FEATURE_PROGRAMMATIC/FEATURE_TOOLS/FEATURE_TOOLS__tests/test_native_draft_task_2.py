@@ -4,9 +4,14 @@ import unittest
 
 import yaml
 
-TOOLS = Path(__file__).resolve().parents[1]
-ENGINE = TOOLS.parents[1]
-sys.path[:0] = [str(TOOLS), str(ENGINE / "IWE_CONSOLE_C43")]
+sys.path.insert(
+    0,
+    str(
+        (ENGINE := (TOOLS := Path(__file__).resolve().parents[1]).parents[1])
+        / "IWE_CONSOLE_C43"
+    ),
+)
+sys.path.insert(0, str(TOOLS))
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
     import (

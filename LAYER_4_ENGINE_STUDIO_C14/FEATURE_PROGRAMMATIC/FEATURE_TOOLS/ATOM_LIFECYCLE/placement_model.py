@@ -17,9 +17,13 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import
 
 
 def _name(value):
-    token = named_value_token(canonical_role_name(value)) if isinstance(value, str) else None
+    token = (
+        named_value_token(canonical_role_name(value))
+        if isinstance(value, str)
+        else None
+    )
     if not token:
-        raise ValueError('Invalid placement Role or Status name')
+        raise ValueError("Invalid placement Role or Status name")
     return token.casefold()
 
 
@@ -47,33 +51,43 @@ _PRESERVE_MAPPING = WrapValidator(preserve_mapping)
 @dataclass(frozen=True, config=ConfigDict(strict=True, extra="forbid"))
 class PlacementRules:
     role_folders: Annotated[Mapping[str, str], _PRESERVE_MAPPING]
-    _placements: Annotated[Mapping[tuple[str, str], tuple[str, str]], _PRESERVE_MAPPING]
-    _archive_aliases: Annotated[Mapping[str, tuple[str, ...]], _PRESERVE_MAPPING]
+    _placements: Annotated[
+        Mapping[tuple[str, str], tuple[str, str]], _PRESERVE_MAPPING
+    ]
+    _archive_aliases: Annotated[
+        Mapping[str, tuple[str, ...]], _PRESERVE_MAPPING
+    ]
     sources: tuple[Annotated[Mapping[str, str | int], _PRESERVE_MAPPING], ...]
 
     def role_folder(self, role):
         try:
             return self.role_folders[_name(role)]
         except KeyError as error:
-            raise ValueError('No declared Role folder') from error
+            raise ValueError("No declared Role folder") from error
 
     def placement(self, role, status):
         key = (_name(role), _name(status))
         try:
             return self._placements[key]
         except KeyError:
-            if key[1] in {'draft', 'archived', 'active'}:
-                raise ValueError('Required explicit Status placement is missing') from None
+            if key[1] in {"draft", "archived", "active"}:
+                raise ValueError(
+                    "Required explicit Status placement is missing"
+                ) from None
             try:
-                base, folder = self._placements[(key[0], '*')]
-                return base, key[1] if folder == '<lowercase status>' else folder
+                base, folder = self._placements[(key[0], "*")]
+                return base, key[
+                    1
+                ] if folder == "<lowercase status>" else folder
             except KeyError as error:
-                raise ValueError('No declared Role and Status placement') from error
+                raise ValueError(
+                    "No declared Role and Status placement"
+                ) from error
 
     def archive_folders(self, role):
-        base, folder = self.placement(role, 'Archived')
-        if base != 'role' or not folder:
-            raise ValueError('Archived placement must be Role-owned')
+        base, folder = self.placement(role, "Archived")
+        if base != "role" or not folder:
+            raise ValueError("Archived placement must be Role-owned")
         return (folder, *self._archive_aliases.get(_name(role), ()))
 
 
@@ -82,15 +96,21 @@ def _load_pins(sources):
     ids = set()
     pins = []
     for pin in sources:
-        if (not isinstance(pin, dict) or set(pin) != {'atom_id', 'version', 'sha256', 'source_path'}
-                or not isinstance(pin['atom_id'], str) or not re.fullmatch(r'[A-Za-z0-9]+-[RD]-[0-9]+', pin['atom_id'])
-                or type(pin['version']) is not int or pin['version'] < 1
-                or not isinstance(pin['sha256'], str) or not re.fullmatch(r'[0-9a-f]{64}', pin['sha256'])):
-            raise ValueError('Invalid placement source pin')
-        _folder(pin['source_path'])
-        if pin['atom_id'] in ids:
-            raise ValueError('Duplicate placement source pin')
-        ids.add(pin['atom_id'])
+        if (
+            not isinstance(pin, dict)
+            or set(pin) != {"atom_id", "version", "sha256", "source_path"}
+            or not isinstance(pin["atom_id"], str)
+            or not re.fullmatch(r"[A-Za-z0-9]+-[RD]-[0-9]+", pin["atom_id"])
+            or type(pin["version"]) is not int
+            or pin["version"] < 1
+            or not isinstance(pin["sha256"], str)
+            or not re.fullmatch(r"[0-9a-f]{64}", pin["sha256"])
+        ):
+            raise ValueError("Invalid placement source pin")
+        _folder(pin["source_path"])
+        if pin["atom_id"] in ids:
+            raise ValueError("Duplicate placement source pin")
+        ids.add(pin["atom_id"])
         pins.append(MappingProxyType(dict(pin)))
     return ids, pins
 
@@ -98,14 +118,18 @@ def _load_pins(sources):
 def _load_folders(entries, ids):
     folders = {}
     if not isinstance(entries, list) or not entries:
-        raise ValueError('Placement requires Role folders')
+        raise ValueError("Placement requires Role folders")
     for entry in entries:
-        if not isinstance(entry, dict) or set(entry) != {'role', 'folder', 'source'} or entry['source'] not in ids:
-            raise ValueError('Invalid Role folder binding')
-        role = _name(entry['role'])
-        folder = _folder(entry['folder'])
-        if '/' in folder or role in folders or folder in folders.values():
-            raise ValueError('Duplicate or invalid Role folder binding')
+        if (
+            not isinstance(entry, dict)
+            or set(entry) != {"role", "folder", "source"}
+            or entry["source"] not in ids
+        ):
+            raise ValueError("Invalid Role folder binding")
+        role = _name(entry["role"])
+        folder = _folder(entry["folder"])
+        if "/" in folder or role in folders or folder in folders.values():
+            raise ValueError("Duplicate or invalid Role folder binding")
         folders[role] = folder
     return folders
 
@@ -113,55 +137,79 @@ def _load_folders(entries, ids):
 def _load_status_placements(records, ids, folders):
     placements = {}
     if not isinstance(records, list) or not records:
-        raise ValueError('Placement requires Status bindings')
+        raise ValueError("Placement requires Status bindings")
     for record in records:
-        if (not isinstance(record, dict) or set(record) != {'role', 'status', 'base', 'folder', 'source'}
-                or record['source'] not in ids or record['base'] not in {'role', 'container'}):
-            raise ValueError('Invalid Status placement binding')
-        role = _name(record['role'])
-        status = '*' if record['status'] == '*' else _name(record['status'])
+        if (
+            not isinstance(record, dict)
+            or set(record) != {"role", "status", "base", "folder", "source"}
+            or record["source"] not in ids
+            or record["base"] not in {"role", "container"}
+        ):
+            raise ValueError("Invalid Status placement binding")
+        role = _name(record["role"])
+        status = "*" if record["status"] == "*" else _name(record["status"])
         key = (role, status)
         if role not in folders or key in placements:
-            raise ValueError('Ambiguous Status placement binding')
-        folder = record['folder']
-        if folder == '<lowercase status>':
-            if status != '*' or record['base'] != 'container':
-                raise ValueError('Invalid Status-derived folder')
+            raise ValueError("Ambiguous Status placement binding")
+        folder = record["folder"]
+        if folder == "<lowercase status>":
+            if status != "*" or record["base"] != "container":
+                raise ValueError("Invalid Status-derived folder")
         else:
             _folder(folder, empty=True)
-        placements[key] = (record['base'], folder)
+        placements[key] = (record["base"], folder)
     for role in folders:
-        if any((role, status) not in placements for status in ('draft', 'archived', 'active')):
-            raise ValueError('Incomplete Role placement bindings')
+        if any(
+            (role, status) not in placements
+            for status in ("draft", "archived", "active")
+        ):
+            raise ValueError("Incomplete Role placement bindings")
     return placements
 
 def load_placement(payload):  # noqa: C901
-    if not isinstance(payload, dict) or set(payload) != {'sources', 'role_folders', 'placements', 'archive_aliases'}:
-        raise ValueError('Invalid placement asset')
-    sources = payload['sources']
+    if not isinstance(payload, dict) or set(payload) != {
+        "sources",
+        "role_folders",
+        "placements",
+        "archive_aliases",
+    }:
+        raise ValueError("Invalid placement asset")
+    sources = payload["sources"]
     if not isinstance(sources, list) or not sources:
-        raise ValueError('Placement requires pinned sources')
+        raise ValueError("Placement requires pinned sources")
     ids, pins = _load_pins(sources)
-    folders = _load_folders(payload['role_folders'], ids)
-    placements = _load_status_placements(payload['placements'], ids, folders)
+    folders = _load_folders(payload["role_folders"], ids)
+    placements = _load_status_placements(payload["placements"], ids, folders)
     aliases = {}
-    records = payload['archive_aliases']
+    records = payload["archive_aliases"]
     if not isinstance(records, list):
-        raise ValueError('Invalid archive aliases')
+        raise ValueError("Invalid archive aliases")
     for record in records:
-        if not isinstance(record, dict) or set(record) != {'role', 'folder', 'source'} or record['source'] not in ids:
-            raise ValueError('Invalid archive alias')
-        role = _name(record['role'])
-        folder = _folder(record['folder'])
+        if (
+            not isinstance(record, dict)
+            or set(record) != {"role", "folder", "source"}
+            or record["source"] not in ids
+        ):
+            raise ValueError("Invalid archive alias")
+        role = _name(record["role"])
+        folder = _folder(record["folder"])
         if role not in folders or folder in aliases.get(role, []):
-            raise ValueError('Duplicate or unknown archive alias')
+            raise ValueError("Duplicate or unknown archive alias")
         aliases.setdefault(role, []).append(folder)
     for role, values in aliases.items():
-        target = placements.get((role, 'archived')) or placements.get((role, '*'))
-        if target is None or target[0] != 'role' or target[1] in values:
-            raise ValueError('Archive alias conflicts with declared placement')
-    return PlacementRules(MappingProxyType(folders), MappingProxyType(placements),
-                          MappingProxyType({role: tuple(values) for role, values in aliases.items()}), tuple(pins))
+        target = placements.get((role, "archived")) or placements.get(
+            (role, "*")
+        )
+        if target is None or target[0] != "role" or target[1] in values:
+            raise ValueError("Archive alias conflicts with declared placement")
+    return PlacementRules(
+        MappingProxyType(folders),
+        MappingProxyType(placements),
+        MappingProxyType(
+            {role: tuple(values) for role, values in aliases.items()}
+        ),
+        tuple(pins),
+    )
 
 
 def _declared_orders(requirement_rows):
@@ -175,9 +223,12 @@ def _declared_orders(requirement_rows):
             claim = parse_native_model_claim(code)
             if not claim or claim['kind'] != 'entity':
                 continue
-            args = claim['arguments']
-            if args.get('qualification_property_path') == 'Atom.Header.Context.Role':
-                order = args.get('axes', {}).get('Role Order Number')
+            args = claim["arguments"]
+            if (
+                args.get("qualification_property_path")
+                == "Atom.Header.Context.Role"
+            ):
+                order = args.get("axes", {}).get("Role Order Number")
                 if order is not None:
                     role_orders.append((args['entity_name'], order, source))
             for name, order in args.get('status_order_numbers', {}).items():
@@ -225,20 +276,22 @@ def compile_placement(rows, requirement_rows=(), declared_roles=None, required_s
     role_folders, status_folders = _declared_orders(requirement_rows)
     generic_source = None
     for row in rows:
-        body = row['_content_bytes'].decode('utf-8')
+        body = row["_content_bytes"].decode("utf-8")
         for rule in parse_placement_claim(body) or ():
-            source = row['id']
-            if rule['kind'] == 'role_root':
+            source = row["id"]
+            if rule["kind"] == "role_root":
                 if generic_source is not None:
-                    raise ValueError('Duplicate generic Role placement template')
+                    raise ValueError(
+                        "Duplicate generic Role placement template"
+                    )
                 generic_source = source
                 sources[source] = row
                 continue
-            role = None if rule['role'] is None else _name(rule['role'])
-            status = '*' if rule['status'] == '*' else _name(rule['status'])
+            role = None if rule["role"] is None else _name(rule["role"])
+            status = "*" if rule["status"] == "*" else _name(rule["status"])
             if (role, status) in rules:
-                raise ValueError(f'{source}: duplicate placement binding')
-            rules[(role, status)] = (rule['base'], rule['folder'], source)
+                raise ValueError(f"{source}: duplicate placement binding")
+            rules[(role, status)] = (rule["base"], rule["folder"], source)
             sources[source] = row
     if generic_source is not None:
         if not role_folders or (declared_roles is not None and

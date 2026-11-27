@@ -295,10 +295,26 @@ assert not any('FEATURE_FORMAL_MODEL_GENERATOR' in name for name in sys.modules)
                 component.write_text(revised.replace("C14", "invalid"), encoding="utf-8")
                 self._assert_worker(client, instance, "structure_refresh", "failed")
                 self.assertEqual(accepted, active.read_bytes())
-                self.assertEqual(model, (generation / "model.json").read_bytes())
-                component.write_text(original.replace(f"version: {version}", f"version: {version + 2}", 1), encoding="utf-8")
-                self._wait_for(lambda: read_structure(active).component("C14").ref.endswith(f"@{version + 2}"))
-                self._assert_worker(client, instance, "structure_refresh", "completed")
+                self.assertEqual(
+                    model, (generation / "model.json").read_bytes()
+                )
+                component.write_text(
+                    original.replace(
+                        f"version: {version}", f"version: {version + 2}", 1
+                    ),
+                    encoding="utf-8",
+                )
+                self._wait_for(
+                    lambda: (
+                        read_structure(active)
+                        .component("C14")
+                        .ref.endswith(f"@{version + 2}")
+                    )
+                )
+                self._assert_worker(
+                    client, instance, "structure_refresh", "completed"
+                )
+
     def test_kernel_rejects_changed_binding(self):
         with tempfile.TemporaryDirectory(prefix="c62-", dir="/tmp") as temporary:
             root = Path(temporary).resolve()

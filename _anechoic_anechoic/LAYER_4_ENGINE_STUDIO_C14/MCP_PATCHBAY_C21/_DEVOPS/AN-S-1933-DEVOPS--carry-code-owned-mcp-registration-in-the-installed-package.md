@@ -8,8 +8,8 @@ context:
   lens: DevOps
 state:
   status: active
-  version: 8
-  updated_at: "2026-11-23T01:48:06.181628+00:00"
+  version: 9
+  updated_at: "2026-11-27T17:35:01.150345+00:00"
 ---
 ## Summary
 
@@ -19,8 +19,6 @@ Carry code-owned MCP registration in the installed package
 
 ### Prose Claim
 
-Backend carries the code-owned provider inventory and generated registration asset. Generate the asset from installed provider descriptors and canonical models under AN-S-1956. MCP maps Backend's enabled JSON catalog; it does not generate or load that asset.
+The installed Backend package carries its code-owned provider inventory and generated registration asset under AN-S-1956. Verify the asset before assigning final package identity in refresh mode.
 
-In refresh mode, generate and verify the asset before final package and image identity. In existing mode, carry the matching checkout asset unchanged and verify it before startup. Failed generation, verification or unresolved common descriptor frontier stops delivery before startup.
-
-Keep the protocol interface declaration version-bound, including supported capabilities and result meanings. Derive schemas from canonical models; keep declarations, schemas and examples credential-free. Registration and schema generation do not execute capabilities or grant effect permission.
+Deliver the version-bound protocol declaration under AN-S-1385. Preserve stable result meanings under AN-S-1387. Keep declarations, schemas, and examples credential-free. Registration and schema generation grant no effect permission.

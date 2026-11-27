@@ -12,7 +12,10 @@ from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import group as _group
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.source_row__pub import atom as source_atom, canonical_row  # noqa: E402
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import source_body  # noqa: E402
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (  # noqa: E402
-    canonical_role_name, carrier_read_view, is_current_requirement_declaration, named_value_token,
+    canonical_role_name,
+    carrier_read_view,
+    is_current_requirement_declaration,
+    named_value_token,
     project_root_container_view,
 )
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (  # noqa: E402
@@ -32,25 +35,42 @@ class SourceReaderValidation:
         if self._compiled_schema is not None:
             while self._exclude_content_errors(
                 self._content_schema.validation_errors(
-                    row for row in self._cached_rows().values() if row.get("status_group") != "Archived"
+                    row
+                    for row in self._cached_rows().values()
+                    if row.get("status_group") != "Archived"
                 )
             ):
                 self._references.rebuild(self._cached_rows())
             return
         while True:
             errors = self._content_schema.rebuild(
-                row for row in self._accepted_rows() if row.get("status_group") != "Archived"
+                row
+                for row in self._accepted_rows()
+                if row.get("status_group") != "Archived"
             )
-            errors.update(self._content_schema.validation_errors(
-                row for row in self._cached_rows().values() if row.get("status_group") != "Archived"
-            ))
+            errors.update(
+                self._content_schema.validation_errors(
+                    row
+                    for row in self._cached_rows().values()
+                    if row.get("status_group") != "Archived"
+                )
+            )
             if not self._exclude_content_errors(errors):
                 return
             self._references.rebuild(self._cached_rows())
     def _rebuild_header_schema(self) -> None:
         if self._compiled_schema is None:
-            self._header_schema.rebuild({**row, "_model_class_bindings": self._content_schema._bindings} for row in self._accepted_rows())
-    def _exclude_invalid_header_sources(self, rows: Iterable[dict[str, Any]] | None = None) -> set[Path]:
+            self._header_schema.rebuild(
+                {
+                    **row,
+                    "_model_class_bindings": self._content_schema._bindings,
+                }
+                for row in self._accepted_rows()
+            )
+
+    def _exclude_invalid_header_sources(
+        self, rows: Iterable[dict[str, Any]] | None = None
+    ) -> set[Path]:
         if self._retain_parsed:
             return set()
         schema = self.header_schema if self._schema_mode == 1 else self._observed_header_schema
@@ -74,14 +94,21 @@ class SourceReaderValidation:
                 removed.add(path)
         return removed
     def _exclude_invalid_content_sources(
-        self, rows: dict[str, dict[str, Any] | None],
+        self,
+        rows: dict[str, dict[str, Any] | None],
     ) -> set[Path]:
         if self._retain_parsed:
             return set()
-        return self._exclude_content_errors(self._content_schema.validation_errors(
-            row for row in rows.values() if row is not None and row.get("status_group") != "Archived"
-        ))
-    def _exclude_content_errors(self, errors: dict[str, ValueError]) -> set[Path]:
+        return self._exclude_content_errors(
+            self._content_schema.validation_errors(
+                row
+                for row in rows.values()
+                if row is not None and row.get("status_group") != "Archived"
+            )
+        )
+    def _exclude_content_errors(
+        self, errors: dict[str, ValueError]
+    ) -> set[Path]:
         removed = set()
         for relative, error in errors.items():
             path = self.root / relative
@@ -116,7 +143,11 @@ class SourceReaderValidation:
         for authority in path.parents:
             if (owner := self._lifecycle_scopes.get(authority)) is not None:
                 parts = path.relative_to(authority).parts
-                if len(parts) >= 2 and marker in self._lifecycle_role_markers.get(parts[0], ()):
+                if len(
+                    parts
+                ) >= 2 and marker in self._lifecycle_role_markers.get(
+                    parts[0], ()
+                ):
                     return owner
                 break
         return None
@@ -129,8 +160,13 @@ class SourceReaderValidation:
         view = carrier_read_view(row["header_json"])
         if view.get("projection"):
             return False
-        role = named_value_token(canonical_role_name(row.get("role") or view.get("role")))
-        if self._identity_pattern is None or (identity := self._identity_pattern.match(path.name)) is None:
+        role = named_value_token(
+            canonical_role_name(row.get("role") or view.get("role"))
+        )
+        if (
+            self._identity_pattern is None
+            or (identity := self._identity_pattern.match(path.name)) is None
+        ):
             return False
         marker = identity[1]
         if not any(marker in markers and role == named_value_token(name)
@@ -142,14 +178,20 @@ class SourceReaderValidation:
         container = view.get("container")
         if isinstance(container, dict):
             scope_id = container.get("scope_unit")
-            if isinstance(scope_id, str):
-                if scope_id not in {owner["scope_unit_name"], owner["scope_unit_id"] or self._project_scope_id}:
-                    return False
-            elif isinstance(parent := container.get("atom"), str):
+            if isinstance(scope_id, str) and scope_id not in {
+                owner["scope_unit_name"],
+                owner["scope_unit_id"] or self._project_scope_id,
+            }:
+                return False
+            if not isinstance(scope_id, str) and isinstance(
+                parent := container.get("atom"), str
+            ):
                 parents = self._references.paths_for(parent)
                 if parents and not any(
-                    self._lifecycle_owner(candidate, parent.rsplit("-", 2)[-2]) == owner
-                    for candidate in parents if len(parent.rsplit("-", 2)) == 3
+                    self._lifecycle_owner(candidate, parent.rsplit("-", 2)[-2])
+                    == owner
+                    for candidate in parents
+                    if len(parent.rsplit("-", 2)) == 3
                 ):
                     return False
         return True
@@ -219,16 +261,19 @@ class SourceReaderValidation:
         view = parsed._view
         assert view is not None
         group = _group(path.relative_to(self.root), view, self._status_groups)
-        if (self._archive_path(path) or any(
-            path.is_relative_to(folder) for folder in self._loaded_archive_folders
-        )):
+        if self._archive_path(path) or any(
+            path.is_relative_to(folder)
+            for folder in self._loaded_archive_folders
+        ):
             group = "Archived"
         if group == "Archived":
             if not self._catalog or not self._archive_path(path):
                 self._remember_archive(path)
         else:
             self._forget_archive(path)
-        if group is None or (group == "Archived" and not self._archive_selected(path)):
+        if group is None or (
+            group == "Archived" and not self._archive_selected(path)
+        ):
             self._source_paths.discard(path)
             self._cached.pop(path, None)
             self._failed.pop(path, None)
@@ -243,9 +288,15 @@ class SourceReaderValidation:
             group,
         )
         root_identity = self._project_root_declaration
-        if group == "Current" and root_identity is not None and path == root_identity[0]:
+        if (
+            group == "Current"
+            and root_identity is not None
+            and path == root_identity[0]
+        ):
             if sha256(raw).hexdigest() == root_identity[1]:
-                row["_project_root_header"] = project_root_container_view(parsed.metadata)
+                row["_project_root_header"] = project_root_container_view(
+                    parsed.metadata
+                )
         if self._retain_parsed:
             row["_retain_parsed"] = True
         canonical_row(row)

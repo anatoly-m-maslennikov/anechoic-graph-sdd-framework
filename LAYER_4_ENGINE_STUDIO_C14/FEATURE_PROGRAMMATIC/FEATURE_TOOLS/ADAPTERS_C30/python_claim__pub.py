@@ -13,22 +13,49 @@ from .python_claim_validation import _validate_structured_call
 
 
 _FUNCTIONS = {
-    "property_rule": ({"address"}, {"address", "value_format", "occurrences", "values"}),
-    "allowed_children": ({"address", "names", "occurrences"},
-                         {"address", "names", "occurrences", "name_format"}),
+    "property_rule": (
+        {"address"},
+        {"address", "value_format", "occurrences", "values"},
+    ),
+    "allowed_children": (
+        {"address", "names", "occurrences"},
+        {"address", "names", "occurrences", "name_format"},
+    ),
     "order_before": ({"first", "second"}, {"first", "second"}),
-    "allowed_values": ({"address", "values"}, {"address", "values", "occurrences", "quoted"}),
-    "children": ({"address", "occurrences"}, {"address", "occurrences", "name_format", "recursive"}),
+    "allowed_values": (
+        {"address", "values"},
+        {"address", "values", "occurrences", "quoted"},
+    ),
+    "children": (
+        {"address", "occurrences"},
+        {"address", "occurrences", "name_format", "recursive"},
+    ),
     "composition": ({"container", "parts"}, {"container", "parts"}),
     "deliver": ({"source", "carrier"}, {"source", "carrier"}),
-    "classify": ({"address", "axis", "value"}, {"address", "axis", "value", "grouped", "notation"}),
+    "classify": (
+        {"address", "axis", "value"},
+        {"address", "axis", "value", "grouped", "notation"},
+    ),
     "path_template": ({"address", "template"}, {"address", "template"}),
     "copy_value": ({"address", "source"}, {"address", "source"}),
     "minimum_value": ({"address", "minimum"}, {"address", "minimum"}),
     "unique": ({"population", "keys"}, {"population", "keys"}),
     "population": ({"address", "count"}, {"address", "count"}),
-    "allow_roles_for_form": ({"form", "roles"}, {"form", "roles", "participant"}),
-    "relation": ({"source", "name"}, {"source", "name", "target", "source_count", "target_count", "reverse"}),
+    "allow_roles_for_form": (
+        {"form", "roles"},
+        {"form", "roles", "participant"},
+    ),
+    "relation": (
+        {"source", "name"},
+        {
+            "source",
+            "name",
+            "target",
+            "source_count",
+            "target_count",
+            "reverse",
+        },
+    ),
     "set_value": ({"address", "value"}, {"address", "value"}),
     "subject_path": ({"address"}, {"address"}),
 }
@@ -42,7 +69,11 @@ def _group_markers(text: str) -> list[tuple[int, str]]:
             depth += 1
         elif token.type == tokenize.OP and token.string in ")]}":
             depth -= 1
-        elif token.type == tokenize.COMMENT and depth == 0 and token.line.lstrip().startswith("#"):
+        elif (
+            token.type == tokenize.COMMENT
+            and depth == 0
+            and token.line.lstrip().startswith("#")
+        ):
             label = token.string[1:].strip().casefold()
             if label in {"model", "instances"}:
                 markers.append((token.start[0], label))
@@ -65,23 +96,30 @@ def _literal_call(item: ast.stmt) -> tuple[str, dict]:
         try:
             args[keyword.arg] = ast.literal_eval(keyword.value)
         except (ValueError, TypeError, SyntaxError, RecursionError) as error:
-            raise _error(keyword, f"{keyword.arg} must be a literal") from error
+            raise _error(
+                keyword, f"{keyword.arg} must be a literal"
+            ) from error
     required, allowed = _FUNCTIONS[name]
     missing = required - args.keys()
     unexpected = args.keys() - allowed
     if missing:
         raise _error(item, f"missing arguments: {', '.join(sorted(missing))}")
     if unexpected:
-        raise _error(item, f"unexpected arguments: {', '.join(sorted(unexpected))}")
+        raise _error(
+            item, f"unexpected arguments: {', '.join(sorted(unexpected))}"
+        )
     return name, args
 
 
 def parse_grouped_python_model_claim(
-    text: str, *, validate_reference: Callable[[str], object] | None = None,
-    validate_relation_endpoint: Callable[[str, object, str], object] | None = None,
+    text: str,
+    *,
+    validate_reference: Callable[[str], object] | None = None,
+    validate_relation_endpoint: Callable[[str, object, str], object]
+    | None = None,
     _structured: bool = False,
 ) -> tuple[tuple[str, str | None], ...]:
-    """Return statements with their preceding top-level model/instances marker."""
+    "Return statements with their preceding top-level model/instances marker."
     if not isinstance(text, str):
         raise TypeError("text must be a string")
     if validate_reference is not None and not callable(validate_reference):
@@ -89,43 +127,93 @@ def parse_grouped_python_model_claim(
     try:
         tree = ast.parse(text, mode="exec")
     except SyntaxError as error:
-        raise PythonModelClaimError(f"line {error.lineno}, column {error.offset}: {error.msg}") from error
+        raise PythonModelClaimError(
+            f"line {error.lineno}, column {error.offset}: {error.msg}"
+        ) from error
     markers = _group_markers(text)
-    statements: list[tuple[str, str | None]] = []
-    for item in tree.body:
-        name, args = _literal_call(item)
-        group = next((label for line, label in reversed(markers) if line < item.lineno), None)
-        if _structured:
-            _validate_structured_call(name, args, item, validate_reference, validate_relation_endpoint)
-            statements.append({"name": name, "arguments": args, "scope": group})
-        else:
-            statements.extend((statement, group) for statement in python_claim_legacy._render(name, args, item, validate_reference, validate_relation_endpoint))
+    statements = _grouped_statements(
+        tree,
+        markers,
+        _structured,
+        validate_reference,
+        validate_relation_endpoint,
+    )
     if not statements:
-        raise PythonModelClaimError("line 1, column 1: expected a declarative function call")
+        raise PythonModelClaimError(
+            "line 1, column 1: expected a declarative function call"
+        )
     return tuple(statements)
 
 
+def _grouped_statements(
+    tree, markers, structured, validate_reference, validate_relation_endpoint
+):
+    statements: list[tuple[str, str | None]] = []
+    for item in tree.body:
+        name, args = _literal_call(item)
+        group = next(
+            (label for line, label in reversed(markers) if line < item.lineno),
+            None,
+        )
+        if structured:
+            _validate_structured_call(
+                name,
+                args,
+                item,
+                validate_reference,
+                validate_relation_endpoint,
+            )
+            statements.append(
+                {"name": name, "arguments": args, "scope": group}
+            )
+        else:
+            statements.extend(
+                (statement, group)
+                for statement in python_claim_legacy._render(
+                    name,
+                    args,
+                    item,
+                    validate_reference,
+                    validate_relation_endpoint,
+                )
+            )
+    return statements
+
+
 def parse_python_model_claim(
-    text: str, *, validate_reference: Callable[[str], object] | None = None,
-    validate_relation_endpoint: Callable[[str, object, str], object] | None = None,
+    text: str,
+    *,
+    validate_reference: Callable[[str], object] | None = None,
+    validate_relation_endpoint: Callable[[str, object, str], object]
+    | None = None,
 ) -> tuple[str, ...]:
     """Return compatible statements without evaluating the source text.
 
     The optional callback checks each address and may return False or raise
     ValueError/LookupError to reject an unknown reference.
     """
-    return tuple(statement for statement, _group in
-                 parse_grouped_python_model_claim(text, validate_reference=validate_reference, validate_relation_endpoint=validate_relation_endpoint))
-
-
-def parse_structured_python_model_claim(
-    text: str, *, validate_reference: Callable[[str], object] | None = None,
-    validate_relation_endpoint: Callable[[str, object, str], object] | None = None,
-) -> tuple[dict, ...]:
-    """Return validated helper names, literal arguments, and model/instance scope."""
-    return parse_grouped_python_model_claim(
-        text, validate_reference=validate_reference,
-        validate_relation_endpoint=validate_relation_endpoint, _structured=True,
+    return tuple(
+        statement
+        for statement, _group in parse_grouped_python_model_claim(
+            text,
+            validate_reference=validate_reference,
+            validate_relation_endpoint=validate_relation_endpoint,
+        )
     )
 
 
+def parse_structured_python_model_claim(
+    text: str,
+    *,
+    validate_reference: Callable[[str], object] | None = None,
+    validate_relation_endpoint: Callable[[str, object, str], object]
+    | None = None,
+) -> tuple[dict, ...]:
+    """Return validated helper names, literal arguments, and \
+model/instance scope."""
+    return parse_grouped_python_model_claim(
+        text,
+        validate_reference=validate_reference,
+        validate_relation_endpoint=validate_relation_endpoint,
+        _structured=True,
+    )

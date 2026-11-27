@@ -60,9 +60,14 @@ class ImportGraphCases3:
             'instance=ComponentSeedManifest(component_seed_id="CS1"))\n```\n\n'
             "## Purpose\n\nProvide a service.\n\n## Solution\n\nAccept a request.\n"
         )
-        spec = self._source(f"{control}/AN-S-007-SPEC-COMPONENT_SEED_MANIFEST--service.md", spec_source)
-        self._source(f"{control}/099_archived/AN-S-007@1-SPEC-COMPONENT_SEED_MANIFEST--service.md",
-                     spec_source.replace("active, version: 2", "archived, version: 1"))
+        spec = self._source(
+            f"{control}/AN-S-007-SPEC-COMPONENT_SEED_MANIFEST--service.md",
+            spec_source,
+        )
+        self._source(
+            f"{control}/099_archived/AN-S-007@1-SPEC-COMPONENT_SEED_MANIFEST--service.md",
+            spec_source.replace("active, version: 2", "archived, version: 1"),
+        )
         sidecar = self._source(
             f"{package}/service_CS1__spec_bind.yaml",
             "implements: [AN-S-007@1, AN-S-999@1]\napplies: [AN-S-007@2]\n",
@@ -106,10 +111,14 @@ class ImportGraphCases3:
         self.assertIn("package_audit", schema.structured_content["tables"])
         self.assertEqual([False, True, True, "valid", False, ["archived", "missing"], "AN-S-007@2", False],
                          await audit())
-        self.assertEqual([False, False, False, "missing", None, [], None, None],
-                         await audit(path=f"{package}/service_CS1__tests"))
+        self.assertEqual(
+            [False, False, False, "missing", None, [], None, None],
+            await audit(path=f"{package}/service_CS1__tests"),
+        )
         sidecar.write_text("{}\n", encoding="utf-8")
-        await expect_audit([False, True, True, "empty", None, [], "AN-S-007@2", False])
+        await expect_audit(
+            [False, True, True, "empty", None, [], "AN-S-007@2", False]
+        )
         sidecar.write_text("implements: not-a-list\n", encoding="utf-8")
         await expect_audit([False, True, True, "invalid", None, [], "AN-S-007@2", False])
         self._source(f"{package}/service_CS1.p.spec_trace.md", "## Implements\n- AN-S-007@2\n")
@@ -142,17 +151,30 @@ class ImportGraphCases3:
         self._source("src/_bypass__shared.py", "")
         self._source("src/LEFT_C1/_package__shared.py", "")
         self._source("src/RIGHT_C2/_package__shared.py", "")
-        self._source("src/LEFT_C1/client.py", "from RIGHT_C2.api import exposed, hidden\n")
+        self._source(
+            "src/LEFT_C1/client.py",
+            "from RIGHT_C2.api import exposed, hidden\n",
+        )
         self._source("src/RIGHT_C2/api.py", "exposed = 1\nhidden = 2\n")
         self._source("src/RIGHT_C2/service_CS1/main__shared.py", "pass\n")
 
         def carrier(ref, fields, **relations):
-            return {"ref": ref, "sha256": "fixture", "source_path": "manifest.md",
-                    "fields": fields, **relations}
+            return {
+                "ref": ref,
+                "sha256": "fixture",
+                "source_path": "manifest.md",
+                "fields": fields,
+                **relations,
+            }
 
-        left = {"name": "Left", "layer": 2, "boundaries": {
-            "code": {"imports": ["RIGHT_C2.api.exposed"]},
-            "state": "local", "io": {"client": [{"component": "C2", "interface": "run"}]}},
+        left = {
+            "name": "Left",
+            "layer": 2,
+            "boundaries": {
+                "code": {"imports": ["RIGHT_C2.api.exposed"]},
+                "state": "local",
+                "io": {"client": [{"component": "C2", "interface": "run"}]},
+            },
         }
         right = {"name": "Right", "layer": 1, "boundaries": {
             "code": {"exports": {"api.exposed": None}},
@@ -165,7 +187,9 @@ class ImportGraphCases3:
             "packages": {"CS1": carrier("AN-S-012@1", {"boundaries": {"state": "pure"}}, component="C2"),
                          "CS2": carrier("AN-S-013@1", {"boundaries": {"state": "local"}}, component="C2")},
         }
-        structure = self._source(".anechoic_tmp/generation/structure.json", json.dumps(snapshot))
+        structure = self._source(
+            ".anechoic_tmp/generation/structure.json", json.dumps(snapshot)
+        )
         gateway = await self._gateway(structure_snapshot=structure)
 
         return right, snapshot, structure, gateway
@@ -200,7 +224,9 @@ class ImportGraphCases3:
         ], await query(findings_sql))
 
         right["layer"] = 3
-        pending = self._source(".anechoic_tmp/generation/structure.pending", json.dumps(snapshot))
+        pending = self._source(
+            ".anechoic_tmp/generation/structure.pending", json.dumps(snapshot)
+        )
         pending.replace(structure)
         expected = [[f"from RIGHT_C2.api import {name}", "denied", "sibling layer order"]
                     for name in ("exposed", "hidden")]
@@ -243,7 +269,11 @@ class ImportGraphCases3:
         """
         expected = [["package:local:src/tree/nested/leaf", 1]]
         self.assertEqual(expected, await rows(gateway, packages))
-        self.assertEqual([["src/tree/nested/leaf/main.go", "unsupported"]], await rows(gateway, """
+        self.assertEqual(
+            [["src/tree/nested/leaf/main.go", "unsupported"]],
+            await rows(
+                gateway,
+                """
             SELECT relative_path, scan_status FROM import_nodes
             WHERE kind = 'module' AND relative_path LIKE 'src/tree%' ORDER BY relative_path
         """))
@@ -266,22 +296,37 @@ class ImportGraphCases3:
         gateway = await self._gateway(enabled=False)
 
         async def rows(sql):
-            response = await gateway.call(None, types.CallToolRequestParams(
-                name='query_run', arguments={'sql': sql, 'result_delivery': 'inline'},
-            ))
+            response = await gateway.call(
+                None,
+                types.CallToolRequestParams(
+                    name="query_run",
+                    arguments={"sql": sql, "result_delivery": "inline"},
+                ),
+            )
             self.assertFalse(response.is_error, response.structured_content)
-            return response.structured_content['rows']
+            return response.structured_content["rows"]
 
-        refs = await rows("SELECT stable_ref, exact_ref FROM native_references "
-                          "WHERE exact_ref LIKE 'AN-T-009@%' ORDER BY exact_ref")
+        refs = await rows(
+            "SELECT stable_ref, exact_ref FROM native_references "
+            "WHERE exact_ref LIKE 'AN-T-009@%' ORDER BY exact_ref"
+        )
         self.assertEqual([[None, 'AN-T-009@1'], ['AN-T-009', 'AN-T-009@2'],
                           [None, 'AN-T-009@3-draft']], refs)
-        facts = await rows("SELECT source_kind, source_ref, target_kind, target_ref, relation_type, derived "
-                           "FROM relations WHERE (source_ref = 'AN-T-010' AND target_ref = 'AN-T-009') "
-                           "OR (source_ref = 'AN-T-009' AND target_ref = 'AN-T-010') "
-                           "OR (source_kind = 'Component' AND source_ref = 'C0' "
-                           "AND target_ref = 'AN-T-009')")
-        self.assertIn(['Atom', 'AN-T-010', 'Atom', 'AN-T-009', 'CONTAINED_BY', False], facts)
-        self.assertIn(['Atom', 'AN-T-009', 'Atom', 'AN-T-010', 'CONTAINS', True], facts)
-        self.assertIn(['Component', 'C0', 'Atom', 'AN-T-009', 'CONTAINS', True], facts)
+        facts = await rows(
+            "SELECT source_kind, source_ref, target_kind, target_ref, relation_type, derived "
+            "FROM relations WHERE (source_ref = 'AN-T-010' AND target_ref = 'AN-T-009') "
+            "OR (source_ref = 'AN-T-009' AND target_ref = 'AN-T-010') "
+            "OR (source_kind = 'Component' AND source_ref = 'C0' "
+            "AND target_ref = 'AN-T-009')"
+        )
+        self.assertIn(
+            ["Atom", "AN-T-010", "Atom", "AN-T-009", "CONTAINED_BY", False],
+            facts,
+        )
+        self.assertIn(
+            ["Atom", "AN-T-009", "Atom", "AN-T-010", "CONTAINS", True], facts
+        )
+        self.assertIn(
+            ["Component", "C0", "Atom", "AN-T-009", "CONTAINS", True], facts
+        )
         self.assertEqual([], await rows('SELECT * FROM scope_units'))

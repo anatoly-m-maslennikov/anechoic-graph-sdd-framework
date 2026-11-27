@@ -84,7 +84,8 @@ def detailMatches (expected actual : Json) : Bool :=
 
 abbrev Bindings := List (String × Json)
 
-def matchEvent (t : Transition) (e : Event) (bindings : Bindings) : Option Bindings := do
+def matchEvent (t : Transition) (e : Event) (bindings : Bindings) :
+    Option Bindings := do
   guard (t.event == e.name)
   let fields ← t.expect.getObj?.toOption
   let observed ← e.detail.getObj?.toOption
@@ -113,7 +114,8 @@ def matchEvent (t : Transition) (e : Event) (bindings : Bindings) : Option Bindi
 def mismatchReason (transitions : List Transition) (event : Event) : String :=
   if !(transitions.any (fun t => t.event == event.name)) then
     "no transition for event name"
-  else "event kind, target, outcome, or detail does not match transition expectations"
+  else "event kind, target, outcome, or detail does not match " ++
+    "transition expectations"
 
 def check (model : Model) : String → List Event → Nat → Bindings → Result
   | stateName, events, index, bindings =>
@@ -122,12 +124,16 @@ def check (model : Model) : String → List Event → Nat → Bindings → Resul
     | some state =>
       match events with
       | [] => if state.final then ⟨"matched", none⟩
-              else ⟨"different", some ⟨stateName, index, "trace ended before a final state"⟩⟩
+              else ⟨"different", some ⟨stateName, index,
+                "trace ended before a final state"⟩⟩
       | event :: rest =>
-        if state.final then ⟨"different", some ⟨stateName, index, "event after final state"⟩⟩
+        if state.final then ⟨"different", some ⟨stateName, index,
+          "event after final state"⟩⟩
         else
-          match state.transitions.filterMap (fun t => (matchEvent t event bindings).map ((t.target, ·))) with
-          | [] => ⟨"different", some ⟨stateName, index, mismatchReason state.transitions event⟩⟩
+          match state.transitions.filterMap (fun t => (matchEvent t event
+            bindings).map ((t.target, ·))) with
+          | [] => ⟨"different", some ⟨stateName, index, mismatchReason
+            state.transitions event⟩⟩
           | [(target, updated)] => check model target rest (index + 1) updated
           | _ => ⟨"unresolved", none⟩
 
@@ -135,7 +141,8 @@ def run (text : String) : Except String Json := do
   let json ← Json.parse text
   let input : Input ← fromJson? json
   validate input
-  pure <| toJson (if input.complete then check input.model input.model.initial input.events 0 [] else ⟨"unresolved", none⟩)
+  pure <| toJson (if input.complete then check input.model
+    input.model.initial input.events 0 [] else ⟨"unresolved", none⟩)
 end WorkflowTrace
 
 def main : IO UInt32 := do

@@ -1,4 +1,4 @@
-"""Verify the required host functional gate is separate from source analysis."""
+"Verify the required host functional gate is separate from source analysis."
 
 from contextlib import redirect_stderr, redirect_stdout
 import io
@@ -77,7 +77,10 @@ class FunctionalPhaseTest(unittest.TestCase):
         for name in (flat, static, image):
             self.file(
                 name,
-                "import unittest\nclass Test(unittest.TestCase):\n def test_one(self): pass\n",
+                (
+                    "import unittest\nclass Test(unittest.TestCase):\n def "
+                    "test_one(self): pass\n"
+                ),
             )
         cases = (
             ([], "selection is empty"),
@@ -107,7 +110,10 @@ class FunctionalPhaseTest(unittest.TestCase):
         name = f"{self.base}/functional/test_skip.py"
         self.file(
             name,
-            'import unittest\n@unittest.skip("unavailable")\nclass Test(unittest.TestCase):\n def test_one(self): pass\n',
+            (
+                'import unittest\n@unittest.skip("unavailable")\nclass '
+                "Test(unittest.TestCase):\n def test_one(self): pass\n"
+            ),
         )
         self.config([name])
         report = {}

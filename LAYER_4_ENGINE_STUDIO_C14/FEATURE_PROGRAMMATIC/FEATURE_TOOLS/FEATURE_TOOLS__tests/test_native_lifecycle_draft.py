@@ -9,9 +9,9 @@ import unittest
 
 import yaml
 
-TOOLS = Path(__file__).resolve().parents[1]
-ENGINE = TOOLS.parents[1]
-sys.path[:0] = [str(TOOLS), str(ENGINE / 'IWE_CONSOLE_C43')]
+sys.path.insert(0, str((ENGINE := (TOOLS := Path(__file__).resolve()
+    .parents[1]).parents[1]) / 'IWE_CONSOLE_C43'))
+sys.path.insert(0, str(TOOLS))
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import capture_native, parse_structure
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import NativeProjectSelection, execute_native_lifecycle
@@ -63,7 +63,8 @@ class NativeDraftTests(unittest.TestCase):
         self.write('001_TICKETS/TASKS/09_archived/AN-T-1@4-TASK--example.md', 'AN-T-1', version=4, status='archived')
         self.write('001_TICKETS/TASKS/01_draft/AN-T-1@5-draft-TASK--example.md', 'AN-T-1', version=5, status='draft')
         current, manifest = self.path.read_bytes(), self.selection.manifest_path.read_bytes()
-        output = create_draft(self.selection, self.params, current_rows=self.rows)
+        output = create_draft(
+            self.selection, self.params, current_rows=self.rows)
         self.assertEqual('completed', output['outcome'])
         self.assertEqual('AN-T-1@6-draft', output['savedDraft']['ref_id'])
         target = self.root / output['savedDraft']['path']
@@ -73,9 +74,11 @@ class NativeDraftTests(unittest.TestCase):
         self.assertEqual(manifest, self.selection.manifest_path.read_bytes())
         after = capture_native(self.selection)
         self.assertFalse(after.errors)
-        row = next(row for row in after.atoms if row['_exact_ref'] == 'AN-T-1@6-draft')
+        row = next(row for row in after.atoms
+                   if row["_exact_ref"] == "AN-T-1@6-draft")
         self.assertEqual('draft', row['status'])
-        source_header = next(row for row in self.rows if row['id'] == 'AN-T-1')['header_json']
+        source_header = next(row for row in self.rows
+                             if row["id"] == "AN-T-1")["header_json"]
         self.assertEqual(source_header['identity'], row['header_json']['identity'])
         self.assertEqual(source_header['context'], row['header_json']['context'])
         self.assertEqual(6, row['header_json']['state']['version'])
@@ -191,6 +194,31 @@ class NativeDraftTests(unittest.TestCase):
         target = self.root / output['savedDraft']['path']
         self.assertEqual(self.path.read_bytes().split(b'---\n', 2)[2], target.read_bytes().split(b'---\n', 2)[2])
 
+    def _alter_stale_draft_content(self, case, params, row, original, manifest):
+        if case == 'bytes':
+            self.path.write_bytes(original.replace(b'Old', b'Altered'))
+        if case == 'summary':
+            params['changes']['body'] = params['changes']['body'].replace('Example', 'Changed')
+        if case == 'extra':
+            params['changes']['status'] = 'done'
+        if case == 'template':
+            row['header_json'] = {**row['header_json'], 'context': {'template': 'epic'}}
+        if case == 'manifest':
+            self.selection.manifest_path.write_bytes(manifest + b'changed')
+
+    def _alter_stale_draft_input(self, case, params, row, original, manifest):
+        if case == 'version':
+            params['sourceCurrent']['version'] = 2
+        if case == 'selector':
+            params['sourceCurrent']['extra'] = 'x'
+        if case == 'foreign':
+            params['sourceCurrent']['ref_id'] = 'XX-T-1'
+        if case == 'digest':
+            row.pop('_source_sha256')
+        if case == 'path':
+            row['source_path'] = '../escape.md'
+        self._alter_stale_draft_content(case, params, row, original, manifest)
+
     def test_rejects_stale_and_out_of_scope_inputs(self):
         for case in ('version', 'selector', 'foreign', 'digest', 'path', 'bytes', 'summary', 'extra', 'template', 'manifest'):
             with self.subTest(case=case):
@@ -198,26 +226,7 @@ class NativeDraftTests(unittest.TestCase):
                 params = {'sourceCurrent': dict(self.params['sourceCurrent']), 'changes': dict(self.params['changes'])}
                 row = next(row for row in rows if row['id'] == 'AN-T-1')
                 original, manifest = self.path.read_bytes(), self.selection.manifest_path.read_bytes()
-                if case == 'version':
-                    params['sourceCurrent']['version'] = 2
-                if case == 'selector':
-                    params['sourceCurrent']['extra'] = 'x'
-                if case == 'foreign':
-                    params['sourceCurrent']['ref_id'] = 'XX-T-1'
-                if case == 'digest':
-                    row.pop('_source_sha256')
-                if case == 'path':
-                    row['source_path'] = '../escape.md'
-                if case == 'bytes':
-                    self.path.write_bytes(original.replace(b'Old', b'Altered'))
-                if case == 'summary':
-                    params['changes']['body'] = params['changes']['body'].replace('Example', 'Changed')
-                if case == 'extra':
-                    params['changes']['status'] = 'done'
-                if case == 'template':
-                    row['header_json'] = {**row['header_json'], 'context': {'template': 'epic'}}
-                if case == 'manifest':
-                    self.selection.manifest_path.write_bytes(manifest + b'changed')
+                self._alter_stale_draft_input(case, params, row, original, manifest)
                 with self.assertRaises((InputError, SourceChanged)):
                     create_draft(self.selection, params, current_rows=rows)
                 self.assertFalse((self.control / '001_TICKETS/TASKS/01_draft').exists())

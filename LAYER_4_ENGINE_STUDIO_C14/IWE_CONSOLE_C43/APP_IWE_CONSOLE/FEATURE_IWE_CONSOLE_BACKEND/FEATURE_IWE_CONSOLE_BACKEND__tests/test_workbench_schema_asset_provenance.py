@@ -9,8 +9,17 @@ import tempfile
 import unittest
 from unittest.mock import Mock, patch
 
-from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (ContentRule, DeclarationSource, _schema_from_rules, compile_content_schema, content_schema_from_statements)  # noqa: E402
-from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import compile_header_rules, header_rules_from_statements  # noqa: E402
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (  # noqa: E402
+    ContentRule,
+    DeclarationSource,
+    _schema_from_rules,
+    compile_content_schema,
+    content_schema_from_statements,
+)
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (  # noqa: E402
+    compile_header_rules,
+    header_rules_from_statements,
+)
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (  # noqa: E402
     declared_header_schema,
 )
@@ -29,9 +38,12 @@ APP_ROOT = Path(__file__).resolve().parents[3]
 
 
 class WorkbenchSchemaAssetTests(WorkbenchSchemaFixture):
-    def test_asset_is_deterministic_pinned_and_rejected_when_stale(self) -> None:
+    def test_asset_is_deterministic_pinned_and_rejected_when_stale(
+        self,
+    ) -> None:
         declaration = atom(
-            "CA-R-DECL", form="Declaration",
+            "CA-R-DECL",
+            form="Declaration",
             body="""## Claim
 
 ### Formal Claim
@@ -51,7 +63,13 @@ declare_entity(entity_name="Summary", relation_name="IS_PROPERTY_OF", base_path=
         payload = json.loads(first)
         self.assertEqual(2, payload["schema_version"])
         self.assertEqual({"1", "2"}, set(payload["modes"]))
-        self.assertEqual(["content.summary"], [item["name"] for item in payload["modes"]["2"]["content"]["content_columns"]])
+        self.assertEqual(
+            ["content.summary"],
+            [
+                item["name"]
+                for item in payload["modes"]["2"]["content"]["content_columns"]
+            ],
+        )
         self.assertEqual(64, len(payload["input_digest"]))
 
         with tempfile.TemporaryDirectory() as directory:
@@ -60,36 +78,61 @@ declare_entity(entity_name="Summary", relation_name="IS_PROPERTY_OF", base_path=
             loaded = load_image_schema(path)
             self.assertEqual(compilation, loaded)
             stale = dict(declaration, _content_bytes=b"## Claim\n\nChanged.\n")
-            self.assertNotEqual(first, schema_asset([stale], compile_schema([stale], content, header)))
+            self.assertNotEqual(
+                first,
+                schema_asset(
+                    [stale], compile_schema([stale], content, header)
+                ),
+            )
             self.assertEqual(compilation, load_image_schema(path))
 
 
-    def test_inherited_header_format_preserves_both_declaration_sources(self) -> None:
-        parent = atom("CA-R-2716", form="Declaration", body="""## Claim
+    def test_inherited_header_format_preserves_both_declaration_sources(
+        self,
+    ) -> None:
+        parent = atom(
+            "CA-R-2716",
+            form="Declaration",
+            body="""## Claim
 
 ### Formal Claim
 
 ```python
 property_rule(address="Atom.Header.Carrier Destination.File.*", value_format="string")
 ```
-""")
-        name = atom("CA-R-2717", form="Declaration", body="""## Claim
+""",
+        )
+        name = atom(
+            "CA-R-2717",
+            form="Declaration",
+            body="""## Claim
 
 ### Formal Claim
 
 ```python
 property_rule(address="Atom.Header.Carrier Destination.File.Name", values="1")
 ```
-""")
-        path_atom = atom("CA-R-2718", form="Declaration", body=name["content_markdown"].replace("File.Name", "File.Path"))
-        compilation = compile_schema([parent, name, path_atom], compile_content_schema([]))
-        columns = {column.path[-1]: column for column in compilation.mode_one.columns}
+""",
+        )
+        path_atom = atom(
+            "CA-R-2718",
+            form="Declaration",
+            body=name["content_markdown"].replace("File.Name", "File.Path"),
+        )
+        compilation = compile_schema(
+            [parent, name, path_atom], compile_content_schema([])
+        )
+        columns = {
+            column.path[-1]: column for column in compilation.mode_one.columns
+        }
         for field, reference in (("name", "CA-R-2717"), ("path", "CA-R-2718")):
             rule = columns[field].rules[0]
             self.assertEqual(reference, rule.source.reference)
             self.assertEqual("CA-R-2716", rule.format_source.reference)
         asset_path = Path(self.temporary.name) / "schema.json"
-        asset_path.write_bytes(schema_asset([parent, name, path_atom], compilation))
+        asset_path.write_bytes(
+            schema_asset([parent, name, path_atom], compilation)
+        )
         self.assertEqual(compilation, load_image_schema(asset_path))
 
 
@@ -115,7 +158,9 @@ property_rule(address="Atom.Header.Carrier Destination.File.Name", values="1")
         with self.assertRaisesRegex(ValueError, "digest mismatch"):
             load_image_schema(path)
         payload.pop("input_digest")
-        payload["input_digest"] = hashlib.sha256(canonical(payload).encode("utf-8")).hexdigest()
+        payload["input_digest"] = hashlib.sha256(
+            canonical(payload).encode("utf-8")
+        ).hexdigest()
         path.write_text(json.dumps(payload))
         with self.assertRaises(ValueError):
             load_image_schema(path)
@@ -126,8 +171,12 @@ property_rule(address="Atom.Header.Carrier Destination.File.Name", values="1")
         binding = DeclarationSource("CA-R-FORM", 2, "form.md")
         occurrence = DeclarationSource("CA-R-CHILD", 3, "child.md")
         wildcard = DeclarationSource("CA-R-FORMAT", 4, "format.md")
-        wildcard_ancestor = DeclarationSource("CA-R-OTHER-PARENT", 5, "other-parent.md")
-        wildcard_binding = DeclarationSource("CA-R-OTHER-FORM", 6, "other-form.md")
+        wildcard_ancestor = DeclarationSource(
+            "CA-R-OTHER-PARENT", 5, "other-parent.md"
+        )
+        wildcard_binding = DeclarationSource(
+            "CA-R-OTHER-FORM", 6, "other-form.md"
+        )
         rules = header_rules_from_statements([
             ("Atom/Workflow", ancestor),
             ("Workflow.Header.Form:: [in (Workflow)]", binding),
@@ -136,7 +185,9 @@ property_rule(address="Atom.Header.Carrier Destination.File.Name", values="1")
             ("FormatOwner.Header.Form:: [in (Workflow)]", wildcard_binding),
             ("FormatOwner.Header.Context.*:: [string]", wildcard),
         ])
-        child = next(rule for rule in rules if rule.path == ("context", "label"))
+        child = next(
+            rule for rule in rules if rule.path == ("context", "label")
+        )
         self.assertEqual(occurrence, child.source)
         self.assertEqual(wildcard, child.format_source)
         self.assertEqual((ancestor, binding, wildcard_ancestor, wildcard_binding), child.provenance)
@@ -152,7 +203,9 @@ property_rule(address="Atom.Header.Carrier Destination.File.Name", values="1")
                     if c["name"] == "header.context.label")["rules"][0]
         rule["provenance"].append(rule["provenance"][0])
         payload.pop("input_digest")
-        payload["input_digest"] = hashlib.sha256(canonical(payload).encode("utf-8")).hexdigest()
+        payload["input_digest"] = hashlib.sha256(
+            canonical(payload).encode("utf-8")
+        ).hexdigest()
         path.write_text(json.dumps(payload))
         with self.assertRaises(ValueError):
             load_image_schema(path)
@@ -177,7 +230,9 @@ property_rule(address="Atom.Header.Carrier Destination.File.Name", values="1")
             ("Workflow.Header.Form:: [in (Workflow)]", occurrence),
             ("Workflow.Content.Steps[string]", occurrence),
         ])
-        shared_rule = next(rule for rule in shared.rules if rule.path == ("steps",))
+        shared_rule = next(
+            rule for rule in shared.rules if rule.path == ("steps",)
+        )
         self.assertEqual((ancestry, occurrence), shared_rule.provenance)
         self.assertEqual(occurrence, shared_rule.source)
         compilation = compile_schema([], content, declared_header_schema(()))
@@ -189,10 +244,14 @@ property_rule(address="Atom.Header.Carrier Destination.File.Name", values="1")
         self.assertEqual(content.columns[0].applies({"role": "Operations", "form": "Workflow"}),
                          loaded.content.columns[0].applies({"role": "Operations", "form": "Workflow"}))
         payload = json.loads(path.read_bytes())
-        contributors = payload["modes"]["1"]["content"]["rules"][0]["provenance"]
+        contributors = payload["modes"]["1"]["content"]["rules"][0][
+            "provenance"
+        ]
         contributors.append(contributors[0])
         payload.pop("input_digest")
-        payload["input_digest"] = hashlib.sha256(canonical(payload).encode("utf-8")).hexdigest()
+        payload["input_digest"] = hashlib.sha256(
+            canonical(payload).encode("utf-8")
+        ).hexdigest()
         path.write_text(json.dumps(payload))
         with self.assertRaises(ValueError):
             load_image_schema(path)
@@ -207,11 +266,20 @@ property_rule(address="Atom.Header.Carrier Destination.File.Name", values="1")
             load_image_schema(path)
 
 
-    def test_project_generator_uses_one_reader_capture_and_writes_exact_bytes(self) -> None:
+    def test_project_generator_uses_one_reader_capture_and_writes_exact_bytes(
+        self,
+    ) -> None:
         row = atom(header={"atom_id": "CA-R-1"})
-        draft = atom("CA-R-2", header={"atom_id": "CA-R-2"}, body="## Summary\n\nEdited Draft.\n")
+        draft = atom(
+            "CA-R-2",
+            header={"atom_id": "CA-R-2"},
+            body="## Summary\n\nEdited Draft.\n",
+        )
         draft["status_group"] = "Draft"
-        reader = Mock(capture=Mock(side_effect=[([row], []), ([row, draft], [])]), model_rows=Mock(return_value=[]))
+        reader = Mock(
+            capture=Mock(side_effect=[([row], []), ([row, draft], [])]),
+            model_rows=Mock(return_value=[]),
+        )
         with patch(
             "IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.generate_workbench_schema.SourceReader",
             return_value=reader,
@@ -224,7 +292,9 @@ property_rule(address="Atom.Header.Carrier Destination.File.Name", values="1")
 
 
     def test_project_generator_emits_declared_status_groups(self) -> None:
-        row = atom(form="Declaration", body="""## Claim
+        row = atom(
+            form="Declaration",
+            body="""## Claim
 
 ### Formal Claim
 
@@ -237,16 +307,25 @@ declare_entity(
     status_groups={"Backlog": "Backlog"},
 )
 ```
-""")
-        ordinary = atom("CA-R-2", body="## Claim\n\n### Formal Claim\n\n```python\nvalue = 1\n```\n")
+""",
+        )
+        ordinary = atom(
+            "CA-R-2",
+            body="## Claim\n\n### Formal Claim\n\n```python\nvalue = 1\n```\n",
+        )
         rows = [row, ordinary]
-        reader = Mock(capture=Mock(return_value=(rows, [])), model_rows=Mock(return_value=rows))
+        reader = Mock(
+            capture=Mock(return_value=(rows, [])),
+            model_rows=Mock(return_value=rows),
+        )
         with patch(
             "IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.generate_workbench_schema.SourceReader",
             return_value=reader,
         ):
             asset = json.loads(compile_project_schema(Path("/project")))
-        self.assertEqual([["Plan", "Backlog", "Backlog"]], asset["status_groups"])
+        self.assertEqual(
+            [["Plan", "Backlog", "Backlog"]], asset["status_groups"]
+        )
 
 if __name__ == "__main__":
     unittest.main()

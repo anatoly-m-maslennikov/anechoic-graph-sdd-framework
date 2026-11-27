@@ -8,14 +8,30 @@ from types import SimpleNamespace
 
 import yaml
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import native_header_view
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
-    active_spec_directories, native_carrier_path, spec_lens_directories, project_goal_filename,
-    DRAFT_DIRECTORY, ARCHIVE_DIRECTORY, READY_DIRECTORY, TICKET_DIRECTORY, PROJECT_CONFIG_DIRECTORY,
+    native_header_view,
 )
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_carrier
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import read_structure
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import CEILINGS, ReadContext
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    active_spec_directories,
+    native_carrier_path,
+    spec_lens_directories,
+    project_goal_filename,
+    DRAFT_DIRECTORY,
+    ARCHIVE_DIRECTORY,
+    READY_DIRECTORY,
+    TICKET_DIRECTORY,
+    PROJECT_CONFIG_DIRECTORY,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    parse_carrier,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    read_structure,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    CEILINGS,
+    ReadContext,
+)
 
 from . import common
 from .native_draft_guards import _check_owner, _summary
@@ -28,12 +44,22 @@ def _revision_root(selection, row, structure_snapshot=None, current_rows=None):
         raise common.SourceChanged("Current carrier path is invalid.")
     relative = Path(relative)
     path = selection.root / relative
-    root_goal = path.parent == selection.root and project_goal_filename(path.name)
-    if (not selection.root.is_absolute() or not selection.control_root.is_relative_to(selection.root)
-            or selection.manifest_path.parent not in {selection.root, selection.control_root}
-            or relative.is_absolute() or ".." in relative.parts or (not root_goal and not path.is_relative_to(selection.control_root))
-            or path == selection.manifest_path):
-        raise common.InputError("sourceCurrent", "Select an admitted Current carrier.")
+    root_goal = path.parent == selection.root and project_goal_filename(
+        path.name
+    )
+    if (
+        not selection.root.is_absolute()
+        or not selection.control_root.is_relative_to(selection.root)
+        or selection.manifest_path.parent
+        not in {selection.root, selection.control_root}
+        or relative.is_absolute()
+        or ".." in relative.parts
+        or (not root_goal and not path.is_relative_to(selection.control_root))
+        or path == selection.manifest_path
+    ):
+        raise common.InputError(
+            "sourceCurrent", "Select an admitted Current carrier."
+        )
     atom_id = row.get("id", "")
     header = native_header_view(row.get("header_json"))
     context = header.get("context") if isinstance(header, dict) else None
@@ -61,34 +87,73 @@ def _task_revision_root(selection, row, current_rows, path, atom_id, context, st
     if current_rows is None:
         raise common.SourceChanged('Current owner capture is unavailable.')
     capture = SimpleNamespace(atoms=current_rows)
-    owner_directory, _ = _check_owner(selection, context.get("container"), current_rows, capture)
+    owner_directory, _ = _check_owner(
+        selection, context.get("container"), current_rows, capture
+    )
     flat_root = next((selection.control_root / name for name in (TICKET_DIRECTORY, "001_TICKETS", "__TKT") if path.is_relative_to(selection.control_root / name)), selection.control_root / TICKET_DIRECTORY) / "TASKS"
     root = owner_directory or flat_root
-    if path.parent == flat_root / ("" if status in {"active", "in_queue"} else str(status)):
+    if path.parent == flat_root / (
+        "" if status in {"active", "in_queue"} else str(status)
+    ):
         root = flat_root
     directory = () if status in {"active", "in_queue"} else (status,)
     template = context.get("template")
-    if (not isinstance(status, str) or status not in {"active", "in_queue", "backlog", "done", "canceled", "resolved"}
-            or template not in {"task", "epic"} or not path.is_relative_to(root)
-            or path.relative_to(root).parts[:-1] != directory
-            or not re.fullmatch(re.escape(atom_id) + (r"-.+--.+\.md" if "atom_family" in row["header_json"]
-                                                     else "-" + template.upper() + r"--.+\.md"), path.name)):
-        raise common.InputError("sourceCurrent", "Select a native Task or Epic in its Current directory.")
+    if (
+        not isinstance(status, str)
+        or status
+        not in {
+            "active",
+            "in_queue",
+            "backlog",
+            "done",
+            "canceled",
+            "resolved",
+        }
+        or template not in {"task", "epic"}
+        or not path.is_relative_to(root)
+        or path.relative_to(root).parts[:-1] != directory
+        or not re.fullmatch(
+            re.escape(atom_id)
+            + (
+                r"-.+--.+\.md"
+                if "atom_family" in row["header_json"]
+                else "-" + template.upper() + r"--.+\.md"
+            ),
+            path.name,
+        )
+    ):
+        raise common.InputError(
+            "sourceCurrent",
+            "Select a native Task or Epic in its Current directory.",
+        )
     return root
 
 
 def _spec_lens_owner(root, tier, lens, status, parameters):
-    directories = () if status == 'ready' else active_spec_directories(
-        tier, spec_lens_directories(lens), parameters=parameters)
+    directories = (
+        ()
+        if status == "ready"
+        else active_spec_directories(
+            tier, spec_lens_directories(lens), parameters=parameters
+        )
+    )
     candidates = [directories]
-    if status != 'ready':
-        candidates.append(() if lens.upper() == 'SPEC' else tuple('__' + part.upper() for part in lens.split('/')))
+    if status != "ready":
+        candidates.append(
+            ()
+            if lens.upper() == "SPEC"
+            else tuple("__" + part.upper() for part in lens.split("/"))
+        )
         if tier in {-1, 0, 1, 2}:
             candidates.append(())
     for candidate in candidates:
         if not candidate:
             return root
-        if len(root.parts) >= len(candidate) and tuple(part.upper() for part in root.parts[-len(candidate):]) == candidate:
+        if (
+            len(root.parts) >= len(candidate)
+            and tuple(part.upper() for part in root.parts[-len(candidate) :])
+            == candidate
+        ):
             return root.parents[len(candidate) - 1]
     raise ValueError("Lens path disagrees")
 
@@ -96,8 +161,14 @@ def _spec_lens_owner(root, tier, lens, status, parameters):
 def _spec_revision_root(selection, structure_snapshot, path, header, context, status):
     lens = context.get("lens")
     container = context.get("container")
-    if not isinstance(lens, str) or not isinstance(container, dict) or set(container) != {"component"}:
-        raise common.InputError("sourceCurrent", "Select a component-owned SPEC carrier.")
+    if (
+        not isinstance(lens, str)
+        or not isinstance(container, dict)
+        or set(container) != {"component"}
+    ):
+        raise common.InputError(
+            "sourceCurrent", "Select a component-owned SPEC carrier."
+        )
     from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import component_manifest_parent, manifest_inputs
     try:
         reader = ReadContext(roots=[str(selection.root)], limits=dict(CEILINGS))
@@ -117,8 +188,14 @@ def _spec_revision_root(selection, structure_snapshot, path, header, context, st
                for part in root.relative_to(selection.control_root).parts):
             raise ValueError("Nested carrier path")
         snapshot_path = getattr(selection, "structure_snapshot", None)
-        if (structure_snapshot is not None or snapshot_path is not None) and root != selection.control_root:
-            snapshot = structure_snapshot if structure_snapshot is not None else read_structure(snapshot_path)
+        if (
+            structure_snapshot is not None or snapshot_path is not None
+        ) and root != selection.control_root:
+            snapshot = (
+                structure_snapshot
+                if structure_snapshot is not None
+                else read_structure(snapshot_path)
+            )
             declaration = Path(snapshot.component(component).source_path)
             parent = component_manifest_parent(declaration, fields.get('parameters'))
             if selection.control_root / parent != root.parent:
@@ -135,8 +212,10 @@ def _revision_header(header):
     return result
 
 
-def _state_bytes(raw, bounds, path, version, body, status, *, update_timestamp=False):
-    header = raw[bounds[0]:bounds[1]].decode('utf-8')
+def _state_bytes(
+    raw, bounds, path, version, body, status, *, update_timestamp=False
+):
+    header = raw[bounds[0] : bounds[1]].decode("utf-8")
     try:
         node = yaml.compose(header, Loader=yaml.SafeLoader)
         states = [value for key, value in node.value if key.value == 'state']
@@ -167,22 +246,56 @@ def _state_bytes(raw, bounds, path, version, body, status, *, update_timestamp=F
         if after != expected:
             raise ValueError('Unexpected header change')
         return candidate
-    except (AttributeError, KeyError, TypeError, ValueError, yaml.YAMLError) as error:
-        raise common.InputError('sourceCurrent', 'Task needs valid scalar state fields.') from error
+    except (
+        AttributeError,
+        KeyError,
+        TypeError,
+        ValueError,
+        yaml.YAMLError,
+    ) as error:
+        raise common.InputError(
+            "sourceCurrent", "Task needs valid scalar state fields."
+        ) from error
 
 
 def _task_path(selection, header, body, status, version, owner, root=None):
-    projected = {**header, 'state': {**header['state'], 'status': status, 'version': version}}
+    projected = {
+        **header,
+        "state": {**header["state"], "status": status, "version": version},
+    }
     try:
         owner_directory, owner_template = owner
-        path = native_carrier_path(projected, _summary(body), project_root=selection.control_root,
-                                   owner_directory=owner_directory, owner_template=owner_template)
-        flat_root = root if root in {selection.control_root / name / 'TASKS' for name in ('__TKT', '001_TICKETS', TICKET_DIRECTORY)} else selection.control_root / TICKET_DIRECTORY / 'TASKS'
+        path = native_carrier_path(
+            projected,
+            _summary(body),
+            project_root=selection.control_root,
+            owner_directory=owner_directory,
+            owner_template=owner_template,
+        )
+        flat_root = (
+            root
+            if root
+            in {
+                selection.control_root / name / "TASKS"
+                for name in ("__TKT", "001_TICKETS", TICKET_DIRECTORY)
+            }
+            else selection.control_root / TICKET_DIRECTORY / "TASKS"
+        )
         if root == flat_root:
-            directory = DRAFT_DIRECTORY if status == 'draft' else ARCHIVE_DIRECTORY if status == 'archived' else '' if status in {'active', 'in_queue'} else status
+            directory = (
+                DRAFT_DIRECTORY
+                if status == "draft"
+                else ARCHIVE_DIRECTORY
+                if status == "archived"
+                else ""
+                if status in {"active", "in_queue"}
+                else status
+            )
             return flat_root / directory / path.name
         return path
     except ValueError as error:
-        raise common.InputError('summary', 'Task Header or Summary cannot be projected to a path.') from error
+        raise common.InputError(
+            "summary", "Task Header or Summary cannot be projected to a path."
+        ) from error
 
 

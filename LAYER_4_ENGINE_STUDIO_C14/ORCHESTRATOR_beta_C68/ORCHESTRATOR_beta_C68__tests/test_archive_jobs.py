@@ -14,7 +14,10 @@ from watchdog.events import FileModifiedEvent, FileMovedEvent
 from .. import ORCHESTRATOR_beta_C68__shared as orchestrator
 from .. import archive_jobs
 from ..ORCHESTRATOR_beta_C68__shared import (
-    ArchiveCoverageLost, ArchiveInputsChanged, DeltaRequiresReconciliation, WorkerIngestionFailure,
+    ArchiveCoverageLost,
+    ArchiveInputsChanged,
+    DeltaRequiresReconciliation,
+    WorkerIngestionFailure,
 )
 from .ORCHESTRATOR_beta_C68__tests__shared import RunFixture, project_jobs
 
@@ -26,18 +29,31 @@ class ArchiveJobsTests(unittest.TestCase):
         self.addCleanup(self.watcher.close)
         self.jobs.watcher = Mock()
         self.jobs.watcher.archive_roots.return_value = ("control/09_archived",)
-        self.jobs._communicate_worker = Mock(return_value=json.dumps({"snapshot": {}, "carrier_hashes": {}}))
+        self.jobs._communicate_worker = Mock(
+            return_value=json.dumps({"snapshot": {}, "carrier_hashes": {}})
+        )
         self.jobs._record_ingestion_issues = Mock()
-        self.deferred = {"roots": ["control/09_archived"], "endpoints": {}, "carrier_hashes": {}}
+        self.deferred = {
+            "roots": ["control/09_archived"],
+            "endpoints": {},
+            "carrier_hashes": {},
+        }
         self.jobs._accept_deferred_archive(self.deferred)
 
-    def test_changed_fence_or_root_inventory_retries_without_watcher_event(self):
+    def test_changed_fence_or_root_inventory_retries_without_watcher_event(
+        self,
+    ):
         for fence, after in ((False, ("control/09_archived",)), (True, ())):
             with self.subTest(fence=fence):
-                self.jobs.archive_run = RunFixture(state="running", started_at=0)
+                self.jobs.archive_run = RunFixture(
+                    state="running", started_at=0
+                )
                 self.jobs.archive_dirty = False
                 self.jobs.watcher.capture_fence.return_value = fence
-                self.jobs.watcher.archive_roots.side_effect = [("control/09_archived",), after]
+                self.jobs.watcher.archive_roots.side_effect = [
+                    ("control/09_archived",),
+                    after,
+                ]
                 with self.assertRaises(ArchiveInputsChanged) as changed:
                     self.jobs._archive_snapshot({})
                 self.jobs.archive_result = changed.exception
@@ -55,15 +71,26 @@ class ArchiveJobsTests(unittest.TestCase):
 
         def capture(directory, request):
             self.assertTrue(request["batch_full"])
-            self.assertEqual(self.jobs.deferred_archive["snapshot"], request["archive"]["seed"]["snapshot"])
+            self.assertEqual(
+                self.jobs.deferred_archive["snapshot"],
+                request["archive"]["seed"]["snapshot"],
+            )
             (Path(directory) / "generation-batches.jsonl").write_bytes(b"x")
             return {"batch_artifact": descriptor, "snapshot_sha256": "b" * 64}
 
-        with patch.object(self.jobs, "_run_archive_worker", side_effect=capture):
-            self.jobs.archive_result = self.jobs._archive_snapshot({}, None, self.jobs.deferred_archive)
+        with patch.object(
+            self.jobs, "_run_archive_worker", side_effect=capture
+        ):
+            self.jobs.archive_result = self.jobs._archive_snapshot(
+                {}, None, self.jobs.deferred_archive
+            )
         directory = Path(self.jobs.archive_result[1]["_archive_temp"].name)
         self.assertTrue(directory.name.startswith("anechoic-archive-"))
-        with patch.object(archive_jobs, "admit_generation", return_value={"generation": "new"}) as admit:
+        with patch.object(
+            archive_jobs,
+            "admit_generation",
+            return_value={"generation": "new"},
+        ) as admit:
             self.jobs._finish_archive()
         self.assertEqual("succeeded", self.jobs.archive_run.state)
         self.assertFalse(directory.exists())
@@ -79,16 +106,29 @@ class ArchiveJobsTests(unittest.TestCase):
         def capture(directory, _request):
             directories.append(Path(directory))
             (directories[-1] / "generation-batches.jsonl").write_bytes(b"x")
-            return {"batch_artifact": {"sha256": "a" * 64, "bytes": 1}, "snapshot_sha256": "b" * 64}
+            return {
+                "batch_artifact": {"sha256": "a" * 64, "bytes": 1},
+                "snapshot_sha256": "b" * 64,
+            }
 
-        with patch.object(self.jobs, "_run_archive_worker", side_effect=capture):
+        with patch.object(
+            self.jobs, "_run_archive_worker", side_effect=capture
+        ):
             self.jobs.watcher.capture_fence.return_value = False
             with self.assertRaises(ArchiveInputsChanged):
-                self.jobs._archive_snapshot({}, None, self.jobs.deferred_archive)
+                self.jobs._archive_snapshot(
+                    {}, None, self.jobs.deferred_archive
+                )
             self.assertFalse(directories[-1].exists())
             self.jobs.watcher.capture_fence.return_value = True
-            self.jobs.archive_result = self.jobs._archive_snapshot({}, None, self.jobs.deferred_archive)
-        with patch.object(archive_jobs, "admit_generation", side_effect=ValueError("rejected")):
+            self.jobs.archive_result = self.jobs._archive_snapshot(
+                {}, None, self.jobs.deferred_archive
+            )
+        with patch.object(
+            archive_jobs,
+            "admit_generation",
+            side_effect=ValueError("rejected"),
+        ):
             self.jobs._finish_archive()
         self.assertFalse(directories[-1].exists())
         self.assertEqual("failed", self.jobs.archive_run.state)
@@ -114,7 +154,9 @@ class ArchiveJobsTests(unittest.TestCase):
         archive.mkdir(parents=True)
         watcher.start()
         self.assertTrue(watcher.watch_archives())
-        self.jobs.archive_run = RunFixture(state="running", started_at=0, run_id="b" * 32)
+        self.jobs.archive_run = RunFixture(
+            state="running", started_at=0, run_id="b" * 32
+        )
 
         def capture(_directory, _request):
             watcher.dispatch(FileMovedEvent(str(root.parent / "outside.md"), str(archive / "first\nfile.md")))
@@ -172,18 +214,31 @@ class ArchiveJobsTests(unittest.TestCase):
         self.jobs.archive_run = RunFixture(state="running", started_at=0)
         self.jobs._accept_deferred_archive(dict(self.deferred))
         self.assertFalse(self.jobs.archive_dirty)
-        self.jobs._accept_deferred_archive(self.deferred | {"carrier_hashes": {"off-path.md": "a" * 64}})
+        self.jobs._accept_deferred_archive(
+            self.deferred | {"carrier_hashes": {"off-path.md": "a" * 64}}
+        )
         self.assertTrue(self.jobs.archive_dirty)
         self.jobs.archive_dirty = False
-        self.jobs._accept_deferred_archive(self.deferred | {"roots": ["control/other/09_archived"]})
+        self.jobs._accept_deferred_archive(
+            self.deferred | {"roots": ["control/other/09_archived"]}
+        )
         self.assertTrue(self.jobs.archive_dirty)
 
     def test_preserves_worker_diagnostic_rows_under_archive_source(self):
-        issues = [{"relative_path": "control/09_archived/bad.md", "code": "invalid_schema"}]
+        issues = [
+            {
+                "relative_path": "control/09_archived/bad.md",
+                "code": "invalid_schema",
+            }
+        ]
         self.jobs.archive_run = RunFixture(state="running", started_at=0)
-        self.jobs.archive_result = WorkerIngestionFailure("Worker failed", {"source": "atom", "issues": issues})
+        self.jobs.archive_result = WorkerIngestionFailure(
+            "Worker failed", {"source": "atom", "issues": issues}
+        )
         self.jobs._finish_archive()
-        self.jobs._record_ingestion_issues.assert_called_once_with("archive", issues)
+        self.jobs._record_ingestion_issues.assert_called_once_with(
+            "archive", issues
+        )
 
     def test_combines_archive_issues_and_reconciles_collision_with_live_scope(self):
         deferred = {"relative_path": "off-path.md", "code": "invalid_schema"}
@@ -201,7 +256,9 @@ class ArchiveJobsTests(unittest.TestCase):
         self.jobs._record_ingestion_issues.assert_not_called()
 
     def test_incremental_reconciliation_tries_full_archive_once(self):
-        self.deferred.update({"checkpoint": {}, "snapshot": {"atoms": [], "relations": []}})
+        self.deferred.update(
+            {"checkpoint": {}, "snapshot": {"atoms": [], "relations": []}}
+        )
         self.jobs.archive_run = RunFixture(state="running", started_at=0)
         self.jobs.archive_result = ({}, {"unchanged": True})
         with patch.object(self.jobs, "_admit_archive", side_effect=DeltaRequiresReconciliation):
@@ -213,7 +270,9 @@ class ArchiveJobsTests(unittest.TestCase):
 
         replacement = {"snapshot": {"atoms": [], "relations": []}, "carrier_hashes": {}}
         self.jobs.watcher.watch_archives.return_value = True
-        with patch.object(self.jobs, "_archive_snapshot", return_value=({}, replacement)) as capture:
+        with patch.object(
+            self.jobs, "_archive_snapshot", return_value=({}, replacement)
+        ) as capture:
             self.jobs._capture_archive(self.jobs.deferred_archive)
         capture.assert_called_once_with({}, None, self.jobs.deferred_archive)
         self.assertTrue(self.jobs.archive_result[1]["replace"])

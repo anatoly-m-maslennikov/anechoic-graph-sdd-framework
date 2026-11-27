@@ -20,8 +20,13 @@ from mcp.server.lowlevel import Server
 MCP_ROOT = Path(__file__).resolve().parents[1]
 TOOLS_ROOT = MCP_ROOT.parents[1] / "FEATURE_PROGRAMMATIC" / "FEATURE_TOOLS"
 
-from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import create_shared_http_app as create_app  # noqa: E402
-from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import HEALTH_PATH, MCP_PATH  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import (  # noqa: E402
+    create_shared_http_app as create_app,
+)
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import (  # noqa: E402
+    HEALTH_PATH,
+    MCP_PATH,
+)
 
 
 def _query_tool():
@@ -42,34 +47,52 @@ class FakeGateway:
         self.status_calls = 0
         self.status_error = None
         self.fail_initialize = False
-        self.snapshot = {"initialized": False, "advertised_tools": [],
-                         "calls": []}
+        self.snapshot = {
+            "initialized": False,
+            "advertised_tools": [],
+            "calls": [],
+        }
         self.__class__.instances.append(self)
 
     def build_server(self):
         async def list_tools(_context, _params):
-            return types.ListToolsResult(tools=[types.Tool(
-                name="echo_project", description="test", inputSchema={
-                    "type": "object", "properties": {"project_root": {"type": "string"}},
-                    "required": ["project_root"], "additionalProperties": False,
-                })])
+            return types.ListToolsResult(
+                tools=[
+                    types.Tool(
+                        name="echo_project",
+                        description="test",
+                        inputSchema={
+                            "type": "object",
+                            "properties": {"project_root": {"type": "string"}},
+                            "required": ["project_root"],
+                            "additionalProperties": False,
+                        },
+                    )
+                ]
+            )
 
         async def call_tool(_context, params):
             root = params.arguments.get("project_root")
             value = {"project_root": root, "instance": str(id(self))}
             return types.CallToolResult(
-                content=[types.TextContent(type="text", text=json.dumps(value))],
+                content=[
+                    types.TextContent(type="text", text=json.dumps(value))
+                ],
                 structuredContent=value,
             )
 
-        return Server("shared-test", on_list_tools=list_tools, on_call_tool=call_tool)
+        return Server(
+            "shared-test", on_list_tools=list_tools, on_call_tool=call_tool
+        )
 
     async def initialize(self):
         self.initialize_calls += 1
         if self.fail_initialize:
             raise RuntimeError("private initialization detail")
         self.initialized = True
-        self.snapshot.update(initialized=True, advertised_tools=["echo_project"])
+        self.snapshot.update(
+            initialized=True, advertised_tools=["echo_project"]
+        )
 
     async def close(self):
         self.close_calls += 1
@@ -189,10 +212,15 @@ class SharedHTTPTests(unittest.IsolatedAsyncioTestCase):
     async def test_beta_next_gateway_refuses_unsupervised_start(self):
         gateway = create_app(self.config).gateway
         with (
-            patch("MCP_PATCHBAY_C21.FEATURE_MCP.shared_backend.runtime_stack", return_value="beta_next"),
+            patch(
+                "MCP_PATCHBAY_C21.FEATURE_MCP.shared_backend.runtime_stack",
+                return_value="beta_next",
+            ),
             patch.dict(os.environ, {}, clear=True),
             patch.object(gateway, "_start_backend") as start,
-            self.assertRaisesRegex(Exception, "^beta_next_requires_supervised_shared_http$"),
+            self.assertRaisesRegex(
+                Exception, "^beta_next_requires_supervised_shared_http$"
+            ),
         ):
             await gateway.initialize()
         start.assert_not_called()
@@ -203,19 +231,29 @@ class SharedHTTPTests(unittest.IsolatedAsyncioTestCase):
         ) as client:
             return await client.request(method, path, **kwargs)
 
-    async def test_health_is_preinit_snapshot_and_accept_negotiation_is_explicit(self):
+    async def test_health_is_preinit_snapshot_and_accept_negotiation_is_explicit(
+        self,
+    ):
         response = await self.request()
         self.assertEqual(200, response.status_code)
         self.assertEqual({"state": "pending"}, response.json())
         self.assertEqual(0, self.gateway.initialize_calls)
         self.assertGreaterEqual(self.gateway.status_calls, 1)
 
-        response = await self.request(headers={"accept": "text/html;q=1,application/json;q=.5"})
+        response = await self.request(
+            headers={"accept": "text/html;q=1,application/json;q=.5"}
+        )
         self.assertEqual(200, response.status_code)
-        self.assertTrue(response.headers["content-type"].startswith("text/html"))
-        self.assertIn("<dt>Gateway readiness</dt><dd>pending</dd>", response.text)
+        self.assertTrue(
+            response.headers["content-type"].startswith("text/html")
+        )
+        self.assertIn(
+            "<dt>Gateway readiness</dt><dd>pending</dd>", response.text
+        )
 
-        response = await self.request(headers={"accept": "text/html;q=0,application/json;q=1"})
+        response = await self.request(
+            headers={"accept": "text/html;q=0,application/json;q=1"}
+        )
         self.assertEqual({"state": "pending"}, response.json())
 
     async def test_loopback_host_and_origin_guard_are_shared(self):
@@ -226,7 +264,9 @@ class SharedHTTPTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_health_snapshot_failure_is_safe_and_reported_unbound(self):
         self.gateway.status_error = RuntimeError("secret status detail")
-        with patch("MCP_PATCHBAY_C21.FEATURE_MCP.shared_http_server.warning") as report:
+        with patch(
+            "MCP_PATCHBAY_C21.FEATURE_MCP.shared_http_server.warning"
+        ) as report:
             response = await self.request()
         self.assertEqual(503, response.status_code)
         self.assertEqual({"state": "unavailable"}, response.json())
@@ -242,26 +282,44 @@ class SharedHTTPTests(unittest.IsolatedAsyncioTestCase):
     async def test_lifespan_closes_after_partial_initialize_failure(self):
         self.gateway.fail_initialize = True
         with self.assertRaises(BaseException):
-            async with self.app.starlette_app.router.lifespan_context(self.app.starlette_app):
+            async with self.app.starlette_app.router.lifespan_context(
+                self.app.starlette_app
+            ):
                 pass
         self.assertEqual(1, self.gateway.close_calls)
 
-    async def test_lifespan_initializes_host_and_routes_two_project_calls(self):
-        async with self.app.starlette_app.router.lifespan_context(self.app.starlette_app):
+    async def test_lifespan_initializes_host_and_routes_two_project_calls(
+        self,
+    ):
+        async with self.app.starlette_app.router.lifespan_context(
+            self.app.starlette_app
+        ):
             async with httpx2.AsyncClient(
                 transport=httpx2.ASGITransport(app=self.app),
                 base_url="http://127.0.0.1:8092",
             ) as client:
-                transport = streamable_http_client("http://127.0.0.1:8092" + MCP_PATH, http_client=client)
+                transport = streamable_http_client(
+                    "http://127.0.0.1:8092" + MCP_PATH, http_client=client
+                )
                 streams = await transport.__aenter__()
                 session = ClientSession(*streams)
                 await session.__aenter__()
                 try:
                     await session.initialize()
-                    first = await session.call_tool("echo_project", {"project_root": "/repos/alpha"})
-                    second = await session.call_tool("echo_project", {"project_root": "/repos/beta"})
-                    self.assertEqual("/repos/alpha", first.structured_content["project_root"])
-                    self.assertEqual("/repos/beta", second.structured_content["project_root"])
+                    first = await session.call_tool(
+                        "echo_project", {"project_root": "/repos/alpha"}
+                    )
+                    second = await session.call_tool(
+                        "echo_project", {"project_root": "/repos/beta"}
+                    )
+                    self.assertEqual(
+                        "/repos/alpha",
+                        first.structured_content["project_root"],
+                    )
+                    self.assertEqual(
+                        "/repos/beta",
+                        second.structured_content["project_root"],
+                    )
                     health = await client.get(HEALTH_PATH)
                     self.assertEqual({"state": "ready"}, health.json())
                 finally:

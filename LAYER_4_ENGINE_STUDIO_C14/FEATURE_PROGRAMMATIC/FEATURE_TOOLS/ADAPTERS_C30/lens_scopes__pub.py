@@ -20,7 +20,11 @@ def compile_lens_groups(parameters):
             or not members
         ):
             raise ValueError(
-                f"Lens group {name!r} must have a simple name and a nonempty list of members"
+                (
+                    "Lens group "
+                    f"{name!r}"
+                    " must have a simple name and a nonempty list of members"
+                )
             )
         for member in members:
             spec_lens_directories(member)
@@ -62,7 +66,13 @@ def validate_lens_whitelist(lenses, groups):
             _covers(right, path) for path in left
         ):
             raise ValueError(
-                f"Lens scopes {left_name!r} and {right_name!r} partially overlap"
+                (
+                    "Lens scopes "
+                    f"{left_name!r}"
+                    " and "
+                    f"{right_name!r}"
+                    " partially overlap"
+                )
             )
 
 

@@ -14,10 +14,12 @@ p.add_argument("checkout", type=pathlib.Path)
 p.add_argument("--lean", required=True)
 a = p.parse_args()
 base = a.checkout / "LAYER_3_ENGINE_STUDIO_C14"
-draft = base / "FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ATOM_LIFECYCLE/native_draft.py"
-source = (
-    base
-    / "IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/native_source_rows.py"
+draft = base / (
+    "FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ATOM_LIFECYCLE/native_draft.py"
+)
+source = base / (
+    "IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/"
+    "native_source_rows.py"
 )
 result = {"findings": [], "unresolved": []}
 
@@ -26,7 +28,8 @@ def fn(tree, name):
     return next(
         n
         for n in tree.body
-        if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)) and n.name == name
+        if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))
+        and n.name == name
     )
 
 
@@ -65,13 +68,22 @@ try:
         revalidate = fn(s, "revalidate_native")
         changed = fn(s, "_changed_inputs")
         assert has(
-            revalidate, "capture_native(selection, previous=previous, paths=changed)"
+            revalidate,
+            ("capture_native(selection, previous=previous, paths=changed)"),
         )
         assert has(revalidate, "previous is None or previous.errors")
-        assert has(revalidate, "before.get(path) != previous.versions.get(path)")
+        assert has(
+            revalidate, ("before.get(path) != previous.versions.get(path)")
+        )
         assert has(capture, "previous is not None and paths is not None")
-        assert has(capture, "_changed_inputs(reader, root, control, previous, paths)")
-        assert has(changed, "[root / path for path in sorted(changed - directories)]")
+        assert has(
+            capture,
+            ("_changed_inputs(reader, root, control, previous, paths)"),
+        )
+        assert has(
+            changed,
+            ("[root / path for path in sorted(changed - directories)]"),
+        )
         assert any(
             isinstance(x, ast.Assign)
             and ast.unparse(x) == "changed, directories = (set(), set())"
@@ -96,7 +108,17 @@ try:
         method = "metadata revalidation with changed paths"
     else:
         raise ValueError("unrecognized promotion capture: " + expr)
-    lean = f"""set_option linter.unusedVariables false\n-- AST projection: population means all carriers, changed means selected changed paths.\ndef reads (population changed : Nat) : Nat := {projected}\n-- Independent invariant: with a valid prior capture and unchanged metadata, no carrier body is reread.\n#eval reads 3 0 == 0\n-- Control: a changed carrier remains eligible for reading.\n#eval reads 3 1 > 0\n"""
+    lean = (
+        "set_option linter.unusedVariables false\n"
+        "-- AST projection: population means all carriers, chang"
+        "ed means selected changed paths.\n"
+        f"def reads (population changed : Nat) : Nat := {projected}\n"
+        "-- Independent invariant: with a valid prior capture an"
+        "d unchanged metadata, no carrier body is reread.\n"
+        "#eval reads 3 0 == 0\n"
+        "-- Control: a changed carrier remains eligible for reading.\n"
+        "#eval reads 3 1 > 0\n"
+    )
     with tempfile.TemporaryDirectory() as d:
         path = pathlib.Path(d) / "Check.lean"
         path.write_text(lean)
@@ -108,14 +130,17 @@ try:
         or run.stdout.split() != ["true", "true"]
         and run.stdout.split() != ["false", "true"]
     ):
-        raise ValueError("Lean failed or unexpected output: " + run.stdout + run.stderr)
+        raise ValueError(
+            ("Lean failed or unexpected output: ") + run.stdout + run.stderr
+        )
     if run.stdout.split()[0] == "false":
         result["findings"].append(
             {
                 "path": str(draft.relative_to(a.checkout)),
                 "detail": (
-                    "Promotion full capture rereads unchanged carrier bodies (Lean cou"
-                    "nterexample: 3 carriers, 0 changed)."
+                    "Promotion full capture rereads unchanged carrier"
+                    " bodies (Lean counterexample: 3 carriers, 0 chan"
+                    "ged)."
                 ),
                 "projection": method,
             }

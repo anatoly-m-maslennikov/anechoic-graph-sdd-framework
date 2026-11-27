@@ -11,9 +11,9 @@ relations:
   IS_SOLUTION_FOR:
   - AN-S-3286@3
 state:
-  status: "active"
-  version: 2
-  updated_at: "2026-11-26T16:43:14.668816+00:00"
+  status: active
+  version: 5
+  updated_at: "2026-11-27T16:29:34.309627+00:00"
 ---
 
 ## Summary
@@ -21,11 +21,6 @@ state:
 Bind a Codex PreToolUse request to its worktree and session.
 
 ## Claim
-
-### Prose Claim
-
-The hook resolves the nearest Git worktree, checks input and session
-consistency, and returns an allow, deny, or empty response.
 
 ### Formal Claim
 
@@ -62,5 +57,4 @@ component_workflow(
 
 ## Details
 
-This Solution defines the expected event sequence for the selected workflow.
-Trace conformance requires recorded evidence.
+Use AN-S-2686 for trace evidence.

@@ -8,8 +8,8 @@ context:
   lens: DES
 state:
   status: active
-  version: 26
-  updated_at: "2026-11-22T09:43:04.650265+00:00"
+  version: 27
+  updated_at: "2026-11-27T17:35:01.150345+00:00"
 ---
 
 ## Summary
@@ -20,12 +20,9 @@ Delegate MCP calls to canonical Tools
 
 ### Prose Claim
 
-MCP maps Backend's JSON catalog to MCP Tools. For each invocation, it
-forwards the Tool name, arguments, and request context. It returns the
-Backend result or failure. Backend owns selection, validation, and
-delegation to the canonical Tool.
+MCP maps Backend's JSON catalog to MCP Tools. Forward admitted calls under AN-S-3366. Backend owns Tool selection, validation, and dispatch under AN-S-1384.
 
-**every** Finder **and** **every** Doer dry run **must** remain independently executable **without** MCP. A direct executable invocation of a ANECHOIC Markdown Atom Doer with `--apply` **must** reject the request **unless** it carries the authorized project-local MCP delegation **and** its sealed Initiative action envelope. Introducing MCP **must not** create a Tool dependency on MCP **or** another APPS unit.
+Apply AN-S-5173 to direct Tool invocation.
 
 ## Details
 

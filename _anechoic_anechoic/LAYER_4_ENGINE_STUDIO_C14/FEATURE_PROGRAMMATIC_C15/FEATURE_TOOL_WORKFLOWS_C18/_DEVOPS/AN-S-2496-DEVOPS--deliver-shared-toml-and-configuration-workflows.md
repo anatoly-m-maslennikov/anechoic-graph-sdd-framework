@@ -8,8 +8,8 @@ context:
   lens: DevOps
 state:
   status: active
-  version: 13
-  updated_at: 2026-10-27 19:59:27 +0400
+  version: 15
+  updated_at: "2026-11-27T17:35:01.150345+00:00"
 ---
 ## Summary
 
@@ -17,7 +17,7 @@ Deliver shared TOML and configuration workflows
 
 ## Scope
 
-Workflow admission owns identity, Version/time, lifecycle and complete schema decisions. Connector calls use CA-D-625 only to verify the supplied request, source preconditions and permission and to perform the explicit mechanical operation. A connector does not choose those decisions.
+Apply the shared connector boundary in AN-S-2478.
 
 The required shared TOML connector and configuration-specific workflow delivery contract under TOOL_WORKFLOWS. It establishes no additional configuration connector, storage backend or runtime path.
 
@@ -25,13 +25,13 @@ The required shared TOML connector and configuration-specific workflow delivery 
 
 ### Prose Claim
 
-one shared TOML connector under CONNECTOR_TOOLS supplies CA-O-218 complete Read under CA-D-631 **and** CA-O-204 Modify under CA-D-625 for admitted configuration sources. The Project Structure and Project Settings workflows each supply their own complete schema/domain validation and permission/currentness boundary.
+One shared TOML connector under CONNECTOR_TOOLS supplies CA-O-218 complete Read under CA-D-631 and CA-O-204 Modify under CA-D-625. Apply AN-S-2417 to Project Structure and Project Settings Workflow authority.
 
 ## Details
 
 Within the existing service envelope, a configuration workflow carries its explicit configuration kind, admitted logical source identity, exact expected source revision/digest, complete proposed TOML delta and applicable schema/validation evidence. The workflow parses and validates the complete proposed configuration before its effect; the connector verifies the supplied admission evidence and rechecks expected source state and permission without choosing the schema. No arbitrary filename or configuration kind can grant authority. Project Structure and Project Settings retain their configured authoritative TOML identities; their workflows reject generated/protected field edits and preserve unrelated values. Configuration-source bindings remain private adapter details, not new connector identities.
 
-The TOML connector returns the exact bound state and proposed or observed result with source-state evidence. It does not choose a configuration schema, invent a Scope Unit or weaken the workflow's validation. Project Structure changes, including Scope Unit Create, follow its structural schema; Project Settings changes follow its settings schema. CA-O-205 uses CA-O-219 Read **before** CA-O-209 Modify; CA-O-206 uses CA-O-220 Read **before** CA-O-210 Modify. their read Steps call the same CA-O-218 Action. complete successful Read data **and** observed source-state evidence become explicit patch-Step inputs **before** proposal validation. their patch Steps call the same CA-O-204 Action. no Workflow reads storage itself **or** assumes that Modify implies Read support.
+Apply AN-S-2425 to the complete Read, its source-state evidence as input to proposal validation, and the subsequent Modify. Project Structure changes, including Scope Unit Create, use the structural schema. Project Settings changes follow the settings schema. CA-O-205 uses CA-O-219 before CA-O-209. CA-O-206 uses CA-O-220 before CA-O-210. The Read Steps call CA-O-218, and the patch Steps call CA-O-204. Neither Workflow reads storage directly or assumes Modify implies Read. The connector returns the exact bound state and proposed or observed result with its source-state evidence.
 
 Return actual source revision/effect observations and explicit validation, stale, denied, failed, uncertain or no-op results through the existing shared result/recording contract. Physical TOML carrier names remain current adapter bindings. Preserve prior admitted configuration and accepted history within each action's claimed safety boundary; a serialization contract does not prove atomic publication.
 

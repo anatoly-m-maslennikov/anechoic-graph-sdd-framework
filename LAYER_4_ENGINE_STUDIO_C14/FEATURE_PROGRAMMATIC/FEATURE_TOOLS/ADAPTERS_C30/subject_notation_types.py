@@ -9,9 +9,10 @@ from pydantic.dataclasses import dataclass
 
 _STRICT = ConfigDict(strict=True, extra="forbid")
 
+
 @dataclass(frozen=True, config=_STRICT)
 class GrammarSource:
-    """One stable current grammar source selector, without observed evidence."""
+    "One stable current grammar source selector, without observed evidence."
 
     atom_id: str
     path: str
@@ -29,7 +30,7 @@ class GrammarPin:
 
 @dataclass(frozen=True, config=_STRICT)
 class SubjectProfile:
-    """Immutable syntax and declared grammar sources for one explicit profile."""
+    "Immutable syntax and declared grammar sources for one explicit profile."
 
     name: str
     separators: tuple[str, ...]
@@ -46,7 +47,8 @@ class Span:
 
 
 def _validate_selector(
-    value: Mapping[str, str], validate: ValidatorFunctionWrapHandler,
+    value: Mapping[str, str],
+    validate: ValidatorFunctionWrapHandler,
 ) -> Mapping[str, str]:
     validate(value)
     return value
@@ -54,7 +56,7 @@ def _validate_selector(
 
 @dataclass(frozen=True, config=_STRICT)
 class InitialAtomSelector:
-    """The syntax-only initial ``atom(...)`` component of an approved Subject."""
+    "The syntax-only initial ``atom(...)`` component of an approved Subject."
 
     literal: str
     selector: Annotated[Mapping[str, str], WrapValidator(_validate_selector)]
@@ -121,13 +123,30 @@ class SelectionSuffix:
 @dataclass(frozen=True, config=_STRICT)
 class PathStep:
     operator: str
-    operand: Name | ValueLiteral | MembershipPredicate | Qualification | DeclaredReference | Path | RelationChain | SelectionGroup | SelectionSuffix
+    operand: (
+        Name
+        | ValueLiteral
+        | MembershipPredicate
+        | Qualification
+        | DeclaredReference
+        | Path
+        | RelationChain
+        | SelectionGroup
+        | SelectionSuffix
+    )
     span: Span
 
 
 @dataclass(frozen=True, config=_STRICT)
 class Path:
-    head: Name | InitialAtomSelector | DeclaredReference | Path | RelationChain | SelectionGroup
+    head: (
+        Name
+        | InitialAtomSelector
+        | DeclaredReference
+        | Path
+        | RelationChain
+        | SelectionGroup
+    )
     steps: tuple[PathStep, ...]
     value_format: FormatReference | None
     value_cardinality: Cardinality | None
@@ -162,30 +181,32 @@ def namespace_local_expression(
 ) -> Path | RelationChain | None:
     """Return the local expression below an explicit ANECHOIC namespace."""
 
-    if not isinstance(expression, RelationChain) or len(expression.endpoints) < 2:
+    if (
+        not isinstance(expression, RelationChain)
+        or len(expression.endpoints) < 2
+    ):
         return None
     root, namespace = expression.endpoints[:2]
-    qualified_root = (
-        isinstance(root.head, Name) and root.head.value in {"MODEL", "PROJECT STRUCTURE"}
-        and len(root.steps) == 1 and root.steps[0].operator == "//"
-        and isinstance(root.steps[0].operand, Name)
-        and root.value_format is None and root.value_cardinality is None
-    )
-    if ((qualified_root or (isinstance(root.head, Name)
-                            and root.head.value in {"ANECHOIC_MODEL", "ANECHOIC_STRUCTURE"}
-                            and not root.steps))
-            and expression.links[0].operator == "<+"
-            and expression.links[0].relation_type is None):
-        endpoints, links = expression.endpoints[1:], expression.links[1:]
-        return endpoints[0] if len(endpoints) == 1 else replace(expression, endpoints=endpoints, links=links)
+    qualified_root = _qualified_root(root)
     if (
-        not isinstance(root.head, Name) or root.head.value != "ANECHOIC"
-        or root.steps
-        or not isinstance(namespace.head, Name) or namespace.head.value not in {"MODEL", "STRUCTURE"}
-        or namespace.steps
-        or any(link.operator != "<+" or link.relation_type is not None
-               for link in expression.links[:min(2, len(expression.links))])
+        (
+            qualified_root
+            or (
+                isinstance(root.head, Name)
+                and root.head.value in {"ANECHOIC_MODEL", "ANECHOIC_STRUCTURE"}
+                and not root.steps
+            )
+        )
+        and expression.links[0].operator == "<+"
+        and expression.links[0].relation_type is None
     ):
+        endpoints, links = expression.endpoints[1:], expression.links[1:]
+        return (
+            endpoints[0]
+            if len(endpoints) == 1
+            else replace(expression, endpoints=endpoints, links=links)
+        )
+    if _invalid_namespace(root, namespace, expression):
         return None
     if len(expression.endpoints) == 2:
         return namespace
@@ -198,9 +219,36 @@ def namespace_local_expression(
 class SubjectNotationError(ValueError):
     """A bounded Subject-notation failure with a stable machine code."""
 
-    def __init__(self, code: str, message: str, span: Span | None = None) -> None:
+    def __init__(
+        self, code: str, message: str, span: Span | None = None
+    ) -> None:
         self.code = code
         self.span = span
         super().__init__(message)
 
 
+def _qualified_root(root):
+    return (
+        isinstance(root.head, Name)
+        and root.head.value in {"MODEL", "PROJECT STRUCTURE"}
+        and len(root.steps) == 1
+        and root.steps[0].operator == "//"
+        and isinstance(root.steps[0].operand, Name)
+        and root.value_format is None
+        and root.value_cardinality is None
+    )
+
+
+def _invalid_namespace(root, namespace, expression):
+    return (
+        not isinstance(root.head, Name)
+        or root.head.value != "ANECHOIC"
+        or root.steps
+        or not isinstance(namespace.head, Name)
+        or namespace.head.value not in {"MODEL", "STRUCTURE"}
+        or namespace.steps
+        or any(
+            link.operator != "<+" or link.relation_type is not None
+            for link in expression.links[: min(2, len(expression.links))]
+        )
+    )

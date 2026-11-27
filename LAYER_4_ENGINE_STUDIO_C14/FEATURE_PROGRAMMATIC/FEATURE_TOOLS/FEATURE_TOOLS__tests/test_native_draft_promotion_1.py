@@ -3,9 +3,9 @@ import sys
 import unittest
 
 
-TOOLS = Path(__file__).resolve().parents[1]
-ENGINE = TOOLS.parents[1]
-sys.path[:0] = [str(TOOLS), str(ENGINE / "IWE_CONSOLE_C43")]
+sys.path.insert(0, str((ENGINE := (TOOLS := Path(__file__).resolve()
+    .parents[1]).parents[1]) / "IWE_CONSOLE_C43"))
+sys.path.insert(0, str(TOOLS))
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
     capture_native,
@@ -38,8 +38,12 @@ class NativePromotionTests(fixtures.NativePromotionTests, unittest.TestCase):
         self.assertFalse(self.draft.exists())
         capture = capture_native(self.selection)
         self.assertFalse(capture.errors)
-        archived = next(row for row in capture.atoms if row["_exact_ref"] == "AN-T-1@1")
-        current = next(row for row in capture.atoms if row["_exact_ref"] == "AN-T-1@2")
+        archived = next(
+            row for row in capture.atoms if row["_exact_ref"] == "AN-T-1@1"
+        )
+        current = next(
+            row for row in capture.atoms if row["_exact_ref"] == "AN-T-1@2"
+        )
         self.assertEqual("Archived", archived["status_group"])
         self.assertEqual("Current", current["status_group"])
         self.assertEqual(old.split(b"---\n", 2)[2], archived["_content_bytes"])
@@ -67,7 +71,10 @@ class NativePromotionTests(fixtures.NativePromotionTests, unittest.TestCase):
         )
 
         with patch(
-            "FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.native_draft_promotion.effects.remove",
+            (
+                'FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.native_draf'
+                't_promotion.effects.remove'
+            ),
             return_value=effects.Result(errors=[{"code": "injected"}]),
         ):
             output = promote_draft(
@@ -97,7 +104,10 @@ class NativePromotionTests(fixtures.NativePromotionTests, unittest.TestCase):
                 conflict = None
                 if case == "collision":
                     conflict = self.write(
-                        "001_TICKETS/TASKS/09_archived/AN-T-1@2-TASK--example.md",
+                        (
+                            '001_TICKETS/TASKS/09_archived/AN-T-1@2-TASK--exam'
+                            'ple.md'
+                        ),
                         "AN-T-1",
                         version=2,
                         status="archived",
@@ -128,8 +138,12 @@ class NativePromotionTests(fixtures.NativePromotionTests, unittest.TestCase):
         )
         self.promotion["targetStatus"] = "done"
         with self.assertRaises(InputError):
-            promote_draft(self.selection, self.promotion, current_rows=self.rows)
-        self.assertFalse((self.control / "001_TICKETS/TASKS/09_archived").exists())
+            promote_draft(
+                self.selection, self.promotion, current_rows=self.rows
+            )
+        self.assertFalse(
+            (self.control / "001_TICKETS/TASKS/09_archived").exists()
+        )
         self.assertEqual([], list(outside.iterdir()))
 
     def test_failed_replacement_rolls_back_archive(self):
@@ -142,7 +156,10 @@ class NativePromotionTests(fixtures.NativePromotionTests, unittest.TestCase):
             errors=[{"code": "stale_state", "message": "injected failure"}]
         )
         with patch(
-            "FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.native_draft_promotion.effects.replace",
+            (
+                'FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.native_draf'
+                't_promotion.effects.replace'
+            ),
             return_value=failure,
         ):
             output = promote_draft(
@@ -154,7 +171,8 @@ class NativePromotionTests(fixtures.NativePromotionTests, unittest.TestCase):
         self.assertTrue(self.path.exists())
         self.assertFalse(
             (
-                self.control / "001_TICKETS/TASKS/09_archived/AN-T-1@1-TASK--example.md"
+                self.control
+                / "001_TICKETS/TASKS/09_archived/AN-T-1@1-TASK--example.md"
             ).exists()
         )
         self.assertFalse(capture_native(self.selection).errors)
@@ -176,7 +194,10 @@ class NativePromotionTests(fixtures.NativePromotionTests, unittest.TestCase):
             return original_remove(root, path, digest)
 
         with patch(
-            "FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.native_draft_promotion.effects.remove",
+            (
+                'FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.native_draf'
+                't_promotion.effects.remove'
+            ),
             side_effect=remove,
         ):
             output = promote_draft(
@@ -190,7 +211,8 @@ class NativePromotionTests(fixtures.NativePromotionTests, unittest.TestCase):
         )
         self.assertFalse(
             (
-                self.control / "001_TICKETS/TASKS/09_archived/AN-T-1@1-TASK--example.md"
+                self.control
+                / "001_TICKETS/TASKS/09_archived/AN-T-1@1-TASK--example.md"
             ).exists()
         )
         self.assertFalse(capture_native(self.selection).errors)
@@ -213,7 +235,10 @@ class NativePromotionTests(fixtures.NativePromotionTests, unittest.TestCase):
             return original_remove(root, path, digest)
 
         with patch(
-            "FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.native_draft_promotion.effects.remove",
+            (
+                'FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.native_draf'
+                't_promotion.effects.remove'
+            ),
             side_effect=remove,
         ):
             output = promote_draft(
@@ -230,7 +255,8 @@ class NativePromotionTests(fixtures.NativePromotionTests, unittest.TestCase):
         )
         self.assertTrue(
             (
-                self.control / "001_TICKETS/TASKS/09_archived/AN-T-1@1-TASK--example.md"
+                self.control
+                / "001_TICKETS/TASKS/09_archived/AN-T-1@1-TASK--example.md"
             ).exists()
         )
 
@@ -241,7 +267,8 @@ class NativePromotionTests(fixtures.NativePromotionTests, unittest.TestCase):
         )
 
         archive = (
-            self.control / "001_TICKETS/TASKS/09_archived/AN-T-1@1-TASK--example.md"
+            self.control
+            / "001_TICKETS/TASKS/09_archived/AN-T-1@1-TASK--example.md"
         )
 
         def replace(*args):
@@ -251,7 +278,10 @@ class NativePromotionTests(fixtures.NativePromotionTests, unittest.TestCase):
             )
 
         with patch(
-            "FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.native_draft_promotion.effects.replace",
+            (
+                'FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.native_draf'
+                't_promotion.effects.replace'
+            ),
             side_effect=replace,
         ):
             output = promote_draft(
@@ -279,7 +309,10 @@ class NativePromotionTests(fixtures.NativePromotionTests, unittest.TestCase):
             return outcome
 
         with patch(
-            "FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.native_draft.common.write_destination",
+            (
+                'FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.native_draf'
+                't.common.write_destination'
+            ),
             side_effect=write,
         ):
             output = promote_draft(
@@ -289,7 +322,8 @@ class NativePromotionTests(fixtures.NativePromotionTests, unittest.TestCase):
         self.assertEqual("source_changed", output["errors"][0]["code"])
         self.assertFalse(
             (
-                self.control / "001_TICKETS/TASKS/09_archived/AN-T-1@1-TASK--example.md"
+                self.control
+                / "001_TICKETS/TASKS/09_archived/AN-T-1@1-TASK--example.md"
             ).exists()
         )
         self.assertTrue(self.path.exists())

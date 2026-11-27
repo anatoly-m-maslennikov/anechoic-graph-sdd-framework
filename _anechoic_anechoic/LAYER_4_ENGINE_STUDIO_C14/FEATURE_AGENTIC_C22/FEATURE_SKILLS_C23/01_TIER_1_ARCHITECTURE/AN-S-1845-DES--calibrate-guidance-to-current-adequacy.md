@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1845
+concern:
+  subject: "Prompt"
+  path: "Model/Graph/Node//Artifact//SSOT//Realization/Content"
+  relation: "is_contained_by"
 container:
   component: C23
 tier: 1
@@ -8,8 +12,8 @@ context:
   lens: DES
 state:
   status: active
-  version: 15
-  updated_at: 2026-11-11 16:35:08 +0400
+  version: 16
+  updated_at: "2026-11-27T16:16:01.404965+00:00"
 ---
 ## Summary
 

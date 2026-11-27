@@ -194,7 +194,7 @@ def _reaches(graph, start, goal):
 
 
 def python_import_order(texts, occurrences):
-    """Return witnessed failures and unresolved structural cycles, without executing code."""
+    """Return witnessed failures and structural cycles without execution."""
     trees, sites, graph = _capture(texts, occurrences)
     results, confirmed_edges = [], set()
     for entry in sorted(trees):
@@ -211,7 +211,16 @@ def python_import_order(texts, occurrences):
                         column,
                         "python_import_order",
                         "unresolved",
-                        f"structural cycle includes {src}:{line} imports {dst}; execution order or premature read not established",
+                        (
+                            "structural cycle includes "
+                            f"{src}"
+                            ":"
+                            f"{line}"
+                            " imports "
+                            f"{dst}"
+                            "; execution order or premature read not "
+                            "established"
+                        ),
                     )
                 )
     return results

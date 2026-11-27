@@ -77,7 +77,10 @@ def _selected_profile(contract, solution, action):
     if action in profiles:
         return profiles[action]
     if action in _operation_claims(solution):
-        return next((profile for profile in profiles.values() if _tool_api(profile)), {})
+        return next(
+            (profile for profile in profiles.values() if _tool_api(profile)),
+            {},
+        )
     return {}
 
 
@@ -114,13 +117,18 @@ def _compare_validated(model, canonical, action, lean, observations):
             return compare_cli_spec(model, canonical, interface=profile['interface'],
                                     action=action, lean=lean, mermaid=mermaid), None
         if _tool_api(profile or contract):
-            mermaid = _require_diagram(model, solution, observations,
-                                       action=action)
-            observations['comparison'] = {
-                'claims_pin': _model_pin(canonical['claims']),
-                'action': action, 'kind': 'tool_api'}
-            return compare_tool_api_spec(model, canonical, action=action, lean=lean, mermaid=mermaid), None
-    if languages[1] == 'python' and _supports_trace(model, contract):
+            mermaid = _require_diagram(
+                model, solution, observations, action=action
+            )
+            observations["comparison"] = {
+                "claims_pin": _model_pin(canonical["claims"]),
+                "action": action,
+                "kind": "tool_api",
+            }
+            return compare_tool_api_spec(
+                model, canonical, action=action, lean=lean, mermaid=mermaid
+            ), None
+    if languages[1] == "python" and _supports_trace(model, contract):
         message = _comparison_gap(contract, action)
         if message is not None:
             return None, finding(model['contract']['source'], 'action', message)
@@ -241,8 +249,10 @@ def _evidence(comparison, action, programs, observations, model_pin,
 
 def generate_framing_cases(root, component_id, manifest, solution):
     """Generate Python test inputs and expectations from two pinned framing Specs."""
-    model = load_boundary_model(root, component_id, manifest, solution=solution)
-    return build_python_framing_cases(select_formal_claims(model, 'framing'))
+    model = load_boundary_model(
+        root, component_id, manifest, solution=solution
+    )
+    return build_python_framing_cases(select_formal_claims(model, "framing"))
 
 
 def _translate(model, lean):

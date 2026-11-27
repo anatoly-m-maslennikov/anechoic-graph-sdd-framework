@@ -55,7 +55,9 @@ class PollCompleteTests(unittest.TestCase):
 
 class CaptureFenceTests(unittest.TestCase):
     def setUp(self):
-        self.root = Path(self.enterContext(tempfile.TemporaryDirectory())).resolve()
+        self.root = Path(
+            self.enterContext(tempfile.TemporaryDirectory())
+        ).resolve()
         self.control = self.root / "control"
         self.control.mkdir()
         jobs = project_jobs(self.root)
@@ -82,13 +84,18 @@ class CaptureFenceTests(unittest.TestCase):
         self.assertIsNotNone(epoch)
         diagnostics = StringIO()
         with redirect_stderr(diagnostics):
-            self.assertTrue(self.watcher.capture_fence(epoch, timeout=3, run_id="a" * 32))
+            self.assertTrue(
+                self.watcher.capture_fence(epoch, timeout=3, run_id="a" * 32)
+            )
         self.assertEqual("", diagnostics.getvalue())
         before = carrier.stat()
         carrier.write_text("edited")
         os.utime(carrier, ns=(before.st_atime_ns, before.st_mtime_ns))
         with redirect_stderr(diagnostics):
-            self.assertIs(self.watcher.capture_fence(epoch, timeout=3, run_id="a" * 32), False)
+            self.assertIs(
+                self.watcher.capture_fence(epoch, timeout=3, run_id="a" * 32),
+                False,
+            )
         report = json.loads(diagnostics.getvalue())
         self.assertEqual(("watcher_fence_failed", "foreground", "source_changed", "WARNING", "a" * 32),
                          (report["code"], report["phase"], report["reason"], report["severity"], report["run_id"]))
@@ -98,7 +105,10 @@ class CaptureFenceTests(unittest.TestCase):
         with patch.dict(os.environ, ANECHOIC_LOG_LEVEL="ERROR"), redirect_stderr(StringIO()) as filtered:
             self.assertIs(self.watcher.capture_fence(epoch, timeout=3, run_id="a" * 32), False)
         self.assertEqual("", filtered.getvalue())
-        self.assertIn(str(carrier), [change["old_path"] for change in self.watcher.changes(1)])
+        self.assertIn(
+            str(carrier),
+            [change["old_path"] for change in self.watcher.changes(1)],
+        )
 
     def test_archive_baselines_are_separate_and_skip_installed_sources(self):
         archive = self.control / "09_archived"
@@ -140,8 +150,10 @@ class CaptureFenceTests(unittest.TestCase):
         package = self.root / "typed"
         package.mkdir()
         self.assertIs(self.watcher.replay_fence(epoch, timeout=3), True)
-        self.assertEqual({str(path) for path in (script, yaml, asset, package)},
-                         {change["old_path"] for change in self.watcher.changes(0)})
+        self.assertEqual(
+            {str(path) for path in (script, yaml, asset, package)},
+            {change["old_path"] for change in self.watcher.changes(0)},
+        )
 
     def test_same_path_replacement_keeps_root_and_invalidates_intermediate_epoch(self):
         archive = self.control / "09_archived"
@@ -220,7 +232,9 @@ class CaptureFenceTests(unittest.TestCase):
         deadline = time.monotonic() + 3
         while time.monotonic() < deadline and paths != {str(foreground), str(background)}:
             events = self.watcher.changes(0.1)
-            self.assertNotIn("coverage_recovered", [event["event_type"] for event in events])
+            self.assertNotIn(
+                "coverage_recovered", [event["event_type"] for event in events]
+            )
             paths.update(event["old_path"] for event in events)
         self.assertEqual({str(foreground), str(background)}, paths)
 

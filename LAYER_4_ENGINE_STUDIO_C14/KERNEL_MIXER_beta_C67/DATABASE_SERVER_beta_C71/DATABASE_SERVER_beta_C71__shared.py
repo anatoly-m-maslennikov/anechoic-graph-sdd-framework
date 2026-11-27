@@ -106,7 +106,9 @@ def open_database(database_path=None, manifest_sha256=None, instance_id=None, jo
 
 
 def _error(code, message, status):
-    return JSONResponse({"error": {"code": code, "message": message}}, status_code=status)
+    return JSONResponse(
+        {"error": {"code": code, "message": message}}, status_code=status
+    )
 
 
 async def _read_object(request, size_limit, *allowed_fields):
@@ -231,8 +233,10 @@ def create_app(connection, instance_id, manifest_sha256, project_root=None, resu
     if project_root is not None and has_table(connection, "main", "ops_project_binding"):
         initialize_accepted_model(connection, project_root)
         state = managed(connection)
-        restore_model = connection.execute("SELECT count(*) FROM duckdb_tables() WHERE database_name = 'temp' "
-                                           "AND table_name = 'model_projection_restore_needed'").fetchone()[0]
+        restore_model = connection.execute(
+            "SELECT count(*) FROM duckdb_tables() WHERE database_name = 'temp' "
+            "AND table_name = 'model_projection_restore_needed'"
+        ).fetchone()[0]
         if restore_model:
             if state[1] and connection.execute("SELECT id FROM ops_generation").fetchone():
                 from .model_projection import replace_model_projection
@@ -302,7 +306,9 @@ def main():
     parser.add_argument("--database-path")
     parser.add_argument("--project-root", type=Path)
     parser.add_argument("--result-ttl-seconds", type=int)
-    parser.add_argument("--journal-storage", choices=("files", "duckdb"), default="files")
+    parser.add_argument(
+        "--journal-storage", choices=("files", "duckdb"), default="files"
+    )
     parser.add_argument("--journal-relative")
     args = parser.parse_args()
     level = os.environ.get("ANECHOIC_LOG_LEVEL", "INFO")

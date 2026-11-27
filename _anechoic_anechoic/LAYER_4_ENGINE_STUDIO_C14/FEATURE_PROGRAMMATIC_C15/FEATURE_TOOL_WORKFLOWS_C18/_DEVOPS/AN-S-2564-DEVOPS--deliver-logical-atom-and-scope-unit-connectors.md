@@ -8,8 +8,8 @@ context:
   lens: DevOps
 state:
   status: active
-  version: 14
-  updated_at: 2026-11-02 19:44:26 +0400
+  version: 15
+  updated_at: "2026-11-27T15:50:51.353081+00:00"
 ---
 ## Summary
 
@@ -17,7 +17,7 @@ Deliver logical Atom and Scope Unit connectors
 
 ## Scope
 
-Workflow admission owns identity, Version/time, lifecycle and complete schema decisions. Connector calls use CA-D-625 only to verify the supplied request, source preconditions and permission and to perform the explicit mechanical operation. A connector does not choose those decisions.
+Apply the shared connector boundary in AN-S-2478.
 
 The required logical connector request/result contract under registered TOOL_WORKFLOWS, with the current file/TOML adapters as delivery bindings. It defines no new Scope Unit, executable path or admitted runtime/MCP route.
 
@@ -33,7 +33,7 @@ The operation-specific payload is carried inside the existing outer service/perm
 
 Find serializes explicit scope/Property/Subject criteria and returns matching descriptors, not full Atom content. A Subject criterion carries field governs/depends_on/both, exact requested value and match exact/prefix/suffix/contains; prefix uses the selected grammar boundary, while suffix/contains compare literal text. Read returns the complete identified state. Neither operation invokes Modify, and Find does not invoke Read.
 
-A Create workflow carries the complete proposed logical object, expected absence and admitted identity/schema/ownership evidence; its connector receives the explicit selected content. A Modify workflow carries only CA-D-623's explicit logical edits with required expected current state and rejects a Summary change under the same Atom ID before its connector call. The Archive workflow returns the observed archived Atom state and retained history rather than deleting the Atom. The workflow supplies Version/time metadata for every actual changed same-ID update, including Status-only, carrier-only and refinement, advances Version exactly once and records actual time; exact prior history keeps its old Version. No-op preserves Version/time. Summary or Type changes use replacement. Unknown operations, denied scopes and missing/ambiguous/stale target evidence fail without silently widening the request.
+A Create workflow carries the complete proposed logical object, expected absence and admitted identity/schema/ownership evidence; its connector receives the explicit selected content. A Modify workflow carries only CA-D-623's explicit logical edits with required expected current state and rejects a Summary change under the same Atom ID before its connector call. The Archive workflow returns the observed archived Atom state and retained history rather than deleting the Atom. Use AN-S-2517 for legacy sealed-carrier revision metadata and AN-S-1604 for native lifecycle operations. Preserve exact prior history. Summary or Type changes use replacement. Unknown operations, denied scopes and missing/ambiguous/stale target evidence fail without silently widening the request.
 
 Results preserve the exact requested identity/state evidence, admitted permission, validation diagnostics and actual known/unknown effects or no-op. Multiple Atom targets become independent actions under CA-M-372; one failed action retains earlier successes and leaves later targets unperformed. Current Markdown/TOML adapter locators, indexes or digests may support exact source binding internally, but a caller list index cannot select a logical list entry.
 

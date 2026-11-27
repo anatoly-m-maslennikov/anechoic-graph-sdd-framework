@@ -7,7 +7,12 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
 
-from .DATABASE_SERVER_beta_C71__tests__shared import BINDING, _generation, _query, _server
+from .DATABASE_SERVER_beta_C71__tests__shared import (
+    BINDING,
+    _generation,
+    _query,
+    _server,
+)
 
 
 class CodeUnitsTest(unittest.TestCase):
@@ -15,13 +20,22 @@ class CodeUnitsTest(unittest.TestCase):
         with TemporaryDirectory(dir='/tmp') as directory:
             path = Path(directory).resolve() / 'projection.duckdb'
             payload = _generation()
-            graph = {'nodes': [['p', 'package', 'python', 'pkg', 'ok', None, None],
-                               ['m', 'module', 'python', 'pkg/m.py', 'ok', 'p', None]],
-                     'occurrences': [], 'edges': [], 'test_edges': [], 'read_issues': [],
-                     'code_units': [['a', 'm', 'function', 'a', 1, 0],
-                                    ['b', 'm', 'method', 'C.b', 2, 4],
-                                    ['c', 'm', 'class', 'C', 2, 0]],
-                     'code_unit_calls': [['a', 'b', 3, 2]]}
+            graph = {
+                "nodes": [
+                    ["p", "package", "python", "pkg", "ok", None, None],
+                    ["m", "module", "python", "pkg/m.py", "ok", "p", None],
+                ],
+                "occurrences": [],
+                "edges": [],
+                "test_edges": [],
+                "read_issues": [],
+                "code_units": [
+                    ["a", "m", "function", "a", 1, 0],
+                    ["b", "m", "method", "C.b", 2, 4],
+                    ["c", "m", "class", "C", 2, 0],
+                ],
+                "code_unit_calls": [["a", "b", 3, 2]],
+            }
 
             def admit(client, value):
                 payload['graph'] = value
@@ -50,20 +64,46 @@ class CodeUnitsTest(unittest.TestCase):
                 self.assertEqual(400, _query(client, 'SELECT * FROM code_units').status_code)
 
     def invalid_graphs(self, graph):
-        for key in ('code_units', 'code_unit_calls'):
+        for key in ("code_units", "code_unit_calls"):
             yield {name: rows for name, rows in graph.items() if name != key}
-        for row in (['a', 'm', 'function', 'a', 1, 0], ['d', 'p', 'function', 'd', 1, 0],
-                    ['d', 'm', 'function', 'd', 0, 0], ['d', 'm', 'function', 'd', 1, -1]):
-            yield graph | {'code_units': [*graph['code_units'], row]}
-        for row in (['a', 'c', 1, 0], ['a', 'missing', 1, 0], ['a', 'b', 0, 0],
-                    ['a', 'b', 1, -1], ['a', 'b', 3, 2]):
-            yield graph | {'code_unit_calls': [*graph['code_unit_calls'], row]}
+        for row in (
+            ["a", "m", "function", "a", 1, 0],
+            ["d", "p", "function", "d", 1, 0],
+            ["d", "m", "function", "d", 0, 0],
+            ["d", "m", "function", "d", 1, -1],
+        ):
+            yield graph | {"code_units": [*graph["code_units"], row]}
+        for row in (
+            ["a", "c", 1, 0],
+            ["a", "missing", 1, 0],
+            ["a", "b", 0, 0],
+            ["a", "b", 1, -1],
+            ["a", "b", 3, 2],
+        ):
+            yield graph | {"code_unit_calls": [*graph["code_unit_calls"], row]}
 
     def assert_graph(self, client):
         for pattern, columns, expected in (
-            ('(m:ImportNode)-[e:ModuleIncludes]->(u:CodeUnit)', 'm.node_key AS m, u.node_key AS u', [['m', 'a'], ['m', 'b'], ['m', 'c']]),
-            ('(a:CodeUnit)-[e:Calls]->(b:CodeUnit)', 'a.node_key AS a, b.node_key AS b', [['a', 'b']]),
+            (
+                "(m:ImportNode)-[e:ModuleIncludes]->(u:CodeUnit)",
+                "m.node_key AS m, u.node_key AS u",
+                [["m", "a"], ["m", "b"], ["m", "c"]],
+            ),
+            (
+                "(a:CodeUnit)-[e:Calls]->(b:CodeUnit)",
+                "a.node_key AS a, b.node_key AS b",
+                [["a", "b"]],
+            ),
         ):
-            response = _query(client, f'FROM GRAPH_TABLE (anechoic MATCH {pattern} COLUMNS ({columns})) ORDER BY 1, 2')
+            response = _query(
+                client,
+                (
+                    'FROM GRAPH_TABLE (anechoic MATCH '
+                    f'{pattern}'
+                    ' COLUMNS ('
+                    f'{columns}'
+                    ')) ORDER BY 1, 2'
+                ),
+            )
             self.assertEqual(200, response.status_code, response.text)
-            self.assertEqual(expected, response.json()['result']['rows'])
+            self.assertEqual(expected, response.json()["result"]["rows"])

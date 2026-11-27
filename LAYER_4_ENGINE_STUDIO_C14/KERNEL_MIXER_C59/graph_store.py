@@ -90,7 +90,9 @@ def _contribution_counts(
     return references, edge_counts
 
 
-def graph_relations(connection: Any, *, has_edges: bool) -> dict[tuple[str, str], dict[str, list[dict[str, object]]]]:
+def graph_relations(
+    connection: Any, *, has_edges: bool
+) -> dict[tuple[str, str], dict[str, list[dict[str, object]]]]:
     """Read outgoing facts from the native graph without exposing its tables."""
     if not has_edges:
         return {}
@@ -170,10 +172,15 @@ def build_graph(
     columns = ", ".join(_EDGE_KEYS)
     sources = [f"SELECT {columns} FROM internal.{table}" for table in state.tables.values()]
     if not sources:
-        sources = ["SELECT NULL::VARCHAR AS source_kind, NULL::VARCHAR AS source_ref, "
-                   "NULL::VARCHAR AS target_kind, NULL::VARCHAR AS target_ref, "
-                   "NULL::VARCHAR AS relation_type, NULL::BOOLEAN AS derived WHERE FALSE"]
-    connection.execute("CREATE OR REPLACE VIEW main.relations AS " + " UNION ALL ".join(sources))
+        sources = [
+            "SELECT NULL::VARCHAR AS source_kind, NULL::VARCHAR AS source_ref, "
+            "NULL::VARCHAR AS target_kind, NULL::VARCHAR AS target_ref, "
+            "NULL::VARCHAR AS relation_type, NULL::BOOLEAN AS derived WHERE FALSE"
+        ]
+    connection.execute(
+        "CREATE OR REPLACE VIEW main.relations AS "
+        + " UNION ALL ".join(sources)
+    )
     return state
 
 
@@ -268,9 +275,15 @@ def graph_delta_state(
 ) -> tuple[GraphState, set[Reference], set[Reference], set[Edge], set[Edge]]:
     """Build a next graph state from only the materialized owners in one delta."""
     if set(previous.edges) != relation_types:
-        raise ValueError("relation type layout changed; full graph rebuild is required")
-    old_edges = edge_records([*delta.old_atoms.values(), *delta.old_scopes.values()])
-    new_edges = edge_records([*delta.new_atoms.values(), *delta.new_scopes.values()])
+        raise ValueError(
+            "relation type layout changed; full graph rebuild is required"
+        )
+    old_edges = edge_records(
+        [*delta.old_atoms.values(), *delta.old_scopes.values()]
+    )
+    new_edges = edge_records(
+        [*delta.new_atoms.values(), *delta.new_scopes.values()]
+    )
     old_references, old_edge_counts = _contribution_counts(
         delta.old_atoms.values(), delta.old_scopes.values(), old_edges,
     )

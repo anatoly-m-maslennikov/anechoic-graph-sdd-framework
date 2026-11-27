@@ -11,10 +11,8 @@ from pathlib import Path
 from .abort import AbortJobs, WorkerAborted
 from .flow import Flow, safe_target
 from .generation import (
-    CompilerColumnsChanged,
-    DeltaRequiresReconciliation,
-    GenerationBaseChanged,
-    WorkerIngestionFailure,
+    CompilerColumnsChanged, DeltaRequiresReconciliation,
+    GenerationBaseChanged, WorkerIngestionFailure,
     admit_generation,
     confirm_reuse,
     live_reuse,
@@ -149,11 +147,7 @@ class GenerationJobs(ArchiveJobs, StartupGraphJobs, GenerationWorker, AbortJobs,
             if deferred is None and options.get("incremental") and not self.skip_archives:
                 deferred = self._restart_archive(reuse, result)
             self._include_archive_pending(result, deferred)
-            if self.skip_archives and "paths" in result and any(
-                    atom["status_group"] == "Archived" for atom in result["snapshot"]["atoms"]):
-                raise DeltaRequiresReconciliation("Archived Atom requires foreground capture")
-            if self.deferred_archive and paths is not None and deferred is None and self._needs_foreground(result):
-                raise DeltaRequiresReconciliation("Archive paths require foreground capture")
+            self._check_foreground_capture(result, paths, deferred)
             captured = time.monotonic()
             witness = result.get("reuse", reuse)
             if result.get("reuse", True) is None:
@@ -169,6 +163,13 @@ class GenerationJobs(ArchiveJobs, StartupGraphJobs, GenerationWorker, AbortJobs,
             )
             self._flow_effect("generation_reuse_write", outcome="succeeded", detail={"state": "stored"})
         return {"state": "succeeded", **admitted}
+
+    def _check_foreground_capture(self, result, paths, deferred):
+        if self.skip_archives and "paths" in result and any(
+                atom["status_group"] == "Archived" for atom in result["snapshot"]["atoms"]):
+            raise DeltaRequiresReconciliation("Archived Atom requires foreground capture")
+        if self.deferred_archive and paths is not None and deferred is None and self._needs_foreground(result):
+            raise DeltaRequiresReconciliation("Archive paths require foreground capture")
 
     def _admit_live_result(self, directory, result, target, witness):
         unchanged = "unchanged" in result
@@ -204,8 +205,16 @@ class GenerationJobs(ArchiveJobs, StartupGraphJobs, GenerationWorker, AbortJobs,
                                 detail={"coalesced": index > 0}, at=at, trigger=index == 0)
             job.requests.clear()
             self.flow.omitted += job.omitted_requests
+        self._add_file_inputs(context.get("changes", changes))
+        if context.get("retry"):
+            self.flow.input("retry_due")
+        if context.get("lifecycle"):
+            self.flow.input("lifecycle_refresh")
+        return job
+
+    def _add_file_inputs(self, changes):
         file_inputs = []
-        for change in context.get("changes", changes):
+        for change in changes:
             if change:
                 observed_at = change.get("observed_at")
                 detail = {"event_type": change.get("event_type")}
@@ -218,11 +227,6 @@ class GenerationJobs(ArchiveJobs, StartupGraphJobs, GenerationWorker, AbortJobs,
             trigger = self.flow.add("trigger", "file_change", causes=file_inputs)
             if trigger is not None:
                 self.flow.causes.append(trigger)
-        if context.get("retry"):
-            self.flow.input("retry_due")
-        if context.get("lifecycle"):
-            self.flow.input("lifecycle_refresh")
-        return job
 
     def _generation_reuse(self, target, changes, startup):
         reuse = self.generation_reuse if (target == "realization_graph" or

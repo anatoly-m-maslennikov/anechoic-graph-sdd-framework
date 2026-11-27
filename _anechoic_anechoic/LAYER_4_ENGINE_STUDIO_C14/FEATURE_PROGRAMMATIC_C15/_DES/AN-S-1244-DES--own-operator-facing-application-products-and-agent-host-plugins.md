@@ -8,8 +8,8 @@ context:
   lens: DES
 state:
   status: active
-  version: 22
-  updated_at: 2026-11-10 20:47:54 +0400
+  version: 23
+  updated_at: "2026-11-27T17:35:01.150345+00:00"
 ---
 ## Summary
 
@@ -23,7 +23,6 @@ PROGRAMMATIC behavior governing APPS.
 
 
 ### Prose Claim
-APPS **must** own ANECHOIC application services, optional Operator-facing interfaces, Workflow orchestration, **and** agent-host plugin packages. A headless application service **must not** depend on its optional UI.
+APPS **must** own ANECHOIC application services, optional Operator-facing interfaces, Workflow orchestration, **and** agent-host plugin packages. Apply AN-S-5168 to headless application services.
 
-MCP supplies discovery and transport; Workflow orchestration owns Workflow execution and coordination. WORKBENCH supports headless use.
-
+Apply AN-S-1247 and AN-S-1391 to MCP discovery and transport. Workflow orchestration owns Workflow execution and coordination. Use AN-S-1349 for headless WORKBENCH use.

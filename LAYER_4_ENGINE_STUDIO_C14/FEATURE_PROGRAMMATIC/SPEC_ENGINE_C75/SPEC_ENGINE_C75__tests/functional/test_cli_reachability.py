@@ -28,7 +28,10 @@ from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.SPEC_ENGINE_C75__tests.functional.test
 
 LEAN = os.environ.get('ANECHOIC_TEST_LEAN') or shutil.which('lean')
 ENGINE = Path(__file__).resolve().parents[4]
-REPLAY = ENGINE / 'IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IMPORT_GRAPH_C61/WorkflowTrace.lean'
+REPLAY = (
+    ENGINE
+    / "IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IMPORT_GRAPH_C61/WorkflowTrace.lean"
+)
 CONTRACT = """## Summary
 
 Declare the Component.
@@ -58,34 +61,88 @@ declare_entity(entity_name='Component Manifest', instance=ComponentManifest(
 declare_cli_contract(interface='suite', action='invoke', exit_codes={'succeeded': 0, 'failed': 1})
 ```
 """
-MACHINE = {'id': 'example', 'initial': 'start', 'states': {
-    'start': {'on': {'request': {'to': 'issue', 'expect': {
-        'kind': 'trigger', 'target': 'suite', 'detail': {'transport': 'cli', 'seed': 'A'},
-        'bind': {'ticket': 'seed'}}}}},
-    'issue': {'on': {
-        'accept': {'to': 'done', 'expect': {'kind': 'output', 'outcome': 'succeeded',
-            'detail': {'seed': 'B', 'exit_code': 0}, 'same_as': {'seed': 'ticket'}}},
-        'reject': {'to': 'done', 'expect': {'kind': 'output', 'outcome': 'failed',
-            'detail': {'exit_code': 1}}}}},
-    'done': {'type': 'final'}}}
+MACHINE = {
+    "id": "example",
+    "initial": "start",
+    "states": {
+        "start": {
+            "on": {
+                "request": {
+                    "to": "issue",
+                    "expect": {
+                        "kind": "trigger",
+                        "target": "suite",
+                        "detail": {"transport": "cli", "seed": "A"},
+                        "bind": {"ticket": "seed"},
+                    },
+                }
+            }
+        },
+        "issue": {
+            "on": {
+                "accept": {
+                    "to": "done",
+                    "expect": {
+                        "kind": "output",
+                        "outcome": "succeeded",
+                        "detail": {"seed": "B", "exit_code": 0},
+                        "same_as": {"seed": "ticket"},
+                    },
+                },
+                "reject": {
+                    "to": "done",
+                    "expect": {
+                        "kind": "output",
+                        "outcome": "failed",
+                        "detail": {"exit_code": 1},
+                    },
+                },
+            }
+        },
+        "done": {"type": "final"},
+    },
+}
 
 
 def solution(machine):
-    return ("## Claim\n\n### Formal Claim\n\n```python\n"
-            f"component_workflow(component='C2', action='invoke', machine={machine!r})\n```\n")
+    return (
+        "## Claim\n\n### Formal Claim\n\n```python\n"
+        f"component_workflow(component='C2', action='invoke', machine={machine!r})\n```\n"
+    )
 
 
 def replay(machine, outcome, seed):
-    model = compile_workflow(parse_workflow(
-        f"component_workflow(component='C2', action='invoke', machine={machine!r})")['machine'])['model']
-    events = [{'kind': 'trigger', 'name': 'request', 'target': 'suite', 'outcome': None,
-               'detail': {'transport': 'cli', 'seed': 'A'}},
-              {'kind': 'output', 'name': 'accept' if outcome == 'succeeded' else 'reject',
-               'target': None, 'outcome': outcome,
-               'detail': {'seed': seed, 'exit_code': 0} if outcome == 'succeeded' else {'exit_code': 1}}]
-    result = subprocess.run([LEAN, '--run', str(REPLAY)], input=json.dumps(
-        {'model': model, 'events': events, 'complete': True}), text=True, capture_output=True, check=True)
-    return json.loads(result.stdout)['status']
+    model = compile_workflow(
+        parse_workflow(
+            f"component_workflow(component='C2', action='invoke', machine={machine!r})"
+        )["machine"]
+    )["model"]
+    events = [
+        {
+            "kind": "trigger",
+            "name": "request",
+            "target": "suite",
+            "outcome": None,
+            "detail": {"transport": "cli", "seed": "A"},
+        },
+        {
+            "kind": "output",
+            "name": "accept" if outcome == "succeeded" else "reject",
+            "target": None,
+            "outcome": outcome,
+            "detail": {"seed": seed, "exit_code": 0}
+            if outcome == "succeeded"
+            else {"exit_code": 1},
+        },
+    ]
+    result = subprocess.run(
+        [LEAN, "--run", str(REPLAY)],
+        input=json.dumps({"model": model, "events": events, "complete": True}),
+        text=True,
+        capture_output=True,
+        check=True,
+    )
+    return json.loads(result.stdout)["status"]
 
 
 @unittest.skipUnless(LEAN, 'Lean unavailable')
@@ -139,32 +196,58 @@ class CliReachabilityTests(unittest.TestCase):
     def test_impossible_and_feasible_correlated_outcomes(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            manifest = _carrier(root, 'AN-S-1', 'component_manifest', 'C1', '{}', CONTRACT)
-            manifest_path = root / manifest['path']
-            manifest_path.write_text(manifest_path.read_text().replace('tier: 4', 'tier: 1'))
+            manifest = _carrier(
+                root, "AN-S-1", "component_manifest", "C1", "{}", CONTRACT
+            )
+            manifest_path = root / manifest["path"]
+            manifest_path.write_text(
+                manifest_path.read_text().replace("tier: 4", "tier: 1")
+            )
             machine = json.loads(json.dumps(MACHINE))
             pin = _carrier(root, 'AN-S-2', 'solution', 'C2', '{ANSWERS: [AN-S-1@1]}', solution(machine))
             def status():
-                return check_cli_spec(root, 'C2', manifest, solution=pin, interface='suite', lean=LEAN)['status']
-            self.assertNotEqual('matched', status())
-            self.assertEqual('different', replay(machine, 'succeeded', 'A'))
-            self.assertEqual('different', replay(machine, 'succeeded', 'B'))
-            self.assertEqual('matched', replay(machine, 'failed', 'A'))
-            machine['states']['issue']['on']['accept']['expect']['detail']['seed'] = 'A'
-            (root / pin['path']).write_text((root / pin['path']).read_text().split('## Claim')[0] + solution(machine))
-            self.assertEqual('matched', status())
-            self.assertEqual('matched', replay(machine, 'succeeded', 'A'))
-            self.assertEqual('matched', replay(machine, 'failed', 'A'))
-            del machine['states']['start']['on']['request']['expect']['detail']['seed']
-            path = root / pin['path']
-            path.write_text(path.read_text().split('## Claim')[0] + solution(machine))
-            self.assertEqual('unresolved', status())
+                return check_cli_spec(
+                    root,
+                    "C2",
+                    manifest,
+                    solution=pin,
+                    interface="suite",
+                    lean=LEAN,
+                )["status"]
+
+            self.assertNotEqual("matched", status())
+            self.assertEqual("different", replay(machine, "succeeded", "A"))
+            self.assertEqual("different", replay(machine, "succeeded", "B"))
+            self.assertEqual("matched", replay(machine, "failed", "A"))
+            machine["states"]["issue"]["on"]["accept"]["expect"]["detail"][
+                "seed"
+            ] = "A"
+            (root / pin["path"]).write_text(
+                (root / pin["path"]).read_text().split("## Claim")[0]
+                + solution(machine)
+            )
+            self.assertEqual("matched", status())
+            self.assertEqual("matched", replay(machine, "succeeded", "A"))
+            self.assertEqual("matched", replay(machine, "failed", "A"))
+            del machine["states"]["start"]["on"]["request"]["expect"][
+                "detail"
+            ]["seed"]
+            path = root / pin["path"]
+            path.write_text(
+                path.read_text().split("## Claim")[0] + solution(machine)
+            )
+            self.assertEqual("unresolved", status())
 
 
 class UnknownReachabilityTests(unittest.TestCase):
     def test_unknown_binding_is_unresolved(self):
         machine = json.loads(json.dumps(MACHINE))
-        del machine['states']['start']['on']['request']['expect']['detail']['seed']
+        del machine["states"]["start"]["on"]["request"]["expect"]["detail"][
+            "seed"
+        ]
         workflow = parse_workflow(
-            f"component_workflow(component='C2', action='invoke', machine={machine!r})")
-        self.assertIsNone(feasible_terminals(compile_workflow(workflow['machine'])['model']))
+            f"component_workflow(component='C2', action='invoke', machine={machine!r})"
+        )
+        self.assertIsNone(
+            feasible_terminals(compile_workflow(workflow["machine"])["model"])
+        )

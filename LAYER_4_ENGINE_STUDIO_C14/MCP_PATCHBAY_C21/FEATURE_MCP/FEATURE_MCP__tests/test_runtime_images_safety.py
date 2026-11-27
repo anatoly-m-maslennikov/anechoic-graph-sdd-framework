@@ -19,16 +19,22 @@ import selectors
 APP = Path(__file__).resolve().parents[1]
 import MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared as images  # noqa: E402
 import MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared as image_inputs  # noqa: E402
-from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import ProjectMcpBackend  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import (  # noqa: E402
+    ProjectMcpBackend,
+)
 
 
 IMAGE_ID = "sha256:" + "a" * 64
 PRIVATE_MARKER = "synthetic-private-diagnostic"
 PROXY_ROUTING = {
-    "HTTP_PROXY": "http://proxy.invalid:3128", "HTTPS_PROXY": "http://proxy.invalid:3128",
-    "ALL_PROXY": "socks5://proxy.invalid:1080", "NO_PROXY": "localhost,127.0.0.1",
-    "http_proxy": "http://proxy.invalid:3128", "https_proxy": "http://proxy.invalid:3128",
-    "all_proxy": "socks5://proxy.invalid:1080", "no_proxy": "localhost,127.0.0.1",
+    "HTTP_PROXY": "http://proxy.invalid:3128",
+    "HTTPS_PROXY": "http://proxy.invalid:3128",
+    "ALL_PROXY": "socks5://proxy.invalid:1080",
+    "NO_PROXY": "localhost,127.0.0.1",
+    "http_proxy": "http://proxy.invalid:3128",
+    "https_proxy": "http://proxy.invalid:3128",
+    "all_proxy": "socks5://proxy.invalid:1080",
+    "no_proxy": "localhost,127.0.0.1",
 }
 
 
@@ -42,16 +48,25 @@ def _tagging_executor(executor, calls):
             tagged.add(command[-1])
             sources[command[-1]] = command[-2]
             return subprocess.CompletedProcess(argv, 0, "", "")
-        if command[:3] == ("docker", "image", "inspect") and command[-1].startswith("anechoic-runtime:"):
+        if command[:3] == ("docker", "image", "inspect") and command[
+            -1
+        ].startswith("anechoic-runtime:"):
             if command[-1] not in tagged:
                 return subprocess.CompletedProcess(argv, 1, "", "")
             payload = json.loads(inspections[sources[command[-1]]])
             payload[0]["RepoTags"] = [command[-1]]
-            return subprocess.CompletedProcess(argv, 0, json.dumps(payload), "")
-        if command[:3] == ("docker", "image", "ls") and command[-1].startswith("anechoic-runtime:"):
+            return subprocess.CompletedProcess(
+                argv, 0, json.dumps(payload), ""
+            )
+        if command[:3] == ("docker", "image", "ls") and command[-1].startswith(
+            "anechoic-runtime:"
+        ):
             return subprocess.CompletedProcess(argv, 0, "", "")
         result = executor(argv, **kwargs)
-        if command[:3] == ("docker", "image", "inspect") and result.returncode == 0:
+        if (
+            command[:3] == ("docker", "image", "inspect")
+            and result.returncode == 0
+        ):
             inspections[command[-1]] = result.stdout
         return result
 
@@ -69,9 +84,13 @@ class ImageOutputSafetyTests(unittest.TestCase):
         self.assertNotIn(PRIVATE_MARKER, str(raised.exception))
 
     def test_real_reader_discards_noisy_stderr(self):
-        source = ("import sys; sys.stderr.write('" + PRIVATE_MARKER + "' * 100000); "
-                  "sys.stdout.write('safe')")
-        result = images._bounded_run(self.python(source), cwd=APP, timeout=2, max_output=32)
+        source = (
+            "import sys; sys.stderr.write('" + PRIVATE_MARKER + "' * 100000); "
+            "sys.stdout.write('safe')"
+        )
+        result = images._bounded_run(
+            self.python(source), cwd=APP, timeout=2, max_output=32
+        )
         self.assertEqual(0, result.returncode)
         self.assertEqual("safe", result.stdout)
         self.assertEqual("", result.stderr)
@@ -85,37 +104,60 @@ class ImageOutputSafetyTests(unittest.TestCase):
         self.assertEqual("", result.stderr)
 
     def test_real_reader_timeout_is_finite_and_keeps_no_diagnostics(self):
-        source = ("import sys,time; sys.stderr.write('" + PRIVATE_MARKER + "'); "
-                  "sys.stderr.flush(); time.sleep(5)")
+        source = (
+            "import sys,time; sys.stderr.write('" + PRIVATE_MARKER + "'); "
+            "sys.stderr.flush(); time.sleep(5)"
+        )
         before = time.monotonic()
         with self.assertRaises(subprocess.TimeoutExpired) as raised:
-            images._bounded_run(self.python(source), cwd=APP, timeout=0.05, max_output=32)
+            images._bounded_run(
+                self.python(source), cwd=APP, timeout=0.05, max_output=32
+            )
         self.assertLess(time.monotonic() - before, 2)
         self.assertIsNone(raised.exception.output)
         self.assertIsNone(raised.exception.stderr)
 
     def test_default_executor_routes_to_bounded_reader(self):
-        manager = images.ImageManager(APP.parents[2], platform="linux/amd64", project_root=APP.parents[2])
-        with patch.object(images, "_bounded_run", return_value=subprocess.CompletedProcess([], 0, "[]", "")) as reader:
+        manager = images.ImageManager(
+            APP.parents[2], platform="linux/amd64", project_root=APP.parents[2]
+        )
+        with patch.object(
+            images,
+            "_bounded_run",
+            return_value=subprocess.CompletedProcess([], 0, "[]", ""),
+        ) as reader:
             self.assertEqual("[]", manager._run(("docker", "image", "ls")))
         self.assertTrue(reader.call_args.kwargs["capture_stdout"])
-        self.assertEqual(4 * 1024 * 1024, reader.call_args.kwargs["max_output"])
-        with patch.object(images, "_bounded_run", return_value=subprocess.CompletedProcess([], 0, "", "")) as reader:
-            self.assertEqual("", manager._run(("docker", "build"), code="BUILD_FAILED"))
+        self.assertEqual(
+            4 * 1024 * 1024, reader.call_args.kwargs["max_output"]
+        )
+        with patch.object(
+            images,
+            "_bounded_run",
+            return_value=subprocess.CompletedProcess([], 0, "", ""),
+        ) as reader:
+            self.assertEqual(
+                "", manager._run(("docker", "build"), code="BUILD_FAILED")
+            )
         self.assertFalse(reader.call_args.kwargs["capture_stdout"])
 
     def test_default_image_commands_receive_only_the_docker_client_environment(self):
         client = {
-            "HOME": "/synthetic-home", "PATH": "/synthetic-bin",
-            "DOCKER_HOST": "unix:///synthetic/docker.sock", "DOCKER_CONTEXT": "fixture",
-            "DOCKER_CONFIG": "/synthetic-docker-config", "XDG_RUNTIME_DIR": "/synthetic-runtime",
+            "HOME": "/synthetic-home",
+            "PATH": "/synthetic-bin",
+            "DOCKER_HOST": "unix:///synthetic/docker.sock",
+            "DOCKER_CONTEXT": "fixture",
+            "DOCKER_CONFIG": "/synthetic-docker-config",
+            "XDG_RUNTIME_DIR": "/synthetic-runtime",
             "TMPDIR": "/synthetic-tmp",
         }
         client.update(PROXY_ROUTING)
         caller = dict(client, ANECHOIC_MCP_HTTP_SECRET_TOKEN=PRIVATE_MARKER,
                       AWS_SECRET_ACCESS_KEY=PRIVATE_MARKER, GITHUB_TOKEN=PRIVATE_MARKER,
                       LANG="en_US.UTF-8")
-        manager = images.ImageManager(APP.parents[2], platform="linux/amd64", project_root=APP.parents[2])
+        manager = images.ImageManager(
+            APP.parents[2], platform="linux/amd64", project_root=APP.parents[2]
+        )
         commands = (("docker", "image", "ls"), ("docker", "image", "inspect", IMAGE_ID),
                     ("docker", "build"))
         for command in commands:
@@ -206,7 +248,9 @@ class ImageCredentialContextTests(unittest.TestCase):
         return protected
 
     def _credential_fixture(self):
-        model = patch.object(images.ImageManager, "_refresh_model", return_value="a" * 64)
+        model = patch.object(
+            images.ImageManager, "_refresh_model", return_value="a" * 64
+        )
         model.start()
         self.addCleanup(model.stop)
         tools = patch.object(images, "_compile_tool_registry", return_value=b'{"schema_version":1}\n')
@@ -214,13 +258,19 @@ class ImageCredentialContextTests(unittest.TestCase):
         self.addCleanup(tools.stop)
         parent = APP.parents[2] / ".anechoic_tmp/launcher-epic-1829/images"
         parent.mkdir(parents=True, exist_ok=True)
-        source = Path(tempfile.mkdtemp(prefix="image-credentials-", dir=parent))
+        source = Path(
+            tempfile.mkdtemp(prefix="image-credentials-", dir=parent)
+        )
         docker = source / image_inputs.DOCKER_ROOT
         docker.mkdir(parents=True)
-        (source / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine").mkdir(parents=True)
+        (source / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine").mkdir(
+            parents=True
+        )
         (source / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/pyproject.toml").write_text("[project]\nname='fixture'\n")
         (source / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/uv.lock").write_text("version=1\n")
-        (source / "version.toml").write_text('[framework]\nversion = "0.4.4.9"\n')
+        (source / "version.toml").write_text(
+            '[framework]\nversion = "0.4.4.9"\n'
+        )
         (docker / "Dockerfile").write_text("FROM scratch\n")
         (docker / "Dockerfile.dockerignore").write_text(".git\n")
         (docker.parent / "engine.py").write_text("ENGINE=True\n")
@@ -268,7 +318,9 @@ class ImageCredentialContextTests(unittest.TestCase):
         read_bytes = Path.read_bytes
 
         def guarded_read(path):
-            self.assertNotIn(path, protected, "excluded store bytes must not be opened")
+            self.assertNotIn(
+                path, protected, "excluded store bytes must not be opened"
+            )
             return read_bytes(path)
 
         calls = []

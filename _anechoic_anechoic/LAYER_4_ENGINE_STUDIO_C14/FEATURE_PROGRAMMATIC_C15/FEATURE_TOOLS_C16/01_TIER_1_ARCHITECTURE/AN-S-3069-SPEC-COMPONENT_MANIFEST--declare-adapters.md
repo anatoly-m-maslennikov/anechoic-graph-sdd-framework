@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 65
-  updated_at: '2026-11-27T13:08:42.395623+00:00'
+  version: 68
+  updated_at: '2026-11-27T17:35:19.540236+00:00'
 ---
 ## Summary
 
@@ -185,6 +185,7 @@ ComponentManifest(
                       'ADAPTERS_C30__shared.active_manifest_carriers': 'public',
                       'ADAPTERS_C30__shared.select_manifest_carriers': 'public',
                       'ADAPTERS_C30__shared.manifest_inputs': 'public',
+                      'ADAPTERS_C30__shared.manifest_purpose': {'shared': ['C59', 'C93']},
                       'ADAPTERS_C30__shared.manifest_sources': 'public',
                       'ADAPTERS_C30__shared.manifest_state_fields': 'public',
                       'ADAPTERS_C30__shared.atomic_tempfile': 'public',

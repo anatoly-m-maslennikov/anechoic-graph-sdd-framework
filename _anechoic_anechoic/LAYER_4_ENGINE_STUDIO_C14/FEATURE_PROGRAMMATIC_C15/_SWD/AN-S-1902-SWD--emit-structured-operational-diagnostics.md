@@ -8,8 +8,8 @@ context:
   lens: SWD
 state:
   status: active
-  version: 17
-  updated_at: 2026-11-10 20:47:54 +0400
+  version: 18
+  updated_at: "2026-11-27T16:29:34.309627+00:00"
 ---
 
 ## Summary
@@ -36,14 +36,8 @@ operation, degraded operation, failure, recovery, **or** diagnostic detail.
 
 ### Procedure
 
-1. select ERROR, WARNING, INFO, **or** DEBUG according **to** the active Logging Policy;
-   do **not** introduce a fifth shared severity.
-   Apply CA-M-396 to failure classification: invalid input or Project
-   artifacts produce WARNING diagnostics and an explicit request-output error;
-   ERROR is reserved for a genuine blocking failure of the runtime itself.
-   A refused request or failed business Workflow is not by itself an ERROR-level
-   runtime failure. Preserve partial results under CA-M-405, use the shared
-   boundary under CA-M-396, and leave business lifecycle recording with CA-M-399.
+1. Apply AN-S-1252 and CA-M-396 for diagnostic severity and request errors.
+   Preserve partial results under CA-M-405 and business recording under CA-M-399.
 2. emit records through one project-owned logging abstraction **and** schema.
    include timestamp, level, component, operation, outcome, **and** the canonical
    action **or** event identity **when** one exists.

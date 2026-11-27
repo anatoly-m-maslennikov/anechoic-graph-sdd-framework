@@ -65,7 +65,10 @@ class FixtureToolClient:
             try:
                 self.registry = load_active_registry(
                     STUDIO
-                    / "IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_BACKEND",
+                    / (
+                        "IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_B"
+                        "ACKEND"
+                    ),
                     self.gateway.root,
                     self.gateway,
                 )

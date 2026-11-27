@@ -32,16 +32,28 @@ class TraceSpecTests(unittest.TestCase):
             'done': {'type': 'final'}}}
         params = machine['states']['start']['on']['effect']['guard']['params']
         def status(detail):
-            params['detail'] = detail
-            workflow = {'action': 'admit', **compile_workflow(machine)['model']}
-            return compare_trace_workflow(contract, workflow, lean=lean)['facts'][1]['status']
-        for detail in ({'rows': 45, 'serialized_bytes': 300},
-                       {'rows': {'at_most': 40}, 'serialized_bytes': {'at_most': 299}}):
-            self.assertEqual('matched', status(detail))
-        for detail in ({'rows': 46, 'serialized_bytes': 300}, {'rows': True, 'serialized_bytes': 300},
-                       {'rows': {'at_most': 46}, 'serialized_bytes': 300},
-                       {'rows': {'at_most': 40, 'extra': 1}, 'serialized_bytes': 300}, {'rows': 45}):
-            self.assertEqual('conflicting', status(detail))
+            params["detail"] = detail
+            workflow = {
+                "action": "admit",
+                **compile_workflow(machine)["model"],
+            }
+            return compare_trace_workflow(contract, workflow, lean=lean)[
+                "facts"
+            ][1]["status"]
+
+        for detail in (
+            {"rows": 45, "serialized_bytes": 300},
+            {"rows": {"at_most": 40}, "serialized_bytes": {"at_most": 299}},
+        ):
+            self.assertEqual("matched", status(detail))
+        for detail in (
+            {"rows": 46, "serialized_bytes": 300},
+            {"rows": True, "serialized_bytes": 300},
+            {"rows": {"at_most": 46}, "serialized_bytes": 300},
+            {"rows": {"at_most": 40, "extra": 1}, "serialized_bytes": 300},
+            {"rows": 45},
+        ):
+            self.assertEqual("conflicting", status(detail))
 
     def test_effect_details_and_manifest_implication(self):
         from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_4_SPEC_COMPARISON_C88._package__shared import _manifest_contract
@@ -96,16 +108,31 @@ class TraceSpecTests(unittest.TestCase):
             workflow = {'action': 'admit', **compile_workflow(machine)['model']}
             return {fact['key']: fact['status'] for fact in compare_trace_workflow(contract, workflow, lean=lean)['facts']}
 
-        machine['states']['start']['on']['silent'] = transition('done', 'effect', 'other', 'done')
-        self.assertEqual({'action': 'matched', 'must_effect': 'matched', 'terminal_output': 'conflicting'}, facts())
-        machine['states']['start']['on']['silent'] = transition('done', 'output', outcome='other')
-        self.assertEqual('matched', facts()['terminal_output'])
-        machine['states']['start']['on']['silent'] = transition('done', 'output')
-        self.assertEqual('unresolved', facts()['terminal_output'])
-        machine['states']['start']['on']['silent'] = transition('done', 'output', outcome='  ')
-        self.assertEqual('unresolved', facts()['terminal_output'])
-        machine['states'] = {'start': {'type': 'final'}}
-        self.assertEqual('conflicting', facts()['terminal_output'])
+        machine["states"]["start"]["on"]["silent"] = transition(
+            "done", "effect", "other", "done"
+        )
+        self.assertEqual(
+            {
+                "action": "matched",
+                "must_effect": "matched",
+                "terminal_output": "conflicting",
+            },
+            facts(),
+        )
+        machine["states"]["start"]["on"]["silent"] = transition(
+            "done", "output", outcome="other"
+        )
+        self.assertEqual("matched", facts()["terminal_output"])
+        machine["states"]["start"]["on"]["silent"] = transition(
+            "done", "output"
+        )
+        self.assertEqual("unresolved", facts()["terminal_output"])
+        machine["states"]["start"]["on"]["silent"] = transition(
+            "done", "output", outcome="  "
+        )
+        self.assertEqual("unresolved", facts()["terminal_output"])
+        machine["states"] = {"start": {"type": "final"}}
+        self.assertEqual("conflicting", facts()["terminal_output"])
 
     def test_contract_rejects_bad_literals(self):
         for effects in ("()", "(('kernel', ''),)", "(('a', 'b'), ('a', 'b'))", "[('a', 'b')]", "(('a', x),)"):
@@ -122,13 +149,24 @@ class TraceSpecTests(unittest.TestCase):
             'done': {'type': 'final'}}}
         contract = parse_trace_contract(CONTRACT)
         def compare():
-            return compare_trace_workflow(contract, {'action': 'admit', **compile_workflow(machine)['model']}, lean=lean)
-        self.assertEqual('matched', compare()['status'])
-        machine['states']['start']['on']['bypass'] = transition('seen', 'trigger')
-        self.assertEqual('conflicting', compare()['status'])
-        machine['states']['start']['on']['bypass'] = transition('done', 'output')
-        self.assertEqual('conflicting', compare()['status'])
-        machine['states']['start']['on']['bypass'] = transition('done', 'output', outcome='')
+            return compare_trace_workflow(
+                contract,
+                {"action": "admit", **compile_workflow(machine)["model"]},
+                lean=lean,
+            )
+
+        self.assertEqual("matched", compare()["status"])
+        machine["states"]["start"]["on"]["bypass"] = transition(
+            "seen", "trigger"
+        )
+        self.assertEqual("conflicting", compare()["status"])
+        machine["states"]["start"]["on"]["bypass"] = transition(
+            "done", "output"
+        )
+        self.assertEqual("conflicting", compare()["status"])
+        machine["states"]["start"]["on"]["bypass"] = transition(
+            "done", "output", outcome=""
+        )
         result = compare()
         self.assertEqual('matched', result['facts'][1]['status'])
         self.assertEqual('unresolved', result['status'])
@@ -142,11 +180,16 @@ class TraceSpecTests(unittest.TestCase):
         prefix = "declare_trace_contract(action='admit', output='ready', forbid_effect="
         for value in ("()", "['state']", "('',)", "('state', 'state')", "(target,)"):
             with self.subTest(value=value), self.assertRaises(ValueError):
-                parse_trace_contract(prefix + value + ')')
-        self.assertEqual(['state'], parse_trace_contract(prefix + "('state',))")['forbid_effect'])
-        both = parse_trace_contract(CONTRACT[:-1] + ", forbid_effect=('state',))")
-        self.assertIn('must_effect', both)
-        self.assertIn('forbid_effect', both)
+                parse_trace_contract(prefix + value + ")")
+        self.assertEqual(
+            ["state"],
+            parse_trace_contract(prefix + "('state',))")["forbid_effect"],
+        )
+        both = parse_trace_contract(
+            CONTRACT[:-1] + ", forbid_effect=('state',))"
+        )
+        self.assertIn("must_effect", both)
+        self.assertIn("forbid_effect", both)
         cli = "declare_cli_contract(interface='i', action='admit', runner='r', path='p', "
         self.assertEqual(['state'], parse_cli_contract(cli + "output='ready', forbid_effect=('state',))")
                          ['trace']['forbid_effect'])

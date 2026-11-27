@@ -1,15 +1,19 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-2407
+concern:
+  subject: "Atom"
+  path: "Model/Graph/Node//Artifact//SSOT//Prescribed/Content"
+  relation: "is_contained_by"
 container:
   component: C18
 tier: 3
 context:
   lens: DES
 state:
-  status: "active"
-  version: 19
-  updated_at: "2026-11-25T19:50:48.965913+00:00"
+  status: active
+  version: 20
+  updated_at: "2026-11-27T16:16:01.404965+00:00"
 ---
 ## Summary
 

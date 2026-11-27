@@ -26,7 +26,6 @@ the changed behavior with focused tests and run locked Mypy.
 
 ## Progress
 
-The locked Ruff selection reports 239 remaining findings. The fixes
-preserve CLI and test entry points, use small control-flow extractions,
-and clear the Database Server scope. Locked Mypy and focused tests
-passed on the working checkout.
+The 2026-11-27 locked Ruff run reports 23 findings, down from 239.
+All 23 are in Model Generator. The fixes preserve CLI and test entry
+points. Mypy and focused tests passed on the working checkout.

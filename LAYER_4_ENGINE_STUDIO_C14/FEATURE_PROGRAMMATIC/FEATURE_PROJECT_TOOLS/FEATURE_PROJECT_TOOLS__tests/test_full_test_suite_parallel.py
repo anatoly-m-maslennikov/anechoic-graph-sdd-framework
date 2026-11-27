@@ -17,7 +17,9 @@ full = fixtures.full
 
 class FullTestSuiteParallelTests(unittest.TestCase):
     def setUp(self):
-        self.enterContext(patch.dict("os.environ", {"ANECHOIC_TEST_FANOUT": "2"}))
+        self.enterContext(
+            patch.dict("os.environ", {"ANECHOIC_TEST_FANOUT": "2"})
+        )
         self.case = fixtures.FullTestSuiteTests(methodName="runTest")
         self.case.setUp()
         self.addCleanup(self.case.doCleanups)
@@ -29,7 +31,9 @@ class FullTestSuiteParallelTests(unittest.TestCase):
 
     def _docker_modules(self, count: int) -> list[Path]:
         return [
-            self.case.file(str(APP / f"FEATURE_MCP__tests/test_{number}_docker_e2e.py"))
+            self.case.file(
+                str(APP / f"FEATURE_MCP__tests/test_{number}_docker_e2e.py")
+            )
             for number in range(count)
         ]
 
@@ -44,7 +48,11 @@ class FullTestSuiteParallelTests(unittest.TestCase):
         ]
 
     def test_browser_suite_finishes_before_other_workers_start(self):
-        browser = self.case.file(str(full.MCP_TESTS / "image/test_native_import_graph_docker_e2e.py"))
+        browser = self.case.file(
+            str(
+                full.MCP_TESTS / "image/test_native_import_graph_docker_e2e.py"
+            )
+        )
         ordinary = self.case.file("LAYER_4_ENGINE_STUDIO_C14/test_example.py")
         observed = []
 
@@ -53,7 +61,10 @@ class FullTestSuiteParallelTests(unittest.TestCase):
             return True, 1, 0, "", "", 0.01, None
 
         with patch.object(full, "run_module", side_effect=execute):
-            self.assertEqual(0, full._run_modules(self.case.root, [ordinary, browser], {}, []))
+            self.assertEqual(
+                0,
+                full._run_modules(self.case.root, [ordinary, browser], {}, []),
+            )
         self.assertEqual([browser, ordinary], observed)
 
     def _assert_success_output(self, modules: list[Path]) -> None:
@@ -63,13 +74,20 @@ class FullTestSuiteParallelTests(unittest.TestCase):
                 f"Test module FINISH: {relative}\noutput:{module.name}\nModule time: {relative}: 0.250s\n",
                 self.case.output.getvalue(),
             )
-            self.assertIn(f"errors:{module.name}\n", self.case.errors.getvalue())
+            self.assertIn(
+                f"errors:{module.name}\n", self.case.errors.getvalue()
+            )
         self.assertIn(
-            "Modules: 12; tests run: 12; skipped: 0; failed modules: 0", self.case.output.getvalue()
+            "Modules: 12; tests run: 12; skipped: 0; failed modules: 0",
+            self.case.output.getvalue(),
         )
 
     def test_parallel_worker_bounds_keep_one_image(self) -> None:
-        modules = self._ordinary_modules(5) + self._long_host_modules() + self._docker_modules(3)
+        modules = (
+            self._ordinary_modules(5)
+            + self._long_host_modules()
+            + self._docker_modules(3)
+        )
         selected = self.case.file(str(APP / "FEATURE_MCP__tests/test_selected_workflows_docker_e2e.py"))
         modules.append(selected)
         active = {"ordinary": 0, "docker": 0}
@@ -113,15 +131,29 @@ class FullTestSuiteParallelTests(unittest.TestCase):
     def test_uses_host_fanout_without_changing_docker_workers(self):
         modules = self._ordinary_modules(2)
         with (
-            patch.object(full, "ThreadPoolExecutor", wraps=ThreadPoolExecutor) as executor,
-            patch.object(full, "run_module", return_value=(True, 1, 0, "", "", 0, None)) as run,
+            patch.object(
+                full, "ThreadPoolExecutor", wraps=ThreadPoolExecutor
+            ) as executor,
+            patch.object(
+                full, "run_module", return_value=(True, 1, 0, "", "", 0, None)
+            ) as run,
         ):
-            self.assertEqual(0, full._run_modules(self.case.root, modules, {"ANECHOIC_TEST_FANOUT": "1"}, []))
-        self.assertEqual([1, 2], [call.kwargs["max_workers"] for call in executor.call_args_list])
+            self.assertEqual(
+                0,
+                full._run_modules(
+                    self.case.root, modules, {"ANECHOIC_TEST_FANOUT": "1"}, []
+                ),
+            )
+        self.assertEqual(
+            [1, 2],
+            [call.kwargs["max_workers"] for call in executor.call_args_list],
+        )
         self.assertEqual(2, run.call_count)
 
     def test_critical_failure_still_runs_later_modules_and_counts_failure(self):
-        critical = self.case.file(str(APP / "FEATURE_MCP__tests/test_selected_subject_apply.py"))
+        critical = self.case.file(
+            str(APP / "FEATURE_MCP__tests/test_selected_subject_apply.py")
+        )
         later = [
             self.case.file("LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/test_later.py"),
             self.case.file(str(APP / "FEATURE_MCP__tests/test_later_docker_e2e.py")),
@@ -146,7 +178,9 @@ class FullTestSuiteParallelTests(unittest.TestCase):
         with (
             patch.object(full, "_run_static_checks", return_value=0),
             patch.object(full, "run_module", side_effect=execute),
-            patch.object(full, "current_code_test_image", return_value=nullcontext({})),
+            patch.object(
+                full, "current_code_test_image", return_value=nullcontext({})
+            ),
             ThreadPoolExecutor(max_workers=1) as driver,
         ):
             future = driver.submit(self.case.run_suite)
@@ -158,27 +192,37 @@ class FullTestSuiteParallelTests(unittest.TestCase):
         self.assertTrue(set(later).issubset(set(calls)))
         self.assertIn("critical failed", self.case.errors.getvalue())
         self.assertIn(
-            "Modules: 3; tests run: 3; skipped: 0; failed modules: 1", self.case.output.getvalue()
+            "Modules: 3; tests run: 3; skipped: 0; failed modules: 1",
+            self.case.output.getvalue(),
         )
 
-    def _interrupt_when_queued(self, pending, ready, release, canceled, watchers):
+    def _interrupt_when_queued(
+        self, pending, ready, release, canceled, watchers
+    ):
         self.assertTrue(ready.wait(5))
         queued = [future for future in pending if not future.running()]
         queued_modules = [pending[future] for future in queued]
         self.assertEqual(6, len(queued))
         self.assertEqual(
             4,
-            sum(not full._docker_module(self.case.root, module) for module in queued_modules),
+            sum(
+                not full._docker_module(self.case.root, module)
+                for module in queued_modules
+            ),
         )
         self.assertEqual(
             2,
-            sum(full._docker_module(self.case.root, module) for module in queued_modules),
+            sum(
+                full._docker_module(self.case.root, module)
+                for module in queued_modules
+            ),
         )
 
         def release_after_cancellation():
             deadline = time.monotonic() + 3
             while (
-                not all(future.cancelled() for future in queued) and time.monotonic() < deadline
+                not all(future.cancelled() for future in queued)
+                and time.monotonic() < deadline
             ):
                 time.sleep(0.01)
             if all(future.cancelled() for future in queued):
@@ -207,21 +251,30 @@ class FullTestSuiteParallelTests(unittest.TestCase):
             return True, 1, 0, "", "", 0.0, None
 
         def interrupted(pending):
-            self._interrupt_when_queued(pending, ready, release, canceled, watchers)
+            self._interrupt_when_queued(
+                pending, ready, release, canceled, watchers
+            )
 
         try:
             with (
                 patch.object(full, "run_module", side_effect=execute),
                 patch.object(full, "as_completed", side_effect=interrupted),
-                patch.object(full, "current_code_test_image", return_value=nullcontext({})),
+                patch.object(
+                    full,
+                    "current_code_test_image",
+                    return_value=nullcontext({}),
+                ),
             ):
                 with self.assertRaises(KeyboardInterrupt):
                     self.case.run_suite()
             self.assertTrue(
-                canceled.is_set(), "queued work must be canceled before waiting for active modules"
+                canceled.is_set(),
+                "queued work must be canceled before waiting for active modules",
             )
             self.assertEqual(
-                4, len(started), "interruption must not start either lane's queued modules"
+                4,
+                len(started),
+                "interruption must not start either lane's queued modules",
             )
         finally:
             release.set()
@@ -229,24 +282,47 @@ class FullTestSuiteParallelTests(unittest.TestCase):
                 watcher.join(timeout=5)
                 self.assertFalse(watcher.is_alive())
 
-    def test_image_module_deadlines_are_optional_and_host_modules_stay_bounded(self):
+    def test_image_module_deadlines_are_optional_and_host_modules_stay_bounded(
+        self,
+    ):
         switch = "ANECHOIC_TEST_IMAGE_DEADLINES"
         result = subprocess.CompletedProcess([], 0, fixtures.PASSED_COUNT, "")
         for relative, requested, forwarded, timeout in (
-            (APP / "FEATURE_MCP__tests/test_selected_workflows_docker_e2e.py", {}, "0", None),
-            (APP / "FEATURE_MCP__tests/test_selected_query_mcp_e2e.py", {switch: "1"}, "1", 3600),
-            (Path("LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/test_ordinary.py"),
-             {switch: "0"}, None, 3600),
+            (
+                APP
+                / "FEATURE_MCP__tests/test_selected_workflows_docker_e2e.py",
+                {},
+                "0",
+                None,
+            ),
+            (
+                APP / "FEATURE_MCP__tests/test_selected_query_mcp_e2e.py",
+                {switch: "1"},
+                "1",
+                3600,
+            ),
+            (
+                Path(
+                    "LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/test_ordinary.py"
+                ),
+                {switch: "0"},
+                None,
+                3600,
+            ),
         ):
             module = self.case.file(str(relative))
             with (
                 self.subTest(module=relative),
-                patch.object(full.subprocess, "run", return_value=result) as command,
+                patch.object(
+                    full.subprocess, "run", return_value=result
+                ) as command,
             ):
                 observed = full.run_module(self.case.root, module, requested)
                 self.assertEqual((True, 1, 0), observed[:3])
                 self.assertEqual(timeout, command.call_args.kwargs["timeout"])
-                self.assertEqual(forwarded, command.call_args.kwargs["env"].get(switch))
+                self.assertEqual(
+                    forwarded, command.call_args.kwargs["env"].get(switch)
+                )
 
 
 if __name__ == "__main__":

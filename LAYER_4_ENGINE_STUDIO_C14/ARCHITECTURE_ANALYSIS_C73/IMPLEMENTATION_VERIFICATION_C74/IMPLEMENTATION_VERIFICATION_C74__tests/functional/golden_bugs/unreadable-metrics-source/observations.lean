@@ -7,4 +7,5 @@ def acceptable : Outcome → Bool
   | .omitted => false
   | .namedError => true
 
-example : acceptable .omitted = false ∧ acceptable .namedError = true := by decide
+example : acceptable .omitted = false ∧ acceptable .namedError = true := by
+  decide

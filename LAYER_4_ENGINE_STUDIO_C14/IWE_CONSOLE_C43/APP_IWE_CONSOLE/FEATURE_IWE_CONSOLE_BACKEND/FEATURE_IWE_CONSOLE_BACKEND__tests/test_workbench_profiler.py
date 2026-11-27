@@ -35,18 +35,31 @@ class WorkbenchProfilerTest(unittest.TestCase):
             "control_root = '.anechoic_anechoic'\ntemporary_root = '.anechoic_tmp'\n",
             encoding="utf-8",
         )
-        write_scope_unit_declarations(self.project, (), control_root=self.control)
+        write_scope_unit_declarations(
+            self.project, (), control_root=self.control
+        )
 
     def test_output_stays_under_project_temporary_root(self) -> None:
-        output = output_directory(self.project, self.project / ".anechoic_tmp/reports/run")
-        self.assertEqual((self.project / ".anechoic_tmp/reports/run").resolve(), output)
+        output = output_directory(
+            self.project, self.project / ".anechoic_tmp/reports/run"
+        )
+        self.assertEqual(
+            (self.project / ".anechoic_tmp/reports/run").resolve(), output
+        )
         with self.assertRaisesRegex(ValueError, "temporary root"):
             output_directory(self.project, self.project / "outside")
 
     def test_cli_help_is_available_without_profiling(self) -> None:
         completed = subprocess.run(
-            [sys.executable, "-B", str(Path(__file__).with_name("profile_workbench.py")), "--help"],
-            check=True, text=True, capture_output=True,
+            [
+                sys.executable,
+                "-B",
+                str(Path(__file__).with_name("profile_workbench.py")),
+                "--help",
+            ],
+            check=True,
+            text=True,
+            capture_output=True,
         )
         self.assertIn("--project-root", completed.stdout)
         self.assertIn("--output", completed.stdout)
@@ -57,46 +70,87 @@ class WorkbenchProfilerTest(unittest.TestCase):
             ({"scope_unit_name": "ENGINE", "scope_unit_type": "Ordered", "scope_unit_label": "LAYER", "local_order": 1},),
             control_root=self.control,
         )
-        source = Path(declarations["ENGINE"]["authority_path"]) / "04_requirement" / "source.md"
+        source = (
+            Path(declarations["ENGINE"]["authority_path"])
+            / "04_requirement"
+            / "source.md"
+        )
         write_atom(source, "CA-R-501")
         source_bytes = source.read_bytes()
         output = output_directory(self.project, None)
         with patch.dict(
             os.environ,
-            {"ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY": str(extension_directory(REPOSITORY))},
+            {
+                "ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY": str(
+                    extension_directory(REPOSITORY)
+                )
+            },
         ):
             report = profile(self.project, output)
         self.assertEqual(3, report["rebuild_cycles"])
         self.assertTrue(report["instrumented"])
-        self.assertEqual(report["source_hashes_before"], report["source_hashes_after"])
+        self.assertEqual(
+            report["source_hashes_before"], report["source_hashes_after"]
+        )
         self.assertTrue((output / "cpu.pstats").is_file())
         self.assertTrue((output / "report.json").is_file())
         self.assertTrue(pstats.Stats(str(output / "cpu.pstats")).stats)
         self.assertTrue(report["python_allocations"]["top"])
-        self.assertIn("process_high_water_rss_bytes", report["measurements"][0])
-        self.assertFalse(report["measurements"][0]["process_high_water_rss_is_current_memory"])
+        self.assertIn(
+            "process_high_water_rss_bytes", report["measurements"][0]
+        )
+        self.assertFalse(
+            report["measurements"][0][
+                "process_high_water_rss_is_current_memory"
+            ]
+        )
         self.assertTrue(report["runtime"]["duckdb_package_version"])
         self.assertTrue(report["disposable_database_cleanup"]["succeeded"])
         self.assertEqual(source_bytes, source.read_bytes())
 
-    def test_failed_database_cleanup_is_confined_to_profile_output(self) -> None:
+    def test_failed_database_cleanup_is_confined_to_profile_output(
+        self,
+    ) -> None:
         declarations = write_scope_unit_declarations(
             self.project,
-            ({"scope_unit_name": "ENGINE", "scope_unit_type": "Ordered", "scope_unit_label": "LAYER", "local_order": 1},),
+            (
+                {
+                    "scope_unit_name": "ENGINE",
+                    "scope_unit_type": "Ordered",
+                    "scope_unit_label": "LAYER",
+                    "local_order": 1,
+                },
+            ),
             control_root=self.control,
         )
-        source = Path(declarations["ENGINE"]["authority_path"]) / "04_requirement" / "source.md"
+        source = (
+            Path(declarations["ENGINE"]["authority_path"])
+            / "04_requirement"
+            / "source.md"
+        )
         write_atom(source, "CA-R-502")
         source_bytes = source.read_bytes()
         output = output_directory(self.project, None)
         with (
-            patch.dict(os.environ, {"ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY": str(extension_directory(REPOSITORY))}),
-            patch("IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.FEATURE_IWE_CONSOLE_BACKEND__tests.profile_workbench.shutil.rmtree", side_effect=OSError("denied")),
+            patch.dict(
+                os.environ,
+                {
+                    "ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY": str(
+                        extension_directory(REPOSITORY)
+                    )
+                },
+            ),
+            patch(
+                "IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.FEATURE_IWE_CONSOLE_BACKEND__tests.profile_workbench.shutil.rmtree",
+                side_effect=OSError("denied"),
+            ),
         ):
             report = profile(self.project, output)
         cleanup = report["disposable_database_cleanup"]
         self.assertFalse(cleanup["succeeded"])
-        self.assertEqual(str(output / "disposable-database"), cleanup["retained_path"])
+        self.assertEqual(
+            str(output / "disposable-database"), cleanup["retained_path"]
+        )
         self.assertTrue(Path(cleanup["retained_path"]).is_relative_to(output))
         self.assertEqual(source_bytes, source.read_bytes())
 

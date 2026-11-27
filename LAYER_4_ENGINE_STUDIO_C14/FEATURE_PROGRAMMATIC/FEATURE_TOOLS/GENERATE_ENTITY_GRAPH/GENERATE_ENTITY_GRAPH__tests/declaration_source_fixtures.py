@@ -4,14 +4,26 @@ from __future__ import annotations
 
 import hashlib
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import get_profile
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.\
+    ADAPTERS_C30__shared import (
+    get_profile,
+)  # fmt: skip
 
 
-def relation_carrier(atom_id: str, subject: str, graph_scope: str, version: int = 1) -> dict:
-    body = f"## Scope\n\n`{subject.split(': ')[-1]} Relation` in the **{graph_scope}**.\n\n## Claim\nText."
+def relation_carrier(
+    atom_id: str, subject: str, graph_scope: str, version: int = 1
+) -> dict:
+    body = (
+        "## Scope\n\n`"
+        f"{subject.split(': ')[-1]}"
+        " Relation` in the **"
+        f"{graph_scope}"
+        "**.\n\n## Claim\nText."
+    )
     raw_body = body + "\n"
     raw = (
-        f"---\natom_id: {atom_id}\nversion: {version}\ncontent_role: Requirement\n"
+        f"---\natom_id: {atom_id}\nversion: {version}\n"
+        "content_role: Requirement\n"
         f"status: Active\n---\n{raw_body}"
     ).encode("utf-8")
     return {
@@ -42,17 +54,19 @@ def refresh_raw(carrier: dict) -> None:
     carrier["raw_body"] = raw_body
     raw = (
         f"---\natom_id: {source['atom_id']}\nversion: {source['version']}\n"
-        f"content_role: {metadata['content_role']}\nstatus: {metadata['status']}\n---\n{raw_body}"
+        f"content_role: {metadata['content_role']}\n"
+        f"status: {metadata['status']}\n---\n{raw_body}"
     ).encode("utf-8")
     source["sha256"] = hashlib.sha256(raw).hexdigest()
     carrier["raw"] = raw
 
 
-def graph_rule_carrier(atom_id: str = "CA-R-901021", version: int = 3, yaml_type: str = "whitelist") -> dict:
+def _graph_rule_body(yaml_type):
     if yaml_type == "cardinality":
         yaml_block = (
             "```yaml\ngraph_rule_type: cardinality\napplies_to:\n"
-            '  node: "Entity/Node/Continuant/Selection//Dependent Entity Occurrences"\n'
+            '  node: "Entity/Node/Continuant/Selection//'
+            'Dependent Entity Occurrences"\n'
             "  relation_type: IS_BORNE_BY\n  direction: outgoing\ncondition:\n"
             "  other_endpoint: [Entity]\n  minimum: 0\n  maximum: null\n```\n"
         )
@@ -61,10 +75,21 @@ def graph_rule_carrier(atom_id: str = "CA-R-901021", version: int = 3, yaml_type
         yaml_block = (
             "```yaml\ngraph_rule_type: " + yaml_type + "\napplies_to:\n"
             "  relation_type: evaluation_for\ncondition:\n"
-            '  source: ["Entity/Node/Continuant/Atom/Content Role: Evaluation"]\n'
-            '  target: ["Entity/Node/Continuant/Atom/Content Role: Requirement"]\n```\n'
+            '  source: ["Entity/Node/Continuant/Atom/'
+            'Content Role: Evaluation"]\n'
+            '  target: ["Entity/Node/Continuant/Atom/'
+            'Content Role: Requirement"]\n```\n'
         )
         summary = "Permit evaluation links."
+    return yaml_block, summary
+
+
+def graph_rule_carrier(
+    atom_id: str = "CA-R-901021",
+    version: int = 3,
+    yaml_type: str = "whitelist",
+) -> dict:
+    yaml_block, summary = _graph_rule_body(yaml_type)
     body = "# Summary\n\n" + summary + "\n\n" + yaml_block
     metadata = {
         "atom_id": atom_id,
@@ -74,7 +99,8 @@ def graph_rule_carrier(atom_id: str = "CA-R-901021", version: int = 3, yaml_type
         "status": "Active",
     }
     raw = (
-        f"---\natom_id: {atom_id}\nversion: {version}\ncontent_role: Requirement\n"
+        f"---\natom_id: {atom_id}\nversion: {version}\n"
+        "content_role: Requirement\n"
         f"type: Graph Rule\nstatus: Active\n---\n{body}"
     ).encode("utf-8")
     return {
@@ -94,8 +120,22 @@ def graph_rule_carrier(atom_id: str = "CA-R-901021", version: int = 3, yaml_type
 
 def support_carriers() -> list[dict]:
     rows = []
-    approvals = ("CA-R-2001", "CA-D-637", "CA-R-1996", *(pin.atom_id for pin in get_profile("approved").grammar_pins))
-    role_by_code = {"C": "Concern", "A": "Analysis", "P": "Plan", "R": "Requirement", "M": "Method", "E": "Evaluation", "D": "Delivery", "O": "Operations"}
+    approvals = (
+        "CA-R-2001",
+        "CA-D-637",
+        "CA-R-1996",
+        *(pin.atom_id for pin in get_profile("approved").grammar_pins),
+    )
+    role_by_code = {
+        "C": "Concern",
+        "A": "Analysis",
+        "P": "Plan",
+        "R": "Requirement",
+        "M": "Method",
+        "E": "Evaluation",
+        "D": "Delivery",
+        "O": "Operations",
+    }
     for identifier in approvals:
         role_code = identifier.rsplit("-", 2)[1]
         version = 1

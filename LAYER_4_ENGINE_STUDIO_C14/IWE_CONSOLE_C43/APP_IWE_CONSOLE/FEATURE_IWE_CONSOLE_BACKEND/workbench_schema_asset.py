@@ -10,9 +10,17 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict
 
-from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import ContentRule, ContentSchema, DeclarationSource, _schema_from_rules
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (
+    ContentRule,
+    ContentSchema,
+    DeclarationSource,
+    _schema_from_rules,
+)
 from .declared_axes import compile_role_folders, compile_status_groups  # noqa: F401
-from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import HeaderRule, compile_header_rules
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (
+    HeaderRule,
+    compile_header_rules,
+)
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import HeaderColumn, HeaderSchema, declared_header_schema, infer_header_schema
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import canonical
 
@@ -23,7 +31,9 @@ DEFAULT_SCHEMA_PATH = Path(__file__).with_name("workbench_schema.json")
 class SchemaCompilation(BaseModel):
     """The two admitted Header modes plus one declared Content schema."""
 
-    model_config = ConfigDict(strict=True, extra="forbid", frozen=True, arbitrary_types_allowed=True)
+    model_config = ConfigDict(
+        strict=True, extra="forbid", frozen=True, arbitrary_types_allowed=True
+    )
 
     mode_one: HeaderSchema
     mode_two: HeaderSchema
@@ -40,13 +50,16 @@ class SchemaCompilation(BaseModel):
 
 
 def compile_schema(
-    atoms: list[dict[str, Any]], content: ContentSchema, declared_header: HeaderSchema | None = None,
+    atoms: list[dict[str, Any]],
+    content: ContentSchema,
+    declared_header: HeaderSchema | None = None,
     status_groups: tuple[tuple[str, str, str], ...] = (),
     role_folders: tuple[tuple[str, str], ...] | None = None,
 ) -> SchemaCompilation:
     """Build both projections from the one accepted source capture."""
     return SchemaCompilation(
-        mode_one=declared_header or declared_header_schema(compile_header_rules(atoms)),
+        mode_one=declared_header
+        or declared_header_schema(compile_header_rules(atoms)),
         mode_two=infer_header_schema(atoms),
         content=content,
         status_groups=status_groups,
@@ -159,19 +172,30 @@ def _validate_source_pins(value: object) -> None:
     if not isinstance(sources, list):
         raise ValueError("invalid schema source pins")
     for source in sources:
-        if (not isinstance(source, dict) or set(source) != {"atom_id", "version", "path", "fingerprint"}
-            or source["atom_id"] is not None and (not isinstance(source["atom_id"], str) or not source["atom_id"])
-            or source["version"] is not None and (type(source["version"]) is not int or source["version"] < 1)
-            or not isinstance(source["path"], str) or not source["path"]
-            or not isinstance(source["fingerprint"], str) or len(source["fingerprint"]) != 64
-            or any(c not in "0123456789abcdef" for c in source["fingerprint"])):
+        if (
+            not isinstance(source, dict)
+            or set(source) != {"atom_id", "version", "path", "fingerprint"}
+            or source["atom_id"] is not None
+            and (
+                not isinstance(source["atom_id"], str) or not source["atom_id"]
+            )
+            or source["version"] is not None
+            and (type(source["version"]) is not int or source["version"] < 1)
+            or not isinstance(source["path"], str)
+            or not source["path"]
+            or not isinstance(source["fingerprint"], str)
+            or len(source["fingerprint"]) != 64
+            or any(c not in "0123456789abcdef" for c in source["fingerprint"])
+        ):
             raise ValueError("invalid schema source pin")
     if sources != sorted(sources, key=lambda source: source["path"]):
         raise ValueError("invalid schema source pin order")
 
 
 def _content_schema(payload: object) -> ContentSchema:
-    if not isinstance(payload, dict) or not isinstance(payload.get("rules"), list):
+    if not isinstance(payload, dict) or not isinstance(
+        payload.get("rules"), list
+    ):
         raise ValueError("invalid delivered Content schema")
     rules = []
     for item in payload["rules"]:
@@ -305,6 +329,8 @@ def _header_rule(payload: object) -> HeaderRule:
 def _selector(value: object) -> frozenset[str] | None:
     if value is None:
         return None
-    if not isinstance(value, list) or not all(isinstance(item, str) and item for item in value):
+    if not isinstance(value, list) or not all(
+        isinstance(item, str) and item for item in value
+    ):
         raise ValueError("invalid delivered Header declaration selector")
     return frozenset(value)

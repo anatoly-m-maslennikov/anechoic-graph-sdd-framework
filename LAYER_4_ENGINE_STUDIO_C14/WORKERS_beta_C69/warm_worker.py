@@ -1,4 +1,4 @@
-"""Serve Ticket delta captures and indexed lifecycle writes in isolated children."""
+"""Capture Ticket deltas and apply indexed lifecycle writes in children."""
 
 import argparse
 import json

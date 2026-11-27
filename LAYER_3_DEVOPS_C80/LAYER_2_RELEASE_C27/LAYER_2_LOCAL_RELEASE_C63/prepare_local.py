@@ -1,8 +1,9 @@
 """Seal an explicit source scope in an isolated checkout for Local Release."""
 
 import ast
+import json
 from contextlib import ExitStack
-from dataclasses import replace
+from dataclasses import asdict, replace
 from hashlib import file_digest
 import os
 from pathlib import Path
@@ -15,9 +16,21 @@ import tempfile
 from markdown_it import MarkdownIt
 
 from LAYER_1_RUNTIME_IMAGES_C81.LAYER_1_RUNTIME_IMAGES_C81__shared import (
-    LocalReleaseError, _owned_directory, _project_path, _root, read_release_selection,
+    LocalReleaseError,
+    _owned_directory,
+    _project_path,
+    _root,
+    read_release_selection,
 )
 
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.container_settings__pub import (
+    CONTAINER_SETTINGS_FILENAME, parse_container_settings, read_container_settings,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.settings_carrier__pub import (
+    write_settings_carrier,
+)
+
+from .local_release_package_phases import project_port
 from .release_support import _read_version
 from .snapshot_inputs import _source_version
 
@@ -60,7 +73,9 @@ def _parts(value, *, overlay):
 def _validate_base(root, base):
     if _git(root, "rev-parse", "--verify", base + "^{commit}") != base:
         raise LocalReleaseError("prepare-local-base-invalid")
-    for entry in _git(root, "ls-tree", "-r", "-z", "--full-tree", base).split("\0"):
+    for entry in _git(root, "ls-tree", "-r", "-z", "--full-tree", base).split(
+        "\0"
+    ):
         if not entry:
             continue
         metadata, path = entry.split("\t", 1)
@@ -94,12 +109,16 @@ def _version(info):
 
 
 def _overlay(root, checkout, relative):
-    destination = _project_path(checkout, relative, label="prepare-local-destination")
+    destination = _project_path(
+        checkout, relative, label="prepare-local-destination"
+    )
     try:
         descriptor = _open_source(root, relative)
     except FileNotFoundError:
         if not destination.is_file():
-            raise LocalReleaseError("prepare-local-deletion-missing-from-base") from None
+            raise LocalReleaseError(
+                "prepare-local-deletion-missing-from-base"
+            ) from None
         destination.unlink()
         return None
     with os.fdopen(descriptor, "rb") as source:
@@ -124,13 +143,13 @@ def _mapping_value(mapping, key):
     return None
 
 
-def _port_nodes(code):
+def _port_nodes(code, manifest_type):
     try:
         tree = ast.parse(code)
     except SyntaxError:
         return
     for node in ast.walk(tree):
-        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "ProjectManifest":
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == manifest_type:
             parameters = next((arg.value for arg in node.keywords if arg.arg == "parameters"), None)
             port = _mapping_value(_mapping_value(parameters, "project_mcp"), "http_port")
             if isinstance(port, ast.Constant) and type(port.value) is int:
@@ -144,10 +163,16 @@ def _formal_claim_fences(text):
         if token.type == "heading_open":
             level = int(token.tag[1:])
             headings = [item for item in headings if item[0] < level]
-            headings.append((level, tokens[index + 1].content.strip().casefold()))
-        elif (token.type == "fence" and token.info.strip().casefold() == "python"
-              and tuple(name for _, name in headings) == ("claim", "formal claim")):
-            yield token
+            headings.append(
+                (level, tokens[index + 1].content.strip().casefold())
+            )
+        elif token.type == "fence":
+            section = tuple(name for _, name in headings)
+            info = token.info.strip().casefold()
+            if section == ("claim", "formal claim") and info == "python":
+                yield token, "ProjectManifest"
+            elif section == ("formal manifest",) and info in {"python", "python anechoic-edsl"}:
+                yield token, "ComponentManifest"
 
 
 def _rewrite_port(path, old_port, port):
@@ -155,8 +180,8 @@ def _rewrite_port(path, old_port, port):
     text = raw.decode("utf-8")
     lines = raw.splitlines(keepends=True)
     slots = []
-    for token in _formal_claim_fences(text):
-        for node in _port_nodes(token.content):
+    for token, manifest_type in _formal_claim_fences(text):
+        for node in _port_nodes(token.content, manifest_type):
             if node.value == old_port:
                 slots.append((token, node))
     if len(slots) != 1:
@@ -169,7 +194,9 @@ def _rewrite_port(path, old_port, port):
         raise LocalReleaseError("prepare-local-manifest-port-unavailable")
     offset = len(original_line) - len(code_line)
     first, last = offset + node.col_offset, offset + node.end_col_offset
-    lines[index] = lines[index][:first] + str(port).encode("ascii") + lines[index][last:]
+    lines[index] = (
+        lines[index][:first] + str(port).encode("ascii") + lines[index][last:]
+    )
     path.write_bytes(b"".join(lines))
 
 
@@ -188,8 +215,11 @@ def _pin_port(checkout, source, port):
     _rewrite_port(selection.manifest_path, _project_port(selection), port)
     pinned = read_release_selection(checkout, source.control_relative)
     settings = selection.parameters["project_mcp"] | {"http_port": port}
-    expected = replace(selection, manifest_sha256=pinned.manifest_sha256,
-                       parameters=selection.parameters | {"project_mcp": settings})
+    expected = replace(
+        selection,
+        manifest_sha256=pinned.manifest_sha256,
+        parameters=selection.parameters | {"project_mcp": settings},
+    )
     if pinned != expected:
         raise LocalReleaseError("prepare-local-manifest-changed")
     return pinned
@@ -225,30 +255,47 @@ def _prepare_checkout(root, stage, base, paths, port, identity, selection):
     checkout.mkdir(mode=0o700)
     _checkout(root, checkout, base, identity, full_history=port is None)
     copied = {path: _overlay(root, checkout, path) for path in paths}
-    if port is None:
+    config = read_container_settings(root)
+    if port is None or config is not None:
         pinned = read_release_selection(checkout, selection.control_relative)
         installed = _project_path(root, Path(".anechoic_runtime/simple_local_release/package/version.toml"),
                                   label="installed-version")
         installed_version = _source_version(installed.parent) if installed.exists() else ""
-        version_path, version = _read_version(checkout, installed_version=installed_version)
-        version_path.write_text(version, encoding="utf-8")
-        with version_path.open("rb") as source:
-            copied[version_path.relative_to(checkout)] = file_digest(source, "sha256").hexdigest()
+        if port is None:
+            version_path, version = _read_version(checkout, installed_version=installed_version)
+            version_path.write_text(version, encoding="utf-8")
+            with version_path.open("rb") as source:
+                copied[version_path.relative_to(checkout)] = file_digest(source, "sha256").hexdigest()
     else:
         pinned = _pin_port(checkout, selection, port)
         copied[pinned.manifest_path.relative_to(checkout)] = pinned.manifest_sha256
     manifest = pinned.manifest_path.relative_to(checkout)
     revision = _seal(checkout, base, copied)
+    if config is not None:
+        config = replace(config, http_port=port if port is not None else config.http_port)
+        content = "schema_version = 1\n\n[container]\n" + "".join(
+            f"{key} = {json.dumps(value, ensure_ascii=False)}\n"
+            for key, value in asdict(config).items() if value is not None
+        )
+        write_settings_carrier(checkout / CONTAINER_SETTINGS_FILENAME, content,
+                               validate=parse_container_settings, replace_existing=False)
     return {"outcome": "completed", "project_root": str(checkout), "revision": revision, "base": base,
             "changed_paths": [path.as_posix() for path in paths], "manifest_path": manifest.as_posix(),
-            "manifest_sha256": pinned.manifest_sha256, "instance_id": pinned.instance_id, "port": _project_port(pinned)}
+            "manifest_sha256": pinned.manifest_sha256, "instance_id": pinned.instance_id, "port": project_port(checkout, pinned)}
 
 
 def _new_stage(stage):
-    with _owned_directory(stage.parent.parent, Path(stage.parent.name)) as owner:
+    with _owned_directory(
+        stage.parent.parent, Path(stage.parent.name)
+    ) as owner:
         info = os.fstat(owner)
-        if (info.st_uid != os.getuid() or info.st_mode & 0o077
-                or not os.path.samestat(info, stage.parent.stat(follow_symlinks=False))):
+        if (
+            info.st_uid != os.getuid()
+            or info.st_mode & 0o077
+            or not os.path.samestat(
+                info, stage.parent.stat(follow_symlinks=False)
+            )
+        ):
             raise LocalReleaseError("prepare-local-scratch-unsafe")
         try:
             os.mkdir(stage.name, mode=0o700, dir_fd=owner)
@@ -268,13 +315,20 @@ def _prepare(root, stage, base, changed_paths, port):
         raise LocalReleaseError("prepare-local-source-not-git-root")
     _validate_base(root, base)
     selection = read_release_selection(root)
-    if port == _project_port(selection):
+    config = read_container_settings(root)
+    if port is not None and port == project_port(root, selection):
         raise LocalReleaseError("prepare-local-port-matches-source")
-    identity = tuple(_git(root, "config", "--get", key, user_config=True) for key in ("user.name", "user.email"))
+    identity = tuple(
+        _git(root, "config", "--get", key, user_config=True)
+        for key in ("user.name", "user.email")
+    )
     _new_stage(stage)
     try:
-        result = _prepare_checkout(root, stage, base, paths, port, identity, selection)
-        if read_release_selection(root) != selection:
+        result = _prepare_checkout(
+            root, stage, base, paths, port, identity, selection
+        )
+        if (read_release_selection(root) != selection or
+                read_container_settings(root) != config):
             raise LocalReleaseError("prepare-local-source-selection-changed")
         return result
     except BaseException:
@@ -283,16 +337,27 @@ def _prepare(root, stage, base, changed_paths, port):
 
 
 def prepare_local(project_root, *, run_id, base, changed_paths, port=None):
-    """Prepare one private checkout and report the exact revision to release."""
+    (
+        'Prepare one private checkout and report the exact revision to '
+        'release.'
+    )
     root = _root(project_root)
-    if not isinstance(run_id, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,95}", run_id):
+    if not isinstance(run_id, str) or not re.fullmatch(
+        r"[A-Za-z0-9][A-Za-z0-9._-]{0,95}", run_id
+    ):
         raise LocalReleaseError("prepare-local-run-id-invalid")
-    owner = (Path.home() / f".anechoic-local-release-{os.getuid()}" if port is None else
-             Path(tempfile.gettempdir()) / f"anechoic-local-release-{os.getuid()}")
+    owner = (
+        Path.home() / f".anechoic-local-release-{os.getuid()}"
+        if port is None
+        else Path(tempfile.gettempdir())
+        / f"anechoic-local-release-{os.getuid()}"
+    )
     stage = owner.parent.resolve(strict=True) / owner.name / run_id
     try:
         if stage.is_relative_to(root):
             raise LocalReleaseError("prepare-local-scratch-inside-source")
-        return _prepare(root, stage, base, changed_paths, port) | {"run_id": run_id}
+        return _prepare(root, stage, base, changed_paths, port) | {
+            "run_id": run_id
+        }
     except (OSError, ValueError, RuntimeError) as error:
         raise LocalReleaseError(f"{stage / 'checkout'}: {error}") from error

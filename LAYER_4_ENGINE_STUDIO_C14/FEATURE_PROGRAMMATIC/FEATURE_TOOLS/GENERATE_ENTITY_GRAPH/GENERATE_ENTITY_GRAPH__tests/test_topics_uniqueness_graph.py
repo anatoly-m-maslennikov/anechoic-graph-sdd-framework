@@ -143,14 +143,18 @@ declare_entity(entity_name="Atom", entity_class=Atom,
                 )
 
     def test_existing_scope_check_still_projects(self):
-        code = """from anechoic.formal_claims import declare_entity
-from anechoic.model import ScopeUnit
-
-def check_structural_level(unit: ScopeUnit) -> bool:
-    return True
-
-declare_entity(entity_name="structural_level", relation_name="IS_PROPERTY_OF", base_path="Scope Unit", instance_check=check_structural_level)
-"""
+        code = (
+            "from anechoic.formal_claims import declare_entity\n"
+            "from anechoic.model import ScopeUnit\n"
+            "\n"
+            "def check_structural_level(unit: ScopeUnit) -> bool:"
+            "\n"
+            "    return True\n"
+            "\n"
+            'declare_entity(entity_name="structural_level", '
+            'relation_name="IS_PROPERTY_OF", base_path="Scope '
+            'Unit", instance_check=check_structural_level)\n'
+        )
         clauses, diagnostics = extract_claim_constraints(
             carrier(code, subject="Scope Unit.structural_level")
         )

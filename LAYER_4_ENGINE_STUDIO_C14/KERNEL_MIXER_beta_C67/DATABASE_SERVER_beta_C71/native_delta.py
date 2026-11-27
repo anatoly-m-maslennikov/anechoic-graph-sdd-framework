@@ -17,7 +17,9 @@ from .pending_graph import replace_pending_graph
 from .native_atoms import stage_atom_rows, validate_native_snapshot, write_staged_atoms
 from .realization_projection import has_table
 
-_CARRIER = re.compile(r"([A-Z][A-Z0-9]*-[STPC]-[0-9]+)(@[1-9][0-9]*(?:-draft)?)?[-.].*\.md\Z")
+_CARRIER = re.compile(
+    r"([A-Z][A-Z0-9]*-[STPC]-[0-9]+)(@[1-9][0-9]*(?:-draft)?)?[-.].*\.md\Z"
+)
 _EDGE = ("source_kind", "source_ref", "target_kind", "target_ref", "relation_type", "derived")
 
 class DeltaReconciliationRequired(ValueError):
@@ -67,9 +69,14 @@ def _validate_edges(rows, inverse):
 
 def _stage(connection, table, rows, width):
     for offset in range(0, len(rows), 256):
-        batch = rows[offset:offset + 256]
-        placeholders = ", ".join(["(" + ", ".join(["?"] * width) + ")"] * len(batch))
-        connection.execute(f"INSERT INTO {table} VALUES {placeholders}", [value for row in batch for value in row])
+        batch = rows[offset : offset + 256]
+        placeholders = ", ".join(
+            ["(" + ", ".join(["?"] * width) + ")"] * len(batch)
+        )
+        connection.execute(
+            f"INSERT INTO {table} VALUES {placeholders}",
+            [value for row in batch for value in row],
+        )
 
 def _old_rows(connection, paths, *, archive=False):
     connection.execute("CREATE TEMP TABLE int_delta_paths (relative_path VARCHAR, filename VARCHAR)")
@@ -92,7 +99,9 @@ def _validate_delta(connection, data, model, manifest_sha256, *, archive=False):
     if _digest(digest_data) != data["snapshot_sha256"]:
         raise ValueError("Native delta digest mismatch")
     bindings = json.loads(model)["bindings"]
-    atoms, relations = validate_native_snapshot(snapshot, manifest_sha256, bindings)
+    atoms, relations = validate_native_snapshot(
+        snapshot, manifest_sha256, bindings
+    )
     _validate_delta_issues(connection, snapshot, paths)
     if archive and (any("09_archived" not in PurePosixPath(parent).parts for parent, _ in paths)
                     or any(atom.status_group != "Archived" for atom in atoms)
@@ -115,19 +124,30 @@ def _validate_delta(connection, data, model, manifest_sha256, *, archive=False):
             WHERE p.relative_path = n.relative_path AND p.filename = n.filename) LIMIT 1""").fetchone()
     if conflict:
         raise DeltaReconciliationRequired("Ticket identity was admitted at another path; reconcile both paths")
-    new_edges = [tuple(getattr(edge, key) for key in _EDGE) for edge in relations]
+    new_edges = [
+        tuple(getattr(edge, key) for key in _EDGE) for edge in relations
+    ]
     _validate_edges(new_edges, inverse)
     return snapshot, old, new_edges, inverse
 
 def _validate_delta_issues(connection, snapshot, paths):
     addressed = {str(PurePosixPath(parent) / name) for parent, name in paths}
     issues = snapshot.get("ingestion_issues", [])
-    if any(issue["relative_path"] not in addressed or not addressed.issuperset(issue["related_paths"])
-           for issue in issues):
-        raise ValueError("Ingestion issue is outside the addressed native paths")
-    if (any(issue["code"] in {"duplicate_revision", "duplicate_current"} for issue in issues)
-            or duplicate_dependencies(connection, snapshot, addressed)):
-        raise DeltaReconciliationRequired("Duplicate Atom group requires full reconciliation")
+    if any(
+        issue["relative_path"] not in addressed
+        or not addressed.issuperset(issue["related_paths"])
+        for issue in issues
+    ):
+        raise ValueError(
+            "Ingestion issue is outside the addressed native paths"
+        )
+    if any(
+        issue["code"] in {"duplicate_revision", "duplicate_current"}
+        for issue in issues
+    ) or duplicate_dependencies(connection, snapshot, addressed):
+        raise DeltaReconciliationRequired(
+            "Duplicate Atom group requires full reconciliation"
+        )
 
 def _stage_owned_edges(connection, old, inverse):
     connection.execute("CREATE TEMP TABLE int_delta_old (reference VARCHAR)")
@@ -199,13 +219,19 @@ def apply_native_delta_in_transaction(connection, data, manifest_sha256, base, m
 
     if data.get("archive_pending"):
         backfill_archive_versions(connection)
-    snapshot, old, new_edges, inverse = _validate_delta(connection, data, model, manifest_sha256, archive=archive)
+    snapshot, old, new_edges, inverse = _validate_delta(
+        connection, data, model, manifest_sha256, archive=archive
+    )
     generation = _delta_generation(base, data["snapshot_sha256"])
     update_checkpoint(connection, data, delta=True)
     if not old and not snapshot["atoms"]:
-        changed = _finish_delta(connection, data, archive, old, check_changes=True)
+        changed = _finish_delta(
+            connection, data, archive, old, check_changes=True
+        )
         if changed:
-            connection.execute("UPDATE ops_generation SET id = ?", [generation])
+            connection.execute(
+                "UPDATE ops_generation SET id = ?", [generation]
+            )
         connection.execute("DROP TABLE int_delta_paths")
         connection.execute("DROP TABLE int_admission_atoms")
         return generation if changed else base
@@ -258,8 +284,11 @@ def _finish_delta(connection, data, archive, old, *, check_changes=False):
     paths = [str(PurePosixPath(parent) / name) for parent, name in data["paths"]]
     changed = bool(snapshot.get("ingestion_issues"))
     if check_changes and not changed:
-        changed = connection.execute("""SELECT EXISTS (SELECT 1 FROM main.ops_ingestion_issues
-            WHERE source IN ('atom', 'archive') AND relative_path IN (SELECT unnest(?)))""", [paths]).fetchone()[0]
+        changed = connection.execute(
+            """SELECT EXISTS (SELECT 1 FROM main.ops_ingestion_issues
+            WHERE source IN ('atom', 'archive') AND relative_path IN (SELECT unnest(?)))""",
+            [paths],
+        ).fetchone()[0]
     replace_carrier_issues(connection, snapshot, paths=paths)
     if archive:
         set_archive_pending(connection, False)

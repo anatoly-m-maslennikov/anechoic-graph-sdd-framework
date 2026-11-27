@@ -8,11 +8,23 @@ from pydantic.dataclasses import dataclass
 
 from typing import Annotated, Any
 
-from .graph_store import GraphState, apply_graph_delta, graph_state, update_graph
+from .graph_store import (
+    GraphState,
+    apply_graph_delta,
+    graph_state,
+    update_graph,
+)
 from .content_schema import ContentSchema
 from .header_columns import HeaderSchema
 from .index_delta import MaterializationDelta
-from .public_rows import SCOPE_FIELDS, _snapshot_atom, atom_fields, atom_key, insert_public_rows, projected_rows
+from .public_rows import (
+    SCOPE_FIELDS,
+    _snapshot_atom,
+    atom_fields,
+    atom_key,
+    insert_public_rows,
+    projected_rows,
+)
 
 
 @dataclass(config=ConfigDict(strict=True, extra="forbid"), frozen=True)
@@ -22,7 +34,9 @@ class ProjectionSnapshot:
     graph: GraphState
     header_schema: HeaderSchema
     content_schema: ContentSchema
-    atom_sources: Annotated[dict[tuple[str, str], dict[str, Any]], InstanceOf()]
+    atom_sources: Annotated[
+        dict[tuple[str, str], dict[str, Any]], InstanceOf()
+    ]
 
 
 @dataclass(config=ConfigDict(strict=True, extra="forbid"), frozen=True)
@@ -36,20 +50,35 @@ class ProjectionChange:
 
 
 def snapshot(
-    atom_rows: list[dict[str, Any]], scope_rows: list[dict[str, Any]], relation_types: set[str] | None,
-    header_schema: HeaderSchema, content_schema: ContentSchema, previous: ProjectionSnapshot | None = None,
-    *, public_rows: tuple[list[dict[str, Any]], list[dict[str, Any]]] | None = None,
+    atom_rows: list[dict[str, Any]],
+    scope_rows: list[dict[str, Any]],
+    relation_types: set[str] | None,
+    header_schema: HeaderSchema,
+    content_schema: ContentSchema,
+    previous: ProjectionSnapshot | None = None,
+    *,
+    public_rows: tuple[list[dict[str, Any]], list[dict[str, Any]]]
+    | None = None,
 ) -> ProjectionSnapshot:
     if public_rows is None:
         reuse = None
-        if previous is not None and previous.header_schema == header_schema and previous.content_schema == content_schema:
+        if (
+            previous is not None
+            and previous.header_schema == header_schema
+            and previous.content_schema == content_schema
+        ):
             reuse = {
                 key: (source, previous.atoms[key])
                 for key, source in previous.atom_sources.items()
-                if key in previous.atoms and previous.atoms[key].get("status_group") != "Archived"
+                if key in previous.atoms
+                and previous.atoms[key].get("status_group") != "Archived"
             }
         public_rows = projected_rows(
-            atom_rows, scope_rows, header_schema, content_schema, previous_atoms=reuse,
+            atom_rows,
+            scope_rows,
+            header_schema,
+            content_schema,
+            previous_atoms=reuse,
         )
     public_atoms, public_scopes = public_rows
     atom_sources = {
@@ -59,14 +88,17 @@ def snapshot(
     return ProjectionSnapshot(
         {(row["relative_path"], row["filename"]): row for row in public_atoms},
         {row["name"]: row for row in public_scopes},
-        graph_state(atom_rows, scope_rows, relation_types), header_schema, content_schema, atom_sources,
+        graph_state(atom_rows, scope_rows, relation_types),
+        header_schema,
+        content_schema,
+        atom_sources,
     )
 
 
 def _same_header_layout(left: HeaderSchema, right: HeaderSchema) -> bool:
-    return tuple((column.name, column.format) for column in left.columns) == tuple(
-        (column.name, column.format) for column in right.columns
-    )
+    return tuple(
+        (column.name, column.format) for column in left.columns
+    ) == tuple((column.name, column.format) for column in right.columns)
 
 
 def _delta_snapshot(
@@ -74,8 +106,13 @@ def _delta_snapshot(
     header_schema: HeaderSchema, content_schema: ContentSchema,
 ) -> ProjectionSnapshot:
     """Copy and patch public maps from already-materialized changed source rows."""
-    if not _same_header_layout(previous.header_schema, header_schema) or previous.content_schema.shape != content_schema.shape:
-        raise ValueError("projection schema changed; full projection rebuild is required")
+    if (
+        not _same_header_layout(previous.header_schema, header_schema)
+        or previous.content_schema.shape != content_schema.shape
+    ):
+        raise ValueError(
+            "projection schema changed; full projection rebuild is required"
+        )
     atoms = dict(previous.atoms)
     atom_sources = dict(previous.atom_sources)
     for row in delta.old_atoms.values():
@@ -83,9 +120,14 @@ def _delta_snapshot(
         atoms.pop(key, None)
         atom_sources.pop(key, None)
     new_atoms, new_scopes = projected_rows(
-        list(delta.new_atoms.values()), list(delta.new_scopes.values()), header_schema, content_schema,
+        list(delta.new_atoms.values()),
+        list(delta.new_scopes.values()),
+        header_schema,
+        content_schema,
     )
-    for public, source in zip(new_atoms, delta.new_atoms.values(), strict=True):
+    for public, source in zip(
+        new_atoms, delta.new_atoms.values(), strict=True
+    ):
         key = (public["relative_path"], public["filename"])
         atoms[key] = public
         atom_sources[key] = source
@@ -93,36 +135,63 @@ def _delta_snapshot(
     for name in delta.old_scopes:
         scopes.pop(name, None)
     scopes.update({row["name"]: row for row in new_scopes})
-    return ProjectionSnapshot(atoms, scopes, previous.graph, header_schema, content_schema, atom_sources)
+    return ProjectionSnapshot(
+        atoms,
+        scopes,
+        previous.graph,
+        header_schema,
+        content_schema,
+        atom_sources,
+    )
 
 
 def _changed_keys(
     previous: dict[Any, dict[str, Any]], current: dict[Any, dict[str, Any]],
 ) -> set[Any]:
     return {
-        key for key in set(previous) | set(current)
-        if previous.get(key, {}).get("hash") != current.get(key, {}).get("hash")
+        key
+        for key in set(previous) | set(current)
+        if previous.get(key, {}).get("hash")
+        != current.get(key, {}).get("hash")
     }
 
 
 def _write_public_delta(
-    connection: Any, previous: ProjectionSnapshot, current: ProjectionSnapshot,
-    changed_atoms: set[tuple[str, str]] | None = None, changed_scopes: set[str] | None = None,
+    connection: Any,
+    previous: ProjectionSnapshot,
+    current: ProjectionSnapshot,
+    changed_atoms: set[tuple[str, str]] | None = None,
+    changed_scopes: set[str] | None = None,
 ) -> tuple[set[tuple[str, str]], set[str], int, int]:
-    changed_atoms = changed_atoms if changed_atoms is not None else _changed_keys(previous.atoms, current.atoms)
-    changed_scopes = changed_scopes if changed_scopes is not None else _changed_keys(previous.scopes, current.scopes)
+    changed_atoms = (
+        changed_atoms
+        if changed_atoms is not None
+        else _changed_keys(previous.atoms, current.atoms)
+    )
+    changed_scopes = (
+        changed_scopes
+        if changed_scopes is not None
+        else _changed_keys(previous.scopes, current.scopes)
+    )
     deleted_atoms = 0
     for path, filename in changed_atoms:
         if (path, filename) in previous.atoms:
-            connection.execute('DELETE FROM main.atoms WHERE "relative_path" = ? AND filename = ?', [path, filename])
+            connection.execute(
+                'DELETE FROM main.atoms WHERE "relative_path" = ? AND filename = ?',
+                [path, filename],
+            )
             deleted_atoms += 1
     deleted_scopes = 0
     for name in changed_scopes:
         if name in previous.scopes:
-            connection.execute("DELETE FROM main.scope_units WHERE name = ?", [name])
+            connection.execute(
+                "DELETE FROM main.scope_units WHERE name = ?", [name]
+            )
             deleted_scopes += 1
     insert_public_rows(
-        connection, "atoms", atom_fields(current.header_schema, current.content_schema),
+        connection,
+        "atoms",
+        atom_fields(current.header_schema, current.content_schema),
         [current.atoms[key] for key in changed_atoms if key in current.atoms],
         json_fields=current.header_schema.json_names | {"header.relations"},
     )
@@ -134,20 +203,37 @@ def _write_public_delta(
     return changed_atoms, changed_scopes, deleted_atoms, deleted_scopes
 
 
-def _delta_keys(delta: MaterializationDelta) -> tuple[set[tuple[str, str]], set[str]]:
+def _delta_keys(
+    delta: MaterializationDelta,
+) -> tuple[set[tuple[str, str]], set[str]]:
     return (
-        {atom_key(row) for row in [*delta.old_atoms.values(), *delta.new_atoms.values()]},
+        {
+            atom_key(row)
+            for row in [*delta.old_atoms.values(), *delta.new_atoms.values()]
+        },
         set(delta.old_scopes) | set(delta.new_scopes),
     )
 
 
 def _changed_delta_keys(
-    previous: ProjectionSnapshot, current: ProjectionSnapshot, delta: MaterializationDelta,
+    previous: ProjectionSnapshot,
+    current: ProjectionSnapshot,
+    delta: MaterializationDelta,
 ) -> tuple[set[tuple[str, str]], set[str]]:
     atom_keys, scope_names = _delta_keys(delta)
     return (
-        {key for key in atom_keys if previous.atoms.get(key, {}).get("hash") != current.atoms.get(key, {}).get("hash")},
-        {name for name in scope_names if previous.scopes.get(name, {}).get("hash") != current.scopes.get(name, {}).get("hash")},
+        {
+            key
+            for key in atom_keys
+            if previous.atoms.get(key, {}).get("hash")
+            != current.atoms.get(key, {}).get("hash")
+        },
+        {
+            name
+            for name in scope_names
+            if previous.scopes.get(name, {}).get("hash")
+            != current.scopes.get(name, {}).get("hash")
+        },
     )
 
 
@@ -180,8 +266,10 @@ def apply(
             for name in previous.graph.edges.keys() | next_graph.edges.keys()
         )
     else:
-        next_graph, graph_rows = apply_graph_delta(connection, previous.graph, delta, relation_types)
-    for key in (current.atoms if delta is None else changed_atoms):
+        next_graph, graph_rows = apply_graph_delta(
+            connection, previous.graph, delta, relation_types
+        )
+    for key in current.atoms if delta is None else changed_atoms:
         if key in current.atoms:
             current.atoms[key] = _snapshot_atom(current.atoms[key])
     current = ProjectionSnapshot(

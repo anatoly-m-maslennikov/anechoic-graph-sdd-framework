@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1757
+concern:
+  subject: "Atom"
+  path: "Model/Graph/Node//Artifact//SSOT//Prescribed/Content"
+  relation: "is_contained_by"
 container:
   component: C18
 tier: 1
@@ -8,8 +12,8 @@ context:
   lens: DevOps
 state:
   status: active
-  version: 29
-  updated_at: '2026-11-25T22:26:06.440694+00:00'
+  version: 30
+  updated_at: "2026-11-27T16:16:01.404965+00:00"
 ---
 ## Summary
 

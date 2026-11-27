@@ -97,7 +97,12 @@ def _journal_items(events, saved_query_id=None):
             record = _journal_record(event)
         except ValueError:
             print(
-                f"saved query skipped: Work Journal {SAVED_QUERY_AUTHOR} event {number}",
+                (
+                    "saved query skipped: Work Journal "
+                    f"{SAVED_QUERY_AUTHOR}"
+                    " event "
+                    f"{number}"
+                ),
                 file=sys.stderr,
             )
             continue

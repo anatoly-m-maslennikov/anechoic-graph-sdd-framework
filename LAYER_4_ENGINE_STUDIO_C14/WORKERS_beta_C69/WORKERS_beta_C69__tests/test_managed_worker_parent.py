@@ -15,17 +15,22 @@ _MODULES = (
     "WORKERS_beta_C69.lifecycle_worker",
 )
 _KEY = "ANECHOIC_BETA_WORKER_PARENT_PID"
-_PARENT = """
-import os
-import subprocess
-import sys
-
-worker = subprocess.Popen([sys.executable, '-B', '-P', '-c', sys.argv[1], sys.argv[2]],
-    env=os.environ | {'ANECHOIC_BETA_WORKER_PARENT_PID': str(os.getpid())},
-    stdin=int(sys.argv[3]), start_new_session=True)
-print(f'worker {worker.pid}', flush=True)
-worker.wait()
-"""
+_PARENT = (
+    "\n"
+    "import os\n"
+    "import subprocess\n"
+    "import sys\n"
+    "\n"
+    "worker = subprocess.Popen([sys.executable, '-B',"
+    " '-P', '-c', sys.argv[1], sys.argv[2]],\n"
+    "    env=os.environ | "
+    "{'ANECHOIC_BETA_WORKER_PARENT_PID': "
+    "str(os.getpid())},\n"
+    "    stdin=int(sys.argv[3]), "
+    "start_new_session=True)\n"
+    "print(f'worker {worker.pid}', flush=True)\n"
+    "worker.wait()\n"
+)
 _WORKER = """
 import runpy
 import subprocess

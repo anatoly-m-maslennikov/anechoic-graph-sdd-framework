@@ -1,15 +1,19 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-275
+concern:
+  subject: "Projection"
+  path: "Model/Graph/Node//Artifact//Derived"
+  relation: "is_narrower_than"
 container:
   component: C37
 tier: 1
 context:
   lens: DES
 state:
-  status: "active"
-  version: 23
-  updated_at: "2026-11-25T22:43:29.365069+00:00"
+  status: active
+  version: 24
+  updated_at: "2026-11-27T16:16:01.404965+00:00"
 ---
 ## Summary
 

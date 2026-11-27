@@ -8,7 +8,11 @@ import re
 import yaml
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
-    CEILINGS, ReadContext, frontmatter_bounds, parse_carrier, revalidate_native,
+    CEILINGS,
+    ReadContext,
+    frontmatter_bounds,
+    parse_carrier,
+    revalidate_native,
 )
 from . import effects
 from .common import InputError, SourceChanged, result, saved
@@ -18,40 +22,79 @@ from .source import bind_query_reader
 
 
 def _validate_input(selection, params):
-    if not isinstance(params, dict) or set(params) - {'target', 'changes', 'expectedUpdatedAt'} or not {'target', 'changes'} <= set(params):
-        raise InputError('target', 'Supply an exact Draft target and changes.')
+    if (
+        not isinstance(params, dict)
+        or set(params) - {"target", "changes", "expectedUpdatedAt"}
+        or not {"target", "changes"} <= set(params)
+    ):
+        raise InputError("target", "Supply an exact Draft target and changes.")
     target, changes = params['target'], params['changes']
     if (not isinstance(target, dict) or set(target) != {'ref_id', 'version'}
             or not isinstance(target['ref_id'], str) or type(target['version']) is not int
             or target['version'] < 1 or not re.fullmatch(
                 re.escape(selection.project_prefix) + rf'-[STPC]-[0-9]+@{target["version"]}-draft', target['ref_id'])):
         raise InputError('target', 'Supply an exact Draft reference and matching Version.')
-    if (not isinstance(changes, dict) or not changes or set(changes) - {'body', 'removeRelations'}
-            or 'body' in changes and not isinstance(changes['body'], str)
-            or 'removeRelations' in changes and (not isinstance(changes['removeRelations'], list)
-                or any(not isinstance(item, dict) or set(item) != {'type', 'ref_id'}
-                       or any(not isinstance(v, str) or not v for v in item.values())
-                       for item in changes['removeRelations']))):
-        raise InputError('changes', 'Supply a Markdown body or authored relations to remove.')
-    if 'expectedUpdatedAt' in params and not isinstance(params['expectedUpdatedAt'], str):
-        raise InputError('expectedUpdatedAt', 'Supply the Draft updated_at timestamp.')
+    if (
+        not isinstance(changes, dict)
+        or not changes
+        or set(changes) - {"body", "removeRelations"}
+        or "body" in changes
+        and not isinstance(changes["body"], str)
+        or "removeRelations" in changes
+        and (
+            not isinstance(changes["removeRelations"], list)
+            or any(
+                not isinstance(item, dict)
+                or set(item) != {"type", "ref_id"}
+                or any(not isinstance(v, str) or not v for v in item.values())
+                for item in changes["removeRelations"]
+            )
+        )
+    ):
+        raise InputError(
+            "changes",
+            "Supply a Markdown body or authored relations to remove.",
+        )
+    if "expectedUpdatedAt" in params and not isinstance(
+        params["expectedUpdatedAt"], str
+    ):
+        raise InputError(
+            "expectedUpdatedAt", "Supply the Draft updated_at timestamp."
+        )
     return target, changes
 
 
 def update_draft(selection, params, *, current_rows, previous_capture=None):
     target, changes = _validate_input(selection, params)
-    matches = [r for r in current_rows if r.get('_exact_ref') == target['ref_id']
-               and r.get('status_group') == 'Draft' and r.get('version') == target['version']]
+    matches = [
+        r
+        for r in current_rows
+        if r.get("_exact_ref") == target["ref_id"]
+        and r.get("status_group") == "Draft"
+        and r.get("version") == target["version"]
+    ]
     if len(matches) != 1:
         raise SourceChanged('Draft selection is missing, ambiguous, or stale.')
     selected = matches[0]
-    relative, digest = selected.get('source_path'), selected.get('_source_sha256')
-    if not isinstance(relative, str) or not isinstance(digest, str) or not re.fullmatch(r'[0-9a-f]{64}', digest):
-        raise SourceChanged('Draft capture lacks a path or digest.')
+    relative, digest = (
+        selected.get("source_path"),
+        selected.get("_source_sha256"),
+    )
+    if (
+        not isinstance(relative, str)
+        or not isinstance(digest, str)
+        or not re.fullmatch(r"[0-9a-f]{64}", digest)
+    ):
+        raise SourceChanged("Draft capture lacks a path or digest.")
     relative = Path(relative)
     path = selection.root / relative
-    if relative.is_absolute() or '..' in relative.parts or not path.is_relative_to(selection.control_root) or path.parent.name not in {'01_draft', '000_draft'}:
-        raise InputError('target', 'Select a native Draft carrier.')
+    if (
+        relative.is_absolute()
+        or ".." in relative.parts
+        or not path.is_relative_to(selection.control_root)
+        or path.parent.name not in {"01_draft", "000_draft"}
+    ):
+        raise InputError("target", "Select a native Draft carrier.")
     with _project_write_lock(selection.root):
         candidate, updated = _prepare(selection, params, changes, target,
                                       selected, digest, path, previous_capture)
@@ -79,10 +122,15 @@ def _prepare(selection, params, changes, target, selected, digest, path, previou
         header = selected['header_json']
         stamp = header.get('state', {}).get('updated_at')
         observed = stamp.isoformat() if isinstance(stamp, datetime) else stamp
-        if 'expectedUpdatedAt' in params and observed != params['expectedUpdatedAt']:
-            raise SourceChanged('Draft updated_at does not match the expected timestamp.')
-        old_body = raw[bounds[2]:].decode('utf-8')
-        body = changes.get('body', old_body)
+        if (
+            "expectedUpdatedAt" in params
+            and observed != params["expectedUpdatedAt"]
+        ):
+            raise SourceChanged(
+                "Draft updated_at does not match the expected timestamp."
+            )
+        old_body = raw[bounds[2] :].decode("utf-8")
+        body = changes.get("body", old_body)
         if _summary(body) != _summary(old_body):
             raise InputError('summary', 'Changing a Summary is not supported.')
         candidate = _candidate(raw, bounds, path, header, body,
@@ -90,9 +138,18 @@ def _prepare(selection, params, changes, target, selected, digest, path, previou
         return candidate if candidate is not None else (None, observed)
     except (InputError, SourceChanged):
         raise
-    except (OSError, RuntimeError, TypeError, ValueError, KeyError, UnicodeError, yaml.YAMLError) as error:
-        raise SourceChanged('Draft source is unavailable or changed.') from error
-
+    except (
+        OSError,
+        RuntimeError,
+        TypeError,
+        ValueError,
+        KeyError,
+        UnicodeError,
+        yaml.YAMLError,
+    ) as error:
+        raise SourceChanged(
+            "Draft source is unavailable or changed."
+        ) from error
 
 
 def _candidate(raw, bounds, path, before, body, removals):
@@ -100,9 +157,13 @@ def _candidate(raw, bounds, path, before, body, removals):
     node = yaml.compose(header, Loader=yaml.SafeLoader)
     fields = {key.value: value for key, value in node.value}
     state = fields['state']
-    timestamps = [value for key, value in state.value if key.value == 'updated_at']
+    timestamps = [
+        value for key, value in state.value if key.value == "updated_at"
+    ]
     if len(timestamps) != 1 or not isinstance(timestamps[0], yaml.ScalarNode):
-        raise InputError('target', 'Draft requires a scalar updated_at timestamp.')
+        raise InputError(
+            "target", "Draft requires a scalar updated_at timestamp."
+        )
     relations = before.get('relations', {})
     if not isinstance(relations, dict):
         raise InputError('changes', 'Draft relations are invalid.')

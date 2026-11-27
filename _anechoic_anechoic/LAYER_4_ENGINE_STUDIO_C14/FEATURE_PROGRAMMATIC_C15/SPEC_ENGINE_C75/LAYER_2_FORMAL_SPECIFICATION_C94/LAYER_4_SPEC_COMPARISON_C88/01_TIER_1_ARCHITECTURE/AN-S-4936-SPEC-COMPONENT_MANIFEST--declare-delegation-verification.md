@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 1
-  updated_at: '2026-11-27T13:09:58.960455+00:00'
+  version: 2
+  updated_at: "2026-11-27T16:43:06.703447+00:00"
 ---
 ## Summary
 
@@ -54,10 +54,39 @@ declare_trace_contract(
 )
 ```
 
+For sibling admission, `siblings` means distinct Components with the same
+nonempty declared parent. `client_declared` means the caller's Manifest
+declares the provider and requested interface, including the required
+transport and route when applicable.
+
 ```python trace
 declare_trace_contract(
     action='check_sibling_outcome',
-    output='compared',
-    must_effect=(('C89.sibling_outcome_comparison', 'reported'),),
+    effects={'admission_error': ('C89.sibling_admission_error', 'raised',
+                                 {'exception': 'ValueError'})},
+    cases={
+        'compared': {
+            'must_effect': (
+                ('C89.sibling_request', 'observed',
+                 {'siblings': True, 'client_declared': True}),
+                ('C89.sibling_outcome_comparison', 'reported'),
+            ),
+        },
+        'rejected_non_sibling': {
+            'must_effect': (
+                ('C89.sibling_request', 'observed', {'siblings': False}),
+                'admission_error',
+            ),
+            'forbid_effect': ('C89.sibling_outcome_comparison',),
+        },
+        'rejected_undeclared_client': {
+            'must_effect': (
+                ('C89.sibling_request', 'observed',
+                 {'siblings': True, 'client_declared': False}),
+                'admission_error',
+            ),
+            'forbid_effect': ('C89.sibling_outcome_comparison',),
+        },
+    },
 )
 ```

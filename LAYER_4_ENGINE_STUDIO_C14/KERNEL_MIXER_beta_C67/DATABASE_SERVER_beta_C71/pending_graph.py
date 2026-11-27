@@ -3,7 +3,13 @@
 import json
 
 from .accepted_model import generation_rows
-from .generation import GenerationBaseChanged, _HEX, _native_graph_payload, _unique, _write_reuse
+from .generation import (
+    GenerationBaseChanged,
+    _HEX,
+    _native_graph_payload,
+    _unique,
+    _write_reuse,
+)
 from .realization_projection import has_table, replace, restore_property_graph
 from .table_names import sync_query_views
 
@@ -16,10 +22,15 @@ def replace_pending_graph(connection, data):
     dropped = False
     try:
         rows = generation_rows(connection)
-        if (len(rows) != 1 or rows[0][0] != data["base_generation"]
-                or not has_table(connection, "native_graph", "int_labels")
-                or not has_table(connection, "main", "mrt_atom_graph_relations")):
-            raise GenerationBaseChanged("Generation base changed or is not native")
+        if (
+            len(rows) != 1
+            or rows[0][0] != data["base_generation"]
+            or not has_table(connection, "native_graph", "int_labels")
+            or not has_table(connection, "main", "mrt_atom_graph_relations")
+        ):
+            raise GenerationBaseChanged(
+                "Generation base changed or is not native"
+            )
         base, model, structure = rows[0]
         witness_rows = connection.execute("SELECT witness FROM ops_generation_reuse").fetchall()
         if len(witness_rows) != 1:

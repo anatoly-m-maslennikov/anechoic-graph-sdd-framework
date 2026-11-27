@@ -7,22 +7,47 @@ import re
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from .ingestion_issues import validate_carrier_issues
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import status_domains as _status_domains
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    status_domains as _status_domains,
+)
 
 _ATOM = re.compile(r"[A-Z]+-[STPC]-[0-9]+")
 _ATOM_REF = re.compile(r"[A-Z]+-[STPC]-[0-9]+(?:@[1-9][0-9]*(?:-draft)?)?")
 NATIVE_PROJECTION_COLUMNS = {
     "mrt_atoms": (
-        ("reference", "VARCHAR"), ("content.summary", "VARCHAR"), ("relative_path", "VARCHAR"),
-        ("filename", "VARCHAR"), ("status_group", "VARCHAR"), ("header.state.version", "BIGINT"),
-        ("header.state.status", "VARCHAR"), ("header.container.component", "VARCHAR"),
-        ("header.tier", "BIGINT"), ("header.context.template", "VARCHAR"),
+        ("reference", "VARCHAR"),
+        ("content.summary", "VARCHAR"),
+        ("relative_path", "VARCHAR"),
+        ("filename", "VARCHAR"),
+        ("status_group", "VARCHAR"),
+        ("header.state.version", "BIGINT"),
+        ("header.state.status", "VARCHAR"),
+        ("header.container.component", "VARCHAR"),
+        ("header.tier", "BIGINT"),
+        ("header.context.template", "VARCHAR"),
     ),
-    "mrt_atom_references": tuple((name, "VARCHAR") for name in
-                                  ("relative_path", "filename", "status_group", "reference", "stable_ref", "exact_ref")),
-    "mrt_atom_graph_relations": tuple((name, "VARCHAR") for name in
-                                       ("source_kind", "source_ref", "target_kind", "target_ref", "relation_type"))
-                                + (("derived", "BOOLEAN"),),
+    "mrt_atom_references": tuple(
+        (name, "VARCHAR")
+        for name in (
+            "relative_path",
+            "filename",
+            "status_group",
+            "reference",
+            "stable_ref",
+            "exact_ref",
+        )
+    ),
+    "mrt_atom_graph_relations": tuple(
+        (name, "VARCHAR")
+        for name in (
+            "source_kind",
+            "source_ref",
+            "target_kind",
+            "target_ref",
+            "relation_type",
+        )
+    )
+    + (("derived", "BOOLEAN"),),
 }
 
 
@@ -85,10 +110,18 @@ def _validate_atom_identity(row, domains):
     family = identity.split("-")[1]
     if status not in domains[family]:
         raise ValueError(f"Invalid native Atom Status {status} for {family}")
-    expected_group = status.title() if status in {"draft", "archived"} else "Current"
-    expected_exact = f'{identity}@{row.version}' + ("-draft" if status == "draft" else "")
+    expected_group = (
+        status.title() if status in {"draft", "archived"} else "Current"
+    )
+    expected_exact = f"{identity}@{row.version}" + (
+        "-draft" if status == "draft" else ""
+    )
     expected_ref = identity if group == "Current" else expected_exact
-    if group != expected_group or exact != expected_exact or row.reference != expected_ref:
+    if (
+        group != expected_group
+        or exact != expected_exact
+        or row.reference != expected_ref
+    ):
         raise ValueError("Native Atom identity, version or status disagrees")
 
 
@@ -105,17 +138,30 @@ def _atom_references(atoms, domains):
         if (any(not _string(getattr(row, key)) for key in ("reference", "exact_ref", "status_group",
                 "relative_path", "filename", "status")) or row.version < 1):
             raise ValueError("Invalid native Atom fields")
-        if (any(value is not None and not value.strip() for value in (row.container_component, row.template))
-                or row.tier is not None and not -(2**63) <= row.tier < 2**63):
+        if (
+            any(
+                value is not None and not value.strip()
+                for value in (row.container_component, row.template)
+            )
+            or row.tier is not None
+            and not -(2**63) <= row.tier < 2**63
+        ):
             raise ValueError("Invalid native Atom fields")
         records.append(row)
         _validate_atom_identity(row, domains)
         exact = row.exact_ref
         path, filename = row.relative_path, row.filename
         parts = PurePosixPath(path).parts
-        if (path.startswith("/") or "\\" in path or any(part in {"..", "."} for part in parts)
-                or str(PurePosixPath(path)) != path or filename in {".", ".."}
-                or "/" in filename or "\\" in filename or not filename.endswith(".md")):
+        if (
+            path.startswith("/")
+            or "\\" in path
+            or any(part in {"..", "."} for part in parts)
+            or str(PurePosixPath(path)) != path
+            or filename in {".", ".."}
+            or "/" in filename
+            or "\\" in filename
+            or not filename.endswith(".md")
+        ):
             raise ValueError("Invalid native Atom path")
         location = (path, filename)
         if exact in exacts or row.reference in references or location in paths:
@@ -127,12 +173,23 @@ def _atom_references(atoms, domains):
 
 
 def _validate_lenses(atoms, lenses):
-    current_specs = {atom.reference for atom in atoms if atom.status_group == "Current"
-                     and "-S-" in atom.reference}
-    if (not isinstance(lenses, list) or any(
-        not isinstance(row, list) or len(row) != 2 or not _string(row[0]) or row[0] not in current_specs
-        or not _string(row[1]) for row in lenses
-    ) or len({row[0] for row in lenses}) != len(lenses)):
+    current_specs = {
+        atom.reference
+        for atom in atoms
+        if atom.status_group == "Current" and "-S-" in atom.reference
+    }
+    if (
+        not isinstance(lenses, list)
+        or any(
+            not isinstance(row, list)
+            or len(row) != 2
+            or not _string(row[0])
+            or row[0] not in current_specs
+            or not _string(row[1])
+            for row in lenses
+        )
+        or len({row[0] for row in lenses}) != len(lenses)
+    ):
         raise ValueError("Invalid native lifecycle Lens rows")
 
 
@@ -151,14 +208,21 @@ def _snapshot_record(snapshot, manifest_sha256):
 
 
 def validate_native_snapshot(snapshot, manifest_sha256, bindings=None):
-    """Reject malformed or inconsistent snapshots before any database mutation."""
+    (
+        'Reject malformed or inconsistent snapshots before any database '
+        'mutation.'
+    )
     record = _snapshot_record(snapshot, manifest_sha256)
     atoms, relations, types = record.atoms, record.relations, record.relation_types
     if not all(isinstance(value, list) for value in (atoms, relations, types)):
         raise ValueError("Native snapshot collections must be lists")
-    if any(not _string(name) for name in types) or len(set(types)) != len(types):
+    if any(not _string(name) for name in types) or len(set(types)) != len(
+        types
+    ):
         raise ValueError("Invalid native relation declarations")
-    references, atoms = _atom_references(atoms, _status_domains(bindings or {}))
+    references, atoms = _atom_references(
+        atoms, _status_domains(bindings or {})
+    )
     validate_carrier_issues(record.ingestion_issues, {
         str(PurePosixPath(row.relative_path) / row.filename): row.exact_ref for row in atoms})
     measured = {atom.exact_ref for atom in atoms if atom.status_group == "Current"
@@ -218,24 +282,39 @@ def write_staged_atoms(connection):
 
 def replace_native_atoms(connection, snapshot):
     """Replace public tables inside the caller's active transaction."""
-    existing = connection.execute("SELECT table_type FROM information_schema.tables WHERE table_catalog = current_database() "
-                                  "AND table_schema = 'main' AND table_name = 'mrt_atom_references'").fetchone()
+    existing = connection.execute(
+        "SELECT table_type FROM information_schema.tables WHERE table_catalog = current_database() "
+        "AND table_schema = 'main' AND table_name = 'mrt_atom_references'"
+    ).fetchone()
     if existing and existing[0] == "VIEW":
         connection.execute("DROP VIEW main.mrt_atom_references")
     for table, columns in NATIVE_PROJECTION_COLUMNS.items():
         definitions = ", ".join(f'"{name}" {kind}' for name, kind in columns)
         key = ", PRIMARY KEY (reference)" if table == "mrt_atoms" else ""
-        connection.execute(f"CREATE OR REPLACE TABLE main.{table} ({definitions}{key})")
+        connection.execute(
+            f"CREATE OR REPLACE TABLE main.{table} ({definitions}{key})"
+        )
     stage_atom_rows(connection, snapshot["atoms"])
     write_staged_atoms(connection)
     connection.execute("DROP TABLE int_admission_atoms")
-    connection.execute('''INSERT INTO main.mrt_atom_graph_relations
+    connection.execute(
+        """INSERT INTO main.mrt_atom_graph_relations
         SELECT edge.source_kind, edge.source_ref, edge.target_kind, edge.target_ref, edge.relation_type, edge.derived
         FROM UNNEST(?::STRUCT(source_kind VARCHAR, source_ref VARCHAR, target_kind VARCHAR,
-            target_ref VARCHAR, relation_type VARCHAR, derived BOOLEAN)[]) AS t(edge)''', [snapshot["relations"]])
+            target_ref VARCHAR, relation_type VARCHAR, derived BOOLEAN)[]) AS t(edge)""",
+        [snapshot["relations"]],
+    )
 
     connection.execute("DROP TABLE IF EXISTS main.int_lifecycle_lenses")
     if "lifecycle_lenses" in snapshot:
-        connection.execute("CREATE TABLE main.int_lifecycle_lenses (reference VARCHAR PRIMARY KEY, lens VARCHAR NOT NULL)")
+        connection.execute(
+            (
+                'CREATE TABLE main.int_lifecycle_lenses (reference VARCHAR '
+                'PRIMARY KEY, lens VARCHAR NOT NULL)'
+            )
+        )
         if snapshot["lifecycle_lenses"]:
-            connection.executemany("INSERT INTO main.int_lifecycle_lenses VALUES (?, ?)", snapshot["lifecycle_lenses"])
+            connection.executemany(
+                "INSERT INTO main.int_lifecycle_lenses VALUES (?, ?)",
+                snapshot["lifecycle_lenses"],
+            )

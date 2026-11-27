@@ -11,7 +11,10 @@ from time import monotonic
 
 import httpx2
 
-_MODULE = "IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.backend_process"
+_MODULE = (
+    'IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.backend_proce'
+    'ss'
+)
 
 
 class ToolProtocolError(RuntimeError):
@@ -22,7 +25,9 @@ class ToolProtocolError(RuntimeError):
 
 
 class ProjectToolSession:
-    def __init__(self, root, *, selection, workbench_storage=None, journal_storage=None):
+    def __init__(
+        self, root, *, selection, workbench_storage=None, journal_storage=None
+    ):
         self.root = Path(root)
         self.selection = selection
         self._workbench_storage = workbench_storage
@@ -48,22 +53,43 @@ class ProjectToolSession:
         engine = Path(__file__).resolve().parents[3]
         root = engine.parent
         paths = (engine,)
-        environment = {**os.environ, "PYTHONPATH": os.pathsep.join(map(str, paths))}
+        environment = {
+            **os.environ,
+            "PYTHONPATH": os.pathsep.join(map(str, paths)),
+        }
         selection = self.selection
-        command = [sys.executable, "-B", "-P", "-m", _MODULE, "--socket", str(socket),
-                   "--project-root", str(selection.root), "--control-root", selection.control_relative.as_posix(),
-                   "--instance-id", selection.instance_id, "--manifest-sha256", selection.manifest_sha256]
+        command = [
+            sys.executable,
+            "-B",
+            "-P",
+            "-m",
+            _MODULE,
+            "--socket",
+            str(socket),
+            "--project-root",
+            str(selection.root),
+            "--control-root",
+            selection.control_relative.as_posix(),
+            "--instance-id",
+            selection.instance_id,
+            "--manifest-sha256",
+            selection.manifest_sha256,
+        ]
         if selection.host_root is not None:
             command += ["--host-project-root", str(selection.host_root)]
         if self._workbench_storage is not None:
             command += ["--default-workbench-storage", self._workbench_storage]
         if self._journal_storage is not None:
             command += ["--default-journal-storage", self._journal_storage]
-        return subprocess.Popen(command, cwd=root, env=environment, stdin=subprocess.PIPE, stdout=2)
+        return subprocess.Popen(
+            command, cwd=root, env=environment, stdin=subprocess.PIPE, stdout=2
+        )
 
     async def initialize(self):
         if self._closed or self._process is not None:
-            raise RuntimeError("Project Tool session already started or closed")
+            raise RuntimeError(
+                "Project Tool session already started or closed"
+            )
         try:
             self._directory = TemporaryDirectory(prefix="anechoic-api-", dir="/tmp")
             socket = Path(self._directory.name).resolve() / "api.sock"
@@ -88,7 +114,10 @@ class ProjectToolSession:
                 if (response.status_code != 200 or not isinstance(observed, dict)
                         or any(observed.get(key) != value for key, value in expected.items())
                         or not isinstance(observed.get("kernel_pid"), int)):
-                    raise RuntimeError("Workbench Backend reported a different Project binding")
+                    raise RuntimeError((
+                        'Workbench Backend reported a different Project '
+                        'binding'
+                    ))
                 timeout = max(0, deadline - monotonic()) if bounded else None
                 async with asyncio.timeout(timeout):
                     catalog, digest = await self._catalog()
@@ -106,67 +135,131 @@ class ProjectToolSession:
         try:
             envelope = response.json()
         except ValueError as error:
-            raise ToolProtocolError("tool_runtime_failure", "Invalid Backend response") from error
-        if (response.is_success and isinstance(envelope, dict) and set(envelope) == {"result"}
-                and isinstance(envelope["result"], dict)):
+            raise ToolProtocolError(
+                "tool_runtime_failure", "Invalid Backend response"
+            ) from error
+        if (
+            response.is_success
+            and isinstance(envelope, dict)
+            and set(envelope) == {"result"}
+            and isinstance(envelope["result"], dict)
+        ):
             return envelope["result"]
         if isinstance(envelope, dict) and set(envelope) == {"error"}:
             fault = envelope["error"]
-            if (isinstance(fault, dict) and set(fault) in ({"code", "message"}, {"code", "message", "tool_result"})
-                    and isinstance(fault["code"], str) and isinstance(fault["message"], str)):
+            if (
+                isinstance(fault, dict)
+                and set(fault)
+                in ({"code", "message"}, {"code", "message", "tool_result"})
+                and isinstance(fault["code"], str)
+                and isinstance(fault["message"], str)
+            ):
                 result = fault.get("tool_result")
-                if "tool_result" not in fault or (isinstance(result, dict) and set(result) == {"outcome", "diagnostics"}
-                        and isinstance(result["outcome"], str) and result["outcome"] in {"rejected", "failed"}
-                        and isinstance(result["diagnostics"], list)
-                        and all(isinstance(item, str) for item in result["diagnostics"])):
-                    raise ToolProtocolError(fault["code"], fault["message"], result)
-        raise ToolProtocolError("tool_runtime_failure", "Invalid Backend response")
+                if "tool_result" not in fault or (
+                    isinstance(result, dict)
+                    and set(result) == {"outcome", "diagnostics"}
+                    and isinstance(result["outcome"], str)
+                    and result["outcome"] in {"rejected", "failed"}
+                    and isinstance(result["diagnostics"], list)
+                    and all(
+                        isinstance(item, str) for item in result["diagnostics"]
+                    )
+                ):
+                    raise ToolProtocolError(
+                        fault["code"], fault["message"], result
+                    )
+        raise ToolProtocolError(
+            "tool_runtime_failure", "Invalid Backend response"
+        )
 
     async def _catalog(self):
         try:
-            response = await self._http.get("/tools", params={"instance_id": self.selection.instance_id})
+            response = await self._http.get(
+                "/tools", params={"instance_id": self.selection.instance_id}
+            )
         except httpx2.HTTPError as error:
-            raise ToolProtocolError("tool_runtime_failure", "Backend unavailable") from error
+            raise ToolProtocolError(
+                "tool_runtime_failure", "Backend unavailable"
+            ) from error
         catalog = self._response(response)
-        if (set(catalog) != {"tools", "blacklist"} or not isinstance(catalog["tools"], list)
-                or not all(isinstance(tool, dict) and isinstance(tool.get("name"), str)
-                           for tool in catalog["tools"])
-                or len({tool["name"] for tool in catalog["tools"]}) != len(catalog["tools"])
-                or not isinstance(catalog["blacklist"], list)
-                or not all(isinstance(name, str) for name in catalog["blacklist"])
-                or len(set(catalog["blacklist"])) != len(catalog["blacklist"])):
-            raise ToolProtocolError("tool_runtime_failure", "Invalid Backend catalog")
-        canonical = {"tools": sorted(catalog["tools"], key=lambda tool: tool["name"]),
-                     "blacklist": sorted(catalog["blacklist"])}
-        return catalog, json.dumps(canonical, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+        if (
+            set(catalog) != {"tools", "blacklist"}
+            or not isinstance(catalog["tools"], list)
+            or not all(
+                isinstance(tool, dict) and isinstance(tool.get("name"), str)
+                for tool in catalog["tools"]
+            )
+            or len({tool["name"] for tool in catalog["tools"]})
+            != len(catalog["tools"])
+            or not isinstance(catalog["blacklist"], list)
+            or not all(isinstance(name, str) for name in catalog["blacklist"])
+            or len(set(catalog["blacklist"])) != len(catalog["blacklist"])
+        ):
+            raise ToolProtocolError(
+                "tool_runtime_failure", "Invalid Backend catalog"
+            )
+        canonical = {
+            "tools": sorted(catalog["tools"], key=lambda tool: tool["name"]),
+            "blacklist": sorted(catalog["blacklist"]),
+        }
+        return catalog, json.dumps(
+            canonical,
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=False,
+        )
 
     async def ensure_current(self):
         if not self.ready:
-            raise ToolProtocolError("tool_runtime_failure", "Backend unavailable")
+            raise ToolProtocolError(
+                "tool_runtime_failure", "Backend unavailable"
+            )
         _, digest = await self._catalog()
         if digest != self._catalog_digest:
-            raise ToolProtocolError("tool_registry_stale", "Tool registry changed")
+            raise ToolProtocolError(
+                "tool_registry_stale", "Tool registry changed"
+            )
 
     async def call_tool(self, name, arguments, *, session_id=None, public_base_url=None,
                         asserted_project_root=None):
         if not self.ready:
-            raise ToolProtocolError("tool_runtime_failure", "Backend unavailable")
-        operation = asyncio.create_task(self._http.post("/tools", json={
-            "name": name, "arguments": arguments, "instance_id": self.selection.instance_id,
-            "session_id": session_id, "public_base_url": public_base_url,
-            "asserted_project_root": asserted_project_root,
-        }))
+            raise ToolProtocolError(
+                "tool_runtime_failure", "Backend unavailable"
+            )
+        operation = asyncio.create_task(
+            self._http.post(
+                "/tools",
+                json={
+                    "name": name,
+                    "arguments": arguments,
+                    "instance_id": self.selection.instance_id,
+                    "session_id": session_id,
+                    "public_base_url": public_base_url,
+                    "asserted_project_root": asserted_project_root,
+                },
+            )
+        )
         try:
             response = await asyncio.shield(operation)
         except asyncio.CancelledError:
             await asyncio.gather(operation, return_exceptions=True)
             raise
         except httpx2.HTTPError as error:
-            raise ToolProtocolError("tool_runtime_failure", "Backend unavailable") from error
+            raise ToolProtocolError(
+                "tool_runtime_failure", "Backend unavailable"
+            ) from error
         result = self._response(response)
-        if (set(result) != {"value", "text"} or not isinstance(result["value"], dict)
-                or (result["text"] is not None and not isinstance(result["text"], str))):
-            raise ToolProtocolError("tool_runtime_failure", "Invalid Backend response")
+        if (
+            set(result) != {"value", "text"}
+            or not isinstance(result["value"], dict)
+            or (
+                result["text"] is not None
+                and not isinstance(result["text"], str)
+            )
+        ):
+            raise ToolProtocolError(
+                "tool_runtime_failure", "Invalid Backend response"
+            )
         return result
 
     async def close(self):

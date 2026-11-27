@@ -93,9 +93,16 @@ class GraphRuleCardinalityTests(unittest.TestCase):
                 opening = source.index("```yaml")
                 closing = source.index("```", opening + 3)
                 closing_end = source.index("\n", closing) + 1
-                self.assertEqual(extracted.operative_yaml, source[source.index("\n", opening) + 1 : closing])
-                self.assertEqual(extracted.operative_block, source[opening:closing_end])
-                self.assertEqual(extracted.payload["graph_rule_type"], "cardinality")
+                self.assertEqual(
+                    extracted.operative_yaml,
+                    source[source.index("\n", opening) + 1 : closing],
+                )
+                self.assertEqual(
+                    extracted.operative_block, source[opening:closing_end]
+                )
+                self.assertEqual(
+                    extracted.payload["graph_rule_type"], "cardinality"
+                )
                 self.assertIsNone(extracted.payload["condition"]["maximum"])
 
 

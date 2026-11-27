@@ -3,31 +3,65 @@ import shutil
 import unittest
 from unittest.mock import patch
 
-from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_2_SPEC_READING_C83.SPECIFICATION_MODEL_C85._package__shared import parse_trace_contract
-from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_3_LEAN_TRANSLATOR_C84._package__shared import compile_lean
-from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75._package__shared import verify_formal_chain
-from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.SPEC_ENGINE_C75__tests.functional.test_trace_cases import FIRST, SECOND, SOLUTION, model
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_2_SPEC_READING_C83.SPECIFICATION_MODEL_C85._package__shared import (
+    parse_trace_contract,
+)
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_3_LEAN_TRANSLATOR_C84._package__shared import (
+    compile_lean,
+)
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75._package__shared import (
+    verify_formal_chain,
+)
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.SPEC_ENGINE_C75__tests.functional.test_trace_cases import (
+    FIRST,
+    SECOND,
+    SOLUTION,
+    model,
+)
 
 
 RESOURCES = "{'cpu_cores': 0.5, 'ram_mib': 1536, 'disk_mib': 4096}"
 LATENCY = "{'from': 'request_received', 'to': 'response_sent', 'workload': 'single', 'statistic': 'p95', 'max_ms': 45}"
 THROUGHPUT = "{'from': 'request_received', 'to': 'query_visible', 'workload': 'batch', 'min_requests_per_second': 2.5}"
-PERFORMANCE = "{'resources': " + RESOURCES + ", 'measurements': {'response': " + LATENCY + ", 'completion': " + THROUGHPUT + "}}"
+PERFORMANCE = (
+    "{'resources': "
+    + RESOURCES
+    + ", 'measurements': {'response': "
+    + LATENCY
+    + ", 'completion': "
+    + THROUGHPUT
+    + "}}"
+)
 
 
-def claim(performance=PERFORMANCE, binding=''):
-    return "declare_trace_contract(action='compile', output='python', performance=" + performance + binding + ")"
+def claim(performance=PERFORMANCE, binding=""):
+    return (
+        "declare_trace_contract(action='compile', output='python', performance="
+        + performance
+        + binding
+        + ")"
+    )
 
 
 class TracePerformanceTests(unittest.TestCase):
     def test_unbound_and_bound_declarations(self):
-        expected = parse_trace_contract(claim())['performance']
-        self.assertEqual({'cpu_cores': 0.5, 'ram_mib': 1536, 'disk_mib': 4096}, expected['resources'])
-        self.assertEqual({'response', 'completion'}, set(expected['measurements']))
-        for binding in (", interface='i', transport='http', route='/x', operation='POST /x'",
-                        ", interface='i', transport='in_process', entry='service.run'"):
-            self.assertEqual(expected, parse_trace_contract(claim(binding=binding))['performance'])
-        self.assertNotIn('performance', parse_trace_contract(FIRST))
+        expected = parse_trace_contract(claim())["performance"]
+        self.assertEqual(
+            {"cpu_cores": 0.5, "ram_mib": 1536, "disk_mib": 4096},
+            expected["resources"],
+        )
+        self.assertEqual(
+            {"response", "completion"}, set(expected["measurements"])
+        )
+        for binding in (
+            ", interface='i', transport='http', route='/x', operation='POST /x'",
+            ", interface='i', transport='in_process', entry='service.run'",
+        ):
+            self.assertEqual(
+                expected,
+                parse_trace_contract(claim(binding=binding))["performance"],
+            )
+        self.assertNotIn("performance", parse_trace_contract(FIRST))
 
     def test_rejects_invalid_performance(self):
         invalid = [
@@ -39,12 +73,28 @@ class TracePerformanceTests(unittest.TestCase):
             PERFORMANCE.replace("'disk_mib': 4096", "'disk_mib': 0"),
             PERFORMANCE.replace("'disk_mib': 4096", "'disk_mib': True"),
             PERFORMANCE.replace("'disk_mib': 4096", "'disk_mib': 1, 'gpu': 1"),
-            PERFORMANCE.replace("'measurements': {", "'measurements': {'response': " + LATENCY + ", "),
-            PERFORMANCE.replace("'measurements': {'response': " + LATENCY + ", 'completion': " + THROUGHPUT + "}", "'measurements': {}"),
-            PERFORMANCE.replace("'from': 'request_received'", "'from': ' '", 1),
-            PERFORMANCE.replace("'to': 'response_sent'", "'to': 'request_received'"),
+            PERFORMANCE.replace(
+                "'measurements': {",
+                "'measurements': {'response': " + LATENCY + ", ",
+            ),
+            PERFORMANCE.replace(
+                "'measurements': {'response': "
+                + LATENCY
+                + ", 'completion': "
+                + THROUGHPUT
+                + "}",
+                "'measurements': {}",
+            ),
+            PERFORMANCE.replace(
+                "'from': 'request_received'", "'from': ' '", 1
+            ),
+            PERFORMANCE.replace(
+                "'to': 'response_sent'", "'to': 'request_received'"
+            ),
             PERFORMANCE.replace("'workload': 'single'", "'workload': ''"),
-            PERFORMANCE.replace("'statistic': 'p95'", "'statistic': 'average'"),
+            PERFORMANCE.replace(
+                "'statistic': 'p95'", "'statistic': 'average'"
+            ),
             PERFORMANCE.replace("'max_ms': 45", "'max_ms': True"),
             PERFORMANCE.replace("'max_ms': 45", "'max_ms': 1.5"),
             PERFORMANCE.replace("'max_ms': 45", "'max_ms': 0"),
@@ -59,8 +109,14 @@ class TracePerformanceTests(unittest.TestCase):
                 parse_trace_contract(claim(value))
 
     def test_translation_and_comparison_across_cases_and_operations(self):
-        lean = os.environ.get('ANECHOIC_TEST_LEAN') or os.environ.get('LEAN_BIN') or shutil.which('lean')
-        self.assertTrue(lean, 'Set ANECHOIC_TEST_LEAN or LEAN_BIN, or put lean on PATH')
+        lean = (
+            os.environ.get("ANECHOIC_TEST_LEAN")
+            or os.environ.get("LEAN_BIN")
+            or shutil.which("lean")
+        )
+        self.assertTrue(
+            lean, "Set ANECHOIC_TEST_LEAN or LEAN_BIN, or put lean on PATH"
+        )
         sample = model()
         boundaries = {'state': {'reads': [], 'writes': []}}
         sample['manifest']['fields']['boundaries'] = sample['manifest']['boundaries'] = boundaries

@@ -1,19 +1,24 @@
 <script lang="ts">
   import { untrack } from 'svelte';
   import AtomDocument from './AtomDocument.svelte';
-  import type { AtomActionsSnippet, AtomDestination, AtomDocumentData } from './console_document';
+  import type { AtomActionsSnippet, AtomDestination,
+    AtomDocumentData } from './console_document';
   let { refs, load, onOpen, actions }: {
     refs: string[];
     load: (ref: string) => Promise<AtomDocumentData>;
     onOpen: (ref: string, destination: AtomDestination) => void;
     actions?: AtomActionsSnippet;
   } = $props();
-  let items = $state<{ key: string; ref: string; document?: AtomDocumentData; error?: string; expanded: boolean }[]>([]);
+  let items = $state<{ key: string; ref: string; document?:
+    AtomDocumentData; error?: string; expanded: boolean }[]>([]);
   $effect(() => {
-    const requested = refs.map((ref, index) => ({ ref, key: `${index}:${ref}` }));
+    const requested = refs.map((ref, index) =>
+      ({ ref, key: `${index}:${ref}` }));
     const loader = load;
-    const previous = untrack(() => new Map(items.map((item) => [item.key, item])));
-    items = requested.map((item) => previous.get(item.key) ?? { ...item, expanded: true });
+    const previous = untrack(() => new Map(
+      items.map((item) => [item.key, item])));
+    items = requested.map((item) => previous.get(
+      item.key) ?? { ...item, expanded: true });
     for (const { key, ref } of requested) {
       if (previous.has(key)) continue;
       Promise.resolve().then(() => loader(ref)).then((document) => {
@@ -21,11 +26,13 @@
         if (item) item.document = document;
       }, (error: unknown) => {
         const item = items.find((entry) => entry.key === key);
-        if (item) item.error = error instanceof Error ? error.message : String(error);
+        if (item) item.error = error instanceof Error ?
+          error.message : String(error);
       });
     }
   });
-  function setExpanded(expanded: boolean) { for (const item of items) item.expanded = expanded; }
+  function setExpanded(expanded: boolean) { for (
+    const item of items) item.expanded = expanded; }
 </script>
 
 <div class="document-stack">
@@ -36,8 +43,11 @@
   {#each items as item (item.key)}
     <section class="stack-item">
       {#if item.document}
-        <button class="heading" type="button" aria-expanded={item.expanded} onclick={() => item.expanded = !item.expanded}>{item.document.filename}</button>
-        <div hidden={!item.expanded}><AtomDocument document={item.document} {onOpen} {actions} /></div>
+        <button class="heading" type="button" aria-expanded={item.expanded}
+          onclick={() => item.expanded = !item.expanded}>
+            {item.document.filename}</button>
+        <div hidden={!item.expanded}><AtomDocument
+          document={item.document} {onOpen} {actions} /></div>
       {:else if item.error}
         <p>Could not load {item.ref}: {item.error}</p>
       {:else}

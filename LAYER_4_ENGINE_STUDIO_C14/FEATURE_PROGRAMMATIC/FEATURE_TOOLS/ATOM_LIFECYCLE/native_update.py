@@ -1,7 +1,6 @@
 """Bounded updates for a selected Current native Ticket."""
 from __future__ import annotations
 
-from collections import defaultdict
 from contextlib import nullcontext
 from functools import partial
 from hashlib import sha256
@@ -19,47 +18,15 @@ from . import effects
 from .effects import _project_write_lock
 from .directory_effect import _read_tree, move_directory
 from .common import InputError, SourceChanged, _create_parents, result, saved
-from .native_update_selection import _select_ticket, _status_bytes, _branch, _descendants
+from .native_update_selection import (
+    _select_ticket,
+    _status_bytes,
+    _branch,
+    _descendants,
+)
 from .native_update_publish import _publish_ticket
-from .native_update_promotion import promote_ticket_tree
+from .native_update_promotion import _check_ticket_tree, promote_ticket_tree
 
-
-def _check_ticket_tree(selection, path, selected, capture, tree, close_tree, require_terminal):
-    companion = path.with_suffix('')
-    children = defaultdict(list)
-    for row in capture.atoms:
-        if row['status_group'] == 'Current':
-            owner = native_header_view(row['header_json']).get('context', {}).get('container', {}).get('atom')
-            if owner is not None:
-                children[owner].append(row)
-    pending = list(children.get(selected['id'], ()))
-    if pending and (not close_tree or not companion.is_dir()):
-        raise InputError('target', 'Ticket descendants require their companion directory.')
-    visited = {selected['id']}
-    terminal = {'done', 'canceled', 'resolved', 'complete'}
-    while pending:
-        child = pending.pop()
-        if child['id'] in visited:
-            raise InputError('target', 'Ticket containment contains a cycle.')
-        if require_terminal and child['status'] not in terminal:
-            raise InputError('target', 'Current descendants must be terminal before this Status change.')
-        visited.add(child['id'])
-        pending.extend(children.get(child['id'], ()))
-    companion = path.with_suffix('')
-    if companion.exists() or companion.is_symlink():
-        if not close_tree or companion.is_symlink() or not companion.is_dir():
-            raise InputError('target', 'Direct updates of container Atoms are unsupported.')
-        for child in capture.atoms:
-            child_path = selection.root / child['source_path']
-            if child['id'] in visited - {selected['id']} and not child_path.is_relative_to(companion):
-                raise InputError('target', 'Ticket descendants disagree with the companion directory.')
-            if child_path.is_relative_to(companion):
-                owner = native_header_view(child['header_json']).get('context', {}).get('container', {}).get('atom')
-                if owner not in visited:
-                    raise InputError('target', 'Ticket companion contains an unrelated Atom.')
-                _branch(selection, child_path, child['status'], child, capture.atoms, allow_flat=False)
-        if _read_tree(selection.root, companion) != tree:
-            raise SourceChanged('Ticket companion changed during validation.')
 
 def _read_ticket(selection, target, selected, digest, path, *, close_tree=False, placement=False,
                  require_terminal=False, previous_capture=None, domains=None):
@@ -82,10 +49,18 @@ def _read_ticket(selection, target, selected, digest, path, *, close_tree=False,
         reader = ReadContext(roots=[str(selection.control_root)], limits=dict(CEILINGS))
         raw = reader.read(path)
         bounds = frontmatter_bounds(raw)
-        if bounds is None or sha256(raw).hexdigest() != digest or raw[bounds[2]:] != selected.get('_content_bytes'):
-            raise SourceChanged('Current Ticket source changed after selection.')
-        if parse_carrier(raw, path).metadata != selected.get('header_json'):
-            raise SourceChanged('Current Ticket header changed after selection.')
+        if (
+            bounds is None
+            or sha256(raw).hexdigest() != digest
+            or raw[bounds[2] :] != selected.get("_content_bytes")
+        ):
+            raise SourceChanged(
+                "Current Ticket source changed after selection."
+            )
+        if parse_carrier(raw, path).metadata != selected.get("header_json"):
+            raise SourceChanged(
+                "Current Ticket header changed after selection."
+            )
     except InputError:
         raise
     except SourceChanged:
@@ -95,7 +70,9 @@ def _read_ticket(selection, target, selected, digest, path, *, close_tree=False,
     return raw, bounds, tree, capture
 
 
-def _prepare_ticket_directory(selection, destination, recorded, recorded_errors, check):
+def _prepare_ticket_directory(
+    selection, destination, recorded, recorded_errors, check
+):
     if not destination.parent.exists():
         if not check():
             return result(effects=recorded, errors=recorded_errors)
@@ -107,12 +84,19 @@ def _prepare_ticket_directory(selection, destination, recorded, recorded_errors,
     return None
 
 
-def _ticket_source_intact(selection, path, digest, close_tree, tree, companion):
+def _ticket_source_intact(
+    selection, path, digest, close_tree, tree, companion
+):
     try:
-        reader = ReadContext(roots=[str(selection.control_root)], limits=dict(CEILINGS))
-        return (sha256(reader.read(path)).hexdigest() == digest and not
-                (close_tree and tree is None and (companion.exists() or companion.is_symlink())))
-    except (OSError, RuntimeError, ValueError):
+        reader = ReadContext(
+            roots=[str(selection.control_root)], limits=dict(CEILINGS)
+        )
+        return sha256(reader.read(path)).hexdigest() == digest and not (
+            close_tree
+            and tree is None
+            and (companion.exists() or companion.is_symlink())
+        )
+    except OSError, RuntimeError, ValueError:
         return False
 
 
@@ -121,7 +105,9 @@ def _ticket_definition_intact(check_definition, errors):
         check_definition()
         return True
     except Exception as error:
-        errors.append({'code': 'definition_revalidation_required', 'message': str(error)})
+        errors.append(
+            {"code": "definition_revalidation_required", "message": str(error)}
+        )
         return False
 
 
@@ -152,7 +138,9 @@ def _move_ticket(selection, target, selected, digest, path, destination, status,
                 recorded.extend(undone.effects)
                 recorded_errors.extend(undone.errors)
 
-        failure = _prepare_ticket_directory(selection, destination, recorded, recorded_errors, check)
+        failure = _prepare_ticket_directory(
+            selection, destination, recorded, recorded_errors, check
+        )
         if failure is not None:
             return failure
         if not check():
@@ -176,12 +164,24 @@ def _check_ticket_transition(selected, template, status, project_statuses):
         issue = template in {'problem', 'question', 'code_spec_mismatch', 'opportunity'}
         planning = template in {'task', 'epic'}
         if issue or planning:
-            terminals = {'resolved', 'canceled'} if issue else {'done', 'canceled'}
-            previous = selected['status']
-            work = {'in_queue', 'active'} | project_statuses
-            permitted = ((previous == 'backlog' and status in {'in_queue'} | project_statuses)
-                         or (previous in work and status in terminals | project_statuses)
-                         or (previous in {'active'} | project_statuses and status == 'in_queue'))
+            terminals = (
+                {"resolved", "canceled"} if issue else {"done", "canceled"}
+            )
+            previous = selected["status"]
+            work = {"in_queue", "active"} | project_statuses
+            permitted = (
+                (
+                    previous == "backlog"
+                    and status in {"in_queue"} | project_statuses
+                )
+                or (
+                    previous in work and status in terminals | project_statuses
+                )
+                or (
+                    previous in {"active"} | project_statuses
+                    and status == "in_queue"
+                )
+            )
             if not permitted:
                 raise InputError('targetStatus', 'Ticket Status transition is not supported for its Template.')
 
@@ -224,29 +224,47 @@ def _apply_status_actions(selection, actions, selected, status, current_rows, te
 
 
 def _ticket_template(selected, status, project_statuses):
-    template = native_header_view(selected['header_json']).get('context', {}).get('template')
-    context = native_header_view(selected['header_json']).get('context', {})
-    detached_asset = native_ticket_asset(template) and 'component' in context.get('container', {})
-    if status == 'complete' and not detached_asset:
-        raise InputError('targetStatus', 'Only a standalone Ticket Asset can be completed.')
-    if detached_asset and status == 'complete' and selected['status'] not in {'in_queue'} | project_statuses:
-        raise InputError('targetStatus', 'Only an In Queue Asset can be completed.')
+    template = (
+        native_header_view(selected["header_json"])
+        .get("context", {})
+        .get("template")
+    )
+    context = native_header_view(selected["header_json"]).get("context", {})
+    detached_asset = native_ticket_asset(
+        template
+    ) and "component" in context.get("container", {})
+    if status == "complete" and not detached_asset:
+        raise InputError(
+            "targetStatus", "Only a standalone Ticket Asset can be completed."
+        )
+    if (
+        detached_asset
+        and status == "complete"
+        and selected["status"] not in {"in_queue"} | project_statuses
+    ):
+        raise InputError(
+            "targetStatus", "Only an In Queue Asset can be completed."
+        )
     _check_ticket_transition(selected, template, status, project_statuses)
     return template
 
 
 def _ticket_status_domain(domains):
-    return set(domains['T'] if domains is not None else CURRENT_STATUSES['T']) - {'active', 'draft', 'archived'}
+    return set(
+        domains["T"] if domains is not None else CURRENT_STATUSES["T"]
+    ) - {"active", "draft", "archived"}
 
 
 def ticket_status_options(metadata, domains=None):
     """List candidate Current Status moves under the same policy as a write."""
-    current = native_header_view(metadata)['state']['status']
-    selected = {'header_json': metadata, 'status': current}
+    current = native_header_view(metadata)["state"]["status"]
+    selected = {"header_json": metadata, "status": current}
     allowed = _ticket_status_domain(domains)
-    project_statuses = allowed - CURRENT_STATUSES['T']
+    project_statuses = allowed - CURRENT_STATUSES["T"]
     options = []
-    for status in sorted(allowed - {current}, key=lambda value: (value == 'canceled', value)):
+    for status in sorted(
+        allowed - {current}, key=lambda value: (value == "canceled", value)
+    ):
         try:
             _ticket_template(selected, status, project_statuses)
         except InputError:
@@ -257,7 +275,11 @@ def ticket_status_options(metadata, domains=None):
 
 def _requested_status(value, allowed):
     if not isinstance(value, str) or value.casefold() not in allowed:
-        raise InputError('targetStatus', 'Supply a Current Ticket Status.', allowed_values=allowed)
+        raise InputError(
+            "targetStatus",
+            "Supply a Current Ticket Status.",
+            allowed_values=allowed,
+        )
     return value.casefold()
 
 
@@ -269,7 +291,9 @@ def change_ticket_status(selection, params, *, current_rows, check_definition, p
     status = _requested_status(params['targetStatus'], allowed)
     target = params['target']
     selected, digest, path = _select_ticket(selection, target, current_rows)
-    template = _ticket_template(selected, status, allowed - CURRENT_STATUSES['T'])
+    template = _ticket_template(
+        selected, status, allowed - CURRENT_STATUSES["T"]
+    )
     move_tree = template in ('task', 'epic')
     terminal = move_tree and status in ('done', 'canceled')
     recorded = []

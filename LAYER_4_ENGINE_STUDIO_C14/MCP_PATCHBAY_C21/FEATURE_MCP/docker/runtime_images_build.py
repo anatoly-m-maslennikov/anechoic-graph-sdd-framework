@@ -10,16 +10,34 @@ try:
     from .image_metadata import OCI_VERSION_LABEL
     from .image_provenance import label_arguments
     from .runtime_images_common import (
-        DOCKERFILE, FINGERPRINT_LABEL, SCHEMA, SCHEMA_LABEL,
-        TOOL_REGISTRY, _GENERATED_ASSETS, ImageError, ImageIdentity,
+        DOCKERFILE,
+        FINGERPRINT_LABEL,
+        SCHEMA,
+        SCHEMA_LABEL,
+        TOOL_REGISTRY,
+        _GENERATED_ASSETS,
+        ImageError,
+        ImageIdentity,
     )
 except ImportError:
-    from MCP_PATCHBAY_C21.FEATURE_MCP.docker.image_reference import IMMUTABLE_IMAGE
-    from MCP_PATCHBAY_C21.FEATURE_MCP.docker.image_metadata import OCI_VERSION_LABEL
-    from MCP_PATCHBAY_C21.FEATURE_MCP.docker.image_provenance import label_arguments
+    from MCP_PATCHBAY_C21.FEATURE_MCP.docker.image_reference import (
+        IMMUTABLE_IMAGE,
+    )
+    from MCP_PATCHBAY_C21.FEATURE_MCP.docker.image_metadata import (
+        OCI_VERSION_LABEL,
+    )
+    from MCP_PATCHBAY_C21.FEATURE_MCP.docker.image_provenance import (
+        label_arguments,
+    )
     from MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_images_common import (
-        DOCKERFILE, FINGERPRINT_LABEL, SCHEMA, SCHEMA_LABEL,
-        TOOL_REGISTRY, _GENERATED_ASSETS, ImageError, ImageIdentity,
+        DOCKERFILE,
+        FINGERPRINT_LABEL,
+        SCHEMA,
+        SCHEMA_LABEL,
+        TOOL_REGISTRY,
+        _GENERATED_ASSETS,
+        ImageError,
+        ImageIdentity,
     )
 
 
@@ -29,7 +47,9 @@ class ImageBuild:
         self._current(identity, use_packaged_assets=use_packaged_assets)
         try:
             parent = self._build_parent()
-            attempt = Path(tempfile.mkdtemp(prefix="anechoic-runtime-image-", dir=parent))
+            attempt = Path(
+                tempfile.mkdtemp(prefix="anechoic-runtime-image-", dir=parent)
+            )
             attempt.chmod(0o700)
             context = attempt / "context"
             context.mkdir()
@@ -37,7 +57,9 @@ class ImageBuild:
             buildx.mkdir(mode=0o700)
             buildx.chmod(0o700)
         except OSError as error:
-            raise ImageError("BUILD_FAILED", "Private image build context is unavailable") from error
+            raise ImageError(
+                "BUILD_FAILED", "Private image build context is unavailable"
+            ) from error
         self._assemble(context, identity)
         iidfile = attempt / "image.id"
         self._current(identity, use_packaged_assets=use_packaged_assets)
@@ -69,13 +91,20 @@ class ImageBuild:
     @staticmethod
     def _read_image_id(iidfile: Path) -> str:
         try:
-            if iidfile.is_symlink() or not iidfile.is_file() or iidfile.stat().st_size > 1024:
+            if (
+                iidfile.is_symlink()
+                or not iidfile.is_file()
+                or iidfile.stat().st_size > 1024
+            ):
                 raise ValueError("immutable builder identity is absent")
             image = iidfile.read_text(encoding="ascii").strip()
             if IMMUTABLE_IMAGE.fullmatch(image) is None:
                 raise ValueError("immutable builder identity is invalid")
         except (OSError, ValueError, UnicodeError) as error:
-            raise ImageError("BUILD_FAILED", "Builder did not capture one immutable sha256 image ID") from error
+            raise ImageError(
+                "BUILD_FAILED",
+                "Builder did not capture one immutable sha256 image ID",
+            ) from error
         return image
 
     def _assemble(self, context: Path, identity: ImageIdentity):
@@ -94,10 +123,15 @@ class ImageBuild:
                 with destination.open("xb") as stream:
                     stream.write(payload)
                 destination.chmod(row.mode)
-                if row.path not in _GENERATED_ASSETS and source.stat().st_mode & 0o777 != row.mode:
+                if (
+                    row.path not in _GENERATED_ASSETS
+                    and source.stat().st_mode & 0o777 != row.mode
+                ):
                     raise self._input_error()
         except OSError as error:
-            raise ImageError("BUILD_FAILED", "Private image context could not be assembled") from error
+            raise ImageError(
+                "BUILD_FAILED", "Private image context could not be assembled"
+            ) from error
         self._verify_context(context, identity)
 
     def _verify_context_file(self, path, relative, expected):
@@ -123,8 +157,12 @@ class ImageBuild:
 
     def _verify_context(self, context: Path, identity: ImageIdentity):
         expected = {row.path: row for row in identity.manifest}
-        expected_directories = {parent.as_posix() for row in identity.manifest
-                                for parent in Path(row.path).parents if parent != Path(".")}
+        expected_directories = {
+            parent.as_posix()
+            for row in identity.manifest
+            for parent in Path(row.path).parents
+            if parent != Path(".")
+        }
         observed = set()
         observed_directories = set()
         if context.is_symlink() or not context.is_dir():
@@ -134,7 +172,9 @@ class ImageBuild:
             raise self._input_error()
 
         try:
-            for current, directories, names in os.walk(context, topdown=False, followlinks=False, onerror=unavailable):
+            for current, directories, names in os.walk(
+                context, topdown=False, followlinks=False, onerror=unavailable
+            ):
                 folder = Path(current)
                 for name in directories:
                     path = folder / name
@@ -150,5 +190,8 @@ class ImageBuild:
                         observed.add(relative)
         except OSError as error:
             raise self._input_error() from error
-        if observed != expected.keys() or observed_directories != expected_directories:
+        if (
+            observed != expected.keys()
+            or observed_directories != expected_directories
+        ):
             raise self._input_error()

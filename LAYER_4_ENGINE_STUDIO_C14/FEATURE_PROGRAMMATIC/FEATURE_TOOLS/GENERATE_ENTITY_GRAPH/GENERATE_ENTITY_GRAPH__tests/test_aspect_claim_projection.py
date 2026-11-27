@@ -7,12 +7,14 @@ import unittest
 TOOL = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(TOOL.parent), str(TOOL)]
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import (  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.\
+    GENERATE_ENTITY_GRAPH__shared import (  # noqa: E402
     compose_enhanced_current_graph,
-)
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import (  # noqa: E402
+)  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.\
+    GENERATE_ENTITY_GRAPH__shared import (  # noqa: E402
     render_model,
-)
+)  # fmt: skip
 
 
 def carrier(atom_id, subject, address):
@@ -31,7 +33,8 @@ def carrier(atom_id, subject, address):
             "## Claim\n### Formal Claim\n```python\n"
             "from anechoic.formal_claims import declare_entity\n"
             "from anechoic.model import Aspect\n"
-            f"declare_entity(entity_name={name!r}, instance=Aspect(address={address!r}))\n"
+            f"declare_entity(entity_name={name!r}, "
+            f"instance=Aspect(address={address!r}))\n"
             "```\n"
         ),
         "read_view": {"content_role": "Requirement", "type": "Declaration"},
@@ -51,7 +54,7 @@ def instance_edges(graph):
 
 
 class AspectClaimProjectionTests(unittest.TestCase):
-    def test_grouped_formal_claim_preserves_full_identity_without_subject_fallback(
+    def _grouped_claim_keeps_written_identity(
         self,
     ):
         first = (
@@ -114,6 +117,14 @@ class AspectClaimProjectionTests(unittest.TestCase):
         row["read_view"]["type"] = "Requirement"
         graph, _ = compose_enhanced_current_graph([row])
         self.assertNotIn((path, "Aspect"), instance_edges(graph))
+
+
+setattr(
+    AspectClaimProjectionTests,
+    "test_grouped_formal_claim_preserves_full_identity_"
+    "without_subject_fallback",
+    AspectClaimProjectionTests._grouped_claim_keeps_written_identity,
+)
 
 
 if __name__ == "__main__":

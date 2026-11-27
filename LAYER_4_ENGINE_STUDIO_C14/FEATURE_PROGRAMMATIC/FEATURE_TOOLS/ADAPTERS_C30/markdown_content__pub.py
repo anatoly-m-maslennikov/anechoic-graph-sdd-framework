@@ -15,7 +15,8 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.content_records__pub \
 _MARKDOWN_HEADINGS = MarkdownIt("commonmark").disable("inline")
 _SUMMARY_TITLE = re.compile(
     rb"\A(?:[ \t]*\r?\n)*## Summary[ \t]*\r?\n(?:[ \t]*\r?\n)*"
-    rb"(?![0-9]{1,9}[.)][ \t])([A-Za-z0-9][^\r\n]*)(?=\r?\n(?:[ \t]*\r?\n|\Z)|\Z)"
+    rb"(?![0-9]{1,9}[.)][ \t])([A-Za-z0-9][^\r\n]*)"
+    rb"(?=\r?\n(?:[ \t]*\r?\n|\Z)|\Z)"
 )
 
 

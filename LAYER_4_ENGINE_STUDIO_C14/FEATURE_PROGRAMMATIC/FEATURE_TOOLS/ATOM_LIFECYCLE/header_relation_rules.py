@@ -1,17 +1,27 @@
 """Check authored Header Relation entries against the selected Model."""
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.cardinality__pub import cardinality_bounds
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.cardinality__pub import (
+    cardinality_bounds,
+)
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import header_value
 
 
 def _claim_rows(rows):
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import iter_formal_claims
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_native_model_claim
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import model_declaration_subject
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+        iter_formal_claims,
+    )
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+        parse_native_model_claim,
+    )
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+        model_declaration_subject,
+    )
 
     for row in rows:
         _, subject = header_value(row["header_json"], "topics.main_subject")
-        if not isinstance(subject, str) or not subject.startswith("ANECHOIC_MODEL"):
+        if not isinstance(subject, str) or not subject.startswith(
+            "ANECHOIC_MODEL"
+        ):
             continue
         source = row["source_path"]
         subject = model_declaration_subject(subject, source)
@@ -36,11 +46,15 @@ def compile_header_relation_rules(rows):
             records.append((source, subject, claim))
             subjects[address] = "Relation"
         elif (kind := arguments.get("entity_class")) and (
-            kind_address := model_class_target(subject, arguments["entity_name"])
+            kind_address := model_class_target(
+                subject, arguments["entity_name"]
+            )
         ):
             kinds[kind_address] = kind
             subjects[address] = kind
-            entity_rules[kind] = arguments.get("instance_relation_constraints", {})
+            entity_rules[kind] = arguments.get(
+                "instance_relation_constraints", {}
+            )
         elif arguments.get("relation_name") == "IS_PROPERTY_OF":
             subjects[address] = "Node"
             if address == "Atom.Header.Relations":
@@ -72,24 +86,42 @@ def load_header_relation_rules(contract):
     with_endpoints = required | {"endpoints", "kinds"}
     with_constraints = with_endpoints | {"entity_rules"}
     if not isinstance(contract, dict) or set(contract) not in (
-        required, with_endpoints, with_constraints, with_constraints | {"subjects"}
+        required,
+        with_endpoints,
+        with_constraints,
+        with_constraints | {"subjects"},
     ):
         raise ValueError("Invalid Header Relation rules")
     names = contract["names"]
-    if (not isinstance(names, list) or not names or any(not isinstance(name, str) or not name for name in names)
-            or len(names) != len({name.casefold() for name in names})):
+    if (
+        not isinstance(names, list)
+        or not names
+        or any(not isinstance(name, str) or not name for name in names)
+        or len(names) != len({name.casefold() for name in names})
+    ):
         raise ValueError("Invalid or ambiguous Header Relation names")
     cardinality_bounds(contract["entries"])
     cardinality_bounds(contract["targets"])
-    if "endpoints" in contract and (not isinstance(contract["endpoints"], dict)
-                                    or set(contract["endpoints"]) != set(names)
-                                    or not isinstance(contract["kinds"], dict)):
+    if "endpoints" in contract and (
+        not isinstance(contract["endpoints"], dict)
+        or set(contract["endpoints"]) != set(names)
+        or not isinstance(contract["kinds"], dict)
+    ):
         raise ValueError("Invalid Header Relation endpoint bindings")
-    if "entity_rules" in contract and (not isinstance(contract["entity_rules"], dict)
-                                       or any(not isinstance(value, dict)
-                                              for value in contract["entity_rules"].values())):
+    if "entity_rules" in contract and (
+        not isinstance(contract["entity_rules"], dict)
+        or any(
+            not isinstance(value, dict)
+            for value in contract["entity_rules"].values()
+        )
+    ):
         raise ValueError("Invalid Header Relation Entity constraints")
-    if "subjects" in contract and (not isinstance(contract["subjects"], dict)
-                                   or any(not isinstance(value, str) for value in contract["subjects"].values())):
+    if "subjects" in contract and (
+        not isinstance(contract["subjects"], dict)
+        or any(
+            not isinstance(value, str)
+            for value in contract["subjects"].values()
+        )
+    ):
         raise ValueError("Invalid Model Subject bindings")
     return contract

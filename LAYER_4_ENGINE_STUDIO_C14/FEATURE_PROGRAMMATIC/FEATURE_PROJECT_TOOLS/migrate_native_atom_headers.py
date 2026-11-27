@@ -27,8 +27,12 @@ def digest(data):
 
 
 def admitted(path):
-    parts = path.parts[1:] if path.parts and path.parts[0] == NESTED_CONTROL else path.parts
-    return not any(p.startswith('.') or p in EXCLUDED for p in parts)
+    parts = (
+        path.parts[1:]
+        if path.parts and path.parts[0] == NESTED_CONTROL
+        else path.parts
+    )
+    return not any(p.startswith(".") or p in EXCLUDED for p in parts)
 
 
 def reference(atom_id, state):
@@ -44,31 +48,40 @@ def load_codecs():
 
 
 def timestamp_fallback(metadata, path):
-    state = metadata.get('state', {})
-    original = state.get('updated_at')
+    state = metadata.get("state", {})
+    original = state.get("updated_at")
     try:
-        timestamp = datetime.fromisoformat(original.replace('Z', '+00:00')) if isinstance(original, str) else original
+        timestamp = (
+            datetime.fromisoformat(original.replace("Z", "+00:00"))
+            if isinstance(original, str)
+            else original
+        )
     except ValueError:
         timestamp = None
     fallback = None
     if not isinstance(timestamp, datetime) or timestamp.utcoffset() is None:
-        fallback = datetime.fromtimestamp(path.stat().st_mtime, timezone.utc).isoformat()
-        state['updated_at'] = fallback
+        fallback = datetime.fromtimestamp(
+            path.stat().st_mtime, timezone.utc
+        ).isoformat()
+        state["updated_at"] = fallback
     return original, fallback
 
 
 def convert_tier(metadata, view, family, was_core, old_ref, recovery, rel):
-    if family != 'SPEC':
+    if family != "SPEC":
         return None, None
-    tier = view['context'].get('tier')
-    tier_source = 'core' if was_core else None
+    tier = view["context"].get("tier")
+    tier_source = "core" if was_core else None
     if tier is None:
         tier = recovery.get(old_ref, 2)
-        tier_source = 'recovered' if old_ref in recovery else 'defaulted'
+        tier_source = "recovered" if old_ref in recovery else "defaulted"
     if type(tier) is not int:
-        raise ValueError(f'Invalid Tier for {rel}: {tier!r}')
-    structure = metadata.get('structure', metadata if 'atom_family' in metadata else metadata['context'])
-    structure['tier'] = tier
+        raise ValueError(f"Invalid Tier for {rel}: {tier!r}")
+    structure = metadata.get(
+        "structure",
+        metadata if "atom_family" in metadata else metadata["context"],
+    )
+    structure["tier"] = tier
     return tier, tier_source
 
 
@@ -88,60 +101,86 @@ def adjust_status(metadata, view, family, old_status, rel):
         state['status'] = 'complete'
 
 
-def carrier_destination(source, rel, new, view, family, tier, atom_id, old_ref):
+def carrier_destination(
+    source, rel, new, view, family, tier, atom_id, old_ref
+):
     from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
-        COMPLETE_DIRECTORY, DRAFT_DIRECTORY, TICKET_DIRECTORY, native_ticket_asset,
+        COMPLETE_DIRECTORY,
+        DRAFT_DIRECTORY,
+        TICKET_DIRECTORY,
+        native_ticket_asset,
     )
 
-    suffix = re.sub(r'^' + re.escape(atom_id) + r'(?:@\d+(?:-draft)?)?', '', rel.name)
-    if suffix == rel.name or not suffix.endswith('.md'):
-        raise ValueError(f'Unsupported carrier filename: {rel}')
-    status = view['state']['status'].lower()
-    marker = old_ref if status in {'draft', 'archived'} else atom_id
+    suffix = re.sub(
+        r"^" + re.escape(atom_id) + r"(?:@\d+(?:-draft)?)?", "", rel.name
+    )
+    if suffix == rel.name or not suffix.endswith(".md"):
+        raise ValueError(f"Unsupported carrier filename: {rel}")
+    status = view["state"]["status"].lower()
+    marker = old_ref if status in {"draft", "archived"} else atom_id
     new = new.with_name(marker + suffix)
-    container = view['context']['container']
-    if status == 'complete' and family == 'TKT':
-        new = Path(TICKET_DIRECTORY, 'ASSETS', COMPLETE_DIRECTORY, new.name)
+    container = view["context"]["container"]
+    if status == "complete" and family == "TKT":
+        new = Path(TICKET_DIRECTORY, "ASSETS", COMPLETE_DIRECTORY, new.name)
     elif rel.parts[0] == NESTED_CONTROL:
-        if (family == 'TKT' and status == 'in_queue' and 'component' in container
-                and native_ticket_asset(view['context'].get('template'))):
-            new = Path(TICKET_DIRECTORY, 'ASSETS', new.name)
-        elif family == 'SPEC' and status == 'draft' and rel.parent.name == '000_draft':
+        if (
+            family == "TKT"
+            and status == "in_queue"
+            and "component" in container
+            and native_ticket_asset(view["context"].get("template"))
+        ):
+            new = Path(TICKET_DIRECTORY, "ASSETS", new.name)
+        elif (
+            family == "SPEC"
+            and status == "draft"
+            and rel.parent.name == "000_draft"
+        ):
             owner = Path(*rel.parts[1:-2])
-            if owner.name.rpartition('_')[2] != container.get('component') or not (source / owner).is_dir():
-                raise ValueError(f'Unknown nested SPEC owner: {rel}')
+            if (
+                owner.name.rpartition("_")[2] != container.get("component")
+                or not (source / owner).is_dir()
+            ):
+                raise ValueError(f"Unknown nested SPEC owner: {rel}")
             new = owner / DRAFT_DIRECTORY / new.name
         else:
-            raise ValueError(f'Unmapped nested native carrier: {rel}')
+            raise ValueError(f"Unmapped nested native carrier: {rel}")
     return spec_destination(rel, new, view, family, tier)
 
 
 def spec_destination(rel, new, view, family, tier):
     from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
-        READY_DIRECTORY, active_spec_directories, spec_lens_directories,
+        READY_DIRECTORY,
+        active_spec_directories,
+        spec_lens_directories,
     )
 
-    status = view['state']['status'].lower()
-    container = view['context']['container']
-    if family != 'SPEC' or 'component' not in container or status in {'draft', 'archived'}:
+    status = view["state"]["status"].lower()
+    container = view["context"]["container"]
+    if (
+        family != "SPEC"
+        or "component" not in container
+        or status in {"draft", "archived"}
+    ):
         return new
-    ready = status == 'ready'
+    ready = status == "ready"
     if not ready and tier < -1:
         return new
-    lens = spec_lens_directories(view['context']['lens'])
+    lens = spec_lens_directories(view["context"]["lens"])
     if not ready and tier == -1:
-        if container['component'] != 'C00':
-            raise ValueError(f'Non-project Tier -1 requires review: {rel}')
+        if container["component"] != "C00":
+            raise ValueError(f"Non-project Tier -1 requires review: {rel}")
         return Path(new.name)
-    legacy_lens = (f'_{lens[0]}', *lens[1:])
+    legacy_lens = (f"_{lens[0]}", *lens[1:])
     owner = new.parent
     if ready and owner.name == READY_DIRECTORY:
         owner = owner.parent
     for folder in (lens, legacy_lens, active_spec_directories(1, lens)):
-        if owner.parts[-len(folder):] == folder:
+        if owner.parts[-len(folder) :] == folder:
             owner = owner.parents[len(folder) - 1]
             break
-    folders = (READY_DIRECTORY,) if ready else active_spec_directories(tier, lens)
+    folders = (
+        (READY_DIRECTORY,) if ready else active_spec_directories(tier, lens)
+    )
     return owner.joinpath(*folders, new.name)
 
 
@@ -169,12 +208,18 @@ def convert_carrier(source, path, rel, new, recovery, refs, header_codecs):
     state, atom_id = view['state'], view['identity']['atom_id']
     old_ref, old_status = reference(atom_id, state), state['status']
     if old_ref in refs:
-        raise ValueError(f'Duplicate reference {old_ref}: {rel}, {refs[old_ref]}')
+        raise ValueError(
+            f"Duplicate reference {old_ref}: {rel}, {refs[old_ref]}"
+        )
     refs[old_ref] = str(rel)
-    tier, tier_source = convert_tier(metadata, view, family, was_core, old_ref, recovery, rel)
+    tier, tier_source = convert_tier(
+        metadata, view, family, was_core, old_ref, recovery, rel
+    )
     adjust_status(metadata, view, family, old_status, rel)
     header = canonical_native_header(metadata)
-    new = carrier_destination(source, rel, new, view, family, tier, atom_id, old_ref)
+    new = carrier_destination(
+        source, rel, new, view, family, tier, atom_id, old_ref
+    )
     newline = b'\r\n' if raw.startswith(b'---\r\n') else b'\n'
     encoded = yaml.safe_dump(header, sort_keys=False, allow_unicode=True).encode().replace(b'\n', newline)
     result = b'---' + newline + encoded + b'---' + newline + raw[match.end():]
@@ -198,21 +243,27 @@ def preflight(source, entries, recovery, header_codecs):
     for path in entries:
         rel = path.relative_to(source)
         parent = paths.get(rel.parent, rel.parent)
-        new = parent / (renames.get(rel.name, rel.name) if admitted(rel) else rel.name)
-        if rel == Path('__TKT/ASSETS/done'):
+        new = parent / (
+            renames.get(rel.name, rel.name) if admitted(rel) else rel.name
+        )
+        if rel == Path("__TKT/ASSETS/done"):
             new = parent / COMPLETE_DIRECTORY
-        if path.is_file() and path.suffix == '.md' and admitted(rel):
-            converted = convert_carrier(source, path, rel, new, recovery, refs, header_codecs)
+        if path.is_file() and path.suffix == ".md" and admitted(rel):
+            converted = convert_carrier(
+                source, path, rel, new, recovery, refs, header_codecs
+            )
             if converted:
                 new, result, record = converted
                 carriers[rel] = result, record
-                companion = rel.with_suffix('')
+                companion = rel.with_suffix("")
                 if (source / companion).is_dir():
-                    paths[companion] = new.with_suffix('')
+                    paths[companion] = new.with_suffix("")
         new = paths.get(rel, new)
         paths[rel] = new
         if new in destinations:
-            raise ValueError(f'Path collision: {rel} and {destinations[new]} -> {new}')
+            raise ValueError(
+                f"Path collision: {rel} and {destinations[new]} -> {new}"
+            )
         destinations[new] = rel
     unknown = set(recovery) - set(refs)
     if unknown:
@@ -224,8 +275,13 @@ def preflight(source, entries, recovery, header_codecs):
 def check_parents(source, paths, destinations):
     for target in paths.values():
         for parent in target.parents:
-            if parent in destinations and (source / destinations[parent]).is_file():
-                raise ValueError(f'File blocks destination directory: {target}')
+            if (
+                parent in destinations
+                and (source / destinations[parent]).is_file()
+            ):
+                raise ValueError(
+                    f"File blocks destination directory: {target}"
+                )
 
 
 def write_output(source, destination, entries, paths, carriers):

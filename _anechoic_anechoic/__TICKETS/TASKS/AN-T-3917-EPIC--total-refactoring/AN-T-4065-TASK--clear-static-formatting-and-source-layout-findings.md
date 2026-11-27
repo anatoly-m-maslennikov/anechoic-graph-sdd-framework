@@ -32,7 +32,7 @@ new 45/300 violations. It kept the imported Markdown fixtures and the
 hash-bound generated Scope predicate intact. Narrow formatter directives
 retain required wraps for long imports.
 
-The working-checkout Static run reports 869 files that need
-formatting, 34692 overlength lines, and 11 size findings.
-All reported size findings are in Spec Engine. Additional modules need
-splits before formatting can meet the size limits.
+The 2026-11-27 Static run reports 839 files that need formatting,
+24,642 overlength lines, and eight size findings. The previous run
+reported 869 files, 34,692 lines, and 11 size findings. All remaining
+size findings are in Model Generator.

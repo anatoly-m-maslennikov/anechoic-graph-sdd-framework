@@ -75,7 +75,14 @@ class StartWorkbenchCodexTests(unittest.TestCase):
 
     def test_only_matching_project_bridge_is_an_owned_process(self) -> None:
         server = STARTER.with_name("bridge_server.py").resolve()
-        command = f"{sys.executable} {server} --project-root {self.root} --mcp-url http://127.0.0.1:56317/anechoic/mcp"
+        command = (
+            f"{sys.executable}"
+            " "
+            f"{server}"
+            " --project-root "
+            f"{self.root}"
+            " --mcp-url http://127.0.0.1:56317/anechoic/mcp"
+        )
         with patch.object(
             starter.subprocess,
             "run",

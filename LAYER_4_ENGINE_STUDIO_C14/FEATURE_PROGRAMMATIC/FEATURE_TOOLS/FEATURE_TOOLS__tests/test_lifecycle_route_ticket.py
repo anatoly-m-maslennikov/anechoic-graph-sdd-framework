@@ -5,24 +5,40 @@ import unittest
 
 import yaml
 
-TOOLS = Path(__file__).resolve().parents[1]
-ENGINE = TOOLS.parents[1]
-sys.path[:0] = [str(TOOLS), str(ENGINE / 'IWE_CONSOLE_C43')]
+sys.path.insert(0, str((ENGINE := (TOOLS := Path(__file__).resolve()
+    .parents[1]).parents[1]) / 'IWE_CONSOLE_C43'))
+sys.path.insert(0, str(TOOLS))
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import capture_native
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import InputError, SourceChanged
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import create_asset
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import canonical_native_header
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import native_carrier_path
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import create_draft, promote_draft
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import (archive_ticket, change_ticket_status, direct_update)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    capture_native,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import (
+    InputError,
+    SourceChanged,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import (
+    create_asset,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    canonical_native_header,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    native_carrier_path,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import (
+    create_draft,
+    promote_draft,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import (
+    archive_ticket,
+    change_ticket_status,
+    direct_update,
+)
 
 
-
-
-
-
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__tests.lifecycle_route_support import LifecycleRouteSupport
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__tests.lifecycle_route_support import (
+    LifecycleRouteSupport,
+)
 
 
 class LifecycleRouteMatrix(LifecycleRouteSupport, unittest.TestCase):
@@ -33,13 +49,27 @@ class LifecycleRouteMatrix(LifecycleRouteSupport, unittest.TestCase):
                     project = self.project()
                     def rows():
                         return capture_native(project).atoms
-                    container = {'atom': 'AN-T-1'} if contained else {'component': 'C00'}
-                    created = create_draft(project, {'newAtom': {'template': template, 'container': container,
-                                          'body': '\n## Summary\n\nExample\n'}}, current_rows=rows())
-                    self.assertEqual('completed', created['outcome'])
-                    draft = created['savedDraft']
-                    target = {'ref_id': draft['ref_id'], 'version': 1}
-                    for forbidden in ('in_queue', 'done', 'in_progress'):
+
+                    container = (
+                        {"atom": "AN-T-1"}
+                        if contained
+                        else {"component": "C00"}
+                    )
+                    created = create_draft(
+                        project,
+                        {
+                            "newAtom": {
+                                "template": template,
+                                "container": container,
+                                "body": "\n## Summary\n\nExample\n",
+                            }
+                        },
+                        current_rows=rows(),
+                    )
+                    self.assertEqual("completed", created["outcome"])
+                    draft = created["savedDraft"]
+                    target = {"ref_id": draft["ref_id"], "version": 1}
+                    for forbidden in ("in_queue", "done", "in_progress"):
                         before = self.files(project)
                         with self.assertRaises(InputError):
                             promote_draft(project, {'target': target, 'targetStatus': forbidden}, current_rows=rows())
@@ -75,8 +105,16 @@ class LifecycleRouteMatrix(LifecycleRouteSupport, unittest.TestCase):
                     current = {'ref_id': first['artifact']['ref_id'], 'version': 1}
                     before = self.files(project)
                     with self.assertRaises(InputError):
-                        direct_update(project, {'target': current, 'changes': {'body': '\n## Summary\n\nExample\n'}},
-                                      current_rows=rows())
+                        direct_update(
+                            project,
+                            {
+                                "target": current,
+                                "changes": {
+                                    "body": "\n## Summary\n\nExample\n"
+                                },
+                            },
+                            current_rows=rows(),
+                        )
                     self.assertEqual(before, self.files(project))
                     revision = create_draft(project, {'sourceCurrent': current}, current_rows=rows())
                     self.assertEqual('completed', revision['outcome'])
@@ -129,27 +167,59 @@ class LifecycleRouteMatrix(LifecycleRouteSupport, unittest.TestCase):
                             change_ticket_status(project, {'target': target, 'targetStatus': status},
                                                  current_rows=rows(), check_definition=lambda: None)
                         self.assertEqual(before, self.files(project))
-                    for status in ('in_queue', 'resolved'):
-                        result = change_ticket_status(project, {'target': target, 'targetStatus': status},
-                                                      current_rows=rows(), check_definition=lambda: None)
-                        self.assertEqual('completed', result['outcome'], result)
-                        self.assertEqual(status, result['artifact']['status'])
+                    for status in ("in_queue", "resolved"):
+                        result = change_ticket_status(
+                            project,
+                            {"target": target, "targetStatus": status},
+                            current_rows=rows(),
+                            check_definition=lambda: None,
+                        )
+                        self.assertEqual(
+                            "completed", result["outcome"], result
+                        )
+                        self.assertEqual(status, result["artifact"]["status"])
 
     def test_pmeta_and_spec_reject_ticket_only_routes(self):
         for family, atom_id in (('PROJECT_CONFIG', 'AN-P-2'), ('SPEC', 'AN-S-2')):
             for contained in (False, True):
                 with self.subTest(family=family, contained=contained):
                     project = self.project()
-                    container = {'atom': 'AN-T-1'} if contained else {'component': 'C00'}
+                    container = (
+                        {"atom": "AN-T-1"}
+                        if contained
+                        else {"component": "C00"}
+                    )
                     before = self.files(project)
                     for template in (family.lower(),):
                         with self.assertRaises(InputError):
-                            create_asset(project, {'newAtom': {'template': template, 'container': container,
-                                         'body': '\n## Summary\n\nExample\n'}},
-                                         current_rows=capture_native(project).atoms)
-                    for operation, params in ((direct_update, {'target': {'ref_id': atom_id, 'version': 1},
-                                                               'changes': {'body': 'Example'}}),
-                                              (archive_ticket, {'target': {'ref_id': atom_id, 'version': 1}})):
+                            create_asset(
+                                project,
+                                {
+                                    "newAtom": {
+                                        "template": template,
+                                        "container": container,
+                                        "body": "\n## Summary\n\nExample\n",
+                                    }
+                                },
+                                current_rows=capture_native(project).atoms,
+                            )
+                    for operation, params in (
+                        (
+                            direct_update,
+                            {
+                                "target": {"ref_id": atom_id, "version": 1},
+                                "changes": {"body": "Example"},
+                            },
+                        ),
+                        (
+                            archive_ticket,
+                            {"target": {"ref_id": atom_id, "version": 1}},
+                        ),
+                    ):
                         with self.assertRaises((InputError, SourceChanged)):
-                            operation(project, params, current_rows=capture_native(project).atoms)
+                            operation(
+                                project,
+                                params,
+                                current_rows=capture_native(project).atoms,
+                            )
                     self.assertEqual(before, self.files(project))

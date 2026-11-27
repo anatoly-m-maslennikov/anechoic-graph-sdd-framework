@@ -68,9 +68,13 @@ def _state_json(inputs, events, violations, status, nodes):
     except (ValueError, TypeError):
         raise ValueError('Invalid state finding JSON') from None
     witness, events, violations = decoded
-    if ((witness is not None and not isinstance(witness, dict)) or not isinstance(events, list)
-            or not isinstance(violations, list) or (status in ('unresolved', 'unreachable') and violations)):
-        raise ValueError('Invalid state finding JSON shape')
+    if (
+        (witness is not None and not isinstance(witness, dict))
+        or not isinstance(events, list)
+        or not isinstance(violations, list)
+        or (status in ("unresolved", "unreachable") and violations)
+    ):
+        raise ValueError("Invalid state finding JSON shape")
     if status in ('declaredNoOp', 'deadEnd', 'hasEffects') and witness is None:
         raise ValueError('Missing state finding witness')
     for event in events:
@@ -110,12 +114,26 @@ def _validate_units(graph, nodes):
 
 
 def _validate_findings(graph, nodes):
-    for source, path, line, column, _written, status, _reason in graph['code_access_findings']:
+    for source, path, line, column, _written, status, _reason in graph[
+        "code_access_findings"
+    ]:
         node = nodes.get(source)
-        if (node is None or node[1] != 'module' or source != 'module:' + path or node[3] != path
-                or (line is not None and line < 1) or (column is not None and column < 0)
-                or status not in ('denied', 'uncertain', 'declared_bypass', 'undeclared_bypass')):
-            raise ValueError('Invalid code access finding endpoint or value')
+        if (
+            node is None
+            or node[1] != "module"
+            or source != "module:" + path
+            or node[3] != path
+            or (line is not None and line < 1)
+            or (column is not None and column < 0)
+            or status
+            not in (
+                "denied",
+                "uncertain",
+                "declared_bypass",
+                "undeclared_bypass",
+            )
+        ):
+            raise ValueError("Invalid code access finding endpoint or value")
     for path, line, column, rule, status, _detail in graph['antipattern_findings']:
         node = nodes.get('module:' + path)
         if (node is None or node[1] != 'module' or node[3] != path or line < 1 or column < 0
@@ -190,20 +208,32 @@ def validate(graph, components):
 
 def _replace_test_projection(connection, components):
     for table, columns in _GRAPH_TABLES.items():
-        connection.execute(f"CREATE TABLE IF NOT EXISTS realization_internal.{table} ({columns})")
+        connection.execute(
+            f"CREATE TABLE IF NOT EXISTS realization_internal.{table} ({columns})"
+        )
         connection.execute(f"DELETE FROM realization_internal.{table}")
-    connection.execute("INSERT INTO realization_internal.int_component_reference SELECT 'Component', unnest(?)",
-                       [sorted(components)])
-    connection.execute("INSERT INTO realization_internal.int_package_tests "
-                       "SELECT e.source_key, e.target_key FROM mrt_real_graph_test_edges e "
-                       "JOIN mrt_real_graph_import_nodes n ON n.node_key = e.target_key AND n.kind = 'package'")
-    connection.execute("INSERT INTO realization_internal.int_package_tested_by "
-                       "SELECT target_key, source_key FROM realization_internal.int_package_tests")
-    connection.execute("INSERT INTO realization_internal.int_component_tests "
-                       "SELECT e.source_key, r.kind, r.ref FROM mrt_real_graph_test_edges e "
-                       "JOIN realization_internal.int_component_reference r ON r.ref = e.target_key")
-    connection.execute("INSERT INTO realization_internal.int_component_tested_by "
-                       "SELECT target_kind, target_key, source_key FROM realization_internal.int_component_tests")
+    connection.execute(
+        "INSERT INTO realization_internal.int_component_reference SELECT 'Component', unnest(?)",
+        [sorted(components)],
+    )
+    connection.execute(
+        "INSERT INTO realization_internal.int_package_tests "
+        "SELECT e.source_key, e.target_key FROM mrt_real_graph_test_edges e "
+        "JOIN mrt_real_graph_import_nodes n ON n.node_key = e.target_key AND n.kind = 'package'"
+    )
+    connection.execute(
+        "INSERT INTO realization_internal.int_package_tested_by "
+        "SELECT target_key, source_key FROM realization_internal.int_package_tests"
+    )
+    connection.execute(
+        "INSERT INTO realization_internal.int_component_tests "
+        "SELECT e.source_key, r.kind, r.ref FROM mrt_real_graph_test_edges e "
+        "JOIN realization_internal.int_component_reference r ON r.ref = e.target_key"
+    )
+    connection.execute(
+        "INSERT INTO realization_internal.int_component_tested_by "
+        "SELECT target_kind, target_key, source_key FROM realization_internal.int_component_tests"
+    )
 
 
 def replace(connection, graph, components):
@@ -235,15 +265,20 @@ def replace(connection, graph, components):
         connection.execute(f"DELETE FROM {table}")
         rows = graph[key]
         if rows:
-            connection.execute(f"INSERT INTO {table} SELECT " + ", ".join("unnest(?)" for _ in types),
-                               [list(column) for column in zip(*rows, strict=False)])
+            connection.execute(
+                f"INSERT INTO {table} SELECT "
+                + ", ".join("unnest(?)" for _ in types),
+                [list(column) for column in zip(*rows, strict=False)],
+            )
     connection.execute("DELETE FROM mrt_real_graph_tested_by_edges")
     connection.execute("INSERT INTO mrt_real_graph_tested_by_edges SELECT target_key, source_key FROM mrt_real_graph_test_edges")
     _replace_test_projection(connection, components)
     if _ANALYSIS <= graph.keys():
         analysis_projection.prepare(connection)
         analysis_projection.replace_code(connection, graph["analysis_code"])
-        analysis_projection.replace_bindings(connection, graph["analysis_bindings"])
+        analysis_projection.replace_bindings(
+            connection, graph["analysis_bindings"]
+        )
     restore_property_graph(connection)
 
 
@@ -282,7 +317,9 @@ def restore_property_graph(connection):
     if imports:
         vertices.append("main.mrt_real_graph_import_nodes LABEL ImportNode")
         edges.extend(_import_edges(reference))
-        if has_table(connection, "main", "mrt_real_graph_code_units") and has_table(connection, "main", "mrt_real_graph_code_unit_calls"):
+        if has_table(
+            connection, "main", "mrt_real_graph_code_units"
+        ) and has_table(connection, "main", "mrt_real_graph_code_unit_calls"):
             vertices.append("main.mrt_real_graph_code_units LABEL CodeUnit")
             edges.extend((
                 "main.mrt_real_graph_code_units SOURCE KEY(module_key) REFERENCES main.mrt_real_graph_import_nodes(node_key) "

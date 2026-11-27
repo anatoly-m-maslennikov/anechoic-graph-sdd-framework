@@ -121,12 +121,16 @@ class SourceReaderTests(SourceReaderFixture, unittest.TestCase):
             self._write_atom(
                 "fixture", role, f"root-{index}.md", atom_id=f"CA-R-{100 + index}"
             )
-        self._write_atom("CHILD", "04_requirement", "child.md", atom_id="CA-R-120")
+        self._write_atom(
+            "CHILD", "04_requirement", "child.md", atom_id="CA-R-120"
+        )
 
         atoms, scopes, stderr = self._capture()
 
         self.assertEqual(stderr, "")
-        self.assertEqual({row["name"] for row in scopes}, {"fixture", "MAIN", "CHILD"})
+        self.assertEqual(
+            {row["name"] for row in scopes}, {"fixture", "MAIN", "CHILD"}
+        )
         self.assertEqual(len(scopes), len(self.declarations))
         self.assertTrue(
             {
@@ -154,9 +158,13 @@ class SourceReaderTests(SourceReaderFixture, unittest.TestCase):
         root = self.declarations["fixture"]["declaration_path"]
         relative = root.relative_to(self.root).as_posix()
         original = root.read_text(encoding="utf-8")
-        original = original.replace("\nrole:", "\ncurrent_scope_unit: MAIN\nrole:", 1)
+        original = original.replace(
+            "\nrole:", "\ncurrent_scope_unit: MAIN\nrole:", 1
+        )
         audit = auditor(container_constraint=True)
-        legacy = self._write_atom("MAIN", "04_requirement", "legacy.md", atom_id="CA-R-999")
+        legacy = self._write_atom(
+            "MAIN", "04_requirement", "legacy.md", atom_id="CA-R-999"
+        )
         legacy.write_text(legacy.read_text().replace("\nrole:", "\ncurrent_scope_unit: MAIN\nrole:", 1))
         non_root = self.declarations["MAIN"]["declaration_path"].relative_to(self.root).as_posix()
 
@@ -318,7 +326,9 @@ Atom.Content.Summary{::1}:: {::1};
             "---\natom_id: ANECHOIC-CONC-004\nversion: 1\n---\n# Legacy concern\n",
             encoding="utf-8",
         )
-        legacy_analysis = self._path("fixture", "02_analysis", "ANECHOIC-ANRP-003--legacy.md")
+        legacy_analysis = self._path(
+            "fixture", "02_analysis", "ANECHOIC-ANRP-003--legacy.md"
+        )
         legacy_analysis.write_text(
             "---\natom_id: ANECHOIC-ANRP-003\nversion: 2\n---\n# Legacy analysis\n",
             encoding="utf-8",

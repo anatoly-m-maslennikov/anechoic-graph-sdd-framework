@@ -27,9 +27,9 @@ Spec Engine work with AN 1 and reuse AN-T-4062 and AN-T-4063.
 
 ## Progress
 
-The working-checkout Manifest gate reports 0 denied or
-unapproved imports after coordinated changes to the active Manifests.
-The import ownership check passed after adding the Godot grouping entry.
-The State check reports unresolved cases separately. Source Language
-still flags the historical Workbench replay. Its TypeScript rename and
-Spec Engine caller were handed to AN 1.
+The 2026-11-27 Static run reports zero blocking Studio import findings.
+Import ownership passed. Source Language reports zero findings after
+AN 1 renamed the Workbench replay and verified both callers.
+
+The State check reports 10,954 unresolved cases. The import check
+reports one unresolved dynamic import in a golden test fixture.

@@ -43,7 +43,11 @@ def _error(message: str) -> HostRuntimeConfigError:
 
 
 def _path(value: Path | str, *, absolute: bool = False) -> Path:
-    if not isinstance(value, (Path, str)) or not str(value) or "\x00" in str(value):
+    if (
+        not isinstance(value, (Path, str))
+        or not str(value)
+        or "\x00" in str(value)
+    ):
         raise _error("Host runtime path is invalid")
     try:
         raw = Path(value).expanduser()
@@ -56,19 +60,25 @@ def _path(value: Path | str, *, absolute: bool = False) -> Path:
         raise _error("Host runtime path is unavailable or unsafe") from error
 
 
-def _canonical_directory(value: Path | str, *, reject_filesystem_root: bool = False) -> Path:
+def _canonical_directory(
+    value: Path | str, *, reject_filesystem_root: bool = False
+) -> Path:
     path = _path(value, absolute=True)
     try:
         if path.resolve(strict=True) != path:
             raise _error("Host runtime directory must be canonical")
         info = path.stat()
-        if not stat.S_ISDIR(info.st_mode) or (reject_filesystem_root and path.parent == path):
+        if not stat.S_ISDIR(info.st_mode) or (
+            reject_filesystem_root and path.parent == path
+        ):
             raise _error("Host runtime directory is invalid")
         return path
     except HostRuntimeConfigError:
         raise
     except (OSError, RuntimeError, ValueError) as error:
-        raise _error("Host runtime directory is unavailable or unsafe") from error
+        raise _error(
+            "Host runtime directory is unavailable or unsafe"
+        ) from error
 
 
 def _canonical_config_path(value: Path | str) -> Path:
@@ -87,22 +97,36 @@ def _canonical_config_path(value: Path | str) -> Path:
     except HostRuntimeConfigError:
         raise
     except (OSError, RuntimeError, ValueError) as error:
-        raise _error("Host runtime configuration file is unavailable or unsafe") from error
+        raise _error(
+            "Host runtime configuration file is unavailable or unsafe"
+        ) from error
 
 
 def _read_config(path: Path) -> bytes:
     try:
-        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import ReadContext
+        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+            ReadContext,
+        )
 
-        reader = ReadContext(roots=[str(path.parent)], limits=dict(_READ_LIMITS))
+        reader = ReadContext(
+            roots=[str(path.parent)], limits=dict(_READ_LIMITS)
+        )
         raw = reader.read(path)
         if reader.currentness()["state"] != "unchanged":
             raise _error("Host runtime configuration changed during read")
         return raw
     except HostRuntimeConfigError:
         raise
-    except (OSError, RuntimeError, UnicodeError, ValueError, KeyError) as error:
-        raise _error("Host runtime configuration is unavailable or unsafe") from error
+    except (
+        OSError,
+        RuntimeError,
+        UnicodeError,
+        ValueError,
+        KeyError,
+    ) as error:
+        raise _error(
+            "Host runtime configuration is unavailable or unsafe"
+        ) from error
 
 
 def _exact_int(value: Any, message: str, *, minimum: int, maximum: int) -> int:
@@ -126,10 +150,17 @@ def _document(raw: bytes) -> tuple[Path, int, int, bool, str, str, str]:
         value = tomllib.loads(raw.decode("utf-8"))
     except (UnicodeDecodeError, tomllib.TOMLDecodeError, TypeError, ValueError) as error:
         raise _error("Host runtime configuration TOML is invalid") from error
-    if (not isinstance(value, dict) or not {"schema_version", "shared_mcp"} <= set(value)
-            or set(value) - {"schema_version", "shared_mcp", "project_defaults", "logging"}):
+    if (
+        not isinstance(value, dict)
+        or not {"schema_version", "shared_mcp"} <= set(value)
+        or set(value)
+        - {"schema_version", "shared_mcp", "project_defaults", "logging"}
+    ):
         raise _error("Host runtime configuration keys are invalid")
-    if type(value["schema_version"]) is not int or value["schema_version"] != 1:
+    if (
+        type(value["schema_version"]) is not int
+        or value["schema_version"] != 1
+    ):
         raise _error("Host runtime configuration schema_version must be 1")
     shared = value["shared_mcp"]
     if (not isinstance(shared, dict) or "http_port" not in shared
@@ -186,45 +217,77 @@ class HostRuntimeConfig:
 
 def _default_path() -> Path:
     try:
-        base = os.environ.get("XDG_CONFIG_HOME") or str(Path.home() / ".config")
+        base = os.environ.get("XDG_CONFIG_HOME") or str(
+            Path.home() / ".config"
+        )
         return Path(base) / "anechoic" / "runtime.toml"
     except (OSError, RuntimeError, TypeError, ValueError) as error:
-        raise _error("Host runtime configuration default path is unavailable") from error
+        raise _error(
+            "Host runtime configuration default path is unavailable"
+        ) from error
 
 
-def load_host_runtime_config(path: Path | str | None = None) -> HostRuntimeConfig:
+def load_host_runtime_config(
+    path: Path | str | None = None,
+) -> HostRuntimeConfig:
     """Load one canonical host config without writing or using a fallback."""
     source = _canonical_config_path(_default_path() if path is None else path)
     raw = _read_config(source)
-    projects_root, http_port, maximum, single, workbench, journal, level = _document(raw)
+    projects_root, http_port, maximum, single, workbench, journal, level = (
+        _document(raw)
+    )
     return HostRuntimeConfig(
-        source, projects_root, http_port, hashlib.sha256(raw).hexdigest(), maximum,
-        single, workbench, journal, level
+        source,
+        projects_root,
+        http_port,
+        hashlib.sha256(raw).hexdigest(),
+        maximum,
+        single,
+        workbench,
+        journal,
+        level,
     )
 
 
-def resolve_host_project(config: HostRuntimeConfig, project_root: Path | str, *, selector=None):
+def resolve_host_project(
+    config: HostRuntimeConfig, project_root: Path | str, *, selector=None
+):
     """Resolve one explicit Project admitted by the configured host root."""
     if not isinstance(config, HostRuntimeConfig):
         raise _error("Host runtime configuration is invalid")
     candidate = _canonical_directory(project_root)
     try:
-        if (candidate != config.projects_root if config.single_project else
-                candidate == config.projects_root or not candidate.is_relative_to(config.projects_root)):
-            raise OutsideProjectRootError("Project root is outside the shared host root")
+        if (
+            candidate != config.projects_root
+            if config.single_project
+            else candidate == config.projects_root
+            or not candidate.is_relative_to(config.projects_root)
+        ):
+            raise OutsideProjectRootError(
+                "Project root is outside the shared host root"
+            )
     except ValueError as error:
-        raise OutsideProjectRootError("Project root is outside the shared host root") from error
+        raise OutsideProjectRootError(
+            "Project root is outside the shared host root"
+        ) from error
     if selector is None:
         from .project_admission import select_runtime_project
+
         selector = select_runtime_project
 
     selection = selector(candidate)
     parameters = deepcopy(selection.parameters)
     runtime = parameters.setdefault("runtime", {})
     if isinstance(runtime, dict):
-        console = "iwe_console" if "iwe_console" in runtime or "workbench" not in runtime else "workbench"
-        for name, storage in ((console, config.workbench_storage),
-                              ("journal", config.journal_storage)):
+        console = (
+            "iwe_console"
+            if "iwe_console" in runtime or "workbench" not in runtime
+            else "workbench"
+        )
+        for name, storage in (
+            (console, config.workbench_storage),
+            ("journal", config.journal_storage),
+        ):
             section = runtime.setdefault(name, {})
             if isinstance(section, dict):
                 section.setdefault("storage", storage)

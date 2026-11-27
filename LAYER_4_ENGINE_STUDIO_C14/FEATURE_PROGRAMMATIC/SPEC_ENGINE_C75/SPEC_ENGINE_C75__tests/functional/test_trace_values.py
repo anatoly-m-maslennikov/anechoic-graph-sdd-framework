@@ -5,9 +5,15 @@ import shutil
 import subprocess
 import unittest
 
-from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_2_SPEC_READING_C83._package__shared import load_formal_claim
-from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_2_SPEC_READING_C83.SPECIFICATION_MODEL_C85._package__shared import parse_trace_contract
-from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_4_SPEC_COMPARISON_C88._package__shared import compare_trace_values
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_2_SPEC_READING_C83._package__shared import (
+    load_formal_claim,
+)
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_2_SPEC_READING_C83.SPECIFICATION_MODEL_C85._package__shared import (
+    parse_trace_contract,
+)
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_4_SPEC_COMPARISON_C88._package__shared import (
+    compare_trace_values,
+)
 
 
 RULE = """declare_trace_contract(action='run_view', cases={
@@ -27,13 +33,19 @@ class TraceValuesTests(unittest.TestCase):
             ({'query_id': None}, {'query_id': None}, 'matched'),
             ({'query_id': None}, {}, 'unresolved'),
         ):
-            with self.subTest(expected=expected, received=received, displayed=displayed):
-                result = compare_trace_values(case, [
-                    {'event': 'reply', 'detail': received},
-                    {'event': 'display', 'detail': displayed},
-                ], lean=lean)
-                self.assertEqual(expected, result['status'], result)
-                self.assertEqual('succeeded', result['output'])
+            with self.subTest(
+                expected=expected, received=received, displayed=displayed
+            ):
+                result = compare_trace_values(
+                    case,
+                    [
+                        {"event": "reply", "detail": received},
+                        {"event": "display", "detail": displayed},
+                    ],
+                    lean=lean,
+                )
+                self.assertEqual(expected, result["status"], result)
+                self.assertEqual("succeeded", result["output"])
 
     def test_equal_blank_ids_and_empty_witnesses_fail_nonempty_checks(self):
         rule = """declare_trace_contract(action='verify', cases={'succeeded': {
@@ -54,15 +66,25 @@ class TraceValuesTests(unittest.TestCase):
             ('snapshot', [1], 'matched'),
         ):
             with self.subTest(pin=pin, witnesses=witnesses):
-                report = compare_trace_values(case, [
-                    {'event': 'read', 'detail': {'pin': pin}},
-                    {'event': 'result', 'detail': {'pin': pin, 'witnesses': witnesses}},
-                ])
-                self.assertEqual(expected, report['status'], report)
+                report = compare_trace_values(
+                    case,
+                    [
+                        {"event": "read", "detail": {"pin": pin}},
+                        {
+                            "event": "result",
+                            "detail": {"pin": pin, "witnesses": witnesses},
+                        },
+                    ],
+                )
+                self.assertEqual(expected, report["status"], report)
 
     def test_rejects_self_comparison(self):
-        with self.assertRaisesRegex(ValueError, 'distinct named event fields'):
-            parse_trace_contract(RULE.replace("('display', 'query_id')", "('reply', 'query_id')"))
+        with self.assertRaisesRegex(ValueError, "distinct named event fields"):
+            parse_trace_contract(
+                RULE.replace(
+                    "('display', 'query_id')", "('reply', 'query_id')"
+                )
+            )
 
     def test_malformed_event_does_not_complete_an_observation(self):
         case, = parse_trace_contract(RULE)['cases']
@@ -74,9 +96,16 @@ class TraceValuesTests(unittest.TestCase):
         self.assertEqual('unresolved', report['status'], report)
 
     def test_equal_fields_still_need_the_required_type(self):
-        rule = RULE.replace("'succeeded': {", "'succeeded': {'value_types': {('display', 'query_id'): 'string'}, ")
-        case, = parse_trace_contract(rule)['cases']
-        for value, expected in ((False, 'conflicting'), (None, 'conflicting'), ('A', 'matched')):
+        rule = RULE.replace(
+            "'succeeded': {",
+            "'succeeded': {'value_types': {('display', 'query_id'): 'string'}, ",
+        )
+        (case,) = parse_trace_contract(rule)["cases"]
+        for value, expected in (
+            (False, "conflicting"),
+            (None, "conflicting"),
+            ("A", "matched"),
+        ):
             with self.subTest(value=value):
                 report = compare_trace_values(case, [
                     {'event': 'reply', 'detail': {'query_id': value}},
@@ -91,15 +120,27 @@ class TraceValuesTests(unittest.TestCase):
                'status': 'draft', 'container_component': 'C46'}
         _, declaration, issues = load_formal_claim(root, 'C46', 'contract', pin)
         self.assertFalse(issues, issues)
-        case = next(parsed for language, text in declaration['claims'] if language == 'python trace'
-                    and (parsed := parse_trace_contract(text)).get('output') == 'succeeded'
-                    and parsed['action'] == 'workbench_frontend_run_view')
-        script, = (root / 'LAYER_4_ENGINE_STUDIO_C14/ARCHITECTURE_ANALYSIS_C73').rglob(
-            'workbench-reply-identity/replay.mjs')
-        observed = json.loads(subprocess.check_output(
-            ['node', str(script), '--observations'], timeout=30))
-        by_probe = {(row['version'], row['queryId']): row for row in observed
-                    if row['kind'] == 'run' and 'queryId' in row}
+        case = next(
+            parsed
+            for language, text in declaration["claims"]
+            if language == "python trace"
+            and (parsed := parse_trace_contract(text)).get("output")
+            == "succeeded"
+            and parsed["action"] == "workbench_frontend_run_view"
+        )
+        (script,) = (
+            root / "LAYER_4_ENGINE_STUDIO_C14/ARCHITECTURE_ANALYSIS_C73"
+        ).rglob("workbench-reply-identity/replay.mts")
+        observed = json.loads(
+            subprocess.check_output(
+                ["node", str(script), "--observations"], timeout=30
+            )
+        )
+        by_probe = {
+            (row["version"], row["queryId"]): row
+            for row in observed
+            if row["kind"] == "run" and "queryId" in row
+        }
         for version, query_id, expected in (
             ('before', 'run-1', 'conflicting'), ('fixed', 'run-2', 'matched'),
         ):

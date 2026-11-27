@@ -6,9 +6,9 @@ from unittest.mock import patch
 
 import yaml
 
-TOOLS = Path(__file__).resolve().parents[1]
-ENGINE = TOOLS.parents[1]
-sys.path[:0] = [str(TOOLS), str(ENGINE / 'IWE_CONSOLE_C43')]
+sys.path.insert(0, str((ENGINE := (TOOLS := Path(__file__).resolve()
+    .parents[1]).parents[1]) / 'IWE_CONSOLE_C43'))
+sys.path.insert(0, str(TOOLS))
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import capture_native
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import InputError, SourceChanged
@@ -40,21 +40,40 @@ class NativeDirectUpdateTests(NativeUpdateSupport, unittest.TestCase):
             self.assertEqual(allowed, outcome['artifact']['status'])
 
     def test_standalone_asset_completes_in_its_directory(self):
-        path = self.write('001_TICKETS/ASSETS/AN-T-2-WORK_LOG--example.md', 'AN-T-2')
-        _, header, body = path.read_text().split('---', 2)
+        path = self.write(
+            "001_TICKETS/ASSETS/AN-T-2-WORK_LOG--example.md", "AN-T-2"
+        )
+        _, header, body = path.read_text().split("---", 2)
         metadata = yaml.safe_load(header)
-        metadata['context']['template'] = 'work_log'
-        metadata['state']['status'] = 'in_queue'
-        path.write_text('---\n' + yaml.safe_dump(canonical_native_header(metadata)) + '---' + body)
-        target = {'ref_id': 'AN-T-2', 'version': 1}
-        outcome = change_ticket_status(self.selection, {'target': target, 'targetStatus': 'complete'},
-                                       current_rows=capture_native(self.selection).atoms, check_definition=lambda: None)
-        self.assertEqual('complete', outcome['artifact']['status'])
-        self.assertEqual(self.control / '001_TICKETS/ASSETS/08_complete' / path.name,
-                         self.root / outcome['artifact']['path'])
+        metadata["context"]["template"] = "work_log"
+        metadata["state"]["status"] = "in_queue"
+        path.write_text(
+            "---\n"
+            + yaml.safe_dump(canonical_native_header(metadata))
+            + "---"
+            + body
+        )
+        target = {"ref_id": "AN-T-2", "version": 1}
+        outcome = change_ticket_status(
+            self.selection,
+            {"target": target, "targetStatus": "complete"},
+            current_rows=capture_native(self.selection).atoms,
+            check_definition=lambda: None,
+        )
+        self.assertEqual("complete", outcome["artifact"]["status"])
+        self.assertEqual(
+            self.control / "001_TICKETS/ASSETS/08_complete" / path.name,
+            self.root / outcome["artifact"]["path"],
+        )
         self.assertFalse(path.exists())
-        self.assertEqual('complete', next(row for row in capture_native(self.selection).atoms
-                                          if row['id'] == 'AN-T-2')['status'])
+        self.assertEqual(
+            "complete",
+            next(
+                row
+                for row in capture_native(self.selection).atoms
+                if row["id"] == "AN-T-2"
+            )["status"],
+        )
 
     def test_canonical_ticket_archive_requires_current_replacement(self):
         target_path = self.write('001_TICKETS/TASKS/AN-T-2-TASK--example.md', 'AN-T-2')
@@ -118,6 +137,31 @@ class NativeDirectUpdateTests(NativeUpdateSupport, unittest.TestCase):
         self.assertEqual({**canonical, 'state': after['state']}, after)
         self.assertEqual('done', after['state']['status'])
 
+    def _alter_invalid_update_input(self, case, params, ticket, original):
+        extra_path = None
+        if case == 'version':
+            params['target']['version'] = 2
+        elif case == 'header':
+            self.path.write_bytes(original.replace(b'version: 1', b'version: 2'))
+        elif case == 'header_bytes':
+            self.path.write_bytes(original.replace(b'version: 1', b'version: 01'))
+        elif case == 'missing_digest':
+            ticket.pop('_source_sha256')
+        elif case == 'path':
+            ticket['source_path'] = '../outside.md'
+        elif case == 'wrong_path':
+            ticket['source_path'] = str(Path(ticket['source_path']).with_name('AN-T-1-other.md'))
+        elif case == 'summary':
+            params['changes']['body'] = params['changes']['body'].replace('Example', 'Different')
+        elif case == 'extra':
+            params['changes']['status'] = 'done'
+        elif case == 'child':
+            extra_path = self.write('001_TICKETS/ASSETS/AN-T-2-ASSET--child.md', 'AN-T-2', {'atom': 'AN-T-1'})
+        else:
+            extra_path = self.path.with_suffix('')
+            extra_path.mkdir()
+        return extra_path
+
     def test_stale_or_invalid_inputs_have_no_effect(self):
         for case in ('version', 'header', 'header_bytes', 'missing_digest', 'path', 'wrong_path', 'summary', 'extra', 'child', 'companion'):
             with self.subTest(case=case):
@@ -125,28 +169,7 @@ class NativeDirectUpdateTests(NativeUpdateSupport, unittest.TestCase):
                 rows = [dict(row) for row in self.rows]
                 params = {'target': dict(self.params['target']), 'changes': dict(self.params['changes'])}
                 ticket = next(row for row in rows if row['id'] == 'AN-T-1')
-                extra_path = None
-                if case == 'version':
-                    params['target']['version'] = 2
-                elif case == 'header':
-                    self.path.write_bytes(original.replace(b'version: 1', b'version: 2'))
-                elif case == 'header_bytes':
-                    self.path.write_bytes(original.replace(b'version: 1', b'version: 01'))
-                elif case == 'missing_digest':
-                    ticket.pop('_source_sha256')
-                elif case == 'path':
-                    ticket['source_path'] = '../outside.md'
-                elif case == 'wrong_path':
-                    ticket['source_path'] = str(Path(ticket['source_path']).with_name('AN-T-1-other.md'))
-                elif case == 'summary':
-                    params['changes']['body'] = params['changes']['body'].replace('Example', 'Different')
-                elif case == 'extra':
-                    params['changes']['status'] = 'done'
-                elif case == 'child':
-                    extra_path = self.write('001_TICKETS/ASSETS/AN-T-2-ASSET--child.md', 'AN-T-2', {'atom': 'AN-T-1'})
-                else:
-                    extra_path = self.path.with_suffix('')
-                    extra_path.mkdir()
+                extra_path = self._alter_invalid_update_input(case, params, ticket, original)
                 expected = self.path.read_bytes()
                 with self.assertRaises((InputError, SourceChanged)):
                     direct_update(self.selection, params, current_rows=rows)
@@ -160,7 +183,10 @@ class NativeDirectUpdateTests(NativeUpdateSupport, unittest.TestCase):
         path.write_bytes(path.read_bytes().replace(b'status: active', b'status: draft').replace(b'version: 1', b'version: 2'))
         rows = capture_native(self.selection).atoms
         before = path.read_bytes()
-        params = {'target': {'ref_id': 'AN-T-1@2-draft', 'version': 2}, 'changes': self.params['changes']}
+        params = {
+            "target": {"ref_id": "AN-T-1@2-draft", "version": 2},
+            "changes": self.params["changes"],
+        }
         outcome = direct_update(self.selection, params, current_rows=rows)
         self.assertEqual('completed', outcome['outcome'])
         self.assertEqual(('AN-T-1', 'AN-T-1@2-draft', 2, 'draft'),
@@ -173,45 +199,89 @@ class NativeDirectUpdateTests(NativeUpdateSupport, unittest.TestCase):
             direct_update(self.selection, params, current_rows=rows)
 
     def test_archive_preserves_draft_and_version(self):
-        draft = self.write('001_TICKETS/ASSETS/01_draft/AN-T-1@2-draft-ASSET--draft.md', 'AN-T-1')
-        draft.write_bytes(draft.read_bytes().replace(b'status: active', b'status: draft').replace(b'version: 1', b'version: 2'))
+        draft = self.write(
+            "001_TICKETS/ASSETS/01_draft/AN-T-1@2-draft-ASSET--draft.md",
+            "AN-T-1",
+        )
+        draft.write_bytes(
+            draft.read_bytes()
+            .replace(b"status: active", b"status: draft")
+            .replace(b"version: 1", b"version: 2")
+        )
         rows = capture_native(self.selection).atoms
-        body = self.path.read_bytes().split(b'---\n', 2)[2]
+        body = self.path.read_bytes().split(b"---\n", 2)[2]
         original_draft = draft.read_bytes()
-        outcome = archive_ticket(self.selection, {'target': self.params['target']}, current_rows=rows)
-        self.assertEqual('completed', outcome['outcome'])
-        destination = self.path.parent / '09_archived' / 'AN-T-1@1-ASSET--example.md'
+        outcome = archive_ticket(
+            self.selection,
+            {"target": self.params["target"]},
+            current_rows=rows,
+        )
+        self.assertEqual("completed", outcome["outcome"])
+        destination = (
+            self.path.parent / "09_archived" / "AN-T-1@1-ASSET--example.md"
+        )
         self.assertFalse(self.path.exists())
-        self.assertEqual(body, destination.read_bytes().split(b'---\n', 2)[2])
+        self.assertEqual(body, destination.read_bytes().split(b"---\n", 2)[2])
         self.assertEqual(original_draft, draft.read_bytes())
-        self.assertEqual(('AN-T-1@1', 1, 'archived'),
-                         tuple(outcome['artifact'][key] for key in ('ref_id', 'version', 'status')))
+        self.assertEqual(
+            ("AN-T-1@1", 1, "archived"),
+            tuple(
+                outcome["artifact"][key]
+                for key in ("ref_id", "version", "status")
+            ),
+        )
         capture = capture_native(self.selection)
         self.assertEqual({}, capture.errors)
-        self.assertEqual({'AN-T-1@1', 'AN-T-1@2-draft'},
-                         {row['ref'] for row in capture.atoms if row['id'] == 'AN-T-1'})
+        self.assertEqual(
+            {"AN-T-1@1", "AN-T-1@2-draft"},
+            {row["ref"] for row in capture.atoms if row["id"] == "AN-T-1"},
+        )
 
     def test_status_failed_removal_rolls_back_only_when_proven(self):
-        params = {'target': self.params['target'], 'targetStatus': 'done'}
-        destination = self.path.parent / 'done' / self.path.name
+        params = {"target": self.params["target"], "targetStatus": "done"}
+        destination = self.path.parent / "done" / self.path.name
         destination.parent.mkdir()
         remove = effects.remove
+
         def failed(root, path, digest):
             if path == self.path:
-                return effects.Result(errors=[{'code': 'backend_failure', 'message': 'failure'}])
+                return effects.Result(
+                    errors=[{"code": "backend_failure", "message": "failure"}]
+                )
             return remove(root, path, digest)
-        with patch.object(effects, 'remove', side_effect=failed):
-            outcome = change_ticket_status(self.selection, params, current_rows=self.rows, check_definition=lambda: None)
-        self.assertEqual(['create', 'remove'], [effect['operation'] for effect in outcome['effects']])
+
+        with patch.object(effects, "remove", side_effect=failed):
+            outcome = change_ticket_status(
+                self.selection,
+                params,
+                current_rows=self.rows,
+                check_definition=lambda: None,
+            )
+        self.assertEqual(
+            ["create", "remove"],
+            [effect["operation"] for effect in outcome["effects"]],
+        )
         self.assertTrue(self.path.exists())
         self.assertFalse(destination.exists())
+
         def uncertain(root, path, digest):
-            return effects.Result(effects=[{'operation': 'remove', 'state': 'unknown'}],
-                                  errors=[{'code': 'effect_uncertain', 'message': 'failure'}])
-        with patch.object(effects, 'remove', side_effect=uncertain):
-            outcome = change_ticket_status(self.selection, params, current_rows=self.rows, check_definition=lambda: None)
-        self.assertEqual(['create', 'remove'], [effect['operation'] for effect in outcome['effects']])
-        self.assertEqual('unknown', outcome['effects'][1]['state'])
+            return effects.Result(
+                effects=[{"operation": "remove", "state": "unknown"}],
+                errors=[{"code": "effect_uncertain", "message": "failure"}],
+            )
+
+        with patch.object(effects, "remove", side_effect=uncertain):
+            outcome = change_ticket_status(
+                self.selection,
+                params,
+                current_rows=self.rows,
+                check_definition=lambda: None,
+            )
+        self.assertEqual(
+            ["create", "remove"],
+            [effect["operation"] for effect in outcome["effects"]],
+        )
+        self.assertEqual("unknown", outcome["effects"][1]["state"])
         self.assertTrue(destination.exists())
 
     def test_archive_rejects_missing_draft_and_stale_selection(self):
@@ -225,11 +295,16 @@ class NativeDirectUpdateTests(NativeUpdateSupport, unittest.TestCase):
         self.assertTrue(self.path.exists())
 
     def test_body_update_rejects_task(self):
-        path = self.write('001_TICKETS/TASKS/AN-T-3-TASK--task.md', 'AN-T-3')
+        path = self.write("001_TICKETS/TASKS/AN-T-3-TASK--task.md", "AN-T-3")
         rows = capture_native(self.selection).atoms
         for row in rows:
-            row['_source_sha256'] = sha256((self.root / row['source_path']).read_bytes()).hexdigest()
-        params = {'target': {'ref_id': 'AN-T-3', 'version': 1}, 'changes': self.params['changes']}
+            row["_source_sha256"] = sha256(
+                (self.root / row["source_path"]).read_bytes()
+            ).hexdigest()
+        params = {
+            "target": {"ref_id": "AN-T-3", "version": 1},
+            "changes": self.params["changes"],
+        }
         before = path.read_bytes()
         with self.assertRaises(InputError):
             direct_update(self.selection, params, current_rows=rows)

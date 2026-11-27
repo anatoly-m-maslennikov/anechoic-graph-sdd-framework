@@ -173,5 +173,10 @@ def native_trace_snapshot(root, nodes, *, strict=False):
 
 
 def native_trace_rows(root, nodes):
-    "Read bindings for the local owners already inventoried by the Realization Graph."
+    # fmt: off
+    (
+        "Read bindings for the local owners already inventoried by the "
+        "Realization Graph."
+    )
+    # fmt: on
     return native_trace_snapshot(root, nodes)[0]

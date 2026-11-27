@@ -2,21 +2,29 @@
 
 from __future__ import annotations
 
-from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IMPORT_GRAPH_C61.import_graph__shared import ImportSite, Source
+from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IMPORT_GRAPH_C61.import_graph__shared import (
+    ImportSite,
+    Source,
+)
 
 
-_CACHE_VERSION = 4
+_CACHE_VERSION = 5
 _SCHEMA = "_anechoic_import_cache"
 
 
 def _exists(connection) -> bool:
-    return bool(connection.execute(
-        "SELECT count(*) FROM information_schema.schemata WHERE catalog_name = current_database() AND schema_name = ?", [_SCHEMA]
-    ).fetchone()[0])
+    return bool(
+        connection.execute(
+            "SELECT count(*) FROM information_schema.schemata WHERE catalog_name = current_database() AND schema_name = ?",
+            [_SCHEMA],
+        ).fetchone()[0]
+    )
 
 
 def _compatible(connection) -> bool:
-    return connection.execute(f"SELECT version FROM {_SCHEMA}.version").fetchall() == [(_CACHE_VERSION,)]
+    return connection.execute(
+        f"SELECT version FROM {_SCHEMA}.version"
+    ).fetchall() == [(_CACHE_VERSION,)]
 
 
 def read_import_sources(connection) -> dict[str, Source]:
@@ -24,12 +32,29 @@ def read_import_sources(connection) -> dict[str, Source]:
     if not _exists(connection) or not _compatible(connection):
         return {}
     sites: dict[str, list[ImportSite]] = {}
-    for path, module, name, level, line, column, type_only in connection.execute(
-        f'SELECT path, module, name, level, line, "column", type_only FROM {_SCHEMA}.sites ORDER BY path, ordinal'
+    for (
+        path,
+        module,
+        name,
+        level,
+        line,
+        column,
+        type_only,
+        previous_image,
+    ) in connection.execute(
+        f'SELECT path, module, name, level, line, "column", type_only, previous_image FROM {_SCHEMA}.sites ORDER BY path, ordinal'
     ).fetchall():
-        sites.setdefault(path, []).append(ImportSite(module, name, level, line, column, type_only))
+        sites.setdefault(path, []).append(
+            ImportSite(module, name, level, line, column, type_only, previous_image)
+        )
     return {
-        path: Source(language, status, signature, tuple(sites.get(path, ())), error_message)
+        path: Source(
+            language,
+            status,
+            signature,
+            tuple(sites.get(path, ())),
+            error_message,
+        )
         for path, language, status, signature, error_message in connection.execute(
             f"SELECT path, language, status, signature, error_message FROM {_SCHEMA}.sources"
         ).fetchall()
@@ -59,7 +84,7 @@ def replace_import_sources(connection, sources: dict[str, Source],
         connection.execute(
             f'CREATE TABLE {_SCHEMA}.sites (path VARCHAR NOT NULL, ordinal INTEGER NOT NULL, '
             'module VARCHAR NOT NULL, name VARCHAR, level INTEGER NOT NULL, line INTEGER NOT NULL, '
-            '"column" INTEGER NOT NULL, type_only BOOLEAN NOT NULL, PRIMARY KEY (path, ordinal))'
+            '"column" INTEGER NOT NULL, type_only BOOLEAN NOT NULL, previous_image BOOLEAN NOT NULL, PRIMARY KEY (path, ordinal))'
         )
     if previous is None:
         previous = read_import_sources(connection)
@@ -74,10 +99,12 @@ def replace_import_sources(connection, sources: dict[str, Source],
     if rows:
         connection.execute(f"INSERT INTO {_SCHEMA}.sources SELECT unnest(?), unnest(?), unnest(?), unnest(?), unnest(?)",
                            [list(column) for column in zip(*rows, strict=True)])
-    rows = [(path, ordinal, site.module, site.name, site.level, site.line, site.column, site.type_only)
+    rows = [(path, ordinal, site.module, site.name, site.level, site.line, site.column, site.type_only, site.previous_image)
             for path, source in sources.items() if path in changed
             for ordinal, site in enumerate(source.imports)]
     if rows:
-        connection.execute(f"INSERT INTO {_SCHEMA}.sites SELECT unnest(?), unnest(?), unnest(?), "
-                           "unnest(?), unnest(?), unnest(?), unnest(?), unnest(?)",
-                           [list(column) for column in zip(*rows, strict=True)])
+        connection.execute(
+            f"INSERT INTO {_SCHEMA}.sites SELECT unnest(?), unnest(?), unnest(?), "
+            "unnest(?), unnest(?), unnest(?), unnest(?), unnest(?), unnest(?)",
+            [list(column) for column in zip(*rows, strict=True)],
+        )

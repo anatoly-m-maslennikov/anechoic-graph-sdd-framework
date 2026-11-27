@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: "active"
-  version: 5
-  updated_at: "2026-11-26T15:52:28.111960+00:00"
+  version: 6
+  updated_at: "2026-11-27T17:36:37.991574+00:00"
 ---
 
 ## Summary
@@ -49,6 +49,7 @@ ComponentManifest(
                                                 'arguments',
                                    'routes': ['GET /health',
                                               'GET /tools',
+                                              'GET /jobs/worker-runs',
                                               'POST /tools']},
                    'shared_api': {'transport': 'http',
                                   'socket': 'private Unix socket',
@@ -105,6 +106,10 @@ Serve the established 33 Tool capabilities through private HTTP, including
 query, Workspace, View, saved SQL, projection, and Atom lifecycle operations.
 MCP maps the catalog to its transport and forwards calls and results.
 Enforce the selected Project's Tool blacklist.
+
+For direct `GET /jobs/worker-runs`, require exactly one `instance_id`
+matching the pinned Project. Validate the Worker Runs response against its
+typed model before returning it.
 
 Validate structured data with Pydantic. Send query, Workspace, and save
 operations to the Project's Kernel. Send rebuild, abort, and lifecycle

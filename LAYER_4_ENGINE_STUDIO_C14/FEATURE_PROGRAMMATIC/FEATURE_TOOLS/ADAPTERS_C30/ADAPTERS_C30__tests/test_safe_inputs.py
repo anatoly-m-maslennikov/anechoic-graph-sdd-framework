@@ -14,7 +14,8 @@ from unittest.mock import patch
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
 sys.path.insert(0, str(HERE.parent.parent))
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.\
+    ADAPTERS_C30__shared import (  # noqa: E402
     CarrierError,
     LimitReached,
     ReadContext,
@@ -22,7 +23,7 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import
     frontmatter_bounds,
     parse_carrier,
     source_body,
-)
+)  # fmt: skip
 
 
 class CarrierTests(unittest.TestCase):

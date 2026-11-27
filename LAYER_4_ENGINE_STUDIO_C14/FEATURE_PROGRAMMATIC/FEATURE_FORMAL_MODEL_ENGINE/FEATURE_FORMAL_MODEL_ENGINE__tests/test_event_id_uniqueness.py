@@ -2,18 +2,28 @@
 
 import unittest
 
-from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.FEATURE_FORMAL_MODEL_ENGINE__shared import (
+from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.\
+    FEATURE_FORMAL_MODEL_ENGINE__shared \
+    import (
     lint_python_model_claim,
-)
-from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import (
+)  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.\
+    FEATURE_PROJECT_TOOLS__tests.\
+    FEATURE_PROJECT_TOOLS__tests__shared \
+    import (
     EVENT_CLAIM as CLAIM,
-)
-from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import (
+)  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.\
+    FEATURE_PROJECT_TOOLS__tests.\
+    FEATURE_PROJECT_TOOLS__tests__shared \
+    import (
     EVENT_CLASS,
-)
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+)  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.\
+    ADAPTERS_C30__shared \
+    import (
     parse_native_model_claim,
-)
+)  # fmt: skip
 
 
 class EventIDTests(unittest.TestCase):

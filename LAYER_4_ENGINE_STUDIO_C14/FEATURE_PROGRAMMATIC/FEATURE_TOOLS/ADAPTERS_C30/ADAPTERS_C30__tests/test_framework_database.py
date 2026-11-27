@@ -39,7 +39,8 @@ class FrameworkDatabaseTests(unittest.TestCase):
         path.write_text(
             f"---\natom_family: SPEC\natom_id: AN-S-{number}\n"
             "container: {component: C00}\ntier: 2\ncontext: {lens: SPEC}\n"
-            f"state: {{status: {status}, version: {version}}}\n---\n\n## Summary\n\nAtom {number}\n",
+            f"state: {{status: {status}, version: {version}}}\n---\n"
+            f"\n## Summary\n\nAtom {number}\n",
             encoding="utf-8",
         )
 
@@ -69,7 +70,10 @@ class FrameworkDatabaseTests(unittest.TestCase):
             )
             self.assertEqual(
                 connection.execute(
-                    "SELECT atom_id, version FROM framework.atoms ORDER BY atom_id"
+                    (
+                        "SELECT atom_id, version FROM framework.atoms ORDER "
+                        "BY atom_id"
+                    )
                 ).fetchall(),
                 [("AN-S-1", 1), ("AN-S-2", 1)],
             )

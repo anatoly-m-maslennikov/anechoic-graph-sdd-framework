@@ -5,24 +5,42 @@ from __future__ import annotations
 import threading
 from typing import Any
 
-from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import QueryExecutionError, WorkbenchUnavailableError
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (
+    QueryExecutionError,
+    WorkbenchUnavailableError,
+)
 from KERNEL_MIXER_C59.result_delivery import DELIVERY_MODES
 
-RUN, PAGE, CHECK, SCHEMA = "query_run", "query_page", "query_check", "query_schema"
+RUN = "query_run"
+PAGE = "query_page"
+CHECK = "query_check"
+SCHEMA = "query_schema"
 SAVE_VIEW, LOAD, SAVED_LIST = "view_save", "query_load", "query_saved_list"
 REBUILD = "query_rebuild"
 SYNC_STATUS = "iwe_console_status"
-WORKSPACE_OPEN, WORKSPACE_LIST, WORKSPACE_GET = "workspace_open", "workspace_list", "workspace_get"
+WORKSPACE_OPEN = "workspace_open"
+WORKSPACE_LIST = "workspace_list"
+WORKSPACE_GET = "workspace_get"
 VIEW_CREATE, VIEW_DUPLICATE, VIEW_LIST, VIEW_GET, VIEW_UPDATE = (
-    "view_create", "view_duplicate", "view_list", "view_get", "view_update"
+    "view_create",
+    "view_duplicate",
+    "view_list",
+    "view_get",
+    "view_update",
 )
-VIEW_RUN, VIEW_CHECK, VIEW_FETCH, VIEW_FOCUS = "view_run", "view_check", "view_fetch", "view_focus"
+VIEW_RUN, VIEW_CHECK, VIEW_FETCH, VIEW_FOCUS = (
+    "view_run",
+    "view_check",
+    "view_fetch",
+    "view_focus",
+)
 VIEW_RENAME, VIEW_REMOVE = "view_rename", "view_remove"
 QUERY_LOG_LIST, QUERY_LOG_GET = "query_log_list", "query_log_get"
 INTERFACE_TOOLS = (
-    WORKSPACE_OPEN, WORKSPACE_LIST, WORKSPACE_GET, VIEW_CREATE, VIEW_DUPLICATE, VIEW_LIST, VIEW_GET,
-    VIEW_UPDATE, VIEW_RUN, VIEW_CHECK, VIEW_FETCH, VIEW_FOCUS, VIEW_RENAME, VIEW_REMOVE,
-    QUERY_LOG_LIST, QUERY_LOG_GET,
+    (WORKSPACE_OPEN, WORKSPACE_LIST, WORKSPACE_GET)
+    + (VIEW_CREATE, VIEW_DUPLICATE, VIEW_LIST, VIEW_GET, VIEW_UPDATE)
+    + (VIEW_RUN, VIEW_CHECK, VIEW_FETCH, VIEW_FOCUS, VIEW_RENAME, VIEW_REMOVE)
+    + (QUERY_LOG_LIST, QUERY_LOG_GET)
 )
 
 
@@ -43,54 +61,115 @@ class WorkbenchOperations:
             if name in INTERFACE_TOOLS:
                 return self._query_owner.interface_call(name, arguments)
             if name == RUN:
-                sql, page_size, cursor, save, preview, query_name, delivery, result_format = self._run(arguments)
-                return self._query_owner.run(
-                    sql, page_size=page_size, cursor_position=cursor,
-                    save=save, preview=preview, name=query_name,
-                    result_delivery=delivery, result_format=result_format,
-                )
+                return self._run_query(arguments)
             if name == CHECK:
                 sql, cursor = self._sql(arguments, {"sql", "cursor_position"})
                 return self._query_owner.check(sql, cursor_position=cursor)
             if name == PAGE:
-                query_id, offset, page_size, grid, preview, delivery, result_format = self._page(arguments)
-                return self._query_owner.page(
-                    query_id, offset, page_size=page_size, grid=grid, preview=preview,
-                    result_delivery=delivery, result_format=result_format,
-                )
+                return self._page_query(arguments)
             if name == SCHEMA:
                 self._empty(arguments)
                 return self._query_owner.schema()
             if name == SAVE_VIEW:
-                if isinstance(arguments, dict) and {"workspace_id", "view_id"} <= set(arguments):
+                if isinstance(arguments, dict) and {
+                    "workspace_id",
+                    "view_id",
+                } <= set(arguments):
                     return self._query_owner.interface_call(name, arguments)
                 sql, _ = self._sql(arguments, {"sql", "name"})
-                return self._query_owner.save_view(sql, name=self._name(arguments))
+                return self._query_owner.save_view(
+                    sql, name=self._name(arguments)
+                )
             if name == LOAD:
-                reference, _ = self._sql(arguments, {"reference"}, key="reference")
+                reference, _ = self._sql(
+                    arguments, {"reference"}, key="reference"
+                )
                 return self._query_owner.load(reference)
             if name == SAVED_LIST:
-                return self._query_owner.saved_list(limit=self._limit(arguments))
+                return self._query_owner.saved_list(
+                    limit=self._limit(arguments)
+                )
             raise ValueError("Unknown Workbench tool")
 
+    def _run_query(self, arguments):
+        (
+            sql,
+            page_size,
+            cursor,
+            save,
+            preview,
+            query_name,
+            delivery,
+            result_format,
+        ) = self._run(arguments)
+        return self._query_owner.run(
+            sql,
+            page_size=page_size,
+            cursor_position=cursor,
+            save=save,
+            preview=preview,
+            name=query_name,
+            result_delivery=delivery,
+            result_format=result_format,
+        )
+
+    def _page_query(self, arguments):
+        (
+            query_id,
+            offset,
+            page_size,
+            grid,
+            preview,
+            delivery,
+            result_format,
+        ) = self._page(arguments)
+        return self._query_owner.page(
+            query_id,
+            offset,
+            page_size=page_size,
+            grid=grid,
+            preview=preview,
+            result_delivery=delivery,
+            result_format=result_format,
+        )
+
     def _rebuild(self, arguments):
-        if not isinstance(arguments, dict) or set(arguments) != {"target"} or not isinstance(arguments["target"], str) or not arguments["target"].strip():
-            raise ValueError("Expected a non-empty target table selector or all")
+        if (
+            not isinstance(arguments, dict)
+            or set(arguments) != {"target"}
+            or not isinstance(arguments["target"], str)
+            or not arguments["target"].strip()
+        ):
+            raise ValueError(
+                "Expected a non-empty target table selector or all"
+            )
         try:
             return self._query_owner.rebuild(arguments["target"])
-        except (ValueError, QueryExecutionError, WorkbenchUnavailableError):
+        except ValueError, QueryExecutionError, WorkbenchUnavailableError:
             raise
         except Exception as error:
-            raise QueryExecutionError("Query rebuild failed. See process diagnostics.") from error
+            raise QueryExecutionError(
+                "Query rebuild failed. See process diagnostics."
+            ) from error
 
     @staticmethod
-    def _sql(arguments: Any, allowed: set[str], *, key: str = "sql") -> tuple[str, int | None]:
-        if not isinstance(arguments, dict) or set(arguments) - allowed or key not in arguments:
+    def _sql(
+        arguments: Any, allowed: set[str], *, key: str = "sql"
+    ) -> tuple[str, int | None]:
+        if (
+            not isinstance(arguments, dict)
+            or set(arguments) - allowed
+            or key not in arguments
+        ):
             raise ValueError(f"Expected only {' and '.join(sorted(allowed))}")
         value, cursor = arguments[key], arguments.get("cursor_position")
         if not isinstance(value, str):
             raise ValueError(f"{key} must be a string")
-        if cursor is not None and (isinstance(cursor, bool) or not isinstance(cursor, int) or cursor < 0):
+        if cursor is not None and (
+            isinstance(cursor, bool)
+            or not isinstance(cursor, int)
+            or cursor < 0
+        ):
             raise ValueError("cursor_position must be a non-negative integer")
         return value, cursor
 
@@ -111,20 +190,44 @@ class WorkbenchOperations:
         return value
 
     @staticmethod
-    def _result_options(arguments: dict[str, Any]) -> tuple[int | None, str, str]:
+    def _result_options(
+        arguments: dict[str, Any],
+    ) -> tuple[int | None, str, str]:
         preview = arguments.get("preview")
-        if preview is not None and (isinstance(preview, bool) or not isinstance(preview, int) or preview < 0):
+        if preview is not None and (
+            isinstance(preview, bool)
+            or not isinstance(preview, int)
+            or preview < 0
+        ):
             raise ValueError("preview must be a non-negative integer")
         delivery = arguments.get("result_delivery", "file")
         if delivery not in DELIVERY_MODES:
             raise ValueError("result_delivery must be file, inline or auto")
         result_format = arguments.get("result_format", "json_matrix")
-        if not isinstance(result_format, str) or result_format not in {"json_matrix", "csv", "toon"}:
+        if not isinstance(result_format, str) or result_format not in {
+            "json_matrix",
+            "csv",
+            "toon",
+        }:
             raise ValueError("result_format must be json_matrix, csv or toon")
         return preview, delivery, result_format
 
-    def _run(self, arguments: Any) -> tuple[str, int, int | None, bool, int | None, str | None, str, str]:
-        sql, cursor = self._sql(arguments, {"sql", "page_size", "cursor_position", "save", "preview", "name", "result_delivery", "result_format"})
+    def _run(
+        self, arguments: Any
+    ) -> tuple[str, int, int | None, bool, int | None, str | None, str, str]:
+        sql, cursor = self._sql(
+            arguments,
+            {
+                "sql",
+                "page_size",
+                "cursor_position",
+                "save",
+                "preview",
+                "name",
+                "result_delivery",
+                "result_format",
+            },
+        )
         save = arguments.get("save", False)
         if type(save) is not bool:
             raise ValueError("save must be a boolean")
@@ -134,22 +237,64 @@ class WorkbenchOperations:
         query_name = arguments.get("name")
         if query_name is not None and not save:
             raise ValueError("name is only valid when save is true")
-        page_size_default = 1000 if delivery == "auto" and result_format != "toon" else 100
-        return sql, self._page_size(arguments, page_size_default), cursor, save, preview, query_name, delivery, result_format
+        page_size_default = (
+            1000 if delivery == "auto" and result_format != "toon" else 100
+        )
+        return (
+            sql,
+            self._page_size(arguments, page_size_default),
+            cursor,
+            save,
+            preview,
+            query_name,
+            delivery,
+            result_format,
+        )
 
-    def _page(self, arguments: Any) -> tuple[str, int, int, Any, int | None, str, str]:
-        allowed = {"query_id", "offset", "page_size", "grid", "preview", "result_delivery", "result_format"}
-        if not isinstance(arguments, dict) or set(arguments) - allowed or "query_id" not in arguments:
-            raise ValueError("Expected query_id and optional pagination, grid and result options")
+    def _page(
+        self, arguments: Any
+    ) -> tuple[str, int, int, Any, int | None, str, str]:
+        allowed = {
+            "query_id",
+            "offset",
+            "page_size",
+            "grid",
+            "preview",
+            "result_delivery",
+            "result_format",
+        }
+        if (
+            not isinstance(arguments, dict)
+            or set(arguments) - allowed
+            or "query_id" not in arguments
+        ):
+            raise ValueError(
+                (
+                    "Expected query_id and optional pagination, grid and "
+                    "result options"
+                )
+            )
         if "grid" in arguments and not isinstance(arguments["grid"], dict):
             raise ValueError("grid must be an object")
         query_id, offset = arguments["query_id"], arguments.get("offset", 0)
         if not isinstance(query_id, str):
             raise ValueError("query_id must be a string")
-        if isinstance(offset, bool) or not isinstance(offset, int) or offset < 0:
+        if (
+            isinstance(offset, bool)
+            or not isinstance(offset, int)
+            or offset < 0
+        ):
             raise ValueError("offset must be a non-negative integer")
         preview, delivery, result_format = self._result_options(arguments)
-        return query_id, offset, self._page_size(arguments), arguments.get("grid"), preview, delivery, result_format
+        return (
+            query_id,
+            offset,
+            self._page_size(arguments),
+            arguments.get("grid"),
+            preview,
+            delivery,
+            result_format,
+        )
 
     @staticmethod
     def _empty(arguments: Any) -> None:
@@ -161,11 +306,14 @@ class WorkbenchOperations:
         if not isinstance(arguments, dict) or set(arguments) - {"limit"}:
             raise ValueError("Expected optional limit")
         value = arguments.get("limit", 20)
-        if isinstance(value, bool) or not isinstance(value, int) or not 1 <= value <= 1000:
+        if (
+            isinstance(value, bool)
+            or not isinstance(value, int)
+            or not 1 <= value <= 1000
+        ):
             raise ValueError("limit must be an integer from 1 to 1000")
         return value
 
     def close(self) -> None:
         with self._lock:
             self._query_owner.close()
-

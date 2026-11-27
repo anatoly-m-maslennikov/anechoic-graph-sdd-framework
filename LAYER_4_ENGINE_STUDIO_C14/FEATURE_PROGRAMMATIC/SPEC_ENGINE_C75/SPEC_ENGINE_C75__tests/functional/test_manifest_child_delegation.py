@@ -24,12 +24,16 @@ from .test_cli_child_dispatch import _parent_workflow
 from .test_cli_spec import _CONTRACT, _carrier
 from .test_trace_child_delegation import CONTRACT, PARENT
 
-_PARENT = PARENT.replace("'output': 'succeeded'", "'output': 'succeeded', 'manifest': 'AN-S-2@1', "
-                        "'interface': 'renderer', 'transport': 'in_process', "
-                        "'limit': {'at_most': 5}, 'path': 'rendered.svg'")
-_CHILD = CONTRACT.replace("action='render'", "action='render', interface='renderer', "
-                          "transport='in_process'").replace(
-    "'shown'),", "'shown', {'limit': 4, 'path': 'rendered.svg'}),")
+_PARENT = PARENT.replace(
+    "'output': 'succeeded'",
+    "'output': 'succeeded', 'manifest': 'AN-S-2@1', "
+    "'interface': 'renderer', 'transport': 'in_process', "
+    "'limit': {'at_most': 5}, 'path': 'rendered.svg'",
+)
+_CHILD = CONTRACT.replace(
+    "action='render'",
+    "action='render', interface='renderer', transport='in_process'",
+).replace("'shown'),", "'shown', {'limit': 4, 'path': 'rendered.svg'}),")
 
 
 def _set_tier(root, pin, tier, previous):
@@ -77,11 +81,38 @@ class ManifestChildTests(unittest.TestCase):
         directory = tempfile.TemporaryDirectory()
         self.addCleanup(directory.cleanup)
         self.root = Path(directory.name)
-        self.parent = _manifest(self.root, 'AN-S-1', 'C00', 'C1', CONTRACT.replace(
-            "action='render'", "action='run'"))
-        self.child = _manifest(self.root, 'AN-S-2', 'C1', 'C2', _CHILD, {
-            'io': {'server': {'renderer': {'transport': 'in_process', 'entry': 'renderer.render'}}}})
-        self.solution = _carrier(self.root, 'AN-S-3', 'solution', 'C1', '{ANSWERS: [AN-S-1@1]}', _PARENT)
+        self.parent = _manifest(
+            self.root,
+            "AN-S-1",
+            "C00",
+            "C1",
+            CONTRACT.replace("action='render'", "action='run'"),
+        )
+        self.child = _manifest(
+            self.root,
+            "AN-S-2",
+            "C1",
+            "C2",
+            _CHILD,
+            {
+                "io": {
+                    "server": {
+                        "renderer": {
+                            "transport": "in_process",
+                            "entry": "renderer.render",
+                        }
+                    }
+                }
+            },
+        )
+        self.solution = _carrier(
+            self.root,
+            "AN-S-3",
+            "solution",
+            "C1",
+            "{ANSWERS: [AN-S-1@1]}",
+            _PARENT,
+        )
 
     def check(self):
         return check_child_outcome(self.root, self.solution, 'C2', self.child,
@@ -96,13 +127,17 @@ class ManifestChildTests(unittest.TestCase):
 
     def test_parent_only_reads_the_child_manifest_and_renders_the_call(self):
         report = self.check()
-        self.assertEqual('matched', report['status'])
-        self.assertEqual({'caller', 'manifest'}, report['sources'].keys())
-        self.assertEqual({'caller_manifest'}, report['directions'].keys())
-        self.assertEqual('AN-S-2', report['sources']['manifest']['atom_id'])
-        self.assertTrue(report['sources']['manifest']['sha256'])
-        model = load_boundary_model(self.root, 'C1', self.parent, solution=self.solution)
-        normalized, error = normalize_claim('solution', model['solution'], 'C1')
+        self.assertEqual("matched", report["status"])
+        self.assertEqual({"caller", "manifest"}, report["sources"].keys())
+        self.assertEqual({"caller_manifest"}, report["directions"].keys())
+        self.assertEqual("AN-S-2", report["sources"]["manifest"]["atom_id"])
+        self.assertTrue(report["sources"]["manifest"]["sha256"])
+        model = load_boundary_model(
+            self.root, "C1", self.parent, solution=self.solution
+        )
+        normalized, error = normalize_claim(
+            "solution", model["solution"], "C1"
+        )
         self.assertIsNone(error)
         diagram = render_solution(model, normalized)
         for label in ('C2', 'render', 'succeeded', 'AN-S-2@1'):
@@ -131,10 +166,21 @@ class ManifestChildTests(unittest.TestCase):
             restore()
 
     def test_child_manifest_declares_identity_and_parent(self):
-        with self.assertRaisesRegex(ValueError, 'manifest does not match source pin'):
-            check_child_outcome(self.root, self.solution, 'C2', {**self.child, 'version': 2},
-                                parent_manifest=self.parent, event='render', lean=self.lean)
-        restore = self.mutate(self.child, "component_id='C2'", "component_id='C4'")
+        with self.assertRaisesRegex(
+            ValueError, "manifest does not match source pin"
+        ):
+            check_child_outcome(
+                self.root,
+                self.solution,
+                "C2",
+                {**self.child, "version": 2},
+                parent_manifest=self.parent,
+                event="render",
+                lean=self.lean,
+            )
+        restore = self.mutate(
+            self.child, "component_id='C2'", "component_id='C4'"
+        )
         try:
             with self.assertRaisesRegex(ValueError, 'component does not match'):
                 self.check()
@@ -173,7 +219,13 @@ class ManifestChildTests(unittest.TestCase):
                 self.assertEqual(expected, self.check()['status'])
 
     def test_legacy_child_contract_is_reported_as_unresolved(self):
-        pin = _carrier(self.root, 'AN-S-2', 'component_manifest', 'C1', '{}', """## Formal Manifest
+        pin = _carrier(
+            self.root,
+            "AN-S-2",
+            "component_manifest",
+            "C1",
+            "{}",
+            """## Formal Manifest
 
 ```python
 from anechoic.model import ComponentManifest
@@ -182,21 +234,50 @@ ComponentManifest(component_id='C2', name='Example')
 """)
         self.child = pin
         result = self.check()
-        self.assertEqual('unresolved', result['status'], result)
-        self.assertTrue(any(item['source']['atom_id'] == 'AN-S-2'
-                            and 'embedded Contract' in item['message'] for item in result['unresolved']))
+        self.assertEqual("unresolved", result["status"], result)
+        self.assertTrue(
+            any(
+                item["source"]["atom_id"] == "AN-S-2"
+                and "embedded Contract" in item["message"]
+                for item in result["unresolved"]
+            )
+        )
 
     def test_http_request_fields_follow_the_public_action(self):
-        contract = (_CHILD.replace('python trace', 'python contract')
-                    .replace('declare_trace_contract', 'declare_http_contract')
-                    .replace("transport='in_process'", "route='render', operation='POST /render', "
-                             "outcomes={'succeeded': (200, 'result')}, "
-                             "checks={'input_format': {'fields': ('format', 'input')}}"))
-        self.child = _manifest(self.root, 'AN-S-2', 'C1', 'C2', contract, {
-            'io': {'server': {'renderer': {'transport': 'http', 'routes': {'POST /render': 'render'}}}}})
-        self.mutate(self.solution, "'transport': 'in_process'", "'transport': 'http', "
-                    "'route': 'render', 'operation': 'POST /render', 'request_fields': ['input', 'format']")
-        self.assertEqual('matched', self.check()['status'])
+        contract = (
+            _CHILD.replace("python trace", "python contract")
+            .replace("declare_trace_contract", "declare_http_contract")
+            .replace(
+                "transport='in_process'",
+                "route='render', operation='POST /render', "
+                "outcomes={'succeeded': (200, 'result')}, "
+                "checks={'input_format': {'fields': ('format', 'input')}}",
+            )
+        )
+        self.child = _manifest(
+            self.root,
+            "AN-S-2",
+            "C1",
+            "C2",
+            contract,
+            {
+                "io": {
+                    "server": {
+                        "renderer": {
+                            "transport": "http",
+                            "routes": {"POST /render": "render"},
+                        }
+                    }
+                }
+            },
+        )
+        self.mutate(
+            self.solution,
+            "'transport': 'in_process'",
+            "'transport': 'http', "
+            "'route': 'render', 'operation': 'POST /render', 'request_fields': ['input', 'format']",
+        )
+        self.assertEqual("matched", self.check()["status"])
         self.mutate(self.solution, "['input', 'format']", "['format']")
         self.assertEqual('conflicting', self.check()['status'])
 
@@ -207,9 +288,18 @@ ComponentManifest(component_id='C2', name='Example')
         call = "'target': 'C2', 'detail': {'manifest': 'AN-S-2@1', 'action': 'run', " \
                "'arguments': ['--name', '<value>']}"
         workflow = _parent_workflow().replace("'target': 'C2'", call)
-        unpinned = ("'invoking': {'on': {'unbound': {'target': 'reporting', 'guard': {'type': 'matchesTrace', "
-                    "'params': {'kind': 'effect', 'target': 'C2'}}}, 'dispatch':")
-        solution = _carrier(self.root, 'AN-S-3', 'solution', 'C1', '{ANSWERS: [AN-S-1@1]}', workflow)
+        unpinned = (
+            "'invoking': {'on': {'unbound': {'target': 'reporting', 'guard': {'type': 'matchesTrace', "
+            "'params': {'kind': 'effect', 'target': 'C2'}}}, 'dispatch':"
+        )
+        solution = _carrier(
+            self.root,
+            "AN-S-3",
+            "solution",
+            "C1",
+            "{ANSWERS: [AN-S-1@1]}",
+            workflow,
+        )
         for before, after, expected in (
             ('', '', 'matched'),
             ('AN-S-2@1', 'AN-S-2@2', 'conflicting'),
@@ -221,9 +311,18 @@ ComponentManifest(component_id='C2', name='Example')
                 restore = self.mutate(solution, before, after)
                 try:
                     report = check_cli_child_dispatch(
-                        self.root, solution, 'C2', child, parent_manifest=self.parent,
-                        interface='suite', command='local', lean=self.lean)
-                    self.assertEqual(expected, report['status'])
-                    self.assertEqual({'caller_manifest'}, report['directions'].keys())
+                        self.root,
+                        solution,
+                        "C2",
+                        child,
+                        parent_manifest=self.parent,
+                        interface="suite",
+                        command="local",
+                        lean=self.lean,
+                    )
+                    self.assertEqual(expected, report["status"])
+                    self.assertEqual(
+                        {"caller_manifest"}, report["directions"].keys()
+                    )
                 finally:
                     restore()

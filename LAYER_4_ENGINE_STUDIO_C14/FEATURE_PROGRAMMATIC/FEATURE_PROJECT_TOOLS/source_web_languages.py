@@ -64,7 +64,7 @@ class _InlineScripts(HTMLParser):
 
 
 def web_language_findings(root: Path, path: Path) -> list[str]:
-    """Report JavaScript files and inline scripts in one authored inventory path."""
+    "Report JavaScript files and inline scripts in one authored inventory path."
     suffix = path.suffix.lower()
     if suffix in JAVASCRIPT_SUFFIXES:
         return [f"{path}: authored JavaScript source must use TypeScript"]
@@ -74,7 +74,12 @@ def web_language_findings(root: Path, path: Path) -> list[str]:
     scripts.feed((root / path).read_text(encoding="utf-8"))
     scripts.close()
     return [
-        f"{path}:{line}: inline JavaScript must be built from TypeScript source"
+        (
+            f"{path}"
+            ":"
+            f"{line}"
+            ": inline JavaScript must be built from TypeScript source"
+        )
         for line in scripts.lines
     ]
 

@@ -6,12 +6,33 @@ from mcp import types
 from .health_fixture import HealthHTTPFixture, PROVIDER_DIAGNOSTIC, SECRET
 
 
-SAFE_ERROR_CATEGORIES = {"timeout", "connection", "returned-error", "uncertain"}
-SAFE_OUTCOMES = {
-    "completed", "no_op", "failed", "partial", "cancelled", "interrupted_pending",
-    "uncertain", "rejected", "returned", "success", "unknown",
+SAFE_ERROR_CATEGORIES = {
+    "timeout",
+    "connection",
+    "returned-error",
+    "uncertain",
 }
-SAFE_DISPOSITIONS = {"terminal", "started", "queued", "recording_pending", "uncertain", "unknown"}
+SAFE_OUTCOMES = {
+    "completed",
+    "no_op",
+    "failed",
+    "partial",
+    "cancelled",
+    "interrupted_pending",
+    "uncertain",
+    "rejected",
+    "returned",
+    "success",
+    "unknown",
+}
+SAFE_DISPOSITIONS = {
+    "terminal",
+    "started",
+    "queued",
+    "recording_pending",
+    "uncertain",
+    "unknown",
+}
 
 
 class HealthGatewayCallTests(HealthHTTPFixture):
@@ -48,7 +69,12 @@ class HealthGatewayCallTests(HealthHTTPFixture):
                     if row.get("disposition") is not None:
                         self.assertIn(row["disposition"], SAFE_DISPOSITIONS)
                 encoded = json.dumps(snapshot, sort_keys=True)
-                for secret in (SECRET, "fixture-result", PROVIDER_DIAGNOSTIC, "/fixture/absolute/path"):
+                for secret in (
+                    SECRET,
+                    "fixture-result",
+                    PROVIDER_DIAGNOSTIC,
+                    "/fixture/absolute/path",
+                ):
                     self.assertNotIn(secret, encoded)
                 for row in snapshot["calls"]:
                     for forbidden in ("arguments", "response", "result"):
@@ -56,29 +82,50 @@ class HealthGatewayCallTests(HealthHTTPFixture):
             finally:
                 await self.close_session(client, transport, session)
 
-    async def test_concurrent_real_calls_keep_names_and_histories_isolated(self):
+    async def test_concurrent_real_calls_keep_names_and_histories_isolated(
+        self,
+    ):
         async with self.lifespan():
             client, transport, session = await self.session()
             try:
                 responses = await asyncio.gather(
-                    *(session.call_tool(name, {}) for name in ("workspace_list", "query_saved_list") * 4)
+                    *(
+                        session.call_tool(name, {})
+                        for name in ("workspace_list", "query_saved_list") * 4
+                    )
                 )
-                self.assertTrue(all(not response.is_error for response in responses), responses)
+                self.assertTrue(
+                    all(not response.is_error for response in responses),
+                    responses,
+                )
                 rows = self.app.gateway.health_observations.snapshot()["calls"]
                 self.assertEqual(8, len(rows))
-                self.assertEqual({"workspace_list", "query_saved_list"}, {row["name"] for row in rows})
+                self.assertEqual(
+                    {"workspace_list", "query_saved_list"},
+                    {row["name"] for row in rows},
+                )
                 self.assertNotIn("worker", json.dumps(rows))
             finally:
                 await self.close_session(client, transport, session)
 
-    async def test_cancelled_real_gateway_call_propagates_and_is_not_returned(self):
+    async def test_cancelled_real_gateway_call_propagates_and_is_not_returned(
+        self,
+    ):
         async with self.lifespan():
-            pending = asyncio.create_task(self.app.gateway.call(
-                None, types.CallToolRequestParams(name="query_run", arguments={"sql": "SELECT 1"})))
+            pending = asyncio.create_task(
+                self.app.gateway.call(
+                    None,
+                    types.CallToolRequestParams(
+                        name="query_run", arguments={"sql": "SELECT 1"}
+                    ),
+                )
+            )
             try:
                 marker = ""
                 for _ in range(50):
-                    marker = self.marker.read_text() if self.marker.exists() else ""
+                    marker = (
+                        self.marker.read_text() if self.marker.exists() else ""
+                    )
                     if "slow-started" in marker:
                         break
                     await asyncio.sleep(0.02)
@@ -86,10 +133,17 @@ class HealthGatewayCallTests(HealthHTTPFixture):
                 pending.cancel()
                 with self.assertRaises(asyncio.CancelledError):
                     await pending
-                rows = [row for row in self.app.gateway.health_observations.snapshot()["calls"]
-                        if row["name"] == "query_run"]
+                rows = [
+                    row
+                    for row in self.app.gateway.health_observations.snapshot()[
+                        "calls"
+                    ]
+                    if row["name"] == "query_run"
+                ]
                 self.assertEqual(1, len(rows))
-                self.assertIn(self.outcome(rows[0]), {"uncertain", "interrupted_pending"})
+                self.assertIn(
+                    self.outcome(rows[0]), {"uncertain", "interrupted_pending"}
+                )
                 self.assertNotEqual("returned", self.outcome(rows[0]))
             finally:
                 if not pending.done():
@@ -97,16 +151,26 @@ class HealthGatewayCallTests(HealthHTTPFixture):
                     with self.assertRaises(asyncio.CancelledError):
                         await pending
 
-    async def test_process_local_observer_is_bounded_and_restart_resets_history(self):
+    async def test_process_local_observer_is_bounded_and_restart_resets_history(
+        self,
+    ):
         async with self.lifespan():
             observations = self.app.gateway.health_observations
             for index in range(40):
-                observations.record(f"tool-{index}", {}, {"outcome": "completed"})
+                observations.record(
+                    f"tool-{index}", {}, {"outcome": "completed"}
+                )
             snapshot = observations.snapshot()
             self.assertEqual(32, len(snapshot["calls"]))
-            self.assertEqual([f"tool-{index}" for index in range(8, 40)],
-                             [row["name"] for row in snapshot["calls"]])
+            self.assertEqual(
+                [f"tool-{index}" for index in range(8, 40)],
+                [row["name"] for row in snapshot["calls"]],
+            )
 
         second = self.new_app()
-        self.assertEqual([], second.gateway.health_observations.snapshot()["calls"])
-        self.assertNotIn("workflows", second.gateway.health_observations.snapshot())
+        self.assertEqual(
+            [], second.gateway.health_observations.snapshot()["calls"]
+        )
+        self.assertNotIn(
+            "workflows", second.gateway.health_observations.snapshot()
+        )

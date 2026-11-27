@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-2388
+concern:
+  subject: "Contract"
+  path: "Model/Graph/Node//Artifact//SSOT//Prescribed/Content/Atom//Specification"
+  relation: "is_narrower_than"
 container:
   component: C16
 tier: 4
@@ -8,8 +12,8 @@ context:
   lens: DevOps
 state:
   status: active
-  version: 16
-  updated_at: 2026-10-27 19:59:26 +0400
+  version: 18
+  updated_at: "2026-11-27T17:35:01.150345+00:00"
 ---
 ## Summary
 
@@ -74,11 +78,8 @@ the following exact bounded request and result representations.
   result contains actual Run IDs and admitted definition bindings; a terminal
   result additionally contains truthful operation outcome/result/effect/report
   refs. Preview and every unstarted disposition have no Run/Event identity.
-  Plain Journal append/read records supplied observations independently:
-  canonical Event IDs/receipts, prior history and successful logging are not
-  dispatch or completion prerequisites. An append failure is reported through
-  existing diagnostics without changing the independently observed operation
-  outcome. No recording-pending or Journal retry/recovery disposition is
+  Apply AN-S-2356 to independent Journal observation and append diagnostics.
+  No recording-pending or Journal retry/recovery disposition is
   required; any existing replay disposition describes actual dispatch/effect
   state, never permission to repeat an uncertain effect.
 - The service neither decides route-specific domain semantics nor creates a

@@ -30,6 +30,7 @@ __pycache__/
 /.anechoic_runtime/
 /.anechoic_tmp/
 .anechoic_tmp/
+/.anechoic_runtime_config.toml
 /.anechoic_install/workflow_orchestrator/
 /.anechoic_install/mcp_hot_reload/
 /.anechoic_install/project_mcp/

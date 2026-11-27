@@ -98,3 +98,24 @@ def _target(
         if kind == "relation":
             return "relation", _relation_name(_model_target(expression))
     return None
+
+
+def _declaration_target(expression):
+    if expression is None:
+        return (
+            None,
+            (
+                "Declaration active Subject is a selector, not one declared "
+                "target."
+            ),
+        )
+    target = _target(expression)
+    if target is None:
+        return (
+            None,
+            (
+                "Declaration active Subject is not a declared Node, Property, "
+                "Relation, or component."
+            ),
+        )
+    return target, None

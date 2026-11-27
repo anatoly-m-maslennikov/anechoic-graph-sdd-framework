@@ -2,8 +2,12 @@ import fs from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 
-const require = createRequire(new URL('../IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_FRONTEND/package.json', import.meta.url));
-const ts: typeof import('../IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_FRONTEND/node_modules/typescript') =
+const require = createRequire(new URL(
+  '../IWE_CONSOLE_C43/APP_IWE_CONSOLE/\
+FEATURE_IWE_CONSOLE_FRONTEND/package.json', import.meta.url));
+const ts: typeof
+  import('../IWE_CONSOLE_C43/APP_IWE_CONSOLE/\
+FEATURE_IWE_CONSOLE_FRONTEND/node_modules/typescript') =
   require('typescript');
 
 type Node = Parameters<typeof ts.isIdentifier>[0];
@@ -13,10 +17,12 @@ type NamedNode = Node & { name?: Node };
 type CompilerHost = NonNullable<Parameters<typeof ts.createProgram>[2]>;
 type ImportSite = [line: number, specifier: string, target: string];
 type UnitKind = 'class' | 'function' | 'method';
-type Unit = [key: string, module: string, kind: UnitKind, name: string, line: number, column: number];
+type Unit = [key: string, module: string, kind: UnitKind, name: string, line:
+  number, column: number];
 type Call = [source: string, target: string, line: number, column: number];
 
-const input: { sources?: Record<string, string>; imports?: Record<string, ImportSite[]> } =
+const input: { sources?: Record<string, string>; imports?: Record<string,
+  ImportSite[]> } =
   JSON.parse(fs.readFileSync(0, 'utf8'));
 const sources = input.sources || {};
 const imports = input.imports || {};
@@ -28,9 +34,12 @@ function scriptKind(name: string) {
   if (name.endsWith('.jsx')) return ts.ScriptKind.JSX;
   return /\.[cm]?js$/.test(name) ? ts.ScriptKind.JS : ts.ScriptKind.TS;
 }
-const trees = new Map([...names].map(([file, name]) => [file, ts.createSourceFile(file, sources[name], ts.ScriptTarget.Latest, true, scriptKind(name))]));
+const trees = new Map([...names].map(([file, name]) => [file,
+  ts.createSourceFile(file, sources[name], ts.ScriptTarget.Latest, true,
+    scriptKind(name))]));
 const options = {allowJs: true, noLib: true, module: ts.ModuleKind.ESNext,
-  moduleDetection: ts.ModuleDetectionKind.Force, target: ts.ScriptTarget.Latest};
+  moduleDetection: ts.ModuleDetectionKind.Force, target:
+    ts.ScriptTarget.Latest};
 const host: CompilerHost = {
   getSourceFile: file => trees.get(path.posix.normalize(file)),
   getDefaultLibFileName: () => '', writeFile() {},
@@ -43,11 +52,14 @@ const host: CompilerHost = {
     const source = names.get(path.posix.normalize(containingFile));
     return specifiers.map(spec => {
       const rows = source === undefined ? [] : imports[source] ?? [];
-      const targets = new Set(rows.filter(row => row[1] === spec).map(row => row[2]).filter(target => names.has(absolute(target))));
+      const targets = new Set(rows.filter(row => row[1] === spec).map(row =>
+        row[2]).filter(target => names.has(absolute(target))));
       if (targets.size !== 1) return undefined;
       const target = absolute([...targets][0]);
-      const extension = /\.tsx$/.test(target) ? ts.Extension.Tsx : /\.[cm]?jsx?$/.test(target) ? ts.Extension.Js : ts.Extension.Ts;
-      return {resolvedFileName: target, extension, isExternalLibraryImport: false};
+      const extension = /\.tsx$/.test(target) ? ts.Extension.Tsx :
+        /\.[cm]?jsx?$/.test(target) ? ts.Extension.Js : ts.Extension.Ts;
+      return {resolvedFileName: target, extension, isExternalLibraryImport:
+        false};
     });
   }
 };
@@ -57,32 +69,43 @@ const aliasChecker = checker as typeof checker & {
   getTypeOnlyAliasDeclaration(symbol: Symbol): Node | undefined;
 };
 const units: Unit[] = [], calls: Call[] = [];
-const nodes = new Map<Node, string>(), symbolUnits = new Map<Symbol, string[]>();
+const nodes = new Map<Node, string>(), symbolUnits = new Map<Symbol,
+  string[]>();
 const callableUnits = new Set<string>(), written = new Set<Symbol>();
 function pos(tree: SourceFile, node: Node): [number, number] {
   const p = tree.getLineAndCharacterOfPosition(node.getStart(tree));
   return [p.line + 1, p.character];
 }
 function nameOf(node: NamedNode) {
-  if (node.name && (ts.isIdentifier(node.name) || ts.isStringLiteral(node.name) || ts.isNumericLiteral(node.name))) return node.name.text;
-  if ((ts.isArrowFunction(node) || ts.isFunctionExpression(node) || ts.isClassExpression(node)) && ts.isVariableDeclaration(node.parent) && ts.isIdentifier(node.parent.name)) return node.parent.name.text;
+  if (node.name && (ts.isIdentifier(node.name) || ts.isStringLiteral(node.name)
+    || ts.isNumericLiteral(node.name))) return node.name.text;
+  if ((ts.isArrowFunction(node) || ts.isFunctionExpression(node) ||
+    ts.isClassExpression(node)) && ts.isVariableDeclaration(node.parent) &&
+      ts.isIdentifier(node.parent.name)) return node.parent.name.text;
   return null;
 }
 function symbolOf(node: NamedNode) {
-  const loc = node.name || (ts.isVariableDeclaration(node.parent) ? node.parent.name : undefined);
+  const loc = node.name || (ts.isVariableDeclaration(node.parent) ?
+    node.parent.name : undefined);
   return loc && checker.getSymbolAtLocation(loc);
 }
-function record(tree: SourceFile, file: string, node: Node, parents: {name: string; key: string}[]) {
+function record(tree: SourceFile, file: string, node: Node, parents: {name:
+  string; key: string}[]) {
   let kind: UnitKind | null = null;
-  if (ts.isClassDeclaration(node) || ts.isClassExpression(node)) kind = 'class';
+  if (ts.isClassDeclaration(node) || ts.isClassExpression(node)) kind =
+    'class';
   else if (ts.isMethodDeclaration(node) && node.body) kind = 'method';
-  else if ((ts.isFunctionDeclaration(node) && node.body) || ts.isFunctionExpression(node) || ts.isArrowFunction(node)) kind = 'function';
+  else if ((ts.isFunctionDeclaration(node) && node.body) ||
+    ts.isFunctionExpression(node) || ts.isArrowFunction(node)) kind =
+      'function';
   const name = kind && nameOf(node);
   let next = parents;
   if (name && kind) {
     const [line, column] = pos(tree, node);
     const key = `code_unit:${file}:${line}:${column}`;
-    units.push([key, `module:${file}`, kind, [...parents.map(p => p.name), name].join('.'), line, column]);
+    units.push([key,
+      `module:${file}`, kind, [...parents.map(p => p.name), name].join('.'),
+      line, column]);
     nodes.set(node, key);
     if (kind !== 'class') callableUnits.add(key);
     const sym = symbolOf(node);
@@ -98,9 +121,15 @@ for (const [file, tree] of trees) record(tree, names.get(file)!, tree, []);
 
 function markWrites(node: Node) {
   let target: Node | undefined;
-  if (ts.isBinaryExpression(node) && node.operatorToken.kind >= ts.SyntaxKind.FirstAssignment && node.operatorToken.kind <= ts.SyntaxKind.LastAssignment) target = node.left;
-  else if ((ts.isPrefixUnaryExpression(node) || ts.isPostfixUnaryExpression(node)) && (node.operator === ts.SyntaxKind.PlusPlusToken || node.operator === ts.SyntaxKind.MinusMinusToken)) target = node.operand;
-  if (target) { const s = checker.getSymbolAtLocation(target); if (s) written.add(s); }
+  if (ts.isBinaryExpression(node) && node.operatorToken.kind >=
+    ts.SyntaxKind.FirstAssignment && node.operatorToken.kind <=
+      ts.SyntaxKind.LastAssignment) target = node.left;
+  else if ((ts.isPrefixUnaryExpression(node) ||
+    ts.isPostfixUnaryExpression(node)) && (node.operator ===
+      ts.SyntaxKind.PlusPlusToken || node.operator ===
+        ts.SyntaxKind.MinusMinusToken)) target = node.operand;
+  if (target) { const s = checker.getSymbolAtLocation(target); if (s)
+    written.add(s); }
   ts.forEachChild(node, markWrites);
 }
 for (const tree of trees.values()) markWrites(tree);
@@ -121,13 +150,17 @@ function resolvedSymbol(expr: Node) {
   const decl = target?.valueDeclaration;
   if (!decl || !ts.isMethodDeclaration(decl)) {
     const receiver = binding(expr.expression);
-    return receiver && (receiver.flags & ts.SymbolFlags.ValueModule) ? target : null;
+    return receiver && (receiver.flags & ts.SymbolFlags.ValueModule) ? target :
+      null;
   }
   const receiver = binding(expr.expression);
   const directClass = receiver?.valueDeclaration === decl.parent;
-  const isStatic = ts.getModifiers(decl)?.some(item => item.kind === ts.SyntaxKind.StaticKeyword);
-  const decoratedOwner = ts.canHaveDecorators(decl.parent) && ts.getDecorators(decl.parent)?.length;
-  return directClass && isStatic && !ts.getDecorators(decl)?.length && !decoratedOwner
+  const isStatic = ts.getModifiers(decl)?.some(item => item.kind ===
+    ts.SyntaxKind.StaticKeyword);
+  const decoratedOwner = ts.canHaveDecorators(decl.parent) &&
+    ts.getDecorators(decl.parent)?.length;
+  return directClass && isStatic && !ts.getDecorators(decl)?.length &&
+    !decoratedOwner
     ? target : null;
 }
 function scan(tree: SourceFile, node: Node, owner?: string) {
@@ -135,7 +168,8 @@ function scan(tree: SourceFile, node: Node, owner?: string) {
   if (ts.isCallExpression(node) && !node.questionDotToken) {
     const symbol = resolvedSymbol(node.expression);
     const targets = symbol && symbolUnits.get(symbol);
-    if (owner && callableUnits.has(owner) && targets?.length === 1 && callableUnits.has(targets[0])) {
+    if (owner && callableUnits.has(owner) && targets?.length === 1 &&
+      callableUnits.has(targets[0])) {
       const [line, column] = pos(tree, node);
       calls.push([owner, targets[0], line, column]);
     }

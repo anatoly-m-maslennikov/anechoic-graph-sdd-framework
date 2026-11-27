@@ -8,8 +8,8 @@ context:
   lens: DevOps
 state:
   status: active
-  version: 16
-  updated_at: 2026-11-10 20:47:54 +0400
+  version: 17
+  updated_at: "2026-11-27T16:29:34.309627+00:00"
 ---
 
 ## Summary
@@ -53,12 +53,6 @@ This binding exposes neither credentials nor an Agent endpoint and does not
 authorize a hidden mount, arbitrary writer, or live-model execution. An
 explicit executable mock remains `mock-not-live-llm` evidence only.
 
-An Integrated prompt response carries the current Step's prompt, bound inputs,
-output contract, and opaque continuation identity. Publishing it leaves the Step
-pending. The controlling session may perform or delegate the admitted work and
-submit its actual result through the same Workflow interface. Only the executor
-validates that bound submission and chooses the next Step; a prompt alone is not
-completion. Retain the persistent Plan, partial effects, candidate-specific
-review/check evidence and finite retry state across requests. The implementation
-instructions use CA-R-2117 and CA-E-653 for narrowest-branch RMED
-ownership comments; citations alone do not prove conformance.
+Apply AN-S-1566 to the Integrated response and continuation. Use
+CA-R-2117 and CA-E-653 for narrowest-branch RMED ownership comments.
+Citations alone do not prove conformance.

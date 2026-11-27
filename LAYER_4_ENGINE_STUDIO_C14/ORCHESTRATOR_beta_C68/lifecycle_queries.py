@@ -75,14 +75,20 @@ def _literal(value):
 
 
 def _allocation_references(archive_versions):
-    archive_refs = ("""WHERE status_group <> 'Archived'
-        UNION ALL SELECT atom_id FROM main.ops_archive_versions""" if archive_versions else "")
+    archive_refs = (
+        """WHERE status_group <> 'Archived'
+        UNION ALL SELECT atom_id FROM main.ops_archive_versions"""
+        if archive_versions
+        else ""
+    )
     return _ALLOCATION_REFERENCES.format(archive_refs=archive_refs)
 
 
 def lifecycle_sql(prefix, name, arguments, *, archive_versions=False):
     """Build a single SELECT so every returned value belongs to one generation."""
-    if not isinstance(prefix, str) or not re.fullmatch(r"[A-Z][A-Z0-9]*", prefix):
+    if not isinstance(prefix, str) or not re.fullmatch(
+        r"[A-Z][A-Z0-9]*", prefix
+    ):
         raise ValueError("Invalid Project prefix")
     if not isinstance(name, str) or not isinstance(arguments, dict):
         raise ValueError("Invalid lifecycle query arguments")
@@ -94,15 +100,27 @@ def lifecycle_sql(prefix, name, arguments, *, archive_versions=False):
     if not isinstance(target, str) or not isinstance(owner, str):
         raise ValueError("Invalid lifecycle selector")
     target_id = target.split('@', 1)[0]
-    target_lit, exact_lit, owner_lit = map(_literal, (target_id, target, owner))
-    is_create = name in {'atom_lifecycle_create_draft', 'atom_lifecycle_create_asset'} and isinstance(new, dict) and bool(new)
+    target_lit, exact_lit, owner_lit = map(
+        _literal, (target_id, target, owner)
+    )
+    is_create = (
+        name in {"atom_lifecycle_create_draft", "atom_lifecycle_create_asset"}
+        and isinstance(new, dict)
+        and bool(new)
+    )
     sources = "('AN-S-1928','AN-S-1834','AN-S-1831')" if name == 'atom_lifecycle_change_status' else "('')"
     numbers = "TRUE" if is_create else "FALSE"
     template = new.get('template') if isinstance(new, dict) else None
-    needs_model = (is_create and name == 'atom_lifecycle_create_draft'
-                   and isinstance(template, str) and template not in {'task', 'epic'}
-                   and container == {'component': 'C00'}
-                   or '-S-' in target_id and name in {'atom_lifecycle_promote_draft', 'atom_lifecycle_change_status'})
+    needs_model = (
+        is_create
+        and name == "atom_lifecycle_create_draft"
+        and isinstance(template, str)
+        and template not in {"task", "epic"}
+        and container == {"component": "C00"}
+        or "-S-" in target_id
+        and name
+        in {"atom_lifecycle_promote_draft", "atom_lifecycle_change_status"}
+    )
     model_sql = "json_merge_patch(g.model::JSON, '{\"declarations\":null,\"ticket_labels\":null}')::VARCHAR" if needs_model else 'NULL'
     archive_version = (f"COALESCE((SELECT max_version FROM main.ops_archive_versions WHERE atom_id={target_lit}), 0)::VARCHAR"
                        if archive_versions else "'0'")
@@ -111,7 +129,14 @@ def lifecycle_sql(prefix, name, arguments, *, archive_versions=False):
                        allocation_refs=_allocation_references(archive_versions), archive_version=archive_version)
 
 
-def ticket_allocation(socket_path, instance_id, base_generation, prefix, *, archive_versions=False):
+def ticket_allocation(
+    socket_path,
+    instance_id,
+    base_generation,
+    prefix,
+    *,
+    archive_versions=False,
+):
     if re.fullmatch(r"[A-Z][A-Z0-9]*", prefix) is None:
         raise ValueError("Invalid Project prefix")
     sql = f"""WITH allocation_refs AS ({_allocation_references(archive_versions)}), numbers AS (
@@ -122,53 +147,91 @@ def ticket_allocation(socket_path, instance_id, base_generation, prefix, *, arch
         json_extract(model, '$.ticket_labels')::VARCHAR
     FROM main.int_lifecycle_generation"""
     rows = _query_rows(socket_path, instance_id, sql, "Ticket allocation")
-    if (not isinstance(rows, list) or len(rows) != 1 or not isinstance(rows[0], list)
-            or len(rows[0]) != 3 or rows[0][0] != base_generation):
+    if (
+        not isinstance(rows, list)
+        or len(rows) != 1
+        or not isinstance(rows[0], list)
+        or len(rows[0]) != 3
+        or rows[0][0] != base_generation
+    ):
         raise ValueError("Kernel generation changed before Ticket allocation")
     number = rows[0][1]
-    if not isinstance(number, str) or re.fullmatch(r"0|[1-9][0-9]*", number) is None:
+    if (
+        not isinstance(number, str)
+        or re.fullmatch(r"0|[1-9][0-9]*", number) is None
+    ):
         raise ValueError("Kernel returned an invalid Ticket number")
     if rows[0][2] is None:
         raise ValueError("The admitted Model lacks Ticket label rules")
     labels = json.loads(rows[0][2])
-    if not isinstance(labels, list) or not all(isinstance(label, str) for label in labels):
+    if not isinstance(labels, list) or not all(
+        isinstance(label, str) for label in labels
+    ):
         raise ValueError("Kernel returned invalid Ticket label rules")
     return number, labels
 
 
 def _query_rows(socket_path, instance_id, sql, purpose):
-    request = json.dumps({'instance_id': instance_id, 'sql': sql})
+    request = json.dumps({"instance_id": instance_id, "sql": sql})
     with closing(UnixConnection(socket_path)) as connection:
-        connection.request('POST', '/database', request, {'Content-Type': 'application/json'})
+        connection.request(
+            "POST", "/database", request, {"Content-Type": "application/json"}
+        )
         response = connection.getresponse()
         payload = json.loads(response.read())
         if response.status != 200:
-            message = payload.get('error', {}).get('message', 'query failed')
-            raise ValueError(f"Kernel refused {purpose}: {str(message)[:1024]}")
-        return payload['result']['rows']
+            message = payload.get("error", {}).get("message", "query failed")
+            raise ValueError(
+                f"Kernel refused {purpose}: {str(message)[:1024]}"
+            )
+        return payload["result"]["rows"]
 
 
 def archive_versions_available(socket_path, instance_id):
     sql = """SELECT EXISTS (SELECT 1 FROM duckdb_tables() WHERE database_name=current_database()
         AND schema_name='main' AND table_name='ops_archive_versions')"""
-    return _query_rows(socket_path, instance_id, sql, "Archive version checkpoint") == [[True]]
+    return _query_rows(
+        socket_path, instance_id, sql, "Archive version checkpoint"
+    ) == [[True]]
 
 
 def lifecycle_context(socket_path, instance_id, base, prefix, name, arguments, *, archive_versions=False):
-    sql = lifecycle_sql(prefix, name, arguments, archive_versions=archive_versions)
-    rows = _query_rows(socket_path, instance_id, sql, "lifecycle context query")
-    if not isinstance(rows, list) or len(rows) != 1 or len(rows[0]) != 10 or rows[0][0] != base:
-        raise ValueError('Kernel generation changed before lifecycle context query')
+    sql = lifecycle_sql(
+        prefix, name, arguments, archive_versions=archive_versions
+    )
+    rows = _query_rows(
+        socket_path, instance_id, sql, "lifecycle context query"
+    )
+    if (
+        not isinstance(rows, list)
+        or len(rows) != 1
+        or len(rows[0]) != 10
+        or rows[0][0] != base
+    ):
+        raise ValueError(
+            "Kernel generation changed before lifecycle context query"
+        )
     _, structure, model, labels, ticket, spec, carriers, descendants, lenses, archived_version = rows[0]
     model = json.loads(model) if model is not None else None
-    structure, labels, carriers, lenses = map(json.loads, (structure, labels, carriers, lenses))
-    if (not isinstance(structure, dict) or model is not None and not isinstance(model, dict) or not isinstance(labels, list)
-            or not all(isinstance(x, str) for x in labels) or not isinstance(carriers, list)
-            or not isinstance(lenses, list) or not all(isinstance(x, str) for x in lenses)
-            or type(descendants) is not bool
-            or any(not isinstance(x, str) or not re.fullmatch(r'0|[1-9][0-9]*', x)
-                   for x in (ticket, spec, archived_version))):
-        raise ValueError('Kernel returned invalid lifecycle context')
+    structure, labels, carriers, lenses = map(
+        json.loads, (structure, labels, carriers, lenses)
+    )
+    if (
+        not isinstance(structure, dict)
+        or model is not None
+        and not isinstance(model, dict)
+        or not isinstance(labels, list)
+        or not all(isinstance(x, str) for x in labels)
+        or not isinstance(carriers, list)
+        or not isinstance(lenses, list)
+        or not all(isinstance(x, str) for x in lenses)
+        or type(descendants) is not bool
+        or any(
+            not isinstance(x, str) or not re.fullmatch(r"0|[1-9][0-9]*", x)
+            for x in (ticket, spec, archived_version)
+        )
+    ):
+        raise ValueError("Kernel returned invalid lifecycle context")
     return {'structure': structure, 'model': model, 'ticket_labels': labels, 'max_numbers': {'T': ticket, 'S': spec},
             'carriers': carriers, 'has_descendants': descendants, 'lenses': lenses,
             'max_archived_version': int(archived_version)}
@@ -184,15 +247,24 @@ def requires_project_capture(job, context, control):
         return context["has_descendants"] and operation in {
             "atom_lifecycle_promote_draft", "atom_lifecycle_change_status",
         }
-    if operation not in {"atom_lifecycle_promote_draft", "atom_lifecycle_change_status", "atom_lifecycle_archive"}:
+    if operation not in {
+        "atom_lifecycle_promote_draft",
+        "atom_lifecycle_change_status",
+        "atom_lifecycle_archive",
+    }:
         return False
     from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
         is_ontology_model_source, ontology_component_path,
     )
 
     atom_id = ref.partition("@")[0]
-    archiving_spec = "-S-" in atom_id and (operation == "atom_lifecycle_archive"
-        or (operation == "atom_lifecycle_change_status" and job.arguments.get("targetStatus") == "archived"))
+    archiving_spec = "-S-" in atom_id and (
+        operation == "atom_lifecycle_archive"
+        or (
+            operation == "atom_lifecycle_change_status"
+            and job.arguments.get("targetStatus") == "archived"
+        )
+    )
     control_path = PurePosixPath(control)
     custom = {PurePosixPath(directory, "CUSTOM_MODEL")
               for directory in ("__PROJECT_CONFIG", "002_PROJECT_CONFIG")}
@@ -218,10 +290,18 @@ def needs_exact_archive(job, context):
     ref = target.get("ref_id") if isinstance(target, dict) else None
     if not isinstance(ref, str):
         return False
-    will_archive = (job.name == "atom_lifecycle_archive" and not ref.endswith("-draft")
-                    or job.name == "atom_lifecycle_change_status" and job.arguments.get("targetStatus") == "archived")
+    will_archive = (
+        job.name == "atom_lifecycle_archive"
+        and not ref.endswith("-draft")
+        or job.name == "atom_lifecycle_change_status"
+        and job.arguments.get("targetStatus") == "archived"
+    )
     if not will_archive and job.name != "atom_lifecycle_promote_draft":
         return False
     atom_id = ref.partition("@")[0]
-    return any(row["read"] and row["id"] == atom_id and row["version"] <= context["max_archived_version"]
-               for row in context["carriers"])
+    return any(
+        row["read"]
+        and row["id"] == atom_id
+        and row["version"] <= context["max_archived_version"]
+        for row in context["carriers"]
+    )

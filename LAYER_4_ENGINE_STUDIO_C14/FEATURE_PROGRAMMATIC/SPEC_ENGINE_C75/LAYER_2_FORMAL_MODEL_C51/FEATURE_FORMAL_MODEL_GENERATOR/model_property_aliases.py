@@ -1,7 +1,9 @@
 """Resolve unique declared and inherited Model class Property addresses."""
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import canonical_model_address
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import model_class_target
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.\
+    ADAPTERS_C30__shared import canonical_model_address  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.\
+    ADAPTERS_C30__shared import model_class_target  # fmt: skip
 
 
 def _class_roots(parsed):
@@ -17,7 +19,9 @@ def _class_roots(parsed):
             for item in declaration["classes"]:
                 if item["name"] == name:
                     bases[name] = item["bases"]
-    return {name: paths[0] for name, paths in roots.items() if len(paths) == 1}, bases
+    return {
+        name: paths[0] for name, paths in roots.items() if len(paths) == 1
+    }, bases
 
 
 def _ancestors(name, roots, bases):
@@ -36,9 +40,14 @@ def _ancestors(name, roots, bases):
 def class_property_aliases(parsed):
     canonical = {canonical_model_address(subject) for _, subject, _ in parsed}
     roots, bases = _class_roots(parsed)
-    properties = {name: {address[len(root):]: address for address in canonical
-                         if address.startswith(root + ".")}
-                  for name, root in roots.items()}
+    properties = {
+        name: {
+            address[len(root) :]: address
+            for address in canonical
+            if address.startswith(root + ".")
+        }
+        for name, root in roots.items()
+    }
     aliases = set()
     for name in roots:
         direct = properties[name]
@@ -50,5 +59,7 @@ def class_property_aliases(parsed):
                     inherited.setdefault(suffix, set()).add(address)
         for suffix in direct.keys() | inherited.keys():
             if suffix in direct or len(inherited[suffix]) == 1:
-                aliases.update({name + suffix, roots[name] + suffix} - canonical)
+                aliases.update(
+                    {name + suffix, roots[name] + suffix} - canonical
+                )
     return aliases

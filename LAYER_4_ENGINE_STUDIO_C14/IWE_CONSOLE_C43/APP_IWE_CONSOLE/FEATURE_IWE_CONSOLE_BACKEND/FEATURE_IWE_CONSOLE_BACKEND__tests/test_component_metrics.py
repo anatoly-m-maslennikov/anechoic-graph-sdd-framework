@@ -11,7 +11,10 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import
     NativeCapture,
 )
 
-from KERNEL_MIXER_C59.component_metrics import measure_components, refresh_spec_sizes
+from KERNEL_MIXER_C59.component_metrics import (
+    measure_components,
+    refresh_spec_sizes,
+)
 from KERNEL_MIXER_C59.native_projection import replace_component_metrics
 
 
@@ -80,15 +83,32 @@ class ComponentMetricsTest(unittest.TestCase):
 
     def test_spec_refresh_keeps_realization_measurements(self):
         capture = NativeCapture(
-            atoms=[{'id': 'CA-S-1', 'ref': 'CA-S-1', 'status_group': 'Current',
-                    '_source_bytes': 25, '_content_bytes': b'first\nsecond\n'}],
-            containment=[{'source_ref': 'CA-S-1', 'target_kind': 'Component', 'target_ref': 'C1'}],
+            atoms=[
+                {
+                    "id": "CA-S-1",
+                    "ref": "CA-S-1",
+                    "status_group": "Current",
+                    "_source_bytes": 25,
+                    "_content_bytes": b"first\nsecond\n",
+                }
+            ],
+            containment=[
+                {
+                    "source_ref": "CA-S-1",
+                    "target_kind": "Component",
+                    "target_ref": "C1",
+                }
+            ],
             errors={},
         )
         with duckdb.connect() as connection:
-            replace_component_metrics(connection, [('C1', 20, 6, 1, 5, 2, 5, 1, 11, 3)])
-            self.assertEqual([('C1', 25, 13, 2, 5, 2, 5, 1, 11, 3)],
-                             refresh_spec_sizes(connection, capture, 'CA'))
+            replace_component_metrics(
+                connection, [("C1", 20, 6, 1, 5, 2, 5, 1, 11, 3)]
+            )
+            self.assertEqual(
+                [("C1", 25, 13, 2, 5, 2, 5, 1, 11, 3)],
+                refresh_spec_sizes(connection, capture, "CA"),
+            )
 
 
 if __name__ == '__main__':

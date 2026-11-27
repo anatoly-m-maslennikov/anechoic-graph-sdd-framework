@@ -1,4 +1,5 @@
-"""Private Project Spec staging; PUT uses the 128 MiB full-generation body limit."""
+"""Private Project Spec staging; PUT uses the 128 MiB\
+ full-generation body limit."""
 
 import json
 import re

@@ -75,7 +75,10 @@ class ReleasePhaseInputsTests(unittest.TestCase):
         self.write(Path("LAYER_1_META_ONTOLOGY_C9/atom.md"), "copied product")
         self.write(
             Path(
-                ".anechoic_runtime/simple_local_release/runs/example/state.json"
+                (
+                    ".anechoic_runtime/simple_local_release/runs/example/state"
+                    ".json"
+                )
             ),
             "journal",
         )

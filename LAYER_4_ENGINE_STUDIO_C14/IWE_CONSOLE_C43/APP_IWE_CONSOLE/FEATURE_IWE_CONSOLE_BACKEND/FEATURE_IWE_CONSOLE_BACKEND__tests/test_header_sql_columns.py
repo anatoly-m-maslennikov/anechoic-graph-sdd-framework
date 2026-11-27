@@ -35,9 +35,12 @@ class HeaderSqlColumnsTests(unittest.TestCase):
     def setUp(self) -> None:
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)
-        self.database = Path(self.temporary.name) / "workbench" / "projection.duckdb"
+        self.database = (
+            Path(self.temporary.name) / "workbench" / "projection.duckdb"
+        )
         self.store = QueryStore(
-            extension_directory=extension_directory(APP_ROOT.parents[1]), database_path=self.database,
+            extension_directory=extension_directory(APP_ROOT.parents[1]),
+            database_path=self.database,
         )
         self.addCleanup(self.store.close)
 
@@ -74,7 +77,9 @@ class HeaderSqlColumnsTests(unittest.TestCase):
 
         self.store.replace([flat, nested], [])
 
-        fields = atom_fields(self.store._header_schema, self.store._content_schema)
+        fields = atom_fields(
+            self.store._header_schema, self.store._content_schema
+        )
         self.assertTrue({
             "header.atom_id", "header.identity.atom_id", "header.status", "header.state.status",
             "header.enabled", "header.zero", "header.tags", "header.metadata.answer",
@@ -86,13 +91,21 @@ class HeaderSqlColumnsTests(unittest.TestCase):
             'SELECT "header.enabled", "header.zero", "header.tags", "header.metadata.answer", '
             '"header.items", "header.identity.atom_id", "header.atom_id" FROM atoms ORDER BY reference'
         ).fetchall()
-        self.assertEqual((False, 0, '["one"]', 42, None, None, "CA-R-1"), values[0])
-        self.assertEqual((None, None, None, None, '[{"answer":1}]', "CA-R-2", None), values[1])
+        self.assertEqual(
+            (False, 0, '["one"]', 42, None, None, "CA-R-1"), values[0]
+        )
+        self.assertEqual(
+            (None, None, None, None, '[{"answer":1}]', "CA-R-2", None),
+            values[1],
+        )
         asset = json.loads((self.database.parent / "projection-schema.json").read_text(encoding="utf-8"))
         self.assertIn(
             {
-                "path": ["identity", "atom_id"], "name": "header.identity.atom_id", "format": "VARCHAR",
-                "populated": True, "reader": None,
+                "path": ["identity", "atom_id"],
+                "name": "header.identity.atom_id",
+                "format": "VARCHAR",
+                "populated": True,
+                "reader": None,
             },
             asset["header_columns"],
         )
@@ -157,9 +170,14 @@ class HeaderSqlColumnsTests(unittest.TestCase):
         ]
         self.assertTrue(self.store.apply(empty, [], relation_types=set()))
         self.assertTrue(self.store.schema_changed)
-        self.assertIn("header.volatile", atom_fields(self.store._header_schema, self.store._content_schema))
+        self.assertIn(
+            "header.volatile",
+            atom_fields(self.store._header_schema, self.store._content_schema),
+        )
         self.store.replace(empty, [])
-        fields = atom_fields(self.store._header_schema, self.store._content_schema)
+        fields = atom_fields(
+            self.store._header_schema, self.store._content_schema
+        )
         self.assertIn("header.volatile", fields)
         self.assertIn("header.zero", fields)
         self.assertIn("header.enabled", fields)
@@ -180,10 +198,15 @@ class HeaderSqlColumnsTests(unittest.TestCase):
                 "optional": None,
             }),
         ]
-        self.assertTrue(self.store.apply(with_empty_path, [], relation_types=set()))
+        self.assertTrue(
+            self.store.apply(with_empty_path, [], relation_types=set())
+        )
         self.assertTrue(self.store.schema_changed)
         self.store.replace(with_empty_path, [])
-        self.assertIn("header.optional", atom_fields(self.store._header_schema, self.store._content_schema))
+        self.assertIn(
+            "header.optional",
+            atom_fields(self.store._header_schema, self.store._content_schema),
+        )
 
         self.assertTrue(self.store.apply(empty, [], relation_types=set()))
         self.assertTrue(self.store.schema_changed)
@@ -194,7 +217,9 @@ class HeaderSqlColumnsTests(unittest.TestCase):
             self.atom("A", {"atom_id": "A", "volatile": "", "stable": 1, "zero": 0, "enabled": False}),
             self.atom("B", {"atom_id": "B", "volatile": None, "stable": 2, "zero": 0, "enabled": False}),
         ]
-        self.assertTrue(self.store.apply(changed_type, [], relation_types=set()))
+        self.assertTrue(
+            self.store.apply(changed_type, [], relation_types=set())
+        )
         self.assertTrue(self.store.schema_changed)
 
 
@@ -209,7 +234,9 @@ class HeaderSqlColumnsTests(unittest.TestCase):
 
         self.store.replace(rows, [])
 
-        fields = atom_fields(self.store._header_schema, self.store._content_schema)
+        fields = atom_fields(
+            self.store._header_schema, self.store._content_schema
+        )
         self.assertIn("header.mixed", fields)
         self.assertIn("header.mixed.child", fields)
         self.assertIn("header.all_empty", fields)
@@ -226,7 +253,8 @@ class HeaderSqlColumnsTests(unittest.TestCase):
             ).fetchall(),
         )
         self.assertEqual(
-            [(None,), ('{}',), (None,), ('""',), ('[]',)], self.store._connection.execute(
+            [(None,), ("{}",), (None,), ('""',), ("[]",)],
+            self.store._connection.execute(
                 'SELECT "header.all_empty" FROM atoms ORDER BY reference'
             ).fetchall(),
         )
@@ -270,23 +298,34 @@ class HeaderSqlColumnsTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "collision"):
             infer_header_schema([{"header_json": {"same-name": "a", "same_name": "b"}}])
 
-    def test_failed_delta_write_does_not_publish_candidate_header_state(self) -> None:
+    def test_failed_delta_write_does_not_publish_candidate_header_state(
+        self,
+    ) -> None:
         original = self.atom("A", {"atom_id": "A", "stable": "before"})
         unchanged = self.atom("B", {"atom_id": "B", "stable": "unchanged"})
         self.store.replace([original, unchanged], [])
         previous_state = self.store._header_state
         previous_schema = self.store._header_schema
-        updated = self.atom("A", {"atom_id": "A", "stable": "after"}, version=2)
+        updated = self.atom(
+            "A", {"atom_id": "A", "stable": "after"}, version=2
+        )
         delta = MaterializationDelta(
-            old_atoms={"source/A.md": original}, new_atoms={"source/A.md": updated},
-            old_scopes={}, new_scopes={},
+            old_atoms={"source/A.md": original},
+            new_atoms={"source/A.md": updated},
+            old_scopes={},
+            new_scopes={},
         )
 
-        with patch(
-            "KERNEL_MIXER_C59.query_projection.apply_projection_delta",
-            side_effect=RuntimeError("write failed"),
-        ), self.assertRaises(WorkbenchUnavailableError):
-            self.store.apply([updated, unchanged], [], relation_types=set(), delta=delta)
+        with (
+            patch(
+                "KERNEL_MIXER_C59.query_projection.apply_projection_delta",
+                side_effect=RuntimeError("write failed"),
+            ),
+            self.assertRaises(WorkbenchUnavailableError),
+        ):
+            self.store.apply(
+                [updated, unchanged], [], relation_types=set(), delta=delta
+            )
 
         self.assertIs(previous_state, self.store._header_state)
         self.assertIs(previous_schema, self.store._header_schema)

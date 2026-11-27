@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1145
+concern:
+  subject: "Artifact"
+  path: "Model/Graph/Node"
+  relation: "is_narrower_than"
 container:
   component: C16
 tier: 2
@@ -8,8 +12,8 @@ context:
   lens: SWD
 state:
   status: active
-  version: 20
-  updated_at: 2026-11-02 19:44:26 +0400
+  version: 21
+  updated_at: "2026-11-27T16:16:01.404965+00:00"
 ---
 ## Summary
 

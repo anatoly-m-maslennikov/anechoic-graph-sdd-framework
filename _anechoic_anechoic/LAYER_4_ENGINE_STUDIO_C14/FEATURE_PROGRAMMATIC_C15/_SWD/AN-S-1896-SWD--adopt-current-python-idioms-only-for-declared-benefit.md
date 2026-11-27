@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1896
+concern:
+  subject: "Module/(.Language := python)"
+  path: "Model/Graph/Node//Artifact//SSOT//Realization/Content"
+  relation: "is_contained_by"
 container:
   component: C15
 tier: 4
@@ -8,8 +12,8 @@ context:
   lens: SWD
 state:
   status: active
-  version: 14
-  updated_at: 2026-11-10 20:47:54 +0400
+  version: 15
+  updated_at: "2026-11-27T16:16:01.404965+00:00"
 ---
 
 ## Summary

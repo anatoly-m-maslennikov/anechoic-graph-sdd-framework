@@ -13,7 +13,13 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
 
 
 def carrier(n, subject, entity):
-    code = f'from anechoic.formal_claims import declare_entity\nfrom anechoic.model import Node\nclass Element(Node):\n    pass\ndeclare_entity(entity_class=Element, entity_name="{entity}")'
+    code = (
+        "from anechoic.formal_claims import declare_entity\nfrom "
+        "anechoic.model import Node\nclass Element(Node):\n    "
+        'pass\ndeclare_entity(entity_class=Element, entity_name="'
+        f"{entity}"
+        '")'
+    )
     return {
         "source": {"atom_id": f"CA-R-{n}", "version": 1, "path": f"{n}.md"},
         "subjects": {"governs": subject},

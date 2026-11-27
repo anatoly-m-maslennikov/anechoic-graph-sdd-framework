@@ -9,8 +9,12 @@ from pathlib import Path
 from unittest.mock import Mock, NonCallableMock, patch
 
 from LAYER_2_LOCAL_RELEASE_C63 import local_release_runner
-from LAYER_2_LOCAL_RELEASE_C63.LAYER_2_LOCAL_RELEASE_C63__shared import run_local_release
-from LAYER_2_LOCAL_RELEASE_C63.LAYER_2_LOCAL_RELEASE_C63__shared import _GENERATED_ASSETS
+from LAYER_2_LOCAL_RELEASE_C63.LAYER_2_LOCAL_RELEASE_C63__shared import (
+    run_local_release,
+)
+from LAYER_2_LOCAL_RELEASE_C63.LAYER_2_LOCAL_RELEASE_C63__shared import (
+    _GENERATED_ASSETS,
+)
 
 
 class SimpleReleaseFixture:
@@ -20,7 +24,9 @@ class SimpleReleaseFixture:
         self._setup_mocks()
 
     def _setup_filesystem(self):
-        self.temporary = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
+        self.temporary = tempfile.TemporaryDirectory(
+            ignore_cleanup_errors=True
+        )
         self.addCleanup(self.temporary.cleanup)
         self.root = Path(self.temporary.name).resolve()
         self.control = self.root / ".anechoic_anechoic"
@@ -33,20 +39,34 @@ class SimpleReleaseFixture:
         )
         for path in self.native_sources:
             atom_id = path.name.split("-SPEC--")[0]
-            path.write_text(f"---\natom_family: SPEC\natom_id: {atom_id}\nstate:\n  status: active\n  version: 1\n---\n## Claim\nNative source\n", encoding="utf-8")
-        (self.root / ".gitignore").write_text(".anechoic_tmp/\n/.anechoic_runtime/\n", encoding="utf-8")
+            path.write_text(
+                f"---\natom_family: SPEC\natom_id: {atom_id}\nstate:\n  status: active\n  version: 1\n---\n## Claim\nNative source\n",
+                encoding="utf-8",
+            )
+        (self.root / ".gitignore").write_text(
+            ".anechoic_tmp/\n/.anechoic_runtime/\n", encoding="utf-8"
+        )
         self.product = self.root / "LAYER_1_FRAMEWORK_METHODOLOGY"
         self.installed = self.control / "000_ANECHOIC_framework"
         self.runtime = self.root / ".anechoic_runtime"
-        delivery = self.root / "LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/LAYER_3_PUBLIC_RELEASE_C64"
+        delivery = (
+            self.root
+            / "LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/LAYER_3_PUBLIC_RELEASE_C64"
+        )
         delivery.mkdir(parents=True)
-        (delivery / "public_release.py").write_text("# release source\n", encoding="utf-8")
+        (delivery / "public_release.py").write_text(
+            "# release source\n", encoding="utf-8"
+        )
         (delivery / "LAYER_3_PUBLIC_RELEASE_C64__tests").mkdir()
-        (delivery / "LAYER_3_PUBLIC_RELEASE_C64__tests/test_private.py").write_text("# excluded test\n", encoding="utf-8")
+        (
+            delivery / "LAYER_3_PUBLIC_RELEASE_C64__tests/test_private.py"
+        ).write_text("# excluded test\n", encoding="utf-8")
         for destination in (self.product, self.installed, self.runtime):
             destination.mkdir(parents=True)
             (destination / "old.txt").write_text("obsolete", encoding="utf-8")
-            (destination / "config.toml").write_text("keep = true\n", encoding="utf-8")
+            (destination / "config.toml").write_text(
+                "keep = true\n", encoding="utf-8"
+            )
 
     def _setup_engine(self):
         skill = self.root / "LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_SKILLS/ane"
@@ -81,7 +101,8 @@ class SimpleReleaseFixture:
         prompt.parent.mkdir(parents=True)
         prompt.write_text("# source-only prompt\n", encoding="utf-8")
         self.engine_bootstrap = (
-            self.root / "LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/"
+            self.root
+            / "LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/"
             "docker/start_mcp.py"
         )
         self.engine_bootstrap.parent.mkdir(parents=True)
@@ -116,14 +137,18 @@ class SimpleReleaseFixture:
             package = self.runtime / "simple_local_release/package"
             return self.image_id if package.is_dir() else None
 
-        launcher = patch("LAYER_2_LOCAL_RELEASE_C63.local_release_runner._launcher_image", side_effect=scoped_launcher_image)
+        launcher = patch(
+            "LAYER_2_LOCAL_RELEASE_C63.local_release_runner._launcher_image",
+            side_effect=scoped_launcher_image,
+        )
         launcher.start()
         self.addCleanup(launcher.stop)
         image_factory = patch("LAYER_2_LOCAL_RELEASE_C63.local_release_package_phases._image_manager", return_value=self.image)
         self.image_factory = image_factory.start()
         self.addCleanup(image_factory.stop)
         self._start_container_patch = patch(
-            "LAYER_2_LOCAL_RELEASE_C63.local_release_runner.start_container", return_value="http://localhost:12345/mcp"
+            "LAYER_2_LOCAL_RELEASE_C63.local_release_runner.start_container",
+            return_value="http://localhost:12345/mcp",
         )
         self.start_container = self._start_container_patch.start()
         self.addCleanup(self._start_container_patch.stop)
@@ -151,11 +176,21 @@ class SimpleReleaseFixture:
             elif argv[:2] == ("git", "commit"):
                 staged = False
             if argv[:2] == ("git", "rev-parse"):
-                return subprocess.CompletedProcess(argv, 0, "d" * 40 + "\n", "")
+                return subprocess.CompletedProcess(
+                    argv, 0, "d" * 40 + "\n", ""
+                )
             if argv == ("git", "diff", "--cached", "--quiet"):
                 return subprocess.CompletedProcess(argv, int(staged), "", "")
-            if "--phase" in argv and argv[argv.index("--phase") + 1] in {"image", "canary"}:
-                return subprocess.CompletedProcess(argv, 0, "ANECHOIC_CANARY_ENDPOINT http://127.0.0.1:49152/anechoic/mcp\n", "")
+            if "--phase" in argv and argv[argv.index("--phase") + 1] in {
+                "image",
+                "canary",
+            }:
+                return subprocess.CompletedProcess(
+                    argv,
+                    0,
+                    "ANECHOIC_CANARY_ENDPOINT http://127.0.0.1:49152/anechoic/mcp\n",
+                    "",
+                )
             return subprocess.CompletedProcess(argv, 0, "", "")
 
         return run, calls
@@ -169,12 +204,18 @@ class SimpleReleaseFixture:
         )
 
 
-    def _mcp_bootstrap_success(self, argv: tuple[str, ...]) -> subprocess.CompletedProcess[str]:
+    def _mcp_bootstrap_success(
+        self, argv: tuple[str, ...]
+    ) -> subprocess.CompletedProcess[str]:
         launcher_python = self.runtime / "launcher-venv/bin/python"
         launcher_python.parent.mkdir(parents=True, exist_ok=True)
-        launcher_python.write_text("#!/usr/bin/env python3\n", encoding="utf-8")
+        launcher_python.write_text(
+            "#!/usr/bin/env python3\n", encoding="utf-8"
+        )
         launcher_python.chmod(0o755)
-        return subprocess.CompletedProcess(argv, 0, "http://localhost:12345/mcp\n", "")
+        return subprocess.CompletedProcess(
+            argv, 0, "http://localhost:12345/mcp\n", ""
+        )
 
 
     def _native_project(self):
@@ -188,15 +229,22 @@ class SimpleReleaseFixture:
             "from anechoic.model import ProjectManifest\n"
             "declare_entity(entity_name='Project Manifest', "
             "instance=ProjectManifest(name='Anechoic', prefix='AN', "
-            "parameters={'project_mcp': {'http_port': 12345}}))\n```\n", encoding="utf-8",
+            "parameters={'project_mcp': {'http_port': 12345}}))\n```\n",
+            encoding="utf-8",
         )
 
         for relative in _GENERATED_ASSETS:
-            (self.root / relative).write_text('{"sealed": true}\n', encoding="utf-8")
+            (self.root / relative).write_text(
+                '{"sealed": true}\n', encoding="utf-8"
+            )
 
 
     def _native_sources(self):
-        return {source.relative_to(self.control): source for source in self.native_sources if source.is_file()}
+        return {
+            source.relative_to(self.control): source
+            for source in self.native_sources
+            if source.is_file()
+        }
 
 
     def _assert_input_refused(self, run_id, failed_step="validate_inputs"):
@@ -206,7 +254,12 @@ class SimpleReleaseFixture:
         self.assertEqual(failed_step, result["failed_step"])
         for target in (self.product, self.installed):
             self.assertEqual("obsolete", (target / "old.txt").read_text())
-        self.assertFalse(any(any(item.endswith("test_suite__pub.py") for item in argv) for argv in calls))
+        self.assertFalse(
+            any(
+                any(item.endswith("test_suite__pub.py") for item in argv)
+                for argv in calls
+            )
+        )
         self.start_container.assert_not_called()
         self.image_factory.assert_not_called()
 

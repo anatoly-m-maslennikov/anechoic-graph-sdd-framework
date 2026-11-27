@@ -25,12 +25,33 @@ def project(directory):
 def compile_model(root, digest, stage, payload, *, observe=False):
     stage = stage.resolve()
     stage.mkdir()
-    command = [sys.executable, '-B', '-P', '-m', COMPILER, str(root), '_anechoic_anechoic', digest,
-               str(stage), '--ingested-model', '--attest-model']
-    environment = {**os.environ, 'PYTHONPATH': str(ENGINE),
-                   'ANECHOIC_STARTUP_TIMING': '1' if observe else '0'}
-    return subprocess.run(command, input=json.dumps(payload), text=True, capture_output=True,
-                          cwd=ENGINE, env=environment, check=False)
+    command = [
+        sys.executable,
+        "-B",
+        "-P",
+        "-m",
+        COMPILER,
+        str(root),
+        "_anechoic_anechoic",
+        digest,
+        str(stage),
+        "--ingested-model",
+        "--attest-model",
+    ]
+    environment = {
+        **os.environ,
+        "PYTHONPATH": str(ENGINE),
+        "ANECHOIC_STARTUP_TIMING": "1" if observe else "0",
+    }
+    return subprocess.run(
+        command,
+        input=json.dumps(payload),
+        text=True,
+        capture_output=True,
+        cwd=ENGINE,
+        env=environment,
+        check=False,
+    )
 
 
 def _contract_outcomes():
@@ -49,14 +70,20 @@ def _contract_outcomes():
         for path in (*active, *directory.glob(f'{atom}-*.md'), *drafts):
             raw = path.read_bytes()
             carrier = parse_carrier(raw, path)
-            state = carrier.metadata['state']
-            if state['version'] == version and state['status'] in ('active', 'draft'):
-                return {'path': path.relative_to(root).as_posix(),
-                        'atom_id': atom, 'version': version,
-                        'status': state['status'],
-                        'container_component': parent,
-                        'sha256': sha256(raw).hexdigest()}
-        raise AssertionError(f'{atom}@{version} is absent')
+            state = carrier.metadata["state"]
+            if state["version"] == version and state["status"] in (
+                "active",
+                "draft",
+            ):
+                return {
+                    "path": path.relative_to(root).as_posix(),
+                    "atom_id": atom,
+                    "version": version,
+                    "status": state["status"],
+                    "container_component": parent,
+                    "sha256": sha256(raw).hexdigest(),
+                }
+        raise AssertionError(f"{atom}@{version} is absent")
 
     contract = pin(base, 'AN-S-3065', 39, 'C51')
     solution = pin(base / 'FEATURE_FORMAL_MODEL_GENERATOR_C50',

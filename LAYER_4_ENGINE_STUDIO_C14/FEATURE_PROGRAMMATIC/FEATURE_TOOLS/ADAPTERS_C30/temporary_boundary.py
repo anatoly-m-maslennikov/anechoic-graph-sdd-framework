@@ -4,7 +4,7 @@ from pathlib import Path
 
 
 class TemporaryBoundaryError(RuntimeError):
-    "A disposable Carrier cannot be placed in the required Project Temporary State."
+    "Placement in the required Project Temporary State failed."
 
 
 def validate_directory_components(root: Path, directory: Path) -> None:

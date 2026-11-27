@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-2423
+concern:
+  subject: "Content"
+  path: "Model/Graph/Node//Artifact//SSOT//Prescribed/Content/Atom"
+  relation: "is_property_of"
 container:
   component: C18
 tier: 3
@@ -8,8 +12,8 @@ context:
   lens: SWD
 state:
   status: active
-  version: 11
-  updated_at: 2026-10-27 19:59:42 +0400
+  version: 12
+  updated_at: "2026-11-27T16:16:01.404965+00:00"
 ---
 ## Summary
 

@@ -10,29 +10,36 @@ from pydantic.dataclasses import dataclass
 class ValueFormat:
     pass
 
+
 @dataclass
 class BooleanValueFormat(ValueFormat):
     pass
+
 
 @dataclass
 class DateTimeValueFormat(ValueFormat):
     pass
 
+
 @dataclass
 class DecimalValueFormat(ValueFormat):
     pass
+
 
 @dataclass
 class FloatValueFormat(ValueFormat):
     pass
 
+
 @dataclass
 class IntegerValueFormat(ValueFormat):
     pass
 
+
 @dataclass
 class ScalarValueFormat(ValueFormat):
     pass
+
 
 @dataclass
 class StringValueFormat(ValueFormat):

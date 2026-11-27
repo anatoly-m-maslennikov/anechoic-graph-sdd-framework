@@ -10,7 +10,9 @@ from concurrent.futures import CancelledError as FutureCancelledError
 import sys
 from typing import Any, Callable
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import report_failure
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import (
+    report_failure,
+)
 
 
 class ProjectCapacityError(RuntimeError):
@@ -29,7 +31,9 @@ class LoadedProject:
 class SharedProjectPool:
     """Keep only a bounded number of initialized per-Project gateways warm."""
 
-    def __init__(self, max_loaded_projects: int, gateway_factory: Callable[..., Any]) -> None:
+    def __init__(
+        self, max_loaded_projects: int, gateway_factory: Callable[..., Any]
+    ) -> None:
         self.max_loaded_projects = max_loaded_projects
         self.gateway_factory = gateway_factory
         self._entries: dict[str, LoadedProject] = {}
@@ -57,7 +61,9 @@ class SharedProjectPool:
         except Exception:
             pass
 
-    def _report(self, selection: Any | None, error: Exception, operation: str) -> None:
+    def _report(
+        self, selection: Any | None, error: Exception, operation: str
+    ) -> None:
         _, secondary = report_failure(
             None,
             error,
@@ -102,11 +108,22 @@ class SharedProjectPool:
                 self._touch(entry)
                 return key, entry, None
             if key in self._pending:
-                raise ProjectCapacityError("Selected Project gateway is initializing")
-            if len(self._entries) + len(self._pending) >= self.max_loaded_projects:
-                idle = [item for item in self._entries.values() if item.in_flight == 0]
+                raise ProjectCapacityError(
+                    "Selected Project gateway is initializing"
+                )
+            if (
+                len(self._entries) + len(self._pending)
+                >= self.max_loaded_projects
+            ):
+                idle = [
+                    item
+                    for item in self._entries.values()
+                    if item.in_flight == 0
+                ]
                 if not idle:
-                    raise ProjectCapacityError("All loaded Project gateways are busy")
+                    raise ProjectCapacityError(
+                        "All loaded Project gateways are busy"
+                    )
                 evicted = min(idle, key=lambda item: item.touched)
                 del self._entries[self._key(evicted.selection)]
             self._pending.add(key)
@@ -114,7 +131,7 @@ class SharedProjectPool:
         return key, entry, evicted
 
     async def acquire(self, selection: Any) -> LoadedProject:
-        """Reserve a gateway, evicting only an idle least-recently-used entry."""
+        "Reserve a gateway, evicting only an idle least-recently-used entry."
         key, entry, evicted = await self._reserve(selection)
         if entry is not None:
             return entry
@@ -122,40 +139,54 @@ class SharedProjectPool:
         try:
             if evicted is not None:
                 await self._close_gateway(
-                    evicted.selection, evicted.gateway, "shared_project_pool.eviction_close"
+                    evicted.selection,
+                    evicted.gateway,
+                    "shared_project_pool.eviction_close",
                 )
             gateway = self.gateway_factory(selection.root, selection=selection)
             await gateway.initialize()
-            async with self._lock:
-                if self._closed:
-                    raise ProjectCapacityError("Project gateway pool is closed")
-                else:
-                    try:
-                        info = selection.root.stat()
-                        identity = (info.st_dev, info.st_ino)
-                    except OSError:
-                        identity = None
-                    entry = LoadedProject(selection, gateway, in_flight=1, root_identity=identity)
-                    self._touch(entry)
-                    self._entries[key] = entry
-                    return entry
+            return await self._store(selection, key, gateway)
         except asyncio.CancelledError, FutureCancelledError:
-            await self._cleanup_gateway(selection, gateway, "shared_project_pool.cancelled_close")
+            await self._cleanup_gateway(
+                selection, gateway, "shared_project_pool.cancelled_close"
+            )
             raise
         except Exception as error:
-            await self._cleanup_gateway(selection, gateway, "shared_project_pool.failure_close")
+            await self._cleanup_gateway(
+                selection, gateway, "shared_project_pool.failure_close"
+            )
             self._report(selection, error, "shared_project_pool.initialize")
             raise
         except BaseException:
-            await self._cleanup_gateway(selection, gateway, "shared_project_pool.failure_close")
+            await self._cleanup_gateway(
+                selection, gateway, "shared_project_pool.failure_close"
+            )
             raise
         finally:
             async with self._lock:
                 self._pending.discard(key)
                 self._pending_tasks.pop(key, None)
 
+    async def _store(
+        self, selection: Any, key: str, gateway: Any
+    ) -> LoadedProject:
+        async with self._lock:
+            if self._closed:
+                raise ProjectCapacityError("Project gateway pool is closed")
+            try:
+                info = selection.root.stat()
+                identity = (info.st_dev, info.st_ino)
+            except OSError:
+                identity = None
+            entry = LoadedProject(
+                selection, gateway, in_flight=1, root_identity=identity
+            )
+            self._touch(entry)
+            self._entries[key] = entry
+            return entry
+
     async def acquire_cached(self, root: Any) -> LoadedProject | None:
-        """Lease an already selected Project without re-reading its declarations."""
+        "Lease a Project without re-reading its declarations."
         async with self._lock:
             if self._closed:
                 raise ProjectCapacityError("Project gateway pool is closed")
@@ -172,7 +203,9 @@ class SharedProjectPool:
     async def release(self, entry: LoadedProject) -> None:
         async with self._lock:
             if entry.in_flight < 1:
-                raise RuntimeError("Project gateway lease was already released")
+                raise RuntimeError(
+                    "Project gateway lease was already released"
+                )
             entry.in_flight -= 1
             self._touch(entry)
 
@@ -198,7 +231,9 @@ class SharedProjectPool:
             self._pending_tasks.clear()
         await asyncio.gather(
             *(
-                self._close_gateway(entry.selection, entry.gateway, "shared_project_pool.close")
+                self._close_gateway(
+                    entry.selection, entry.gateway, "shared_project_pool.close"
+                )
                 for entry in entries
             )
         )

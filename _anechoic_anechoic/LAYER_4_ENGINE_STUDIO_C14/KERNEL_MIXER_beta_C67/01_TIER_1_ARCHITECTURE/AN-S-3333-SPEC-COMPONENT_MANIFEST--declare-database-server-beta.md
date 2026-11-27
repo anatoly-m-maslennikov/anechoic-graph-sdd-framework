@@ -8,9 +8,9 @@ context:
   template: component_manifest
   lens: SPEC
 state:
-  status: active
-  version: 34
-  updated_at: '2026-11-27T13:09:34.991865+00:00'
+  status: "active"
+  version: 37
+  updated_at: "2026-11-27T17:39:16+00:00"
 ---
 ## Summary
 
@@ -218,122 +218,113 @@ ComponentManifest(
 
 #### Guarantee
 
-Admit the Model, Structure, native revisions and relations, and enabled Realization Graph
-in one transaction for the bound Project. Keep the prior generation on
-failed admission. Serve its exact artifact bytes and one read-only SQL
-SELECT per request, with no external access and at most 1,000 rows.
-Validate Atom Status values against the admitted Model. Return those
-domains with the generation's reuse proof.
+Bind Kernel to one Project. Admit Model, Structure, native revisions
+and relations, and the enabled Graph atomically. Preserve the previous
+generation on failure. Serve exact artifacts and one read-only SELECT
+per request with no external access and at most 1,000 rows. Validate
+Atom Status against the admitted Model and include its domains in reuse
+proof.
 
-Keep a 16 MiB result budget in Kernel. Charge serialized result and
-SQL bytes with a 4 KiB minimum for each result. Limit each serialized
-result to 1 MiB. Refuse a new result or refresh
-that would exceed capacity. Do not evict young or pinned results.
-Pages keep their result across a generation update. Open Views pin results.
-Unpinned results expire after the configured startup lifetime of 3,600
-seconds by default. View result IDs and rows are transient.
+On disk, bind the private database to the Project instance and Manifest
+digest. Offer a compatible checkpoint on reopen. Commit the input proof,
+carrier inventory and hashes, and Archive state with the generation.
+Confirm the named base before reusing it or applying startup deltas.
+Update rows and checkpoints together, removing absent and old move paths.
+Expose the proof to Orchestrator.
 
-When Workbench selects disk storage, retain the accepted generation in a
-private database bound to the Project instance and Manifest digest. Offer
-the compatible persisted checkpoint when that binding reopens. Commit
-the input proof, carrier inventory and content hashes, and Archive
-pending state with the accepted generation.
+Keep a 16 MiB result budget, including serialized SQL and result bytes,
+with a 4 KiB minimum per result and a 1 MiB serialized result cap. Refuse
+excess admission or refresh. Preserve result IDs across generation updates.
+Pin open View results and retain young results. Unpinned results expire
+after the startup-configured lifetime, by default 3,600 seconds. Results
+and their IDs are transient.
 
-Confirm the named base before reusing the projection or accepting
-Incremental Startup changes. Update affected rows and their checkpoints
-together. Remove checkpoints for paths that are absent, including the
-previous paths of moves. Expose the current proof to Orchestrator.
-Expose DuckPGQ queries for admitted imports
-and Package and Component test relationships.
+Bind Workspaces to Project and session. Retain View IDs and edits across
+restart independently of query storage. Refuse stale revisions. Keep at
+least one View per Workspace.
 
-Keep each Workspace bound to its Project and session. Preserve View IDs
-and edits across Kernel restarts independently of query storage. Refuse
-stale View revisions and keep at least one View in each Workspace.
+Commit staged DuckDB Journal records to the existing Project table before
+removing the inbox record. Refuse conflicting bytes for a record ID. For
+file Journals, project the admitted Project-relative carriers into the
+connection-local `work_journal` table before SQL. Keep prior rows if
+validation fails.
 
-For DuckDB Work Journal storage, admit staged records into the Project's
-existing Journal table. Remove an inbox record after its commit.
-Refuse conflicting bytes for an accepted record ID.
+Filter, sort, and group inline results before paging. On explicit refresh,
+replace IDs and update View pins in one locked operation. A projection
+rebuild commits refreshed results with the new generation. Failed capture
+preserves prior generation and result IDs.
 
-Filter, sort, and group retained inline results before paging. On an
-explicit result refresh, issue replacement IDs and update any View pins
-in the same locked operation. For a projection rebuild, commit the new
-generation and its result refresh together. Keep the prior generation
-and result IDs if capture fails.
+Log query and View Run attempts through one ordered background writer per
+Project owner. Retain seven technical fields in hourly UTC files for 48
+hours. Expose the same entries through read-only list, get, and
+`query_log`. Check and schema reads create no attempt. Logging failure
+preserves the Run response. Drain the writer on orderly shutdown. Serve
+bounded schema fields and distinct Status values from one admitted
+generation.
 
-For file Journal storage, read the admitted Project-relative Journal
-directory into a connection-local `work_journal` projection before SQL.
-Keep the prior rows if a carrier cannot be validated.
+Save successful Query or View Runs requested as Bookmarks. Save View
+snapshots one valid read-only SELECT from the bound View or explicit SQL
+without running it.
+Use canonical UUIDv7 and the fixed `workbench-saved-items` Journal author
+in the selected file or DuckDB storage. Return ID after write. Failed save
+returns partial with any successful Run and its query ID. Load by admitted
+Project and ID. List bounded metadata without SQL. Read compatible
+historical files and DuckDB records across storage changes without
+mutating carriers.
 
-Record query and View Run attempts through one ordered background writer
-per Project owner. Retain their seven technical fields for 48 hours in
-hourly UTC files. Expose the same retained attempts through read-only
-list, get, and `query_log` SQL. Check creates no attempt. A log failure
-leaves the Run response intact. Drain the writer on orderly shutdown.
+Return cached rows inline or disposable Project files. Export full Run
+or requested Page or View Fetch as JSON matrix, CSV, or TOON, preserving
+positions and column names. On export failure return partial with the
+query ID and retain the result. Apply Run preview before materialization
+and retain it at refresh. Apply Page and Fetch previews only to delivery.
 
-Return public schema fields and available distinct Status values from the
-same accepted generation. Omit hints outside the supported bound.
-Schema reads create no technical query attempt.
+Publish Code Access findings, declared bypasses, `code_units`,
+`code_unit_calls`, `import_cycles`, `package_coupling`, and
+`antipattern_findings` with the Graph. Omit Graph tables when disabled.
+Expose imports, Package and Component tests, Module membership and calls
+through DuckPGQ. Preserve source Module on propagated effects.
 
-Own Saved SQL for the admitted Project. Store a successful Query or View
-Run with a save request as a Bookmark. Save View snapshots one valid
-read-only SELECT from a bound View or explicit SQL text without running it.
-Use a canonical UUIDv7 and append under the Project Journal's fixed
-`workbench-saved-items` author. Use the selected file or DuckDB storage.
-Return the ID after the write. A failed save preserves a successful Run
-and its query ID and returns a partial outcome.
+Mark Archive pending until successful background admission. Apply
+AN-S-3389 to prior Archive visibility and cold startup. Admit Archive
+changes, relations, and hashes atomically against the latest live base,
+preserving Current, Draft, and Graph.
 
-Load saved SQL by its admitted Project ID. List bounded metadata without
-SQL bodies. Read compatible historical files and accepted DuckDB records
-across Journal storage changes. Saved reads do not alter their carriers.
+For a native refresh, validate the snapshot under the admitted Model.
+Replace Atom and native relation rows atomically against the current
+generation. Preserve Model, Structure, and Graph, except that a supplied
+Graph and digest can replace Graph rows after Structure validation.
+Refuse stale bases and preserve prior state on failure. A native delta
+names up to 1,024 paths and the current generation. Admit affected Atom
+rows, relations, Graph rows, and Current Lens membership together.
+Preserve accepted Model, Structure, and Graph authority. Request
+reconciliation when relation ownership cannot be preserved.
 
-Deliver cached results inline or as disposable files under the admitted
-Project. Export the whole accepted Run or the requested Page or View
-Fetch as JSON matrix, CSV, or TOON. Preserve positional values and
-column names. Return a partial outcome with the existing query ID when
-an export fails. Keep the result available for later reads.
+Derive Component flows from observed events, exposing causal links and
+shared-action candidates in SQL. Admit each bound trace atomically and
+retain it across rebuilds and disk reopen.
 
-Apply a Run preview cap before materializing the result. Apply a Page
-or View Fetch preview only to the delivered page. Preserve the Run
-preview cap when refreshing the retained result.
+##### Formal Claim
 
-Publish admitted Code Access findings with the Realization Graph. Keep
-declared owner bypasses visible. Omit the graph tables when disabled.
+This claim models only stale-base refusal for a native refresh or delta.
+It treats the accepted generation, artifacts, and rows as one state.
+It does not prove the runtime implements this transition.
 
-Publish `code_units` and `code_unit_calls` in the same generation.
-Expose Module membership and calls through DuckPGQ. Retain the source
-Module on propagated effects.
+```lean
+namespace DatabaseServerStaleBase
 
-Serve structural cycles, Package coupling, and antipattern evidence
-through `import_cycles`, `package_coupling`, and `antipattern_findings`.
+def admit {State : Type} (base current : Nat) (accepted candidate : State) :
+    String × State :=
+  if base = current then ("accepted", candidate)
+  else ("generation_base_changed", accepted)
 
-Mark Archive pending until background reconciliation succeeds. During
-Incremental Startup, prior checkpoint Archive rows may remain visible
-with that marker. On cold startup, expose no Archive rows before
-admission.
+theorem stale_preserves_accepted {State : Type} (base current : Nat)
+    (accepted candidate : State) (stale : base ≠ current) :
+    admit base current accepted candidate =
+      ("generation_base_changed", accepted) := by
+  simp [admit, stale]
 
-Admit Archive additions, edits, moves, and deletions with their relations
-and carrier hashes against the latest live generation in one transaction.
-Preserve Current and Draft rows and the Realization Graph. Clear the
-pending marker only when Archive admission succeeds.
-
-Accept a native-only refresh against the named current generation.
-Validate the native snapshot against the admitted Model. Replace Atom
-and native relation rows in one transaction. Retain Model, Structure,
-and Realization Graph rows when the request contains only a native
-snapshot. When the request also supplies a Realization Graph and its
-digest, validate it against the admitted Structure and replace it
-in the same transaction. Retain the exact Model and Structure.
-Refuse a stale generation and retain the prior state on failure.
-
-A native carrier delta names the current generation and up to 1,024 affected paths.
-Publish the changed Atom rows and Model-defined relations together in one
-transaction, including their graph rows and Current Lens membership.
-Retain the accepted Model, Structure, and Realization Graph. Request
-reconciliation when the delta cannot preserve relation ownership.
-
-Derive Component flows from observed events. Expose their causal
-links and shared-action candidates in SQL. Admit each bound trace atomically. Preserve the
-event stream across generation rebuilds and disk reopen.
+end DatabaseServerStaleBase
+```
 
 #### References
 

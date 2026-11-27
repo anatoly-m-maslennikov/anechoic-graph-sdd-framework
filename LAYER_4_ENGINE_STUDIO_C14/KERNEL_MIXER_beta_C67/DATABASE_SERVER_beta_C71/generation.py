@@ -72,23 +72,33 @@ def _artifacts(data, receipt, manifest_sha256):
     model, structure = data["model"], data["structure"]
     if not isinstance(model, str) or not isinstance(structure, str):
         raise ValueError("Artifacts must be JSON strings")
-    if (sha256(model.encode("utf-8")).hexdigest() != receipt["model_descriptor_sha256"]
-            or sha256(structure.encode("utf-8")).hexdigest() != receipt["structure_sha256"]):
+    if (
+        sha256(model.encode("utf-8")).hexdigest()
+        != receipt["model_descriptor_sha256"]
+        or sha256(structure.encode("utf-8")).hexdigest()
+        != receipt["structure_sha256"]
+    ):
         raise ValueError("Artifact digest mismatch")
     m = json.loads(model, object_pairs_hook=_unique)
     s = json.loads(structure, object_pairs_hook=_unique)
-    if (not isinstance(m, dict) or not isinstance(s, dict)
-            or m.get("binding_schema") != 1
-            or not isinstance(m.get("modules"), dict) or "__init__.py" not in m["modules"]
-            or not isinstance(m.get("module_order"), list)
-            or not isinstance(m.get("class_modules"), dict) or not isinstance(m.get("bindings"), dict)
-            or m.get("model_sha256") != receipt["model_sha256"]
-            or s.get("model_sha256") != receipt["model_sha256"]
-            or not isinstance(s.get("project"), dict)
-            or s["project"].get("sha256") != manifest_sha256
-            or not isinstance(s["project"].get("ref"), str) or not s["project"]["ref"]
-            or not isinstance(s.get("components"), dict)
-            or not isinstance(s.get("packages", {}), dict)):
+    if (
+        not isinstance(m, dict)
+        or not isinstance(s, dict)
+        or m.get("binding_schema") != 1
+        or not isinstance(m.get("modules"), dict)
+        or "__init__.py" not in m["modules"]
+        or not isinstance(m.get("module_order"), list)
+        or not isinstance(m.get("class_modules"), dict)
+        or not isinstance(m.get("bindings"), dict)
+        or m.get("model_sha256") != receipt["model_sha256"]
+        or s.get("model_sha256") != receipt["model_sha256"]
+        or not isinstance(s.get("project"), dict)
+        or s["project"].get("sha256") != manifest_sha256
+        or not isinstance(s["project"].get("ref"), str)
+        or not s["project"]["ref"]
+        or not isinstance(s.get("components"), dict)
+        or not isinstance(s.get("packages", {}), dict)
+    ):
         raise ValueError("Invalid artifact shape or binding")
     return model, structure, m, s
 
@@ -107,14 +117,22 @@ def _validate_generation(data, manifest_sha256):
             or any(not isinstance(v, str) or _HEX.fullmatch(v) is None for v in receipt.values())
             or receipt["manifest_sha256"] != manifest_sha256):
         raise ValueError("Invalid receipt")
-    model, structure, descriptor, s = _artifacts(data, receipt, manifest_sha256)
+    model, structure, descriptor, s = _artifacts(
+        data, receipt, manifest_sha256
+    )
     if native:
         if _digest(snapshot) != receipt["snapshot_sha256"]:
             raise ValueError("Native snapshot digest mismatch")
-        validate_native_snapshot(snapshot, manifest_sha256, descriptor["bindings"])
+        validate_native_snapshot(
+            snapshot, manifest_sha256, descriptor["bindings"]
+        )
         endpoints = descriptor["bindings"].get("endpoints")
-        if not isinstance(endpoints, dict) or set(endpoints) != set(snapshot["relation_types"]):
-            raise ValueError("Snapshot relation types differ from the admitted Model")
+        if not isinstance(endpoints, dict) or set(endpoints) != set(
+            snapshot["relation_types"]
+        ):
+            raise ValueError(
+                "Snapshot relation types differ from the admitted Model"
+            )
     else:
         _legacy_atoms(snapshot, manifest_sha256)
     graph = data["graph"]
@@ -265,7 +283,10 @@ class GenerationBaseChanged(ValueError):
 
 
 def _finish_native_checkpoint(connection, data):
-    from .archive_generation import refresh_archive_versions, set_archive_pending
+    from .archive_generation import (
+        refresh_archive_versions,
+        set_archive_pending,
+    )
 
     refresh_archive_versions(connection)
     set_archive_pending(connection, False)

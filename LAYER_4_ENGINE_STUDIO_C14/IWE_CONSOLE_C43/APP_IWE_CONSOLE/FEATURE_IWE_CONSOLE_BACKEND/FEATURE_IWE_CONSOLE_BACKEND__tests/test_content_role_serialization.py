@@ -8,7 +8,11 @@ from unittest.mock import patch
 import yaml
 
 
-from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import ContentSchema, DeclarationSource, compile_content_schema
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (
+    ContentSchema,
+    DeclarationSource,
+    compile_content_schema,
+)
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import HeaderRule
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import HeaderColumn
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import carrier_read_view
@@ -27,7 +31,9 @@ METHOD_PROSE = (
     "property_rule(address='Atom/(.Header.Role := Method)/(.Header.Form := Direct Policy)"
     ".Content.Claim.Prose Claim', values='1')"
 )
-WILDCARD_CONTENT = "children(address='Atom.Content', occurrences='0+', name_format='string')"
+WILDCARD_CONTENT = (
+    "children(address='Atom.Content', occurrences='0+', name_format='string')"
+)
 
 
 def atom(role, form, body):
@@ -63,7 +69,9 @@ class CarrierSerializationTests(unittest.TestCase, SourceReaderFixture):
             _, head, body = path.read_text().split("---", 2)
             header = carrier_read_view(yaml.safe_load(head))
             declarations.append(atom(header["role"], header["form"], body))
-        source = atom("Method", "Decision", "## Summary\n\nTop.\n\n### Note\n\nKeep.\n")
+        source = atom(
+            "Method", "Decision", "## Summary\n\nTop.\n\n### Note\n\nKeep.\n"
+        )
         schema = compile_content_schema([*declarations, source])
         self.assertNotIn("content.summary.note", schema.names)
         self.assertIn("### Note", schema.values(source)["content.summary"])
@@ -104,16 +112,26 @@ class CarrierSerializationTests(unittest.TestCase, SourceReaderFixture):
 
     def test_mode_one_header_rule_matches_serialized_role_and_form(self):
         rule = HeaderRule(
-            ("custom",), "VARCHAR", frozenset({"Method"}), frozenset({"Direct Policy"}),
+            ("custom",),
+            "VARCHAR",
+            frozenset({"Method"}),
+            frozenset({"Direct Policy"}),
             DeclarationSource("CA-R-1", 1, "model.md"),
         )
-        column = HeaderColumn(("custom",), "header.custom", "VARCHAR", True, rules=(rule,))
-        self.assertTrue(column.applies({"role": "method", "form": "direct_policy"}))
-        self.assertFalse(column.applies({"role": "method", "form": "solution"}))
+        column = HeaderColumn(
+            ("custom",), "header.custom", "VARCHAR", True, rules=(rule,)
+        )
+        self.assertTrue(
+            column.applies({"role": "method", "form": "direct_policy"})
+        )
+        self.assertFalse(
+            column.applies({"role": "method", "form": "solution"})
+        )
 
     def test_serialized_role_and_form_match_business_spelling(self):
         declaration = atom(
-            "requirement", "entity_definition",
+            "requirement",
+            "entity_definition",
             python_claim_body(METHOD_PROSE),
         )
         schema = compile_content_schema([declaration])
@@ -123,7 +141,8 @@ class CarrierSerializationTests(unittest.TestCase, SourceReaderFixture):
             schema.values(atom("method", "direct_policy", body)),
         )
         self.assertEqual(
-            {"content.claim.prose_claim": None}, schema.values(atom("Method", "Solution", body)),
+            {"content.claim.prose_claim": None},
+            schema.values(atom("Method", "Solution", body)),
         )
 
     def test_wildcard_constraints_do_not_declare_secret(self):
@@ -142,7 +161,8 @@ class CarrierSerializationTests(unittest.TestCase, SourceReaderFixture):
 
     def test_filtered_wildcard_preserves_fences_and_role_boundaries(self):
         declaration = atom(
-            "Requirement", "Declaration",
+            "Requirement",
+            "Declaration",
             python_claim_body(
                 "children(address='Atom/(.Header.Role in (Plan, Concern)).Content',\n"
                 "    occurrences='0+', name_format='string', recursive=True)\n"
@@ -151,18 +171,29 @@ class CarrierSerializationTests(unittest.TestCase, SourceReaderFixture):
             ),
         )
         plan = atom(
-            "plan", "Plan", "## Project Objective\n\nText.\n\n"
+            "plan",
+            "Plan",
+            "## Project Objective\n\nText.\n\n"
             "```md\n### Not A Heading\n```\n\n### Nested Scope\n\nInside.\n",
         )
         method = atom(
-            "Method", "Solution", plan["content_markdown"] + "\n## Private Note\n\nHidden.\n",
+            "Method",
+            "Solution",
+            plan["content_markdown"] + "\n## Private Note\n\nHidden.\n",
         )
         schema = compile_content_schema([declaration, plan, method])
         self.assertIn("content.project_objective.nested_scope", schema.names)
         self.assertNotIn("content.private_note", schema.names)
-        self.assertNotIn("content.project_objective.not_a_heading", schema.names)
-        self.assertEqual("Inside.", schema.values(plan)["content.project_objective.nested_scope"])
-        self.assertIsNone(schema.values(method)["content.project_objective.nested_scope"])
+        self.assertNotIn(
+            "content.project_objective.not_a_heading", schema.names
+        )
+        self.assertEqual(
+            "Inside.",
+            schema.values(plan)["content.project_objective.nested_scope"],
+        )
+        self.assertIsNone(
+            schema.values(method)["content.project_objective.nested_scope"]
+        )
 
     def test_generic_declaration_exposes_content_for_every_role_and_new_role(self):
         examples = [
@@ -189,7 +220,8 @@ class CarrierSerializationTests(unittest.TestCase, SourceReaderFixture):
 
     def test_wildcards_do_not_expose_observed_paths_or_split_prose(self):
         declaration = atom(
-            "Requirement", "Declaration",
+            "Requirement",
+            "Declaration",
             python_claim_body(
                 "children(address='Atom.Content', occurrences='0+', name_format='string')\n"
                 "children(address='Atom.Content', occurrences='0+', name_format='string', recursive=True)\n"
@@ -198,21 +230,33 @@ class CarrierSerializationTests(unittest.TestCase, SourceReaderFixture):
             ),
         )
         prose = atom(
-            "Method", "Direct Policy",
-            "## Claim\n\n### Prose Claim\n\nText.\n\n#### Note\n\nStill prose.\n",
+            "Method",
+            "Direct Policy",
+            (
+                '## Claim\n\n### Prose Claim\n\nText.\n\n#### Note\n\nStill '
+                'prose.\n'
+            ),
         )
         legacy = atom(
-            "Requirement", "Rule", "## Claim\n\nText.\n\n### Note\n\nStill prose.\n",
+            "Requirement",
+            "Rule",
+            "## Claim\n\nText.\n\n### Note\n\nStill prose.\n",
         )
-        plan = atom("Plan", "Plan", "## Objective\n\nShip.\n\n### Scope\n\nInside.\n")
+        plan = atom(
+            "Plan", "Plan", "## Objective\n\nShip.\n\n### Scope\n\nInside.\n"
+        )
         schema = compile_content_schema([declaration, prose, legacy, plan])
         self.assertNotIn("content.objective", schema.names)
         self.assertNotIn("content.objective.scope", schema.names)
         self.assertNotIn("content.claim", schema.names)
         self.assertNotIn("content.claim.prose_claim.note", schema.names)
         self.assertNotIn("content.claim.note", schema.names)
-        self.assertIn("#### Note", schema.values(prose)["content.claim.prose_claim"])
-        self.assertIn("### Note", schema.values(legacy)["content.claim.prose_claim"])
+        self.assertIn(
+            "#### Note", schema.values(prose)["content.claim.prose_claim"]
+        )
+        self.assertIn(
+            "### Note", schema.values(legacy)["content.claim.prose_claim"]
+        )
 
     def test_observed_headings_do_not_change_wildcard_schema(self):
         SourceReaderFixture.setUp(self)
@@ -236,7 +280,9 @@ class CarrierSerializationTests(unittest.TestCase, SourceReaderFixture):
             self.assertEqual(shape, self.reader.content_schema.shape)
 
     def test_current_and_draft_in_both_schema_modes(self):
-        temporary_root = Path.cwd() / ".anechoic_tmp" / "APP_IWE_CONSOLE__tests"
+        temporary_root = (
+            Path.cwd() / ".anechoic_tmp" / "APP_IWE_CONSOLE__tests"
+        )
         temporary_root.mkdir(parents=True, exist_ok=True)
         with tempfile.TemporaryDirectory(dir=temporary_root) as directory:
             root = Path(directory)

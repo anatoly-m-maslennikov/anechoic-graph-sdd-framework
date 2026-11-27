@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1903
+concern:
+  subject: "Module/(.Language := python)"
+  path: "Model/Graph/Node//Artifact//SSOT//Realization/Content"
+  relation: "is_contained_by"
 container:
   component: C15
 tier: 3
@@ -8,8 +12,8 @@ context:
   lens: SWD
 state:
   status: active
-  version: 14
-  updated_at: 2026-11-10 20:47:54 +0400
+  version: 16
+  updated_at: "2026-11-27T16:29:34.309627+00:00"
 ---
 
 ## Summary
@@ -40,8 +44,7 @@ exception is proposed.
 #### Procedure
 1. apply the Python selection established by this Method **and** read its current
    materialization **before** realizing a component.
-2. use the standard library **when** it provides the required behavior with
-   comparable clarity **and** reliability.
+2. Apply AN-S-2270 for standard library and dependency selection.
 3. add **or** change a runtime, library, workflow tool, **or** non-Python exception
    **only** through an accepted Method that selects it for a bounded scope.
 4. materialize **every** accepted selection **in** canonical configuration **and**

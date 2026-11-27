@@ -74,64 +74,145 @@ def scheduler_inputs(root, *, swapped=False):
 
 
 def model(contract=CONTRACT, solution=SOLUTION, server=None):
-    boundaries = {'io': {'server': {'api': {}} if server is None else server}}
-    return {'component_id': 'C51',
-            'manifest': {'source': {'atom_id': 'M'}, 'fields': {'component_id': 'C51', 'name': 'Model',
-                                                                  'boundaries': boundaries}, 'boundaries': boundaries},
-            'contract': {'source': {'atom_id': 'C'}, 'claims': [('python group', contract)]},
-            'solution': {'source': {'atom_id': 'S'}, 'claims': [('python group', solution)]}}
+    boundaries = {"io": {"server": {"api": {}} if server is None else server}}
+    return {
+        "component_id": "C51",
+        "manifest": {
+            "source": {"atom_id": "M"},
+            "fields": {
+                "component_id": "C51",
+                "name": "Model",
+                "boundaries": boundaries,
+            },
+            "boundaries": boundaries,
+        },
+        "contract": {
+            "source": {"atom_id": "C"},
+            "claims": [("python group", contract)],
+        },
+        "solution": {
+            "source": {"atom_id": "S"},
+            "claims": [("python group", solution)],
+        },
+    }
 
 
 class GroupSpecTests(unittest.TestCase):
-    def check(self, *, children=('C50', 'C52'), contract=CONTRACT, solution=SOLUTION, server=None,
-              current_record_count=None):
-        with patch('FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_2_SPEC_READING_C83._package__shared.load_boundary_model', return_value=model(contract, solution, server)):
-            return check_group_spec('.', 'C51', {}, {}, {}, structure_children=children,
-                                    current_record_count=current_record_count, lean=LEAN)
+    def check(
+        self,
+        *,
+        children=("C50", "C52"),
+        contract=CONTRACT,
+        solution=SOLUTION,
+        server=None,
+        current_record_count=None,
+    ):
+        with patch(
+            "FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_2_SPEC_READING_C83._package__shared.load_boundary_model",
+            return_value=model(contract, solution, server),
+        ):
+            return check_group_spec(
+                ".",
+                "C51",
+                {},
+                {},
+                {},
+                structure_children=children,
+                current_record_count=current_record_count,
+                lean=LEAN,
+            )
 
     def test_structure_and_entrypoint_comparison(self):
         result = self.check()
-        self.assertEqual('matched', result['directions']['manifest_contract']['status'])
-        self.assertEqual('matched', result['directions']['contract_solution']['status'])
-        self.assertEqual(['C50', 'C52'], result['structure_children'])
-        self.assertIn('C51 -->|generation| C50', result['mermaid'])
-        for children in (('C50',), ('C50', 'C53')):
-            self.assertEqual('conflicting', self.check(children=children)['directions']['manifest_contract']['status'])
-        result = self.check(server={'api': {}, 'extra': {}})
-        self.assertEqual('conflicting', result['directions']['manifest_solution']['status'])
-        result = self.check(solution=SOLUTION.replace("'generation': 'C50', 'core': 'C52'",
-                                                      "'generation': 'C52', 'core': 'C50'"))
-        self.assertEqual('conflicting', result['directions']['contract_solution']['status'])
-        self.assertTrue(self.check(server='unsupported')['unresolved'])
+        self.assertEqual(
+            "matched", result["directions"]["manifest_contract"]["status"]
+        )
+        self.assertEqual(
+            "matched", result["directions"]["contract_solution"]["status"]
+        )
+        self.assertEqual(["C50", "C52"], result["structure_children"])
+        self.assertIn("C51 -->|generation| C50", result["mermaid"])
+        for children in (("C50",), ("C50", "C53")):
+            self.assertEqual(
+                "conflicting",
+                self.check(children=children)["directions"][
+                    "manifest_contract"
+                ]["status"],
+            )
+        result = self.check(server={"api": {}, "extra": {}})
+        self.assertEqual(
+            "conflicting", result["directions"]["manifest_solution"]["status"]
+        )
+        result = self.check(
+            solution=SOLUTION.replace(
+                "'generation': 'C50', 'core': 'C52'",
+                "'generation': 'C52', 'core': 'C50'",
+            )
+        )
+        self.assertEqual(
+            "conflicting", result["directions"]["contract_solution"]["status"]
+        )
+        self.assertTrue(self.check(server="unsupported")["unresolved"])
 
     def test_omitted_entry_points_remain_unknown(self):
         contract = "declare_group_contract(roles={'generation': 'C50', 'core': 'C52'})"
-        solution = "component_group(roles={'generation': 'C50', 'core': 'C52'})"
-        self.assertEqual({'roles': {'generation': 'C50', 'core': 'C52'}}, parse_group(solution, 'solution'))
-        result = self.check(contract=contract, solution=solution, server='unsupported')
-        self.assertEqual('unresolved', result['status'])
-        self.assertEqual('matched', result['directions']['contract_solution']['status'])
-        self.assertEqual({'M', 'C', 'S'}, {gap['source']['atom_id'] for gap in result['unresolved']})
+        solution = (
+            "component_group(roles={'generation': 'C50', 'core': 'C52'})"
+        )
+        self.assertEqual(
+            {"roles": {"generation": "C50", "core": "C52"}},
+            parse_group(solution, "solution"),
+        )
+        result = self.check(
+            contract=contract, solution=solution, server="unsupported"
+        )
+        self.assertEqual("unresolved", result["status"])
+        self.assertEqual(
+            "matched", result["directions"]["contract_solution"]["status"]
+        )
+        self.assertEqual(
+            {"M", "C", "S"},
+            {gap["source"]["atom_id"] for gap in result["unresolved"]},
+        )
         result = self.check(contract=CONTRACT, solution=solution)
         self.assertEqual('unresolved', result['directions']['contract_solution']['status'])
         result = self.check(contract=contract, solution=solution.replace("'C52'", "'C53'"))
         self.assertEqual('conflicting', result['directions']['contract_solution']['status'])
         empty = solution[:-1] + ', entry_points=[])'
         result = self.check(contract=CONTRACT, solution=empty)
-        self.assertEqual('conflicting', result['directions']['contract_solution']['status'])
-        self.assertEqual([], parse_group(empty, 'solution')['entry_points'])
+        self.assertEqual(
+            "conflicting", result["directions"]["contract_solution"]["status"]
+        )
+        self.assertEqual([], parse_group(empty, "solution")["entry_points"])
 
     def test_current_record_count(self):
-        contract = CONTRACT[:-1] + ', current_record_count=500)'
-        solution = SOLUTION[:-1] + ', current_record_count=500)'
-        result = self.check(contract=contract, solution=solution, current_record_count=500)
-        self.assertTrue(all(direction['status'] == 'matched' for direction in result['directions'].values()))
-        self.assertIn('C51 (500 records)', result['mermaid'])
-        changed = self.check(contract=contract, solution=solution.replace('500', '499'), current_record_count=500)
-        self.assertEqual('conflicting', changed['directions']['contract_solution']['status'])
-        self.assertIn('C51 (499 records)', changed['mermaid'])
-        self.assertEqual('conflicting', self.check(contract=contract, solution=solution,
-                                                    current_record_count=499)['status'])
+        contract = CONTRACT[:-1] + ", current_record_count=500)"
+        solution = SOLUTION[:-1] + ", current_record_count=500)"
+        result = self.check(
+            contract=contract, solution=solution, current_record_count=500
+        )
+        self.assertTrue(
+            all(
+                direction["status"] == "matched"
+                for direction in result["directions"].values()
+            )
+        )
+        self.assertIn("C51 (500 records)", result["mermaid"])
+        changed = self.check(
+            contract=contract,
+            solution=solution.replace("500", "499"),
+            current_record_count=500,
+        )
+        self.assertEqual(
+            "conflicting", changed["directions"]["contract_solution"]["status"]
+        )
+        self.assertIn("C51 (499 records)", changed["mermaid"])
+        self.assertEqual(
+            "conflicting",
+            self.check(
+                contract=contract, solution=solution, current_record_count=499
+            )["status"],
+        )
         result = self.check(contract=contract, solution=solution)
         self.assertEqual('unresolved', result['status'])
         self.assertEqual('unresolved', result['directions']['manifest_contract']['status'])

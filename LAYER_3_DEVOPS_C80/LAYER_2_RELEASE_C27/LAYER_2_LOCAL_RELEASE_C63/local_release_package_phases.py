@@ -25,6 +25,10 @@ from LAYER_1_RUNTIME_IMAGES_C81.LAYER_1_RUNTIME_IMAGES_C81__shared import (
     release_image_provenance,
 )
 
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.container_settings__pub import (
+    read_container_settings,
+)
+
 from .release_support import (
     _GENERATED_ASSETS,
     _PRESERVED_NAMES,
@@ -247,6 +251,24 @@ def validate_package_inputs(root, selection):
     _native_release_sources(selection)
 
 
+def project_port(root, selection):
+    try:
+        config = read_container_settings(root)
+        if config is not None:
+            if (config.mode != "project" or
+                    (config.control_root is not None and
+                     config.control_root != selection.control_relative.as_posix())):
+                raise ValueError("Project release settings do not match selection")
+            return config.http_port
+        settings = selection.parameters.get("project_mcp")
+        port = settings.get("http_port") if isinstance(settings, dict) else None
+        if type(port) is not int or not 1 <= port <= 65535:
+            raise ValueError("invalid port")
+        return port
+    except (OSError, ValueError) as error:
+        raise LocalReleaseError("local-release-production-port-invalid") from error
+
+
 def validate_inputs(
     root,
     selection,
@@ -257,10 +279,7 @@ def validate_inputs(
     source_root=None,
     source_selection=None,
 ):
-    settings = selection.parameters.get("project_mcp")
-    port = settings.get("http_port") if isinstance(settings, dict) else None
-    if type(port) is not int or not 1 <= port <= 65535:
-        raise LocalReleaseError("local-release-production-port-invalid")
+    port = project_port(root, selection)
     validate_package_inputs(source_root or root, source_selection or selection)
     ane = _target(root, Path(".agents/skills/ane"), label="project-ane")
     for target in (product, installed, runtime, ane):

@@ -4,7 +4,6 @@ from hashlib import sha256
 import os
 from pathlib import Path
 import stat
-import tomllib
 from typing import Literal, Self
 
 from pydantic import (
@@ -13,6 +12,13 @@ from pydantic import (
     Field,
     field_validator,
     model_validator,
+)
+
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.container_settings__pub import (
+    CONTAINER_SETTINGS_FILENAME, parse_container_settings,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.settings_carrier__pub import (
+    read_settings_carrier,
 )
 
 from .runtime_log_level import LOG_LEVELS
@@ -72,6 +78,10 @@ class HostRuntimeSettings(_Settings):
     workbench_storage: str
     journal_storage: str
     log_level: str
+    image: str | None = None
+    docker_context: str | None = None
+    startup_timeout_seconds: int = 420
+    readiness_timeout_seconds: int = 420
 
     @property
     def shared_runtime_id(self) -> str:
@@ -134,17 +144,23 @@ def _read(source: Path) -> bytes:
 
 
 def load_host_runtime_settings(
-    path: Path | str | None, *, base: Path
+    path: Path | str | None, *, base: Path, mounted_folder: Path | str | None = None
 ) -> HostRuntimeSettings:
+    if path is not None and mounted_folder is not None:
+        raise ValueError("Only one settings locator is allowed")
+    if mounted_folder is not None:
+        root = _canonical_path(mounted_folder)
+        path = root / CONTAINER_SETTINGS_FILENAME
     if path is None:
         config_home = Path(
             os.environ.get("XDG_CONFIG_HOME") or Path.home() / ".config"
         )
         path = config_home / "anechoic/runtime.toml"
     source = _canonical_path(path, base)
-    document = _Document.model_validate(
-        tomllib.loads(_read(source).decode("utf-8"))
-    )
+    document_data = read_settings_carrier(source, read_bytes=_read)
+    if source.name == CONTAINER_SETTINGS_FILENAME:
+        return _native_settings(source, document_data)
+    document = _Document.model_validate(document_data)
     shared = document.shared_mcp
     single = shared.project_root is not None
     root = _canonical_path(
@@ -152,6 +168,13 @@ def load_host_runtime_settings(
     )
     if root.parent == root or not root.is_dir():
         raise ValueError("Shared host root must be a canonical directory")
+    native_source = root / CONTAINER_SETTINGS_FILENAME
+    try:
+        native_data = read_settings_carrier(native_source, read_bytes=_read)
+    except FileNotFoundError:
+        pass
+    else:
+        return _native_settings(native_source, native_data)
     return HostRuntimeSettings(
         source_path=source,
         projects_root=root,
@@ -161,4 +184,22 @@ def load_host_runtime_settings(
         workbench_storage=document.project_defaults.workbench_storage,
         journal_storage=document.project_defaults.journal_storage,
         log_level=document.logging.level,
+    )
+
+
+def _native_settings(source: Path, document: dict) -> HostRuntimeSettings:
+    settings = parse_container_settings(document)
+    root = _canonical_path(source.parent)
+    if root.parent == root or not root.is_dir():
+        raise ValueError("Shared host root must be a canonical directory")
+    return HostRuntimeSettings(
+        source_path=source, projects_root=root,
+        http_port=settings.http_port,
+        max_loaded_projects=settings.max_loaded_projects,
+        single_project=settings.mode == "project",
+        workbench_storage=settings.workbench_storage,
+        journal_storage=settings.journal_storage, log_level=settings.log_level,
+        image=settings.image, docker_context=settings.docker_context,
+        startup_timeout_seconds=settings.startup_timeout_seconds,
+        readiness_timeout_seconds=settings.readiness_timeout_seconds,
     )

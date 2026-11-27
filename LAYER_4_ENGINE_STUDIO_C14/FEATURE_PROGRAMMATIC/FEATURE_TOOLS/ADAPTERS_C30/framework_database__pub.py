@@ -76,8 +76,10 @@ def _publish(database: Path, digest: str, records) -> None:
             str(candidate), config={"temp_directory": ""}
         ) as connection:
             connection.execute(
-                "CREATE TABLE atoms (source_path VARCHAR NOT NULL, atom_id VARCHAR PRIMARY KEY, "
-                "version BIGINT NOT NULL, tier BIGINT, header JSON NOT NULL, markdown VARCHAR NOT NULL)"
+                "CREATE TABLE atoms (source_path VARCHAR NOT NULL, "
+                "atom_id VARCHAR PRIMARY KEY, version BIGINT NOT NULL, "
+                "tier BIGINT, header JSON NOT NULL, "
+                "markdown VARCHAR NOT NULL)"
             )
             connection.executemany(
                 "INSERT INTO atoms VALUES (?, ?, ?, ?, ?, ?)",
@@ -91,7 +93,7 @@ def _publish(database: Path, digest: str, records) -> None:
 
 
 def attach_framework(connection, *, source: Path = _SOURCE) -> None:
-    """Attach a read-only Framework database before disabling external access."""
+    "Attach a read-only Framework database before disabling external access."
     value = os.environ.get("ANECHOIC_FRAMEWORK_DB_ROOT")
     if not value:
         return

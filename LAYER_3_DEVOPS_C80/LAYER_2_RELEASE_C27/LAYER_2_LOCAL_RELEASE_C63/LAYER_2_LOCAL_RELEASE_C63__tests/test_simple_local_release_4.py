@@ -11,7 +11,9 @@ import unittest
 from unittest.mock import patch
 
 
-from LAYER_2_LOCAL_RELEASE_C63 import local_release_package_phases as package_phases  # noqa: E402
+from LAYER_2_LOCAL_RELEASE_C63 import (  # noqa: E402
+    local_release_package_phases as package_phases,
+)
 from LAYER_2_LOCAL_RELEASE_C63.LAYER_2_LOCAL_RELEASE_C63__shared import LocalReleaseRun, run_local_release  # noqa: E402
 
 
@@ -95,16 +97,32 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
         source, temporary = prepared.args
         self.assertTrue(source.is_relative_to(self.root / ".anechoic_tmp/simple_local_release"))
         self.assertEqual(source.parent / "image_builds", temporary)
-        self.assertEqual(self.runtime / "simple_local_release/package", installed.args[0])
-        self.assertLess(events.index("preflight-green"), events.index("static-green"))
-        self.assertLess(events.index("static-green"), events.index("functional-green"))
-        self.assertLess(events.index("functional-green"), events.index("candidate-resolve"))
+        self.assertEqual(
+            self.runtime / "simple_local_release/package", installed.args[0]
+        )
+        self.assertLess(
+            events.index("preflight-green"), events.index("static-green")
+        )
+        self.assertLess(
+            events.index("static-green"), events.index("functional-green")
+        )
+        self.assertLess(
+            events.index("functional-green"), events.index("candidate-resolve")
+        )
         self.assertLess(events.index("candidate-resolve"), events.index("image-tests-green"))
-        self.assertLess(events.index("image-tests-green"), events.index("canary-green"))
-        self.assertLess(events.index("canary-green"), events.index("candidate-recheck"))
+        self.assertLess(
+            events.index("image-tests-green"), events.index("canary-green")
+        )
+        self.assertLess(
+            events.index("canary-green"), events.index("candidate-recheck")
+        )
         self.assertLess(events.index("candidate-recheck"), events.index("installed-resolve"))
-        self.assertLess(events.index("installed-resolve"), events.index("launch"))
-        self.assertLess(events.index("launch"), events.index("post-smoke-image-cleanup"))
+        self.assertLess(
+            events.index("installed-resolve"), events.index("launch")
+        )
+        self.assertLess(
+            events.index("launch"), events.index("post-smoke-image-cleanup")
+        )
         self.assertEqual("http://127.0.0.1:49152/anechoic/mcp", result["canary_endpoint"])
 
 
@@ -263,7 +281,8 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
 
     def test_current_source_suite_canary_failure_does_not_run_combined_verification(self):
         result, calls, probes = self._release_from_source_suite(
-            "preflight,static,functional,unit,image,image-tests,canary", failed_phase="canary",
+            "preflight,static,functional,unit,image,image-tests,canary",
+            failed_phase="canary",
         )
         self.assertEqual(("failed", "verify_candidate_canary"), (result["outcome"], result["failed_step"]), result)
         self.assertEqual(["preflight", "static", "functional", "image-tests", "canary"], [phase for phase, _ in calls])
@@ -295,18 +314,26 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
         self.start_container.assert_not_called()
 
 
-    def test_packaged_fingerprint_mismatch_preserves_previous_installation(self):
+    def test_packaged_fingerprint_mismatch_preserves_previous_installation(
+        self,
+    ):
         runtime_package = self.runtime / "simple_local_release/package"
         runtime_package.mkdir(parents=True)
         (runtime_package / "old.txt").write_bytes(b"previous payload")
-        self.image.identity.side_effect = [SimpleNamespace(fingerprint="b" * 64),
-                                           SimpleNamespace(fingerprint="c" * 64)]
+        self.image.identity.side_effect = [
+            SimpleNamespace(fingerprint="b" * 64),
+            SimpleNamespace(fingerprint="c" * 64),
+        ]
         runner, calls = self._runner()
-        result = run_local_release(self.root, run_id="package-mismatch", runner=runner)
+        result = run_local_release(
+            self.root, run_id="package-mismatch", runner=runner
+        )
         self.assertEqual("failed", result["outcome"])
         self.assertEqual("prepare_candidate_image", result["failed_step"])
         self.assertEqual("obsolete", (self.installed / "old.txt").read_text())
-        self.assertEqual(b"previous payload", (runtime_package / "old.txt").read_bytes())
+        self.assertEqual(
+            b"previous payload", (runtime_package / "old.txt").read_bytes()
+        )
         self.start_container.assert_not_called()
 
 

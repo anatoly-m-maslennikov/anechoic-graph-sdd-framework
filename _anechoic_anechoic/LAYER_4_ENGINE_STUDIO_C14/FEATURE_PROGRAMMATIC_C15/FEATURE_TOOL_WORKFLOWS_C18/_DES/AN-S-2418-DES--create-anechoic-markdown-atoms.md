@@ -1,15 +1,19 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-2418
+concern:
+  subject: "Atom"
+  path: "Model/Graph/Node//Artifact//SSOT//Prescribed/Content"
+  relation: "is_contained_by"
 container:
   component: C18
 tier: 3
 context:
   lens: DES
 state:
-  status: "active"
-  version: 30
-  updated_at: "2026-11-25T21:23:34.101360+00:00"
+  status: active
+  version: 32
+  updated_at: "2026-11-27T16:16:01.404965+00:00"
 ---
 ## Summary
 
@@ -29,7 +33,7 @@ the ATOM_CREATE Tool **must** provide admission **and** creation of complete new
 - reject destination collisions **and** reused assigned Atom IDs, including IDs retained **only** **in** historical authority. the legacy sealed route follows AN-S-1783@19; an unassigned Draft does **not** acquire an invented ID.
 - create **`=1`** Atom per independently admitted Action. A several-Atom Workflow stops at the first failed Action, retains completed creations and leaves the remainder untouched. Retain each one-Atom Action's complete admission, preflight and storage-effect safeguards; do not promise a cross-Atom all-or-nothing effect.
 - permit generic Carrier-construction mechanics while retaining responsibility for Atom admission, identity, Revision, one-Atom storage-effect safeguards, **and** effect semantics.
-- default **to** a mutation-free dry run. accept `--apply` **only** through authorized Project-local MCP delegation with a sealed Initiative action envelope.
+- Use the Doer authorization in AN-S-2481. Apply uses the sealed MCP envelope.
 - admit any requested initial Status allowed by the Atom's applicable Role/Type Status model and transition conditions. Journal append is an independent observation attempt; its absence, incompleteness or failure neither blocks a created Atom nor authorizes replay.
 
 ## Details

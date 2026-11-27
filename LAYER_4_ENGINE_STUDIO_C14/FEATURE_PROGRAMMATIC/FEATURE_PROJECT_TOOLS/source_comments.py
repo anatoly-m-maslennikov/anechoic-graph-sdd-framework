@@ -85,7 +85,10 @@ def docker_comments(path: Path, source: str) -> list[tuple[int, int]]:
                 ranges.append((start, offset + len(line.rstrip("\r\n"))))
             elif "<<" in stripped and not stripped.startswith("#"):
                 raise ValueError(
-                    f"{path}: Dockerfile heredoc requires a syntax-aware parser"
+                    (
+                        f"{path}"
+                        ": Dockerfile heredoc requires a syntax-aware parser"
+                    )
                 )
         elif line.startswith("#"):
             ranges.append((offset, offset + len(line.rstrip("\r\n"))))
@@ -272,7 +275,12 @@ def main() -> int:
     if findings:
         print(*findings, sep="\n")
     print(
-        f"Source comments {'removed' if args.fix else 'found'}: {len(findings)}"
+        (
+            "Source comments "
+            f"{('removed' if args.fix else 'found')}"
+            ": "
+            f"{len(findings)}"
+        )
     )
     return int(bool(findings) and not args.fix)
 

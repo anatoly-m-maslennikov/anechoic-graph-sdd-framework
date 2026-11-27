@@ -49,9 +49,9 @@ def _validate(raw):
             or (name == "__init__.py" and source)
         ):
             raise ValueError("Invalid accepted Model module integrity")
-    from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.FEATURE_MODEL_VALIDATION.model_generation__pub import (
-        _validate_binding_descriptor,
-    )
+    from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.\
+        FEATURE_MODEL_VALIDATION.model_generation__pub \
+        import _validate_binding_descriptor  # fmt: skip
 
     _validate_binding_descriptor(doc, hashes)
     return raw
@@ -113,7 +113,10 @@ def _check_receipt(connection, root, stored, model, read_failed):
 def initialize(connection, root):
     root = str(Path(root))
     connection.execute(
-        "CREATE TEMP TABLE accepted_model_state (root VARCHAR, model VARCHAR, reason VARCHAR)"
+        (
+            "CREATE TEMP TABLE accepted_model_state (root VARCHAR, model "
+            "VARCHAR, reason VARCHAR)"
+        )
     )
     read_failed = False
     reason = "Accepted Model asset is missing"
@@ -134,7 +137,10 @@ def initialize(connection, root):
         )
         if not valid_receipt:
             if model is not None:
-                reason = "Accepted Model asset does not match its generation receipt"
+                reason = (
+                    "Accepted Model asset does not match its generation "
+                    "receipt"
+                )
             connection.execute("DELETE FROM ops_generation")
     if not row or not valid_receipt:
         model = None
@@ -142,10 +148,13 @@ def initialize(connection, root):
         "INSERT INTO accepted_model_state VALUES (?, ?, ?)",
         [root, model, reason],
     )
-    connection.execute("""CREATE OR REPLACE TEMP VIEW int_lifecycle_generation AS
-        SELECT g.id, accepted.model, g.structure
-        FROM main.ops_generation g
-        JOIN temp.main.accepted_model_state accepted ON g.model = sha256(accepted.model)""")
+    connection.execute(
+        "CREATE OR REPLACE TEMP VIEW int_lifecycle_generation AS\n"
+        "        SELECT g.id, accepted.model, g.structure\n"
+        "        FROM main.ops_generation g\n"
+        "        JOIN temp.main.accepted_model_state accepted "
+        "ON g.model = sha256(accepted.model)"
+    )
 
 
 def managed(connection):

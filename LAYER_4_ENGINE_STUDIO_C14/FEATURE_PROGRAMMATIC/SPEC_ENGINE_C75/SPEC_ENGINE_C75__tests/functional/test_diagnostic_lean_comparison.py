@@ -10,12 +10,24 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 ROOT = Path(__file__).resolve().parents[5]
-STUDIO = ROOT / 'LAYER_4_ENGINE_STUDIO_C14'
-FORMAL = Path('SPEC_ENGINE_C75/LAYER_2_FORMAL_SPECIFICATION_C94')
-CARRIERS = Path('_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15') / FORMAL
-SOURCE = STUDIO / 'FEATURE_PROGRAMMATIC' / FORMAL / 'LAYER_1_DIAGNOSTICS_C90/diagnostics__pub.py'
-EXPORT = SOURCE.with_name('_package__shared.py')
-CLI = 'ARCHITECTURE_ANALYSIS_C73.IMPLEMENTATION_VERIFICATION_C74.carrier_compare'
+STUDIO = ROOT / "LAYER_4_ENGINE_STUDIO_C14"
+FORMAL = Path("SPEC_ENGINE_C75/LAYER_2_FORMAL_SPECIFICATION_C94")
+CARRIERS = (
+    Path(
+        "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15"
+    )
+    / FORMAL
+)
+SOURCE = (
+    STUDIO
+    / "FEATURE_PROGRAMMATIC"
+    / FORMAL
+    / "LAYER_1_DIAGNOSTICS_C90/diagnostics__pub.py"
+)
+EXPORT = SOURCE.with_name("_package__shared.py")
+CLI = (
+    "ARCHITECTURE_ANALYSIS_C73.IMPLEMENTATION_VERIFICATION_C74.carrier_compare"
+)
 PINS = {
     'manifest': {
         'path': (CARRIERS / '01_TIER_1_ARCHITECTURE/AN-S-4937-SPEC-COMPONENT_MANIFEST--declare-diagnostics.md').as_posix(),
@@ -64,9 +76,10 @@ def _stage(root, pins, source):
 class DiagnosticLeanComparisonTests(unittest.TestCase):
     def test_shared_verdict_matches_policy_for_any_status_list(self):
         pins, source = _pinned_specs(), SOURCE.read_bytes()
-        original = b"return ('conflicting' if 'conflicting' in statuses else"
-        mutated = (b"return ('unresolved' if 'unresolved' in statuses else\n"
-                   b"            " + original.removeprefix(b'return ('))
+        original = b'return (\n        "conflicting"'
+        mutated = (b'return (\n        "unresolved"\n'
+                   b'        if "unresolved" in statuses\n'
+                   b'        else "conflicting"')
         self.assertEqual(1, source.count(original))
         changed = source.replace(original, mutated)
         with TemporaryDirectory() as directory:
@@ -137,8 +150,8 @@ class DiagnosticLeanComparisonTests(unittest.TestCase):
     def test_cli_checks_declared_values_and_detects_wrong_field(self):
         pins = _pinned_specs()
         source = SOURCE.read_bytes()
-        self.assertEqual(source.count(b"'message': message"), 1)
-        mutant = source.replace(b"'message': message", b"'message': field")
+        self.assertEqual(source.count(b'"message": message'), 1)
+        mutant = source.replace(b'"message": message', b'"message": field')
         with TemporaryDirectory() as directory:
             folder = Path(directory)
             request_path = folder / 'pins.json'
@@ -168,9 +181,10 @@ class DiagnosticLeanComparisonTests(unittest.TestCase):
                               if row['implementation'] == 'conflicting'],
                              [(['result_returned', 'message'], 'matched')])
 
-            fields = b"'source': source, 'field': field"
+            fields = b'"source": source, "field": field'
             self.assertEqual(source.count(fields), 1)
-            reordered = source.replace(fields, b"'field': field, 'source': source")
+            reordered = source.replace(
+                fields, b'"field": field, "source": source')
             root = folder / 'reordered'
             _stage(root, pins, reordered)
             status, report = _compare(pins, reordered, root, request_path)
@@ -203,8 +217,10 @@ class DiagnosticLeanComparisonTests(unittest.TestCase):
     def test_finding_proof_checks_inputs_outside_the_string_witness(self):
         pins = _pinned_specs()
         source = SOURCE.read_bytes()
-        self.assertEqual(source.count(b"'message': message"), 1)
-        mutant = source.replace(b"'message': message", b"'message': field if message == 'other' else message")
+        self.assertEqual(source.count(b'"message": message'), 1)
+        mutant = source.replace(
+            b'"message": message',
+            b'"message": field if message == "other" else message')
         with TemporaryDirectory() as directory:
             root = Path(directory)
             _stage(root, pins, mutant)
@@ -271,7 +287,9 @@ class DiagnosticLeanComparisonTests(unittest.TestCase):
             _stage(root, pins, source)
             path = root / pins['solution']['path']
             original = path.read_bytes()
-            changed = original.replace(b"'same_as': {", b"'same_as': {'unreturned_field': 'source', ")
+            changed = original.replace(
+                b"'same_as': {", b"'same_as': {'unreturned_field': 'source', "
+            )
             self.assertNotEqual(original, changed)
             path.write_bytes(changed)
             pins['solution']['sha256'] = hashlib.sha256(changed).hexdigest()

@@ -109,9 +109,16 @@ class ImageError(RuntimeError):
     def __init__(self, code: str, message: str | None = None):
         self.code = code
         defaults = {
-            "IMAGE_INPUT_UNAVAILABLE": "Supply a readable --source-root Framework build closure",
-            "IMAGE_REFUSED": "A matching immutable runtime image could not be admitted",
-            "BUILD_FAILED": "Runtime image build did not produce an admitted immutable image",
+            "IMAGE_INPUT_UNAVAILABLE": (
+                "Supply a readable --source-root Framework build closure"
+            ),
+            "IMAGE_REFUSED": (
+                "A matching immutable runtime image could not be admitted"
+            ),
+            "BUILD_FAILED": (
+                "Runtime image build did not produce an admitted immutable "
+                "image"
+            ),
         }
         super().__init__(
             message or defaults.get(code, "Runtime image operation failed")

@@ -10,8 +10,15 @@ import unittest
 
 from . import launcher_images_test_support as fixtures
 
-from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import ImageBuildProvenance  # noqa: E402
-from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import FINGERPRINT_LABEL, SCHEMA_LABEL, ImageError, ImageManager  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import (  # noqa: E402
+    ImageBuildProvenance,
+)
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import (  # noqa: E402
+    FINGERPRINT_LABEL,
+    SCHEMA_LABEL,
+    ImageError,
+    ImageManager,
+)
 
 
 def _display_tag_executor(executor):
@@ -23,17 +30,24 @@ def _display_tag_executor(executor):
             tagged.add(command[-1])
             sources[command[-1]] = command[-2]
             return subprocess.CompletedProcess(argv, 0, "", "")
-        if command[:3] == ("docker", "image", "inspect") and command[-1].startswith("anechoic-runtime:"):
+        if command[:3] == ("docker", "image", "inspect") and command[
+            -1
+        ].startswith("anechoic-runtime:"):
             tag = command[-1]
             if tag not in tagged:
                 return subprocess.CompletedProcess(argv, 1, "", "")
             value = json.loads(inspections[sources[tag]])
             value[0]["RepoTags"] = [tag]
             return subprocess.CompletedProcess(argv, 0, json.dumps(value), "")
-        if command[:3] == ("docker", "image", "ls") and command[-1].startswith("anechoic-runtime:"):
+        if command[:3] == ("docker", "image", "ls") and command[-1].startswith(
+            "anechoic-runtime:"
+        ):
             return subprocess.CompletedProcess(argv, 0, "", "")
         result = executor(argv, **kwargs)
-        if command[:3] == ("docker", "image", "inspect") and result.returncode == 0:
+        if (
+            command[:3] == ("docker", "image", "inspect")
+            and result.returncode == 0
+        ):
             inspections[command[-1]] = result.stdout
         return result
 
@@ -53,7 +67,9 @@ class ImageProvenanceTests(fixtures.ImageFixture, unittest.TestCase):
             "d" * 40,
         )
 
-    def test_provenance_rejects_incomplete_ids_and_unsafe_owner_paths(self) -> None:
+    def test_provenance_rejects_incomplete_ids_and_unsafe_owner_paths(
+        self,
+    ) -> None:
         for changes in (
             {"head_commit": "short"},
             {"project_id": "short"},
@@ -66,7 +82,9 @@ class ImageProvenanceTests(fixtures.ImageFixture, unittest.TestCase):
 
     def test_visible_control_root_is_valid_provenance(self) -> None:
         owner = replace(self.owner, control_root="_anechoic_project")
-        self.assertEqual(owner.labels()["org.anechoic.control_root"], "_anechoic_project")
+        self.assertEqual(
+            owner.labels()["org.anechoic.control_root"], "_anechoic_project"
+        )
         with self.assertRaises(ValueError):
             replace(self.owner, control_root="_anechoic_")
 
@@ -74,7 +92,9 @@ class ImageProvenanceTests(fixtures.ImageFixture, unittest.TestCase):
         labels: dict[str, str] = {}
         calls: list[list[str]] = []
 
-        def executor(argv: list[str], **kwargs: object) -> subprocess.CompletedProcess[str]:
+        def executor(
+            argv: list[str], **kwargs: object
+        ) -> subprocess.CompletedProcess[str]:
             calls.append(argv)
             if "ls" in argv:
                 return subprocess.CompletedProcess(argv, 0, "", "")
@@ -108,17 +128,24 @@ class ImageProvenanceTests(fixtures.ImageFixture, unittest.TestCase):
             project_root=fixtures.APP.parents[2],
         )
         self.assertEqual(manager.resolve(), fixtures.IMAGE_ID)
-        self.assertEqual({key: labels[key] for key in self.owner.labels()}, self.owner.labels())
+        self.assertEqual(
+            {key: labels[key] for key in self.owner.labels()},
+            self.owner.labels(),
+        )
         plain = ImageManager(self.source, platform="linux/amd64", project_root=fixtures.APP.parents[2])
         self.assertEqual(manager.identity(), plain.identity())
         self.assertEqual(sum("build" in call for call in calls), 1)
 
-    def test_cached_unlabelled_and_foreign_images_are_reused_without_claiming_owner(self) -> None:
+    def test_cached_unlabelled_and_foreign_images_are_reused_without_claiming_owner(
+        self,
+    ) -> None:
         for metadata in ({}, {"org.anechoic.project": "f" * 64}):
             with self.subTest(metadata=metadata):
                 calls: list[list[str]] = []
                 manager = ImageManager(
-                    self.source, platform="linux/amd64", build_provenance=self.owner,
+                    self.source,
+                    platform="linux/amd64",
+                    build_provenance=self.owner,
                     project_root=fixtures.APP.parents[2],
                 )
                 labels = {
@@ -128,7 +155,9 @@ class ImageProvenanceTests(fixtures.ImageFixture, unittest.TestCase):
                     **metadata,
                 }
 
-                def executor(argv: list[str], **kwargs: object) -> subprocess.CompletedProcess[str]:
+                def executor(
+                    argv: list[str], **kwargs: object
+                ) -> subprocess.CompletedProcess[str]:
                     calls.append(argv)
                     output = (
                         fixtures.IMAGE_ID
@@ -156,7 +185,9 @@ class ImageProvenanceTests(fixtures.ImageFixture, unittest.TestCase):
     def test_fresh_build_with_missing_provenance_label_is_refused(self) -> None:
         labels: dict[str, str] = {}
 
-        def executor(argv: list[str], **kwargs: object) -> subprocess.CompletedProcess[str]:
+        def executor(
+            argv: list[str], **kwargs: object
+        ) -> subprocess.CompletedProcess[str]:
             if "ls" in argv:
                 return subprocess.CompletedProcess(argv, 0, "", "")
             if "build" in argv:

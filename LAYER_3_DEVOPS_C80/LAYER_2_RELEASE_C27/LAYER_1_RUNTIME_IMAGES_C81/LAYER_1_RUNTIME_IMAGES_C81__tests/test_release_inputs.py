@@ -22,19 +22,26 @@ class ReleaseInputsTests(unittest.TestCase):
         folder.mkdir(exist_ok=True)
         path = folder / "AN-S-001-PROJECT_MANIFEST--declare.md"
         header = (
-            "atom_family: SPEC\natom_id: AN-S-001\ncontainer:\n  component: C00\ntier: -1\n"
+            "atom_family: SPEC\natom_id: AN-S-001\n"
+            "container:\n  component: C00\ntier: -1\n"
             "context:\n  template: project_manifest\n"
             if flat
-            else "identity:\n  atom_id: AN-S-001\ncontext:\n  container:\n    component: C00\n"
+            else "identity:\n  atom_id: AN-S-001\n"
+            "context:\n  container:\n    component: C00\n"
             "  tier: -1\n  template: project_manifest\n"
         )
+        manifest_parameters = parameters or {
+            "project_mcp": {"http_port": 56317}
+        }
         path.write_text(
             f"---\n{header}state:\n  status: active\n  version: 1\n---\n"
             "## Claim\n\n### Formal Claim\n\n```python\n"
             "from anechoic.formal_claims import declare_entity\n"
             "from anechoic.model import ProjectManifest\n"
-            "declare_entity(entity_name='Project Manifest', instance=ProjectManifest("
-            f"name='Anechoic', prefix='AN', parameters={parameters or {'project_mcp': {'http_port': 56317}}!r}))\n"
+            "declare_entity(entity_name='Project Manifest', "
+            "instance=ProjectManifest("
+            f"name='Anechoic', prefix='AN', "
+            f"parameters={manifest_parameters!r}))\n"
             "```\n",
             encoding="utf-8",
         )
@@ -118,14 +125,50 @@ class ReleaseInputsTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             release_inputs.read_release_selection(self.root)
 
+    def test_direct_root_formal_manifest_and_guardrails(self):
+        old = self.manifest()
+        path = self.root / old.name
+        header = old.read_text().split("## Claim", 1)[0]
+        declaration = (
+            "from anechoic.model import ComponentManifest\n"
+            "ComponentManifest(name='Anechoic', prefix='AN', "
+            "lens_whitelist=['architecture'], "
+            "parameters={'project_mcp': {'http_port': 56317}})\n"
+        )
+        for info in ("python", "python anechoic-edsl"):
+            with self.subTest(info=info):
+                body = (
+                    f"## Formal Manifest\n\n```{info}\n{declaration}```\n"
+                )
+                path.write_text(header + body)
+                selected = release_inputs.read_release_selection(self.root)
+                self.assertEqual(
+                    56317, selected.parameters["project_mcp"]["http_port"]
+                )
+
+        invalid = (
+            declaration.replace("56317", "__import__('os').system('false')"),
+            declaration.replace("prefix='AN'", "prefix='AN', prefix='AN'"),
+            declaration.replace("ComponentManifest\n", "ComponentManifest as M\n"),
+            declaration + "print('unexpected')\n",
+        )
+        for source in invalid:
+            with self.subTest(source=source):
+                path.write_text(
+                    header + f"## Formal Manifest\n```python\n{source}```\n"
+                )
+                with self.assertRaises(ValueError):
+                    release_inputs.read_release_selection(self.root)
+        path.write_text(header + body + body)
+        with self.assertRaises(ValueError):
+            release_inputs.read_release_selection(self.root)
+
     def test_real_project_manifest(self):
         root = Path(__file__).resolve().parents[4]
         selected = release_inputs.read_release_selection(root)
         self.assertEqual("Anechoic", selected.project_name)
         self.assertEqual("AN", selected.project_prefix)
-        port = selected.parameters["project_mcp"]["http_port"]
-        self.assertIs(type(port), int)
-        self.assertTrue(1 <= port <= 65535, port)
+        self.assertNotIn("http_port", selected.parameters.get("project_mcp", {}))
 
     def test_release_port_is_left_for_the_callers_existing_validation(self):
         for value in (False, 0, 65536, "56317"):

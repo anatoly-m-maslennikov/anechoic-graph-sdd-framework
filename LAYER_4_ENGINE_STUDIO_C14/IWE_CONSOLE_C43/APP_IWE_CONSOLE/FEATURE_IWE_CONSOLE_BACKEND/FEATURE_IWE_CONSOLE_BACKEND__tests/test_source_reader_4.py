@@ -22,7 +22,9 @@ from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.FEATURE_IWE_CON
 
 
 class SourceReaderTests(SourceReaderFixture, unittest.TestCase):
-    def test_mixed_frontmatter_line_endings_preserve_the_exact_body(self) -> None:
+    def test_mixed_frontmatter_line_endings_preserve_the_exact_body(
+        self,
+    ) -> None:
         path = self._path("MAIN", "04_requirement", "mixed.md")
         body = b"# Summary\r\n\r\nMixed body.\r\n"
         path.write_bytes(
@@ -32,8 +34,7 @@ class SourceReaderTests(SourceReaderFixture, unittest.TestCase):
             b"form: Definition\n"
             b"status: Active\r\n"
             b"version: 1\n"
-            b"---\r\n"
-            + body
+            b"---\r\n" + body
         )
 
         atoms, _scopes, stderr = self._capture()
@@ -45,7 +46,9 @@ class SourceReaderTests(SourceReaderFixture, unittest.TestCase):
         self.assertEqual(source_markdown(row), body.decode("utf-8"))
 
 
-    def test_unreadable_matching_atom_is_reported_even_in_another_role_folder(self) -> None:
+    def test_unreadable_matching_atom_is_reported_even_in_another_role_folder(
+        self,
+    ) -> None:
         proof_copy = self._write_atom(
             "MAIN", "02_analysis", "CA-R-703-proof-copy.md", atom_id="CA-R-703"
         )
@@ -57,11 +60,17 @@ class SourceReaderTests(SourceReaderFixture, unittest.TestCase):
             return original_read(context, path, **kwargs)
 
         stderr = StringIO()
-        with patch.object(ReadContext, "read", new=fail_proof_copy), redirect_stderr(stderr):
+        with (
+            patch.object(ReadContext, "read", new=fail_proof_copy),
+            redirect_stderr(stderr),
+        ):
             atoms, _scopes = self.reader.capture()
 
         self.assertIn("proof copy unavailable", stderr.getvalue())
-        self.assertNotIn(proof_copy.relative_to(self.root).as_posix(), {row["source_path"] for row in atoms})
+        self.assertNotIn(
+            proof_copy.relative_to(self.root).as_posix(),
+            {row["source_path"] for row in atoms},
+        )
         self.assertEqual(self.reader.excluded_count, 1)
 
 
@@ -83,32 +92,49 @@ class SourceReaderTests(SourceReaderFixture, unittest.TestCase):
         self.assertEqual(self.reader.excluded_count, 0)
 
 
-    def test_explicit_control_root_uses_uppercase_configured_project_prefix(self) -> None:
-        source = self._write_atom("MAIN", "04_requirement", "explicit.md", atom_id="CA-R-501")
+    def test_explicit_control_root_uses_uppercase_configured_project_prefix(
+        self,
+    ) -> None:
+        source = self._write_atom(
+            "MAIN", "04_requirement", "explicit.md", atom_id="CA-R-501"
+        )
         settings = self.control / "anechoic_project_settings.toml"
-        settings.write_text(settings.read_text().replace('project_prefix = "CA"', 'project_prefix = "demo"'))
+        settings.write_text(
+            settings.read_text().replace(
+                'project_prefix = "CA"', 'project_prefix = "demo"'
+            )
+        )
         source = source.rename(source.with_name("demo-R-explicit.md"))
 
         reader = SourceReader(self.root, self.control)
         atoms, scopes = reader.capture()
 
-        self.assertIn(source.relative_to(self.root).as_posix(), {row["source_path"] for row in atoms})
+        self.assertIn(
+            source.relative_to(self.root).as_posix(),
+            {row["source_path"] for row in atoms},
+        )
         self.assertEqual(len(scopes), len(self.declarations))
         self.assertEqual("DEMO-SU-00", scopes[0]["scope_unit_id"])
         self.assertEqual("fixture", scopes[0]["name"])
 
 
     def test_project_scope_id_requires_configured_prefix(self) -> None:
-        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import ProjectSettingsValueError
+        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+            ProjectSettingsValueError,
+        )
 
         (self.control / "anechoic_project_settings.toml").unlink()
-        with self.assertRaisesRegex(ProjectSettingsValueError, "current Project Settings") as raised:
+        with self.assertRaisesRegex(
+            ProjectSettingsValueError, "current Project Settings"
+        ) as raised:
             SourceReader(self.root, self.control).capture()
         self.assertEqual("project-settings-unavailable", raised.exception.code)
 
 
     def test_move_remove_and_capture_do_not_write_sources(self) -> None:
-        source = self._write_atom("MAIN", "07_delivery", "moving.md", atom_id="CA-R-430")
+        source = self._write_atom(
+            "MAIN", "07_delivery", "moving.md", atom_id="CA-R-430"
+        )
         before = self._snapshot_files()
         atoms, _scopes, stderr = self._capture()
         self.assertEqual(stderr, "")
@@ -128,19 +154,33 @@ class SourceReaderTests(SourceReaderFixture, unittest.TestCase):
         self.assertEqual(stderr, "")
         self.assertNotIn("CA-R-430", {row["id"] for row in atoms})
         self.assertEqual(
-            {path: content for path, content in self._snapshot_files().items() if path != destination},
-            {path: content for path, content in before.items() if path != source},
+            {
+                path: content
+                for path, content in self._snapshot_files().items()
+                if path != destination
+            },
+            {
+                path: content
+                for path, content in before.items()
+                if path != source
+            },
         )
 
 
     def test_watcher_changes_update_only_affected_sources(self) -> None:
-        source = self._write_atom("MAIN", "07_delivery", "changing.md", atom_id="CA-R-440")
+        source = self._write_atom(
+            "MAIN", "07_delivery", "changing.md", atom_id="CA-R-440"
+        )
         self._capture()
         source.write_text(
-            source.read_text(encoding="utf-8").replace("version: 1", "version: 2"),
+            source.read_text(encoding="utf-8").replace(
+                "version: 1", "version: 2"
+            ),
             encoding="utf-8",
         )
-        created = self._write_atom("MAIN", "07_delivery", "created.md", atom_id="CA-R-441")
+        created = self._write_atom(
+            "MAIN", "07_delivery", "created.md", atom_id="CA-R-441"
+        )
         renamed = self._path("MAIN", "09_operations", "renamed.md")
 
         with (
@@ -175,31 +215,52 @@ class SourceReaderTests(SourceReaderFixture, unittest.TestCase):
         inventory.assert_not_called()
 
 
-    def test_incremental_capture_marks_only_effective_source_changes(self) -> None:
-        source = self._write_atom("MAIN", "04_requirement", "stable.md", atom_id="CA-R-442")
+    def test_incremental_capture_marks_only_effective_source_changes(
+        self,
+    ) -> None:
+        source = self._write_atom(
+            "MAIN", "04_requirement", "stable.md", atom_id="CA-R-442"
+        )
         self._capture()
 
-        self.reader.capture([{
-            "operation": "update", "old_path": None,
-            "new_path": "unrelated.txt",
-        }])
+        self.reader.capture(
+            [
+                {
+                    "operation": "update",
+                    "old_path": None,
+                    "new_path": "unrelated.txt",
+                }
+            ]
+        )
         self.assertFalse(self.reader.capture_changed)
 
         source.write_text(
-            source.read_text(encoding="utf-8").replace("Fixture source.", "Changed source."),
+            source.read_text(encoding="utf-8").replace(
+                "Fixture source.", "Changed source."
+            ),
             encoding="utf-8",
         )
-        self.reader.capture([{
-            "operation": "update", "old_path": None,
-            "new_path": source.relative_to(self.root).as_posix(),
-        }])
+        self.reader.capture(
+            [
+                {
+                    "operation": "update",
+                    "old_path": None,
+                    "new_path": source.relative_to(self.root).as_posix(),
+                }
+            ]
+        )
         self.assertTrue(self.reader.capture_changed)
 
         source.unlink()
-        self.reader.capture([{
-            "operation": "remove",
-            "old_path": source.relative_to(self.root).as_posix(), "new_path": None,
-        }])
+        self.reader.capture(
+            [
+                {
+                    "operation": "remove",
+                    "old_path": source.relative_to(self.root).as_posix(),
+                    "new_path": None,
+                }
+            ]
+        )
         self.assertTrue(self.reader.capture_changed)
 
 

@@ -6,7 +6,10 @@ import unittest
 
 
 from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.FEATURE_IWE_CONSOLE_BACKEND__tests import test_source_reader as fixtures
-from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import DeclarationSource, compile_content_schema
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (
+    DeclarationSource,
+    compile_content_schema,
+)
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import RelationRegistry
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import _atom_facts
 from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.FEATURE_IWE_CONSOLE_BACKEND__shared import SourceReader
@@ -21,8 +24,21 @@ class StatusGroupTests(unittest.TestCase):
         fixture = fixtures.SourceReaderTests()
         fixture.setUp()
         self.addCleanup(fixture.doCleanups)
-        current = fixture._write_atom('MAIN', '04_requirement', 'current.md', atom_id='CA-R-820', status='Active')
-        history = fixture._write_atom('MAIN', '04_requirement', 'history.md', atom_id='CA-R-821', status='Active', parts=('099_archived',))
+        current = fixture._write_atom(
+            "MAIN",
+            "04_requirement",
+            "current.md",
+            atom_id="CA-R-820",
+            status="Active",
+        )
+        history = fixture._write_atom(
+            "MAIN",
+            "04_requirement",
+            "history.md",
+            atom_id="CA-R-821",
+            status="Active",
+            parts=("099_archived",),
+        )
         fixture._write_atom('MAIN', '04_requirement', 'drafted.md', atom_id='CA-R-822', status='Active', version=2, parts=('000_draft',))
         fixture._write_atom('MAIN', '04_requirement', 'projection.md', atom_id='CA-R-823', status='Active', parts=('_projection',))
         fixture._write_atom('MAIN', '04_requirement', 'done.md', atom_id='CA-R-824', status='Active', parts=('020_done',))
@@ -34,7 +50,10 @@ class StatusGroupTests(unittest.TestCase):
         self.assertEqual('Current', by_id['CA-R-823']['status_group'])
         self.assertNotIn('CA-R-825', by_id)
         self.assertEqual('Current', by_id['CA-R-824']['status_group'])
-        self.assertEqual(('Draft', 'CA-R-822@2-draft'), (by_id['CA-R-822']['status_group'], by_id['CA-R-822']['ref']))
+        self.assertEqual(
+            ("Draft", "CA-R-822@2-draft"),
+            (by_id["CA-R-822"]["status_group"], by_id["CA-R-822"]["ref"]),
+        )
         moved = history.parent.parent / history.name
         history.rename(moved)
         rows, _ = reader.capture([{'operation': 'move', 'old_path': history.relative_to(fixture.root).as_posix(), 'new_path': moved.relative_to(fixture.root).as_posix()}])
@@ -52,7 +71,9 @@ classify(
 )
 ''')
         source = DeclarationSource('CA-R-1539', 1, 'status.md')
-        groups = compile_status_groups([(declaration, source) for declaration in declarations])
+        groups = compile_status_groups(
+            [(declaration, source) for declaration in declarations]
+        )
         self.assertEqual((("Plan", "Backlog", "Backlog"),), groups)
         with tempfile.TemporaryDirectory() as directory:
             asset = Path(directory) / 'schema.json'
@@ -69,7 +90,9 @@ classify(
         path_draft = fixture._write_atom('MAIN', '03_plan', 'path-draft.md', atom_id='CA-P-813', status='Backlog', form='Plan', version=2, parts=('draft',))
         archived = fixture._write_atom('MAIN', '03_plan', 'archived.md', atom_id='CA-P-814', status='Archived', form='Plan')
         for path in (backlog, active, draft, path_draft, archived):
-            path.write_text(path.read_text().replace('role: "Requirement"', 'role: "Plan"'))
+            path.write_text(
+                path.read_text().replace('role: "Requirement"', 'role: "Plan"')
+            )
         reader = SourceReader(fixture.root, status_groups=groups, include_archived=False)
         rows, _ = reader.capture()
         rows = {row['id']: row for row in rows}

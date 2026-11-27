@@ -61,7 +61,9 @@ class NativeProjectionTests(unittest.TestCase):
                    "CONTRIBUTES_TO": "RECEIVES_CONTRIBUTION_FROM",
                    "RECEIVES_CONTRIBUTION_FROM": "CONTRIBUTES_TO"}
         capture = NativeCapture([row], [], {})
-        projected = native_projection._projected_rows(capture, set(inverse), inverse)[0]
+        projected = native_projection._projected_rows(
+            capture, set(inverse), inverse
+        )[0]
         edges = projected["relation_edges_json"]
         self.assertEqual(8, len(edges))
         self.assertEqual({("SERVES", "AN-S-2@3-draft"), ("IS_SERVED_BY", "AN-S-3"),
@@ -177,9 +179,13 @@ class NativeProjectionTests(unittest.TestCase):
 
     def test_summary_projection_and_retained_upgrade(self):
         duplicate = self.write("AN-T-09--task.md", "AN-T-09", "active", 1)
-        duplicate.write_text(duplicate.read_text() + "\n## Summary\n\nSecond\n")
+        duplicate.write_text(
+            duplicate.read_text() + "\n## Summary\n\nSecond\n"
+        )
         missing = self.write("AN-T-10--task.md", "AN-T-10", "active", 1)
-        missing.write_text(missing.read_text().replace("## Summary", "## Details"))
+        missing.write_text(
+            missing.read_text().replace("## Summary", "## Details")
+        )
         seed = self.write("AN-S-002-SPEC-COMPONENT_SEED_MANIFEST--model-host.md", "AN-S-002", "active", 1)
         header = yaml.safe_load(seed.read_text().split("---\n")[1])
         header["context"]["template"] = "component_seed_manifest"
@@ -191,14 +197,20 @@ class NativeProjectionTests(unittest.TestCase):
         capture = capture_native(self.selection)
         bindings = dict(relation_types={"CONTAINED_BY", "CONTAINS"}, inverses={"CONTAINED_BY": "CONTAINS"})
         project_native(store, capture, **bindings)
-        query = 'SELECT reference, "content.summary" FROM atoms ORDER BY reference'
+        query = (
+            'SELECT reference, "content.summary" FROM atoms ORDER BY reference'
+        )
         expected = [["AN-S-001", "Example"], ["AN-S-002", "Model Host"],
                     ["AN-T-09", "Example"], ["AN-T-10", None]]
         self.assertEqual(expected, store.run(query)["rows"])
         retired = ("native_legacy_references", "native_migration_paths")
         for table in retired:
-            store._connection.execute(f"CREATE TABLE main.{table} (exact_ref VARCHAR)")
-        store._connection.execute("UPDATE internal.native_frontier SET frontier = 'v4'")
+            store._connection.execute(
+                f"CREATE TABLE main.{table} (exact_ref VARCHAR)"
+            )
+        store._connection.execute(
+            "UPDATE internal.native_frontier SET frontier = 'v4'"
+        )
         project_native(store, capture, use_retained=True, **bindings)
         self.assertEqual(expected, store.run(query)["rows"])
         self.assertTrue(all(table not in store.schema()["tables"] for table in retired))

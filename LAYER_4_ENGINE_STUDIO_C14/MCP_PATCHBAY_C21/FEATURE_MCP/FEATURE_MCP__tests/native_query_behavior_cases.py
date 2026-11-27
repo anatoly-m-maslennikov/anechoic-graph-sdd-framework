@@ -100,29 +100,39 @@ class NativeQueryBehaviorCases:
             "atom_schema_issues", "atom_declared_carrier_issues", "atom_physical_carrier_issues",
             "atom_duplicate_revision_issues", "boundary_declarations", "code_access_findings", "state_effect_findings",
         }, set(tables))
-        small = await client.call_tool("query_run", {"sql": "SELECT 0 AS n FROM range(120)"})
+        small = await client.call_tool(
+            "query_run", {"sql": "SELECT 0 AS n FROM range(120)"}
+        )
         self.assertFalse(small.is_error, small.structured_content)
         self.assertEqual([[0]] * 120, small.structured_content["rows"])
         self.assertEqual(120, small.structured_content["row_count"])
         self.assertLessEqual(len(small.content[0].text.encode("utf-8")), 4096)
-        large = await client.call_tool("query_run", {"sql": "SELECT repeat('a', 4096) AS payload"})
+        large = await client.call_tool(
+            "query_run", {"sql": "SELECT repeat('a', 4096) AS payload"}
+        )
         self.assertFalse(large.is_error, large.structured_content)
         file = large.structured_content["result_file"]
         self.assertEqual("json_matrix", file["format"])
         self.assertEqual([["a" * 4096]], json.loads((self.root / file["path"]).read_text())["rows"])
-        csv = await client.call_tool("query_run", {"sql": "SELECT 1 AS n", "result_format": "csv"})
+        csv = await client.call_tool(
+            "query_run", {"sql": "SELECT 1 AS n", "result_format": "csv"}
+        )
         self.assertFalse(csv.is_error, csv.structured_content)
         self.assertEqual('"n"\r\n"1"\r\n', csv.content[0].text)
 
 
     async def _check_atom_templates(self, client):
-        current = await self._tree_template(client, "get_atom", reference="AN-T-009")
+        current = await self._tree_template(
+            client, "get_atom", reference="AN-T-009"
+        )
         self.assertEqual(["exact_ref", "summary", "status", "path"], [column["name"] for column in current["columns"]])
         self.assertEqual([[
             "AN-T-009@2", "Verify the operator's runtime.", "active",
             f"{CONTROL}/001_TICKETS/TASKS/AN-T-009-TASK--verify-runtime.md",
         ]], current["rows"])
-        exact = await self._tree_template(client, "get_atom", reference="AN-T-009@1")
+        exact = await self._tree_template(
+            client, "get_atom", reference="AN-T-009@1"
+        )
         self.assertEqual("AN-T-009@1", exact["rows"][0][0])
         state = await self._tree_template(client, "get_atom_state", reference="AN-T-009")
         self.assertEqual(["status", "version"], [column["name"] for column in state["columns"]])

@@ -4,9 +4,9 @@ _CONFIGURATION_LIMIT = 10_000
 
 
 def _advance(expect, bindings):
-    detail = expect.get('detail', {})
+    detail = expect.get("detail", {})
     values = {}
-    for key, alias in expect.get('same_as', {}).items():
+    for key, alias in expect.get("same_as", {}).items():
         if alias not in bindings:
             return None
         value = bindings[alias]
@@ -18,7 +18,7 @@ def _advance(expect, bindings):
             return False
         values[key] = value
     updated = dict(bindings)
-    for alias, key in expect.get('bind', {}).items():
+    for alias, key in expect.get("bind", {}).items():
         value = values.get(key, detail.get(key))
         if not isinstance(value, str):
             return None
@@ -30,19 +30,19 @@ def _advance(expect, bindings):
 
 def feasible_terminals(claim):
     """Return unresolved for unknown bindings or more than the supported state space."""
-    states = {state['name']: state for state in claim['states']}
-    queue = [(claim['initial'], ())]
+    states = {state["name"]: state for state in claim["states"]}
+    queue = [(claim["initial"], ())]
     seen = set(queue)
     terminals = set()
     for name, bindings in queue:
-        for index, edge in enumerate(states[name]['transitions']):
-            updated = _advance(edge['expect'], dict(bindings))
+        for index, edge in enumerate(states[name]["transitions"]):
+            updated = _advance(edge["expect"], dict(bindings))
             if updated is None:
                 return None
             if updated is False:
                 continue
-            target = edge['target']
-            if states[target]['final']:
+            target = edge["target"]
+            if states[target]["final"]:
                 terminals.add((name, index))
             item = (target, tuple(sorted(updated.items())))
             if item not in seen:

@@ -93,16 +93,46 @@ class LifecycleRouteSupport:
         )
 
     def _grid_ticket_transition_supported(self, case):
-        template = case['template']
-        source = case.get('source_status', 'in_queue')
-        target = case.get('target_status', 'resolved' if template in {'problem', 'question', 'code_spec_mismatch', 'opportunity'} else 'done')
-        if template in {'task', 'epic'}:
-            return (source == 'backlog' and target == 'in_queue' or
-                    source in {'in_queue', 'active'} and target in {'done', 'canceled'} or
-                    source == 'active' and target == 'in_queue')
-        if template in {'problem', 'question', 'code_spec_mismatch', 'opportunity'}:
-            return (source == 'backlog' and target == 'in_queue' or
-                    source in {'in_queue', 'active'} and target in {'resolved', 'canceled'} or
-                    source == 'active' and target == 'in_queue')
-        return (template in {'analysis_report', 'work_report', 'work_log', 'spec_proposal'}
-                and (target == 'done' or not case['contained'] and source == 'in_queue' and target == 'complete'))
+        template = case["template"]
+        source = case.get("source_status", "in_queue")
+        target = case.get(
+            "target_status",
+            "resolved"
+            if template
+            in {"problem", "question", "code_spec_mismatch", "opportunity"}
+            else "done",
+        )
+        if template in {"task", "epic"}:
+            return (
+                source == "backlog"
+                and target == "in_queue"
+                or source in {"in_queue", "active"}
+                and target in {"done", "canceled"}
+                or source == "active"
+                and target == "in_queue"
+            )
+        if template in {
+            "problem",
+            "question",
+            "code_spec_mismatch",
+            "opportunity",
+        }:
+            return (
+                source == "backlog"
+                and target == "in_queue"
+                or source in {"in_queue", "active"}
+                and target in {"resolved", "canceled"}
+                or source == "active"
+                and target == "in_queue"
+            )
+        return template in {
+            "analysis_report",
+            "work_report",
+            "work_log",
+            "spec_proposal",
+        } and (
+            target == "done"
+            or not case["contained"]
+            and source == "in_queue"
+            and target == "complete"
+        )

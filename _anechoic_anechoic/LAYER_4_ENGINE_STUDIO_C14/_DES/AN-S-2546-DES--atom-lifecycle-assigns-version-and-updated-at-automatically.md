@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-2546
+concern:
+  subject: "State"
+  path: "Model/Graph/Node//Artifact//SSOT//Prescribed/Content/Atom.Header"
+  relation: "is_property_of"
 container:
   component: C14
 tier: 3
@@ -8,8 +12,8 @@ context:
   lens: DES
 state:
   status: active
-  version: 1
-  updated_at: '2026-11-13T20:27:53.588756+00:00'
+  version: 4
+  updated_at: "2026-11-27T16:29:34.309627+00:00"
 ---
 ## Summary
 
@@ -19,6 +23,5 @@ Atom lifecycle assigns Version and Updated At automatically
 
 ### Prose Claim
 
-When a lifecycle operation creates a new Atom Version, the runtime assigns both Version and Updated At. Use Version 1 for a new Atom ID. For an existing ID, use one more than the highest Version across its Current, Draft and Archived carriers. Set Updated At to the creation time.
-
-Promotion keeps the Draft’s Version and Updated At. The Draft Version may skip numbers and must be greater than the published predecessor’s Version.
+Apply AN-S-1604 at the selected Project's lifecycle boundary using its
+exact Current, Draft, and Archived revision evidence.

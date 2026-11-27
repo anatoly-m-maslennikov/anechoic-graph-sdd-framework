@@ -17,10 +17,22 @@ PROGRAMMATIC = Path(__file__).resolve().parents[2]
 
 
 class NativeModelLintTests(unittest.TestCase):
-    def lint(self, source, *, addresses=("Atom", "Atom.Content", "Scope Unit", "Carrier"),
-             relations=("IS_PROPERTY_OF", "IS_CONTAINED_BY"), bindings=None):
-        return lint_python_model_claim(source, declared_addresses=addresses, relation_names=relations,
-                                       path="atom.md", first_line=10, python_class_bindings=bindings)
+    def lint(
+        self,
+        source,
+        *,
+        addresses=("Atom", "Atom.Content", "Scope Unit", "Carrier"),
+        relations=("IS_PROPERTY_OF", "IS_CONTAINED_BY"),
+        bindings=None,
+    ):
+        return lint_python_model_claim(
+            source,
+            declared_addresses=addresses,
+            relation_names=relations,
+            path="atom.md",
+            first_line=10,
+            python_class_bindings=bindings,
+        )
 
     def test_native_field_contracts_are_checked_without_compiler(self):
         source = ("from dataclasses import dataclass, field\n"
@@ -28,13 +40,33 @@ class NativeModelLintTests(unittest.TestCase):
                   "@dataclass\nclass Example:\n"
                   "    id: int = field(metadata={'property_occurrence_cardinality': 1, 'value_cardinality': 1})\n"
                   "declare_entity(entity_name='Example', entity_class=Example)\n")
-        with patch('FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.compiler_claim.compiler_model_statements', side_effect=AssertionError('translated')):
+        with patch((
+            'FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.compiler_claim.c'
+            'ompiler_model_statements'
+        ), side_effect=AssertionError('translated')):
             self.assertEqual((), self.lint(source))
             for modified, message in (
-                (source.replace('    id: int', '    extra: str\n    id: int'), 'unsupported dataclass field contract'),
-                (source.replace("'value_cardinality': 1", "'other': 1"), 'require occurrence and value cardinalities'),
-                (source.replace('id: int', 'id: list[int]'), 'unsupported compiler format'),
-                (source.replace("entity_class=Example)", "entity_class=Example, axes={'Container': 'yes'})"), 'unsupported dataclass field contract declaration'),
+                (
+                    source.replace(
+                        "    id: int", "    extra: str\n    id: int"
+                    ),
+                    "unsupported dataclass field contract",
+                ),
+                (
+                    source.replace("'value_cardinality': 1", "'other': 1"),
+                    "require occurrence and value cardinalities",
+                ),
+                (
+                    source.replace("id: int", "id: list[int]"),
+                    "unsupported compiler format",
+                ),
+                (
+                    source.replace(
+                        "entity_class=Example)",
+                        "entity_class=Example, axes={'Container': 'yes'})",
+                    ),
+                    "unsupported dataclass field contract declaration",
+                ),
             ):
                 with self.subTest(message=message):
                     self.assertIn(message, self.lint(modified)[0])
@@ -87,8 +119,14 @@ class NativeModelLintTests(unittest.TestCase):
                   "from anechoic.model import Decision\n"
                   "class Detail(Decision):\n    pass\n"
                   "declare_entity(entity_class=Detail, entity_name='Detail')")
-        decision = "Atom/(.Header.Context.Role := Method)/(.Header.Context.Form := Decision)"
-        other = "Atom/(.Header.Context.Role := Evaluation)/(.Header.Context.Form := Decision)"
+        decision = (
+            'Atom/(.Header.Context.Role := Method)/(.Header.Context.Form := '
+            'Decision)'
+        )
+        other = (
+            'Atom/(.Header.Context.Role := Evaluation)/(.Header.Context.Form '
+            ':= Decision)'
+        )
         self.assertEqual(self.lint(source, addresses=(decision,)), ())
         self.assertIn("ambiguous Model class: Decision", self.lint(source, addresses=(decision, other))[0])
 
@@ -100,28 +138,71 @@ class NativeModelLintTests(unittest.TestCase):
         role = "Atom/(.Header.Context.Role := Requirement)"
         form = "Atom/(.Header.Context.Form := Requirement)"
         addresses = (role, form)
-        self.assertIn("ambiguous Model class", self.lint(source, addresses=addresses)[0])
-        self.assertEqual(self.lint(source, addresses=addresses, bindings={"Requirement": [role]}), ())
-        self.assertIn("ambiguous Model class", self.lint(
-            source, addresses=addresses, bindings={"Requirement": [role, form]})[0])
-        self.assertIn("unknown Model class address", self.lint(
-            source, addresses=(form,), bindings={"Requirement": [role]})[0])
-        self.assertIn("ambiguous Model class", self.lint(source, addresses=addresses, bindings={})[0])
+        self.assertIn(
+            "ambiguous Model class", self.lint(source, addresses=addresses)[0]
+        )
+        self.assertEqual(
+            self.lint(
+                source, addresses=addresses, bindings={"Requirement": [role]}
+            ),
+            (),
+        )
+        self.assertIn(
+            "ambiguous Model class",
+            self.lint(
+                source,
+                addresses=addresses,
+                bindings={"Requirement": [role, form]},
+            )[0],
+        )
+        self.assertIn(
+            "unknown Model class address",
+            self.lint(
+                source, addresses=(form,), bindings={"Requirement": [role]}
+            )[0],
+        )
+        self.assertIn(
+            "ambiguous Model class",
+            self.lint(source, addresses=addresses, bindings={})[0],
+        )
 
     def test_graph_catalog_resolves_unambiguous_legacy_imports(self):
-        source = ("from anechoic.formal_claims import declare_entity\n"
-                  "from anechoic.model import ScopeUnit\n"
-                  "class Project(ScopeUnit):\n    pass\n"
-                  "declare_entity(entity_class=Project, entity_name='Project')")
-        self.assertEqual(self.lint(source, addresses=("Scope Unit",), bindings={}), ())
-        self.assertIn("unknown Model class", self.lint(source, addresses=("Atom",), bindings={})[0])
-        self.assertIn("unknown Model class address", self.lint(
-            source, addresses=("Scope Unit",), bindings={"ScopeUnit": ["Atom"]})[0])
+        source = (
+            "from anechoic.formal_claims import declare_entity\n"
+            "from anechoic.model import ScopeUnit\n"
+            "class Project(ScopeUnit):\n    pass\n"
+            "declare_entity(entity_class=Project, entity_name='Project')"
+        )
+        self.assertEqual(
+            self.lint(source, addresses=("Scope Unit",), bindings={}), ()
+        )
+        self.assertIn(
+            "unknown Model class",
+            self.lint(source, addresses=("Atom",), bindings={})[0],
+        )
+        self.assertIn(
+            "unknown Model class address",
+            self.lint(
+                source,
+                addresses=("Scope Unit",),
+                bindings={"ScopeUnit": ["Atom"]},
+            )[0],
+        )
 
     def test_graph_catalog_supports_legacy_claims_with_qualified_entries(self):
-        addresses = ("Atom", "Atom.Content", "Atom/(.Header.Context.Role:=Requirement)")
-        self.assertEqual(self.lint("property_rule(address='Atom.Content', values='1')", addresses=addresses,
-                                   bindings={"Requirement": [addresses[-1]]}), ())
+        addresses = (
+            "Atom",
+            "Atom.Content",
+            "Atom/(.Header.Context.Role:=Requirement)",
+        )
+        self.assertEqual(
+            self.lint(
+                "property_rule(address='Atom.Content', values='1')",
+                addresses=addresses,
+                bindings={"Requirement": [addresses[-1]]},
+            ),
+            (),
+        )
 
     def test_relation_endpoints_are_checked(self):
         source = ("from anechoic.formal_claims import declare_relation\n"
@@ -144,10 +225,18 @@ class NativeModelLintTests(unittest.TestCase):
             with self.subTest(level=level):
                 prefix = ("from anechoic.formal_claims import declare_entity\n"
                           f"declare_entity(entity_name='Project', {level}_relation_constraints=")
-                valid = prefix + "{'IS_CONTAINED_BY': {'target_entity_paths': ('Scope Unit',)}})"
+                valid = prefix + (
+                    "{'IS_CONTAINED_BY': {'target_entity_paths': ('Scope "
+                    "Unit',)}})"
+                )
                 self.assertEqual(self.lint(valid), ())
-                self.assertIn("unknown Relation", self.lint(valid, relations=())[0])
-                self.assertIn("unknown Model address", self.lint(valid, addresses=("Atom",))[0])
+                self.assertIn(
+                    "unknown Relation", self.lint(valid, relations=())[0]
+                )
+                self.assertIn(
+                    "unknown Model address",
+                    self.lint(valid, addresses=("Atom",))[0],
+                )
                 malformed = prefix + "{'IS_CONTAINED_BY': 'invalid'})"
                 self.assertIn("must map Relation names", self.lint(malformed)[0])
 
@@ -172,27 +261,61 @@ class NativeModelLintTests(unittest.TestCase):
             relations.write_text(json.dumps(["IS_PROPERTY_OF"]))
             env = os.environ.copy()
             env.pop("PYTHONPATH", None)
-            result = subprocess.run([sys.executable, "-B", str(PROGRAMMATIC / "FEATURE_FORMAL_MODEL_ENGINE" /
-                                                       "lint_python_model_claim__pub.py"), str(claim),
-                                     "--addresses", str(addresses), "--relations", str(relations)],
-                                    capture_output=True, text=True, env=env)
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    "-B",
+                    str(
+                        PROGRAMMATIC
+                        / "FEATURE_FORMAL_MODEL_ENGINE"
+                        / "lint_python_model_claim__pub.py"
+                    ),
+                    str(claim),
+                    "--addresses",
+                    str(addresses),
+                    "--relations",
+                    str(relations),
+                ],
+                capture_output=True,
+                text=True,
+                env=env,
+            )
             self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_cli_accepts_model_catalog_with_explicit_python_classes(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            claim, addresses, relations = (root / name for name in ("claim.py", "addresses.json", "relations.json"))
-            claim.write_text("from anechoic.formal_claims import declare_entity\n"
-                             "from anechoic.model import Requirement\n"
-                             "class R(Requirement):\n    pass\n"
-                             "declare_entity(entity_class=R, entity_name='R')\n")
+            claim, addresses, relations = (
+                root / name
+                for name in ("claim.py", "addresses.json", "relations.json")
+            )
+            claim.write_text(
+                "from anechoic.formal_claims import declare_entity\n"
+                "from anechoic.model import Requirement\n"
+                "class R(Requirement):\n    pass\n"
+                "declare_entity(entity_class=R, entity_name='R')\n"
+            )
             role = "Atom/(.Header.Context.Role:=Requirement)"
             addresses.write_text(json.dumps({"addresses": [role], "python_classes": {"Requirement": [role]}}))
             relations.write_text("[]")
-            result = subprocess.run([sys.executable, "-B", str(PROGRAMMATIC / "FEATURE_FORMAL_MODEL_ENGINE" /
-                                                       "lint_python_model_claim__pub.py"), str(claim),
-                                     "--addresses", str(addresses), "--relations", str(relations)],
-                                    capture_output=True, text=True)
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    "-B",
+                    str(
+                        PROGRAMMATIC
+                        / "FEATURE_FORMAL_MODEL_ENGINE"
+                        / "lint_python_model_claim__pub.py"
+                    ),
+                    str(claim),
+                    "--addresses",
+                    str(addresses),
+                    "--relations",
+                    str(relations),
+                ],
+                capture_output=True,
+                text=True,
+            )
             self.assertEqual(result.returncode, 0, result.stderr)
 
 

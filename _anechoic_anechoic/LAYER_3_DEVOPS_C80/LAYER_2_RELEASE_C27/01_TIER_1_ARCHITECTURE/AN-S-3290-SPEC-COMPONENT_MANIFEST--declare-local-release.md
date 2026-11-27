@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: "active"
-  version: 16
-  updated_at: "2026-11-26T15:52:25.398715+00:00"
+  version: 17
+  updated_at: "2026-11-27T14:45:10.285943+00:00"
 ---
 
 ## Summary
@@ -94,8 +94,16 @@ ComponentManifest(
 Use the host command in AN-S-3288. Checkpoint Git only for a direct release.
 A fresh direct release bumps the candidate version. Package Active source Atoms.
 
-Use the single C19 Test Suite entry in AN-S-3287. Apply the gate order in
-AN-S-4734 and the test-image deadline rules in AN-S-4731. Before long gates,
+Use the single C19 Test Suite entry in AN-S-3055. Run Static source
+analysis and analyzer tests, then the configured required host
+Functional cases in the locked development environment. Build the
+exact isolated production candidate. Run End-to-End checks and then
+the Canary on that immutable candidate before installation. Install
+only after all required checks pass. A failed or incomplete required
+check stops release before the next step. Apply AN-S-4731 to image
+liveness and deadlines.
+
+Before long gates,
 launch pinned Chromium, load pinned DuckPGQ, and check locked frontend
 dependencies. Use installed dependencies. Report failed prerequisites with
 cache paths or setup steps.
@@ -155,4 +163,4 @@ affected Docker port or resource. Apply cleanup ownership checks.
 
 #### References
 
-AN-S-3290 and AN-S-4734.
+AN-S-3055 and AN-S-4731.

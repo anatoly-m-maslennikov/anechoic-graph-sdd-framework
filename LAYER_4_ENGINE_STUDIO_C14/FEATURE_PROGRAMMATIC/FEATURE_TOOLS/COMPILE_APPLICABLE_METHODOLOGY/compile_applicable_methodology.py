@@ -61,7 +61,8 @@ def _collect_role(root, places, candidates, diagnostics, exclude, layer, order, 
         relative_within_role = path.relative_to(role_root)
         relative = repo_relative(root, path)
         if {"archived", "draft", "done", "canceled"}.intersection(
-            carrier_status_folder(part) for part in relative_within_role.parts[:-1]
+            carrier_status_folder(part)
+            for part in relative_within_role.parts[:-1]
         ):
             exclude(path, "inactive-location")
             continue
@@ -157,10 +158,15 @@ def discover_candidates(root: Path, places: MethodologyPaths | None = None) -> t
 
 
 def output_plan(candidates: list[Candidate]) -> list[dict[str, object]]:
-    return [candidate.report_record() for candidate in sorted(candidates, key=selected_sort_key)]
+    return [
+        candidate.report_record()
+        for candidate in sorted(candidates, key=selected_sort_key)
+    ]
 
 
-def projection_metadata_bytes(source_relative_from_output: str, candidate: Candidate) -> bytes:
+def projection_metadata_bytes(
+    source_relative_from_output: str, candidate: Candidate
+) -> bytes:
     """Render the one canonical projection metadata insertion verbatim."""
     return (
         "\nprojection:\n"
@@ -172,13 +178,23 @@ def projection_metadata_bytes(source_relative_from_output: str, candidate: Candi
     ).encode("utf-8")
 
 
-def projection_bytes(source: bytes, source_relative_from_output: str, candidate: Candidate) -> bytes:
+def projection_bytes(
+    source: bytes, source_relative_from_output: str, candidate: Candidate
+) -> bytes:
     path = candidate.source_path
     frontmatter, _ = split_frontmatter(source, path)
     if re.search(r"(?m)^projection:\s*(?:$|\{)", frontmatter):
-        raise CompileError("source-projection-metadata-present", "Authoritative Source Carrier cannot contain projection metadata", path=path)
+        raise CompileError(
+            "source-projection-metadata-present",
+            "Authoritative Source Carrier cannot contain projection metadata",
+            path=path,
+        )
     boundary = source.find(b"\n---\n", 4)
-    return source[:boundary] + projection_metadata_bytes(source_relative_from_output, candidate) + source[boundary:]
+    return (
+        source[:boundary]
+        + projection_metadata_bytes(source_relative_from_output, candidate)
+        + source[boundary:]
+    )
 
 
 def validate_projection_source_preservation(
@@ -191,12 +207,21 @@ def validate_projection_source_preservation(
     path = candidate.source_path
     frontmatter, _ = split_frontmatter(source, path)
     if re.search(r"(?m)^projection:\s*(?:$|\{)", frontmatter):
-        raise CompileError("source-projection-metadata-present", "Authoritative Source Carrier cannot contain projection metadata", path=path)
+        raise CompileError(
+            "source-projection-metadata-present",
+            "Authoritative Source Carrier cannot contain projection metadata",
+            path=path,
+        )
     boundary = source.find(b"\n---\n", 4)
-    metadata = projection_metadata_bytes(source_relative_from_output, candidate)
+    metadata = projection_metadata_bytes(
+        source_relative_from_output, candidate
+    )
     prefix = source[:boundary]
     suffix = source[boundary:]
-    if not projected.startswith(prefix + metadata) or projected[len(prefix + metadata):] != suffix:
+    if (
+        not projected.startswith(prefix + metadata)
+        or projected[len(prefix + metadata) :] != suffix
+    ):
         raise CompileError(
             "projection-source-preservation-invalid",
             "Projected Carrier must preserve source bytes except for canonical projection metadata",
@@ -206,9 +231,13 @@ def validate_projection_source_preservation(
 
 def stage_outputs(root: Path, candidates: list[Candidate], source_snapshot: dict[str, str], places: MethodologyPaths | None = None) -> Path:
     output_root = root / (places or methodology_paths(root)).output
-    temporary_staging = root / ".anechoic_runtime/compile_applicable_methodology"
+    temporary_staging = (
+        root / ".anechoic_runtime/compile_applicable_methodology"
+    )
     temporary_staging.mkdir(parents=True, exist_ok=True)
-    staging = Path(tempfile.mkdtemp(prefix="transaction-", dir=temporary_staging))
+    staging = Path(
+        tempfile.mkdtemp(prefix="transaction-", dir=temporary_staging)
+    )
     new_root = staging / "new"
     for _, role_directory in ROLES:
         (new_root / role_directory).mkdir(parents=True)

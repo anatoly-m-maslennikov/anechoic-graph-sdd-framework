@@ -19,7 +19,8 @@ instance : FromJson Event where
     let outcome ← j.getObjVal? "outcome"
     let detail ← j.getObjVal? "detail"
     match detail with
-    | .obj _ => pure ⟨← j.getObjValAs? String "kind", ← j.getObjValAs? String "name",
+    | .obj _ => pure ⟨← j.getObjValAs? String "kind", ← j.getObjValAs? String
+      "name",
         ← fromJson? target, ← fromJson? outcome, detail⟩
     | _ => throw "detail must be an object"
 

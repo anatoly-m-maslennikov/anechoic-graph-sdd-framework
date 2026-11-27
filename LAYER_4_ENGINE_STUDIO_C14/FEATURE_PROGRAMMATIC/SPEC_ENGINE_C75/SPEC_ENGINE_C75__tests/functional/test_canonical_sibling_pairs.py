@@ -28,14 +28,29 @@ class CanonicalSiblingPairsTests(unittest.TestCase):
         provider = (pin(3, 'C1'), pin(4, 'C3'))
         for check in (check_sibling_binding, check_sibling_outcome):
             with self.subTest(check=check.__name__):
-                result = check(ROOT, caller, 'C3', provider, event='invoke',
-                               interface='worker', lean=lean)
-                self.assertEqual('matched', result['status'])
-                self.assertEqual('AN-S-3', result['sources']['manifest']['atom_id'])
-                self.assertEqual('AN-S-3', result['sources']['contract']['atom_id'])
-                self.assertEqual('AN-S-4', result['sources']['solution']['atom_id'])
-                self.assertEqual({'caller_manifest', 'caller_contract', 'caller_solution'},
-                                 set(result['directions']))
+                result = check(
+                    ROOT,
+                    caller,
+                    "C3",
+                    provider,
+                    event="invoke",
+                    interface="worker",
+                    lean=lean,
+                )
+                self.assertEqual("matched", result["status"])
+                self.assertEqual(
+                    "AN-S-3", result["sources"]["manifest"]["atom_id"]
+                )
+                self.assertEqual(
+                    "AN-S-3", result["sources"]["contract"]["atom_id"]
+                )
+                self.assertEqual(
+                    "AN-S-4", result["sources"]["solution"]["atom_id"]
+                )
+                self.assertEqual(
+                    {"caller_manifest", "caller_contract", "caller_solution"},
+                    set(result["directions"]),
+                )
 
     def test_wrong_manifest_reference_conflicts(self):
         lean = os.environ.get('ANECHOIC_TEST_LEAN') or shutil.which('lean')
@@ -112,13 +127,23 @@ class CanonicalSiblingPairsTests(unittest.TestCase):
             root = Path(directory)
             for source in ROOT.glob('*.md'):
                 shutil.copy(source, root / source.name)
-            source = root / 'AN-S-2.md'
-            source.write_text(source.read_text().replace(
-                "'transport': 'in_process', 'entry': 'worker.run'", "'entry': 'worker.other'"))
-            result = check_sibling_outcome(root, (pin(1, 'C1'), pin(2, 'C2')), 'C3',
-                                           (pin(3, 'C1'), pin(4, 'C3')), event='invoke',
-                                           interface='worker', lean=lean)
-            self.assertEqual('conflicting', result['status'], result)
+            source = root / "AN-S-2.md"
+            source.write_text(
+                source.read_text().replace(
+                    "'transport': 'in_process', 'entry': 'worker.run'",
+                    "'entry': 'worker.other'",
+                )
+            )
+            result = check_sibling_outcome(
+                root,
+                (pin(1, "C1"), pin(2, "C2")),
+                "C3",
+                (pin(3, "C1"), pin(4, "C3")),
+                event="invoke",
+                interface="worker",
+                lean=lean,
+            )
+            self.assertEqual("conflicting", result["status"], result)
 
     def test_embedded_outcome_needs_association_with_interface(self):
         lean = os.environ.get('ANECHOIC_TEST_LEAN') or shutil.which('lean')
@@ -137,13 +162,31 @@ class CanonicalSiblingPairsTests(unittest.TestCase):
                 ", 'target': 'worker', 'detail': {'transport': 'in_process', 'entry': 'worker.run'}", ''))
             for name in ('AN-S-1.md', 'AN-S-2.md'):
                 source = root / name
-                source.write_text(source.read_text().replace('worker', 'unrelated').replace(
-                    "'transport': 'in_process', 'entry': 'unrelated.run', ", ''))
-            result = check_sibling_outcome(root, (pin(1, 'C1'), pin(2, 'C2')), 'C3',
-                                           (pin(3, 'C1'), pin(4, 'C3')), event='invoke',
-                                           interface='unrelated', lean=lean)
-            self.assertEqual('unresolved', result['status'], result)
-            self.assertTrue(all(row['status'] == 'unresolved' for row in result['directions'].values()), result)
+                source.write_text(
+                    source.read_text()
+                    .replace("worker", "unrelated")
+                    .replace(
+                        "'transport': 'in_process', 'entry': 'unrelated.run', ",
+                        "",
+                    )
+                )
+            result = check_sibling_outcome(
+                root,
+                (pin(1, "C1"), pin(2, "C2")),
+                "C3",
+                (pin(3, "C1"), pin(4, "C3")),
+                event="invoke",
+                interface="unrelated",
+                lean=lean,
+            )
+            self.assertEqual("unresolved", result["status"], result)
+            self.assertTrue(
+                all(
+                    row["status"] == "unresolved"
+                    for row in result["directions"].values()
+                ),
+                result,
+            )
 
     def test_http_outcome_checks_provider_route_and_client_declaration(self):
         lean = os.environ.get('ANECHOIC_TEST_LEAN') or shutil.which('lean')
@@ -151,15 +194,24 @@ class CanonicalSiblingPairsTests(unittest.TestCase):
             self.skipTest('Lean executable unavailable')
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            for source in ROOT.glob('*.md'):
-                body = source.read_text().replace("'transport': 'in_process', 'entry': 'worker.run'",
-                                                  "'transport': 'http', 'route': 'POST /work'")
-                if source.name == 'AN-S-1.md':
-                    body = body.replace("'transport': 'in_process'", "'transport': 'http', 'routes': ['POST /work']")
-                if source.name == 'AN-S-3.md':
-                    body = body.replace("'transport': 'http', 'route': 'POST /work'",
-                                        "'transport': 'http', 'routes': ['POST /work']")
-                    body = body.replace(", interface='worker', transport='in_process'", '')
+            for source in ROOT.glob("*.md"):
+                body = source.read_text().replace(
+                    "'transport': 'in_process', 'entry': 'worker.run'",
+                    "'transport': 'http', 'route': 'POST /work'",
+                )
+                if source.name == "AN-S-1.md":
+                    body = body.replace(
+                        "'transport': 'in_process'",
+                        "'transport': 'http', 'routes': ['POST /work']",
+                    )
+                if source.name == "AN-S-3.md":
+                    body = body.replace(
+                        "'transport': 'http', 'route': 'POST /work'",
+                        "'transport': 'http', 'routes': ['POST /work']",
+                    )
+                    body = body.replace(
+                        ", interface='worker', transport='in_process'", ""
+                    )
                 (root / source.name).write_text(body)
             def check():
                 return check_sibling_outcome(root, (pin(1, 'C1'), pin(2, 'C2')), 'C3',
@@ -186,10 +238,22 @@ class CanonicalSiblingPairsTests(unittest.TestCase):
                 with self.subTest(source=name):
                     source = root / name
                     body = source.read_text()
-                    source.write_text(body.replace("'transport': 'in_process'", "'transport': 'http'"))
-                    with self.assertRaisesRegex(ValueError, 'does not declare client'):
-                        check_sibling_outcome(root, (pin(1, 'C1'), pin(2, 'C2')), 'C3',
-                                              (pin(3, 'C1'), pin(4, 'C3')), event='invoke', interface='worker')
+                    source.write_text(
+                        body.replace(
+                            "'transport': 'in_process'", "'transport': 'http'"
+                        )
+                    )
+                    with self.assertRaisesRegex(
+                        ValueError, "does not declare client"
+                    ):
+                        check_sibling_outcome(
+                            root,
+                            (pin(1, "C1"), pin(2, "C2")),
+                            "C3",
+                            (pin(3, "C1"), pin(4, "C3")),
+                            event="invoke",
+                            interface="worker",
+                        )
                     source.write_text(body)
 
     def test_mixed_framing_order_does_not_change_sibling_checks(self):
@@ -238,7 +302,15 @@ class CanonicalSiblingPairsTests(unittest.TestCase):
                 "interface='worker', transport='in_process'",
                 "interface='other', transport='in_process'"))
             result = check_sibling_binding(
-                root, (pin(1, 'C1'), pin(2, 'C2')), 'C3',
-                (pin(3, 'C1'), pin(4, 'C3')), event='invoke',
-                interface='worker', lean=lean)
-            self.assertEqual('conflicting', result['directions']['caller_contract']['status'])
+                root,
+                (pin(1, "C1"), pin(2, "C2")),
+                "C3",
+                (pin(3, "C1"), pin(4, "C3")),
+                event="invoke",
+                interface="worker",
+                lean=lean,
+            )
+            self.assertEqual(
+                "conflicting",
+                result["directions"]["caller_contract"]["status"],
+            )

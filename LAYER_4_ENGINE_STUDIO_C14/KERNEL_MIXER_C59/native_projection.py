@@ -1,18 +1,20 @@
 """Publish a native capture through the existing Workbench DuckDB store."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Mapping, Set
 from hashlib import sha256
-import json
 from pathlib import PurePosixPath
 import re
 from typing import Any
 
+from .component_projection import _write_components
 from .content_schema import ContentRule, DeclarationSource, _schema_from_rules
 from .graph_store import GraphState, register_graph
 from .index_delta import MaterializationDelta
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import source_markdown
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import NativeCapture
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    NativeCapture,
+)
 from .query_store import QueryStore
 
 
@@ -84,31 +86,54 @@ def _projected_rows(capture, relation_types, inverse):
             })
 
     historical = _historical_relation_names(relation_types)
-    containment = "IS_CONTAINED_BY" if "IS_CONTAINED_BY" in inverse else "CONTAINED_BY"
+    containment = (
+        "IS_CONTAINED_BY" if "IS_CONTAINED_BY" in inverse else "CONTAINED_BY"
+    )
     for edge in capture.containment:
         add(dict(edge, relation_type=containment))
     for row in rows:
-        relations = row["header_json"].get("relations", {})
-        direct, derived = ("IS_REFERENCE", "HAS_REFERENCE") if inverse.get("IS_REFERENCE") == "HAS_REFERENCE" else ("HAS_REFERENCE", "IS_REFERENCE_FOR")
-        if (direct in relation_types and isinstance(relations, dict) and derived in relations):
-            raise ValueError(f"Native relation {derived} is derived")
-        citations = set()
-        consolidated = set()
-        for edge in _authored_edges(row):
-            edge["relation_type"] = historical.get(edge["relation_type"], edge["relation_type"])
-            if edge["relation_type"] in historical.values():
-                key = edge["relation_type"], edge["target_kind"], edge["target_ref"]
-                if key in consolidated:
-                    continue
-                consolidated.add(key)
-            if direct in relation_types and edge["relation_type"] in {"REFERENCES", direct}:
-                edge["relation_type"] = direct
-                key = edge["target_kind"], edge["target_ref"]
-                if key in citations:
-                    continue
-                citations.add(key)
-            add(edge)
+        _add_authored_edges(row, relation_types, inverse, historical, add)
     return rows
+
+
+def _add_authored_edges(row, relation_types, inverse, historical, add):
+    relations = row["header_json"].get("relations", {})
+    direct, derived = (
+        ("IS_REFERENCE", "HAS_REFERENCE")
+        if inverse.get("IS_REFERENCE") == "HAS_REFERENCE"
+        else ("HAS_REFERENCE", "IS_REFERENCE_FOR")
+    )
+    if (
+        direct in relation_types
+        and isinstance(relations, dict)
+        and derived in relations
+    ):
+        raise ValueError(f"Native relation {derived} is derived")
+    citations = set()
+    consolidated = set()
+    for edge in _authored_edges(row):
+        edge["relation_type"] = historical.get(
+            edge["relation_type"], edge["relation_type"]
+        )
+        if edge["relation_type"] in historical.values():
+            key = (
+                edge["relation_type"],
+                edge["target_kind"],
+                edge["target_ref"],
+            )
+            if key in consolidated:
+                continue
+            consolidated.add(key)
+        if direct in relation_types and edge["relation_type"] in {
+            "REFERENCES",
+            direct,
+        }:
+            edge["relation_type"] = direct
+            key = edge["target_kind"], edge["target_ref"]
+            if key in citations:
+                continue
+            citations.add(key)
+        add(edge)
 
 
 def replace_component_metrics(connection, measurements) -> None:
@@ -149,6 +174,7 @@ def replace_component_metrics(connection, measurements) -> None:
 def project_native(store: QueryStore, capture: NativeCapture, *,
                    relation_types: Set[str], inverses: Mapping[str, str],
                    component_ids: Iterable[str] = (),
+                   selection=None,
                    use_retained: bool = False,
                    before_commit: Callable[[GraphState], None] | None = None) -> None:
     """Replace the disposable projection. Relation declarations must be caller-validated."""
@@ -178,7 +204,7 @@ def project_native(store: QueryStore, capture: NativeCapture, *,
                 _write_references(connection, rows)
                 connection.execute("DROP TABLE IF EXISTS main.native_legacy_references")
                 connection.execute("DROP TABLE IF EXISTS main.native_migration_paths")
-                _write_components(connection, rows)
+                _write_components(connection, rows, selection)
                 connection.execute("CREATE TABLE internal.native_frontier(frontier VARCHAR NOT NULL)")
                 connection.execute("INSERT INTO internal.native_frontier VALUES (?)", [frontier])
             if before_commit is not None:
@@ -189,11 +215,20 @@ def project_native(store: QueryStore, capture: NativeCapture, *,
 
 
 def _native_frontier(store, rows, relation_types, inverses, component_refs):
-    return sha256(repr((
-        10, store._schema_mode, sorted(relation_types), sorted(inverses.items()),
-        component_refs,
-        sorted((row["source_path"], row["_source_sha256"]) for row in rows),
-    )).encode()).hexdigest()
+    return sha256(
+        repr(
+            (
+                11,
+                store._schema_mode,
+                sorted(relation_types),
+                sorted(inverses.items()),
+                component_refs,
+                sorted(
+                    (row["source_path"], row["_source_sha256"]) for row in rows
+                ),
+            )
+        ).encode()
+    ).hexdigest()
 
 
 def _native_rows(capture, relation_types, inverse):
@@ -201,8 +236,12 @@ def _native_rows(capture, relation_types, inverse):
     for row in rows:
         summaries = [record for record in row["content_properties_json"] if record.get("property_path") == ["summary"]]
         if len(summaries) > 1:
-            row["content_properties_json"] = [record for record in row["content_properties_json"]
-                                              if record.get("property_path") != ["summary"] or record is summaries[0]]
+            row["content_properties_json"] = [
+                record
+                for record in row["content_properties_json"]
+                if record.get("property_path") != ["summary"]
+                or record is summaries[0]
+            ]
     return rows
 
 
@@ -215,6 +254,7 @@ def _native_content_schema():
 def project_native_delta(store: QueryStore, capture: NativeCapture, *, paths: set[PurePosixPath],
                          relation_types: Set[str], inverses: Mapping[str, str],
                          component_ids: Iterable[str] | None = None,
+                         selection=None,
                          before_commit: Callable[[GraphState], None] | None = None) -> bool:
     """Publish touched owners together, or request a full projection for a layout change."""
     if capture.errors or not capture.atoms:
@@ -252,7 +292,7 @@ def project_native_delta(store: QueryStore, capture: NativeCapture, *, paths: se
 
         def finish(graph):
             _apply_native_tables(connection, old_changed, new_changed, capture.atoms,
-                                 components_changed, frontier)
+                                 components_changed, frontier, selection)
             if source_changed and before_commit is not None:
                 before_commit(graph)
 
@@ -276,61 +316,22 @@ def _components_changed(old_changed, new_changed):
     from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import native_header_view
 
     def component_manifest(row):
-        return native_header_view(row["header_json"])["context"].get("template") == "component_manifest"
+        return native_header_view(row["header_json"])["context"].get("template") in {"component_manifest", "project_manifest"}
     return any(component_manifest(row) for row in [*old_changed.values(), *new_changed.values()])
 
 
-def _apply_native_tables(connection, old, new, rows, components_changed, frontier):
+def _apply_native_tables(connection, old, new, rows, components_changed, frontier, selection):
     for row in old.values():
         connection.execute("DELETE FROM internal.native_exact_refs WHERE reference = ?", [row["ref"]])
     if new:
-        connection.executemany("INSERT INTO internal.native_exact_refs VALUES (?, ?)",
-                               [(row["ref"], row["_exact_ref"]) for row in new.values()])
+        connection.executemany(
+            "INSERT INTO internal.native_exact_refs VALUES (?, ?)",
+            [(row["ref"], row["_exact_ref"]) for row in new.values()],
+        )
     if components_changed:
-        _write_components(connection, rows)
+        _write_components(connection, rows, selection)
     connection.execute("DELETE FROM internal.native_frontier")
     connection.execute("INSERT INTO internal.native_frontier VALUES (?)", [frontier])
-
-
-def _write_components(connection, rows) -> None:
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_component_manifest
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import component_contract_fences
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import native_header_view
-
-    manifests = []
-    for row in rows:
-        if row["status_group"] != "Current" or row["tier"] not in (0, 1, 4) or row["id"].split("-")[1] != "S":
-            continue
-        context = native_header_view(row["header_json"])["context"]
-        if context.get("template") != "component_manifest" or context.get("lens") != "SPEC":
-            continue
-        owner = context["container"].get("component")
-        if owner is None:
-            continue
-        try:
-            body = source_markdown(row)
-            fields, purpose = parse_component_manifest(body, tier=row["tier"] or None)
-            has_contract = row["tier"] == 1 and component_contract_fences(body) is not None
-        except ValueError:
-            continue
-        cid = fields.get("component_id")
-        name, layer, lenses = fields.get("name"), fields.get("layer"), fields.get("lens_whitelist")
-        if (isinstance(cid, str) and re.fullmatch(r"C[0-9]+", cid)
-                and isinstance(name, str) and name.strip()
-                and (layer is None or type(layer) is int)
-                and (lenses is None or isinstance(lenses, list) and all(isinstance(lens, str) for lens in lenses))):
-            boundaries = fields.get("boundaries")
-            ref = row["_exact_ref"]
-            manifests.append((cid, name, owner, layer, lenses,
-                              None if boundaries is None else json.dumps(boundaries),
-                              ref, row["source_path"], [ref] if purpose else [], has_contract))
-
-    connection.execute("""CREATE OR REPLACE TABLE main.components (
-        component_id VARCHAR, name VARCHAR, parent_component_id VARCHAR, layer BIGINT,
-        lens_whitelist VARCHAR[], boundaries JSON, manifest_ref VARCHAR, manifest_path VARCHAR, purpose_refs VARCHAR[], has_contract BOOLEAN
-    )""")
-    if manifests:
-        connection.executemany("INSERT INTO main.components VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", manifests)
 
 
 def _write_references(connection, rows) -> None:

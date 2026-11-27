@@ -4,6 +4,21 @@ from markdown_it import MarkdownIt
 
 
 def iter_formal_claims(body):
+    yield from _python_sections(body, ("claim", "formal claim"), {"python"})
+
+
+def formal_manifest(body):
+    found = list(
+        _python_sections(
+            body, ("formal manifest",), {"python", "python anechoic-edsl"}
+        )
+    )
+    if len(found) > 1:
+        raise ValueError("Expected one Python Formal Manifest")
+    return found[0] if found else None
+
+
+def _python_sections(body, path, fence_types):
     headings = []
     for index, token in enumerate(
         tokens := MarkdownIt("commonmark").parse(body)
@@ -16,8 +31,8 @@ def iter_formal_claims(body):
             )
         elif (
             token.type == "fence"
-            and token.info.strip().casefold() == "python"
-            and tuple(x[1] for x in headings) == ("claim", "formal claim")
+            and token.info.strip().casefold() in fence_types
+            and tuple(x[1] for x in headings) == path
         ):
             yield token.content
 

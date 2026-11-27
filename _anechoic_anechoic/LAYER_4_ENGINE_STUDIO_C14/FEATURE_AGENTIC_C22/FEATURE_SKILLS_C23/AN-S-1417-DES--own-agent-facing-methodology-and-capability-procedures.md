@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1417
+concern:
+  subject: "Realization"
+  path: "Model/Graph/Node//Artifact//SSOT"
+  relation: "is_narrower_than"
 container:
   component: C23
 tier: 0
@@ -8,8 +12,8 @@ context:
   lens: DES
 state:
   status: active
-  version: 25
-  updated_at: 2026-11-10 20:47:54 +0400
+  version: 26
+  updated_at: "2026-11-27T16:16:01.404965+00:00"
 ---
 ## Summary
 

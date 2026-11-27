@@ -8,8 +8,8 @@ context:
   lens: DevOps
 state:
   status: active
-  version: 15
-  updated_at: 2026-11-02 19:46:47 +0400
+  version: 16
+  updated_at: "2026-11-27T17:35:01.150345+00:00"
 ---
 ## Summary
 
@@ -28,11 +28,6 @@ the `VALIDATE_ATOMS` executable Carrier **must** be delivered as `LAYER_2_FRAMEW
 - expose `validate_atoms.py --input <request.json>` **and** `--input -` for standard input.
 - emit **=1** JSON result on standard output under CA-D-493-TOOLS-ENG_DECISION--serialize-atom-validator-results; human execution diagnostics belong on standard error.
 - the path identifies an Implementation Artifact inside TOOLS, **not** a newly declared Scope Unit. it carries the implementation bound under CA-R-1622-TOOLS-RULE--implement-atom-carrier-validation-in-validate-atoms, **not** another Workflow authority.
-- store the end-to-end command tests **in** `VALIDATE_ATOMS/tests/test_validate_atoms_e2e.py` relative **to** the delivered TOOLS directory.
-- store mock Markdown Atoms **and** supporting mock context **in** `VALIDATE_ATOMS/tests/fixtures/`, with `good/`, `bad/`, `mixed/`, **and** `context/` groups. fixture files are test inputs, **not** active governing Project Atoms.
-- store the case/coverage manifest **in** `VALIDATE_ATOMS/tests/cases.json` **and** independently reviewed expected reports **in** `VALIDATE_ATOMS/tests/expected/<case_id>.json`. **every** manifest case identifies its fixture inputs, request, governing rule identities/Revisions, expected report, **and** expected exit code.
-
-- `cases.json` is a closed object with `schema_version: 1` **and** `cases`: a nonempty array. each case has a unique nonempty `case_id`, `request` path, nonempty `fixture_paths` list, nonempty `authority` list of exact Atom Bindings under CA-D-492-TOOLS-DELIVERY--serialize-atom-validator-requests, nonempty `check_codes` list, `expected_report` path, **and** integer `expected_exit_code` **in** (0, 1, 2, 3). all case paths are relative **to** `tests/`, remain inside it, **and** cannot escape through symlinks. expected reports follow CA-D-493-TOOLS-DELIVERY--serialize-atom-validator-results.
-- include positive/negative/exception/boundary coverage for every supported check **and** declared failure class; reusable fixture cases may cover multiple rules. the harness verifies the matrix against the independently resolved obligation inventory, **not** just the list of implemented checks.
+- Verify the delivered command and its obligation coverage under AN-S-5180.
 
 ## Details

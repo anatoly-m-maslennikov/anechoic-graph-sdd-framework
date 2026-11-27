@@ -7,11 +7,25 @@ import unittest
 from unittest.mock import Mock
 
 from .native_query_test_support import WorkbenchTools
-from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import QueryExecutionError, WorkbenchUnavailableError
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (
+    QueryExecutionError,
+    WorkbenchUnavailableError,
+)
 MCP_ROOT = Path(__file__).resolve().parents[1]
 
 from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.FEATURE_IWE_CONSOLE_BACKEND__shared import (  # noqa: E402
-    CHECK, LOAD, NATIVE_TOOLS, PAGE, QUERY_LOG_LIST, RUN, SAVED_LIST, SAVE_VIEW, SCHEMA, VIEW_CREATE, VIEW_DUPLICATE, WORKSPACE_OPEN,
+    CHECK,
+    LOAD,
+    NATIVE_TOOLS,
+    PAGE,
+    QUERY_LOG_LIST,
+    RUN,
+    SAVED_LIST,
+    SAVE_VIEW,
+    SCHEMA,
+    VIEW_CREATE,
+    VIEW_DUPLICATE,
+    WORKSPACE_OPEN,
     native_tools,
 )
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import ExplicitBlockingRuntimeFailure  # noqa: E402
@@ -22,27 +36,87 @@ class FakeService:
         self.calls = []
         self.closed = False
 
-    def run(self, sql, page_size=100, cursor_position=None, *, save=False, preview=None, name=None, result_delivery="file", result_format="json_matrix"):
-        self.calls.append((RUN, sql, page_size, cursor_position, save, preview, name, result_delivery, result_format))
+    def run(
+        self,
+        sql,
+        page_size=100,
+        cursor_position=None,
+        *,
+        save=False,
+        preview=None,
+        name=None,
+        result_delivery="file",
+        result_format="json_matrix",
+    ):
+        self.calls.append(
+            (
+                RUN,
+                sql,
+                page_size,
+                cursor_position,
+                save,
+                preview,
+                name,
+                result_delivery,
+                result_format,
+            )
+        )
         result = {
-            "query_id": "q-1", "columns": [{"name": "sql", "type": "VARCHAR"}],
-            "rows": [[sql]], "row_count": 1, "column_count": 1,
-            "offset": 0, "page_size": page_size, "has_more": False,
+            "query_id": "q-1",
+            "columns": [{"name": "sql", "type": "VARCHAR"}],
+            "rows": [[sql]],
+            "row_count": 1,
+            "column_count": 1,
+            "offset": 0,
+            "page_size": page_size,
+            "has_more": False,
         }
         if save:
-            result.update({"saved_query_id": "q_1", "kind": "query", "sql": sql, "name": name})
+            result.update(
+                {
+                    "saved_query_id": "q_1",
+                    "kind": "query",
+                    "sql": sql,
+                    "name": name,
+                }
+            )
         return result
 
     def check(self, sql, cursor_position=None):
         self.calls.append((CHECK, sql, cursor_position))
         return {"valid": True, "row_count": 1, "column_count": 1}
 
-    def page(self, query_id, offset, page_size=100, *, grid=None, preview=None, result_delivery="file", result_format="json_matrix"):
-        self.calls.append((PAGE, query_id, offset, page_size, grid, result_delivery, result_format))
+    def page(
+        self,
+        query_id,
+        offset,
+        page_size=100,
+        *,
+        grid=None,
+        preview=None,
+        result_delivery="file",
+        result_format="json_matrix",
+    ):
+        self.calls.append(
+            (
+                PAGE,
+                query_id,
+                offset,
+                page_size,
+                grid,
+                result_delivery,
+                result_format,
+            )
+        )
         return {
-            "query_id": query_id, "columns": [{"name": "sql", "type": "VARCHAR"}],
-            "rows": [[query_id]], "row_count": 1, "column_count": 1,
-            "offset": offset, "page_size": page_size, "has_more": False,
+            "query_id": query_id,
+            "columns": [{"name": "sql", "type": "VARCHAR"}],
+            "rows": [[query_id]],
+            "row_count": 1,
+            "column_count": 1,
+            "offset": offset,
+            "page_size": page_size,
+            "has_more": False,
         }
 
     def schema(self):
@@ -51,11 +125,20 @@ class FakeService:
 
     def save_view(self, sql, name=None):
         self.calls.append((SAVE_VIEW, sql, name))
-        return {"saved_query_id": "w_1", "kind": "view", "sql": sql, "name": name}
+        return {
+            "saved_query_id": "w_1",
+            "kind": "view",
+            "sql": sql,
+            "name": name,
+        }
 
     def load(self, reference):
         self.calls.append((LOAD, reference))
-        return {"saved_query_id": reference, "kind": "query", "sql": "SELECT 1"}
+        return {
+            "saved_query_id": reference,
+            "kind": "query",
+            "sql": "SELECT 1",
+        }
 
     def saved_list(self, limit=20):
         self.calls.append((SAVED_LIST, limit))
@@ -74,18 +157,32 @@ class WorkbenchToolsTests(unittest.TestCase):
         run = await owner.call(RUN, {"sql": "SELECT 1"})
         self.assertEqual("q-1", run["query_id"])
         self.assertEqual(1, run["row_count"])
-        page = await owner.call(PAGE, {"query_id": run["query_id"], "offset": 0, "page_size": 1})
+        page = await owner.call(
+            PAGE, {"query_id": run["query_id"], "offset": 0, "page_size": 1}
+        )
         self.assertEqual(0, page["offset"])
-        self.assertTrue((await owner.call(CHECK, {"sql": "SELECT 1"}))["valid"])
+        self.assertTrue(
+            (await owner.call(CHECK, {"sql": "SELECT 1"}))["valid"]
+        )
         saved = await owner.call(RUN, {
             "sql": "SELECT 2", "cursor_position": 2, "save": True, "name": "saved",
         })
         self.assertEqual("q_1", saved["saved_query_id"])
-        self.assertEqual("w_1", (await owner.call(SAVE_VIEW, {"sql": "SELECT 3", "name": "view"}))["saved_query_id"])
+        self.assertEqual(
+            "w_1",
+            (await owner.call(SAVE_VIEW, {"sql": "SELECT 3", "name": "view"}))[
+                "saved_query_id"
+            ],
+        )
         await owner.call(RUN, {"sql": "SELECT 4", "save": True, "name": "   "})
-        self.assertEqual("q_2", (await owner.call(LOAD, {"reference": "q_2"}))["saved_query_id"])
+        self.assertEqual(
+            "q_2",
+            (await owner.call(LOAD, {"reference": "q_2"}))["saved_query_id"],
+        )
         self.assertEqual({"atoms": []}, await owner.call(SCHEMA, {}))
-        self.assertEqual({"items": []}, await owner.call(SAVED_LIST, {"limit": 3}))
+        self.assertEqual(
+            {"items": []}, await owner.call(SAVED_LIST, {"limit": 3})
+        )
         self.assertEqual("session-1", (await owner.call(WORKSPACE_OPEN, {"session_id": "session-1"}))["session_id"])
         self.assertEqual("view_create", (await owner.call(VIEW_CREATE, {"workspace_id": "session-1"}))["operation"])
         self.assertEqual(
@@ -94,12 +191,17 @@ class WorkbenchToolsTests(unittest.TestCase):
                 "workspace_id": "session-1", "view_id": "source-view",
             }))['operation'],
         )
-        self.assertEqual("query_log_list", (await owner.call(QUERY_LOG_LIST, {}))["operation"])
+        self.assertEqual(
+            "query_log_list",
+            (await owner.call(QUERY_LOG_LIST, {}))["operation"],
+        )
         await owner.close()
 
 
     def test_native_descriptors_and_one_owner_handle_all_calls_and_close(self):
-        self.assertEqual(list(NATIVE_TOOLS), [tool.name for tool in native_tools()])
+        self.assertEqual(
+            list(NATIVE_TOOLS), [tool.name for tool in native_tools()]
+        )
         tools = {tool.name: tool for tool in native_tools()}
         self.assertNotIn("query_save", tools)
         self.assertIsNone(tools[WORKSPACE_OPEN].meta)
@@ -149,7 +251,10 @@ class WorkbenchToolsTests(unittest.TestCase):
             (PAGE, {"query_id": "q", "offset": True}, "offset must be a non-negative integer"),
             (PAGE, {"query_id": "q", "offset": -1}, "offset must be a non-negative integer"),
             (PAGE, {"query_id": "q", "offset": 0, "page_size": True}, "page_size must be an integer"),
-            (PAGE, {"query_id": "q", "offset": 0, "unknown": 1}, "Expected query_id and optional pagination, grid and result options"),
+            (PAGE, {"query_id": "q", "offset": 0, "unknown": 1}, (
+                'Expected query_id and optional pagination, grid and result '
+                'options'
+            )),
             (RUN, {"sql": "SELECT 1", "page_size": True}, "page_size must be an integer"),
             (RUN, {"sql": "SELECT 1", "name": "forbidden"}, "name is only valid when save is true"),
             (RUN, {"sql": "SELECT 1", "save": "yes"}, "save must be a boolean"),
@@ -169,27 +274,41 @@ class WorkbenchToolsTests(unittest.TestCase):
         with self.assertRaises(ExplicitBlockingRuntimeFailure) as caught:
             asyncio.run(owner.call(RUN, {"sql": "SELECT FROM"}))
         self.assertEqual("query_error", caught.exception.code)
-        self.assertEqual("query failed: Parser Error", caught.exception.message)
+        self.assertEqual(
+            "query failed: Parser Error", caught.exception.message
+        )
 
-        owner._query_owner.run.side_effect = QueryExecutionError("query failed: missing column 'restart required'")
+        owner._query_owner.run.side_effect = QueryExecutionError(
+            "query failed: missing column 'restart required'"
+        )
         with self.assertRaises(ExplicitBlockingRuntimeFailure) as caught:
             asyncio.run(owner.call(RUN, {"sql": 'SELECT "restart required"'}))
         self.assertEqual("query_error", caught.exception.code)
 
-        owner._query_owner.run.side_effect = ValueError("query result delivery failed: unsupported value")
+        owner._query_owner.run.side_effect = ValueError(
+            "query result delivery failed: unsupported value"
+        )
         with self.assertRaises(ExplicitBlockingRuntimeFailure) as caught:
             asyncio.run(owner.call(RUN, {"sql": "SELECT unsupported"}))
         self.assertEqual("query_error", caught.exception.code)
         self.assertEqual("query result delivery failed: unsupported value", caught.exception.message)
 
-        owner._query_owner.run.side_effect = WorkbenchUnavailableError("query store unavailable; Workbench restart required")
+        owner._query_owner.run.side_effect = WorkbenchUnavailableError(
+            "query store unavailable; Workbench restart required"
+        )
         with self.assertRaises(ExplicitBlockingRuntimeFailure) as caught:
             asyncio.run(owner.call(RUN, {"sql": "SELECT 1"}))
         self.assertEqual("workbench_unavailable", caught.exception.code)
-        self.assertEqual("Workbench unavailable; restart required", caught.exception.message)
+        self.assertEqual(
+            "Workbench unavailable; restart required", caught.exception.message
+        )
 
-        owner._query_owner.run.side_effect = RuntimeError("unexpected connector fault")
-        with self.assertRaisesRegex(RuntimeError, "unexpected connector fault"):
+        owner._query_owner.run.side_effect = RuntimeError(
+            "unexpected connector fault"
+        )
+        with self.assertRaisesRegex(
+            RuntimeError, "unexpected connector fault"
+        ):
             asyncio.run(owner.call(RUN, {"sql": "SELECT 1"}))
 
         owner._query_owner.run.side_effect = RuntimeError("unexpected connector fault: restart required")

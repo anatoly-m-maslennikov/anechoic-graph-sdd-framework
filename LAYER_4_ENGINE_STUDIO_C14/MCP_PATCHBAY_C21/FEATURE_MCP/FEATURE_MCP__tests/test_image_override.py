@@ -9,7 +9,10 @@ from unittest.mock import patch
 
 APP = Path(__file__).resolve().parents[1]
 
-from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import IMAGE, Runtime  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import (  # noqa
+    IMAGE,
+    Runtime,
+)
 
 
 IMMUTABLE_IMAGE = "sha256:" + "a" * 64

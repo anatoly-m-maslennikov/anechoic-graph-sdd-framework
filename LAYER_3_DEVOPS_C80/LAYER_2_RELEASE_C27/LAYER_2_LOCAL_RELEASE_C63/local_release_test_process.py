@@ -18,7 +18,9 @@ _TAIL_CHARACTERS = 8000
 _CANCELLATION_GRACE_SECONDS = 2.0
 
 
-def _signal_owned(process: subprocess.Popen[bytes], requested: signal.Signals) -> None:
+def _signal_owned(
+    process: subprocess.Popen[bytes], requested: signal.Signals
+) -> None:
     try:
         if os.name == "posix":
             os.killpg(process.pid, requested)
@@ -61,28 +63,67 @@ def _cancel_and_forward(process, error: BaseException, forward) -> None:
     if process is not None:
         try:
             _stop_owned(process)
-        except (OSError, KeyboardInterrupt, subprocess.TimeoutExpired) as cleanup_error:
-            error.add_note(f"Test-process cancellation failed: {cleanup_error!r}")
+        except (
+            OSError,
+            KeyboardInterrupt,
+            subprocess.TimeoutExpired,
+        ) as cleanup_error:
+            error.add_note(
+                f"Test-process cancellation failed: {cleanup_error!r}"
+            )
         try:
             forward(final=True)
         except (OSError, ValueError) as output_error:
-            error.add_note(f"Final test-output forwarding failed: {output_error!r}")
+            error.add_note(
+                f"Final test-output forwarding failed: {output_error!r}"
+            )
+
+
+def _run_and_forward(argv, cwd, log, env, lock_fd, check_abort, forward):
+    process = None
+    try:
+        process = subprocess.Popen(
+            argv,
+            cwd=cwd,
+            stdout=log,
+            stderr=subprocess.STDOUT,
+            env=env,
+            start_new_session=os.name == "posix",
+            pass_fds=(lock_fd,) if lock_fd is not None else (),
+        )
+        while True:
+            if check_abort is not None:
+                check_abort()
+            forward()
+            if process.poll() is not None:
+                break
+            time.sleep(0.05)
+        forward(final=True)
+    except BaseException as error:
+        _cancel_and_forward(process, error, forward)
+        raise
+    return process
 
 
 def run_logged_test_process(
-    argv: tuple[str, ...], cwd: Path, log: BinaryIO, *, env: dict[str, str] | None = None,
-    lock_fd: int | None = None, check_abort: Callable[[], None] | None = None,
+    argv: tuple[str, ...],
+    cwd: Path,
+    log: BinaryIO,
+    *,
+    env: dict[str, str] | None = None,
+    lock_fd: int | None = None,
+    check_abort: Callable[[], None] | None = None,
 ) -> subprocess.CompletedProcess[str]:
-    """Keep complete output on disk, forwarding chunks and retaining only a tail.
+    """Keep output on disk, forward chunks, and retain only a tail.
 
     The caller owns the newly created log. Only this whole-suite process starts
     a new session; cancellation never targets the caller's process group.
     """
     tail = ""
     decoder = codecs.getincrementaldecoder("utf-8")(errors="replace")
-    process: subprocess.Popen[bytes] | None = None
     log.flush()
     with Path(log.name).open("rb") as reader:
+
         def forward(*, final: bool = False) -> None:
             nonlocal tail
             while chunk := reader.read(_CHUNK_BYTES):
@@ -96,21 +137,7 @@ def run_logged_test_process(
                 sys.stderr.write(text)
                 sys.stderr.flush()
 
-        try:
-            process = subprocess.Popen(
-                argv, cwd=cwd, stdout=log, stderr=subprocess.STDOUT, env=env,
-                start_new_session=os.name == "posix",
-                pass_fds=(lock_fd,) if lock_fd is not None else (),
-            )
-            while True:
-                if check_abort is not None:
-                    check_abort()
-                forward()
-                if process.poll() is not None:
-                    break
-                time.sleep(0.05)
-            forward(final=True)
-        except BaseException as error:
-            _cancel_and_forward(process, error, forward)
-            raise
+        process = _run_and_forward(
+            argv, cwd, log, env, lock_fd, check_abort, forward
+        )
     return subprocess.CompletedProcess(argv, process.returncode, tail, "")

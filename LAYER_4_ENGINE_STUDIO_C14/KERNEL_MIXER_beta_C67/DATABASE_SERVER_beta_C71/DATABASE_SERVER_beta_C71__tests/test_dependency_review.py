@@ -9,27 +9,45 @@ import unittest
 
 import duckdb
 
-from .DATABASE_SERVER_beta_C71__tests__shared import _generation, _query, _server
+from .DATABASE_SERVER_beta_C71__tests__shared import (
+    _generation,
+    _query,
+    _server,
+)
 
 
 class DependencyReviewTest(unittest.TestCase):
     def test_stale_coupling_view_is_replaced(self):
-        with TemporaryDirectory(dir='/tmp') as directory:
-            path = Path(directory).resolve() / 'db.duckdb'
+        with TemporaryDirectory(dir="/tmp") as directory:
+            path = Path(directory).resolve() / "db.duckdb"
             data = _generation()
-            data['graph'] = {'nodes': [], 'occurrences': [], 'edges': [], 'test_edges': [], 'read_issues': []}
-            data['receipt']['graph_sha256'] = sha256(json.dumps(data['graph'], sort_keys=True, separators=(',', ':')).encode()).hexdigest()
+            data["graph"] = {
+                "nodes": [],
+                "occurrences": [],
+                "edges": [],
+                "test_edges": [],
+                "read_issues": [],
+            }
+            data["receipt"]["graph_sha256"] = sha256(
+                json.dumps(
+                    data["graph"], sort_keys=True, separators=(",", ":")
+                ).encode()
+            ).hexdigest()
             with _server(path) as client:
-                response = client.put('/generation', json=data)
+                response = client.put("/generation", json=data)
                 self.assertEqual(200, response.status_code, response.text)
             with duckdb.connect(str(path)) as connection:
-                connection.execute('CREATE TABLE old_graph (value INTEGER)')
-                connection.execute('CREATE OR REPLACE VIEW biz_package_coupling AS SELECT * FROM old_graph')
-                connection.execute('DROP TABLE old_graph')
+                connection.execute("CREATE TABLE old_graph (value INTEGER)")
+                connection.execute(
+                    "CREATE OR REPLACE VIEW biz_package_coupling AS SELECT * FROM old_graph"
+                )
+                connection.execute("DROP TABLE old_graph")
             with _server(path) as client:
-                response = _query(client, 'SELECT count(*) FROM mrt_diag_antipatterns')
+                response = _query(
+                    client, "SELECT count(*) FROM mrt_diag_antipatterns"
+                )
                 self.assertEqual(200, response.status_code, response.text)
-                self.assertEqual([[0]], response.json()['result']['rows'])
+                self.assertEqual([[0]], response.json()["result"]["rows"])
 
     def test_cycles_coupling_and_restart(self):
         nodes = [[p, 'package', 'python', p, 'ok', None, 'Test Package' if p == 'test' else None]
@@ -78,38 +96,82 @@ class DependencyReviewTest(unittest.TestCase):
                 self.assertEqual(_query(client, 'SELECT * FROM antipattern_findings').status_code, 400)
 
     def assert_views(self, client):
-        finding = _query(client, 'SELECT relative_path, rule, status FROM antipattern_findings '
-                         "WHERE rule = 'python_import_order'")
+        finding = _query(
+            client,
+            "SELECT relative_path, rule, status FROM antipattern_findings "
+            "WHERE rule = 'python_import_order'",
+        )
         self.assertEqual(finding.status_code, 200, finding.text)
-        self.assertEqual(finding.json()['result']['rows'], [['sample.py', 'python_import_order', 'confirmed']])
+        self.assertEqual(
+            finding.json()["result"]["rows"],
+            [["sample.py", "python_import_order", "confirmed"]],
+        )
         result = _query(client, "SELECT level, occurrence_key, relative_path, line, \"column\" FROM import_cycles ORDER BY 1, 2")
         self.assertEqual(result.status_code, 200, result.text)
-        self.assertEqual(result.json()['result']['rows'], [
-            ['module', 'ab1', 'a1.py', 2, 3], ['module', 'ab2', 'a2.py', 4, 0],
-            ['module', 'at', 'a1.py', 7, 0], ['module', 'ba', 'b1.py', 5, 1],
-            ['module', 'ta', 't1.py', 8, 0], ['module', 'within', 'a1.py', 10, 0],
-            ['package', 'ab1', 'a1.py', 2, 3], ['package', 'ab2', 'a2.py', 4, 0],
-            ['package', 'at', 'a1.py', 7, 0], ['package', 'ba', 'b1.py', 5, 1],
-            ['package', 'ta', 't1.py', 8, 0],
-        ])
+        self.assertEqual(
+            result.json()["result"]["rows"],
+            [
+                ["module", "ab1", "a1.py", 2, 3],
+                ["module", "ab2", "a2.py", 4, 0],
+                ["module", "at", "a1.py", 7, 0],
+                ["module", "ba", "b1.py", 5, 1],
+                ["module", "ta", "t1.py", 8, 0],
+                ["module", "within", "a1.py", 10, 0],
+                ["package", "ab1", "a1.py", 2, 3],
+                ["package", "ab2", "a2.py", 4, 0],
+                ["package", "at", "a1.py", 7, 0],
+                ["package", "ba", "b1.py", 5, 1],
+                ["package", "ta", "t1.py", 8, 0],
+            ],
+        )
         result = _query(client, 'SELECT DISTINCT package_key, incoming_count, outgoing_count FROM package_coupling ORDER BY 1')
         self.assertEqual(result.status_code, 200, result.text)
-        self.assertEqual(result.json()['result']['rows'], [['a', 1, 1], ['b', 1, 2], ['c', 1, 0], ['solo', 0, 0]])
+        self.assertEqual(
+            result.json()["result"]["rows"],
+            [["a", 1, 1], ["b", 1, 2], ["c", 1, 0], ["solo", 0, 0]],
+        )
         result = _query(client, "SELECT occurrence_key FROM package_coupling WHERE package_key = 'a' AND direction = 'outgoing' ORDER BY 1")
         self.assertEqual(result.json()['result']['rows'], [['ab1'], ['ab2']])
         self.assert_antipatterns(client)
 
     def assert_antipatterns(self, client):
-        cycle = _query(client, """SELECT split_part(detail, ' ', 1), count(*), min(status)
+        cycle = _query(
+            client,
+            """SELECT split_part(detail, ' ', 1), count(*), min(status)
                                   FROM antipattern_findings WHERE rule = 'import_cycles'
-                                  GROUP BY 1 ORDER BY 1""")
+                                  GROUP BY 1 ORDER BY 1""",
+        )
         self.assertEqual(cycle.status_code, 200, cycle.text)
-        self.assertEqual(cycle.json()['result']['rows'], [['module', 6, 'confirmed'], ['package', 5, 'confirmed']])
-        coupling = _query(client, """SELECT relative_path, line, status, detail FROM antipattern_findings
-                                     WHERE rule = 'package_coupling' ORDER BY relative_path""")
+        self.assertEqual(
+            cycle.json()["result"]["rows"],
+            [["module", 6, "confirmed"], ["package", 5, "confirmed"]],
+        )
+        coupling = _query(
+            client,
+            """SELECT relative_path, line, status, detail FROM antipattern_findings
+                                     WHERE rule = 'package_coupling' ORDER BY relative_path""",
+        )
         self.assertEqual(coupling.status_code, 200, coupling.text)
-        self.assertEqual(coupling.json()['result']['rows'], [
-            ['a', None, 'review', '1 incoming and 1 outgoing Package dependencies'],
-            ['b', None, 'review', '1 incoming and 2 outgoing Package dependencies'],
-            ['c', None, 'review', '1 incoming and 0 outgoing Package dependencies'],
-        ])
+        self.assertEqual(
+            coupling.json()["result"]["rows"],
+            [
+                [
+                    "a",
+                    None,
+                    "review",
+                    "1 incoming and 1 outgoing Package dependencies",
+                ],
+                [
+                    "b",
+                    None,
+                    "review",
+                    "1 incoming and 2 outgoing Package dependencies",
+                ],
+                [
+                    "c",
+                    None,
+                    "review",
+                    "1 incoming and 0 outgoing Package dependencies",
+                ],
+            ],
+        )

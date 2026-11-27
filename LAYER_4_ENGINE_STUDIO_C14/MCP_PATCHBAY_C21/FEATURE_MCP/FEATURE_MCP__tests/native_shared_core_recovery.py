@@ -30,7 +30,10 @@ assert len(matches) == 1, (sys.argv[1], matches)
 os.kill(matches[0], signal.SIGKILL)
 """
 
-_KERNEL = "KERNEL_MIXER_beta_C67.DATABASE_SERVER_beta_C71.DATABASE_SERVER_beta_C71__shared"
+_KERNEL = (
+    'KERNEL_MIXER_beta_C67.DATABASE_SERVER_beta_C71.DATABASE_SERVER_beta_C71__'
+    'shared'
+)
 _ORCHESTRATOR = "ORCHESTRATOR_beta_C68.ORCHESTRATOR_beta_C68__shared"
 
 
@@ -54,23 +57,33 @@ async def _wait_for_pair(case, instance, old):
     async with asyncio.timeout(image_timeout(30)):
         while True:
             current = (await asyncio.to_thread(_pairs, case)).get(instance, {})
-            if current.keys() == old.keys() and not set(current.values()) & set(old.values()):
+            if current.keys() == old.keys() and not set(
+                current.values()
+            ) & set(old.values()):
                 return current
             await asyncio.sleep(0.15)
 
 
 async def _query_after_recovery(case, session, project):
-    args = {"project_root": str(project), "sql": "SELECT 42",
-            "result_delivery": "inline", "result_format": "json_matrix"}
+    args = {
+        "project_root": str(project),
+        "sql": "SELECT 42",
+        "result_delivery": "inline",
+        "result_format": "json_matrix",
+    }
     async with asyncio.timeout(image_timeout(45)):
         while True:
             result = await session.call_tool("query_run", args)
             if not result.is_error:
                 case.assertEqual([[42]], result.structured_content["rows"])
                 return
-            case.assertIn("project_gateway_busy", str(result.structured_content))
+            case.assertIn(
+                "project_gateway_busy", str(result.structured_content)
+            )
             if image_timeout(45) is None:
-                await asyncio.to_thread(assert_container_running, case._shared_candidate_container)
+                await asyncio.to_thread(
+                    assert_container_running, case._shared_candidate_container
+                )
             await asyncio.sleep(0.15)
 
 
@@ -83,8 +96,11 @@ async def assert_core_recovery(case, endpoint, projects, http, unaffected_query_
     project = None
     processes, _ = await asyncio.to_thread(case._processes)
     for name in ("alpha", "beta"):
-        if any(pid == base[instance][_KERNEL] and str(projects / name) in shlex.split(command)
-               for pid, _, command in processes):
+        if any(
+            pid == base[instance][_KERNEL]
+            and str(projects / name) in shlex.split(command)
+            for pid, _, command in processes
+        ):
             project = name
     case.assertIsNotNone(project)
     sibling = "alpha" if project == "beta" else "beta"
@@ -95,8 +111,13 @@ async def assert_core_recovery(case, endpoint, projects, http, unaffected_query_
             timeout=image_timeout(10), check=True, capture_output=True, text=True,
         )
         base[instance] = await _wait_for_pair(case, instance, base[instance])
-        case.assertEqual(base[other], (await asyncio.to_thread(_pairs, case))[other])
-        async with streamable_http_client(endpoint, http_client=http) as streams, ClientSession(*streams) as session:
+        case.assertEqual(
+            base[other], (await asyncio.to_thread(_pairs, case))[other]
+        )
+        async with (
+            streamable_http_client(endpoint, http_client=http) as streams,
+            ClientSession(*streams) as session,
+        ):
             await session.initialize()
             await _query_after_recovery(case, session, projects / project)
             page = await session.call_tool("query_page", {
@@ -105,7 +126,9 @@ async def assert_core_recovery(case, endpoint, projects, http, unaffected_query_
                 "offset": 0, "page_size": 1, "result_delivery": "inline",
             })
             case.assertFalse(page.is_error, page.structured_content)
-            case.assertEqual([[f"{sibling.upper()}-S-001"]], page.structured_content["rows"])
+            case.assertEqual(
+                [[f"{sibling.upper()}-S-001"]], page.structured_content["rows"]
+            )
         current = case._assert_project_processes(projects)
         current.pop("peer_processes")
         case.assertEqual(facades, current)

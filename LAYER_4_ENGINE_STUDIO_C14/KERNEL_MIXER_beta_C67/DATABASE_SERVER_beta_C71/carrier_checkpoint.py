@@ -17,7 +17,9 @@ _LEGACY_CHECKPOINTS = {
     "ops_carrier_hashes": "carrier_sha256_by_path",
     "generation_carriers": "hashes",
 }
-_PENDING_FOLDER = "coalesce(nullif(parse_dirpath(path, 'forward_slash'), ''), '.')"
+_PENDING_FOLDER = (
+    "coalesce(nullif(parse_dirpath(path, 'forward_slash'), ''), '.')"
+)
 _PENDING_DIGESTS = f"""SELECT path, {_PENDING_FOLDER} AS folder, digest
     FROM main.ops_generation_carrier_changes WHERE digest IS NOT NULL"""
 _EFFECTIVE_DIGESTS = f"""SELECT d.path, d.folder, d.digest FROM main.ops_generation_carrier_digests d
@@ -32,17 +34,26 @@ def initialize_checkpoint(connection, objects=None):
     connection.execute("""CREATE TABLE IF NOT EXISTS main.ops_generation_carrier_digests
         (path VARCHAR PRIMARY KEY, folder VARCHAR NOT NULL, digest VARCHAR NOT NULL)""")
     if "ops_generation_carrier_digests" not in objects:
-        connection.execute("CREATE INDEX ops_generation_carrier_digests_folder ON main.ops_generation_carrier_digests(folder)")
+        connection.execute(
+            "CREATE INDEX ops_generation_carrier_digests_folder ON main.ops_generation_carrier_digests(folder)"
+        )
     connection.execute("""CREATE TABLE IF NOT EXISTS main.ops_generation_carrier_checkpoint
         (complete BOOLEAN PRIMARY KEY CHECK (complete))""")
     connection.execute("""CREATE TABLE IF NOT EXISTS main.ops_generation_carrier_changes
         (path VARCHAR PRIMARY KEY, digest VARCHAR)""")
     connection.execute("""CREATE TABLE IF NOT EXISTS main.ops_generation_folder_hashes
         (folder VARCHAR PRIMARY KEY, digest VARCHAR NOT NULL)""")
-    sources = [(name, column) for name, column in _LEGACY_CHECKPOINTS.items() if objects.get(name) == "BASE TABLE"]
+    sources = [
+        (name, column)
+        for name, column in _LEGACY_CHECKPOINTS.items()
+        if objects.get(name) == "BASE TABLE"
+    ]
     if sources:
         hashes = _legacy_hashes(connection, *sources[0])
-        if checkpoint_exists(connection) or any(_legacy_hashes(connection, *source) != hashes for source in sources[1:]):
+        if checkpoint_exists(connection) or any(
+            _legacy_hashes(connection, *source) != hashes
+            for source in sources[1:]
+        ):
             raise ValueError("Conflicting retained carrier checkpoints")
         _replace_checkpoint(connection, hashes)
         for name, _ in sources:
@@ -59,7 +70,9 @@ def initialize_checkpoint(connection, objects=None):
 
 
 def _legacy_hashes(connection, table, column):
-    rows = connection.execute(f"SELECT {column} FROM main.{table} LIMIT 2").fetchall()
+    rows = connection.execute(
+        f"SELECT {column} FROM main.{table} LIMIT 2"
+    ).fetchall()
     if not rows:
         return None
     if len(rows) != 1 or not isinstance(rows[0][0], str):
@@ -76,7 +89,9 @@ def _path(parent, filename):
 
 def _valid_hashes(hashes):
     return isinstance(hashes, dict) and all(
-        isinstance(value, str) and re.fullmatch(r"[0-9a-f]{64}", value) is not None for value in hashes.values()
+        isinstance(value, str)
+        and re.fullmatch(r"[0-9a-f]{64}", value) is not None
+        for value in hashes.values()
     )
 
 
@@ -86,7 +101,9 @@ def _folder_hashes(rows):
         folders[folder].append((PurePosixPath(path).name, digest))
     result = {}
     for folder, entries in folders.items():
-        encoded = json.dumps(sorted(entries), ensure_ascii=False, separators=(",", ":")).encode()
+        encoded = json.dumps(
+            sorted(entries), ensure_ascii=False, separators=(",", ":")
+        ).encode()
         result[folder] = sha256(encoded).hexdigest()
     return result
 
@@ -94,8 +111,11 @@ def _folder_hashes(rows):
 def _write_folder_hashes(connection, rows):
     folders = _folder_hashes(rows)
     if folders:
-        connection.execute("""INSERT INTO main.ops_generation_folder_hashes
-            SELECT unnest(?::VARCHAR[]), unnest(?::VARCHAR[])""", [list(folders), list(folders.values())])
+        connection.execute(
+            """INSERT INTO main.ops_generation_folder_hashes
+            SELECT unnest(?::VARCHAR[]), unnest(?::VARCHAR[])""",
+            [list(folders), list(folders.values())],
+        )
 
 
 def _replace_checkpoint(connection, hashes):
@@ -104,12 +124,20 @@ def _replace_checkpoint(connection, hashes):
     connection.execute("DELETE FROM main.ops_generation_carrier_checkpoint")
     connection.execute("DELETE FROM main.ops_generation_carrier_changes")
     if hashes is not None:
-        rows = [(path, PurePosixPath(path).parent.as_posix(), digest) for path, digest in hashes.items()]
+        rows = [
+            (path, PurePosixPath(path).parent.as_posix(), digest)
+            for path, digest in hashes.items()
+        ]
         if rows:
-            connection.execute("""INSERT INTO main.ops_generation_carrier_digests
-                SELECT unnest(?::VARCHAR[]), unnest(?::VARCHAR[]), unnest(?::VARCHAR[])""", list(zip(*rows, strict=False)))
+            connection.execute(
+                """INSERT INTO main.ops_generation_carrier_digests
+                SELECT unnest(?::VARCHAR[]), unnest(?::VARCHAR[]), unnest(?::VARCHAR[])""",
+                list(zip(*rows, strict=False)),
+            )
         _write_folder_hashes(connection, rows)
-        connection.execute("INSERT INTO main.ops_generation_carrier_checkpoint VALUES (true)")
+        connection.execute(
+            "INSERT INTO main.ops_generation_carrier_checkpoint VALUES (true)"
+        )
 
 
 def _record_changes(connection, paths, hashes):
@@ -118,40 +146,63 @@ def _record_changes(connection, paths, hashes):
         raise ValueError("Invalid carrier hashes")
     changes.update(hashes)
     if changes:
-        connection.execute("""INSERT INTO main.ops_generation_carrier_changes
+        connection.execute(
+            """INSERT INTO main.ops_generation_carrier_changes
             SELECT unnest(?::VARCHAR[]), unnest(?::VARCHAR[])
-            ON CONFLICT (path) DO UPDATE SET digest = excluded.digest""", [list(changes), list(changes.values())])
+            ON CONFLICT (path) DO UPDATE SET digest = excluded.digest""",
+            [list(changes), list(changes.values())],
+        )
 
 
 def update_checkpoint(connection, data, *, delta=False):
     hashes = data.get("carrier_hashes")
     if "carrier_hashes" in data:
         snapshot = data["snapshot"]
-        if not _valid_hashes(hashes) or not isinstance(snapshot, dict) or snapshot.get("schema_version") != 2:
+        if (
+            not _valid_hashes(hashes)
+            or not isinstance(snapshot, dict)
+            or snapshot.get("schema_version") != 2
+        ):
             raise ValueError("Invalid carrier hashes")
-        expected = {_path(atom["relative_path"], atom["filename"]) for atom in snapshot["atoms"]}
-        rejected = {issue["relative_path"] for issue in snapshot.get("ingestion_issues", [])}
+        expected = {
+            _path(atom["relative_path"], atom["filename"])
+            for atom in snapshot["atoms"]
+        }
+        rejected = {
+            issue["relative_path"]
+            for issue in snapshot.get("ingestion_issues", [])
+        }
         if not expected <= hashes.keys() <= expected | rejected:
             raise ValueError("Invalid carrier hashes")
     if delta and hashes is not None:
         if checkpoint_exists(connection):
             _record_changes(connection, data["paths"], hashes)
     else:
-        if not has_table(connection, "main", "ops_generation_carrier_checkpoint"):
+        if not has_table(
+            connection, "main", "ops_generation_carrier_checkpoint"
+        ):
             initialize_checkpoint(connection)
         _replace_checkpoint(connection, hashes)
 
 
 def checkpoint_exists(connection):
-    return has_table(connection, "main", "ops_generation_carrier_checkpoint") and connection.execute(
-        "SELECT 1 FROM main.ops_generation_carrier_checkpoint LIMIT 1"
-    ).fetchone() is not None
+    return (
+        has_table(connection, "main", "ops_generation_carrier_checkpoint")
+        and connection.execute(
+            "SELECT 1 FROM main.ops_generation_carrier_checkpoint LIMIT 1"
+        ).fetchone()
+        is not None
+    )
 
 
 def checkpoint_changes_pending(connection):
-    return has_table(connection, "main", "ops_generation_carrier_changes") and connection.execute(
-        "SELECT 1 FROM main.ops_generation_carrier_changes LIMIT 1"
-    ).fetchone() is not None
+    return (
+        has_table(connection, "main", "ops_generation_carrier_changes")
+        and connection.execute(
+            "SELECT 1 FROM main.ops_generation_carrier_changes LIMIT 1"
+        ).fetchone()
+        is not None
+    )
 
 
 def _scope_filter(scope, folder="folder"):
@@ -193,19 +244,35 @@ def fold_checkpoint(connection):
 
 
 def _read_folders(connection, witness, hashes, scope=None):
-    required = (("main", "ops_generation_folder_hashes"), ("main", "mrt_atoms"),
-                ("main", "mrt_atom_references"), ("main", "mrt_atom_graph_relations"),
-                ("native_graph", "int_labels"))
-    if (hashes is None or "carrier_schema" not in witness["inputs"]
-            or not all(has_table(connection, schema, name) for schema, name in required)):
+    required = (
+        ("main", "ops_generation_folder_hashes"),
+        ("main", "mrt_atoms"),
+        ("main", "mrt_atom_references"),
+        ("main", "mrt_atom_graph_relations"),
+        ("native_graph", "int_labels"),
+    )
+    if (
+        hashes is None
+        or "carrier_schema" not in witness["inputs"]
+        or not all(
+            has_table(connection, schema, name) for schema, name in required
+        )
+    ):
         return None
-    folders = dict(connection.execute(f"SELECT folder, digest FROM ops_generation_folder_hashes WHERE {_scope_filter(scope)}").fetchall())
+    folders = dict(
+        connection.execute(
+            f"SELECT folder, digest FROM ops_generation_folder_hashes WHERE {_scope_filter(scope)}"
+        ).fetchall()
+    )
     touched = _touched_folders(connection, scope)
     if touched:
         for folder in touched:
             folders.pop(folder, None)
-        rows = connection.execute(f"""SELECT path, folder, digest FROM ({_EFFECTIVE_DIGESTS})
-            WHERE folder IN (SELECT unnest(?::VARCHAR[]))""", [touched]).fetchall()
+        rows = connection.execute(
+            f"""SELECT path, folder, digest FROM ({_EFFECTIVE_DIGESTS})
+            WHERE folder IN (SELECT unnest(?::VARCHAR[]))""",
+            [touched],
+        ).fetchall()
         folders.update(_folder_hashes(rows))
     return folders
 
@@ -253,7 +320,11 @@ def reuse_route(connection, instance_id, lock, read_object, error_response):
     async def reuse(request):
         if request.method == "PUT":
             try:
-                data = await read_object(request, 4096, {"instance_id", "base_generation", "archive_pending"})
+                data = await read_object(
+                    request,
+                    4096,
+                    {"instance_id", "base_generation", "archive_pending"},
+                )
                 if data["instance_id"] != instance_id:
                     return error_response("foreign_instance", "Instance does not match", 403)
                 if data["archive_pending"] is not True:

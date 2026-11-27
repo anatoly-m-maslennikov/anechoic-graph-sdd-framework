@@ -9,7 +9,11 @@ def _has_value(name: str, kind: str) -> str:
     if kind == "VARCHAR" or kind.startswith("ENUM("):
         present += f" AND {column}::VARCHAR != ''"
     elif kind == "JSON":
-        present += f" AND json({column})::VARCHAR NOT IN ('null', '\"\"', '[]', '{{}}')"
+        present += (
+            " AND json("
+            f"{column}"
+            ")::VARCHAR NOT IN ('null', '\"\"', '[]', '{}')"
+        )
     elif kind.endswith("]"):
         present += f" AND len({column}) > 0"
     elif kind.startswith("MAP("):

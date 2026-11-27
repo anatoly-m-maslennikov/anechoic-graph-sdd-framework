@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-2412
+concern:
+  subject: "Carrier"
+  path: "Model"
+  relation: "is_contained_by"
 container:
   component: C18
 tier: 3
@@ -8,8 +12,8 @@ context:
   lens: DES
 state:
   status: active
-  version: 28
-  updated_at: 2026-10-27 19:59:50 +0400
+  version: 29
+  updated_at: "2026-11-27T16:16:01.404965+00:00"
 ---
 ## Summary
 

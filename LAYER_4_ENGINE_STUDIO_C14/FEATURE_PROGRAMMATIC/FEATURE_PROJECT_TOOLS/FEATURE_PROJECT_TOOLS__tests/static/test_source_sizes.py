@@ -8,7 +8,9 @@ from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import patch
 
-from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.test_suite__shared import run_full_suite
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.test_suite__shared import (
+    run_full_suite,
+)
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.test_suite__shared import (
     check_functions,
     check_module,
@@ -91,6 +93,7 @@ class SourceSizeTests(unittest.TestCase):
 
     def test_added_web_suffixes_are_measured(self):
         from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS import source_sizes
+
         with TemporaryDirectory() as directory:
             root = Path(directory).resolve()
             subprocess.run(("git", "init", "--quiet", str(root)), check=True)
@@ -99,18 +102,26 @@ class SourceSizeTests(unittest.TestCase):
             body = "const run = () => {\n" + "  void 0;\n" * 44 + "};\n"
             for suffix in ("jsx", "tsx", "mts"):
                 (folder / f"example.{suffix}").write_text(body)
-            with unittest.mock.patch.object(source_sizes, "web_functions") as parse:
-                parse.side_effect = lambda root, files: web_functions(ROOT, files)
+            with unittest.mock.patch.object(
+                source_sizes, "web_functions"
+            ) as parse:
+                parse.side_effect = lambda root, files: web_functions(
+                    ROOT, files
+                )
                 findings = source_sizes.source_size_findings(root)
             self.assertEqual(3, len(findings))
-            self.assertTrue(all("run has 46 lines" in item for item in findings))
+            self.assertTrue(
+                all("run has 46 lines" in item for item in findings)
+            )
 
     def test_javascript_and_typescript_function_limit(self):
         arrow = "const run = () => {\n" + "  void 0;\n\n  \n" * 43 + "};"
         longer = arrow.replace("};", "  void 0;\n};")
         component = (
-            '<script lang="ts" module>\n' + arrow + '\n</script>\n'
-            '<script lang="ts">\n' + longer.replace('run', 'slow') + '\n</script>'
+            '<script lang="ts" module>\n' + arrow + "\n</script>\n"
+            '<script lang="ts">\n'
+            + longer.replace("run", "slow")
+            + "\n</script>"
         )
         files = [
             {"path": "exact.ts", "source": arrow},
@@ -118,9 +129,10 @@ class SourceSizeTests(unittest.TestCase):
             {"path": "Both.svelte", "source": component},
         ]
         exact, over, blocks = web_functions(ROOT, files)
-        self.assertCountEqual([("run", 45), ("slow", 46)], [
-            (name, size) for _, name, size in blocks
-        ])
+        self.assertCountEqual(
+            [("run", 45), ("slow", 46)],
+            [(name, size) for _, name, size in blocks],
+        )
         self.assertEqual([[1, "run", 45]], exact)
         self.assertEqual([], check_functions("exact.ts", exact))
         self.assertEqual(

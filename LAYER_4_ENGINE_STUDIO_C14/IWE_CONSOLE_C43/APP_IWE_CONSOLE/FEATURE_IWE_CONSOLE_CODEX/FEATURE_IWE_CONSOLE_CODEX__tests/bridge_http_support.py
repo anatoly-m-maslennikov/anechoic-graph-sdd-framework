@@ -116,7 +116,12 @@ class BridgeHTTPFixture(unittest.TestCase):
                     cls.process.stderr.read() if cls.process.stderr else ""
                 )
                 raise AssertionError(
-                    f"Codex bridge exited\nstdout:\n{stdout}\nstderr:\n{stderr}"
+                    (
+                        "Codex bridge exited\nstdout:\n"
+                        f"{stdout}"
+                        "\nstderr:\n"
+                        f"{stderr}"
+                    )
                 )
             try:
                 value = json.loads(state.read_text(encoding="utf-8"))

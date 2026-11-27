@@ -38,11 +38,12 @@ class ProjectInitTests(unittest.TestCase):
         self.assertIn("atom_id: MP-S-1\n", text)
         self.assertIn("  template: project_manifest\n", text)
         self.assertIn("  status: active\n", text)
+        self.assertIn("## Formal Manifest\n\n```python\n", text)
         claim = ast.parse(text.split("```python\n", 1)[1].split("\n```", 1)[0])
-        call = claim.body[-1].value
-        project = next(
-            kw.value for kw in call.keywords if kw.arg == "instance"
-        )
+        self.assertEqual("anechoic.model", claim.body[0].module)
+        self.assertEqual("ComponentManifest", claim.body[0].names[0].name)
+        project = claim.body[-1].value
+        self.assertEqual("ComponentManifest", project.func.id)
         return {kw.arg: ast.literal_eval(kw.value) for kw in project.keywords}
 
     def test_manifest_contains_project_identity_storage_and_layout(self):
@@ -54,8 +55,8 @@ class ProjectInitTests(unittest.TestCase):
         self.assertEqual("MP", fields["prefix"])
         self.assertEqual(
             {
-                "iwe_console": {"storage": "memory"},
-                "journal": {"storage": "duckdb"},
+                "duck_db.storage": "memory",
+                "journal.storage": "duckdb",
             },
             fields["parameters"]["runtime"],
         )
@@ -65,7 +66,7 @@ class ProjectInitTests(unittest.TestCase):
                 "1": "01_TIER_1_ARCHITECTURE",
                 "2+": "_{lens}/{sublenses}",
             },
-            fields["parameters"]["project"]["folder_layout"][
+            fields["parameters"]["folder_layout"][
                 "active_spec_by_tier"
             ],
         )
@@ -73,10 +74,9 @@ class ProjectInitTests(unittest.TestCase):
             self.root / "MP-S-1-SPEC-PROJECT_MANIFEST--declare-project.md"
         )
         self.assertIn(
-            "        parameters={\n"
             "            'runtime': {\n"
-            "                'iwe_console': {'storage': 'memory'},\n"
-            "                'journal': {'storage': 'duckdb'},\n",
+            "                'duck_db.storage': 'memory',\n"
+            "                'journal.storage': 'duckdb',\n",
             manifest.read_text(encoding="utf-8"),
         )
         self.assertEqual(
@@ -115,8 +115,8 @@ class ProjectInitTests(unittest.TestCase):
         )
         self.assertEqual(
             {
-                "iwe_console": {"storage": "disk"},
-                "journal": {"storage": "files"},
+                "duck_db.storage": "disk",
+                "journal.storage": "files",
             },
             self.manifest_fields(control)["parameters"]["runtime"],
         )

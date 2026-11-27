@@ -164,7 +164,10 @@ def _bind_value_formats(
             diagnostics.append(
                 {
                     "code": "unresolved_model_value_format",
-                    "message": f"Model class {cls} has {len(found)} declaring bindings for {identity}.",
+                    "message": (
+                        f"Model class {cls} has {len(found)} "
+                        f"declaring bindings for {identity}."
+                    ),
                     "sources": [
                         dict(clause["source"]),
                         *[source for _, source in found],
@@ -221,7 +224,10 @@ def _apply_effective_format(
         diagnostics.append(
             {
                 "code": "conflicting_property_value_formats",
-                "message": f"Conflicting applicable value formats for {identity}: {', '.join(sorted(formats))} ({', '.join(refs)}).",
+                "message": (
+                    f"Conflicting applicable value formats for {identity}: "
+                    f"{', '.join(sorted(formats))} ({', '.join(refs)})."
+                ),
                 "sources": [dict(clause["source"]) for clause in matches],
             }
         )

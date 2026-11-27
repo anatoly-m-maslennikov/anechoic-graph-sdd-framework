@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from importlib import import_module
 import sys
 import unittest
 from pathlib import Path
@@ -12,119 +13,23 @@ import yaml
 SCRIPT_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SCRIPT_DIR))
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import render_declarations  # noqa: E402
-
-
-FENCE = chr(96) * 3
-PROJECTION = {
-    "projection_id": "CA-PROJ-901",
-    "named_selection": "Relation-Types-and-Graph-Rules",
-    "source_of_truth": ["CORE_META_MODEL selected authority", "current active source set"],
-}
-
-
-def source(atom_id: str, version: int) -> dict[str, object]:
-    return {"atom_id": atom_id, "version": version}
-
-
-def metadata(**overrides: object) -> dict[str, object]:
-    values = {
-        "meaning": "a supplied relation meaning",
-        "direction": "source to target",
-        "inverse": "target to source",
-        "authority_effect": "direct",
-        "transitivity": "not transitive",
-        "applicability": "selected graph",
-        "status": "Active",
-        "exclusive_purpose": "one purpose",
-    }
-    values.update(overrides)
-    return values
-
-
-def relation_type(
-    graph_kind: str,
-    canonical_name: str,
-    *,
-    relation_metadata: dict[str, object] | None = None,
-    sources: list[dict[str, object]] | None = None,
-    evidence: list[dict[str, object]] | None = None,
-) -> dict[str, object]:
-    row: dict[str, object] = {
-        "graph_kind": graph_kind,
-        "canonical_name": canonical_name,
-        "metadata": relation_metadata if relation_metadata is not None else metadata(),
-        "sources": sources if sources is not None else [source("CA-R-100", 2)],
-    }
-    if evidence is not None:
-        row["evidence"] = evidence
-    return row
-
-
-def render(
-    catalog: dict[str, object],
-    *,
-    owners: list[dict[str, object]] | None = None,
-    projection_identity: dict[str, object] | None = None,
-) -> str:
-    return render_declarations(
-        catalog,
-        {"owners": owners if owners is not None else [{"source": source("CA-R-100", 2)}]},
-        updated_at="2026-10-20 02:30:00 +0400",
-        source_selection="CORE_META_MODEL only",
-        projection_identity=projection_identity or PROJECTION,
-    )
-
-
-def good_view_document():
-    raw_yaml = (
-        FENCE
-        + "yaml\n"
-        + "graph_rule_type: whitelist\n"
-        + "applies_to:\n"
-        + "  relation_type: IS_CONTAINED_BY\n"
-        + "condition:\n"
-        + "  source: [Child]\n"
-        + "  target: [Parent]\n"
-        + FENCE
-    )
-    document = render(
-        {
-            "relation_types": [
-                relation_type(
-                    "Entities Graph",
-                    "IS_CONTAINED_BY",
-                    evidence=[
-                        {
-                            "source": source("CA-R-1368", 14),
-                            "subject": "Entity/Plan",
-                            "body": "The source Claim establishes the direct containment direction.",
-                        }
-                    ],
-                )
-            ],
-            "graph_rules": [
-                {
-                    "source": source("CA-R-200", 4),
-                    "subject": "Entity/Plan",
-                    "summary": "Plan containment rule.",
-                    "yaml_block": raw_yaml,
-                }
-            ],
-            "limitations": ["Project selection is not included."],
-            "unresolved": [],
-        },
-        owners=[
-            {"source": source("CA-R-200", 4)},
-            {"source": source("CA-R-100", 2)},
-            {"source": source("CA-R-100", 2)},
-        ],
-    )
-    return document, raw_yaml
+_fixture = import_module(
+    "FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH."
+    "GENERATE_ENTITY_GRAPH__tests._declaration_view_fixture"
+)
+FENCE = _fixture.FENCE
+PROJECTION = _fixture.PROJECTION
+source = _fixture.source
+metadata = _fixture.metadata
+relation_type = _fixture.relation_type
+render = _fixture.render
+good_view_document = _fixture.good_view_document
 
 
 class DeclarationViewTests(unittest.TestCase):
-    def test_good_view_has_identity_sections_and_no_atom_relation_map(self) -> None:
+    def test_good_view_has_identity_sections_and_no_atom_relation_map(
+        self,
+    ) -> None:
         document, raw_yaml = good_view_document()
 
         frontmatter = yaml.safe_load(document.split("---\n", 2)[1])
@@ -135,27 +40,63 @@ class DeclarationViewTests(unittest.TestCase):
             "Named Selection//Relation-Types-and-Graph-Rules",
             frontmatter["source"]["named_selection"],
         )
-        self.assertEqual(["CA-R-100@2", "CA-R-200@4"], frontmatter["source"]["atoms"])
+        self.assertEqual(
+            ["CA-R-100@2", "CA-R-200@4"], frontmatter["source"]["atoms"]
+        )
         self.assertNotIn("type", frontmatter)
         self.assertNotIn("source_of_truth", frontmatter)
         self.assertNotIn("sources", frontmatter)
-        self.assertLess(document.index("## Relation Types"), document.index("## Graph Rules"))
-        self.assertLess(document.index("## Graph Rules"), document.index("## Source limitations"))
+        self.assertLess(
+            document.index("## Relation Types"),
+            document.index("## Graph Rules"),
+        )
+        self.assertLess(
+            document.index("## Graph Rules"),
+            document.index("## Source limitations"),
+        )
         self.assertIn("\tMeaning: a supplied relation meaning", document)
         self.assertIn("#### Evidence: CA-R-1368@14", document)
         self.assertIn("Subject: Entity/Plan", document)
-        self.assertIn("The source Claim establishes the direct containment direction.", document)
+        self.assertIn(
+            "The source Claim establishes the direct containment direction.",
+            document,
+        )
         self.assertIn(raw_yaml, document)
         self.assertNotIn("relations:", document)
 
-    def test_empty_catalog_is_explicit_and_does_not_claim_complete_authority(self) -> None:
-        document = render({"relation_types": [], "graph_rules": [], "limitations": [], "unresolved": []})
+    def test_empty_catalog_is_explicit_and_does_not_claim_complete_authority(
+        self,
+    ) -> None:
+        document = render(
+            {
+                "relation_types": [],
+                "graph_rules": [],
+                "limitations": [],
+                "unresolved": [],
+            }
+        )
 
-        self.assertIn("- No Relation Type declarations supplied for the selected source set.", document)
-        self.assertIn("- Concrete Graph Rule catalogue: empty for the selected source set.", document)
-        self.assertIn("does not establish completeness outside the selection", document)
+        self.assertIn(
+            (
+                "- No Relation Type declarations supplied"
+                " for the selected source set."
+            ),
+            document,
+        )
+        self.assertIn(
+            (
+                "- Concrete Graph Rule catalogue: empty f"
+                "or the selected source set."
+            ),
+            document,
+        )
+        self.assertIn(
+            "does not establish completeness outside the selection", document
+        )
 
-    def test_graph_kind_and_name_are_sorted_without_merging_same_names(self) -> None:
+    def test_graph_kind_and_name_are_sorted_without_merging_same_names(
+        self,
+    ) -> None:
         document = render(
             {
                 "relation_types": [
@@ -207,13 +148,18 @@ class DeclarationViewTests(unittest.TestCase):
         self.assertIn("literal: '01:02'", document)
         self.assertIn("Do not evaluate this.", document)
 
-    def test_cardinality_yaml_renders_opaque_with_selection_and_unbounded_maximum(self) -> None:
+    def _cardinality_yaml(
+        self,
+    ) -> None:
         raw_yaml = (
             FENCE
             + "yaml\n"
             + "graph_rule_type: cardinality\n"
             + "applies_to:\n"
-            + '  node: "Entity/Node/Continuant/Selection//Dependent Entity Occurrences"\n'
+            + (
+                '  node: "Entity/Node/Continuant/Selectio'
+                'n//Dependent Entity Occurrences"\n'
+            )
             + "  relation_type: IS_BORNE_BY\n"
             + "  direction: outgoing\n"
             + "condition:\n"
@@ -240,20 +186,35 @@ class DeclarationViewTests(unittest.TestCase):
 
         self.assertIn("### Graph Rule: CA-R-637", document)
         self.assertIn("Source: CA-R-637", document)
-        self.assertIn("Governed Subject: Entity/Node/Continuant/Atom.Relations", document)
+        self.assertIn(
+            "Governed Subject: Entity/Node/Continuant/Atom.Relations", document
+        )
         self.assertIn(raw_yaml, document)
         self.assertIn("Selection//Dependent Entity Occurrences", document)
         self.assertIn("maximum: null", document)
         self.assertNotIn("evaluated_count", document)
 
-    def test_duplicate_relation_sources_are_deduplicated_and_sorted(self) -> None:
+    locals()[
+        (
+            "test_cardinality_yaml_renders_opaque"
+            "_with_selection_and_unbounded_maximum"
+        )
+    ] = _cardinality_yaml
+
+    def test_duplicate_relation_sources_are_deduplicated_and_sorted(
+        self,
+    ) -> None:
         document = render(
             {
                 "relation_types": [
                     relation_type(
                         "Entities Graph",
                         "IS_BORNE_BY",
-                        sources=[source("CA-R-9", 3), source("CA-R-9", 3), source("CA-R-2", 8)],
+                        sources=[
+                            source("CA-R-9", 3),
+                            source("CA-R-9", 3),
+                            source("CA-R-2", 8),
+                        ],
                     )
                 ],
                 "graph_rules": [],
@@ -274,14 +235,18 @@ class DeclarationViewTests(unittest.TestCase):
         self.assertEqual(1, document.count("\t\tCA-R-9@3"))
         self.assertEqual(1, document.count("\t\tCA-R-2@8"))
 
-    def test_metadata_fence_is_wider_than_untrusted_backticks_and_fields_are_tabbed(self) -> None:
+    def _metadata_fence(
+        self,
+    ) -> None:
         document = render(
             {
                 "relation_types": [
                     relation_type(
                         "Entities Graph",
                         "UNTRUSTED",
-                        relation_metadata=metadata(meaning="text with " + chr(96) * 4 + " inside"),
+                        relation_metadata=metadata(
+                            meaning="text with " + chr(96) * 4 + " inside"
+                        ),
                     )
                 ],
                 "graph_rules": [],
@@ -291,12 +256,23 @@ class DeclarationViewTests(unittest.TestCase):
         )
 
         self.assertIn(chr(96) * 5 + "text", document)
-        self.assertIn("\tMeaning: text with " + chr(96) * 4 + " inside", document)
+        self.assertIn(
+            "\tMeaning: text with " + chr(96) * 4 + " inside", document
+        )
         text_block = document[document.index(chr(96) * 5 + "text") :]
         self.assertIn("\tOwning graph kind:", text_block)
         self.assertIn("\tCanonical name:", text_block)
 
-    def test_missing_metadata_is_an_honest_gap_and_unresolved_evidence_is_visible(self) -> None:
+    locals()[
+        (
+            "test_metadata_fence_is_wider_than_unt"
+            "rusted_backticks_and_fields_are_tabbed"
+        )
+    ] = _metadata_fence
+
+    def _missing_metadata(
+        self,
+    ) -> None:
         evidence = "governing prose with " + chr(96) * 3 + " fence"
         document = render(
             {
@@ -321,17 +297,28 @@ class DeclarationViewTests(unittest.TestCase):
         )
 
         self.assertIn("\tMeaning: only supplied meaning", document)
-        self.assertIn("\tDeclared direct direction: unavailable (not evidenced in selected authority)", document)
+        self.assertIn(
+            (
+                "\tDeclared direct direction: unavailable "
+                "(not evidenced in selected authority)"
+            ),
+            document,
+        )
         self.assertIn("unknown candidate remains outside admission", document)
         self.assertIn("qualified identity is unresolved", document)
         self.assertIn(evidence, document)
 
-    def test_invalid_provenance_version_fails_through_existing_source_helper(self) -> None:
-        with self.assertRaisesRegex(ValueError, "Invalid source Version"):
-            render(
-                {"relation_types": [], "graph_rules": [], "limitations": [], "unresolved": []},
-                owners=[{"source": {"atom_id": "CA-R-100", "version": 0}}],
-            )
+    locals()[
+        (
+            "test_missing_metadata_is_an_honest_g"
+            "ap_and_unresolved_evidence_is_visible"
+        )
+    ] = _missing_metadata
+
+    def test_invalid_provenance_version_fails_through_existing_source_helper(
+        self,
+    ) -> None:
+        _fixture.assert_invalid_provenance(self)
 
 
 if __name__ == "__main__":

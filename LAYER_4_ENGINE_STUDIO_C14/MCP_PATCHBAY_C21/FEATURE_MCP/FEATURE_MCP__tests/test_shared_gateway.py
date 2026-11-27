@@ -41,7 +41,9 @@ class _Gateway:
 
     def __init__(self, root, *, selection):
         self.root, self.selection = Path(root), selection
-        self.tool_blacklist = self.blacklist_by_root.get(str(root), frozenset())
+        self.tool_blacklist = self.blacklist_by_root.get(
+            str(root), frozenset()
+        )
         self.ready = True
         self.tools = self.tools_by_root[str(root)]
         self.closed = False
@@ -72,10 +74,22 @@ class _Gateway:
 class _Session(_Gateway):
     def __init__(self, root, *, selection):
         super().__init__(root, selection=selection)
-        self.tools = [tool.model_dump(mode="json", by_alias=True) for tool in self.tools]
+        self.tools = [
+            tool.model_dump(mode="json", by_alias=True) for tool in self.tools
+        ]
 
-    async def call_tool(self, name, arguments, *, session_id, public_base_url, asserted_project_root):
-        result = await self.call(None, types.CallToolRequestParams(name=name, arguments=arguments))
+    async def call_tool(
+        self,
+        name,
+        arguments,
+        *,
+        session_id,
+        public_base_url,
+        asserted_project_root,
+    ):
+        result = await self.call(
+            None, types.CallToolRequestParams(name=name, arguments=arguments)
+        )
         return {"value": result.structured_content, "text": None}
 
 
@@ -115,7 +129,11 @@ class SharedGatewayTests(unittest.IsolatedAsyncioTestCase):
     async def test_single_project_catalog_and_routing_include_lifecycle(self):
         root = self.roots[0]
         self.config_path.write_text(
-            f'schema_version=1\n[shared_mcp]\nproject_root="{root}"\nhttp_port=8092\n'
+            (
+                'schema_version=1\n[shared_mcp]\nproject_root="'
+                f'{root}'
+                '"\nhttp_port=8092\n'
+            )
         )
         name = "atom_lifecycle_archive"
         _Gateway.tools_by_root[str(root)] = [_tool(), _tool(name)]
@@ -135,8 +153,14 @@ class SharedGatewayTests(unittest.IsolatedAsyncioTestCase):
 
         coordinator = backend.SharedBackend(load_host_runtime_config(self.config_path), _Session)
         for error, expected in (
-            (backend.OutsideProjectRootError("a different explanation"), "outside_project_root"),
-            (backend.HostRuntimeConfigError("outside is mentioned here"), "invalid_project_root"),
+            (
+                backend.OutsideProjectRootError("a different explanation"),
+                "outside_project_root",
+            ),
+            (
+                backend.HostRuntimeConfigError("outside is mentioned here"),
+                "invalid_project_root",
+            ),
         ):
             with self.subTest(error=error), patch.object(backend, "resolve_host_project", side_effect=error):
                 with self.assertRaises(backend.SharedProjectRefusal) as caught:

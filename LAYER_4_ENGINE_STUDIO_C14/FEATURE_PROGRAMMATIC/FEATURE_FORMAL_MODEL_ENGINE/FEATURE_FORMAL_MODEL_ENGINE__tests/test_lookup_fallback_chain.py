@@ -2,26 +2,42 @@
 
 import unittest
 
-from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.FEATURE_FORMAL_MODEL_ENGINE__shared import (
+from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.\
+    FEATURE_FORMAL_MODEL_ENGINE__shared \
+    import (
     compiler_model_statements,
     lint_python_model_claim,
-)
-from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import (
+)  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.\
+    FEATURE_PROJECT_TOOLS__tests.\
+    FEATURE_PROJECT_TOOLS__tests__shared \
+    import (
     FALLBACK_CLAIM as CLAIM,
-)
-from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import (
+)  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.\
+    FEATURE_PROJECT_TOOLS__tests.\
+    FEATURE_PROJECT_TOOLS__tests__shared \
+    import (
     FALLBACK_PLAN as PLAN,
-)
-from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import (
+)  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.\
+    FEATURE_PROJECT_TOOLS__tests.\
+    FEATURE_PROJECT_TOOLS__tests__shared \
+    import (
     FALLBACK_PROJECT as PROJECT,
-)
-from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import (
+)  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.\
+    FEATURE_PROJECT_TOOLS__tests.\
+    FEATURE_PROJECT_TOOLS__tests__shared \
+    import (
     FALLBACK_PROP as PROP,
-)
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+)  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.\
+    ADAPTERS_C30__shared \
+    import (
     NativeModelClaimError,
     parse_native_model_claim,
-)
+)  # fmt: skip
 
 CATALOG = {
     "Atom",

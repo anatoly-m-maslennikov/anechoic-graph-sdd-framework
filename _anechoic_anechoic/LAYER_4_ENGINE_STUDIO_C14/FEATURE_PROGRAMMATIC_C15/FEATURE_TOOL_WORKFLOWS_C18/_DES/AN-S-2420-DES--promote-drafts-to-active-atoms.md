@@ -1,15 +1,19 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-2420
+concern:
+  subject: "Atom"
+  path: "Model/Graph/Node//Artifact//SSOT//Prescribed/Content"
+  relation: "is_contained_by"
 container:
   component: C18
 tier: 3
 context:
   lens: DES
 state:
-  status: "active"
-  version: 26
-  updated_at: "2026-11-25T20:25:07.137603+00:00"
+  status: active
+  version: 28
+  updated_at: "2026-11-27T16:16:01.404965+00:00"
 ---
 ## Summary
 
@@ -21,7 +25,7 @@ Independently admitted promotion of one explicitly selected ANECHOIC Markdown Dr
 
 ## Claim
 
-This contract describes the legacy sealed-carrier or Subject-batch route. Native Draft and Current carriers use AN-S-3160 and the lifecycle rules in AN-S-1604. Exact historical carrier references apply when interpreting legacy inputs.
+This legacy route uses the scope and native exclusions in AN-S-2517.
 
 ### Prose Claim
 

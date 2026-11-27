@@ -90,7 +90,9 @@ ALIASES.update(
         "mrt_flow_actions": "component_flows",
         "mrt_real_graph_import_nodes": "import_nodes",
         "mrt_real_graph_import_occurrences": "module_imports",
-        "mrt_real_graph_package_spec_bindings": "architecture_package_bindings",
+        ("mrt_real_graph_package_spec_bindings"): (
+            "architecture_package_bindings"
+        ),
         "mrt_diag_import_read_issues": "import_read_issues",
         "mrt_diag_import_cycles": "import_cycles",
         "mrt_diag_antipatterns": "antipattern_findings",

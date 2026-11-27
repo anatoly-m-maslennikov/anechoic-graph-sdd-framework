@@ -8,8 +8,8 @@ context:
   lens: DevOps
 state:
   status: active
-  version: 20
-  updated_at: '2026-11-12T16:59:28.781286+00:00'
+  version: 21
+  updated_at: "2026-11-27T17:35:01.150345+00:00"
 ---
 ## Summary
 
@@ -37,11 +37,11 @@ JSON matrix files are UTF-8 JSON objects with exactly `columns` (ordered names) 
 
 Shared encoding preserves ordinary JSON values. Encode unsafe integers and Decimal values as strings, dates/times as ISO strings, and binary as base64: strings. Unsupported values return a delivery error. An export failure after successful execution keeps the query ID and cached result, reports outcome partial and export_error, and returns no successful path for the failed file. A partial file must not be exposed as a complete artifact. Do not rerun SQL, retry or roll back the successful result.
 
-A Bookmark is permanent saved SQL, distinct from a saved View and the temporary query log. `query_run(save=true)` writes its exact original SQL only after the Run succeeds. A successful save adds `saved_query_id`, `saved_query_url`, kind query and optional name. Use the bound Project’s Workbench URL derived from the HTTP request or configured for stdio. If neither is available, return the ID, `saved_query_url: null` and `saved_query_url_reason: workbench_url_unknown`. Apply the same URL rule to saved Views. A later save failure preserves the result and returns outcome partial and save_error, without a saved identity unless known. Failed validation or execution creates no Bookmark.
+Use AN-S-1943 for saved SQL identity, lifetime, and writes after a successful Run. A successful save adds `saved_query_id`, `saved_query_url`, kind query and optional name. Use the bound Project’s Workbench URL derived from the HTTP request or configured for stdio. If neither is available, return the ID, `saved_query_url: null` and `saved_query_url_reason: workbench_url_unknown`. Apply the same URL rule to saved Views. A later save failure preserves the result and returns outcome partial and save_error, without a saved identity unless known. Failed validation or execution creates no Bookmark.
 
-`view_save`, `query_load` and `query_saved_list` retain their current names, ID/URL fields and kind values. View Save snapshots one query with optional name. Load explicitly returns SQL without executing it. Saved List returns recent metadata and bounded previews; it does not automatically return full SQL. Existing kind worksheet and q_/w_ items remain read-only compatibility sources. Do not rename saved entries. New saved IDs remain canonical UUIDv7. Use the existing Project Journal's date-partitioned workbench-saved-items writer and 1,000-row parts. Saved writes finish before their IDs are returned; they do not trigger Atom reindexing.
+`view_save`, `query_load` and `query_saved_list` retain their current names, ID/URL fields and kind values. View Save snapshots one query with optional name. Apply AN-S-1943 to Load, Saved List, and read-only compatibility entries. New saved IDs remain canonical UUIDv7. Use the existing Project Journal's date-partitioned workbench-saved-items writer and 1,000-row parts. Saved writes finish before their IDs are returned; they do not trigger Atom reindexing.
 
-`query_check` returns validity, ordered column metadata and exact counts when available, or its query error. It returns no SQL echo, result rows or result file. Check creates no Bookmark, saved View or query-log entry. Run logs remain metadata-only NDJSON under their existing independent contract. Page, Schema, Load and List do not append a query Run log.
+`query_check` returns validity, ordered column metadata and exact counts when available, or its query error. It returns no SQL echo, result rows or result file. Check creates no Bookmark, saved View or query-log entry. Use AN-S-2242 and AN-S-1356 for the metadata-only Run log. Page, Schema, Load and List do not append a query Run log.
 
 `query_schema` returns read-only table/column metadata for atoms, scope_units and change_log, including declared content columns and optional Status completion values. It neither executes user SQL nor accesses saved items.
 

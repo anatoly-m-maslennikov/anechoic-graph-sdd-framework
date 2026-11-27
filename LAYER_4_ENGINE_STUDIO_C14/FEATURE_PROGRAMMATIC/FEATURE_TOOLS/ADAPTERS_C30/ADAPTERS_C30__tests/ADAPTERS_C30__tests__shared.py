@@ -9,7 +9,7 @@ import yaml
 
 
 class NativeSelectionStub(BaseModel):
-    """Test-owned selection shape; semantic Project admission is out of scope here."""
+    """Return the selection fixture used by Project admission callers."""
 
     model_config = ConfigDict(extra="forbid", arbitrary_types_allowed=True)
     root: Path

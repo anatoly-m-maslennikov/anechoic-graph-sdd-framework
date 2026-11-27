@@ -1,6 +1,7 @@
 """Bind reusable Local Release phase evidence to its inputs and source."""
 
 import json
+from dataclasses import asdict
 from hashlib import sha256
 from pathlib import Path
 
@@ -10,6 +11,10 @@ from LAYER_1_RUNTIME_IMAGES_C81.LAYER_1_RUNTIME_IMAGES_C81__shared import (
     _project_path,
     _walk_regular_files,
     read_release_selection,
+)
+
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.container_settings__pub import (
+    read_container_settings,
 )
 
 from .local_release_delivery import PRESERVE_FRAMEWORK, verify_recorded_targets
@@ -90,7 +95,11 @@ def _proof_matches(phase, proof, data, inputs):
 
 class ReleaseProgress(ReleaseGitCheckpoints):
     def _target_binding(self):
-        return [self.selection.manifest_sha256, target_runtime_digest(self.root)]
+        binding = [self.selection.manifest_sha256, target_runtime_digest(self.root)]
+        settings = read_container_settings(self.root)
+        if settings is not None:
+            binding.append(asdict(settings))
+        return binding
 
     def _bind_target(self):
         target = self._target_binding()

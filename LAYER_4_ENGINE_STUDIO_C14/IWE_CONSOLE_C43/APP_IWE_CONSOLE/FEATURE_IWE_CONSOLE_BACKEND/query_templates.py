@@ -25,12 +25,33 @@ TEMPLATES = {
 }
 _ATOM_ID = r"[A-Z]+-[STPC]-[0-9]+"
 _VERSION = r"@[1-9][0-9]*(?:-draft)?"
-_STATUSES = ["active", "in_queue", "ready", "backlog", "draft", "done", "complete", "canceled", "resolved", "archived"]
+_STATUSES = [
+    "active",
+    "in_queue",
+    "ready",
+    "backlog",
+    "draft",
+    "done",
+    "complete",
+    "canceled",
+    "resolved",
+    "archived",
+]
 _FAMILIES = {"spec": "S", "tkt": "T", "project_config": "PC", "pmeta": "P"}
 _INVENTORIES = {"list_atoms", "count_atoms", "list_tickets"}
-_COMPONENT_QUERIES = {"fetch_contracts", "fetch_solutions", "get_component_manifest", "get_component_purpose"}
+_COMPONENT_QUERIES = {
+    "fetch_contracts",
+    "fetch_solutions",
+    "get_component_manifest",
+    "get_component_purpose",
+}
 _RESULT_OPTIONS = ("page_size", "result_delivery", "result_format")
-_TEXT = {"type": "string", "minLength": 1, "maxLength": 1000, "pattern": r"^[^\x00]+$"}
+_TEXT = {
+    "type": "string",
+    "minLength": 1,
+    "maxLength": 1000,
+    "pattern": r"^[^\x00]+$",
+}
 _ATOMS = "atoms AS a JOIN native_references AS r USING (reference)"
 _SUMMARY = 'a."content.summary" AS summary'
 _PATH = "concat_ws('/', nullif(a.relative_path, ''), a.filename) AS path"
@@ -40,7 +61,11 @@ _LABEL = "json_extract_string(to_json(a), '$.\"header.context.label\"')"
 _NORMALIZED_LABEL = f"lower(replace(replace({_LABEL}, '-', ''), ' ', ''))"
 _UPDATED = 'a."header.state.updated_at"'
 _NUMBER = 'a."header.state.version"'
-_GROUPS = {"status": _STATUS, "status_group": "a.status_group", "kind": _TEMPLATE}
+_GROUPS = {
+    "status": _STATUS,
+    "status_group": "a.status_group",
+    "kind": _TEMPLATE,
+}
 _COLUMNS = {
     "get_atom": f"r.exact_ref, {_SUMMARY}, {_STATUS} AS status, {_PATH}",
     "find_atoms": f"a.reference AS ref, {_SUMMARY}, {_PATH}",
@@ -72,7 +97,10 @@ def descriptor():
             "type": "object",
             "properties": {
                 "template": {"type": "string", "enum": list(TEMPLATES)},
-                "reference": {"type": "string", "pattern": f"^{_ATOM_ID}(?:{_VERSION})?$"},
+                "reference": {
+                    "type": "string",
+                    "pattern": f"^{_ATOM_ID}(?:{_VERSION})?$",
+                },
                 "text": _TEXT,
                 "kind": {"type": "string", "pattern": r"^[a-z][a-z0-9_]*$"},
                 "label": _TEXT,
@@ -89,7 +117,9 @@ def descriptor():
             "required": ["template"],
             "additionalProperties": False,
         },
-        annotations=types.ToolAnnotations(read_only_hint=True, open_world_hint=False),
+        annotations=types.ToolAnnotations(
+            read_only_hint=True, open_world_hint=False
+        ),
     )
 
 
@@ -97,20 +127,26 @@ def _literal(value: str) -> str:
     return "'" + value.replace("'", "''") + "'"
 
 
+def _kind_filter(template, kind):
+    if template == "list_tickets" and kind == "epic":
+        return (f"({_TEMPLATE} = 'epic' OR ({_TEMPLATE} = 'task' AND "
+                f"{_NORMALIZED_LABEL} IN ('epic', 'subepic')))")
+    return f"{_TEMPLATE} = {_literal(kind)}"
+
+
 def _inventory(template, arguments, columns):
     group = order = ""
     filters = []
     if template == "list_tickets":
-        filters += ["split_part(r.exact_ref, '-', 2) = 'T'", f"{_TEMPLATE} IN ('task', 'epic')"]
+        filters += [
+            "split_part(r.exact_ref, '-', 2) = 'T'",
+            f"{_TEMPLATE} IN ('task', 'epic')",
+        ]
     if "family" in arguments:
         markers = ", ".join(map(_literal, _FAMILIES[arguments["family"]]))
         filters.append(f"split_part(r.exact_ref, '-', 2) IN ({markers})")
     if "kind" in arguments:
-        if template == "list_tickets" and arguments["kind"] == "epic":
-            filters.append(f"({_TEMPLATE} = 'epic' OR ({_TEMPLATE} = 'task' AND "
-                           f"{_NORMALIZED_LABEL} IN ('epic', 'subepic')))")
-        else:
-            filters.append(f"{_TEMPLATE} = {_literal(arguments['kind'])}")
+        filters.append(_kind_filter(template, arguments["kind"]))
     if "label" in arguments:
         label = arguments["label"].lower().replace("-", "").replace(" ", "")
         filters.append(f"{_NORMALIZED_LABEL} = {_literal(label)}")
@@ -140,8 +176,11 @@ def _component(template, arguments):
     label = arguments["component"].strip()
     if not label:
         raise ValueError("A Component name or ID is required")
-    cid = (_literal(label.upper()) if re.fullmatch(r"[Cc][0-9]+", label)
-           else f"(SELECT component_id FROM components WHERE lower(name) = lower({_literal(label)}))")
+    cid = (
+        _literal(label.upper())
+        if re.fullmatch(r"[Cc][0-9]+", label)
+        else f"(SELECT component_id FROM components WHERE lower(name) = lower({_literal(label)}))"
+    )
     columns = f"r.exact_ref, {_SUMMARY}, {_PATH}"
     order = "r.exact_ref"
     if template == "get_component_manifest":
@@ -149,17 +188,23 @@ def _component(template, arguments):
     elif template == "get_component_purpose":
         where = f"r.exact_ref IN (SELECT unnest(purpose_refs) FROM components WHERE component_id = {cid})"
     elif template == "fetch_contracts":
-        where = (f"{_STATUS} = 'active' AND r.exact_ref = "
-                 f"(SELECT manifest_ref FROM components WHERE component_id = {cid} AND has_contract)")
+        where = (
+            f"{_STATUS} = 'active' AND r.exact_ref = "
+            f"(SELECT manifest_ref FROM components WHERE component_id = {cid} AND has_contract)"
+        )
     else:
-        tier = "coalesce(json_extract_string(to_json(a), '$.\"header.tier\"'), " \
-               "json_extract_string(to_json(a), '$.\"header.structure.tier\"'), " \
-               "json_extract_string(to_json(a), '$.\"header.context.tier\"'))"
-        where = ("a.status_group = 'Current' AND split_part(a.reference, '-', 2) = 'S' "
-                 f"AND {_STATUS} = 'active' AND {tier} = '0' AND lower({_TEMPLATE}) = 'solution' "
-                 "AND EXISTS (SELECT 1 FROM relations AS edge WHERE edge.source_ref = a.reference "
-                 "AND edge.source_kind = 'Atom' AND edge.target_kind = 'Component' "
-                 f"AND edge.relation_type IN ('IS_CONTAINED_BY', 'CONTAINED_BY') AND NOT edge.derived AND edge.target_ref = {cid})")
+        tier = (
+            "coalesce(json_extract_string(to_json(a), '$.\"header.tier\"'), "
+            "json_extract_string(to_json(a), '$.\"header.structure.tier\"'), "
+            "json_extract_string(to_json(a), '$.\"header.context.tier\"'))"
+        )
+        where = (
+            "a.status_group = 'Current' AND split_part(a.reference, '-', 2) = 'S' "
+            f"AND {_STATUS} = 'active' AND {tier} = '0' AND lower({_TEMPLATE}) = 'solution' "
+            "AND EXISTS (SELECT 1 FROM relations AS edge WHERE edge.source_ref = a.reference "
+            "AND edge.source_kind = 'Atom' AND edge.target_kind = 'Component' "
+            f"AND edge.relation_type IN ('IS_CONTAINED_BY', 'CONTAINED_BY') AND NOT edge.derived AND edge.target_ref = {cid})"
+        )
     return columns, where, order
 
 
@@ -187,12 +232,18 @@ def _query_parts(template, arguments):
     elif template in _INVENTORIES:
         columns, where, group, order = _inventory(template, arguments, columns)
     elif template == "list_relations":
-        side, other = ("target", "source") if arguments.get("direction") == "incoming" else ("source", "target")
+        side, other = (
+            ("target", "source")
+            if arguments.get("direction") == "incoming"
+            else ("source", "target")
+        )
         table = "relations"
         columns = f"relation_type, {other}_ref AS related_ref, derived"
         reference = _literal(arguments["reference"])
-        where = (f"{side}_kind = 'Atom' AND ({side}_ref = {reference} OR {side}_ref IN "
-                 f"(SELECT reference FROM native_references WHERE exact_ref = {reference}))")
+        where = (
+            f"{side}_kind = 'Atom' AND ({side}_ref = {reference} OR {side}_ref IN "
+            f"(SELECT reference FROM native_references WHERE exact_ref = {reference}))"
+        )
         order = "relation_type, related_ref, derived"
     elif template == "count_relations_by_type":
         table = "relations"
@@ -209,9 +260,13 @@ def run_arguments(arguments: dict) -> dict:
     template = arguments["template"]
     fields = set(arguments) - {"template", *_RESULT_OPTIONS}
     allowed = set(TEMPLATES[template])
-    required = allowed - {"direction"} if template not in _INVENTORIES else set()
+    required = (
+        allowed - {"direction"} if template not in _INVENTORIES else set()
+    )
     if fields - allowed or required - fields:
-        raise ValueError(f"Invalid arguments for {template}. Supported fields: {', '.join(TEMPLATES[template])}")
+        raise ValueError(
+            f"Invalid arguments for {template}. Supported fields: {', '.join(TEMPLATES[template])}"
+        )
 
     table, columns, where, group, order = _query_parts(template, arguments)
     sql = f"SELECT {columns} FROM {table}"
@@ -221,6 +276,8 @@ def run_arguments(arguments: dict) -> dict:
         sql += f" GROUP BY {group}"
     if order:
         sql += f" ORDER BY {order}"
-    options = {key: arguments[key] for key in _RESULT_OPTIONS if key in arguments}
+    options = {
+        key: arguments[key] for key in _RESULT_OPTIONS if key in arguments
+    }
     options.setdefault("result_format", "csv")
     return {"sql": sql, **options}

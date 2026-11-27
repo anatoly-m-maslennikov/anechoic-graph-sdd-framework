@@ -11,27 +11,46 @@ import tempfile
 
 
 TOOL_REGISTRY_COMPILER = (
-    "LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_BACKEND/generate_tool_registry.py"
+    (
+        'LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE'
+        '_CONSOLE_BACKEND/generate_tool_registry.py'
+    )
 )
 TOOL_PROVIDERS = (
-    "LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_BACKEND/tool_providers.json"
+    (
+        'LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE'
+        '_CONSOLE_BACKEND/tool_providers.json'
+    )
 )
-TOOL_REGISTRY = "LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_BACKEND/tool_registry.json"
+TOOL_REGISTRY = (
+    'LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CON'
+    'SOLE_BACKEND/tool_registry.json'
+)
 
 
-def compile_tool_registry(source_root: Path, *, timeout: float | None, max_output: int) -> bytes:
-    """Generate the registry in private staging, never in the source closure."""
+def compile_tool_registry(
+    source_root: Path, *, timeout: float | None, max_output: int
+) -> bytes:
+    "Generate the registry in private staging, never in the source closure."
     compiler = source_root / TOOL_REGISTRY_COMPILER
     providers = source_root / TOOL_PROVIDERS
-    if (compiler.is_symlink() or not compiler.is_file() or providers.is_symlink()
-            or not providers.is_file()):
+    if (
+        compiler.is_symlink()
+        or not compiler.is_file()
+        or providers.is_symlink()
+        or not providers.is_file()
+    ):
         raise ValueError("tool registry compiler or providers are unavailable")
-    with tempfile.TemporaryDirectory(prefix="anechoic-tool-registry-") as stage:
+    with tempfile.TemporaryDirectory(
+        prefix="anechoic-tool-registry-"
+    ) as stage:
         package = Path(stage) / "package"
         for component in ("FEATURE_PROGRAMMATIC", "ARCHITECTURE_ANALYSIS_C73",
                           "MCP_PATCHBAY_C21", "IWE_CONSOLE_C43"):
             relative = Path("LAYER_4_ENGINE_STUDIO_C14") / component
-            shutil.copytree(source_root / relative, package / relative, symlinks=True)
+            shutil.copytree(
+                source_root / relative, package / relative, symlinks=True
+            )
         staged_compiler = package / TOOL_REGISTRY_COMPILER
         output = package / TOOL_REGISTRY
         result = subprocess.run(

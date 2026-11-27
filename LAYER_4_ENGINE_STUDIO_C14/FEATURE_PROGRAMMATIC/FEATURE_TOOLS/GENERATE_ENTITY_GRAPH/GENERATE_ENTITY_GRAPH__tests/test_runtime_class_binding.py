@@ -9,7 +9,20 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.\
 
 
 def carrier(n, subject, cls, base, entity):
-    text = f"from anechoic.formal_claims import declare_entity\nfrom anechoic.model import {base}\n\nclass {cls}({base}):\n    pass\n\ndeclare_entity(entity_class={cls}, entity_name={entity!r})"
+    text = (
+        "from anechoic.formal_claims import declare_entity\nfrom "
+        "anechoic.model import "
+        f"{base}"
+        "\n\nclass "
+        f"{cls}"
+        "("
+        f"{base}"
+        "):\n    pass\n\ndeclare_entity(entity_class="
+        f"{cls}"
+        ", entity_name="
+        f"{entity!r}"
+        ")"
+    )
     return {
         "source": {"atom_id": f"CA-R-{n}", "version": 1, "path": f"{n}.md"},
         "subjects": {"active": subject, "passive": []},

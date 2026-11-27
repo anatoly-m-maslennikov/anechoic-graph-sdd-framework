@@ -8,9 +8,9 @@ context:
   template: action
   lens: DES/DOM
 state:
-  status: "active"
-  version: 38
-  updated_at: "2026-11-25T21:38:53.905679+00:00"
+  status: active
+  version: 40
+  updated_at: "2026-11-27T17:35:01.150345+00:00"
 ---
 # Summary
 
@@ -18,9 +18,9 @@ Update sealed ANECHOIC Atom carriers
 
 ## Operation
 
-This contract describes the legacy sealed-carrier or Subject-batch route. Native Draft and Current carriers use AN-S-3160 and the lifecycle rules in AN-S-1604. Exact historical carrier references apply when interpreting legacy inputs.
+This legacy route uses the scope and native exclusions in AN-S-2517.
 
-Update Sealed Atom Carriers **means** the reusable Action that performs one explicit admitted same-identity edit to one logical Atom under CA-R-866. Each Action preserves ID, Summary, Type and unrelated values; its private Carrier and history effects remain safely validated. A batch does not become one cross-Atom transaction.
+Update Sealed Atom Carriers **means** the reusable Action that performs one explicit admitted same-identity edit to one logical Atom under CA-R-866. Each Action applies the identity and Summary rules in AN-S-3119, AN-S-2196, and AN-S-1604. Validate its private Carrier and history effects. Preserve unrelated values. A batch does not become one cross-Atom transaction.
 
 ## Details
 
@@ -35,7 +35,7 @@ This workflow-facing Action addresses logical Atoms by Atom ID and Version and S
 
 ### Existing full-content Concern repair
 
-For an explicitly selected, already identified Concern under `01_concern`, a legacy single descriptive first H1 may supply the source Summary value for a same-ID full-content repair. Require exactly one nonempty unfenced H1 and no competing Summary; do not infer or assign an identity. The proposed body must use the canonical literal `# Summary` with that exact value and pass complete Concern validation. Preserve ID, path, Type and intended Status; a changed Summary value still requires replacement. Reuse existing assessment, authorization, exact source checks, Version N+1/actual Updated At, exact predecessor history and result readback. This source-input normalization adds no endpoint, flag or proof/approval mechanism and does not relax Subjects-only source validation.
+Use the legacy full-content Concern repair rule in AN-S-2517.
 
 This uses the existing full-content update path under CA-R-866, not the one-Section edit operation under CA-R-1933/CA-M-373. Its explicit approved proposal may reorganize the legacy Concern body into its canonical sections; unrelated changes remain excluded.
 
@@ -49,17 +49,17 @@ A requested batch is an ordered list of independently authorized Atom Actions. I
 
 Resolve the current original and exact proposal, recheck admitted identity classification and actual authority, and retain the mutation-free preview before execution. Apply only through the existing admitted Project-local route with its exact sealed permission, selected Session, completed required assessment and actual Action start retained in the selected Run. A direct call, caller Boolean, candidate acceptance or local preview grants no effect permission. Bind and recheck the source, proposal, validation, definition, destination and history evidence before the one-Atom effect.
 
-Every actual same-ID Atom change, including Status-only, carrier-only and equivalent refinement, advances exactly from Version N to N+1 and records actual Project-time updated_at. Preserve the exact prior N bytes as history without rewriting their metadata. A no-op retains Version/time and creates no history or change event. Identity classification remains required, but it cannot exempt an actual change from this Version rule. Preserve Summary, identity, intended Status, unrelated bytes and prior semantic history. Recover only the verified mutable frontier and attempt-owned history of this Action on its failure; preserve pre-existing history, earlier successful Atoms and accepted Journal evidence. Missing or unverifiable source-effect recovery is not success. Journal recording is not a source-effect completion prerequisite or proof.
+Apply AN-S-2517 to Version and Updated At in the sealed legacy route. Keep exact predecessor bytes for revision history. Preserve Summary, identity, intended Status, unrelated bytes and prior semantic history. Recover only the verified mutable frontier and attempt-owned history of this Action on its failure; preserve pre-existing history, earlier successful Atoms and accepted Journal evidence. Missing or unverifiable source-effect recovery is not success. Journal recording is not a source-effect completion prerequisite or proof.
+
+### Explicit batch-only source-profile transition
+
+This Action adopts AN-S-2517's transition rule for the exact active packet
+member and bound request. Keep this Action's authorization, independent
+target, source, history, readback, and restoration boundaries.
 
 ### Subject-only preview and staged candidates
 
-The closed Subject preview root remains `{atoms, subject_profile?}`; each selected logical Atom has pinned identity/Version/source evidence and explicit `subject_patches`. A patch names governs or depends_on, exact old/current value and explicit new value. Resolve a dependency replacement by its unique current value and reject a caller index, missing/ambiguous old value, resulting duplicate or mixed body/complete-frontmatter request. Syntax checking neither establishes meaning nor chooses a mapping.
-
-Omission selects legacy; approved is explicit. Reuse the selected profile's current grammar evidence for both source and result. Preserve Atom/atom case distinction, reject unsupported forms, and retain private exact scalar-span evidence. Validate complete source and result, preserving every unrelated byte and intended Status. Select complete stable-ID originals; exclude Draft and archived carriers by Status and placement and reject unavailable or ambiguous authority.
-
-Default local preview writes nothing. Opt-in local `run --stage-preview` exports only the existing illustrative proposed bytes under CA-D-425 into fresh generated temporary candidates. Independently read back bytes/hashes, validate at the original logical source context, and repeat the same pinned preview/time check before returning its closed manifest. Source drift refuses success; partial failures retain truthful artifact references without unsafe cleanup.
-
-Staging performs no authoritative, archive/history, Journal, promotion or MCP effect. It does not create source effect-time evidence, bypass the standalone apply guard, change the staged-only migration scope or reopen deferred live changed-Subject publication. New contract authoring is not implementation or runtime readiness; affected use still needs the independently verified realization.
+Apply AN-S-2517 for the closed preview and eligibility rules, and AN-S-1916 for its Delivery. Preserve the Atom/atom case distinction and retain private exact scalar-span evidence. Default preview writes nothing. Use the opt-in local staged preview under CA-D-425. Staging does not reopen deferred live changed-Subject publication. Verify the selected realization before use.
 
 ### Instructed Subjects-only batch effect
 
@@ -112,4 +112,4 @@ These direct calls preserve the existing no-Journal local preparation policy: no
 
 ### Existing-Atom edit-draft publication
 
-The instructed draft-backed batch uses AN-S-1771@32/CA-D-425's source-pinned full drafts and final schema1 packet. Existing request authorization admits their exact promotion without an additional review/form/confirmation round. A new Draft may be ID-free or carry `CA-R-draft`; an edit Draft carries `<canonical-ID>@<proposed-version>-draft`, with legacy `<canonical-ID>@draft` accepted only when the request supplies the proposed Version. Reopen exact source and draft at the operation, verify the explicit target, expected predecessor Version/digest and marker, restore the canonical ID and original source Status, archive the exact predecessor when one exists, publish the proposed Version with actual time, and independently read back the actual effect. No separate full-candidate preflight, retained Draft-history/lineage requirement, Journal gate or public initial intent metadata is required. Keep existing native failed-write handling and truthful partial/unknown results; proposal existence is not publication. After verified canonical output and any required predecessor readback, conditionally remove only that member's exact packet-pinned draft bytes. If draft cleanup fails or its bytes have drifted, stop and report the actual cleanup failure, preserving the published canonical Revision and archive; do not roll them back or remove another file.
+The instructed draft-backed batch uses AN-S-1771@32/CA-D-425's source-pinned full drafts and final packet with its admitted version and profiles under AN-S-2519. Existing request authorization admits their exact promotion without an additional review/form/confirmation round. A new Draft may be ID-free or carry `CA-R-draft`; an edit Draft carries `<canonical-ID>@<proposed-version>-draft`, with legacy `<canonical-ID>@draft` accepted only when the request supplies the proposed Version. Reopen exact source and draft at the operation, verify the explicit target, expected predecessor Version/digest and marker, restore the canonical ID and original source Status, archive the exact predecessor when one exists, publish the proposed Version with actual time, and independently read back the actual effect. No separate full-candidate preflight, retained Draft-history/lineage requirement, Journal gate or public initial intent metadata is required. Keep existing native failed-write handling and truthful partial/unknown results; proposal existence is not publication. After verified canonical output and any required predecessor readback, conditionally remove only that member's exact packet-pinned draft bytes. If draft cleanup fails or its bytes have drifted, stop and report the actual cleanup failure, preserving the published canonical Revision and archive; do not roll them back or remove another file.

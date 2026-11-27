@@ -8,9 +8,9 @@ context:
   template: POLICY
   lens: QA
 state:
-  status: active
-  version: 4
-  updated_at: "2026-11-26T15:27:06.149280+00:00"
+  status: "active"
+  version: 5
+  updated_at: "2026-11-27T14:45:10.285943+00:00"
 ---
 ## Summary
 
@@ -25,13 +25,9 @@ Group Engine quality checks by how they run
 - Static tests belong in the owning `<Owner>__tests/static/`.
 - Functional tests belong in the owning `<Owner>__tests/functional/`.
 - End-to-end image entry modules belong in the owning
-  `<Owner>__tests/image/`. The current runner also accepts root
-  `*_docker_e2e.py` and `test_selected_query_mcp_e2e.py` modules in the
-  Workbench or MCP test package. Browser case files remain in the owning
-  frontend test package.
-- Canary checks use the release runner's harness in
-  `FEATURE_PROJECT_TOOLS/_release_canary.py`. The harness is separate from
-  test-case files and is invoked by the image phase.
+  `<Owner>__tests/image/`. Browser cases stay in the owning frontend
+  test package.
+- Run the Canary as a separate candidate check under AN-S-4737.
 - Performance, Load, and optional Soak drivers belong in the owning
   `<Owner>__tests/` package. Performance and Load checks
   are explicitly invoked for relevant changes. Soak checks are explicit
@@ -53,9 +49,4 @@ Each suite report records phase, selection, outcome, and duration under
 `.anechoic_tmp/test_reports/`. Profilers are diagnostic only. Equivalent
 coverage is not duplicated.
 
-#### Fast Local Release timing
-
-Measure from the first start to production readiness, including fixes and
-continuations. The ideal target is 10 minutes. The mandatory performance
-limit is 15 minutes. Report whether each target was met. An overrun is a QA
-performance miss. Tests and delivery proceed under their normal gates.
+Apply AN-S-4738 to Fast Local Release timing.

@@ -33,7 +33,11 @@ def inverse_call(left, right, *, reverse=False):
 
 def declarations():
     return [
-        relation_declaration("CA-R-1", "IS_CONTAINED_BY", inverse_call("IS_CONTAINED_BY", "CONTAINS")),
+        relation_declaration(
+            "CA-R-1",
+            "IS_CONTAINED_BY",
+            inverse_call("IS_CONTAINED_BY", "CONTAINS"),
+        ),
         relation_declaration("CA-R-2", "CONTAINS"),
     ]
 
@@ -44,7 +48,9 @@ def project_root_relation():
             "declaration_source_path": "project.md", "declaration_version": 1,
             "relation_edges_json": [], "hash": None}
     source = atom("CA-R-3")
-    source["header_json"]["context"] = {"container": {"scope_unit": "DEMO-SU-00"}}
+    source["header_json"]["context"] = {
+        "container": {"scope_unit": "DEMO-SU-00"}
+    }
     return root, source
 
 
@@ -53,9 +59,15 @@ class RelationTests(unittest.TestCase):
         root, source = project_root_relation()
         sources = declarations() + [source]
         rows, scopes = materialize(sources, [root])
-        edge = next(row for row in rows if row["ref"] == "CA-R-3")["relation_edges_json"][0]
-        self.assertEqual(("Scope Unit", "demo"), (edge["target_kind"], edge["target_ref"]))
-        self.assertEqual("CA-R-3", scopes[0]["relation_edges_json"][0]["target_ref"])
+        edge = next(row for row in rows if row["ref"] == "CA-R-3")[
+            "relation_edges_json"
+        ][0]
+        self.assertEqual(
+            ("Scope Unit", "demo"), (edge["target_kind"], edge["target_ref"])
+        )
+        self.assertEqual(
+            "CA-R-3", scopes[0]["relation_edges_json"][0]["target_ref"]
+        )
         self.assertTrue(scopes[0]["relation_edges_json"][0]["derived"])
 
     def test_nested_header_container_atom_generates_both_directions(self):
@@ -106,19 +118,31 @@ class RelationTests(unittest.TestCase):
         self.assertTrue(edge["derived"])
 
     def test_scope_unit_id_relations_use_the_declared_scope_name(self):
-        by_mapping = atom("CA-R-31", relation={"is_contained_by": {"scope_unit": "CA-SU-14"}})
+        by_mapping = atom(
+            "CA-R-31", relation={"is_contained_by": {"scope_unit": "CA-SU-14"}}
+        )
         by_id = atom("CA-R-32", relation={"is_contained_by": "CA-SU-14"})
         unknown = atom("CA-R-33", relation={"is_contained_by": {"scope_unit": "CA-SU-999"}})
-        parent = {"name": "CORE", "scope_unit_id": "CA-SU-9", "parent_name": None,
-                  "declared_label": None, "ordered": False, "order_number": None,
-                  "declaration_source_path": "core.md", "declaration_version": 1,
-                  "relation_edges_json": [], "hash": None}
+        parent = {
+            "name": "CORE",
+            "scope_unit_id": "CA-SU-9",
+            "parent_name": None,
+            "declared_label": None,
+            "ordered": False,
+            "order_number": None,
+            "declaration_source_path": "core.md",
+            "declaration_version": 1,
+            "relation_edges_json": [],
+            "hash": None,
+        }
         scope = {"name": "FRAMEWORK_ENGINE", "scope_unit_id": "CA-SU-14", "parent_name": "CORE",
                  "declared_label": None, "ordered": False, "order_number": None,
                  "declaration_source_path": "engine.md", "declaration_version": 1,
                  "relation_edges_json": [], "hash": None}
 
-        rows, scopes = materialize(declarations() + [by_mapping, by_id, unknown], [parent, scope])
+        rows, scopes = materialize(
+            declarations() + [by_mapping, by_id, unknown], [parent, scope]
+        )
 
         by_ref = {row["ref"]: row for row in rows}
         by_scope = {row["name"]: row for row in scopes}
@@ -153,30 +177,45 @@ class RelationTests(unittest.TestCase):
         self.assertEqual({"IS_CONTAINED_BY": "CONTAINS"}, inverses)
         self.assertNotIn("A", registered)
 
-    def test_relation_declaration_registers_direct_fact_but_draft_does_not(self):
+    def test_relation_declaration_registers_direct_fact_but_draft_does_not(
+        self,
+    ):
         declaration = relation_declaration("CA-R-1", "IS_WORK_REPORT_FOR")
         declaration["form"] = "Relation Declaration"
-        report = atom("CA-R-REPORT", relation={"IS_WORK_REPORT_FOR": ["CA-P-TASK"]})
+        report = atom(
+            "CA-R-REPORT", relation={"IS_WORK_REPORT_FOR": ["CA-P-TASK"]}
+        )
         task = atom("CA-P-TASK")
 
         rows, _ = materialize([declaration, report, task], [])
         self.assertIn(
             {
-                "source_kind": "Atom", "source_ref": "CA-R-REPORT",
-                "target_kind": "Atom", "target_ref": "CA-P-TASK",
-                "relation_type": "IS_WORK_REPORT_FOR", "derived": False,
+                "source_kind": "Atom",
+                "source_ref": "CA-R-REPORT",
+                "target_kind": "Atom",
+                "target_ref": "CA-P-TASK",
+                "relation_type": "IS_WORK_REPORT_FOR",
+                "derived": False,
             },
-            next(row for row in rows if row["ref"] == "CA-R-REPORT")["relation_edges_json"],
+            next(row for row in rows if row["ref"] == "CA-R-REPORT")[
+                "relation_edges_json"
+            ],
         )
 
         draft = dict(declaration, status_group="Draft")
         self.assertNotIn("IS_WORK_REPORT_FOR", relation_registry([draft])[0])
         rows, _ = materialize([draft, report, task], [])
-        self.assertEqual([], next(row for row in rows if row["ref"] == "CA-R-REPORT")["relation_edges_json"])
+        self.assertEqual(
+            [],
+            next(row for row in rows if row["ref"] == "CA-R-REPORT")[
+                "relation_edges_json"
+            ],
+        )
 
     def test_inverse_alias_without_own_declaration_normalizes_once(self):
         declaration = relation_declaration(
-            "CA-R-1", "CONTAINS",
+            "CA-R-1",
+            "CONTAINS",
             'relation(source="Relation//IS_CONTAINED_BY", name="IS_INVERSE_ALIAS_FOR", target="Relation//CONTAINS")',
         )
         parent = atom("CA-P-1", relation={"CONTAINS": ["CA-P-2"]})
@@ -186,18 +225,31 @@ class RelationTests(unittest.TestCase):
         self.assertEqual({"CONTAINS"}, set(registry.names))
         self.assertEqual({"IS_CONTAINED_BY": "CONTAINS"}, registry.aliases)
         rows, _ = materialize([declaration, parent, child], [])
-        edges = next(row for row in rows if row["ref"] == "CA-P-1")["relation_edges_json"]
+        edges = next(row for row in rows if row["ref"] == "CA-P-1")[
+            "relation_edges_json"
+        ]
         self.assertEqual(
-            [{"source_kind": "Atom", "source_ref": "CA-P-1", "target_kind": "Atom",
-              "target_ref": "CA-P-2", "relation_type": "CONTAINS", "derived": False}],
+            [
+                {
+                    "source_kind": "Atom",
+                    "source_ref": "CA-P-1",
+                    "target_kind": "Atom",
+                    "target_ref": "CA-P-2",
+                    "relation_type": "CONTAINS",
+                    "derived": False,
+                }
+            ],
             edges,
         )
-        self.assertEqual({"IS_CONTAINED_BY": ["CA-P-1"]}, child["header_json"]["relations"])
+        self.assertEqual(
+            {"IS_CONTAINED_BY": ["CA-P-1"]}, child["header_json"]["relations"]
+        )
 
     def test_instance_scoped_literal_metadata_is_warned_and_omitted(self):
         instance_scoped = relation_declaration(
-            "CA-R-1", "DIRECT",
-            f'# instances\n{inverse_call("DIRECT", "INVERSE")}\n'
+            "CA-R-1",
+            "DIRECT",
+            f"# instances\n{inverse_call('DIRECT', 'INVERSE')}\n"
             'relation(source="Relation//LEGACY", name="IS_INVERSE_ALIAS_FOR", target="Relation//DIRECT")\n',
         )
         inverse = relation_declaration("CA-R-2", "INVERSE")
@@ -207,7 +259,9 @@ class RelationTests(unittest.TestCase):
         self.assertEqual({"DIRECT", "INVERSE"}, set(registry.names))
         self.assertEqual({}, registry.inverse)
         self.assertEqual({}, registry.aliases)
-        self.assertIn("unsupported Python relation metadata", errors.getvalue())
+        self.assertIn(
+            "unsupported Python relation metadata", errors.getvalue()
+        )
 
     def test_ambiguous_literal_inverses_warn_and_keep_direct_facts(self):
         metadata = [
@@ -219,20 +273,28 @@ class RelationTests(unittest.TestCase):
             relation_declaration("F", "F", inverse_call("F", "G")),
             relation_declaration("G", "G"),
             relation_declaration("J", "J", inverse_call("J", "K")),
-            relation_declaration("K", "K", inverse_call("K", "J", reverse=True)),
+            relation_declaration(
+                "K", "K", inverse_call("K", "J", reverse=True)
+            ),
         ]
         errors = StringIO()
         with redirect_stderr(errors):
             registered, inverses = relation_registry(metadata)
         self.assertEqual({"J": "K"}, inverses)
-        self.assertTrue({"A", "B", "C", "D", "E", "F", "G", "J", "K"} <= registered)
+        self.assertTrue(
+            {"A", "B", "C", "D", "E", "F", "G", "J", "K"} <= registered
+        )
         self.assertIn("multiple direct owners A, C", errors.getvalue())
         self.assertIn("self-pair", errors.getvalue())
-        self.assertIn("derived Relation F is declared direct", errors.getvalue())
+        self.assertIn(
+            "derived Relation F is declared direct", errors.getvalue()
+        )
 
         source = atom("CA-P-1", relation={"A": ["CA-P-2"], "J": ["CA-P-3"]})
         with redirect_stderr(StringIO()):
-            rows, _ = materialize(metadata + [source, atom("CA-P-2"), atom("CA-P-3")], [])
+            rows, _ = materialize(
+                metadata + [source, atom("CA-P-2"), atom("CA-P-3")], []
+            )
         by_ref = {row["ref"]: row for row in rows}
         self.assertIn({"source_kind": "Atom", "source_ref": "CA-P-1",
                        "target_kind": "Atom", "target_ref": "CA-P-2",

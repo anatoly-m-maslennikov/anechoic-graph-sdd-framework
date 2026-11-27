@@ -9,11 +9,11 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 4
-  updated_at: '2026-11-22T11:59:13.546148+00:00'
+  version: 5
+  updated_at: '2026-11-27T17:49:09.957980+00:00'
 relations:
   SERVES:
-  - AN-S-1233
+  - AN-S-3037
 ---
 ## Summary
 
@@ -37,8 +37,8 @@ Read across each selected repository, including files outside
 `.anechoic_*`. State which sources an analysis covered. Report exclusions,
 unsupported inputs, and read failures that affect its result.
 
-Place the Current Project Manifest and Project Goal at the repository
-root for new Projects. Existing Projects can keep them in their
-ANECHOIC control directory. Place each Package Spec Binding sidecar at
+Place the Current Project Manifest at the repository root for new Projects.
+Existing Projects can keep a Project Manifest and standalone Project Goal in
+their ANECHOIC control directory. Place each Package Spec Binding sidecar at
 its Package root as `<package folder name>__spec_bind.yaml`. Keep all
 other ANECHOIC-owned repository files in `.anechoic_*` directories.

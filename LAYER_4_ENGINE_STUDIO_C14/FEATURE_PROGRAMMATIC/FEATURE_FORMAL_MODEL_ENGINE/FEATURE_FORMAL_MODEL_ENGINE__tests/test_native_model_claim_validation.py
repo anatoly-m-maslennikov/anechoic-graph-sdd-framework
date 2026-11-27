@@ -31,15 +31,23 @@ class NativeModelClaimValidationTests(unittest.TestCase):
     def test_invalid_cardinality_and_property_bearer_are_rejected(self):
         prefix = "from anechoic.formal_claims import declare_entity\n"
         invalid = (
-            'declare_entity(entity_name="Name", relation_name="IS_PROPERTY_OF")',
-            'declare_entity(entity_name="Name", relation_name="IS_PROPERTY_OF", base_path=" ")',
+            (
+                'declare_entity(entity_name="Name", '
+                'relation_name="IS_PROPERTY_OF")'
+            ),
+            (
+                'declare_entity(entity_name="Name", '
+                'relation_name="IS_PROPERTY_OF", base_path=" ")'
+            ),
             'declare_entity(entity_name="Name", value_cardinality=-1)',
             'declare_entity(entity_name="Name", value_cardinality=True)',
             'declare_entity(entity_name="Name", value_cardinality="1")',
             'declare_entity(entity_name="Name", '
-            'instance_relation_constraints={"CONTAINS": {"targets_per_source": -1}})',
+            'instance_relation_constraints={"CONTAINS": '
+            '{"targets_per_source": -1}})',
             'declare_entity(entity_name="Name", '
-            'instance_property_constraints={"Name": {"value_cardinality": {"minimum": 2, "maximum": 1}}})',
+            'instance_property_constraints={"Name": '
+            '{"value_cardinality": {"minimum": 2, "maximum": 1}}})',
         )
         for claim in invalid:
             with (
@@ -81,7 +89,8 @@ class NativeModelClaimValidationTests(unittest.TestCase):
     def test_relation_endpoint_levels_default_independently(self):
         prefix = "from anechoic.formal_claims import declare_relation\n"
         claim = (
-            "declare_relation(relation_name='R', source_endpoint={'entity_paths': ('Node',)}, "
+            "declare_relation(relation_name='R', "
+            "source_endpoint={'entity_paths': ('Node',)}, "
             "target_endpoint={'level': 'instances'})"
         )
         args = parse_native_model_claim(prefix + claim)["arguments"]
@@ -96,8 +105,10 @@ class NativeModelClaimValidationTests(unittest.TestCase):
 
         claim = (
             "declare_relation(relation_name='R', endpoint_pairs=("
-            "{'source_endpoint': {}, 'target_endpoint': {'level': 'model_entities'}},"
-            "{'source_endpoint': {'level': 'instances'}, 'target_endpoint': {}},))"
+            "{'source_endpoint': {}, "
+            "'target_endpoint': {'level': 'model_entities'}},"
+            "{'source_endpoint': {'level': 'instances'}, "
+            "'target_endpoint': {}},))"
         )
         pairs = parse_native_model_claim(prefix + claim)["arguments"][
             "endpoint_pairs"

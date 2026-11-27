@@ -9,22 +9,33 @@ from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (
     QueryExecutionError,
     WorkbenchUnavailableError,
 )
-from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.FEATURE_IWE_CONSOLE_BACKEND__tests.query_store_test_support import QueryStoreFixture
+from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.FEATURE_IWE_CONSOLE_BACKEND__tests.query_store_test_support import (
+    QueryStoreFixture,
+)
 
 
 class QueryStoreTest(QueryStoreFixture, unittest.TestCase):
-    def test_public_graph_table_direct_inverse_cycles_and_typed_identity(self) -> None:
+    def test_public_graph_table_direct_inverse_cycles_and_typed_identity(
+        self,
+    ) -> None:
         atoms = [
-                self.atom("A", [self.edge("Atom", "A", "Atom", "B")]),
-                self.atom("B", [
+            self.atom("A", [self.edge("Atom", "A", "Atom", "B")]),
+            self.atom(
+                "B",
+                [
                     self.edge("Atom", "B", "Atom", "A", derived=True),
                     self.edge("Atom", "B", "Atom", "C"),
                     self.edge("Atom", "B", "Atom", "A@2-draft", "DRAFT_LINK"),
-                ]),
-                self.atom("C", [self.edge("Atom", "C", "Atom", "A")]),
-                self.atom("A@2-draft"),
-            ]
-        scopes = [self.scope("A", [self.edge("Scope Unit", "A", "Atom", "A", "OWNS")])]
+                ],
+            ),
+            self.atom("C", [self.edge("Atom", "C", "Atom", "A")]),
+            self.atom("A@2-draft"),
+        ]
+        scopes = [
+            self.scope(
+                "A", [self.edge("Scope Unit", "A", "Atom", "A", "OWNS")]
+            )
+        ]
         self.store.replace(atoms, scopes)
         self._assert_graph_direct()
         self._assert_graph_public_rows()
@@ -64,7 +75,13 @@ class QueryStoreTest(QueryStoreFixture, unittest.TestCase):
                             {"kind": "Atom", "reference": "A", "derived": True},
                             {"kind": "Atom", "reference": "C", "derived": False},
                         ],
-                        "DRAFT_LINK": [{"kind": "Atom", "reference": "A@2-draft", "derived": False}],
+                        "DRAFT_LINK": [
+                            {
+                                "kind": "Atom",
+                                "reference": "A@2-draft",
+                                "derived": False,
+                            }
+                        ],
                     },
                 ],
             ],
@@ -73,11 +90,18 @@ class QueryStoreTest(QueryStoreFixture, unittest.TestCase):
         )
         self.assertEqual(
             {},
-            json.loads(self.store.run('SELECT "header.relations" FROM atoms WHERE reference = \'A@2-draft\'')["rows"][0][0]),
+            json.loads(self.store.run((
+                'SELECT "header.relations" FROM atoms WHERE reference = '
+                "'A@2-draft'"
+            ))["rows"][0][0]),
         )
         self.assertEqual(
             {"OWNS": [{"kind": "Atom", "reference": "A", "derived": False}]},
-            json.loads(self.store.run("SELECT relations FROM scope_units WHERE name = 'A'")["rows"][0][0]),
+            json.loads(
+                self.store.run(
+                    "SELECT relations FROM scope_units WHERE name = 'A'"
+                )["rows"][0][0]
+            ),
         )
 
     def _assert_graph_hash_stability(self, atoms, scopes):
@@ -139,16 +163,23 @@ class QueryStoreTest(QueryStoreFixture, unittest.TestCase):
             "ON reach.kind = source_kind AND reach.ref = source_ref) "
             "SELECT kind, ref FROM reach ORDER BY ref"
         )["rows"]
-        self.assertEqual([["Atom", "A"], ["Atom", "B"], ["Atom", "C"]], reachable)
+        self.assertEqual(
+            [["Atom", "A"], ["Atom", "B"], ["Atom", "C"]], reachable
+        )
 
 
-    def test_native_graph_ctes_select_labels_directions_and_isolated_seed(self) -> None:
+    def test_native_graph_ctes_select_labels_directions_and_isolated_seed(
+        self,
+    ) -> None:
         atoms = [
             self.atom("A", [self.edge("Atom", "A", "Atom", "B")]),
-            self.atom("B", [
-                self.edge("Atom", "B", "Atom", "C"),
-                self.edge("Atom", "B", "Atom", "A@2-draft", "DRAFT_LINK"),
-            ]),
+            self.atom(
+                "B",
+                [
+                    self.edge("Atom", "B", "Atom", "C"),
+                    self.edge("Atom", "B", "Atom", "A@2-draft", "DRAFT_LINK"),
+                ],
+            ),
             self.atom("C", [self.edge("Atom", "C", "Atom", "A")]),
             self.atom("A@2-draft"),
             self.atom("ISOLATED"),
@@ -192,7 +223,9 @@ class QueryStoreTest(QueryStoreFixture, unittest.TestCase):
         self.assertEqual([["A", 1], ["B", 1], ["C", 1]], aggregate)
 
 
-    def test_result_delivery_is_lossless_and_refresh_failure_stops_service(self) -> None:
+    def test_result_delivery_is_lossless_and_refresh_failure_stops_service(
+        self,
+    ) -> None:
         result = self.store.run(
             "SELECT 9007199254740992::HUGEINT AS wide, 1.20::DECIMAL(4,2) AS decimal, "
             "DATE '2026-11-04' AS day, TIME '01:02:03' AS moment, "
@@ -209,15 +242,26 @@ class QueryStoreTest(QueryStoreFixture, unittest.TestCase):
         self.assertEqual("base64:Ymlu", result[5])
         self.assertEqual(["9007199254740992", "9007199254740993"], result[6])
         self.assertEqual(["base64:eA=="], result[7])
-        self.assertEqual({"wide": "9007199254740992", "binary": "base64:eA=="}, result[8])
+        self.assertEqual(
+            {"wide": "9007199254740992", "binary": "base64:eA=="}, result[8]
+        )
         tables_before = self.store._connection.execute(
-            "SELECT table_name FROM information_schema.tables WHERE table_schema = 'workbench_results'"
+            (
+                'SELECT table_name FROM information_schema.tables WHERE '
+                "table_schema = 'workbench_results'"
+            )
         ).fetchall()
         with self.assertRaisesRegex(QueryExecutionError, "NaN or infinity"):
             self.store.run("SELECT 'NaN'::DOUBLE")
-        self.assertEqual(tables_before, self.store._connection.execute(
-            "SELECT table_name FROM information_schema.tables WHERE table_schema = 'workbench_results'"
-        ).fetchall())
+        self.assertEqual(
+            tables_before,
+            self.store._connection.execute(
+                (
+                    'SELECT table_name FROM information_schema.tables WHERE '
+                    "table_schema = 'workbench_results'"
+                )
+            ).fetchall(),
+        )
         self.assertEqual([[1]], self.store.run("SELECT 1")["rows"])
         with self.assertRaises(RuntimeError):
             self.store.replace([{"source_path": "invalid.md"}], [])
@@ -226,9 +270,16 @@ class QueryStoreTest(QueryStoreFixture, unittest.TestCase):
 
     def test_internal_management_failure_requires_restart(self) -> None:
         stderr = StringIO()
-        with redirect_stderr(stderr), self.assertRaisesRegex(WorkbenchUnavailableError, "restart required"):
+        with (
+            redirect_stderr(stderr),
+            self.assertRaisesRegex(
+                WorkbenchUnavailableError, "restart required"
+            ),
+        ):
             self.store.run("SELECT * FROM drop_property_graph()")
         self.assertIn("query store unavailable", stderr.getvalue())
-        with self.assertRaisesRegex(WorkbenchUnavailableError, "restart required"):
+        with self.assertRaisesRegex(
+            WorkbenchUnavailableError, "restart required"
+        ):
             self.store.run("SELECT 1")
 

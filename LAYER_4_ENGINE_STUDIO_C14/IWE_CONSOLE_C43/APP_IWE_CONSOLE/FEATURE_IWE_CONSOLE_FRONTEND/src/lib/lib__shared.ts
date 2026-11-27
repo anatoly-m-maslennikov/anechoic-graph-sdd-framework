@@ -15,12 +15,16 @@ export type { NativeBootstrap } from './mcp_app_transport';
 export { formatSql } from './sql_format';
 export { HttpOperationCaller } from './transport';
 export type { OperationCaller } from './transport';
-export type { Command, PreferenceCommand, CheckResult, GridState, QueryLogItem, QueryResult, ResultDisplayPreferences, SavedIdentity, SavedItem, Schema, SourceSyncStatus, ViewResult, WorkspaceState, WorkspaceView } from './types';
+export type { Command, PreferenceCommand, CheckResult, GridState,
+  QueryLogItem, QueryResult, ResultDisplayPreferences, SavedIdentity,
+    SavedItem, Schema, SourceSyncStatus, ViewResult, WorkspaceState,
+      WorkspaceView } from './types';
 export {
   STORAGE_PREFIX, cleanAfterSave, legacyStorageKey, newView,
   persistable, readConsoleStorage, restore, storageKey, workspaceTabs,
 } from './workspace';
-export { applyNativeEvent, historyEntries, interaction, inputAnswers, sseFrames } from './codex_protocol';
+export { applyNativeEvent, historyEntries, interaction, inputAnswers,
+  sseFrames } from './codex_protocol';
 export { statusCompletion } from './editor_helpers';
 export { default as AtomActions } from './AtomActions.svelte';
 export { default as ConsoleQueryPanel } from './ConsoleQueryPanel.svelte';

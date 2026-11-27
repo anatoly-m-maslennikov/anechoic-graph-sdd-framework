@@ -12,11 +12,17 @@ _TOOL_NAME = re.compile(r"^[A-Za-z0-9_.-]{1,128}$")
 _PROJECT_PREFIX = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$")
 _PROJECT_INSTANCE = re.compile(r"^[0-9a-f]{64}$")
 _TOOL_OUTCOMES = frozenset(
-    """accepted applied assessed blocked canceled cancelled completed duplicate failed
-    implementation_gap input_required interrupted interrupted_pending needs_input no-op no_op partial
-    pending pending_recording prepared preview published publication_recovery_required queued
-    recorded recording_blocked recording_pending recreation_required rejected reloaded returned
-    running success uncertain unknown unchanged unavailable""".split()
+    (
+        "accepted applied assessed blocked canceled "
+        "cancelled completed duplicate failed implementation_gap "
+        "input_required interrupted interrupted_pending needs_input no-op "
+        "no_op partial pending pending_recording prepared "
+        "preview published publication_recovery_required queued recorded "
+        "recording_blocked recording_pending recreation_required "
+        "rejected reloaded "
+        "returned running success uncertain unknown "
+        "unchanged unavailable "
+    ).split()
 )
 
 

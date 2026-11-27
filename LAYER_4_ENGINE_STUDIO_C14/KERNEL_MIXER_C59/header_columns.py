@@ -126,7 +126,10 @@ class HeaderSchema:
 
     def write(self, path: Path | None) -> None:
         if path is not None:
-            path.write_text(json.dumps(self.asset(), ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+            path.write_text(
+                json.dumps(self.asset(), ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
 
 
 @dataclass(config=ConfigDict(strict=True, extra="forbid"), frozen=True)

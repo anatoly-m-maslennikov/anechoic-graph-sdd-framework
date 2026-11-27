@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-2413
+concern:
+  subject: "Artifact"
+  path: "Model/Graph/Node"
+  relation: "is_narrower_than"
 container:
   component: C18
 tier: 3
@@ -8,8 +12,8 @@ context:
   lens: DES
 state:
   status: active
-  version: 26
-  updated_at: 2026-11-02 19:44:26 +0400
+  version: 27
+  updated_at: "2026-11-27T16:16:01.404965+00:00"
 ---
 ## Summary
 

@@ -5,15 +5,19 @@ import { loadLib } from './FEATURE_IWE_CONSOLE_FRONTEND__tests__shared.ts';
 const { DraftSave, lifecycleResult } = await loadLib();
 import type { AtomDocumentData } from '../src/lib/lib__shared';
 
-const doc: AtomDocumentData = { ref_id: 'AN-T-1@2-draft', exact_ref: 'AN-T-1@2-draft', version: 2,
-  status: 'draft', filename: '', body: 'old', updated_at: 'one', history: [], relations: [], contained: [] };
+const doc: AtomDocumentData = { ref_id: 'AN-T-1@2-draft',
+  exact_ref: 'AN-T-1@2-draft', version: 2,
+  status: 'draft', filename: '', body: 'old', updated_at:
+    'one', history: [], relations: [], contained: [] };
 
-test('serializes changes made during a save and advances the expected timestamp', async () => {
+test('serializes changes made during a save and advances the expected timestamp',
+  async () => {
   const calls: Record<string, unknown>[] = [];
   let release!: (value: unknown) => void;
   const draft = new DraftSave(doc, async (_name, args) => {
     calls.push(args);
-    if (calls.length === 1) return new Promise((resolve) => { release = resolve; });
+    if (calls.length === 1) return new Promise(
+      (resolve) => { release = resolve; });
     return { artifact: { updated_at: 'three' } };
   }, () => {});
   draft.edit('first');
@@ -24,8 +28,10 @@ test('serializes changes made during a save and advances the expected timestamp'
   release({ artifact: { updated_at: 'two' } });
   assert.equal(await first, true);
   assert.equal(await flush, true);
-  assert.deepEqual(calls.map((call) => call.expectedUpdatedAt), ['one', 'two']);
-  assert.deepEqual(calls.map((call) => call.changes), [{ body: 'first' }, { body: 'second' }]);
+  assert.deepEqual(calls.map((call) =>
+    call.expectedUpdatedAt), ['one', 'two']);
+  assert.deepEqual(calls.map((call) => call.changes),
+    [{ body: 'first' }, { body: 'second' }]);
   assert.equal(draft.dirty, false);
   draft.dispose();
 });
@@ -47,12 +53,14 @@ test('failed saves preserve edits and a retry clears the error', async () => {
   assert.throws(() => lifecycleResult({ status: 'failed' }), /failed/);
 });
 
-test('a stale Draft retains edits and stops retrying until the editor reloads', async (context) => {
+test('a stale Draft retains edits and stops retrying until the editor reloads',
+  async (context) => {
   context.mock.timers.enable({ apis: ['setTimeout'] });
   let attempts = 0;
   const draft = new DraftSave(doc, async () => {
     attempts++;
-    return { status: 'failed', errors: [{ code: 'source_changed', message: 'Draft changed' }] };
+    return { status: 'failed', errors: [{ code:
+      'source_changed', message: 'Draft changed' }] };
   }, () => {});
   const relation = { type: 'REL', ref_id: 'AN-T-2' };
   draft.edit('new'); draft.remove(relation);
@@ -71,7 +79,8 @@ test('a stale Draft retains edits and stops retrying until the editor reloads', 
   draft.dispose();
 });
 
-test('continuous typing does not postpone the five-second save', async (context) => {
+test('continuous typing does not postpone the five-second save',
+  async (context) => {
   context.mock.timers.enable({ apis: ['setTimeout'] });
   const calls: Record<string, unknown>[] = [];
   const draft = new DraftSave(doc, async (_name, args) => {

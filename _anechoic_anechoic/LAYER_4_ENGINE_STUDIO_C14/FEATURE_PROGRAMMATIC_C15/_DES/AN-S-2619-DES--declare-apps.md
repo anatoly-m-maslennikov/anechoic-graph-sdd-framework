@@ -8,8 +8,8 @@ context:
   lens: DES
 state:
   status: active
-  version: 4
-  updated_at: 2026-11-11 15:29:41 +0400
+  version: 5
+  updated_at: "2026-11-27T15:50:51.353081+00:00"
 ---
 ## Summary
 
@@ -34,4 +34,4 @@ Eligible HAS_ACTIVE_SUBJECT targets are exactly the declared model entities or d
 - `PROJECT STRUCTURE//ANECHOIC <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+ Output Publication`
 - `PROJECT STRUCTURE//ANECHOIC <+ Aspects <+ Engineering <+ Operation <+ Execution Control <+ Recovery`
 
-The selection contains exact objects only, not strings, type members, or descendants; an unresolved address grants no admission.
+Use the exact-object selection rule in AN-S-2615.

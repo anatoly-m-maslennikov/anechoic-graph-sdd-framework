@@ -94,38 +94,65 @@ class SourceTest(unittest.TestCase):
             select_source(self.selection, 'CA-R-10', expected_version=1)
 
     def test_draft_and_archived(self):
-        self.carrier('CA-R-10@2-draft-example.md', version=2, status='draft')
-        self.carrier('CA-R-10-example@1.md', version=1, status='Archived', grouped=True)
-        self.assertEqual(select_source(self.selection, 'CA-R-10@2-draft').version, 2)
-        self.assertEqual(select_source(self.selection, 'CA-R-10@1').status, 'Archived')
+        self.carrier("CA-R-10@2-draft-example.md", version=2, status="draft")
+        self.carrier(
+            "CA-R-10-example@1.md", version=1, status="Archived", grouped=True
+        )
+        self.assertEqual(
+            select_source(self.selection, "CA-R-10@2-draft").version, 2
+        )
+        self.assertEqual(
+            select_source(self.selection, "CA-R-10@1").status, "Archived"
+        )
         with self.assertRaises(SourceSelectionError):
-            select_source(self.selection, 'CA-R-10')
+            select_source(self.selection, "CA-R-10")
 
     def test_ambiguity_projection_and_wrong_carrier(self):
-        self.carrier('CA-R-10-first.md')
-        self.carrier('CA-R-10-projection.md', projection=True)
-        self.carrier('CA-R-10-copy.md', folder=self.root / 'delivery')
-        self.assertEqual(select_source(self.selection, 'CA-R-10').path.name, 'CA-R-10-first.md')
-        second = self.carrier('CA-R-10-second.md')
+        self.carrier("CA-R-10-first.md")
+        self.carrier("CA-R-10-projection.md", projection=True)
+        self.carrier("CA-R-10-copy.md", folder=self.root / "delivery")
+        self.assertEqual(
+            select_source(self.selection, "CA-R-10").path.name,
+            "CA-R-10-first.md",
+        )
+        second = self.carrier("CA-R-10-second.md")
         with self.assertRaises(SourceSelectionError):
-            select_source(self.selection, 'CA-R-10')
+            select_source(self.selection, "CA-R-10")
         second.unlink()
-        self.carrier('CA-R-10-wrong.md', identity='CA-R-11')
+        self.carrier("CA-R-10-wrong.md", identity="CA-R-11")
         with self.assertRaises(SourceSelectionError):
-            select_source(self.selection, 'CA-R-10')
+            select_source(self.selection, "CA-R-10")
 
-    def test_leading_zero_atom_ids_are_distinct_and_select_exact_revisions(self):
-        padded = self.carrier('CA-R-096-EXAMPLE--example.md', identity='CA-R-096', version=25)
-        unpadded = self.carrier('CA-R-96-EXAMPLE--example.md', identity='CA-R-96', version=1)
-        archived = self.carrier('CA-R-096@24-EXAMPLE--example.md', identity='CA-R-096',
-                                version=24, status='Archived')
-        self.assertEqual(padded, select_source(self.selection, 'CA-R-096').path)
-        self.assertEqual(unpadded, select_source(self.selection, 'CA-R-96').path)
-        self.assertEqual(archived, select_source(self.selection, 'CA-R-096@24').path)
-        zero = self.carrier('CA-R-000-EXAMPLE--example.md', identity='CA-R-000', version=1)
-        self.assertEqual(zero, select_source(self.selection, 'CA-R-000').path)
+    def test_leading_zero_atom_ids_are_distinct_and_select_exact_revisions(
+        self,
+    ):
+        padded = self.carrier(
+            "CA-R-096-EXAMPLE--example.md", identity="CA-R-096", version=25
+        )
+        unpadded = self.carrier(
+            "CA-R-96-EXAMPLE--example.md", identity="CA-R-96", version=1
+        )
+        archived = self.carrier(
+            "CA-R-096@24-EXAMPLE--example.md",
+            identity="CA-R-096",
+            version=24,
+            status="Archived",
+        )
+        self.assertEqual(
+            padded, select_source(self.selection, "CA-R-096").path
+        )
+        self.assertEqual(
+            unpadded, select_source(self.selection, "CA-R-96").path
+        )
+        self.assertEqual(
+            archived, select_source(self.selection, "CA-R-096@24").path
+        )
+        zero = self.carrier(
+            "CA-R-000-EXAMPLE--example.md", identity="CA-R-000", version=1
+        )
+        self.assertEqual(zero, select_source(self.selection, "CA-R-000").path)
         with self.assertRaises(SourceSelectionError):
-            select_source(self.selection, 'CA-R-096@024')
+            select_source(self.selection, "CA-R-096@024")
 
     def test_project_prefix_and_root_local_authority(self):
         settings = self.control / 'anechoic_project_settings.toml'
@@ -149,21 +176,30 @@ class SourceTest(unittest.TestCase):
         self.assertEqual(select_source(self.selection, 'CA-O-22').path, standalone)
 
     def test_currentness_is_scoped_to_identity(self):
-        selected = self.carrier('CA-R-10-first.md')
-        other = self.carrier('CA-R-11-before.md', identity='CA-R-11')
+        selected = self.carrier("CA-R-10-first.md")
+        other = self.carrier("CA-R-11-before.md", identity="CA-R-11")
         original = source_module.parse_carrier
+
         def rename_unrelated(raw, path):
-            other.rename(other.with_name('CA-R-11-after.md'))
+            other.rename(other.with_name("CA-R-11-after.md"))
             return original(raw, path)
-        with patch.object(source_module, 'parse_carrier', side_effect=rename_unrelated):
-            self.assertEqual(select_source(self.selection, 'CA-R-10').path, selected)
+
+        with patch.object(
+            source_module, "parse_carrier", side_effect=rename_unrelated
+        ):
+            self.assertEqual(
+                select_source(self.selection, "CA-R-10").path, selected
+            )
 
         def add_duplicate(raw, path):
-            self.carrier('CA-R-10-second.md')
+            self.carrier("CA-R-10-second.md")
             return original(raw, path)
-        with patch.object(source_module, 'parse_carrier', side_effect=add_duplicate):
+
+        with patch.object(
+            source_module, "parse_carrier", side_effect=add_duplicate
+        ):
             with self.assertRaises(SourceSelectionError):
-                select_source(self.selection, 'CA-R-10')
+                select_source(self.selection, "CA-R-10")
 
     def test_batch_current_sources_rechecks_all_candidates(self):
         first = self.carrier('CA-R-10-first.md')
@@ -200,10 +236,12 @@ class SourceTest(unittest.TestCase):
             source_module.select_sources(self.selection, ['CA-R-10@1', 'CA-R-10@2-draft'])
 
     def test_symlinked_role_directory_fails_closed(self):
-        self.carrier('CA-R-10-first.md')
-        (self.folder / 'linked').symlink_to(self.root, target_is_directory=True)
+        self.carrier("CA-R-10-first.md")
+        (self.folder / "linked").symlink_to(
+            self.root, target_is_directory=True
+        )
         with self.assertRaises(SourceSelectionError):
-            select_source(self.selection, 'CA-R-10')
+            select_source(self.selection, "CA-R-10")
 
     def test_invalid_version_and_changed_declaration(self):
         self.carrier('CA-R-10@2-draft-example.md', version=3, status='draft')
@@ -214,16 +252,18 @@ class SourceTest(unittest.TestCase):
             select_source(self.selection, 'CA-R-10')
 
     def test_declaration_changed_during_discovery_is_rejected(self):
-        self.carrier('CA-R-10-first.md')
+        self.carrier("CA-R-10-first.md")
         original = source_module.parse_carrier
 
         def change_declaration(raw, path):
-            self.selection.declaration_paths[0].write_text('changed')
+            self.selection.declaration_paths[0].write_text("changed")
             return original(raw, path)
 
-        with patch.object(source_module, 'parse_carrier', side_effect=change_declaration):
+        with patch.object(
+            source_module, "parse_carrier", side_effect=change_declaration
+        ):
             with self.assertRaises(SourceSelectionError):
-                select_source(self.selection, 'CA-R-10')
+                select_source(self.selection, "CA-R-10")
 
     def test_query_reader_binds_exact_and_batch_sources_without_inventory(self):
         current = self.carrier('CA-R-10-example.md', version=2)
@@ -273,7 +313,9 @@ class SourceTest(unittest.TestCase):
         archived = self.carrier('CA-R-10@1-a.md', status='Archived')
         archived_copy = self.carrier('CA-R-10@1-b.md', status='Archived')
         draft = self.carrier('CA-R-10@3-draft-a.md', version=3, status='Draft')
-        draft_copy = self.carrier('CA-R-10@3-draft-b.md', version=3, status='Draft')
+        draft_copy = self.carrier(
+            "CA-R-10@3-draft-b.md", version=3, status="Draft"
+        )
         indexed = IndexedReader(self.selection, [('CA-R-10', path) for path in
                                (current, duplicate, archived, archived_copy, draft, draft_copy)])
         with (source_module.bind_query_reader(indexed),

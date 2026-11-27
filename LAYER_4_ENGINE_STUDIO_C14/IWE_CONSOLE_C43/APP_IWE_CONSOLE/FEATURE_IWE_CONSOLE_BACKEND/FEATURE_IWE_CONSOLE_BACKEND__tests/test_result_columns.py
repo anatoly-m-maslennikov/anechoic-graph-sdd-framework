@@ -1,4 +1,4 @@
-"""Whole-result column visibility does not discard SQL values or later pages."""
+"Whole-result column visibility does not discard SQL values or later pages."
 
 import unittest
 
@@ -30,7 +30,10 @@ class ResultColumnsTest(unittest.TestCase):
 
     def test_later_row_keeps_column_and_null_only_column_hides(self):
         columns, count = self.metadata(
-            "SELECT NULL AS empty, CASE WHEN range = 100 THEN 'last' END AS later FROM range(101)"
+            (
+                "SELECT NULL AS empty, CASE WHEN range = 100 THEN 'last' END "
+                "AS later FROM range(101)"
+            )
         )
         self.assertEqual(101, count)
         self.assertEqual(
@@ -39,13 +42,19 @@ class ResultColumnsTest(unittest.TestCase):
         self.assertEqual(
             (None, "last"),
             self.connection.execute(
-                "SELECT * FROM workbench_results.result ORDER BY rowid LIMIT 1 OFFSET 100"
+                (
+                    "SELECT * FROM workbench_results.result ORDER BY rowid "
+                    "LIMIT 1 OFFSET 100"
+                )
             ).fetchone(),
         )
 
     def test_false_zero_remain_while_empty_strings_and_collections_hide(self):
         columns, count = self.metadata(
-            "SELECT 0 AS same, NULL AS same, false AS flag, '' AS text, [] AS items, '{}'::JSON AS object"
+            (
+                "SELECT 0 AS same, NULL AS same, false AS flag, '' AS text, "
+                "[] AS items, '{}'::JSON AS object"
+            )
         )
         self.assertEqual(1, count)
         self.assertEqual(

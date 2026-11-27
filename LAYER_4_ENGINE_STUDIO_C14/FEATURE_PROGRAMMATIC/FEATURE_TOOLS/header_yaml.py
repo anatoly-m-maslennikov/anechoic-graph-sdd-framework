@@ -41,7 +41,10 @@ def _metadata(document: Node) -> dict[str, Any]:
             ]
             if len(keys) != len(node.value) or len(set(keys)) != len(keys):
                 raise ValueError(
-                    "Header keys must be unique strings; merge keys are unsupported."
+                    (
+                        "Header keys must be unique strings; merge keys are "
+                        "unsupported."
+                    )
                 )
             pending.extend(
                 (child, depth + 1) for pair in node.value for child in pair
@@ -94,7 +97,7 @@ def _document(frontmatter: str) -> MappingNode:
 
 
 def parse_header(frontmatter: str) -> dict[str, Any]:
-    """Read actual Header keys with the same duplicate and alias safety as scalar access."""
+    "Read actual Header keys with the same duplicate and alias safety as scalar access."
     return _metadata(_document(frontmatter))
 
 

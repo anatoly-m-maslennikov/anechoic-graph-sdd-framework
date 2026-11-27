@@ -1,66 +1,32 @@
-"""Read Python Model Declarations without importing or executing authored code."""
+"""Read Python Model Declarations without importing or executing authored \
+code."""
 
 from __future__ import annotations
 
 import ast
 from typing import Any
 
+from .native_model_claim_constants import (
+    _DECLARATIONS as _DECLARATIONS,
+    _BUILTINS as _BUILTINS,
+    _IMPORTS as _IMPORTS,
+    _COUNT_KEYS as _COUNT_KEYS,
+    _ENDPOINT_KEYS as _ENDPOINT_KEYS,
+    _ENDPOINT_LEVELS as _ENDPOINT_LEVELS,
+    _DECLARATION_KEYS as _DECLARATION_KEYS,
+    _RELATION_CONSTRAINT_KEYS as _RELATION_CONSTRAINT_KEYS,
+    _PROPERTY_CONSTRAINT_KEYS as _PROPERTY_CONSTRAINT_KEYS,
+)
+
 
 class NativeModelClaimError(ValueError):
     """A native Model Claim cannot be read safely."""
 
 
-_DECLARATIONS = {"declare_entity": "entity", "declare_relation": "relation"}
-_BUILTINS = {"str", "int", "bool", "float", "bytes", "list", "tuple", "dict", "set", "object"}
-_IMPORTS = {
-    "anechoic.formal_claims": {"declare_entity", "declare_relation", "Cardinality"},
-    "datetime": {"date", "datetime", "time", "timedelta"},
-    "dataclasses": {"dataclass", "field"},
-    "typing": {"Annotated", "ClassVar", "Literal", "Optional"},
-    "__future__": {"annotations"},
-}
-_COUNT_KEYS = {
-    "property_occurrence_cardinality", "value_cardinality",
-    "dependent_property_cardinality", "dependent_property_value_cardinality",
-    "recursive_dependent_property_cardinality", "instance_population_cardinality",
-    "targets_per_source", "sources_per_target",
-}
-_ENDPOINT_KEYS = {
-    "level", "entity_paths", "reference_form", "dependency", "axis",
-    "ephemeral", "address_form",
-}
-_ENDPOINT_LEVELS = {"model_entities", "instances", "model_entities_or_instances"}
-
-_DECLARATION_KEYS = {
-    "declare_entity": {
-        "entity_name", "entity_class", "ssot_carrier_path", "creation_enabled", "instance", "instance_check", "qualification_property_path", "incoming_model_relations", "structure_paths", "aspect_memberships",
-        "entity_kind", "identity_properties", "field_options", "derived_from_properties", "constraints_for",
-        "relation_name", "base_path", "value_format", "value_cardinality", "property_occurrence_cardinality",
-        "dependent_property_cardinality", "dependent_property_name_format", "dependent_property_value_format",
-        "dependent_property_value_cardinality",
-        "recursive_dependent_property_cardinality", "recursive_dependent_property_name_format",
-        "recursive_dependent_property_value_format", "ordered_dependent_property_roles",
-        "allowed_dependent_property_names", "ordered_dependent_property_pairs", "allowed_values", "allowed_relation_names",
-        "minimum_value", "applies_to_entity_classes",
-        "instance_population_cardinality", "instance_population_scope", "population_entity_path", "population_functional_dependencies", "population_unique_constraints", "axes", "allowed_axis_values", "fallback_property_name", "fallback_value", "fallback_chain", "maximum_value",
-        "required_instance_property_values", "instance_property_constraints", "model_relation_constraints",
-        "instance_relation_constraints", "status_order_numbers", "applies_to_role", "applies_to_forms", "status_groups",
-        "form_roles", "form_content", "project_form_content",
-    },
-    "declare_relation": {
-        "relation_name", "source_endpoint", "target_endpoint", "endpoint_pairs", "inverse_alias", "written_alias", "derived_from",
-        "reverse_written_alias", "targets_per_source", "sources_per_target", "acyclic",
-        "same_immediate_bearer", "swap_endpoints", "swap_endpoint_cardinalities",
-        "axes", "inverse_axes", "forbidden_status_pairs",
-    },
-}
-_RELATION_CONSTRAINT_KEYS = {"target_entity_paths", "targets_per_source", "sources_per_target"}
-_PROPERTY_CONSTRAINT_KEYS = {"value_cardinality"}
-
-
 def _fail(node: ast.AST, message: str) -> None:
     raise NativeModelClaimError(
-        f"line {getattr(node, 'lineno', 1)}, column {getattr(node, 'col_offset', 0) + 1}: {message}"
+        f"line {getattr(node, 'lineno', 1)}, "
+        f"column {getattr(node, 'col_offset', 0) + 1}: {message}"
     )
 
 
@@ -112,11 +78,17 @@ def _validate_cardinalities(value: Any, node: ast.AST) -> None:
             if key in _COUNT_KEYS:
                 exact = type(item) is int and item >= 0
                 bounded = (
-                    isinstance(item, dict) and set(item) == {"minimum", "maximum"}
-                    and type(item["minimum"]) is int and item["minimum"] >= 0
-                    and (item["maximum"] is None or (
-                        type(item["maximum"]) is int and item["maximum"] >= item["minimum"]
-                    ))
+                    isinstance(item, dict)
+                    and set(item) == {"minimum", "maximum"}
+                    and type(item["minimum"]) is int
+                    and item["minimum"] >= 0
+                    and (
+                        item["maximum"] is None
+                        or (
+                            type(item["maximum"]) is int
+                            and item["maximum"] >= item["minimum"]
+                        )
+                    )
                 )
                 if not (exact or bounded):
                     _fail(node, f"invalid {key} cardinality")
@@ -136,9 +108,16 @@ def _validate_endpoint(value: Any, label: str, node: ast.AST) -> None:
         _fail(node, f"{label} requires an admitted level")
     if "entity_paths" in value:
         paths = value["entity_paths"]
-        if (not isinstance(paths, (list, tuple)) or not paths
-                or any(not isinstance(path, str) or not path.strip() or path != path.strip()
-                       for path in paths)):
+        if (
+            not isinstance(paths, (list, tuple))
+            or not paths
+            or any(
+                not isinstance(path, str)
+                or not path.strip()
+                or path != path.strip()
+                for path in paths
+            )
+        ):
             _fail(node, f"{label} entity_paths must be nonempty paths")
     _validate_endpoint_flags(value, label, node)
 
@@ -160,18 +139,25 @@ def _value(node: ast.AST, names: set[str]) -> Any:  # noqa: C901
         return tuple(values) if isinstance(node, ast.Tuple) else values
     if isinstance(node, ast.Dict):
         return _dictionary(node, names)
-    if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "Cardinality":
+    if (
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "Cardinality"
+    ):
         return _cardinality(node, names)
     _fail(node, "unsupported expression")
 
 
 def _annotation(node: ast.AST, names: set[str]) -> str:
-    """Validate and preserve an annotation without evaluating forward references."""
+    """Validate and preserve an annotation without evaluating forward \
+references."""
     if isinstance(node, ast.Name):
         if node.id not in names and node.id not in _BUILTINS:
             _fail(node, f"unbound annotation: {node.id}")
     elif isinstance(node, ast.Constant):
-        if node.value is not None and not isinstance(node.value, (str, int, bool)):
+        if node.value is not None and not isinstance(
+            node.value, (str, int, bool)
+        ):
             _fail(node, "unsupported annotation literal")
     elif isinstance(node, ast.Subscript):
         _annotation(node.value, names)
@@ -188,7 +174,10 @@ def _annotation(node: ast.AST, names: set[str]) -> str:
 
 
 def _manifest_property_annotation(node, imports):
-    if any(isinstance(part, ast.Constant) and part.value is not None for part in ast.walk(node)):
+    if any(
+        isinstance(part, ast.Constant) and part.value is not None
+        for part in ast.walk(node)
+    ):
         _fail(node, "Property value formats must use types directly")
     names = {"datetime"} if imports.get("datetime") == "datetime" else set()
     return _annotation(node, names)
@@ -198,11 +187,29 @@ def _manifest_field_options(node):
     if not isinstance(node, ast.Dict):
         _fail(node, "field_options must be a literal mapping")
     options = _dictionary(node, set())
-    if (options.keys() - {"default", "default_factory", "kw_only", "class_var"}
-            or any(type(options[key]) is not bool for key in ("kw_only", "class_var") if key in options)
-            or ("default_factory" in options and (
-                options["default_factory"] not in ("dict", "list", "set", "tuple") or "default" in options))
-            or (options.get("class_var") and (options.keys() - {"class_var", "default"} or "default" not in options))):
+    if (
+        options.keys() - {"default", "default_factory", "kw_only", "class_var"}
+        or any(
+            type(options[key]) is not bool
+            for key in ("kw_only", "class_var")
+            if key in options
+        )
+        or (
+            "default_factory" in options
+            and (
+                options["default_factory"]
+                not in ("dict", "list", "set", "tuple")
+                or "default" in options
+            )
+        )
+        or (
+            options.get("class_var")
+            and (
+                options.keys() - {"class_var", "default"}
+                or "default" not in options
+            )
+        )
+    ):
         _fail(node, "unsupported Property field options")
     return options
 
@@ -211,33 +218,73 @@ def _validate_manifest_arguments(arguments, node):
     kind = arguments.get("entity_kind")
     if "entity_kind" in arguments and kind not in ("Primary", "Property"):
         _fail(node, "entity_kind must be Primary or Property")
-    if kind == "Property" and arguments.get("relation_name") != "IS_PROPERTY_OF":
+    if (
+        kind == "Property"
+        and arguments.get("relation_name") != "IS_PROPERTY_OF"
+    ):
         _fail(node, "Property must declare its bearer through IS_PROPERTY_OF")
-    for key, required_kind in (("identity_properties", "Primary"), ("derived_from_properties", "Property")):
+    for key, required_kind in (
+        ("identity_properties", "Primary"),
+        ("derived_from_properties", "Property"),
+    ):
         if key not in arguments:
             continue
         items = arguments[key]
-        if (kind != required_kind or not isinstance(items, tuple) or not items
-                or any(not isinstance(item, str) or not item.strip() for item in items)
-                or len(set(items)) != len(items)):
-            _fail(node, f"{key} requires distinct Property paths on a {required_kind} declaration")
-    if "creation_enabled" in arguments and (kind != "Primary" or type(arguments["creation_enabled"]) is not bool):
-        _fail(node, "creation_enabled requires a boolean on a Primary declaration")
+        if (
+            kind != required_kind
+            or not isinstance(items, tuple)
+            or not items
+            or any(
+                not isinstance(item, str) or not item.strip() for item in items
+            )
+            or len(set(items)) != len(items)
+        ):
+            _fail(
+                node,
+                f"{key} requires distinct Property paths on a "
+                f"{required_kind} declaration",
+            )
+    if "creation_enabled" in arguments and (
+        kind != "Primary" or type(arguments["creation_enabled"]) is not bool
+    ):
+        _fail(
+            node,
+            "creation_enabled requires a boolean on a Primary declaration",
+        )
     if "field_options" in arguments and kind != "Property":
         _fail(node, "Only a Property can declare field_options")
+    _validate_constraint_owner(arguments, kind, node)
+
+
+def _validate_constraint_owner(arguments, kind, node):
     if "constraints_for" in arguments:
         owner = arguments["constraints_for"]
-        if (not isinstance(owner, str) or not owner.strip() or kind is not None
-                or set(arguments) - {"entity_name", "constraints_for", "instance_check",
-                                     "model_relation_constraints", "instance_relation_constraints", "population_unique_constraints"}):
-            _fail(node, "constraints_for requires a separate class constraint declaration")
-
-
+        if (
+            not isinstance(owner, str)
+            or not owner.strip()
+            or kind is not None
+            or set(arguments)
+            - {
+                "entity_name",
+                "constraints_for",
+                "instance_check",
+                "model_relation_constraints",
+                "instance_relation_constraints",
+                "population_unique_constraints",
+            }
+        ):
+            _fail(
+                node,
+                "constraints_for requires a separate class constraint "
+                "declaration",
+            )
 
 
 def _validate_endpoint_flags(value, label, node):
     for key in ("reference_form", "dependency", "address_form"):
-        if key in value and (not isinstance(value[key], str) or not value[key].strip()):
+        if key in value and (
+            not isinstance(value[key], str) or not value[key].strip()
+        ):
             _fail(node, f"{label} {key} must be a nonempty string")
     for key in ("axis", "ephemeral"):
         if key in value and type(value[key]) is not bool:

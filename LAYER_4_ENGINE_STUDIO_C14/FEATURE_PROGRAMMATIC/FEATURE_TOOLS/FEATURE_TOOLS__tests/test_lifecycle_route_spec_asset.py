@@ -7,9 +7,9 @@ import unittest
 
 import yaml
 
-TOOLS = Path(__file__).resolve().parents[1]
-ENGINE = TOOLS.parents[1]
-sys.path[:0] = [str(TOOLS), str(ENGINE / 'IWE_CONSOLE_C43')]
+sys.path.insert(0, str((ENGINE := (TOOLS := Path(__file__).resolve()
+    .parents[1]).parents[1]) / 'IWE_CONSOLE_C43'))
+sys.path.insert(0, str(TOOLS))
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import capture_native
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import InputError, SourceChanged
@@ -69,8 +69,12 @@ class LifecycleRouteMatrix(LifecycleRouteSupport, unittest.TestCase):
         self.assertEqual(before, self.files(project))
         target = {'ref_id': created['savedDraft']['ref_id'], 'version': 1}
         self.assertTrue(any(row['_exact_ref'] == target['ref_id'] for row in capture_native(project).atoms))
-        ready = promote_draft(project, {'target': target, 'targetStatus': 'ready'},
-                              current_rows=capture_native(project).atoms, validate_project_spec_model=validate)
+        ready = promote_draft(
+            project,
+            {"target": target, "targetStatus": "ready"},
+            current_rows=capture_native(project).atoms,
+            validate_project_spec_model=validate,
+        )
         self.assertEqual('ready', ready['artifact']['status'], ready)
         current = {'ref_id': ready['artifact']['ref_id'], 'version': 1}
         revision = create_draft(project, {'sourceCurrent': current}, current_rows=capture_native(project).atoms)
@@ -139,9 +143,13 @@ class LifecycleRouteMatrix(LifecycleRouteSupport, unittest.TestCase):
                 raise ValueError('Status is not enabled')
 
         def publish(draft, validate):
-            target = {'ref_id': draft['ref_id'], 'version': draft['version']}
-            return promote_draft(project, {'target': target, 'targetStatus': 'ready'},
-                                 current_rows=capture_native(project).atoms, validate_project_spec_model=validate)
+            target = {"ref_id": draft["ref_id"], "version": draft["version"]}
+            return promote_draft(
+                project,
+                {"target": target, "targetStatus": "ready"},
+                current_rows=capture_native(project).atoms,
+                validate_project_spec_model=validate,
+            )
 
         first = create_draft(project, {'newAtom': values}, current_rows=capture_native(project).atoms,
                              validate_project_spec_model=allow)['savedDraft']

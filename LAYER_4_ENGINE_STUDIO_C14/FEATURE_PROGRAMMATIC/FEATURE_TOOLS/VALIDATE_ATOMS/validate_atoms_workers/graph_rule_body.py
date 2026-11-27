@@ -64,7 +64,10 @@ class _CardinalityCondition(BaseModel):
     maximum: int | None = Field(ge=0)
 
 
-@dataclass(config=ConfigDict(strict=True, extra="forbid", hide_input_in_errors=True), frozen=True)
+@dataclass(
+    config=ConfigDict(strict=True, extra="forbid", hide_input_in_errors=True),
+    frozen=True,
+)
 class ValidatedGraphRulePayload:
     summary: str
     operative_block: str
@@ -104,7 +107,9 @@ def _support_sections_valid(body: str, closing: int, check: Check) -> bool:
     if not sections:
         if any(line.strip() for line in lines[closing + 1 :]):
             check.fail(
-                "GRAPH_RULE_BODY", "body", "Unsectioned content may not follow the operative block."
+                "GRAPH_RULE_BODY",
+                "body",
+                "Unsectioned content may not follow the operative block.",
             )
             return False
         return True
@@ -118,7 +123,9 @@ def _support_sections_valid(body: str, closing: int, check: Check) -> bool:
     return True
 
 
-def _operative_fence(lines: list[str], summary_heading: int, check: Check) -> tuple[int, int] | None:
+def _operative_fence(
+    lines: list[str], summary_heading: int, check: Check
+) -> tuple[int, int] | None:
     fence_pattern = re.compile(r"^ {0,3}(`{3,}|~{3,})(.*)$")
     opening = next(
         (
@@ -130,7 +137,9 @@ def _operative_fence(lines: list[str], summary_heading: int, check: Check) -> tu
     )
     if opening is None:
         check.fail(
-            "GRAPH_RULE_BODY", "body", "Graph Rule body requires exactly one fenced yaml block."
+            "GRAPH_RULE_BODY",
+            "body",
+            "Graph Rule body requires exactly one fenced yaml block.",
         )
         return None
     opener = fence_pattern.match(_line_content(lines[opening]))
@@ -164,21 +173,33 @@ def _carrier_parts(body: str, check: Check) -> tuple[str, str, str] | None:
         starts.append(offset)
         offset += len(line)
     summary_heading = next(
-        (i for i, line in enumerate(lines) if _line_content(line).strip()), None
+        (i for i, line in enumerate(lines) if _line_content(line).strip()),
+        None,
     )
-    if summary_heading is None or _line_content(lines[summary_heading]) != "# Summary":
-        check.fail("GRAPH_RULE_BODY", "body", "Graph Rule body must start with literal # Summary.")
+    if (
+        summary_heading is None
+        or _line_content(lines[summary_heading]) != "# Summary"
+    ):
+        check.fail(
+            "GRAPH_RULE_BODY",
+            "body",
+            "Graph Rule body must start with literal # Summary.",
+        )
         return None
     fence = _operative_fence(lines, summary_heading, check)
     if fence is None:
         return None
     opening, closing = fence
-    summary = body[starts[summary_heading] + len(lines[summary_heading]) : starts[opening]]
+    summary = body[
+        starts[summary_heading] + len(lines[summary_heading]) : starts[opening]
+    ]
     if not any(line.strip() for line in summary.splitlines()) or any(
         re.match(r"^ {0,3}#{1,6}[ \t]+", line) for line in summary.splitlines()
     ):
         check.fail(
-            "GRAPH_RULE_BODY", "Summary", "Graph Rule Summary must contain prose and no extra sections."
+            "GRAPH_RULE_BODY",
+            "Summary",
+            "Graph Rule Summary must contain prose and no extra sections.",
         )
         return None
     if not _support_sections_valid(body, closing, check):
@@ -192,7 +213,9 @@ def _carrier_parts(body: str, check: Check) -> tuple[str, str, str] | None:
 
 
 def _mapping(value: object) -> bool:
-    return isinstance(value, dict) and all(isinstance(key, str) for key in value)
+    return isinstance(value, dict) and all(
+        isinstance(key, str) for key in value
+    )
 
 
 def _valid_subjects(subjects: list[str]) -> bool:
@@ -223,11 +246,17 @@ def _parse_rule(payload: str, check: Check) -> dict[str, Any] | None:
     try:
         check_yaml_resources(payload)
         rule = yaml.load(payload, Loader=UniqueSafeLoader)
-    except (CarrierError, yaml.YAMLError, RuntimeError, ValueError):
-        check.fail("GRAPH_RULE_BODY", "body", "Graph Rule operative block must be safe, valid YAML.")
+    except CarrierError, yaml.YAMLError, RuntimeError, ValueError:
+        check.fail(
+            "GRAPH_RULE_BODY",
+            "body",
+            "Graph Rule operative block must be safe, valid YAML.",
+        )
         return None
     if not _mapping(rule):
-        check.fail("GRAPH_RULE_BODY", "body", "Graph Rule yaml must be one mapping.")
+        check.fail(
+            "GRAPH_RULE_BODY", "body", "Graph Rule yaml must be one mapping."
+        )
         return None
     return cast(dict[str, Any], rule)
 
@@ -295,7 +324,9 @@ def validated_graph_rule_payload(
         _validate_cardinality(payload_model, rule, check)
         if len(check.findings) > findings_before:
             return None
-        return ValidatedGraphRulePayload(summary, operative_block, operative_yaml, rule)
+        return ValidatedGraphRulePayload(
+            summary, operative_block, operative_yaml, rule
+        )
     if payload_model.graph_rule_type != "whitelist":
         check.gap(
             "graph_rule_type",
@@ -306,7 +337,9 @@ def validated_graph_rule_payload(
     _validate_whitelist(payload_model, check)
     if len(check.findings) > findings_before:
         return None
-    return ValidatedGraphRulePayload(summary, operative_block, operative_yaml, rule)
+    return ValidatedGraphRulePayload(
+        summary, operative_block, operative_yaml, rule
+    )
 
 
 def validate_graph_rule_body(body: str, check: Check) -> None:

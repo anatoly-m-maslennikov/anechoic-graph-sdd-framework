@@ -16,8 +16,8 @@ relations:
   - AN-S-4741
 state:
   status: active
-  version: 1
-  updated_at: '2026-11-27T11:11:44.727957+00:00'
+  version: 2
+  updated_at: "2026-11-27T16:29:34.309627+00:00"
 ---
 
 ## Summary
@@ -44,8 +44,5 @@ end ProgrammaticDiagnostics
 
 ### Prose Claim
 
-Use the shared diagnostic emitter and the Studio logging levels. Emit bounded,
-sanitized records to stderr with UTC time, component, event code, operation,
-outcome, and an existing correlation ID when available.
-Keep protocol stdout for results. Keep diagnostics free of secrets and raw
-request data. Emit each exception trace once at its handling boundary.
+Use the shared diagnostic emitter under AN-S-4741. Reserve protocol
+stdout for results.

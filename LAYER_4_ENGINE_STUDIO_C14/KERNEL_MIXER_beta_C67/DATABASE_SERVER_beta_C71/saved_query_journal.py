@@ -11,7 +11,12 @@ from uuid import uuid7
 
 import duckdb
 
-from .saved_query_reads import SAVED_QUERY_AUTHOR, _journal_record, list_saved_queries, load_saved_query
+from .saved_query_reads import (
+    SAVED_QUERY_AUTHOR,
+    _journal_record,
+    list_saved_queries,
+    load_saved_query,
+)
 from .work_journal import (
     MAX_DATABASE_EVENT_BYTES,
     TABLE,
@@ -34,8 +39,13 @@ def _file_events(directory, source):
     descriptor = os.open(source.name, flags, dir_fd=directory)
     with os.fdopen(descriptor, "rb") as stream:
         before = os.fstat(stream.fileno())
-        if (not stat.S_ISREG(before.st_mode) or before.st_dev != os.fstat(directory).st_dev
-                or before.st_uid != os.getuid() or before.st_mode & 0o022 or before.st_nlink != 1):
+        if (
+            not stat.S_ISREG(before.st_mode)
+            or before.st_dev != os.fstat(directory).st_dev
+            or before.st_uid != os.getuid()
+            or before.st_mode & 0o022
+            or before.st_nlink != 1
+        ):
             raise OSError(f"unsafe Work Journal carrier: {source}")
         limit = MAX_DATABASE_EVENT_BYTES + 1
         number = 0
@@ -44,12 +54,24 @@ def _file_events(directory, source):
             if len(data) == limit and not data.endswith(b"\n"):
                 while data and not data.endswith(b"\n"):
                     data = stream.readline(limit)
-                print(f"saved query skipped: {source}:{number}: line exceeds size limit", file=sys.stderr)
+                print(
+                    (
+                        'saved query skipped: '
+                        f'{source}'
+                        ':'
+                        f'{number}'
+                        ': line exceeds size limit'
+                    ),
+                    file=sys.stderr,
+                )
                 continue
             try:
                 event = json.loads(data.decode("utf-8"))
-            except (ValueError, RecursionError):
-                print(f"saved query skipped: {source}:{number}: invalid JSON", file=sys.stderr)
+            except ValueError, RecursionError:
+                print(
+                    f"saved query skipped: {source}:{number}: invalid JSON",
+                    file=sys.stderr,
+                )
                 continue
             yield event
         if _fingerprint(before) != _fingerprint(os.fstat(stream.fileno())):
@@ -58,7 +80,9 @@ def _file_events(directory, source):
 
 def _historical_files(root, relative):
     try:
-        descriptor = _open_directory(root, relative.parts, create=False, same_device=True)
+        descriptor = _open_directory(
+            root, relative.parts, create=False, same_device=True
+        )
     except FileNotFoundError:
         return
     try:
@@ -66,7 +90,9 @@ def _historical_files(root, relative):
             for entry in entries:
                 match = _FILE_NAME.fullmatch(entry.name)
                 if match and match[1] == SAVED_QUERY_AUTHOR:
-                    yield from _file_events(descriptor, root / relative / entry.name)
+                    yield from _file_events(
+                        descriptor, root / relative / entry.name
+                    )
     finally:
         os.close(descriptor)
 
@@ -74,12 +100,13 @@ def _historical_files(root, relative):
 def _database_events(connection, table):
     cursor = connection.execute(
         f"SELECT CASE WHEN octet_length(encode(event::VARCHAR)) <= ? THEN event END "
-        f"FROM {table} WHERE author = ?", [MAX_DATABASE_EVENT_BYTES, SAVED_QUERY_AUTHOR],
+        f"FROM {table} WHERE author = ?",
+        [MAX_DATABASE_EVENT_BYTES, SAVED_QUERY_AUTHOR],
     )
     while row := cursor.fetchone():
         try:
             yield json.loads(row[0]) if row[0] is not None else None
-        except (ValueError, RecursionError):
+        except ValueError, RecursionError:
             yield None
 
 
@@ -88,13 +115,21 @@ def _historical_database(root):
         path = journal_database_path(root)
     except FileNotFoundError:
         return
-    config = {"enable_external_access": False, "autoinstall_known_extensions": False,
-              "autoload_known_extensions": False, "memory_limit": "256MB", "temp_directory": ""}
-    with duckdb.connect(str(path), read_only=True, config=config) as connection:
+    config = {
+        "enable_external_access": False,
+        "autoinstall_known_extensions": False,
+        "autoload_known_extensions": False,
+        "memory_limit": "256MB",
+        "temp_directory": "",
+    }
+    with duckdb.connect(
+        str(path), read_only=True, config=config
+    ) as connection:
         catalog = connection.execute("SELECT current_database()").fetchone()[0]
         exists = connection.execute(
             "SELECT 1 FROM information_schema.tables WHERE table_catalog = ? "
-            "AND table_schema = 'main' AND table_name = 'work_journal'", [catalog],
+            "AND table_schema = 'main' AND table_name = 'work_journal'",
+            [catalog],
         ).fetchone()
         if exists:
             validate_journal_schema(connection, catalog)
@@ -105,28 +140,50 @@ class SavedQueryJournal:
     def __init__(self, connection, root, journal_relative, *, native):
         self._connection = connection
         self._root = Path(root)
-        self._relative = Path(journal_relative) if journal_relative is not None else None
+        self._relative = (
+            Path(journal_relative) if journal_relative is not None else None
+        )
         self._native = native
 
     def save(self, sql, kind, name=None):
-        """Store one exact SQL snapshot while the caller holds the Kernel lock."""
+        (
+            'Store one exact SQL snapshot while the caller holds the Kernel '
+            'lock.'
+        )
         if kind not in ("query", "view"):
             raise ValueError("saved query kind must be query or view")
         now = datetime.now(UTC)
-        record = _journal_record({"saved_query_id": str(uuid7()), "kind": kind, "sql": sql,
-                                  "saved_at": now.isoformat(), "name": name}).as_event()
+        record = _journal_record(
+            {
+                "saved_query_id": str(uuid7()),
+                "kind": kind,
+                "sql": sql,
+                "saved_at": now.isoformat(),
+                "name": name,
+            }
+        ).as_event()
         local_date = now.date().isoformat()
-        row = _JournalRecord(author=SAVED_QUERY_AUTHOR, local_date=local_date, event=record)
+        row = _JournalRecord(
+            author=SAVED_QUERY_AUTHOR, local_date=local_date, event=record
+        )
         if len(_canonical_json_bytes(row.model_dump() if self._native else record)) > MAX_DATABASE_EVENT_BYTES:
             raise ValueError("saved query event exceeds the Journal record size limit")
         try:
             if self._native:
                 _commit_record(self._connection, TABLE, str(uuid7()), row)
             elif self._relative is not None:
-                from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import append_sealed_events
+                from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+                    append_sealed_events,
+                )
 
-                append_sealed_events(self._root, [record], author=SAVED_QUERY_AUTHOR, local_date=local_date,
-                                     timezone="UTC", journal_root=self._relative.as_posix())
+                append_sealed_events(
+                    self._root,
+                    [record],
+                    author=SAVED_QUERY_AUTHOR,
+                    local_date=local_date,
+                    timezone="UTC",
+                    journal_root=self._relative.as_posix(),
+                )
             else:
                 raise OSError("saved query Journal is unavailable")
         except OSError:
@@ -144,7 +201,10 @@ class SavedQueryJournal:
             else:
                 yield from _historical_database(self._root)
         except (OSError, ValueError, duckdb.Error) as error:
-            print(f"saved query read failed: {self._root}: {error}", file=sys.stderr)
+            print(
+                f"saved query read failed: {self._root}: {error}",
+                file=sys.stderr,
+            )
             raise OSError("saved query Journal is unavailable") from error
 
     def invoke(self, operation, args):
@@ -152,5 +212,7 @@ class SavedQueryJournal:
             if operation == "query_load" and set(args) == {"reference"}:
                 return load_saved_query(self._root, events, args["reference"])
             if operation == "query_saved_list" and set(args) <= {"limit"}:
-                return list_saved_queries(self._root, events, args.get("limit", 20))
+                return list_saved_queries(
+                    self._root, events, args.get("limit", 20)
+                )
         raise ValueError("Invalid saved query request")

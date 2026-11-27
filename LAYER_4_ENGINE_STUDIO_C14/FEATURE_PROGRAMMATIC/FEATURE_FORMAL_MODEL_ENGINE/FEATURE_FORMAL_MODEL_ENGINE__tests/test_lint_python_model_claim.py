@@ -15,19 +15,35 @@ TOOLS = Path(__file__).resolve().parents[1]
 
 class LintPythonModelClaimTests(unittest.TestCase):
     def lint(self, source):
-        return lint_python_model_claim(source, declared_addresses=["ANECHOIC_MODEL <+ Atom.Name", "Atom"],
-                                       relation_names=["HAS_PROPERTY"], path="test.md", first_line=10)
+        return lint_python_model_claim(
+            source,
+            declared_addresses=["ANECHOIC_MODEL <+ Atom.Name", "Atom"],
+            relation_names=["HAS_PROPERTY"],
+            path="test.md",
+            first_line=10,
+        )
 
     def test_known_reference_and_relation(self):
         self.assertEqual(self.lint('relation(source="Atom", name="HAS_PROPERTY", target="Atom.Name")'), ())
 
     def test_unknown_reference_and_relation_with_location(self):
-        self.assertIn('test.md:11:', self.lint('\nproperty_rule(address="Atom.Missing")')[0])
-        self.assertIn('unknown address', self.lint('property_rule(address="Atom.Missing")')[0])
-        self.assertIn('unknown Relation: WRONG', self.lint('relation(source="Atom", name="WRONG")')[0])
+        self.assertIn(
+            "test.md:11:",
+            self.lint('\nproperty_rule(address="Atom.Missing")')[0],
+        )
+        self.assertIn(
+            "unknown address",
+            self.lint('property_rule(address="Atom.Missing")')[0],
+        )
+        self.assertIn(
+            "unknown Relation: WRONG",
+            self.lint('relation(source="Atom", name="WRONG")')[0],
+        )
 
     def test_unsupported_qualification_is_explicit(self):
-        self.assertIn('unknown address', self.lint('subject_path(address="Node.**")')[0])
+        self.assertIn(
+            "unknown address", self.lint('subject_path(address="Node.**")')[0]
+        )
 
     def test_qualifier_wildcard_and_bound_instance(self):
         addresses = ["Atom", "Atom.Header.Context.Role", "Atom.Content.Claim"]
@@ -60,32 +76,72 @@ class LintPythonModelClaimTests(unittest.TestCase):
                   "allowed_values(address='Workflow.Header.Context.Form', values=('Workflow',), occurrences='1')\n"
                   "relation(source='Workflow//$workflow', name='CONTAINS', target='Step//$step', source_count='1+')\n"
                   "relation(source='Workflow Run//$run', name='CONTAINS', target='Workflow//$workflow')")
-        kwargs = dict(declared_addresses=addresses, relation_names=['CONTAINS'], python_class_bindings={},
-                      address_bindings={'Workflow': workflow, 'Step': step})
+        kwargs = dict(
+            declared_addresses=addresses,
+            relation_names=["CONTAINS"],
+            python_class_bindings={},
+            address_bindings={"Workflow": workflow, "Step": step},
+        )
         self.assertEqual((), lint_python_model_claim(source, **kwargs))
-        self.assertEqual((), lint_python_model_claim(source, declared_addresses=addresses,
-                                                     relation_names=['CONTAINS'],
-                                                     address_bindings={'Workflow': workflow, 'Step': step}))
-        self.assertTrue(lint_python_model_claim(source, declared_addresses=addresses,
-                                               relation_names=['CONTAINS'], python_class_bindings={}))
-        self.assertTrue(lint_python_model_claim("subject_path(address='Workflow.Header.Missing')", **kwargs))
+        self.assertEqual(
+            (),
+            lint_python_model_claim(
+                source,
+                declared_addresses=addresses,
+                relation_names=["CONTAINS"],
+                address_bindings={"Workflow": workflow, "Step": step},
+            ),
+        )
+        self.assertTrue(
+            lint_python_model_claim(
+                source,
+                declared_addresses=addresses,
+                relation_names=["CONTAINS"],
+                python_class_bindings={},
+            )
+        )
+        self.assertTrue(
+            lint_python_model_claim(
+                "subject_path(address='Workflow.Header.Missing')", **kwargs
+            )
+        )
         self.assertTrue(lint_python_model_claim("subject_path(address='Atom/(.Header.Context.Role in (Method))/Workflow')", **kwargs))
         self.assertTrue(lint_python_model_claim("subject_path(address='Atom/(.Header.Context.Role in (Operations, Method))/Workflow')", **kwargs))
         self.assertTrue(lint_python_model_claim("subject_path(address='Atom/(.Header.Context.Role:=Operations)/Missing')", **kwargs))
 
-    def test_qualified_catalog_entry_requires_declared_qualifier_property(self):
+    def test_qualified_catalog_entry_requires_declared_qualifier_property(
+        self,
+    ):
         qualified = "Atom/(.Missing:=X)/Workflow"
-        options = dict(declared_addresses=['Atom', qualified], relation_names=[],
-                       address_bindings={'Workflow': qualified})
-        for reference in (qualified, "Workflow", "Atom/(.Missing in (X))/Workflow//$x"):
-            result = lint_python_model_claim(f"subject_path(address={reference!r})", **options)
-            self.assertIn("unknown qualifier Property: Atom.Missing", result[0])
+        options = dict(
+            declared_addresses=["Atom", qualified],
+            relation_names=[],
+            address_bindings={"Workflow": qualified},
+        )
+        for reference in (
+            qualified,
+            "Workflow",
+            "Atom/(.Missing in (X))/Workflow//$x",
+        ):
+            result = lint_python_model_claim(
+                f"subject_path(address={reference!r})", **options
+            )
+            self.assertIn(
+                "unknown qualifier Property: Atom.Missing", result[0]
+            )
         chain = "Atom <+ " + qualified
-        options['declared_addresses'].append(chain)
-        result = lint_python_model_claim(f"subject_path(address={chain!r})", **options)
+        options["declared_addresses"].append(chain)
+        result = lint_python_model_claim(
+            f"subject_path(address={chain!r})", **options
+        )
         self.assertIn("unknown qualifier Property: Atom.Missing", result[0])
-        options['declared_addresses'].append('Atom.Missing')
-        self.assertEqual((), lint_python_model_claim(f"subject_path(address={qualified!r})", **options))
+        options["declared_addresses"].append("Atom.Missing")
+        self.assertEqual(
+            (),
+            lint_python_model_claim(
+                f"subject_path(address={qualified!r})", **options
+            ),
+        )
 
     def test_graph_bindings_keep_variable_identity_and_local_property(self):
         workflow = "Atom/(.Header.Context.Role:=Operations)/Workflow"
@@ -106,27 +162,57 @@ class LintPythonModelClaimTests(unittest.TestCase):
                     "subject_path(address='Step//$x')")
         self.assertIn("inconsistent binding", lint_python_model_claim(mismatch, **kwargs)[0])
 
-    def test_graph_bindings_fail_closed_for_missing_and_conflicting_aliases(self):
+    def test_graph_bindings_fail_closed_for_missing_and_conflicting_aliases(
+        self,
+    ):
         workflow = "Atom/(.Header.Context.Role:=Operations)/Workflow"
-        options = dict(declared_addresses=['Atom', workflow], relation_names=[], python_class_bindings={})
+        options = dict(
+            declared_addresses=["Atom", workflow],
+            relation_names=[],
+            python_class_bindings={},
+        )
         claim = "subject_path(address='Workflow')"
         self.assertTrue(lint_python_model_claim(claim, **options))
-        self.assertTrue(lint_python_model_claim(claim, address_bindings={'Workflow': 'Missing'}, **options))
-        self.assertTrue(lint_python_model_claim(claim, address_bindings={'Workflow': workflow},
-                                                declared_addresses=['Atom', workflow, 'Workflow'],
-                                                relation_names=[], python_class_bindings={}))
-        self.assertTrue(lint_python_model_claim(claim, address_bindings={'Workflow': ['bad']}, **options))
+        self.assertTrue(
+            lint_python_model_claim(
+                claim, address_bindings={"Workflow": "Missing"}, **options
+            )
+        )
+        self.assertTrue(
+            lint_python_model_claim(
+                claim,
+                address_bindings={"Workflow": workflow},
+                declared_addresses=["Atom", workflow, "Workflow"],
+                relation_names=[],
+                python_class_bindings={},
+            )
+        )
+        self.assertTrue(
+            lint_python_model_claim(
+                claim, address_bindings={"Workflow": ["bad"]}, **options
+            )
+        )
 
-    def test_set_value_validates_relation_alias_without_changing_expression(self):
+    def test_set_value_validates_relation_alias_without_changing_expression(
+        self,
+    ):
         from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
             parse_grouped_python_model_claim,
         )
-        options = dict(declared_addresses=['Relation'], relation_names=['NARROWER_THAN', 'HAS_NARROWER'])
+
+        options = dict(
+            declared_addresses=["Relation"],
+            relation_names=["NARROWER_THAN", "HAS_NARROWER"],
+        )
         source = "# model\nset_value(address='alias(Relation//NARROWER_THAN)', value='\"/\"')"
         self.assertEqual((), lint_python_model_claim(source, **options))
-        self.assertEqual((('alias(Relation//NARROWER_THAN) == \"/\"', 'model'),),
-                         parse_grouped_python_model_claim(source))
-        inverse = "set_value(address='alias(Relation//HAS_NARROWER)', value='/')"
+        self.assertEqual(
+            (('alias(Relation//NARROWER_THAN) == "/"', "model"),),
+            parse_grouped_python_model_claim(source),
+        )
+        inverse = (
+            "set_value(address='alias(Relation//HAS_NARROWER)', value='/')"
+        )
         self.assertEqual((), lint_python_model_claim(inverse, **options))
         invalid = (
             "set_value(address='alias(Relation//narrower_than)', value='/')",
@@ -143,14 +229,35 @@ class LintPythonModelClaimTests(unittest.TestCase):
 
     def test_helpers_check_declared_relations_and_delivery_targets(self):
         addresses = ["Atom", "Atom.Name"]
+
         def lint(source, names, **kwargs):
-            return lint_python_model_claim(source, declared_addresses=addresses, relation_names=names, **kwargs)
-        self.assertIn("CONTAINS", lint('composition(container="Atom", parts=("Atom.Name",))', [])[0])
-        self.assertIn("HAS_AXIS", lint('classify(address="Atom", axis="Role", value="Method")', [])[0])
-        self.assertIn("IS_ORDERED_RIGHT_BEFORE", lint('order_before(first="Atom", second="Atom.Name")', [])[0])
+            return lint_python_model_claim(
+                source,
+                declared_addresses=addresses,
+                relation_names=names,
+                **kwargs,
+            )
+
+        self.assertIn(
+            "CONTAINS",
+            lint('composition(container="Atom", parts=("Atom.Name",))', [])[0],
+        )
+        self.assertIn(
+            "HAS_AXIS",
+            lint('classify(address="Atom", axis="Role", value="Method")', [])[
+                0
+            ],
+        )
+        self.assertIn(
+            "IS_ORDERED_RIGHT_BEFORE",
+            lint('order_before(first="Atom", second="Atom.Name")', [])[0],
+        )
         delivery = 'deliver(source="Atom", carrier="Atom.Name")'
         self.assertEqual(lint(delivery, []), ())
-        self.assertIn("unknown carrier", lint('deliver(source="Atom", carrier="Missing")', [])[0])
+        self.assertIn(
+            "unknown carrier",
+            lint('deliver(source="Atom", carrier="Missing")', [])[0],
+        )
         self.assertEqual(lint('relation(source="Atom", name="*")', []), ())
 
     def test_cli_delivery_claim_checks_carrier(self):
@@ -185,9 +292,13 @@ class LintPythonModelClaimTests(unittest.TestCase):
             self.assertEqual(subprocess.run(command, capture_output=True, text=True).returncode, 2)
 
     def test_rejects_unsafe_placement_folder(self):
-        source = "placement_rules = ({'kind': 'status', 'role': 'Plan', 'status': 'Backlog', " \
-                 "'base': 'role', 'folder': '../Backlog'},)"
-        errors = lint_python_model_claim(source, declared_addresses=[], relation_names=[])
+        source = (
+            "placement_rules = ({'kind': 'status', 'role': 'Plan', 'status': 'Backlog', "
+            "'base': 'role', 'folder': '../Backlog'},)"
+        )
+        errors = lint_python_model_claim(
+            source, declared_addresses=[], relation_names=[]
+        )
         self.assertIn("Unsafe placement folder", errors[0])
 
     def test_python_is_never_executed(self):

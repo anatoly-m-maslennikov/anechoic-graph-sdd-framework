@@ -23,7 +23,14 @@ def image_deadline_mode(environment) -> str:
 
 
 def image_timeout(seconds: float, environment=None) -> float | None:
-    return seconds if image_deadline_mode(os.environ if environment is None else environment) == "1" else None
+    return (
+        seconds
+        if image_deadline_mode(
+            os.environ if environment is None else environment
+        )
+        == "1"
+        else None
+    )
 
 
 def _image_command(root: Path, operation: str, attempt: str, *arguments: str) -> str:
@@ -32,13 +39,25 @@ def _image_command(root: Path, operation: str, attempt: str, *arguments: str) ->
         "--managed-python", "--no-env-file", "python", "-B", "-P", "-m", IMAGE_CLI,
         operation, "--project-root", str(root), "--attempt", attempt, *arguments,
     )
-    environment = {**os.environ, "UV_PROJECT_ENVIRONMENT": str(CODE_ROOT / ".venv-dev"), "PYTHONPATH": str(CODE_ROOT)}
+    environment = {
+        **os.environ,
+        "UV_PROJECT_ENVIRONMENT": str(CODE_ROOT / ".venv-dev"),
+        "PYTHONPATH": str(CODE_ROOT),
+    }
     environment.pop("PYTHONHOME", None)
     environment.pop("VIRTUAL_ENV", None)
     environment[IMAGE_DEADLINES] = image_deadline_mode(environment)
     result = subprocess.run(
-        argv, cwd=CODE_ROOT, env=environment, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
-        text=True, timeout=image_timeout(900 if operation == "build" else 120, environment), check=True,
+        argv,
+        cwd=CODE_ROOT,
+        env=environment,
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
+        text=True,
+        timeout=image_timeout(
+            900 if operation == "build" else 120, environment
+        ),
+        check=True,
     )
     return result.stdout.strip()
 
@@ -55,11 +74,15 @@ def _test_scratch(root: Path):
     parent = root / ".anechoic_tmp/tests/full-suite-integration"
     for component in (root / ".anechoic_tmp", parent.parent, parent):
         if component.is_symlink():
-            raise OSError("test scratch must remain inside the selected Project")
+            raise OSError(
+                "test scratch must remain inside the selected Project"
+            )
     parent.mkdir(parents=True, exist_ok=True)
     if parent.resolve(strict=True) != parent or parent.is_symlink():
         raise OSError("test scratch must remain inside the selected Project")
-    with tempfile.TemporaryDirectory(prefix="attempt-", dir=parent) as directory:
+    with tempfile.TemporaryDirectory(
+        prefix="attempt-", dir=parent
+    ) as directory:
         yield Path(directory)
 
 
@@ -87,9 +110,13 @@ def current_code_test_image(root: Path, *, use_packaged_assets: bool = False):
     with _test_scratch(root) as scratch:
         attempt = uuid.uuid4().hex
         assets = ("--packaged-assets",) if use_packaged_assets else ()
-        image = _image_command(root, "build", attempt, "--scratch", str(scratch), *assets)
+        image = _image_command(
+            root, "build", attempt, "--scratch", str(scratch), *assets
+        )
         if re.fullmatch(r"sha256:[0-9a-f]{64}", image) is None:
-            raise ValueError("Test image build did not return an immutable Docker image ID")
+            raise ValueError(
+                "Test image build did not return an immutable Docker image ID"
+            )
         print(f"Test image FINISH: {image}", flush=True)
         try:
             yield _image_environment(image, scratch)

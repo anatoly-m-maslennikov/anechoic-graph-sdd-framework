@@ -75,11 +75,17 @@ def _initialize_flow_actions(connection):
 
 
 def _validate(data):
-    if (not isinstance(data['run_id'], str) or not _RUN.fullmatch(data['run_id'])
-            or not isinstance(data['component'], str) or not _COMPONENT.fullmatch(data['component'])
-            or not isinstance(data['action'], str) or not data['action'].strip()
-            or not isinstance(data['events'], list) or len(data['events']) > 512):
-        raise ValueError('Invalid flow snapshot')
+    if (
+        not isinstance(data["run_id"], str)
+        or not _RUN.fullmatch(data["run_id"])
+        or not isinstance(data["component"], str)
+        or not _COMPONENT.fullmatch(data["component"])
+        or not isinstance(data["action"], str)
+        or not data["action"].strip()
+        or not isinstance(data["events"], list)
+        or len(data["events"]) > 512
+    ):
+        raise ValueError("Invalid flow snapshot")
     rows = []
     for sequence, event in enumerate(data['events']):
         if not isinstance(event, dict) or set(event) != _FIELDS:
@@ -103,23 +109,46 @@ def _validate(data):
 def flow_route(connection, instance_id, lock, read_object, error):
     async def admit(request):
         try:
-            data = await read_object(request, 1024 * 1024,
-                                     {'instance_id', 'run_id', 'component', 'action', 'events'})
-            if data['instance_id'] != instance_id:
-                print('Flow events rejected: instance does not match', file=sys.stderr)
-                return error('foreign_instance', 'Instance does not match', 403)
+            data = await read_object(
+                request,
+                1024 * 1024,
+                {"instance_id", "run_id", "component", "action", "events"},
+            )
+            if data["instance_id"] != instance_id:
+                print(
+                    "Flow events rejected: instance does not match",
+                    file=sys.stderr,
+                )
+                return error(
+                    "foreign_instance", "Instance does not match", 403
+                )
             rows = _validate(data)
             with lock:
-                connection.execute('BEGIN TRANSACTION')
+                connection.execute("BEGIN TRANSACTION")
                 try:
                     if rows:
-                        connection.executemany('INSERT INTO src_flow_events VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', rows)
-                    connection.execute('COMMIT')
+                        connection.executemany(
+                            (
+                                'INSERT INTO src_flow_events VALUES (?, ?, ?, '
+                                '?, ?, ?, ?, ?, ?, ?, ?)'
+                            ),
+                            rows,
+                        )
+                    connection.execute("COMMIT")
                 except BaseException:
-                    connection.execute('ROLLBACK')
+                    connection.execute("ROLLBACK")
                     raise
-            return JSONResponse({'result': {'run_id': data['run_id'], 'events': len(rows)}})
-        except (ValueError, TypeError, OverflowError, UnicodeError, duckdb.Error) as exc:
-            print(f'Flow events rejected: {exc}', file=sys.stderr)
-            return error('invalid_flow_events', str(exc), 400)
+            return JSONResponse(
+                {"result": {"run_id": data["run_id"], "events": len(rows)}}
+            )
+        except (
+            ValueError,
+            TypeError,
+            OverflowError,
+            UnicodeError,
+            duckdb.Error,
+        ) as exc:
+            print(f"Flow events rejected: {exc}", file=sys.stderr)
+            return error("invalid_flow_events", str(exc), 400)
+
     return admit

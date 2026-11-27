@@ -8,8 +8,8 @@ context:
   lens: DevOps
 state:
   status: active
-  version: 16
-  updated_at: '2026-11-20T11:29:16.598468+00:00'
+  version: 17
+  updated_at: "2026-11-27T15:50:51.353081+00:00"
 ---
 ## Summary
 
@@ -17,7 +17,7 @@ Deliver complete Scope Unit read data
 
 ## Scope
 
-This interface applies only to legacy Scope Unit records. Native Component structure comes from the read-only Structure snapshot API.
+Use the legacy Scope Unit boundary in AN-S-2479.
 
 The operation-specific inner representation of one complete Scope Unit declaration Read, refining CA-D-625-CONNECTOR_TOOLS-ENG_DECISION--deliver-coherent-connector-interface.
 

@@ -9,9 +9,15 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_2_SPEC_READING_C83._package__shared import load_boundary_model
-from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_2_SPEC_READING_C83.SPECIFICATION_MODEL_C85._package__shared import outcome_cases
-from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_3_LEAN_TRANSLATOR_C84._package__shared import compile_lean
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_2_SPEC_READING_C83._package__shared import (
+    load_boundary_model,
+)
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_2_SPEC_READING_C83.SPECIFICATION_MODEL_C85._package__shared import (
+    outcome_cases,
+)
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_3_LEAN_TRANSLATOR_C84._package__shared import (
+    compile_lean,
+)
 from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_4_SPEC_COMPARISON_C88._package__shared import (
     compare_obligations,
     compare_trace_workflow,
@@ -22,10 +28,18 @@ _C94_SPECS = Path(
     'SPEC_ENGINE_C75/LAYER_2_FORMAL_SPECIFICATION_C94'
 )
 _SOURCES = (
-    ('01_TIER_1_ARCHITECTURE/AN-S-4935-SPEC-COMPONENT_MANIFEST--declare-spec-comparison.md',
-     'AN-S-4935', 'C94', '929c914afb640966de04ce2f96420b484a3eaaab991066c2eaf3203d10b2d9cd'),
-    ('LAYER_4_SPEC_COMPARISON_C88/AN-S-5030-DES-SOLUTION--compare-formal-spec-obligations.md',
-     'AN-S-5030', 'C88', 'ad6af299477be8d524d398f808d99acd79b9ebc96361d7bb44a413dfe0d1822d'),
+    (
+        "01_TIER_1_ARCHITECTURE/AN-S-4935-SPEC-COMPONENT_MANIFEST--declare-spec-comparison.md",
+        "AN-S-4935",
+        "C94",
+        "929c914afb640966de04ce2f96420b484a3eaaab991066c2eaf3203d10b2d9cd",
+    ),
+    (
+        "LAYER_4_SPEC_COMPARISON_C88/AN-S-5030-DES-SOLUTION--compare-formal-spec-obligations.md",
+        "AN-S-5030",
+        "C88",
+        "ad6af299477be8d524d398f808d99acd79b9ebc96361d7bb44a413dfe0d1822d",
+    ),
 )
 
 
@@ -58,18 +72,34 @@ class ComparisonDirectionTests(unittest.TestCase):
                         if transition['expect'].get('target') == target:
                             transition['expect']['target'] = 'missing'
                 report = compare_trace_workflow(contract, mutant, lean=lean)
-                self.assertEqual('conflicting', report['status'])
-                self.assertTrue(any(f['key'] == 'must_effect' and f['left'][0] == target
-                                    and f['status'] == 'conflicting' for f in report['facts']))
+                self.assertEqual("conflicting", report["status"])
+                self.assertTrue(
+                    any(
+                        f["key"] == "must_effect"
+                        and f["left"][0] == target
+                        and f["status"] == "conflicting"
+                        for f in report["facts"]
+                    )
+                )
 
     def _assert_public_comparison(self, pins, contract, lean):
-        sources = {'manifest': pins[0], 'contract': pins[0], 'solution': pins[1]}
-        obligations = {'manifest': {'z': 1, 'm': 8, 'a': 2},
-                       'contract': {'z': 1, 'a': 2},
-                       'solution': {'z': 3, 'a': 2}}
+        sources = {
+            "manifest": pins[0],
+            "contract": pins[0],
+            "solution": pins[1],
+        }
+        obligations = {
+            "manifest": {"z": 1, "m": 8, "a": 2},
+            "contract": {"z": 1, "a": 2},
+            "solution": {"z": 3, "a": 2},
+        }
         report = compare_obligations(sources, obligations, lean=lean)
-        directions = [target.removeprefix('C88.') for target, _ in contract['must_effect']]
-        self.assertEqual(directions, list(report['directions']))
+        directions = [
+            target.removeprefix("C88.")
+            for target, _ in contract["must_effect"]
+        ]
+        self.assertEqual(directions, list(report["directions"]))
+
         def fact(key, left, right, status):
             return {'key': key, 'left': left, 'right': right, 'status': status}
 

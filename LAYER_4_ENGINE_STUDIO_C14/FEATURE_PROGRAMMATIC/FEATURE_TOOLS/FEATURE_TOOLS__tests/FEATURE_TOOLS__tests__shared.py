@@ -36,14 +36,20 @@ from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.FEATURE_IWE_CON
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import bootstrap_rows, inventory, read_selected  # noqa: E402
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import compile_header_relation_rules, load_header_relation_rules  # noqa: E402
 from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.FEATURE_FORMAL_MODEL_ENGINE__shared import (  # noqa: E402
-    Atom, DEPENDENCIES_CLAIM_SHA256, dependencies_are_distinct, verify_packaged_dependencies_check,
+    Atom, DEPENDENCIES_CLAIM_SHA256,
+    dependencies_are_distinct, verify_packaged_dependencies_check,
 )
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__tests.legacy_work_report_model import compile_work_report_target, verify_work_report_target  # noqa: E402
 
-_DEPENDENCIES_SUBJECT = 'ANECHOIC_MODEL <+ Atom.Header.Context.Topics.Dependencies'
+_DEPENDENCIES_SUBJECT = (
+    "ANECHOIC_MODEL <+ Atom.Header.Context.Topics.Dependencies"
+)
 
 
-@dataclass(config=ConfigDict(strict=True, extra="forbid", hide_input_in_errors=True), frozen=True)
+@dataclass(
+    config=ConfigDict(strict=True, extra="forbid", hide_input_in_errors=True),
+    frozen=True,
+)
 class CandidateSchema:
     workbench: object
     role_form: object
@@ -67,17 +73,21 @@ class CandidateSchema:
         self.role_form.validate(role, form)
 
     def validate_atom_dependencies(self, metadata):
-        present, values = header_value(metadata, 'topics.dependencies')
+        present, values = header_value(metadata, "topics.dependencies")
         if not present:
             return
-        if isinstance(values, dict) and set(values) <= {'continuant', 'occurrent'} and all(
-            isinstance(group, list) for group in values.values()
+        if (
+            isinstance(values, dict)
+            and set(values) <= {"continuant", "occurrent"}
+            and all(isinstance(group, list) for group in values.values())
         ):
             values = [item for group in values.values() for item in group]
-        if not isinstance(values, list) or any(type(value) is not str for value in values):
-            raise ValueError('Topic Dependencies require a list of strings.')
+        if not isinstance(values, list) or any(
+            type(value) is not str for value in values
+        ):
+            raise ValueError("Topic Dependencies require a list of strings.")
         if not dependencies_are_distinct(Atom(tuple(values))):
-            raise ValueError('Topic Dependencies must be distinct.')
+            raise ValueError("Topic Dependencies must be distinct.")
 
 
 class _MemoryAsset:
@@ -95,7 +105,9 @@ class _MemoryAsset:
 
 
 def _canonical(payload):
-    return json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(',', ':')).encode()
+    return json.dumps(
+        payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    ).encode()
 
 
 def load_candidate_schema(path: Path):
@@ -152,6 +164,14 @@ def _validate_dependency_pin(payload, source_pins):
     return check
 
 
+def _reject_unreviewed_dependencies(row, body, iter_formal_claims, parse_native_model_claim):
+    for code in iter_formal_claims(body.decode('utf-8')):
+        if 'dependencies_are_distinct' in code:
+            parsed = parse_native_model_claim(code)
+            if parsed and (parsed.get('instance_check') or {}).get('name') == 'dependencies_are_distinct':
+                raise ValueError(f"{row['source_path']}: Atom Dependencies check requires {_DEPENDENCIES_SUBJECT}")
+
+
 def _dependencies_declaration(rows):
     from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import iter_formal_claims
     from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_native_model_claim
@@ -171,14 +191,12 @@ def _dependencies_declaration(rows):
                 raise ValueError(f'Multiple Current Declarations for {_DEPENDENCIES_SUBJECT}')
             selected = row
         elif b'dependencies_are_distinct' in body:
-            for code in iter_formal_claims(body.decode('utf-8')):
-                if 'dependencies_are_distinct' in code:
-                    parsed = parse_native_model_claim(code)
-                    if parsed and (parsed.get('instance_check') or {}).get('name') == 'dependencies_are_distinct':
-                        raise ValueError(f"{row['source_path']}: Atom Dependencies check requires {_DEPENDENCIES_SUBJECT}")
+            _reject_unreviewed_dependencies(row, body, iter_formal_claims, parse_native_model_claim)
     if selected is None:
         return None
-    blocks = tuple(iter_formal_claims(selected['_content_bytes'].decode('utf-8')))
+    blocks = tuple(
+        iter_formal_claims(selected["_content_bytes"].decode("utf-8"))
+    )
     if not blocks:
         return None
     if len(blocks) != 1 or hashlib.sha256(blocks[0].encode()).hexdigest() != DEPENDENCIES_CLAIM_SHA256:
@@ -198,14 +216,18 @@ def compile_candidate_schema(root: Path, placement_selection: Path | None = None
     model_class_bindings = bindings_from_workbench_rows(rows)
     for row in rows:
         row['_model_class_bindings'] = model_class_bindings
-    workbench = json.loads(schema_asset(rows, compile_schema(rows, compile_content_schema(rows))))
+    workbench = json.loads(
+        schema_asset(rows, compile_schema(rows, compile_content_schema(rows)))
+    )
     payload = {'schema_version': 2, 'workbench': workbench, 'role_form': compile_role_form(rows),
                'header_constraints': compile_header_constraints(rows),
                'content_constraints': compile_content_constraints(rows)}
     if work_report_target := compile_work_report_target(rows):
         payload['work_report_target'] = work_report_target
-    if header_relation_rules := compile_header_relation_rules(rows + relation_rows):
-        payload['header_relation_rules'] = header_relation_rules
+    if header_relation_rules := compile_header_relation_rules(
+        rows + relation_rows
+    ):
+        payload["header_relation_rules"] = header_relation_rules
     if header_ordering := compile_header_ordering(rows):
         payload['header_ordering'] = header_ordering
     if compile_atom_population_model(rows):
@@ -226,13 +248,17 @@ def _add_candidate_placement(root, placement_selection, rows, payload):
     else:
         selection_path = Path(placement_selection)
         if selection_path.is_symlink() or not selection_path.is_file():
-            raise ValueError('placement selection is missing or is a symlink')
+            raise ValueError("placement selection is missing or is a symlink")
         try:
             selection = json.loads(selection_path.read_bytes())
         except (UnicodeError, json.JSONDecodeError) as error:
-            raise ValueError(f'invalid placement selection: {error}') from error
+            raise ValueError(
+                f"invalid placement selection: {error}"
+            ) from error
         delivery_rows = read_selected(root, selection)
-    roles = load_role_form(payload['role_form'], {row['id'] for row in rows}).roles
+    roles = load_role_form(
+        payload["role_form"], {row["id"] for row in rows}
+    ).roles
     from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import status_memberships
     status_memberships_by_role = set()
     for row in rows:
@@ -247,11 +273,15 @@ def _add_candidate_placement(root, placement_selection, rows, payload):
                 if declared_role is None or canonical_role_name(declared_role) == canonical_role_name(role)
             } for role in roles
         }
-    placement = compile_placement(delivery_rows, rows, roles, required_statuses)
+    placement = compile_placement(
+        delivery_rows, rows, roles, required_statuses
+    )
     if placement is not None:
-        payload['placement'] = placement
+        payload["placement"] = placement
     elif placement_selection is not None and required_statuses is not None:
-        raise ValueError('Placement selection has no authoritative placement rules')
+        raise ValueError(
+            "Placement selection has no authoritative placement rules"
+        )
 
 def _candidate_declarations(root):
     rows, relation_rows = [], []
@@ -282,22 +312,26 @@ def _candidate_declarations(root):
                      'header_json': carrier.metadata, '_content_bytes': carrier.body.encode('utf-8'),
                      '_sha256': hashlib.sha256(raw).hexdigest()})
     if not rows:
-        raise ValueError(f'{root}: no Active Requirement Declarations in staged sources')
+        raise ValueError(
+            f"{root}: no Active Requirement Declarations in staged sources"
+        )
     return rows, relation_rows
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--model-root', required=True, type=Path)
-    parser.add_argument('--output', required=True, type=Path)
-    parser.add_argument('--placement-selection', type=Path)
+    parser.add_argument("--model-root", required=True, type=Path)
+    parser.add_argument("--output", required=True, type=Path)
+    parser.add_argument("--placement-selection", type=Path)
     args = parser.parse_args()
     try:
-        payload = compile_candidate_schema(args.model_root, args.placement_selection)
+        payload = compile_candidate_schema(
+            args.model_root, args.placement_selection
+        )
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_bytes(payload)
     except (OSError, ValueError) as error:
-        parser.exit(1, f'Candidate schema build failed: {error}\n')
+        parser.exit(1, f"Candidate schema build failed: {error}\n")
 
 
 def select_legacy_project(root, control_root):

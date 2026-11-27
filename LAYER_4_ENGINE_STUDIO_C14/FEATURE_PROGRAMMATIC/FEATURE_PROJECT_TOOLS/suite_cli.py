@@ -20,12 +20,23 @@ def run_phase(root, arguments, report, run_full_suite):
     canary_args = (arguments.canary_package, arguments.canary_selection, arguments.run_id)
     canary_options = (*canary_args, arguments.canary_project_root)
     if phase == "image-tests":
-        if (any(value is not None for value in canary_options) or
-                not valid_test_request("image", image, arguments.test_modules, arguments.required)):
-            print("Image-tests phase requires only an exact candidate image", file=sys.stderr)
+        if any(
+            value is not None for value in canary_options
+        ) or not valid_test_request(
+            "image", image, arguments.test_modules, arguments.required
+        ):
+            print(
+                "Image-tests phase requires only an exact candidate image",
+                file=sys.stderr,
+            )
             return 1
-        return run_full_suite(root, phase="image", candidate_image=image, report=report,
-                              **({"image_suite": image_suite} if image_suite != "full" else {}))
+        return run_full_suite(
+            root,
+            phase="image",
+            candidate_image=image,
+            report=report,
+            **({"image_suite": image_suite} if image_suite != "full" else {}),
+        )
     if phase in ("image", "canary"):
         if (not all(canary_args) or not valid_test_request("image", image, arguments.test_modules, arguments.required)):
             print(f"{phase.capitalize()} phase requires an exact candidate image and all canary arguments", file=sys.stderr)
@@ -44,17 +55,26 @@ def run_phase(root, arguments, report, run_full_suite):
 def _run_canary_phase(root, arguments, report, run_full_suite, image_suite="full"):
     try:
         selection = json.loads(arguments.canary_selection)
-        canary_root = (arguments.canary_project_root or root).resolve(strict=True)
+        canary_root = (arguments.canary_project_root or root).resolve(
+            strict=True
+        )
         if not canary_root.is_dir():
-            raise ValueError(f"canary Project root is not a directory: {canary_root}")
+            raise ValueError(
+                f"canary Project root is not a directory: {canary_root}"
+            )
     except (OSError, TypeError, ValueError) as error:
         report["error"] = str(error)
         print(f"Invalid canary input: {error}", file=sys.stderr)
         return 1
     report["canary_project_root"] = str(canary_root)
     if arguments.phase == "image":
-        status = run_full_suite(root, phase="image", candidate_image=arguments.candidate_image, report=report,
-                                **({"image_suite": image_suite} if image_suite != "full" else {}))
+        status = run_full_suite(
+            root,
+            phase="image",
+            candidate_image=arguments.candidate_image,
+            report=report,
+            **({"image_suite": image_suite} if image_suite != "full" else {}),
+        )
     else:
         status = run_full_suite(root, phase="canary", report=report)
     if status:

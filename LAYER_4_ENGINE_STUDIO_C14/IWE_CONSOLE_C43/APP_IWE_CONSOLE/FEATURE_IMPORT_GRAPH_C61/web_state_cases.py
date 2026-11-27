@@ -13,7 +13,7 @@ _SCANNER = Path(__file__).with_name("web_state_cases.ts")
 def web_state_cases(
     sources: dict[str, str], call_sites: dict[str, list[list]] | None = None
 ) -> dict[str, list[dict]]:
-    """Parse a batch without executing source; raise on scanner or protocol failure."""
+    """Parse a batch; raise on scanner or protocol failure."""
     if not sources:
         return {}
     env = {

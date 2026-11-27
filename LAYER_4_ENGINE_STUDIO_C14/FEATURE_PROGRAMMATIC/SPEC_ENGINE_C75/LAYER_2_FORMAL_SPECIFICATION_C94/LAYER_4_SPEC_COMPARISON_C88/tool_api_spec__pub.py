@@ -30,36 +30,77 @@ def _tool_solution(workflow, operation, action, expected=None):
     if 'operations' in workflow:
         profiles = workflow['operations']
         if action is None:
-            candidates = [facts for profile in profiles.values()
-                          if (observed := (facts := solution_tool_api(profile, expected)).get('operation')) == [operation]
-                          or (isinstance(observed, dict) and [operation] in observed['conflicting_values'])]
+            candidates = [
+                facts
+                for profile in profiles.values()
+                if (
+                    observed := (
+                        facts := solution_tool_api(profile, expected)
+                    ).get("operation")
+                )
+                == [operation]
+                or (
+                    isinstance(observed, dict)
+                    and [operation] in observed["conflicting_values"]
+                )
+            ]
             return candidates[0] if len(candidates) == 1 else {}
         workflow = profiles.get(action, {})
-    if not workflow or (action is not None and workflow.get('action') != action):
+    if not workflow or (
+        action is not None and workflow.get("action") != action
+    ):
         return {}
     return solution_tool_api(workflow, expected)
 
 
-def check_tool_api_spec(root, component_id, manifest, contract=None, solution=None, *, action=None, lean='lean'):
+def check_tool_api_spec(
+    root,
+    component_id,
+    manifest,
+    contract=None,
+    solution=None,
+    *,
+    action=None,
+    lean="lean",
+):
     """Compare an exact specification chain and keep unmodeled obligations visible."""
-    model = select_formal_claims(load_boundary_model(root, component_id, manifest, contract, solution), action)
-    return compare_tool_api_spec(model, compile_lean(model), action=action, lean=lean)
+    model = select_formal_claims(
+        load_boundary_model(root, component_id, manifest, contract, solution),
+        action,
+    )
+    return compare_tool_api_spec(
+        model, compile_lean(model), action=action, lean=lean
+    )
 
 
-def compare_tool_api_spec(model, compiled, *, action=None, lean='lean', mermaid=_UNRENDERED):
-    claims = compiled['claims']
-    sources = {role: model[role]['source'] for role in ('manifest', 'contract', 'solution')}
-    manifest_fields = claims.get('manifest', {}).get('boundaries') or {}
-    io = manifest_fields.get('io')
-    server = io.get('server') if isinstance(io, dict) else None
-    api = server.get('tool_api') if isinstance(server, dict) else None
-    declared, extra = manifest_tool_api(api) if isinstance(api, dict) else ({}, {})
-    tool_contract = _tool_contract(claims.get('contract', {}))
+def compare_tool_api_spec(
+    model, compiled, *, action=None, lean="lean", mermaid=_UNRENDERED
+):
+    claims = compiled["claims"]
+    sources = {
+        role: model[role]["source"]
+        for role in ("manifest", "contract", "solution")
+    }
+    manifest_fields = claims.get("manifest", {}).get("boundaries") or {}
+    io = manifest_fields.get("io")
+    server = io.get("server") if isinstance(io, dict) else None
+    api = server.get("tool_api") if isinstance(server, dict) else None
+    declared, extra = (
+        manifest_tool_api(api) if isinstance(api, dict) else ({}, {})
+    )
+    tool_contract = _tool_contract(claims.get("contract", {}))
     contract = contract_tool_api(tool_contract) if tool_contract else {}
-    obligations = {'manifest': declared, 'contract': contract,
-                   'solution': _tool_solution(claims.get('solution', {}), tool_contract.get('operation'),
-                                              action, contract)}
-    unclassified = obligations['solution'].pop('_unclassified_terminal', False)
+    obligations = {
+        "manifest": declared,
+        "contract": contract,
+        "solution": _tool_solution(
+            claims.get("solution", {}),
+            tool_contract.get("operation"),
+            action,
+            contract,
+        ),
+    }
+    unclassified = obligations["solution"].pop("_unclassified_terminal", False)
     if mermaid is _UNRENDERED:
         mermaid = render_solution(model, claims.get('solution'), action=action)
     report = compare_obligations(sources, obligations, lean=lean)

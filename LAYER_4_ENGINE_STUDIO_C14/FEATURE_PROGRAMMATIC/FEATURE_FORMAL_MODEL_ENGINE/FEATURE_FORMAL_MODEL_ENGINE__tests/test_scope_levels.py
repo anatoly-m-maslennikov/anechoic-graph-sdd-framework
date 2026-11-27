@@ -70,7 +70,9 @@ class ScopeLevelsTests(unittest.TestCase):
             {
                 "wrong": "Structural level violates the reviewed Claim",
                 "legacy": "Missing structural_level",
-                "missing_container_level": "Container is missing structural_level",
+                "missing_container_level": (
+                    "Container is missing structural_level"
+                ),
             },
             check_scope_levels_with_packaged_check(
                 declarations, instance_check=check_structural_level

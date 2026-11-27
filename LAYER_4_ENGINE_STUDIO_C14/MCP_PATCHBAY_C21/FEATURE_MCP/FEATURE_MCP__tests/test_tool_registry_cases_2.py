@@ -15,7 +15,12 @@ from mcp import types
 
 
 from . import native_query_test_support
-from .tool_registry_test_support import ToolRegistryFixture, _drifting_provider_source, _context_provider_source, _native_gateway
+from .tool_registry_test_support import (
+    ToolRegistryFixture,
+    _drifting_provider_source,
+    _context_provider_source,
+    _native_gateway,
+)
 MCP = Path(__file__).resolve().parents[1]
 from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.generate_tool_registry import generate  # noqa: E402
 from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.tool_registry_assets import ToolRegistryAssetError  # noqa: E402
@@ -28,35 +33,51 @@ from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.FEATURE_IWE_CON
 
 
 class ToolRegistryTests(ToolRegistryFixture, unittest.IsolatedAsyncioTestCase):
-    async def test_real_transport_rejects_a_changed_registration_before_invocation(self) -> None:
+    async def test_real_transport_rejects_a_changed_registration_before_invocation(
+        self,
+    ) -> None:
         registry_path = generate(self.package)
         root = Path(self.temporary.name).resolve()
 
         def registry_loader(_asset: Path, selected: Path, gateway: object):
             return self._registry(selected, gateway)
 
-        with patch.object(native_query_test_support, "load_active_registry", side_effect=registry_loader):
+        with patch.object(
+            native_query_test_support,
+            "load_active_registry",
+            side_effect=registry_loader,
+        ):
             gateway = _native_gateway(root)
             await gateway.initialize()
             try:
-                async with InMemoryTransport(gateway.build_server(), raise_exceptions=True) as streams:
+                async with InMemoryTransport(
+                    gateway.build_server(), raise_exceptions=True
+                ) as streams:
                     async with ClientSession(*streams) as client:
                         await client.initialize()
                         registry_path.write_text(
-                            registry_path.read_text(encoding="utf-8") + "\n", encoding="utf-8"
+                            registry_path.read_text(encoding="utf-8") + "\n",
+                            encoding="utf-8",
                         )
                         refused = await client.call_tool("demo", {})
                         self.assertTrue(refused.is_error)
-                        self.assertEqual("rejected", refused.structured_content["outcome"])
                         self.assertEqual(
-                            ["tool_registry_stale"], refused.structured_content["diagnostics"]
+                            "rejected", refused.structured_content["outcome"]
                         )
-                        self.assertIsNone(gateway.registry.bindings[0].provider)
+                        self.assertEqual(
+                            ["tool_registry_stale"],
+                            refused.structured_content["diagnostics"],
+                        )
+                        self.assertIsNone(
+                            gateway.registry.bindings[0].provider
+                        )
             finally:
                 await gateway.close()
 
 
-    async def test_real_transport_refuses_registration_changed_during_prepare(self) -> None:
+    async def test_real_transport_refuses_registration_changed_during_prepare(
+        self,
+    ) -> None:
         self._write_provider(_drifting_provider_source())
         generate(self.package)
         root = Path(self.temporary.name).resolve()
@@ -64,16 +85,25 @@ class ToolRegistryTests(ToolRegistryFixture, unittest.IsolatedAsyncioTestCase):
         def registry_loader(_asset: Path, selected: Path, gateway: object):
             return self._registry(selected, gateway)
 
-        with patch.object(native_query_test_support, "load_active_registry", side_effect=registry_loader):
+        with patch.object(
+            native_query_test_support,
+            "load_active_registry",
+            side_effect=registry_loader,
+        ):
             gateway = _native_gateway(root)
             await gateway.initialize()
             try:
-                async with InMemoryTransport(gateway.build_server(), raise_exceptions=True) as streams:
+                async with InMemoryTransport(
+                    gateway.build_server(), raise_exceptions=True
+                ) as streams:
                     async with ClientSession(*streams) as client:
                         await client.initialize()
                         refused = await client.call_tool("demo", {})
                         self.assertTrue(refused.is_error)
-                        self.assertEqual(["tool_registry_stale"], refused.structured_content["diagnostics"])
+                        self.assertEqual(
+                            ["tool_registry_stale"],
+                            refused.structured_content["diagnostics"],
+                        )
                         self.assertEqual(0, sys.modules[self.module].calls)
             finally:
                 await gateway.close()
@@ -115,22 +145,38 @@ class ToolRegistryTests(ToolRegistryFixture, unittest.IsolatedAsyncioTestCase):
             name="demo", arguments={"caller_context": {"session_id": "  "}}
         ))
         self.assertTrue(invalid.is_error)
-        self.assertEqual(["invalid_caller_context"], invalid.structured_content["diagnostics"])
+        self.assertEqual(
+            ["invalid_caller_context"],
+            invalid.structured_content["diagnostics"],
+        )
         from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import (
-            RuntimeRequestContext, bind_request_context, current_request_context,
+            RuntimeRequestContext,
+            bind_request_context,
+            current_request_context,
         )
         with bind_request_context(RuntimeRequestContext("existing")):
-            matching = await gateway.call(None, types.CallToolRequestParams(
-                name="demo", arguments={"caller_context": {"session_id": "existing"}}
-            ))
+            matching = await gateway.call(
+                None,
+                types.CallToolRequestParams(
+                    name="demo",
+                    arguments={"caller_context": {"session_id": "existing"}},
+                ),
+            )
             self.assertFalse(matching.is_error)
             self.assertEqual("existing", matching.structured_content["caller"])
-            conflict = await gateway.call(None, types.CallToolRequestParams(
-                name="demo", arguments={"caller_context": {"session_id": "other"}}
-            ))
+            conflict = await gateway.call(
+                None,
+                types.CallToolRequestParams(
+                    name="demo",
+                    arguments={"caller_context": {"session_id": "other"}},
+                ),
+            )
             self.assertEqual("existing", current_request_context().session_id)
         self.assertTrue(conflict.is_error)
-        self.assertEqual(["caller_context_conflict"], conflict.structured_content["diagnostics"])
+        self.assertEqual(
+            ["caller_context_conflict"],
+            conflict.structured_content["diagnostics"],
+        )
         self.assertIsNone(current_request_context())
         foreign = await gateway.call(None, types.CallToolRequestParams(
             name="demo", arguments={"project_root": str(root / "foreign"),
@@ -139,18 +185,29 @@ class ToolRegistryTests(ToolRegistryFixture, unittest.IsolatedAsyncioTestCase):
         self.assertTrue(foreign.is_error)
         self.assertEqual(3, sys.modules[self.module].calls)
 
-    async def test_project_blacklist_cannot_reenable_a_global_deny(self) -> None:
+    async def test_project_blacklist_cannot_reenable_a_global_deny(
+        self,
+    ) -> None:
         generate(self.package)
         root = Path(self.temporary.name).resolve()
+
         def registry_loader(_asset: Path, selected: Path, gateway: object):
             return self._registry(selected, gateway)
 
-        with patch.object(native_query_test_support, "load_active_registry", side_effect=registry_loader):
-            gateway = _native_gateway(root, {"project_mcp": {"tool_blacklist": ["demo"]}})
+        with patch.object(
+            native_query_test_support,
+            "load_active_registry",
+            side_effect=registry_loader,
+        ):
+            gateway = _native_gateway(
+                root, {"project_mcp": {"tool_blacklist": ["demo"]}}
+            )
             await gateway.initialize()
             try:
                 self.assertEqual(set(), {tool.name for tool in gateway.tools})
-                self.assertEqual(frozenset({"blocked", "demo"}), gateway.tool_blacklist)
+                self.assertEqual(
+                    frozenset({"blocked", "demo"}), gateway.tool_blacklist
+                )
             finally:
                 await gateway.close()
 
@@ -183,9 +240,21 @@ class ToolRegistryTests(ToolRegistryFixture, unittest.IsolatedAsyncioTestCase):
         await active.close()
 
 
-    def test_registry_rejects_duplicate_keys_and_boolean_schema_versions(self) -> None:
-        duplicate = '''{"schema_version":1,"mcp_blacklist":["blocked"],"mcp_blacklist":[],"providers":[{"provider_id":"demo_provider","module":"%s","factory":"create_provider","descriptor_factory":"tool_descriptors"}]}''' % self.module
-        (self.feature / "tool_providers.json").write_text(duplicate, encoding="utf-8")
+    def test_registry_rejects_duplicate_keys_and_boolean_schema_versions(
+        self,
+    ) -> None:
+        duplicate = (
+            (
+                '{"schema_version":1,"mcp_blacklist":["blocked"],"mcp_blacklis'
+                't":[],"providers":[{"provider_id":"demo_provider","module":"%'
+                's","factory":"create_provider","descriptor_factory":"tool_des'
+                'criptors"}]}'
+            )
+            % self.module
+        )
+        (self.feature / "tool_providers.json").write_text(
+            duplicate, encoding="utf-8"
+        )
         with self.assertRaises(ToolRegistryAssetError):
             generate(self.package)
         self._write_inventory()
@@ -197,9 +266,10 @@ class ToolRegistryTests(ToolRegistryFixture, unittest.IsolatedAsyncioTestCase):
             self._registry(Path(self.temporary.name).resolve(), object())
         self._write_inventory()
         (self.feature / "tool_providers.json").write_text(
-            (self.feature / "tool_providers.json").read_text(encoding="utf-8").replace(
-                '"schema_version": 1', '"schema_version": true'
-            ), encoding="utf-8",
+            (self.feature / "tool_providers.json")
+            .read_text(encoding="utf-8")
+            .replace('"schema_version": 1', '"schema_version": true'),
+            encoding="utf-8",
         )
         with self.assertRaises(ToolRegistryAssetError):
             generate(self.package)

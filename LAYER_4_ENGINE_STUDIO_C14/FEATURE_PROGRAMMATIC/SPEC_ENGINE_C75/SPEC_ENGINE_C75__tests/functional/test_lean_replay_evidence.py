@@ -9,10 +9,14 @@ from pathlib import Path
 from unittest.mock import patch
 
 from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75 import formal_chain__pub as chain
-from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75._package__shared import verify_formal_chain
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75._package__shared import (
+    verify_formal_chain,
+)
 from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_1_SOURCE_ADAPTERS_C95.\
     _package__shared import SourceError, read_source  # fmt: skip
-from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_3_LEAN_TRANSLATOR_C84._package__shared import run_lean_json
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_3_LEAN_TRANSLATOR_C84._package__shared import (
+    run_lean_json,
+)
 from .test_direct_manifest_chain import _manifest, _pins
 from .test_trace_cases import FIRST, SECOND, SOLUTION
 
@@ -180,20 +184,29 @@ class LeanReplayEvidenceTests(unittest.TestCase):
         self.assertTrue(lean, 'Lean executable unavailable')
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            pins = _pins(root, _manifest('python trace', FIRST), SOLUTION)
-            evidence = verify_formal_chain(root, 'C15', *pins, lean=lean)['evidence']
-        self.assertEqual('compile', evidence['action'])
-        facts = {fact['key']: (fact.get('action'), fact.get('output')) for fact in evidence['coverage']
-                 if fact['direction'] == 'manifest_solution'}
-        self.assertEqual(('compile', 'python'), facts['must_effect'])
-        self.assertEqual(('compile', 'python'), facts['terminal_output'])
+            pins = _pins(root, _manifest("python trace", FIRST), SOLUTION)
+            evidence = verify_formal_chain(root, "C15", *pins, lean=lean)[
+                "evidence"
+            ]
+        self.assertEqual("compile", evidence["action"])
+        facts = {
+            fact["key"]: (fact.get("action"), fact.get("output"))
+            for fact in evidence["coverage"]
+            if fact["direction"] == "manifest_solution"
+        }
+        self.assertEqual(("compile", "python"), facts["must_effect"])
+        self.assertEqual(("compile", "python"), facts["terminal_output"])
 
-    def test_matching_and_conflicting_receipts_replay_and_failure_has_no_receipt(self):
-        lean = os.environ.get('ANECHOIC_TEST_LEAN') or shutil.which('lean')
-        self.assertTrue(lean, 'Lean executable unavailable')
+    def test_matching_and_conflicting_receipts_replay_and_failure_has_no_receipt(
+        self,
+    ):
+        lean = os.environ.get("ANECHOIC_TEST_LEAN") or shutil.which("lean")
+        self.assertTrue(lean, "Lean executable unavailable")
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            pins = _pins(root, _manifest('python trace', FIRST, SECOND), SOLUTION)
+            pins = _pins(
+                root, _manifest("python trace", FIRST, SECOND), SOLUTION
+            )
             model_pins = set()
             for expected in ('matched', 'conflicting'):
                 result = verify_formal_chain(root, 'C15', *pins, action='compile', lean=lean)
@@ -215,6 +228,8 @@ class LeanReplayEvidenceTests(unittest.TestCase):
                 path = root / pins[1]['path']
                 path.write_text(path.read_text().replace("'target': 'parser'", "'target': 'wrong'"))
             self.assertEqual(2, len(model_pins))
-            failed = verify_formal_chain(root, 'C15', *pins, action='compile', lean='/missing/lean')
-            self.assertEqual('incomplete', failed['outcome'])
-            self.assertNotIn('evidence', failed)
+            failed = verify_formal_chain(
+                root, "C15", *pins, action="compile", lean="/missing/lean"
+            )
+            self.assertEqual("incomplete", failed["outcome"])
+            self.assertNotIn("evidence", failed)

@@ -14,7 +14,8 @@ def is_native_atom_reference(value) -> bool:
 
 
 def atom_identifier(filename: str, explicit: str | None = None) -> str:
-    """Resolve stable identity without absorbing mutable scope, tier, type, or sequence."""
+    """Resolve stable identity without absorbing mutable \
+scope, tier, type, or sequence."""
     if explicit:
         return explicit.strip().strip("\"'")
     name = Path(filename).name

@@ -22,16 +22,32 @@ def write_reviewed_declarations(control, root):
         subject = row["subject"].replace("PMETA Atom", "Project Config Atom")
         if subject.endswith("//Component Purpose"):
             continue
-        claim = row["claim"].replace("PMETA Atom", "Project Config Atom").replace("PMETAAtom", "ProjectConfigAtom")
+        claim = (
+            row["claim"]
+            .replace("PMETA Atom", "Project Config Atom")
+            .replace("PMETAAtom", "ProjectConfigAtom")
+        )
         claim = claim.replace("from caprmedio.", "from anechoic.")
         if subject.endswith("//Ticket Atom"):
-            claim = claim.replace("from typing import ClassVar", "from typing import ClassVar\nfrom dataclasses import field")
-            claim = claim.replace("    family_marker: ClassVar[str]", "    label: str | None = field(default=None, kw_only=True, metadata={'allowed_values': ('Task', 'Subtask', 'Sub-epic', 'Epic', 'Version')})\n    family_marker: ClassVar[str]")
+            claim = claim.replace(
+                "from typing import ClassVar",
+                "from typing import ClassVar\nfrom dataclasses import field",
+            )
+            claim = claim.replace(
+                "    family_marker: ClassVar[str]",
+                "    label: str | None = field(default=None, kw_only=True, metadata={'allowed_values': ('Task', 'Subtask', 'Sub-epic', 'Epic', 'Version')})\n    family_marker: ClassVar[str]",
+            )
         if subject.endswith("//Component Manifest"):
             number = 3109
-            claim = claim.replace('tier: int = field(metadata={"allowed_values": (0,)})',
-                                  'tier: int = field(metadata={"allowed_values": (1,)})')
-        name = "declare-component-manifest" if number == 3109 else f"reviewed-{number}"
+            claim = claim.replace(
+                'tier: int = field(metadata={"allowed_values": (0,)})',
+                'tier: int = field(metadata={"allowed_values": (1,)})',
+            )
+        name = (
+            "declare-component-manifest"
+            if number == 3109
+            else f"reviewed-{number}"
+        )
         (ontology / f"AN-S-{number}-SPEC--{name}.md").write_text(
             f"---\natom_family: SPEC\natom_id: AN-S-{number}\ntier: 2\ncontainer:\n  component: C9\n"
             f"context:\n  lens: SPEC\nstate:\n  status: active\n  version: 1\n  updated_at: '2026-11-19T00:00:00Z'\n---\n\n"
@@ -44,17 +60,39 @@ def write_reviewed_declarations(control, root):
 def kernel_process(root, selection, environment, *, digest=None):
     socket = root / "kernel.sock"
     instance = "a" * 64
-    command = [sys.executable, "-B", "-m", "KERNEL_MIXER_C59.kernel_process",
-               "--socket", str(socket), "--project-root", str(root),
-               "--control-root", selection.control_relative.as_posix(), "--instance-id", instance,
-               "--manifest-sha256", digest or selection.manifest_sha256,
-               "--default-workbench-storage", "memory"]
+    command = [
+        sys.executable,
+        "-B",
+        "-m",
+        "KERNEL_MIXER_C59.kernel_process",
+        "--socket",
+        str(socket),
+        "--project-root",
+        str(root),
+        "--control-root",
+        selection.control_relative.as_posix(),
+        "--instance-id",
+        instance,
+        "--manifest-sha256",
+        digest or selection.manifest_sha256,
+        "--default-workbench-storage",
+        "memory",
+    ]
     with (root / "kernel.log").open("w+") as log:
-        process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=log, stderr=log,
-                                   env={**os.environ, **environment})
+        process = subprocess.Popen(
+            command,
+            stdin=subprocess.PIPE,
+            stdout=log,
+            stderr=log,
+            env={**os.environ, **environment},
+        )
         try:
-            with httpx2.Client(transport=httpx2.HTTPTransport(uds=str(socket)),
-                               base_url="http://private", timeout=5, trust_env=False) as client:
+            with httpx2.Client(
+                transport=httpx2.HTTPTransport(uds=str(socket)),
+                base_url="http://private",
+                timeout=5,
+                trust_env=False,
+            ) as client:
                 yield process, client, instance, log
         finally:
             process.stdin.close()

@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-2408
+concern:
+  subject: "Atom ID"
+  path: "Model/Graph/Node//Artifact//SSOT//Prescribed/Content/Atom.Header"
+  relation: "is_property_of"
 container:
   component: C18
 tier: 3
@@ -8,8 +12,8 @@ context:
   lens: DES
 state:
   status: active
-  version: 25
-  updated_at: 2026-11-02 19:44:26 +0400
+  version: 26
+  updated_at: "2026-11-27T16:16:01.404965+00:00"
 ---
 ## Summary
 

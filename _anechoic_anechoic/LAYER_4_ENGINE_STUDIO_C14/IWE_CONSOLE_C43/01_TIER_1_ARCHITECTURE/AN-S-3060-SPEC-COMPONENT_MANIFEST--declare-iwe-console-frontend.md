@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: "active"
-  version: 11
-  updated_at: "2026-11-26T15:52:28.487067+00:00"
+  version: 13
+  updated_at: "2026-11-27T17:41:27.738721+00:00"
 ---
 
 ## Summary
@@ -63,8 +63,12 @@ ComponentManifest(
 #### Guarantee
 
 Open the Workspace of the selected Project before enabling SQL input.
-Submit the current View's SQL to the Project HTTP API. Run displays the
-returned columns and rows and preserves the SQL in the editor.
+Submit the current View's SQL to the Project HTTP API. Run and Run & Save
+display only the page belonging to the acknowledged View revision and the
+nonempty query ID in the Run receipt. Preserve editor SQL and any result
+the Project already saved. Reject a missing or mismatched receipt revision
+or a missing query ID before fetching. Reject a page with a missing or
+different query ID before display.
 
 Check displays the verdict for the current SQL and preserves the previous
 Run result. Changing SQL clears that Check verdict. Display an error
@@ -73,3 +77,33 @@ when the Project API refuses or fails a request.
 #### References
 
 AN-S-2328, AN-S-2549, AN-S-3060, and AN-T-2947.
+
+```python trace
+declare_trace_contract(
+    action='workbench_frontend_run_view',
+    invariant={'forbid_effect': ('C46.discard_saved_result',)},
+    cases={'succeeded': {'must_effect': (('C46.acknowledged_view', 'acknowledged'),
+                               ('C21.view_run', 'returned'),
+                               ('C21.view_fetch', 'returned'),
+                               ('C46.result_display', 'shown')),
+               'same_values': ((('acknowledged_view', 'revision'),
+                                ('run_reply', 'revision')),
+                               (('run_reply', 'query_id'),
+                                ('first_page_received', 'query_id'))),
+               'value_types': {('acknowledged_view', 'revision'): 'integer',
+                               ('run_reply', 'revision'): 'integer',
+                               ('run_reply', 'query_id'): 'nonempty_string',
+                               ('first_page_received', 'query_id'): 'nonempty_string'},
+               'must_precede': ((('C21.view_fetch', 'returned'),
+                                 ('C46.result_display', 'shown')),)},
+ 'revision_refused': {'must_effect': (('C46.run_error', 'shown'),),
+                      'forbid_effect': ('C46.result_display',
+                                        'C21.view_fetch')},
+ 'missing_query_id': {'must_effect': (('C46.run_error', 'shown'),),
+                      'forbid_effect': ('C46.result_display',
+                                        'C21.view_fetch')},
+ 'page_refused': {'must_effect': (('C46.run_error', 'shown'),),
+                  'forbid_effect': ('C46.result_display',)},
+ 'failed': {'forbid_effect': ('C46.result_display',)}},
+)
+```

@@ -15,14 +15,20 @@ from mcp.client.streamable_http import streamable_http_client
 
 
 REPOSITORY = Path(__file__).resolve().parents[4]
-PROGRAMMATIC = REPOSITORY / "LAYER_4_ENGINE_STUDIO_C14" / "FEATURE_PROGRAMMATIC"
+PROGRAMMATIC = (
+    REPOSITORY / "LAYER_4_ENGINE_STUDIO_C14" / "FEATURE_PROGRAMMATIC"
+)
 MCP = REPOSITORY / "LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP"
 TOOLS = PROGRAMMATIC / "FEATURE_TOOLS"
 APP = REPOSITORY / "LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE"
 
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import MCP_PATH  # noqa: E402
-from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import create_http_app as create_app  # noqa: E402
-from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import select_runtime_project as startup_selection  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import (  # noqa: E402
+    create_http_app as create_app,
+)
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import (  # noqa: E402
+    select_runtime_project as startup_selection,
+)
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import extension_directory, polling_source_watcher  # noqa: E402
 
 
@@ -45,23 +51,32 @@ class SingleProjectRootContextTests(unittest.IsolatedAsyncioTestCase):
             instance_id=startup_selection(self.host).instance_id,
             host_root=self.host,
         )
-        gateway = native_fixture_gateway(self.container, extension_directory(REPOSITORY), selection=selection)
+        gateway = native_fixture_gateway(
+            self.container,
+            extension_directory(REPOSITORY),
+            selection=selection,
+        )
         self.app = create_app(self.container, runtime_gateway=gateway)
 
     @staticmethod
     def _project(root: Path) -> Path:
-        RuntimeSelectionTests.manifest(None, root / ".anechoic_fixture", name="fixture", component="C00")
+        RuntimeSelectionTests.manifest(
+            None, root / ".anechoic_fixture", name="fixture", component="C00"
+        )
         return root
 
     @asynccontextmanager
     async def session(self):
-        async with self.app.starlette_app.router.lifespan_context(self.app.starlette_app):
+        async with self.app.starlette_app.router.lifespan_context(
+            self.app.starlette_app
+        ):
             async with httpx2.AsyncClient(
                 transport=httpx2.ASGITransport(app=self.app),
                 base_url="http://127.0.0.1:18093",
             ) as client:
                 transport = streamable_http_client(
-                    "http://127.0.0.1:18093" + MCP_PATH, http_client=client,
+                    "http://127.0.0.1:18093" + MCP_PATH,
+                    http_client=client,
                 )
                 streams = await transport.__aenter__()
                 session = ClientSession(*streams)

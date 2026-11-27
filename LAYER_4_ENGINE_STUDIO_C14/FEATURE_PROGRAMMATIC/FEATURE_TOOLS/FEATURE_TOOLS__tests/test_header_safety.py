@@ -39,7 +39,10 @@ class HeaderSafetyTests(unittest.TestCase):
             with (
                 self.subTest(depth=depth),
                 patch(
-                    "FEATURE_PROGRAMMATIC.FEATURE_TOOLS.header_yaml.yaml.compose"
+                    (
+                        "FEATURE_PROGRAMMATIC.FEATURE_TOOLS.header_yaml.yaml.c"
+                        "ompose"
+                    )
                 ) as compose,
             ):
                 with self.assertRaisesRegex(ValueError, "safety ceiling"):

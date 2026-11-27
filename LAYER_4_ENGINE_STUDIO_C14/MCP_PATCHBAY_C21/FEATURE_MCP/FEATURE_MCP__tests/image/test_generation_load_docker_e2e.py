@@ -19,7 +19,9 @@ BATCH_START, BATCH_SIZE = 20000, 500
 EXTRA_ARCHIVES = 4500
 WORKLOAD_SQL = """SELECT reference, "content.summary" FROM mrt_atoms
     WHERE reference IN ('AN-T-2', 'AN-T-3', 'AN-T-4') ORDER BY reference"""
-WORKLOAD_ROWS = [[f"AN-T-{number}", f"Current {number}"] for number in (2, 3, 4)]
+WORKLOAD_ROWS = [
+    [f"AN-T-{number}", f"Current {number}"] for number in (2, 3, 4)
+]
 BATCH_SQL = f"""WITH expected AS (SELECT range AS number FROM range({BATCH_START}, {BATCH_START + BATCH_SIZE}))
     SELECT count(DISTINCT reference) FROM mrt_ticket_atoms
     JOIN expected ON reference = 'AN-T-' || number::VARCHAR
@@ -39,9 +41,15 @@ else:
 
 def summarize_queries(times, errors):
     ordered = sorted(times)
-    return {"sample_count": len(times) + len(errors), "success_count": len(times), "error_count": len(errors),
-            "p95_ms": round(ordered[ceil(.95 * len(ordered)) - 1], 3) if ordered else None,
-            "errors": errors}
+    return {
+        "sample_count": len(times) + len(errors),
+        "success_count": len(times),
+        "error_count": len(errors),
+        "p95_ms": round(ordered[ceil(0.95 * len(ordered)) - 1], 3)
+        if ordered
+        else None,
+        "errors": errors,
+    }
 
 
 def public_query(probe, sql):
@@ -101,7 +109,10 @@ def write_batch(directory):
 
 
 def capture_workers(jobs):
-    return sum((jobs.get(lane) or {}).get("worker_alive") is True for lane in ("active", "archive"))
+    return sum(
+        (jobs.get(lane) or {}).get("worker_alive") is True
+        for lane in ("active", "archive")
+    )
 
 
 def archive_running(state):
@@ -119,11 +130,17 @@ def watcher_detection_bounds(at, offsets, write_start, write_end):
     if at is None or write_end < write_start or max(low) > min(high):
         return None
     detected = round(at * 1_000_000_000)
-    return {"candidate_minus_host_ns_bounds": [min(low), max(high)],
-            "write_start_to_watcher_ms_bounds": [(detected - write_start - offset) / 1_000_000
-                                                 for offset in (max(high), min(low))],
-            "write_end_to_watcher_ms_bounds": [(detected - write_end - offset) / 1_000_000
-                                               for offset in (max(high), min(low))]}
+    return {
+        "candidate_minus_host_ns_bounds": [min(low), max(high)],
+        "write_start_to_watcher_ms_bounds": [
+            (detected - write_start - offset) / 1_000_000
+            for offset in (max(high), min(low))
+        ],
+        "write_end_to_watcher_ms_bounds": [
+            (detected - write_end - offset) / 1_000_000
+            for offset in (max(high), min(low))
+        ],
+    }
 
 
 class GenerationLoadDockerTests(unittest.TestCase):
@@ -138,7 +155,9 @@ class GenerationLoadDockerTests(unittest.TestCase):
                  if value.startswith("ANECHOIC_RUNTIME_STACK=")]
         if not modes or modes[-1] not in ("beta", "beta_next"):
             self.skipTest("Generation load applies to the Beta runtime")
-        temporary = self.enterContext(TemporaryDirectory(prefix="anechoic-load-image-"))
+        temporary = self.enterContext(
+            TemporaryDirectory(prefix="anechoic-load-image-")
+        )
         root = Path(temporary).resolve()
         subprocess.run(["git", "init", "--quiet", str(root)], check=True, timeout=image_timeout(10))
         directory, archive_count = prepare_load(root)
@@ -148,9 +167,14 @@ class GenerationLoadDockerTests(unittest.TestCase):
         except BaseException:
             print(probe.docker("logs", probe.container, timeout=30)[-12000:], flush=True)
             raise
-        report.update(image=image, runtime=modes[-1], workload_sql=WORKLOAD_SQL, query_concurrency=1,
-                      duration_seconds=monotonic() - probe.started,
-                      resource_limits={"cpus": 1, "pids": 128, "tmpfs_mib": 256})
+        report.update(
+            image=image,
+            runtime=modes[-1],
+            workload_sql=WORKLOAD_SQL,
+            query_concurrency=1,
+            duration_seconds=monotonic() - probe.started,
+            resource_limits={"cpus": 1, "pids": 128, "tmpfs_mib": 256},
+        )
         print("ANECHOIC_TEST_METRICS " + json.dumps({"generation_load": report}), flush=True)
         for phase in ("idle", "archive_active", "batch"):
             self.assertEqual(0, report[phase]["queries"]["error_count"], report[phase])
@@ -191,7 +215,9 @@ class GenerationLoadDockerTests(unittest.TestCase):
         clock_before = clock_offset(probe)
         started = monotonic()
         write_start = time_ns()
-        (directory / "AN-T-1-TASK--staged.md").write_text(carrier(1, "active", "Measured live edit"))
+        (directory / "AN-T-1-TASK--staged.md").write_text(
+            carrier(1, "active", "Measured live edit")
+        )
         write_end = time_ns()
         written = monotonic()
         visible = probe.until(lambda: monotonic() if rows(probe, SINGLE_SQL) == [["active", "Measured live edit"]]
@@ -202,17 +228,26 @@ class GenerationLoadDockerTests(unittest.TestCase):
         flow = probe.until(lambda: self.generation_flow(probe, job), "single edit Flow publication")
         bounds = watcher_detection_bounds(flow["watcher_observed_at"], (clock_before, clock_offset(probe)),
                                           write_start, write_end)
-        return {"write_seconds": written - started, "write_start_to_correct_sql_seconds": visible - started,
-                "write_end_to_correct_sql_seconds": visible - written,
-                "worker_seconds": job["worker_seconds"], "admission_seconds": job["admission_seconds"],
-                "run_id": run_id, "generation": job["generation"], "generation_kind": job["kind"],
-                "watcher_detection_clock_bounds": bounds, **flow}
+        return {
+            "write_seconds": written - started,
+            "write_start_to_correct_sql_seconds": visible - started,
+            "write_end_to_correct_sql_seconds": visible - written,
+            "worker_seconds": job["worker_seconds"],
+            "admission_seconds": job["admission_seconds"],
+            "run_id": run_id,
+            "generation": job["generation"],
+            "generation_kind": job["kind"],
+            "watcher_detection_clock_bounds": bounds,
+            **flow,
+        }
 
     def changed_run(self, probe, before):
         latest = probe.jobs().get("latest") or {}
         if latest.get("run_id") == before:
             return None
-        if latest.get("state") in ("failed", "aborted") and not latest.get("retrying"):
+        if latest.get("state") in ("failed", "aborted") and not latest.get(
+            "retrying"
+        ):
             self.fail(f"Single Ticket edit failed: {latest}")
         return latest if latest.get("state") == "succeeded" else None
 
@@ -243,19 +278,32 @@ class GenerationLoadDockerTests(unittest.TestCase):
         with ThreadPoolExecutor(max_workers=2) as pool:
             writes = pool.submit(write_batch, directory)
             workload = pool.submit(self.batch_queries, probe)
-            first, last, worker_peak, queue_peak, observations = self.observe_batch(probe, started, writes)
+            first, last, worker_peak, queue_peak, observations = (
+                self.observe_batch(probe, started, writes)
+            )
             written = writes.result()
             queries, queries_started, queries_finished = workload.result()
-        self.assertLess(queries_started, last, "Query workload began after all Tickets were visible")
+        self.assertLess(
+            queries_started,
+            last,
+            "Query workload began after all Tickets were visible",
+        )
         self.assertGreater(queries_finished, started)
-        return {"queries": queries, "tickets_written": BATCH_SIZE, "successful_visible": BATCH_SIZE,
-                "write_seconds": written - started,
-                "start_to_first_visible_seconds": first - started,
-                "start_to_last_visible_seconds": last - started,
-                "successful_tickets_per_second": BATCH_SIZE / (last - started),
-                "observed_peak_active_workers": worker_peak, "observed_peak_watcher_queue_entries": queue_peak,
-                "worker_status_samples": observations,
-                "queue_depth_source": "watcher_queue_depth, including wakeups" if queue_peak is not None else "unavailable"}
+        return {
+            "queries": queries,
+            "tickets_written": BATCH_SIZE,
+            "successful_visible": BATCH_SIZE,
+            "write_seconds": written - started,
+            "start_to_first_visible_seconds": first - started,
+            "start_to_last_visible_seconds": last - started,
+            "successful_tickets_per_second": BATCH_SIZE / (last - started),
+            "observed_peak_active_workers": worker_peak,
+            "observed_peak_watcher_queue_entries": queue_peak,
+            "worker_status_samples": observations,
+            "queue_depth_source": "watcher_queue_depth, including wakeups"
+            if queue_peak is not None
+            else "unavailable",
+        }
 
     def batch_queries(self, probe):
         before = rows(probe, BATCH_SQL)[0][0]

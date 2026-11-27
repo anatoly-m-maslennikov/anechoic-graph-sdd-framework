@@ -8,7 +8,22 @@ import { readFileSync } from 'node:fs';
 
 type Range = [number, number, 'js' | 'css' | 'manual' | 'markup'];
 type CssToken = [string, string, number, number];
-type SourceFile = ts.SourceFile & { parseDiagnostics: readonly ts.Diagnostic[] };
+type SourceFile = ts.SourceFile & {
+  parseDiagnostics: readonly ts.Diagnostic[] };
+
+const toolDirective = new RegExp(
+  String.raw`^(?:@ts-(?:check|nocheck|ignore|expect-error)\b|` +
+  String.raw`(?:eslint|prettier|biome|istanbul|c8|v8|webpack|vite|rollup|` +
+  String.raw`svelte|stylelint|noinspection)(?:[-:\s]|$)|` +
+  String.raw`[#@]\s*(?:sourceMappingURL|sourceURL|__PURE__|` +
+  String.raw`__NO_SIDE_EFFECTS__)\b|\[if\b|<!\[endif\]|#include\b)`,
+  'i',
+);
+const dataScript = new RegExp(
+  String.raw`\btype\s*=\s*['"](?:application\/json|application\/ld\+json|` +
+  String.raw`importmap|speculationrules)['"]`,
+  'i',
+);
 
 function removable(text: string): boolean {
   if (/^\/\*!/.test(text)) return false;
@@ -17,18 +32,23 @@ function removable(text: string): boolean {
   if (/^editorconfig-checker-disable-line\b/.test(body)) {
     return false;
   }
-  return !/^(?:@ts-(?:check|nocheck|ignore|expect-error)\b|(?:eslint|prettier|biome|istanbul|c8|v8|webpack|vite|rollup|svelte|stylelint|noinspection)(?:[-:\s]|$)|[#@]\s*(?:sourceMappingURL|sourceURL|__PURE__|__NO_SIDE_EFFECTS__)\b|\[if\b|<!\[endif\]|#include\b)/i.test(body);
+  return !toolDirective.test(body);
 }
 
-function js(source: string, offset: number, result: Range[], filename = 'file.ts') {
-  const tree = ts.createSourceFile(filename, source, ts.ScriptTarget.Latest, true) as SourceFile;
-  if (tree.parseDiagnostics.length) throw new Error(`${filename}: ${ts.flattenDiagnosticMessageText(tree.parseDiagnostics[0].messageText, ' ')}`);
+function js(source: string, offset: number,
+  result: Range[], filename = 'file.ts') {
+  const tree = ts.createSourceFile(filename, source,
+    ts.ScriptTarget.Latest, true) as SourceFile;
+  if (tree.parseDiagnostics.length) throw new Error(
+    `${filename}: ${ts.flattenDiagnosticMessageText(
+      tree.parseDiagnostics[0].messageText, ' ')}`);
   const tokens: [number, number][] = [];
   function visit(node: ts.Node) {
     if (ts.isJSDoc(node)) return;
     const children = node.getChildren(tree);
     if (!children.length) {
-      if (node.kind !== ts.SyntaxKind.EndOfFileToken) tokens.push([node.getStart(tree), node.end]);
+      if (node.kind !== ts.SyntaxKind.EndOfFileToken) tokens.push(
+        [node.getStart(tree), node.end]);
     } else for (const child of children) visit(child);
   }
   visit(tree);
@@ -39,7 +59,8 @@ function js(source: string, offset: number, result: Range[], filename = 'file.ts
       const gap = source.slice(end, start);
       const comments = /\/\*[\s\S]*?\*\/|\/\/[^\r\n\u2028\u2029]*/g;
       for (const match of gap.matchAll(comments)) {
-        if (removable(match[0])) result.push([offset + end + match.index, offset + end + match.index + match[0].length, 'js']);
+        if (removable(match[0])) result.push([offset + end + match.index,
+          offset + end + match.index + match[0].length, 'js']);
       }
     }
     end = Math.max(end, finish);
@@ -47,7 +68,8 @@ function js(source: string, offset: number, result: Range[], filename = 'file.ts
 }
 
 function cssTokens(source: string): CssToken[] {
-  const tokens = tokenizeCss(new Input(source)) as { endOfFile(): boolean; nextToken(): CssToken };
+  const tokens = tokenizeCss(new Input(source)) as {
+    endOfFile(): boolean; nextToken(): CssToken };
   const result: CssToken[] = [];
   while (!tokens.endOfFile()) result.push(tokens.nextToken() as CssToken);
   return result;
@@ -55,7 +77,8 @@ function cssTokens(source: string): CssToken[] {
 
 function css(source: string, offset: number, result: Range[]) {
   const tokens = cssTokens(source);
-  const signature = (items: CssToken[]) => JSON.stringify(items.filter(([kind]) => kind !== 'comment')
+  const signature = (items: CssToken[]) => JSON.stringify(
+    items.filter(([kind]) => kind !== 'comment')
     .map(([kind, text]) => [kind, text]));
   const original = signature(tokens);
   const bom = source.startsWith('\uFEFF') ? 1 : 0;
@@ -82,7 +105,8 @@ function html(source: string, result: Range[]) {
       const close = source.indexOf('-->', start + 4);
       if (close < 0) throw new Error('Unterminated HTML comment');
       const end = close + 3;
-      if (removable(source.slice(start, end))) result.push([start, end, 'markup']);
+      if (removable(source.slice(start,
+        end))) result.push([start, end, 'markup']);
       pos = end;
       continue;
     }
@@ -99,7 +123,8 @@ function html(source: string, result: Range[]) {
     }
     if (end === source.length) break;
     const tag = source.slice(start, end + 1);
-    const name = /^<\s*(script|style|textarea|title)\b/i.exec(tag)?.[1]?.toLowerCase();
+    const name = /^<\s*(script|style|textarea|title)\b/i.exec(
+      tag)?.[1]?.toLowerCase();
     pos = end + 1;
     if (!name) continue;
     const closing = new RegExp(`</\\s*${name}\\s*>`, 'ig');
@@ -108,7 +133,8 @@ function html(source: string, result: Range[]) {
     if (!match) throw new Error(`Unterminated HTML ${name}`);
     const contents = source.slice(pos, match.index);
     if (name === 'style') css(contents, pos, result);
-    if (name === 'script' && !/\btype\s*=\s*['"](?:application\/json|application\/ld\+json|importmap|speculationrules)['"]/i.test(tag)) js(contents, pos, result, 'embedded.js');
+    if (name === 'script' && !dataScript.test(tag))
+      js(contents, pos, result, 'embedded.js');
     pos = closing.lastIndex;
   }
 }
@@ -120,9 +146,13 @@ function svelte(source: string, result: Range[]) {
     if (!value || typeof value !== 'object' || seen.has(value)) return;
     seen.add(value);
     const node = value as Record<string, unknown>;
-    if ((node.type === 'Comment' || node.type === 'Line' || node.type === 'Block') && typeof node.start === 'number' && Number.isInteger(node.start) && typeof node.end === 'number' && Number.isInteger(node.end)) {
+    if ((node.type === 'Comment' || node.type === 'Line' ||
+      node.type === 'Block') && typeof node.start === 'number' &&
+      Number.isInteger(node.start) &&
+        typeof node.end === 'number' && Number.isInteger(node.end)) {
       const text = source.slice(node.start, node.end);
-      if (/^(?:<!--|\/\*|\/\/)/.test(text) && removable(text)) result.push([node.start, node.end, node.type === 'Comment' ? 'markup' : 'js']);
+      if (/^(?:<!--|\/\*|\/\/)/.test(text) && removable(text)) result.push(
+        [node.start, node.end, node.type === 'Comment' ? 'markup' : 'js']);
     }
     for (const value of Object.values(node)) {
       if (Array.isArray(value)) value.forEach(visit);
@@ -132,8 +162,10 @@ function svelte(source: string, result: Range[]) {
   visit(tree.fragment);
   for (const script of [tree.instance, tree.module]) {
     if (script) {
-      const content = script.content as typeof script.content & { start: number; end: number };
-      js(source.slice(content.start, content.end), content.start, result, 'embedded.ts');
+      const content = script.content as typeof script.content & {
+        start: number; end: number };
+      js(source.slice(content.start, content.end),
+        content.start, result, 'embedded.ts');
     }
   }
   if (tree.css) {
@@ -142,24 +174,32 @@ function svelte(source: string, result: Range[]) {
   }
 }
 
-const input = JSON.parse(readFileSync(0, 'utf8')) as { path: string; source: string }[];
+const input = JSON.parse(readFileSync(0,
+  'utf8')) as { path: string; source: string }[];
 const output = input.map(({ path, source }) => {
   const result: Range[] = [];
   if (/\.svelte$/i.test(path)) svelte(source, result);
   else if (/\.html$/i.test(path)) html(source, result);
   else if (/\.css$/i.test(path)) css(source, 0, result);
   else js(source, 0, result, path);
-  return [...new Map(result.map(range => [range.slice(0, 2).join(':'), range])).values()]
+  return [...new Map(result.map(range => [
+    range.slice(0, 2).join(':'), range])).values()]
     .sort((a, b) => a[0] - b[0])
     .map(([start, end, kind]) => {
       const comment = source.slice(start, end);
-      const newlines = kind === 'js' ? (comment.match(/\r\n|[\r\n\u2028\u2029]/g) || []).join('') : '';
-      const separatesTokens = kind === 'js' && start > 0 && end < source.length &&
+      const newlines = kind === 'js' ? (comment.match(
+        /\r\n|[\r\n\u2028\u2029]/g) || []).join('') : '';
+      const separatesTokens = kind === 'js' &&
+        start > 0 && end < source.length &&
         !/\s/.test(source[start - 1]) && !/\s/.test(source[end]);
-      const replacement = kind === 'manual' ? null : newlines || (separatesTokens ? ' ' : '');
-      const lineEnd = kind === 'js' && /^[ \t]*(?:[\r\n\u2028\u2029]|$)/.test(source.slice(end));
-      const editStart = lineEnd ? start - source.slice(0, start).match(/[ \t]*$/)![0].length : start;
-      return [[...source.slice(0, editStart)].length, [...source.slice(0, end)].length, replacement];
+      const replacement = kind === 'manual' ? null :
+        newlines || (separatesTokens ? ' ' : '');
+      const lineEnd = kind === 'js' &&
+        /^[ \t]*(?:[\r\n\u2028\u2029]|$)/.test(source.slice(end));
+      const editStart = lineEnd ? start - source.slice(
+        0, start).match(/[ \t]*$/)![0].length : start;
+      return [[...source.slice(0, editStart)].length,
+        [...source.slice(0, end)].length, replacement];
     });
 });
 process.stdout.write(JSON.stringify(output));

@@ -34,7 +34,10 @@ class ImageFixture:
         model.start()
         self.addCleanup(model.stop)
         self.tools = patch(
-            "MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared._compile_tool_registry",
+            (
+                "MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared._compile_t"
+                "ool_registry"
+            ),
             return_value=b'{"schema_version":1}\n',
         )
         self.tools.start()
@@ -85,7 +88,7 @@ class ImageFixture:
         )
 
     def source_fixture(self) -> Path:
-        """Minimal admitted build closure; Project state never enters this tree."""
+        "Minimal admitted build closure; Project state never enters this tree."
         root = self.fixture_root / "source"
         docker = (
             root
@@ -97,7 +100,10 @@ class ImageFixture:
         )
         (
             root
-            / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/pyproject.toml"
+            / (
+                "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/pyproject."
+                "toml"
+            )
         ).write_text("[project]\nname = 'fixture'\n", encoding="utf-8")
         (
             root / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/uv.lock"

@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-5025
+concern:
+  subject: "Specification"
+  path: "Model/Graph/Node//Artifact//SSOT//Prescribed/Content/Atom"
+  relation: "is_narrower_than"
 container:
   component: C83
 tier: 0
@@ -12,8 +16,8 @@ relations:
   - AN-S-4930@2
 state:
   status: active
-  version: 2
-  updated_at: '2026-11-27T11:37:27.939414+00:00'
+  version: 4
+  updated_at: "2026-11-27T16:29:34.309627+00:00"
 ---
 
 ## Summary
@@ -22,9 +26,8 @@ Load and bind the pinned Spec sources.
 
 ## Approach
 
-Read each exact source pin. Check the Manifest and carrier roles, Component IDs, and required links. Collect unsupported claim issues before returning the bound sources.
-Pass through the source record read by C95 for every bound role.
-Retain the observed carrier SHA-256 alongside the source identity.
+Pass through the C95 source record for each bound role. Apply AN-S-4930
+for pin and role checks.
 
 ## Claim
 

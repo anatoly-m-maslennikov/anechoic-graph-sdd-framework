@@ -8,8 +8,8 @@ context:
   lens: SWD
 state:
   status: active
-  version: 26
-  updated_at: 2026-11-02 19:46:47 +0400
+  version: 27
+  updated_at: "2026-11-27T16:29:34.309627+00:00"
 ---
 ## Summary
 
@@ -23,7 +23,7 @@ use this Method **when** `BULK_CHANGE` **must** compose registered carrier opera
 
 ### Prose Claim
 
-1. confirm the logical `BULK_CHANGE` Workflow composition binding under TOOL_WORKFLOWS and resolve its explicit admitted executable binding from current context. The existing code path `LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/BULK_CHANGE/` is unchanged by this source-authority split; code topology is not Workflow ownership.
+1. Verify the BULK_CHANGE composition and executable binding under AN-S-2414 and AN-S-121.
 2. resolve one sealed target set **and** declared registered create, structured patch, relation change, rename, move, lifecycle, **or** replacement operations.
 3. derive a complete mutation-free change plan that identifies **every** explicit target, effect, precondition, collision and required reference rewrite. For Atom operations, bind independent one-Atom Actions and their own storage-effect safeguards; do not create a cross-Atom rollback boundary. Retain rollback actions only where separately governed for generic Artifact operations.
 4. require explicit approval of the exact plan digest **and** recheck the target set frontier **and** **every** effect precondition **before** apply.

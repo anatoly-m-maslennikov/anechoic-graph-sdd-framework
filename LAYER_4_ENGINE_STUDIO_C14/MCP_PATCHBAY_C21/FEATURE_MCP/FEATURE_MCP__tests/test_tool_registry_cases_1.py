@@ -14,7 +14,13 @@ from mcp.client._memory import InMemoryTransport
 from mcp.client.session import ClientSession
 
 
-from .tool_registry_test_support import ToolRegistryFixture, _provider_source, _mixed_descriptor_provider_source, _schema_provider_source, _native_gateway
+from .tool_registry_test_support import (
+    ToolRegistryFixture,
+    _provider_source,
+    _mixed_descriptor_provider_source,
+    _schema_provider_source,
+    _native_gateway,
+)
 MCP = Path(__file__).resolve().parents[1]
 from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.generate_tool_registry import generate  # noqa: E402
 from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.tool_registry_assets import ToolRegistryAssetError  # noqa: E402
@@ -24,15 +30,24 @@ from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.tool_registry_a
 
 
 class ToolRegistryTests(ToolRegistryFixture, unittest.IsolatedAsyncioTestCase):
-    def test_generator_writes_models_and_filters_global_blacklist(self) -> None:
-        registry = json.loads(generate(self.package).read_text(encoding="utf-8"))
+    def test_generator_writes_models_and_filters_global_blacklist(
+        self,
+    ) -> None:
+        registry = json.loads(
+            generate(self.package).read_text(encoding="utf-8")
+        )
         self.assertEqual(["demo"], registry["public_tools"])
-        self.assertEqual(["demo", "blocked"], [tool["name"] for tool in registry["providers"][0]["tools"]])
+        self.assertEqual(
+            ["demo", "blocked"],
+            [tool["name"] for tool in registry["providers"][0]["tools"]],
+        )
         self.assertEqual(["blocked"], registry["mcp_blacklist"])
 
 
     def test_generator_refuses_invalid_inventory_before_writing(self) -> None:
-        (self.feature / "tool_providers.json").write_text('{"schema_version": 1}', encoding="utf-8")
+        (self.feature / "tool_providers.json").write_text(
+            '{"schema_version": 1}', encoding="utf-8"
+        )
         with self.assertRaises(ToolRegistryAssetError):
             generate(self.package)
         self.assertFalse((self.feature / "tool_registry.json").exists())
@@ -50,9 +65,14 @@ class ToolRegistryTests(ToolRegistryFixture, unittest.IsolatedAsyncioTestCase):
         self.assertFalse((self.feature / "tool_registry.json").exists())
 
 
-    async def test_real_transport_quarantines_one_invalid_installed_descriptor(self) -> None:
+    async def test_real_transport_quarantines_one_invalid_installed_descriptor(
+        self,
+    ) -> None:
         self._write_provider(_mixed_descriptor_provider_source())
-        with self.assertLogs("IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.generate_tool_registry", level="WARNING") as generated:
+        with self.assertLogs(
+            "IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.generate_tool_registry",
+            level="WARNING",
+        ) as generated:
             generate(self.package)
         self.assertIn("broken", generated.output[0])
         root = Path(self.temporary.name).resolve()
@@ -60,16 +80,30 @@ class ToolRegistryTests(ToolRegistryFixture, unittest.IsolatedAsyncioTestCase):
         def registry_loader(_asset: Path, selected: Path, gateway: object):
             return self._registry(selected, gateway)
 
-        with patch("native_query_test_support.load_active_registry", side_effect=registry_loader):
+        with patch(
+            "native_query_test_support.load_active_registry",
+            side_effect=registry_loader,
+        ):
             gateway = _native_gateway(root)
-            with self.assertLogs("IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.generate_tool_registry", level="WARNING") as loaded:
+            with self.assertLogs(
+                "IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.generate_tool_registry",
+                level="WARNING",
+            ) as loaded:
                 await gateway.initialize()
             self.assertIn("broken", loaded.output[0])
             try:
-                async with InMemoryTransport(gateway.build_server(), raise_exceptions=True) as streams:
+                async with InMemoryTransport(
+                    gateway.build_server(), raise_exceptions=True
+                ) as streams:
                     async with ClientSession(*streams) as client:
                         await client.initialize()
-                        self.assertEqual({"demo"}, {tool.name for tool in (await client.list_tools()).tools})
+                        self.assertEqual(
+                            {"demo"},
+                            {
+                                tool.name
+                                for tool in (await client.list_tools()).tools
+                            },
+                        )
                         accepted = await client.call_tool("demo", {})
                         self.assertFalse(accepted.is_error)
                         rejected = await client.call_tool("broken", {})
@@ -78,75 +112,131 @@ class ToolRegistryTests(ToolRegistryFixture, unittest.IsolatedAsyncioTestCase):
                 await gateway.close()
 
 
-    def test_duplicate_identity_refuses_publication_even_if_one_descriptor_is_invalid(self) -> None:
-        self._write_provider(_mixed_descriptor_provider_source().replace('name="broken"', 'name="demo"'))
+    def test_duplicate_identity_refuses_publication_even_if_one_descriptor_is_invalid(
+        self,
+    ) -> None:
+        self._write_provider(
+            _mixed_descriptor_provider_source().replace(
+                'name="broken"', 'name="demo"'
+            )
+        )
         with self.assertRaises(ToolRegistryAssetError):
             generate(self.package)
         self.assertFalse((self.feature / "tool_registry.json").exists())
 
 
-    async def test_invalid_only_provider_does_not_block_an_independent_provider(self) -> None:
+    async def test_invalid_only_provider_does_not_block_an_independent_provider(
+        self,
+    ) -> None:
         invalid_module = "provider_" + uuid4().hex
         self.addCleanup(sys.modules.pop, invalid_module, None)
-        source = _mixed_descriptor_provider_source().replace(
-            'types.Tool(name="demo", description="Demo", input_schema=valid),\n            ', ""
-        ).replace('input_schema=invalid))', 'input_schema=invalid),)')
-        (self.feature / f"{invalid_module}.py").write_text(source, encoding="utf-8")
+        source = (
+            _mixed_descriptor_provider_source()
+            .replace(
+                'types.Tool(name="demo", description="Demo", input_schema=valid),\n            ',
+                "",
+            )
+            .replace("input_schema=invalid))", "input_schema=invalid),)")
+        )
+        (self.feature / f"{invalid_module}.py").write_text(
+            source, encoding="utf-8"
+        )
         inventory_path = self.feature / "tool_providers.json"
         inventory = json.loads(inventory_path.read_text(encoding="utf-8"))
-        inventory["providers"].append({
-            "provider_id": "invalid_provider", "module": invalid_module,
-            "factory": "create_provider", "descriptor_factory": "tool_descriptors",
-        })
+        inventory["providers"].append(
+            {
+                "provider_id": "invalid_provider",
+                "module": invalid_module,
+                "factory": "create_provider",
+                "descriptor_factory": "tool_descriptors",
+            }
+        )
         inventory_path.write_text(json.dumps(inventory), encoding="utf-8")
-        with self.assertLogs("IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.generate_tool_registry", level="WARNING"):
+        with self.assertLogs(
+            "IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.generate_tool_registry",
+            level="WARNING",
+        ):
             generate(self.package)
-        with self.assertLogs("IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.generate_tool_registry", level="WARNING"):
-            active = self._registry(Path(self.temporary.name).resolve(), object())
+        with self.assertLogs(
+            "IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.generate_tool_registry",
+            level="WARNING",
+        ):
+            active = self._registry(
+                Path(self.temporary.name).resolve(), object()
+            )
         self.assertEqual({"demo"}, {tool.name for tool in active.tools})
-        self.assertEqual({"name": "demo", "arguments": {}}, await active.call("demo", {}))
+        self.assertEqual(
+            {"name": "demo", "arguments": {}}, await active.call("demo", {})
+        )
         await active.close()
 
 
-    def test_duplicate_identity_across_providers_fails_even_when_one_is_invalid(self) -> None:
+    def test_duplicate_identity_across_providers_fails_even_when_one_is_invalid(
+        self,
+    ) -> None:
         self._write_provider(_mixed_descriptor_provider_source())
         second_module = "provider_" + uuid4().hex
         self.addCleanup(sys.modules.pop, second_module, None)
         source = _provider_source().replace('name="demo"', 'name="broken"')
-        (self.feature / f"{second_module}.py").write_text(source, encoding="utf-8")
+        (self.feature / f"{second_module}.py").write_text(
+            source, encoding="utf-8"
+        )
         inventory_path = self.feature / "tool_providers.json"
         inventory = json.loads(inventory_path.read_text(encoding="utf-8"))
-        inventory["providers"].append({
-            "provider_id": "second_provider", "module": second_module,
-            "factory": "create_provider", "descriptor_factory": "tool_descriptors",
-        })
+        inventory["providers"].append(
+            {
+                "provider_id": "second_provider",
+                "module": second_module,
+                "factory": "create_provider",
+                "descriptor_factory": "tool_descriptors",
+            }
+        )
         inventory_path.write_text(json.dumps(inventory), encoding="utf-8")
         with self.assertRaisesRegex(ToolRegistryAssetError, "name-duplicates"):
             generate(self.package)
         self.assertFalse((self.feature / "tool_registry.json").exists())
 
 
-    async def test_real_transport_dispatches_added_provider_and_denies_global_name(self) -> None:
+    async def test_real_transport_dispatches_added_provider_and_denies_global_name(
+        self,
+    ) -> None:
         generate(self.package)
         root = Path(self.temporary.name).resolve()
 
         def registry_loader(_asset: Path, selected: Path, gateway: object):
             return self._registry(selected, gateway)
 
-        with patch("native_query_test_support.load_active_registry", side_effect=registry_loader):
+        with patch(
+            "native_query_test_support.load_active_registry",
+            side_effect=registry_loader,
+        ):
             gateway = _native_gateway(root)
             await gateway.initialize()
             try:
-                async with InMemoryTransport(gateway.build_server(), raise_exceptions=True) as streams:
+                async with InMemoryTransport(
+                    gateway.build_server(), raise_exceptions=True
+                ) as streams:
                     async with ClientSession(*streams) as client:
                         await client.initialize()
-                        self.assertEqual({"demo"}, {tool.name for tool in (await client.list_tools()).tools})
+                        self.assertEqual(
+                            {"demo"},
+                            {
+                                tool.name
+                                for tool in (await client.list_tools()).tools
+                            },
+                        )
                         accepted = await client.call_tool("demo", {})
                         self.assertFalse(accepted.is_error)
-                        self.assertEqual({"name": "demo", "arguments": {}}, accepted.structured_content)
+                        self.assertEqual(
+                            {"name": "demo", "arguments": {}},
+                            accepted.structured_content,
+                        )
                         rejected = await client.call_tool("blocked", {})
                         self.assertTrue(rejected.is_error)
-                        self.assertEqual(["Unknown Tool"], rejected.structured_content["diagnostics"])
+                        self.assertEqual(
+                            ["Unknown Tool"],
+                            rejected.structured_content["diagnostics"],
+                        )
             finally:
                 await gateway.close()
 
@@ -164,7 +254,11 @@ class ToolRegistryTests(ToolRegistryFixture, unittest.IsolatedAsyncioTestCase):
         self._write_provider(source)
         registry_path = generate(self.package)
         installed = json.loads(registry_path.read_text(encoding="utf-8"))
-        descriptor = next(t for t in installed["providers"][0]["tools"] if t["name"] == "demo")
+        descriptor = next(
+            t
+            for t in installed["providers"][0]["tools"]
+            if t["name"] == "demo"
+        )
         root = Path(self.temporary.name).resolve()
         def registry_loader(_asset: Path, selected: Path, gateway: object):
             return self._registry(selected, gateway)

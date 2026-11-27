@@ -4,7 +4,8 @@ import { loadLib } from './FEATURE_IWE_CONSOLE_FRONTEND__tests__shared.ts';
 const { formatSql } = await loadLib();
 
 test('formats a DuckDB query in the Workbench layout', () => {
-  assert.equal(formatSql("select a,b from atoms where x=1 and y='select';"), "SELECT\n  a\n  ,b\nfrom atoms\nwhere x = 1\n  and y = 'select'\n;");
+  assert.equal(formatSql("select a,b from atoms where x=1 and y='select';"),
+    "SELECT\n  a\n  ,b\nfrom atoms\nwhere x = 1\n  and y = 'select'\n;");
 });
 
 test('is idempotent and preserves nested SQL tokens', () => {

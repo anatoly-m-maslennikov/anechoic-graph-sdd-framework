@@ -150,13 +150,20 @@ class LocalReleaseTestProcessTests(unittest.TestCase):
         try:
             _wait_for(self.root / "leader.ready")
             _wait_for(self.root / "descendant.ready")
-            self.assertTrue(select.select([process.stderr], [], [], 10)[0], "Driver did not forward readiness")
-            self.assertEqual("sleeping fixture ready\n", process.stderr.readline())
+            self.assertTrue(
+                select.select([process.stderr], [], [], 10)[0],
+                "Driver did not forward readiness",
+            )
+            self.assertEqual(
+                "sleeping fixture ready\n", process.stderr.readline()
+            )
             process.send_signal(signal.SIGINT)
             stdout, stderr = process.communicate(timeout=10)
             self.assertEqual(130, process.returncode, stderr)
             self.assertEqual("interrupted\n", stdout)
-            self.assertIn("leader interrupted", (self.root / "tests.log").read_text())
+            self.assertIn(
+                "leader interrupted", (self.root / "tests.log").read_text()
+            )
             for name in ("leader", "descendant"):
                 with (self.root / f"{name}.lock").open() as held:
                     fcntl.flock(held, fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -172,8 +179,12 @@ class LocalReleaseTestProcessTests(unittest.TestCase):
                 process.kill()
             process.communicate(timeout=5)
 
-    @unittest.skipUnless(os.name == "posix", "The child-liveness fixture uses POSIX file locks")
-    def test_forwarding_io_failure_stops_owned_child_and_retains_output(self) -> None:
+    @unittest.skipUnless(
+        os.name == "posix", "The child-liveness fixture uses POSIX file locks"
+    )
+    def test_forwarding_io_failure_stops_owned_child_and_retains_output(
+        self,
+    ) -> None:
         class BrokenOutput(io.StringIO):
             def write(self, text):
                 if text:
@@ -192,28 +203,53 @@ time.sleep(60)
         with log_path.open("w+b") as log, redirect_stderr(BrokenOutput()):
             with self.assertRaisesRegex(OSError, "fixture output unavailable"):
                 run_logged_test_process(
-                    (sys.executable, "-B", "-u", "-c", child, str(self.root)), self.root, log,
+                    (sys.executable, "-B", "-u", "-c", child, str(self.root)),
+                    self.root,
+                    log,
                 )
         self.assertIn("retained evidence", log_path.read_text())
         with (self.root / "child.lock").open() as held:
             fcntl.flock(held, fcntl.LOCK_EX | fcntl.LOCK_NB)
 
-    def test_bounded_reap_timeout_preserves_original_interrupt_and_partial_log(self) -> None:
+    def test_bounded_reap_timeout_preserves_original_interrupt_and_partial_log(
+        self,
+    ) -> None:
         process = Mock()
         process.poll.side_effect = KeyboardInterrupt
         process.wait.side_effect = subprocess.TimeoutExpired(("fixture",), 2.0)
         log_path = self.root / "tests.log"
         with log_path.open("w+b") as log:
             log.write(b"partial evidence\n")
-            with patch("LAYER_2_LOCAL_RELEASE_C63.local_release_test_process.subprocess.Popen", return_value=process), \
-                    patch("LAYER_2_LOCAL_RELEASE_C63.local_release_test_process._signal_owned"), \
-                    patch("LAYER_2_LOCAL_RELEASE_C63.local_release_test_process._owned_group_exists", return_value=False), \
-                    redirect_stderr(io.StringIO()):
+            with (
+                patch(
+                    (
+                        'LAYER_2_LOCAL_RELEASE_C63.local_release_test_process.'
+                        'subprocess.Popen'
+                    ),
+                    return_value=process,
+                ),
+                patch(
+                    (
+                        'LAYER_2_LOCAL_RELEASE_C63.local_release_test_process.'
+                        '_signal_owned'
+                    )
+                ),
+                patch(
+                    (
+                        'LAYER_2_LOCAL_RELEASE_C63.local_release_test_process.'
+                        '_owned_group_exists'
+                    ),
+                    return_value=False,
+                ),
+                redirect_stderr(io.StringIO()),
+            ):
                 with self.assertRaises(KeyboardInterrupt) as interrupted:
                     run_logged_test_process(("fixture",), self.root, log)
 
         process.wait.assert_called_once_with(timeout=2.0)
-        self.assertIn("TimeoutExpired", "\n".join(interrupted.exception.__notes__))
+        self.assertIn(
+            "TimeoutExpired", "\n".join(interrupted.exception.__notes__)
+        )
         self.assertEqual("partial evidence\n", log_path.read_text())
 
 

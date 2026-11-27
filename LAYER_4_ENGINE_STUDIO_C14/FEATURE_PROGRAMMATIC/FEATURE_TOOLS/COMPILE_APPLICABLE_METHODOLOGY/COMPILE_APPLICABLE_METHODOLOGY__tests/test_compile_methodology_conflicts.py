@@ -6,12 +6,21 @@ from unittest import mock
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.COMPILE_APPLICABLE_METHODOLOGY.COMPILE_APPLICABLE_METHODOLOGY__tests.methodology_test_support import (
     CompilerFixture, module, carrier, term_definition_carrier,
 )
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import SETTINGS_PATH
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import (
+    SETTINGS_PATH,
+)
 
 
 class CompilerTest(CompilerFixture):
-    def test_changed_control_root_blocks_staging_at_original_places(self) -> None:
-        self.write("001_CORE_META_MODEL", "05_method", "CA-M-001--one.md", carrier("CA-M-001"))
+    def test_changed_control_root_blocks_staging_at_original_places(
+        self,
+    ) -> None:
+        self.write(
+            "001_CORE_META_MODEL",
+            "05_method",
+            "CA-M-001--one.md",
+            carrier("CA-M-001"),
+        )
         places = module.methodology_paths(self.temp)
         _, candidates, snapshot = module.compile_report(self.temp, places)
         (self.temp / SETTINGS_PATH).write_text(
@@ -26,13 +35,24 @@ class CompilerTest(CompilerFixture):
         self.assertFalse((self.temp / ".anechoic_other_project").exists())
 
 
-    def test_explicit_release_child_places_remain_independent_of_canonical_target(self) -> None:
-        original = self.write("001_CORE_META_MODEL", "05_method", "CA-M-001--one.md", carrier("CA-M-001"))
+    def test_explicit_release_child_places_remain_independent_of_canonical_target(
+        self,
+    ) -> None:
+        original = self.write(
+            "001_CORE_META_MODEL",
+            "05_method",
+            "CA-M-001--one.md",
+            carrier("CA-M-001"),
+        )
         canonical = module.methodology_paths(self.temp)
-        child_output = canonical.output / "_release_materialized/selected-candidate"
+        child_output = (
+            canonical.output / "_release_materialized/selected-candidate"
+        )
         places = module.MethodologyPaths(
-            source=canonical.source, output=child_output,
-            declaration_digest=canonical.declaration_digest, control_root=canonical.control_root,
+            source=canonical.source,
+            output=child_output,
+            declaration_digest=canonical.declaration_digest,
+            control_root=canonical.control_root,
         )
 
         report, selected, snapshot = module.compile_report(self.temp, places)
@@ -41,7 +61,10 @@ class CompilerTest(CompilerFixture):
 
         projected = self.temp / child_output / "05_method" / original.name
         self.assertTrue(report["can_apply"])
-        self.assertEqual(projected.relative_to(self.temp).as_posix(), report["output_plan"][0]["output_path"])
+        self.assertEqual(
+            projected.relative_to(self.temp).as_posix(),
+            report["output_plan"][0]["output_path"],
+        )
         self.assertIn(b"projection:", projected.read_bytes())
         self.assertEqual(carrier("CA-M-001"), original.read_bytes())
         self.assertFalse((self.temp / canonical.output / "05_method").exists())
@@ -53,7 +76,10 @@ class CompilerTest(CompilerFixture):
         code, report = self.invoke()
         self.assertEqual(code, 2)
         self.assertGreaterEqual(report["conflict_count"], 1)
-        self.assertIn("duplicate_selected_atom_identity", {item["type"] for item in report["conflicts"]})
+        self.assertIn(
+            "duplicate_selected_atom_identity",
+            {item["type"] for item in report["conflicts"]},
+        )
         apply_code, applied = self.invoke("--apply")
         self.assertEqual(apply_code, 2)
         self.assertFalse(applied["can_apply"])
@@ -72,14 +98,18 @@ class CompilerTest(CompilerFixture):
             "003_PROJECT_CONFIGURATION",
             "04_requirement",
             "CA-R-011--redefine-shared-term.md",
-            term_definition_carrier("CA-R-011", "ANECHOIC_MODEL <+ Term//Shared Term"),
+            term_definition_carrier(
+                "CA-R-011", "ANECHOIC_MODEL <+ Term//Shared Term"
+            ),
         )
 
         code, report = self.invoke()
 
         self.assertEqual(2, code)
         conflict = next(
-            row for row in report["conflicts"] if row["type"] == "duplicate_governed_term_definition"
+            row
+            for row in report["conflicts"]
+            if row["type"] == "duplicate_governed_term_definition"
         )
         self.assertEqual("Shared Term", conflict["details"]["term"])
         apply_code, applied = self.invoke("--apply")
@@ -103,7 +133,11 @@ class CompilerTest(CompilerFixture):
         code, report = self.invoke()
 
         self.assertEqual(2, code)
-        conflict = next(row for row in report["conflicts"] if row["type"] == "duplicate_governed_term_definition")
+        conflict = next(
+            row
+            for row in report["conflicts"]
+            if row["type"] == "duplicate_governed_term_definition"
+        )
         self.assertEqual("Shared Term", conflict["details"]["term"])
         self.assertCountEqual(
             [current_subject, "Term//Shared Term", legacy_subject],
@@ -115,30 +149,51 @@ class CompilerTest(CompilerFixture):
 
 
     def test_separate_model_term_definitions_do_not_conflict(self) -> None:
-        self.write("001_CORE_META_MODEL", "05_method", "CA-M-010--define.md",
-                   term_definition_carrier("CA-M-010", "ANECHOIC_MODEL <+ Term//ID"))
-        self.write("003_PROJECT_CONFIGURATION", "05_method", "CA-M-011--define.md",
-                   term_definition_carrier("CA-M-011", "MODEL//Other <+ Term//ID"))
+        self.write(
+            "001_CORE_META_MODEL",
+            "05_method",
+            "CA-M-010--define.md",
+            term_definition_carrier("CA-M-010", "ANECHOIC_MODEL <+ Term//ID"),
+        )
+        self.write(
+            "003_PROJECT_CONFIGURATION",
+            "05_method",
+            "CA-M-011--define.md",
+            term_definition_carrier("CA-M-011", "MODEL//Other <+ Term//ID"),
+        )
 
         code, report = self.invoke()
 
         self.assertEqual(0, code)
-        self.assertNotIn("duplicate_governed_term_definition", {row["type"] for row in report["conflicts"]})
+        self.assertNotIn(
+            "duplicate_governed_term_definition",
+            {row["type"] for row in report["conflicts"]},
+        )
 
 
     def test_escaped_term_name_does_not_collide_with_model_qualified_term(self) -> None:
         self.write("001_CORE_META_MODEL", "05_method", "CA-M-010--define.md",
                    term_definition_carrier("CA-M-010", r"Term//MODEL\/\/Other \<\+ Term\/\/ID"))
-        self.write("003_PROJECT_CONFIGURATION", "05_method", "CA-M-011--define.md",
-                   term_definition_carrier("CA-M-011", "MODEL//Other <+ Term//ID"))
+        self.write(
+            "003_PROJECT_CONFIGURATION",
+            "05_method",
+            "CA-M-011--define.md",
+            term_definition_carrier("CA-M-011", "MODEL//Other <+ Term//ID"),
+        )
 
         code, report = self.invoke()
 
         self.assertEqual(0, code)
-        self.assertNotIn("duplicate_governed_term_definition", {row["type"] for row in report["conflicts"]})
+        self.assertNotIn(
+            "duplicate_governed_term_definition",
+            {row["type"] for row in report["conflicts"]},
+        )
 
         output = {row["source_atom_id"]: row for row in report["output_plan"]}
-        self.assertEqual(output["CA-M-010"]["definition_term"], output["CA-M-011"]["definition_term"])
+        self.assertEqual(
+            output["CA-M-010"]["definition_term"],
+            output["CA-M-011"]["definition_term"],
+        )
         self.assertEqual(("", "MODEL//Other <+ Term//ID"),
                          (output["CA-M-010"]["definition_namespace"], output["CA-M-010"]["definition_term_name"]))
         self.assertEqual(("MODEL//Other", "ID"),
@@ -152,10 +207,19 @@ class CompilerTest(CompilerFixture):
         self.assertEqual(2, code)
         conflicts = [row["details"] for row in report["conflicts"] if row["type"] == "duplicate_governed_term_definition"]
         self.assertEqual(2, len(conflicts))
-        self.assertEqual({"MODEL//Other <+ Term//ID"}, {row["term"] for row in conflicts})
-        self.assertEqual({("", "MODEL//Other <+ Term//ID"), ("MODEL//Other", "ID")},
-                         {(row["definition_namespace"], row["definition_term_name"]) for row in conflicts})
-        self.assertTrue(all(len(row["definition_subject_paths"]) == 2 for row in conflicts))
+        self.assertEqual(
+            {"MODEL//Other <+ Term//ID"}, {row["term"] for row in conflicts}
+        )
+        self.assertEqual(
+            {("", "MODEL//Other <+ Term//ID"), ("MODEL//Other", "ID")},
+            {
+                (row["definition_namespace"], row["definition_term_name"])
+                for row in conflicts
+            },
+        )
+        self.assertTrue(
+            all(len(row["definition_subject_paths"]) == 2 for row in conflicts)
+        )
 
 
     def test_output_collision_is_reported(self) -> None:
@@ -173,7 +237,9 @@ class CompilerTest(CompilerFixture):
             "001_CORE_META_MODEL",
             "04_requirement",
             "CA-R-002--replacer.md",
-            carrier("CA-R-002", relations="\n  replacement_of:\n    - CA-R-003"),
+            carrier(
+                "CA-R-002", relations="\n  replacement_of:\n    - CA-R-003"
+            ),
         )
         self.write("003_PROJECT_CONFIGURATION", "04_requirement", "CA-R-003--replaced.md", carrier("CA-R-003"))
         self.write(
@@ -220,19 +286,30 @@ class CompilerTest(CompilerFixture):
             carrier("CA-O-001"),
         )
         original = active.read_bytes()
-        for index, directory in enumerate(("draft", "drafts", "archive", "archived", "Draft", "Archived")):
-            historical = active.parent / f"copy-{index}" / directory / active.name
+        for index, directory in enumerate(
+            ("draft", "drafts", "archive", "archived", "Draft", "Archived")
+        ):
+            historical = (
+                active.parent / f"copy-{index}" / directory / active.name
+            )
             historical.parent.mkdir(parents=True)
             historical.write_bytes(original)
         (self.layers["CORE_META_MODEL"] / "01_concern").mkdir()
-        (self.layers["CORE_META_MODEL"] / "01_concern/CA-C-001.md").write_bytes(carrier("CA-C-001"))
+        (
+            self.layers["CORE_META_MODEL"] / "01_concern/CA-C-001.md"
+        ).write_bytes(carrier("CA-C-001"))
         (self.layers["CORE_META_MODEL"] / "08_implementation").mkdir()
-        (self.layers["CORE_META_MODEL"] / "08_implementation/CA-I-001.md").write_bytes(carrier("CA-I-001"))
+        (
+            self.layers["CORE_META_MODEL"] / "08_implementation/CA-I-001.md"
+        ).write_bytes(carrier("CA-I-001"))
         code, report = self.invoke()
         self.assertEqual(code, 0)
         self.assertEqual(report["eligible_candidate_count"], 1)
         self.assertEqual(report["conflict_count"], 0)
-        self.assertEqual(report["output_plan"][0]["source_carrier_path"], active.relative_to(self.temp).as_posix())
+        self.assertEqual(
+            report["output_plan"][0]["source_carrier_path"],
+            active.relative_to(self.temp).as_posix(),
+        )
         self.assertEqual(original, active.read_bytes())
 
 

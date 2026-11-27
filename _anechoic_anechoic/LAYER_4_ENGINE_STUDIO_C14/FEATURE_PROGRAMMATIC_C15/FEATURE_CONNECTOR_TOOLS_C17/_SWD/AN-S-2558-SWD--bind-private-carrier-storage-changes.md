@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-2558
+concern:
+  subject: "Carrier"
+  path: "Model"
+  relation: "is_contained_by"
 container:
   component: C17
 tier: 5
@@ -8,8 +12,8 @@ context:
   lens: SWD
 state:
   status: active
-  version: 15
-  updated_at: 2026-10-27 19:59:42 +0400
+  version: 16
+  updated_at: "2026-11-27T16:16:01.404965+00:00"
 ---
 ## Summary
 

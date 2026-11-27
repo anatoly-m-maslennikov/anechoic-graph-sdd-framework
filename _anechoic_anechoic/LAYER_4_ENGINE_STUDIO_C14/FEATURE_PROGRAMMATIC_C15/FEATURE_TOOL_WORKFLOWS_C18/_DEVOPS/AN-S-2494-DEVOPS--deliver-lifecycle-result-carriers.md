@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-2494
+concern:
+  subject: "Carrier"
+  path: "Model"
+  relation: "is_contained_by"
 container:
   component: C18
 tier: 3
@@ -8,8 +12,8 @@ context:
   lens: DevOps
 state:
   status: active
-  version: 15
-  updated_at: 2026-10-27 19:59:27 +0400
+  version: 17
+  updated_at: "2026-11-27T16:16:01.404965+00:00"
 ---
 ## Summary
 
@@ -17,7 +21,7 @@ Deliver lifecycle result carriers
 
 ## Scope
 
-Workflow admission owns identity, Version/time, lifecycle and complete schema decisions. Connector calls use CA-D-625 only to verify the supplied request, source preconditions and permission and to perform the explicit mechanical operation. A connector does not choose those decisions.
+Apply the shared connector boundary in AN-S-2478.
 
 The returned lifecycle dispatch record and its handoff to native Tools and shared Run support.
 

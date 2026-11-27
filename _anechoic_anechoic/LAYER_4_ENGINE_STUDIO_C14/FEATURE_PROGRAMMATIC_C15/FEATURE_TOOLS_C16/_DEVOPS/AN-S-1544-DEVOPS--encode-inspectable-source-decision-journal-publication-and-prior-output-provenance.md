@@ -1,15 +1,19 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1544
+concern:
+  subject: "Carrier"
+  path: "Model"
+  relation: "is_contained_by"
 container:
   component: C16
 tier: 4
 context:
   lens: DevOps
 state:
-  status: "active"
-  version: 18
-  updated_at: "2026-11-25T23:19:14.447851+00:00"
+  status: active
+  version: 19
+  updated_at: "2026-11-27T16:16:01.404965+00:00"
 ---
 # Summary
 

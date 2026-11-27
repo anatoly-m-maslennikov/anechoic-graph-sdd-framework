@@ -3,6 +3,7 @@
 import asyncio
 from concurrent.futures import CancelledError as FutureCancelledError
 from contextlib import ExitStack, contextmanager, redirect_stdout
+import os
 from pathlib import Path
 import sys
 
@@ -62,7 +63,11 @@ def native_project_gateway(
 @contextmanager
 def native_runtime_gateway(selection, *, backend_socket=None):
     gateway = native_project_gateway(
-        selection.root, selection=selection, backend_socket=backend_socket
+        selection.root,
+        selection=selection,
+        workbench_storage=os.getenv("ANECHOIC_WORKBENCH_STORAGE"),
+        journal_storage=os.getenv("ANECHOIC_JOURNAL_STORAGE"),
+        backend_socket=backend_socket,
     )
     try:
         yield gateway
@@ -200,7 +205,8 @@ class DirectGateway:
         public_base_url=None,
         asserted_project_root=None,
     ):
-        "Call the admitted Backend with transport envelope fields already separated."
+        ("Call the admitted Backend with transport envelope fields "
+         "already separated.")  # fmt: skip
         response = await self._tool_client.call_tool(
             name,
             arguments,

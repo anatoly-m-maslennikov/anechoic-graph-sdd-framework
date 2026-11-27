@@ -20,15 +20,34 @@ class EmbeddedContractAuditTests(TestCase):
                     'tier': tier, 'source_path': ref + '.md', '_content_bytes': body.encode(),
                     'header_json': {'context': {'template': template, 'lens': 'SPEC'}}}
 
-        legacy = row('AN-S-4', 'component_contract', '', 0)
-        manifest = row('AN-S-3', 'component_manifest', IDENTITY + '\n## Component Contract\n\nGuarantee.\n', 1)
-        capture = NativeCapture(atoms=[legacy, manifest], containment=[
-            {'source_ref': 'AN-S-4', 'target_kind': 'Component', 'target_ref': 'C3'},
-            {'source_ref': 'AN-S-3', 'target_kind': 'Component', 'target_ref': 'C1'},
-        ], errors={})
-        selection = SimpleNamespace(project_prefix='AN')
-        with patch('KERNEL_MIXER_C59.package_audit.read_component_contract',
-                   return_value={'ref_id': 'AN-S-4@2'}):
+        legacy = row("AN-S-4", "component_contract", "", 0)
+        manifest = row(
+            "AN-S-3",
+            "component_manifest",
+            IDENTITY + "\n## Component Contract\n\nGuarantee.\n",
+            1,
+        )
+        capture = NativeCapture(
+            atoms=[legacy, manifest],
+            containment=[
+                {
+                    "source_ref": "AN-S-4",
+                    "target_kind": "Component",
+                    "target_ref": "C3",
+                },
+                {
+                    "source_ref": "AN-S-3",
+                    "target_kind": "Component",
+                    "target_ref": "C1",
+                },
+            ],
+            errors={},
+        )
+        selection = SimpleNamespace(project_prefix="AN")
+        with patch(
+            "KERNEL_MIXER_C59.package_audit.read_component_contract",
+            return_value={"ref_id": "AN-S-4@2"},
+        ):
             _, contracts = _contract_candidates(selection, capture)
             self.assertEqual(['AN-S-3@2'], contracts['C3'])
             pins = defaultdict(list, {'pkg': [('implements', 'AN-S-3@2')]})

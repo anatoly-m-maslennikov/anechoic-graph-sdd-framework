@@ -6,7 +6,10 @@ from pathlib import Path
 import stat
 import time
 
-from LAYER_1_RUNTIME_IMAGES_C81.LAYER_1_RUNTIME_IMAGES_C81__shared import INSTALLATION_LOCK_PATH, _owned_directory
+from LAYER_1_RUNTIME_IMAGES_C81.LAYER_1_RUNTIME_IMAGES_C81__shared import (
+    INSTALLATION_LOCK_PATH,
+    _owned_directory,
+)
 
 from .local_release_state import open_artifacts
 
@@ -36,7 +39,20 @@ def _remove_empty(directory, name, info):
     return 1
 
 
-def _prune(directory: int, relative: Path, cutoff: int, device: int, blocked: list[str], keep) -> int:
+def _is_old(child: Path, modified: int, cutoff: int) -> bool:
+    if child.parent == Path("test_reports") and child.suffix == ".json":
+        cutoff -= 5 * _DAY_NS
+    return modified < cutoff
+
+
+def _prune(
+    directory: int,
+    relative: Path,
+    cutoff: int,
+    device: int,
+    blocked: list[str],
+    keep,
+) -> int:
     removed = 0
     for name in os.listdir(directory):
         child = relative / name
@@ -46,20 +62,23 @@ def _prune(directory: int, relative: Path, cutoff: int, device: int, blocked: li
             info = os.stat(name, dir_fd=directory, follow_symlinks=False)
             if info.st_dev != device:
                 continue
-            report = child.parent == Path("test_reports") and child.suffix == ".json"
-            old = info.st_mtime_ns < (cutoff - 5 * _DAY_NS if report else cutoff)
+            old = _is_old(child, info.st_mtime_ns, cutoff)
             if stat.S_ISDIR(info.st_mode):
                 flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
                 nested = os.open(name, flags, dir_fd=directory)
                 try:
                     if not os.path.samestat(info, os.fstat(nested)):
                         continue
-                    removed += _prune(nested, child, cutoff, device, blocked, keep)
+                    removed += _prune(
+                        nested, child, cutoff, device, blocked, keep
+                    )
                 finally:
                     os.close(nested)
                 if old:
                     removed += _remove_empty(directory, name, info)
-            elif old and (stat.S_ISREG(info.st_mode) or stat.S_ISLNK(info.st_mode)):
+            elif old and (
+                stat.S_ISREG(info.st_mode) or stat.S_ISLNK(info.st_mode)
+            ):
                 os.unlink(name, dir_fd=directory)
                 removed += 1
         except FileNotFoundError:
@@ -74,7 +93,14 @@ def prune_temporary_files(root: Path) -> tuple[int, list[str]]:
     blocked: list[str] = []
     keep = _KEEP | _open_paths(root)
     with _owned_directory(root, _TMP) as directory:
-        removed = _prune(directory, Path(), cutoff, os.fstat(directory).st_dev, blocked, keep)
+        removed = _prune(
+            directory,
+            Path(),
+            cutoff,
+            os.fstat(directory).st_dev,
+            blocked,
+            keep,
+        )
     return removed, blocked
 
 

@@ -15,7 +15,9 @@ def _settings(root: Path, control_root: Path | None) -> tuple[Path, str]:
     if control_root is None:
         control_root = root / ".anechoic_anechoic"
     control_root = Path(control_root)
-    settings = tomllib.loads((control_root / "anechoic_project_settings.toml").read_text("utf-8"))
+    settings = tomllib.loads(
+        (control_root / "anechoic_project_settings.toml").read_text("utf-8")
+    )
     if supplied_control_root is None:
         configured = settings.get("paths", {}).get("control_root")
         if isinstance(configured, str) and configured:
@@ -27,7 +29,11 @@ def _settings(root: Path, control_root: Path | None) -> tuple[Path, str]:
 
 
 def _order(value: object) -> int | None:
-    return value if isinstance(value, int) and not isinstance(value, bool) and value > 0 else None
+    return (
+        value
+        if isinstance(value, int) and not isinstance(value, bool) and value > 0
+        else None
+    )
 
 
 def _slug(name: str) -> str:
@@ -93,32 +99,58 @@ def _derived_rows(root: Path, rows: tuple[Mapping[str, Any], ...], control_root:
 
 
 def write_scope_unit_declarations(root: Path, rows: tuple[Mapping[str, Any], ...] = (), *, control_root: Path | None = None, project_name: str | None = None) -> dict[str, dict[str, Any]]:
-    """Materialize fixture declarations and return their derived structural rows."""
+    (
+        'Materialize fixture declarations and return their derived structural '
+        'rows.'
+    )
     resolved_control, settings_name = _settings(root, control_root)
     project_name = project_name or settings_name
-    derived = _derived_rows(Path(root), tuple(rows), resolved_control, project_name)
+    derived = _derived_rows(
+        Path(root), tuple(rows), resolved_control, project_name
+    )
     for row in derived.values():
-        parent_authority = resolved_control if row["project"] else derived[
-            project_name if row["parent"] == PROJECT else row["parent"]
-        ]["authority_path"]
+        parent_authority = (
+            resolved_control
+            if row["project"]
+            else derived[
+                project_name if row["parent"] == PROJECT else row["parent"]
+            ]["authority_path"]
+        )
         filename = (
             f"{row['atom_id']}-{_slug(row['scope_unit_name'])}-SCOPE_UNIT_DECLARATION--"
             f"declare-{_slug(row['scope_unit_name'])}.md"
         )
-        target = (resolved_control if row["project"] else Path(parent_authority) / "04_requirement") / filename
+        target = (
+            resolved_control
+            if row["project"]
+            else Path(parent_authority) / "04_requirement"
+        ) / filename
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(render_scope_declaration(
-            name=row["scope_unit_name"], project_name=project_name, atom_id=row["atom_id"],
-            updated_at="2026-11-02 00:00:00 +0000", scope_id=row["scope_id"],
-            label=row["scope_unit_label"], ordered=row["ordered"], order_number=row["local_order"],
-            parent=row["parent"], project=row["project"],
-        ), encoding="utf-8")
+        target.write_text(
+            render_scope_declaration(
+                name=row["scope_unit_name"],
+                project_name=project_name,
+                atom_id=row["atom_id"],
+                updated_at="2026-11-02 00:00:00 +0000",
+                scope_id=row["scope_id"],
+                label=row["scope_unit_label"],
+                ordered=row["ordered"],
+                order_number=row["local_order"],
+                parent=row["parent"],
+                project=row["project"],
+            ),
+            encoding="utf-8",
+        )
         row["declaration_path"] = target
     return derived
 
 
-def read_scope_unit_declarations(root: Path, control_root: Path, reader: Any = None) -> Any:
+def read_scope_unit_declarations(
+    root: Path, control_root: Path, reader: Any = None
+) -> Any:
     """Delegate declaration discovery when a fixture supplies its reader."""
     if reader is None:
-        raise ValueError("a declaration reader is required for fixture discovery")
+        raise ValueError(
+            "a declaration reader is required for fixture discovery"
+        )
     return reader(root, control_root)

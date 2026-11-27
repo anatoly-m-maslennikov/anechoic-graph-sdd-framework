@@ -12,13 +12,17 @@ import tokenize
 
 import yaml
 
-from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.source_comments import CODE_ROOTS
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.source_comments import (
+    CODE_ROOTS,
+)
 
 PYTHON = re.compile(r"^(?:.*/)?python(?:\d+(?:\.\d+)*)?(?:\.exe)?$")
 BOUNDARY = re.compile(r"(?:^|/)\.anechoic_tmp(?:/|$)")
 ASSIGNMENT = re.compile(r"^[A-Za-z_]\w*=")
 SHORT_OPTIONS = re.compile(r"^-[bBdEhiIOPqRsSuvVx]+$")
-DOCKER_COMMAND = re.compile(r"^(?:RUN(?: --\S+)*|ENTRYPOINT|CMD|HEALTHCHECK(?: --\S+)* CMD)\s+")
+DOCKER_COMMAND = re.compile(
+    r"^(?:RUN(?: --\S+)*|ENTRYPOINT|CMD|HEALTHCHECK(?: --\S+)* CMD)\s+"
+)
 
 
 def safe_prefix(value):
@@ -47,37 +51,87 @@ def _python_options(args):
     return flags, prefix, args[position:]
 
 
+def _uv_command(command, environment):
+    if (
+        Path(command[0]).name in {"uv", "uv.exe"}
+        and len(command) > 1
+        and command[1] in {"run", "sync", "pip"}
+    ):
+        python_index = next(
+            (
+                i
+                for i, item in enumerate(command[2:], 2)
+                if PYTHON.fullmatch(item)
+            ),
+            len(command),
+        )
+        compile_option = next(
+            (
+                item
+                for item in reversed(command[:python_index])
+                if item in {"--compile-bytecode", "--no-compile-bytecode"}
+            ),
+            "",
+        )
+        compile_requested = environment.get("UV_COMPILE_BYTECODE", "") in {
+            "1",
+            "true",
+            "yes",
+        }
+        if (
+            compile_option == "--compile-bytecode"
+            or not compile_option
+            and compile_requested
+        ):
+            return None
+        command = command[python_index:] if command[1] == "run" else []
+    return command
+
+
 def unsafe(tokens):
     environment = {}
     for index, token in enumerate(tokens):
         if ASSIGNMENT.match(token):
             key, value = token.split("=", 1)
             environment[key] = value
-        elif Path(token).name not in {"env", "-S", "exec", "command", "if", "then", "do", "CMD"}:
+        elif Path(token).name not in {
+            "env",
+            "-S",
+            "exec",
+            "command",
+            "if",
+            "then",
+            "do",
+            "CMD",
+        }:
             break
     else:
         return False
     command = tokens[index:]
-    if Path(command[0]).name in {"uv", "uv.exe"} and len(command) > 1 and command[1] in {"run", "sync", "pip"}:
-        python_index = next((i for i, item in enumerate(command[2:], 2) if PYTHON.fullmatch(item)), len(command))
-        compile_option = next((item for item in reversed(command[:python_index])
-                               if item in {"--compile-bytecode", "--no-compile-bytecode"}), "")
-        compile_requested = environment.get("UV_COMPILE_BYTECODE", "") in {"1", "true", "yes"}
-        if compile_option == "--compile-bytecode" or not compile_option and compile_requested:
-            return True
-        command = command[python_index:] if command[1] == "run" else []
+    command = _uv_command(command, environment)
+    if command is None:
+        return True
     if not command or not PYTHON.fullmatch(command[0]):
         return False
     flags, prefix, target = _python_options(command[1:])
     if target[:1] == ["<spread>"] or flags & {"h", "V"}:
         return False
     if not flags & {"E", "I"}:
-        prefix = environment.get("PYTHONPYCACHEPREFIX", "") if prefix is None else prefix
-        if environment.get("PYTHONDONTWRITEBYTECODE") and target[:2] not in (["-m", "compileall"], ["-m", "py_compile"]):
+        prefix = (
+            environment.get("PYTHONPYCACHEPREFIX", "")
+            if prefix is None
+            else prefix
+        )
+        if environment.get("PYTHONDONTWRITEBYTECODE") and target[:2] not in (
+            ["-m", "compileall"],
+            ["-m", "py_compile"],
+        ):
             return False
     contained = safe_prefix(prefix or "")
     if target[:2] in (["-m", "compileall"], ["-m", "py_compile"]):
-        return not contained or target[1] == "compileall" and "-b" in target[2:]
+        return (
+            not contained or target[1] == "compileall" and "-b" in target[2:]
+        )
     return "B" not in flags and not contained
 
 
@@ -127,7 +181,12 @@ def _shell_lines(source, markdown):
     for number, line in enumerate(source.splitlines(), 1):
         stripped = line.strip()
         if markdown and stripped.startswith("```"):
-            fence = not fence if fence else stripped.lower() in {"```sh", "```shell", "```bash", "```console"}
+            fence = (
+                not fence
+                if fence
+                else stripped.lower()
+                in {"```sh", "```shell", "```bash", "```console"}
+            )
             continue
         if markdown and not fence:
             continue
@@ -176,10 +235,16 @@ def _yaml_command(node):
     if isinstance(node, yaml.ScalarNode):
         offset = line if node.style in {"|", ">"} else line - 1
         return [offset + found for found in shell_findings(node.value)]
-    if isinstance(node, yaml.SequenceNode) and all(isinstance(child, yaml.ScalarNode) for child in node.value):
+    if isinstance(node, yaml.SequenceNode) and all(
+        isinstance(child, yaml.ScalarNode) for child in node.value
+    ):
         tokens = [child.value for child in node.value]
         if tokens[:1] == ["CMD-SHELL"]:
-            return [line] if len(tokens) == 2 and shell_findings(tokens[1]) else []
+            return (
+                [line]
+                if len(tokens) == 2 and shell_findings(tokens[1])
+                else []
+            )
         return [line] if unsafe(tokens) else []
     return []
 
@@ -243,8 +308,12 @@ def cache_findings(root):
             children.remove("__pycache__")
             relative = (parent / "__pycache__").relative_to(root)
             yield f"{relative}: bytecode cache outside .anechoic_tmp"
-        children[:] = [name for name in children if name not in {".git", "node_modules"}
-                       and parent / name != root / ".anechoic_tmp"]
+        children[:] = [
+            name
+            for name in children
+            if name not in {".git", "node_modules"}
+            and parent / name != root / ".anechoic_tmp"
+        ]
 
 
 def check(root: Path) -> int:

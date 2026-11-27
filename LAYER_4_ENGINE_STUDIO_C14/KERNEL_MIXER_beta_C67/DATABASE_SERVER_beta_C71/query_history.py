@@ -10,11 +10,15 @@ class QueryHistory:
         self.log = QueryLog(root)
         self.connection = connection
         connection.execute(
-            'CREATE TEMP TABLE ops_query_log_records (log_id VARCHAR PRIMARY KEY, "at" TIMESTAMPTZ, sql VARCHAR, '
-            "outcome VARCHAR, error VARCHAR, row_count BIGINT, column_count BIGINT)"
+            "CREATE TEMP TABLE ops_query_log_records ("
+            "log_id VARCHAR PRIMARY KEY, "
+            '"at" TIMESTAMPTZ, sql VARCHAR, '
+            "outcome VARCHAR, error VARCHAR, row_count BIGINT, "
+            "column_count BIGINT)"
         )
         connection.execute(
-            "CREATE TEMP VIEW ops_query_log AS SELECT * FROM ops_query_log_records "
+            "CREATE TEMP VIEW ops_query_log AS SELECT * "
+            "FROM ops_query_log_records "
             'WHERE "at" > current_timestamp - INTERVAL 48 HOURS'
         )
         connection.execute(
@@ -32,7 +36,10 @@ class QueryHistory:
                 'WHERE "at" <= current_timestamp - INTERVAL 48 HOURS'
             )
             self.connection.executemany(
-                "INSERT OR REPLACE INTO temp.main.ops_query_log_records VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (
+                    "INSERT OR REPLACE INTO temp.main.ops_query_log_records "
+                    "VALUES (?, ?, ?, ?, ?, ?, ?)"
+                ),
                 [
                     (
                         row["log_id"],

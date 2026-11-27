@@ -82,21 +82,35 @@ class HttpRequestBodyLimitTests(unittest.TestCase):
 
     @staticmethod
     def current_size_initialize() -> bytes:
-        value = {"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {
-            "protocolVersion": "2025-11-25", "capabilities": {},
-            "clientInfo": {"name": "body-limit-fixture", "version": "1"},
-            "_meta": {"padding": ""},
-        }}
+        value = {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "initialize",
+            "params": {
+                "protocolVersion": "2025-11-25",
+                "capabilities": {},
+                "clientInfo": {"name": "body-limit-fixture", "version": "1"},
+                "_meta": {"padding": ""},
+            },
+        }
         base = json.dumps(value, separators=(",", ":")).encode()
-        value["params"]["_meta"]["padding"] = "x" * (CURRENT_RELEASE_ENVELOPE_BYTES - len(base))
+        value["params"]["_meta"]["padding"] = "x" * (
+            CURRENT_RELEASE_ENVELOPE_BYTES - len(base)
+        )
         return json.dumps(value, separators=(",", ":")).encode()
 
-    def test_current_release_envelope_size_is_admitted_to_real_mcp_transport(self):
+    def test_current_release_envelope_size_is_admitted_to_real_mcp_transport(
+        self,
+    ):
         body = self.current_size_initialize()
         self.assertEqual(len(body), CURRENT_RELEASE_ENVELOPE_BYTES)
         self.assertGreater(len(body), 4 * 1024 * 1024)
         self.assertLess(len(body), MAX_REQUEST_BODY_SIZE)
-        response = self.client.post(MCP_PATH, headers={"accept": "application/json, text/event-stream"}, content=body)
+        response = self.client.post(
+            MCP_PATH,
+            headers={"accept": "application/json, text/event-stream"},
+            content=body,
+        )
         self.assertEqual(response.status_code, 200)
         self.assertIn("mcp-session-id", response.headers)
         self.assertIn("protocolVersion", response.text)
@@ -104,21 +118,38 @@ class HttpRequestBodyLimitTests(unittest.TestCase):
 
     def test_over_bound_declared_and_streamed_bodies_are_rejected(self):
         oversized = b"x" * (MAX_REQUEST_BODY_SIZE + 1)
-        for body in (oversized, iter((oversized[:4 * 1024 * 1024], oversized[4 * 1024 * 1024:]))):
+        for body in (
+            oversized,
+            iter((oversized[: 4 * 1024 * 1024], oversized[4 * 1024 * 1024 :])),
+        ):
             with self.subTest(streamed=not isinstance(body, bytes)):
-                request = self.client.build_request("POST", MCP_PATH, content=body)
-                self.assertEqual("chunked" if not isinstance(body, bytes) else str(len(body)),
-                                 request.headers.get("transfer-encoding" if not isinstance(body, bytes) else "content-length"))
+                request = self.client.build_request(
+                    "POST", MCP_PATH, content=body
+                )
+                self.assertEqual(
+                    "chunked"
+                    if not isinstance(body, bytes)
+                    else str(len(body)),
+                    request.headers.get(
+                        "transfer-encoding"
+                        if not isinstance(body, bytes)
+                        else "content-length"
+                    ),
+                )
                 response = self.client.send(request)
                 self.assertEqual(response.status_code, 413)
                 self.assertNotIn("mcp-session-id", response.headers)
 
     def test_larger_transport_policy_preserves_host_and_origin_admission(self):
         body = self.current_size_initialize()
-        for extra, status in (({"host": "attacker.invalid"}, 421),
-                              ({"origin": "https://attacker.invalid"}, 403)):
+        for extra, status in (
+            ({"host": "attacker.invalid"}, 421),
+            ({"origin": "https://attacker.invalid"}, 403),
+        ):
             with self.subTest(extra=extra):
-                response = self.client.post(MCP_PATH, headers=extra, content=body)
+                response = self.client.post(
+                    MCP_PATH, headers=extra, content=body
+                )
                 self.assertEqual(response.status_code, status)
                 self.assertNotIn("mcp-session-id", response.headers)
 

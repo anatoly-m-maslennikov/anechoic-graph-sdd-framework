@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1146
+concern:
+  subject: "TOML"
+  path: "Model/Carrier/File//Non-executable File"
+  relation: "is_narrower_than"
 container:
   component: C16
 tier: 2
@@ -8,8 +12,8 @@ context:
   lens: SWD
 state:
   status: active
-  version: 20
-  updated_at: 2026-11-02 19:44:26 +0400
+  version: 22
+  updated_at: "2026-11-27T16:29:34.309627+00:00"
 ---
 ## Summary
 
@@ -28,10 +32,6 @@ use this Method **when** a caller supplies a bounded key-level patch for the can
 3. reject writes **to** generated **or** unknown values **and** preserve **all** unrelated settings exactly.
 4. validate the complete resulting settings document **and** expose the exact key-level **and** byte-level dry-run.
 5. on authorized apply, recheck the source digest, replace the carrier atomically, **and** prove that **only** approved keys changed.
-
-## Outcome
-
-Project Settings contain exactly the approved schema-valid changes while generated **and** unrelated values remain untouched.
 
 ## Failure or stop
 

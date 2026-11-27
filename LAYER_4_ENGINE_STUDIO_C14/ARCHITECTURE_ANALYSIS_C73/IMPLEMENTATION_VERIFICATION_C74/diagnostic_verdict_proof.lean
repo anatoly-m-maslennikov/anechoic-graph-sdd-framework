@@ -6,7 +6,8 @@ set_option linter.unusedSimpArgs false
 
 def verdictOracle (xs : List String) : String :=
   if "conflicting" ∈ xs then "conflicting"
-  else if xs.isEmpty || ("unresolved" ∈ xs : Bool) then "unresolved" else "matched"
+  else if xs.isEmpty || ("unresolved" ∈ xs : Bool) then "unresolved" else
+    "matched"
 
 def verdictCtx (g : Ref) : Ctx := {
   dialect := program.dialect, table := program.table, globals := g,
@@ -46,47 +47,76 @@ theorem boxedVerdictExact (h : Heap) (g : Ref) (xs : List String) :
   by_cases c : "conflicting" ∈ xs
   · have hit : (xs.map Val.str).any (Val.beq (.str "conflicting")) = true := by
       rw [strContains]; exact decide_eq_true c
-    simp (config := {decide := true}) [applyFunc, f_diagnostics__pub_py__module__verdict,
-        Func.posParams, Func.keywordParams, kwargsRejected, posRejected, signatureRejected, seedClassAttrDefaults,
-        selfEnv, boxKwargs, bindParams, Env.get, Env.set, execStmt, evalExpr, Func.literalDefaults,
+    simp (config := {decide := true}) [applyFunc,
+      f_diagnostics__pub_py__module__verdict,
+        Func.posParams, Func.keywordParams, kwargsRejected, posRejected,
+          signatureRejected, seedClassAttrDefaults,
+        selfEnv, boxKwargs, bindParams, Env.get, Env.set, execStmt, evalExpr,
+          Func.literalDefaults,
         Lit.toVal, Val.truthy, Ctx.dunderOn, Val.unbox, valIn, Val.unbuiltin,
-        hit, c, verdictOracle, -List.any_map, verdictDialect, getStatusListObject, statusListObject,
-        Heap.payload, Payload.toVal, evalTruthWith, builtinDunderTarget, verdictListBool,
-        verdictListLen, Iteration.truthValue, Iteration.pureTruth, Iteration.truthConsumer]
+        hit, c, verdictOracle, -List.any_map, verdictDialect,
+          getStatusListObject, statusListObject,
+        Heap.payload, Payload.toVal, evalTruthWith, builtinDunderTarget,
+          verdictListBool,
+        verdictListLen, Iteration.truthValue, Iteration.pureTruth,
+          Iteration.truthConsumer]
   · by_cases emp : xs = []
     · subst xs
-      simp (config := {decide := true}) [applyFunc, f_diagnostics__pub_py__module__verdict,
-          Func.posParams, Func.keywordParams, kwargsRejected, posRejected, signatureRejected, seedClassAttrDefaults,
-          selfEnv, boxKwargs, bindParams, Env.get, Env.set, execStmt, evalExpr, Func.literalDefaults,
+      simp (config := {decide := true}) [applyFunc,
+        f_diagnostics__pub_py__module__verdict,
+          Func.posParams, Func.keywordParams, kwargsRejected, posRejected,
+            signatureRejected, seedClassAttrDefaults,
+          selfEnv, boxKwargs, bindParams, Env.get, Env.set, execStmt,
+            evalExpr, Func.literalDefaults,
           Lit.toVal, Val.truthy, Ctx.dunderOn, Val.unbox, valIn, Val.unbuiltin,
-          binopNeedsHeap, applyBinop, verdictOracle, -List.any_map, verdictDialect,
+          binopNeedsHeap, applyBinop, verdictOracle, -List.any_map,
+            verdictDialect,
           getStatusListObject, statusListObject, Heap.payload, Payload.toVal,
           evalTruthWith, builtinDunderTarget, verdictListBool, verdictListLen,
           Iteration.truthValue, Iteration.pureTruth, Iteration.truthConsumer]
     · have ne : xs.isEmpty = false := by simpa using emp
-      have miss : (xs.map Val.str).any (Val.beq (.str "conflicting")) = false := by
+      have miss : (xs.map Val.str).any (Val.beq (.str "conflicting")) = false
+        := by
         rw [strContains]; exact decide_eq_false c
       by_cases u : "unresolved" ∈ xs
-      · have hit : (xs.map Val.str).any (Val.beq (.str "unresolved")) = true := by
+      · have hit : (xs.map Val.str).any (Val.beq (.str "unresolved")) = true
+        := by
           rw [strContains]; exact decide_eq_true u
-        simp (config := {decide := true}) [applyFunc, f_diagnostics__pub_py__module__verdict,
-          Func.posParams, Func.keywordParams, kwargsRejected, posRejected, signatureRejected,
-          seedClassAttrDefaults, selfEnv, boxKwargs, bindParams, Env.get, Env.set, execStmt,
-          evalExpr, Func.literalDefaults, Lit.toVal, Val.truthy, Ctx.dunderOn, Val.unbox, valIn,
-          Val.unbuiltin, -List.any_map, c, u, ne, miss, hit, verdictOracle, binopNeedsHeap,
-          applyBinop, -List.isEmpty_iff, verdictDialect, getStatusListObject, statusListObject,
-          Heap.payload, Payload.toVal, evalTruthWith, builtinDunderTarget, verdictListBool,
-          verdictListLen, Iteration.truthValue, Iteration.pureTruth, Iteration.truthConsumer]
-      · have no : (xs.map Val.str).any (Val.beq (.str "unresolved")) = false := by
+        simp (config := {decide := true}) [applyFunc,
+          f_diagnostics__pub_py__module__verdict,
+          Func.posParams, Func.keywordParams, kwargsRejected, posRejected,
+            signatureRejected,
+          seedClassAttrDefaults, selfEnv, boxKwargs, bindParams, Env.get,
+            Env.set, execStmt,
+          evalExpr, Func.literalDefaults, Lit.toVal, Val.truthy,
+            Ctx.dunderOn, Val.unbox, valIn,
+          Val.unbuiltin, -List.any_map, c, u, ne, miss, hit, verdictOracle,
+            binopNeedsHeap,
+          applyBinop, -List.isEmpty_iff, verdictDialect, getStatusListObject,
+            statusListObject,
+          Heap.payload, Payload.toVal, evalTruthWith, builtinDunderTarget,
+            verdictListBool,
+          verdictListLen, Iteration.truthValue, Iteration.pureTruth,
+            Iteration.truthConsumer]
+      · have no : (xs.map Val.str).any (Val.beq (.str "unresolved")) = false
+        := by
           rw [strContains]; exact decide_eq_false u
-        simp (config := {decide := true}) [applyFunc, f_diagnostics__pub_py__module__verdict,
-          Func.posParams, Func.keywordParams, kwargsRejected, posRejected, signatureRejected,
-          seedClassAttrDefaults, selfEnv, boxKwargs, bindParams, Env.get, Env.set, execStmt,
-          evalExpr, Func.literalDefaults, Lit.toVal, Val.truthy, Ctx.dunderOn, Val.unbox, valIn,
-          Val.unbuiltin, -List.any_map, c, u, ne, miss, no, verdictOracle, binopNeedsHeap,
-          applyBinop, -List.isEmpty_iff, verdictDialect, getStatusListObject, statusListObject,
-          Heap.payload, Payload.toVal, evalTruthWith, builtinDunderTarget, verdictListBool,
-          verdictListLen, Iteration.truthValue, Iteration.pureTruth, Iteration.truthConsumer]
+        simp (config := {decide := true}) [applyFunc,
+          f_diagnostics__pub_py__module__verdict,
+          Func.posParams, Func.keywordParams, kwargsRejected, posRejected,
+            signatureRejected,
+          seedClassAttrDefaults, selfEnv, boxKwargs, bindParams, Env.get,
+            Env.set, execStmt,
+          evalExpr, Func.literalDefaults, Lit.toVal, Val.truthy,
+            Ctx.dunderOn, Val.unbox, valIn,
+          Val.unbuiltin, -List.any_map, c, u, ne, miss, no, verdictOracle,
+            binopNeedsHeap,
+          applyBinop, -List.isEmpty_iff, verdictDialect, getStatusListObject,
+            statusListObject,
+          Heap.payload, Payload.toVal, evalTruthWith, builtinDunderTarget,
+            verdictListBool,
+          verdictListLen, Iteration.truthValue, Iteration.pureTruth,
+            Iteration.truthConsumer]
 
 def invokePublicVerdict (xs : List String) : EResult :=
   let state := initGlobals program 20 moduleInits

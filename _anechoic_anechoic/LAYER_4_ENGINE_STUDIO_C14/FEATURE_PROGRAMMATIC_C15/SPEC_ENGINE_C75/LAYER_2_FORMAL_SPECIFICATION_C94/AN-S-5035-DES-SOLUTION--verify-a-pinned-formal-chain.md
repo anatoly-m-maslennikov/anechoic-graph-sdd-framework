@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-5035
+concern:
+  subject: "Solution"
+  path: "Model/Graph/Node//Artifact//SSOT//Prescribed/Content/Atom//Specification"
+  relation: "is_narrower_than"
 container:
   component: C94
 tier: 0
@@ -9,34 +13,17 @@ context:
   lens: DES
 relations:
   ANSWERS:
-  - AN-S-5020@4
+  - AN-S-5020@5
 state:
   status: active
-  version: 3
-  updated_at: "2026-11-27T11:36:18.750984+00:00"
+  version: 6
+  updated_at: "2026-11-27T16:19:44.298791+00:00"
 ---
 ## Summary
 
 Verify a pinned formal chain
 
 ## Claim
-
-### Prose Claim
-
-Read the pinned declarations through Spec Reading. Retain the exact refs
-and digests. Select and normalize the Spec claims, and identify them with
-one `model_pin`. Generate and validate Lean for that Model. Render the
-validated Solution. Compare ordinary declarations through C88. For bounded
-framing, report the finite comparison from C86.
-
-Compare the generated claims with the claims and exact sources evaluated
-in Lean. Keep that Model's identity through the C88 comparison.
-Give C87 the selected Solution projection and check its own digest and
-Action. For bounded framing, preserve the digest of the claims and
-finite result formed by C86 through the reported result. Keep source pins separate
-from Model identity.
-If an input or check prevents comparison, report the source and failing
-field or stage before returning incomplete.
 
 ### Formal Claim
 
@@ -56,10 +43,12 @@ component_workflow(component='C94', action='verify_pinned_specs', machine={
                 'target': 'C94.source_diagnostic', 'outcome': 'reported'}},
         }},
         'validate': {'on': {
-            'validate_translation': {'to': 'accept', 'expect': {'kind': 'effect', 'detail': {'component': 'C86', 'action': 'validate_translation', 'output': 'matched', 'manifest': 'AN-S-4933@1'}, 'target': 'C86.translation_validation', 'outcome': 'validated',
+            'validate_translation': {'to': 'accept', 'expect': {'kind': 'effect', 'detail': {'component': 'C86', 'action': 'validate_translation', 'output': 'matched', 'manifest': 'AN-S-4933@1',
+                           'model': 'request_normalized_model'},
+                'target': 'C86.lean_declarations', 'outcome': 'validated',
                 'same_as': {'model_pin': 'selected_model'}}},
             'validate_framing': {'to': 'accept_framing', 'expect': {'kind': 'effect',
-                'target': 'C86.translation_validation', 'outcome': 'validated',
+                'target': 'C86.framing_comparison', 'outcome': 'reported',
                 'same_as': {'model_pin': 'selected_model'},
                 'bind': {'finite_result': 'framing_result_pin'},
                 'detail': {'component': 'C86', 'action': 'validate_translation',
@@ -118,15 +107,32 @@ component_workflow(component='C94', action='verify_pinned_specs', machine={
 component_workflow(component='C94', action='generate_pinned_cases', machine={
     'id': 'c94_generate_pinned_cases', 'initial': 'generate', 'states': {
         'generate': {'on': {
-            'derive': {'to': 'return', 'expect': {'kind': 'effect',
-                'target': 'C92.framing_cases', 'outcome': 'generated',
+            'derive': {'to': 'publish', 'expect': {'kind': 'effect',
+                'target': 'test_cases', 'outcome': 'derived',
                 'detail': {'component': 'C92', 'action': 'generate_framing_cases',
                            'output': 'generated', 'manifest': 'AN-S-5016@1',
                            'interface': 'framing_cases', 'transport': 'in_process'}}},
             'invalid': {'to': 'end', 'expect': {'kind': 'output', 'outcome': 'invalid'}},
         }},
+        'publish': {'on': {'ready': {'to': 'return', 'expect': {
+            'kind': 'effect', 'target': 'C94.generated_cases',
+            'outcome': 'ready'}}}},
         'return': {'on': {'result': {'to': 'end', 'expect': {'kind': 'output', 'outcome': 'generated'}}}},
         'end': {'type': 'final'},
     },
 })
 ```
+
+## Semantics
+
+Keep exact source references and digests separate from the normalized
+Model pin. Compare the generated claims with the exact claims and sources
+evaluated in Lean. Preserve that Model identity through C88 comparison.
+
+C87 receives the selected Solution projection and verifies its digest and
+Action. For bounded framing, preserve the digest of the claims and the
+finite result from C86. An incomplete result identifies the affected
+source and failing field or stage.
+
+The Spec Engine generation entry calls C92 in process and returns its
+report with the source pins intact. This return makes the C94 cases ready.

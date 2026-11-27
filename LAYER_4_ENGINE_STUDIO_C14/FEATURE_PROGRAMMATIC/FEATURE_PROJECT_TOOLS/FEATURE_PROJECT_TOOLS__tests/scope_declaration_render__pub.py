@@ -63,8 +63,15 @@ def render_scope_declaration(
 
 
 def _scope_claim(
-    name: str, project_name: str, atom_id: str, project: bool, scope_id: str | None,
-    label: str | None, ordered: bool, order_number: int | None, parent: str | None,
+    name: str,
+    project_name: str,
+    atom_id: str,
+    project: bool,
+    scope_id: str | None,
+    label: str | None,
+    ordered: bool,
+    order_number: int | None,
+    parent: str | None,
 ) -> str:
     kind = "Project" if project else "ScopeUnit"
     fields = [f"name={_quoted(name)}"]
@@ -79,7 +86,9 @@ def _scope_claim(
         if ordered and _positive_int(order_number):
             fields.append(f"order_number={order_number}")
         if parent:
-            fields.append(f"container={_quoted(project_name if parent == PROJECT else parent)}")
+            fields.append(
+                f"container={_quoted(project_name if parent == PROJECT else parent)}"
+            )
     return (
         f"from anechoic.model import {kind}\n"
         "from anechoic.formal_claims import declare_entity\n"

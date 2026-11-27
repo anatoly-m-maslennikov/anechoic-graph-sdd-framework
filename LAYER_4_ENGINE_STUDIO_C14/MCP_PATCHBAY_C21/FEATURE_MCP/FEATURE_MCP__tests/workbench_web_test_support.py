@@ -7,7 +7,12 @@ from unittest.mock import NonCallableMock
 
 
 MCP_ROOT = Path(__file__).resolve().parents[1]
-FRONTEND_ROOT = MCP_ROOT.parents[1] / "IWE_CONSOLE_C43" / "APP_IWE_CONSOLE" / "FEATURE_IWE_CONSOLE_FRONTEND"
+FRONTEND_ROOT = (
+    MCP_ROOT.parents[1]
+    / "IWE_CONSOLE_C43"
+    / "APP_IWE_CONSOLE"
+    / "FEATURE_IWE_CONSOLE_FRONTEND"
+)
 
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import WORKBENCH_PATH  # noqa: E402
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import ToolProtocolError  # noqa: E402
@@ -29,35 +34,64 @@ class FakeWorkbench:
             or type(arguments.get("offset")) is not int
             or arguments["offset"] < 0
         ):
-            raise ToolProtocolError("query_error", "offset must be a non-negative integer")
-        if name == "query_load" and not isinstance(arguments.get("reference"), str):
-            raise ToolProtocolError("query_error", "reference must be a string")
+            raise ToolProtocolError(
+                "query_error", "offset must be a non-negative integer"
+            )
+        if name == "query_load" and not isinstance(
+            arguments.get("reference"), str
+        ):
+            raise ToolProtocolError(
+                "query_error", "reference must be a string"
+            )
         if name == "query_saved_list":
             limit = arguments.get("limit", 20)
             if type(limit) is not int or not 1 <= limit <= 1000:
-                raise ToolProtocolError("query_error", "limit must be an integer from 1 to 1000")
+                raise ToolProtocolError(
+                    "query_error", "limit must be an integer from 1 to 1000"
+                )
         if (
             name in {"query_run", "query_check"}
-            or name == "view_save" and "workspace_id" not in arguments
+            or name == "view_save"
+            and "workspace_id" not in arguments
         ) and not isinstance(arguments.get("sql"), str):
             raise ToolProtocolError("query_error", "sql must be a string")
 
-    async def call_tool(self, name, arguments, *, public_base_url=None, asserted_project_root=None):
+    async def call_tool(
+        self,
+        name,
+        arguments,
+        *,
+        public_base_url=None,
+        asserted_project_root=None,
+    ):
         from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.workbench_links import (
-            public_saved, public_workspace, validate_reference,
+            public_saved,
+            public_workspace,
+            validate_reference,
         )
 
         self.contexts.append((public_base_url, asserted_project_root))
         request = SimpleNamespace(base_url=public_base_url)
-        if name == "query_load" and isinstance(arguments.get("reference"), str):
+        if name == "query_load" and isinstance(
+            arguments.get("reference"), str
+        ):
             try:
-                validate_reference(arguments["reference"], request, self.selection, asserted_project_root)
+                validate_reference(
+                    arguments["reference"],
+                    request,
+                    self.selection,
+                    asserted_project_root,
+                )
             except ValueError as error:
                 raise ToolProtocolError("query_error", str(error)) from error
         value = await self.call(name, arguments)
-        value = public_saved(value, request, self.selection, asserted_project_root)
+        value = public_saved(
+            value, request, self.selection, asserted_project_root
+        )
         if name in {"workspace_open", "workspace_get"}:
-            value = public_workspace(value, request, self.selection, asserted_project_root)
+            value = public_workspace(
+                value, request, self.selection, asserted_project_root
+            )
         return {"value": value, "text": None}
 
     async def call(self, name, arguments):  # noqa: C901
@@ -68,9 +102,15 @@ class FakeWorkbench:
         if name == "workspace_get":
             return {"workspace_id": arguments["workspace_id"], "views": []}
         if name == "view_create":
-            return {"workspace_id": arguments["workspace_id"], "view_id": "view-1"}
+            return {
+                "workspace_id": arguments["workspace_id"],
+                "view_id": "view-1",
+            }
         if name == "view_save" and "workspace_id" in arguments:
-            return {"workspace_id": arguments["workspace_id"], "view_id": arguments["view_id"]}
+            return {
+                "workspace_id": arguments["workspace_id"],
+                "view_id": arguments["view_id"],
+            }
         if name == "query_page":
             if arguments["query_id"] != "query-1":
                 raise ToolProtocolError("query_error", "unknown query_id")
@@ -107,8 +147,13 @@ class FakeWorkbench:
         if arguments["sql"] == "large":
             return {
                 "query_id": "query-1",
-                "columns": [{"name": "item", "type": "VARCHAR"}, {"name": "item", "type": "VARCHAR"}],
-                "rows": [[f"λ-{index}", f"value-{index}"] for index in range(100)],
+                "columns": [
+                    {"name": "item", "type": "VARCHAR"},
+                    {"name": "item", "type": "VARCHAR"},
+                ],
+                "rows": [
+                    [f"λ-{index}", f"value-{index}"] for index in range(100)
+                ],
                 "row_count": 1024,
                 "column_count": 2,
                 "offset": 0,
@@ -148,20 +193,42 @@ class FakeGateway:
         self.root = Path.cwd()
         self.tool_blacklist = frozenset()
         self.selection = NonCallableMock(
-            spec_set=['project_name', 'root', 'host_root'],
-            project_name=PROJECT_NAME, root=self.root, host_root=None)
+            spec_set=["project_name", "root", "host_root", "instance_id"],
+            project_name=PROJECT_NAME,
+            root=self.root,
+            host_root=None,
+            instance_id="a" * 64,
+        )
         self.workbench.selection = self.selection
 
     async def select_project(self, root):
         if root != "/project":
             raise ValueError("invalid_project_root")
-        return {"project_name": self.selection.project_name, "instance_id": "a" * 64}
+        return {
+            "project_name": self.selection.project_name,
+            "instance_id": "a" * 64,
+        }
 
-    async def call_tool(self, name, arguments, *, public_base_url=None, asserted_project_root=None, project_instance_id=None):
+    async def call_tool(
+        self,
+        name,
+        arguments,
+        *,
+        public_base_url=None,
+        asserted_project_root=None,
+        project_instance_id=None,
+    ):
         if "project_root" in arguments:
             asserted_project_root = arguments["project_root"]
             self.roots.append(asserted_project_root)
-            arguments = {key: value for key, value in arguments.items() if key != "project_root"}
+            arguments = {
+                key: value
+                for key, value in arguments.items()
+                if key != "project_root"
+            }
         return await self.workbench.call_tool(
-            name, arguments, public_base_url=public_base_url, asserted_project_root=asserted_project_root,
+            name,
+            arguments,
+            public_base_url=public_base_url,
+            asserted_project_root=asserted_project_root,
         )

@@ -6,10 +6,21 @@ import duckdb
 
 from .query_results import query, validate_select
 from .result_delivery import deliver, validate_delivery
-from .saved_query_runs import save_run_fields, save_sql, validate_name, validate_run_save
+from .saved_query_runs import (
+    save_run_fields,
+    save_sql,
+    validate_name,
+    validate_run_save,
+)
 
 
-_VIEW = re.compile(r"VIEW (?:TABLE|DOC(?:UMENT)?|STRUCTURE|(?:GRAPH|IMPORTS)(?: (?:VERTICAL|HORIZONTAL))?)(?: ;)?", re.I | re.ASCII)
+_VIEW = re.compile(
+    (
+        "VIEW (?:TABLE|DOC(?:UMENT)?|STRUCTURE|(?:GRAPH|IMPORTS)(?: "
+        "(?:VERTICAL|HORIZONTAL))?)(?: ;)?"
+    ),
+    re.I | re.ASCII,
+)
 
 
 def _view_sql(sql):
@@ -31,13 +42,24 @@ def _view_sql(sql):
     for index, (value, level, start) in enumerate(words):
         if value.upper() == "VIEW" and level == 0:
             suffix = words[index:]
-            if all(item[1] == 0 for item in suffix) and _VIEW.fullmatch(" ".join(item[0] for item in suffix)):
+            if all(item[1] == 0 for item in suffix) and _VIEW.fullmatch(
+                " ".join(item[0] for item in suffix)
+            ):
                 return source[:start].decode("utf-8").rstrip()
     return sql
 
 
 class ViewQueries:
-    def __init__(self, store, connection, queries, journal_sync=None, project_root=None, *, saved_queries=None):
+    def __init__(
+        self,
+        store,
+        connection,
+        queries,
+        journal_sync=None,
+        project_root=None,
+        *,
+        saved_queries=None,
+    ):
         self.store, self.connection, self.queries = store, connection, queries
         self.journal_sync = journal_sync
         self.project_root = project_root
@@ -54,12 +76,19 @@ class ViewQueries:
         if operation == "view_save":
             return self._save_view(args)
         if operation in {"view_run", "view_check", "view_fetch"}:
-            if self.connection.execute("SELECT id FROM ops_generation").fetchone() is None:
+            if (
+                self.connection.execute(
+                    "SELECT id FROM ops_generation"
+                ).fetchone()
+                is None
+            ):
                 raise ValueError("Generation admission required")
             return self._query_operation(operation, args)
         result = self.store.invoke(operation, args)
         if operation == "view_remove":
-            previous = self.results.pop((args["workspace_id"], args["view_id"]), None)
+            previous = self.results.pop(
+                (args["workspace_id"], args["view_id"]), None
+            )
             if previous and previous.get("query_id"):
                 self.queries.pins.discard(previous["query_id"])
         return self._overlay(result)
@@ -67,31 +96,52 @@ class ViewQueries:
     def _overlay(self, result):
         workspace_id = result.get("workspace_id")
         if isinstance(result.get("views"), list):
-            result["views"] = [self._overlay_view(workspace_id, view) for view in result["views"]]
+            result["views"] = [
+                self._overlay_view(workspace_id, view)
+                for view in result["views"]
+            ]
         elif "view_id" in result and "revision" in result:
             result = self._overlay_view(workspace_id, result)
         return result
 
     def _overlay_view(self, workspace_id, view):
-        metadata = self.results.get((workspace_id, view.get("view_id", view.get("id"))))
+        metadata = self.results.get(
+            (workspace_id, view.get("view_id", view.get("id")))
+        )
         return view | {"result": metadata} if metadata else view
 
     @staticmethod
     def _validate(operation, args):
         required = {"workspace_id", "view_id"}
-        options = {"view_run": {"cursor_position", "preview", "save", "name"},
-                   "view_check": {"cursor_position"},
-                   "view_fetch": {"offset", "page_size", "preview", "grid", "result_delivery", "result_format"}}[operation]
+        options = {
+            "view_run": {"cursor_position", "preview", "save", "name"},
+            "view_check": {"cursor_position"},
+            "view_fetch": {
+                "offset",
+                "page_size",
+                "preview",
+                "grid",
+                "result_delivery",
+                "result_format",
+            },
+        }[operation]
         if not required <= args.keys() <= required | options:
             raise ValueError(f"invalid {operation} arguments")
-        if "preview" in args and args["preview"] is not None and (type(args["preview"]) is not int or args["preview"] < 0):
+        if (
+            "preview" in args
+            and args["preview"] is not None
+            and (type(args["preview"]) is not int or args["preview"] < 0)
+        ):
             raise ValueError("preview must be a non-negative integer")
         if operation == "view_run":
             validate_run_save(args)
         if operation == "view_fetch":
             if "grid" in args and type(args["grid"]) is not dict:
                 raise ValueError("grid must be an object")
-            validate_delivery(args.get("result_delivery", "inline"), args.get("result_format", "json_matrix"))
+            validate_delivery(
+                args.get("result_delivery", "inline"),
+                args.get("result_format", "json_matrix"),
+            )
 
     @staticmethod
     def _cursor(sql, cursor):
@@ -103,7 +153,7 @@ class ViewQueries:
         for char in sql:
             if units == cursor:
                 return
-            units += 2 if ord(char) > 0xffff else 1
+            units += 2 if ord(char) > 0xFFFF else 1
             if units > cursor:
                 raise ValueError("cursor_position must be a UTF-16 boundary")
         if units != cursor:
@@ -111,7 +161,9 @@ class ViewQueries:
 
     def _query_operation(self, operation, args):
         self._validate(operation, args)
-        view = self.store.invoke("view_get", {key: args[key] for key in ("workspace_id", "view_id")})
+        view = self.store.invoke(
+            "view_get", {key: args[key] for key in ("workspace_id", "view_id")}
+        )
         identity = {key: view[key] for key in ("workspace_id", "view_id")}
         key = tuple(identity.values())
         if operation != "view_fetch":
@@ -120,10 +172,21 @@ class ViewQueries:
                 self.journal_sync()
         if operation == "view_check":
             result = query(self.connection, _view_sql(view["sql"]))
-            return identity | {"valid": True, "columns": result["columns"], "row_count": len(result["rows"]),
-                               "column_count": len(result["columns"])}
+            return identity | {
+                "valid": True,
+                "columns": result["columns"],
+                "row_count": len(result["rows"]),
+                "column_count": len(result["columns"]),
+            }
         if operation == "view_run":
-            return identity | {"revision": view["revision"]} | self._run_view(key, view["sql"], args)
+            return (
+                identity
+                | {"revision": view["revision"]}
+                | self._run_view(key, view["sql"], args)
+            )
+        return self._fetch_view(key, identity, args)
+
+    def _fetch_view(self, key, identity, args):
         metadata = self.results.get(key)
         if not metadata or metadata["status"] != "success":
             raise ValueError("view has no current result")
@@ -134,9 +197,17 @@ class ViewQueries:
             raise ValueError("page_size must be an integer from 1 to 1000")
         if args.get("preview") is not None:
             size = min(size, args["preview"])
-        page = self.queries.page(metadata["query_id"], offset, size, args.get("grid"))
-        page = deliver(self.queries, self.project_root, page, args.get("result_delivery", "inline"),
-                       args.get("result_format", "json_matrix"), grid=args.get("grid"))
+        page = self.queries.page(
+            metadata["query_id"], offset, size, args.get("grid")
+        )
+        page = deliver(
+            self.queries,
+            self.project_root,
+            page,
+            args.get("result_delivery", "inline"),
+            args.get("result_format", "json_matrix"),
+            grid=args.get("grid"),
+        )
         return identity | page
 
     def _run_view(self, key, sql, args):
@@ -144,16 +215,30 @@ class ViewQueries:
         if prior and prior.get("query_id"):
             self.queries.drop(prior["query_id"])
         try:
-            page = self.queries.run(self.connection, _view_sql(sql), 1, preview=args.get("preview"))
+            page = self.queries.run(
+                self.connection, _view_sql(sql), 1, preview=args.get("preview")
+            )
             self.queries.pins.add(page["query_id"])
-            metadata = {"status": "success", "error": None, "query_id": page["query_id"],
-                        "row_count": page["row_count"], "column_count": page["column_count"]}
+            metadata = {
+                "status": "success",
+                "error": None,
+                "query_id": page["query_id"],
+                "row_count": page["row_count"],
+                "column_count": page["column_count"],
+            }
         except (ValueError, TypeError, duckdb.Error) as error:
-            metadata = {"status": "failed", "error": str(error), "query_id": None,
-                        "row_count": None, "column_count": None}
+            metadata = {
+                "status": "failed",
+                "error": str(error),
+                "query_id": None,
+                "row_count": None,
+                "column_count": None,
+            }
         self.results[key] = metadata
         if metadata["status"] == "success" and args.get("save", False):
-            return metadata | save_run_fields(self.saved_queries, sql, args.get("name"))
+            return metadata | save_run_fields(
+                self.saved_queries, sql, args.get("name")
+            )
         return metadata
 
     def _save_view(self, args):

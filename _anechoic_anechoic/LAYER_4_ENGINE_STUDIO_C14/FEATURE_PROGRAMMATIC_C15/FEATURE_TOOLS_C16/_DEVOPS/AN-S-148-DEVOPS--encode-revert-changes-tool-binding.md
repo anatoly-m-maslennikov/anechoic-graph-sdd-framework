@@ -8,8 +8,8 @@ context:
   lens: DevOps
 state:
   status: active
-  version: 18
-  updated_at: 2026-11-03 02:46:04 +0400
+  version: 19
+  updated_at: "2026-11-27T17:35:01.150345+00:00"
 ---
 # Summary
 
@@ -37,25 +37,4 @@ The strict request has `operation` (`admit` or `execute`), `reversal_request` fo
 
 For Atom reversals, `expected_result_hash` is the hash of the intended target path, properties and exact Markdown content with `updated_at` omitted. The raw Carrier hash is not part of this result comparison because it includes that timestamp. Validate the actual `updated_at` separately. `expected_current_hash`, `current_hashes` and evidence hashes still bind the complete observed bytes and descriptors.
 
-For admission, every frozen evidence reference uses one `evidence_pin`:
-`{ evidence_ref, evidence_hash }`. `evidence_ref` is either an existing
-canonical Journal Event reference `event:<event_id>` or a safe
-Project-relative declared-carrier/member reference; it is not a URL, code,
-resolver, symlink, traversal path, `.git`, or secret file. `evidence_hash` is
-the SHA-256 of canonical Journal Event bytes for `event:<event_id>`, or of the
-referenced member's raw bytes. The bounded reader resolves only configured
-Project authority/evidence roots and rejects unsafe, missing, ambiguous,
-oversized, changed, or unresolvable references; it creates no authority or
-Journal and synthesizes no evidence.
-
-`reversal_request` carries exact pins for `selected_change`, each retained
-`history_record`, `before_record`, `after_record`, and each
-`affected_reference`. `governing_definition` additionally carries
-`{ atom_id, revision, evidence_ref, evidence_hash }`; `operator_decision` and
-`executor_permission` carry `{ evidence_ref, evidence_hash }` with their
-existing decision/capability fields. Operator-decision evidence records the
-current Operator's exact ordered approved effects; executor-permission evidence
-records the supported capability and current grant. Existing
-`capability_permission` evidence remains separately required. Any changed,
-revoked, missing, unsafe, unsupported, or hash-mismatched pin is a precise
-pre-effect blocker; no ID, status, or hash-shaped value permits inference.
+Use exact admission evidence under AN-S-5179.

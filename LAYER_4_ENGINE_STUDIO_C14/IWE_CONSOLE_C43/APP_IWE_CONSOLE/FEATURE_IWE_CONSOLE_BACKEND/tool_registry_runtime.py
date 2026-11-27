@@ -67,7 +67,11 @@ async def _close(value: Any) -> None:
             return
 
 
-@dataclass(config=ConfigDict(strict=True, extra="forbid", arbitrary_types_allowed=True))
+@dataclass(
+    config=ConfigDict(
+        strict=True, extra="forbid", arbitrary_types_allowed=True
+    )
+)
 class ProviderBinding:
     factory: Any
     root: Path
@@ -80,8 +84,12 @@ class ProviderBinding:
         try:
             candidate = await _await(self.factory(self.root, self.gateway))
         except Exception as error:
-            raise ToolRegistryRuntimeError("tool-provider-factory-failed") from error
-        if not callable(getattr(candidate, "call", None)) or not callable(getattr(candidate, "close", None)):
+            raise ToolRegistryRuntimeError(
+                "tool-provider-factory-failed"
+            ) from error
+        if not callable(getattr(candidate, "call", None)) or not callable(
+            getattr(candidate, "close", None)
+        ):
             await _close(candidate)
             raise ToolRegistryRuntimeError("tool-provider-contract-invalid")
         self.provider = candidate
@@ -93,14 +101,23 @@ class ProviderBinding:
             await _close(provider)
 
 
-@dataclass(config=ConfigDict(strict=True, extra="forbid", arbitrary_types_allowed=True), frozen=True)
+@dataclass(
+    config=ConfigDict(
+        strict=True, extra="forbid", arbitrary_types_allowed=True
+    ),
+    frozen=True,
+)
 class RegisteredTool:
     binding: ProviderBinding
     input_validator: Draft202012Validator
     output_validator: Draft202012Validator | None
 
 
-@dataclass(config=ConfigDict(strict=True, extra="forbid", arbitrary_types_allowed=True))
+@dataclass(
+    config=ConfigDict(
+        strict=True, extra="forbid", arbitrary_types_allowed=True
+    )
+)
 class ActiveToolRegistry:
     tools: tuple[types.Tool, ...]
     routes: Annotated[dict[str, RegisteredTool], InstanceOf()]
@@ -112,8 +129,12 @@ class ActiveToolRegistry:
 
     def ensure_current(self) -> None:
         try:
-            current_registry = inventory_digest(self.asset_root / REGISTRY_NAME)
-            current_inventory = inventory_digest(self.asset_root / INVENTORY_NAME)
+            current_registry = inventory_digest(
+                self.asset_root / REGISTRY_NAME
+            )
+            current_inventory = inventory_digest(
+                self.asset_root / INVENTORY_NAME
+            )
         except ToolRegistryAssetError as error:
             raise ToolRegistryStaleError("tool-registry-stale") from error
         if (current_registry, current_inventory) != (
@@ -125,7 +146,9 @@ class ActiveToolRegistry:
     def permits(self, name: str) -> bool:
         return name not in self.global_blacklist and name in self.routes
 
-    async def call(self, name: str, arguments: dict[str, Any], *, context: Any = None) -> dict[str, Any]:
+    async def call(
+        self, name: str, arguments: dict[str, Any], *, context: Any = None
+    ) -> dict[str, Any]:
         self.ensure_current()
         if not self.permits(name):
             raise ToolRegistryRuntimeError("tool-unavailable")
@@ -135,7 +158,9 @@ class ActiveToolRegistry:
         except ValidationError as error:
             raise ToolInputValidationError("tool-input-invalid") from error
         provider = await registered.binding.resolve()
-        arguments = await _provider_hook(provider, "prepare_arguments", name, arguments, context)
+        arguments = await _provider_hook(
+            provider, "prepare_arguments", name, arguments, context
+        )
         self.ensure_current()
         value = await _await(provider.call(name, arguments))
         if not isinstance(value, dict):
@@ -144,17 +169,25 @@ class ActiveToolRegistry:
             try:
                 registered.output_validator.validate(value)
             except ValidationError as error:
-                raise ToolOutputValidationError("tool-output-invalid") from error
-        return await _provider_hook(provider, "present_result", name, value, context)
+                raise ToolOutputValidationError(
+                    "tool-output-invalid"
+                ) from error
+        return await _provider_hook(
+            provider, "present_result", name, value, context
+        )
 
     async def close(self) -> None:
         for binding in self.bindings:
             await binding.close()
 
 
-async def _provider_hook(provider: Any, name: str, tool: str, value: dict[str, Any], context: Any) -> dict[str, Any]:
+async def _provider_hook(
+    provider: Any, name: str, tool: str, value: dict[str, Any], context: Any
+) -> dict[str, Any]:
     hook = getattr(provider, name, None)
-    result = await _await(hook(tool, value, context)) if callable(hook) else value
+    result = (
+        await _await(hook(tool, value, context)) if callable(hook) else value
+    )
     if not isinstance(result, dict):
         raise ToolRegistryRuntimeError(f"tool-provider-{name}-invalid")
     return result
@@ -167,29 +200,48 @@ def _runtime_error(error: Exception) -> ToolRegistryRuntimeError:
 def _registry(asset_root: Path, inventory: ToolInventory) -> dict[str, Any]:
     value = read_json(asset_root / REGISTRY_NAME, "generated-tool-registry")
     version = value.get("schema_version")
-    if (set(value) != _REGISTRY_KEYS or type(version) is not int
-            or version != SCHEMA_VERSION):
+    if (
+        set(value) != _REGISTRY_KEYS
+        or type(version) is not int
+        or version != SCHEMA_VERSION
+    ):
         raise ToolRegistryAssetError("generated-tool-registry-schema-invalid")
     if value.get("inventory_sha256") != inventory.digest:
         raise ToolRegistryAssetError("generated-tool-registry-stale")
     if value.get("mcp_blacklist") != list(inventory.blacklist):
-        raise ToolRegistryAssetError("generated-tool-registry-blacklist-invalid")
-    if not isinstance(value.get("providers"), list) or not isinstance(value.get("public_tools"), list):
+        raise ToolRegistryAssetError(
+            "generated-tool-registry-blacklist-invalid"
+        )
+    if not isinstance(value.get("providers"), list) or not isinstance(
+        value.get("public_tools"), list
+    ):
         raise ToolRegistryAssetError("generated-tool-registry-fields-invalid")
     return value
 
 
-def _provider_rows(value: dict[str, Any], inventory: ToolInventory) -> list[dict[str, Any]]:
+def _provider_rows(
+    value: dict[str, Any], inventory: ToolInventory
+) -> list[dict[str, Any]]:
     rows = value["providers"]
     if len(rows) != len(inventory.providers):
-        raise ToolRegistryAssetError("generated-tool-registry-provider-count-invalid")
+        raise ToolRegistryAssetError(
+            "generated-tool-registry-provider-count-invalid"
+        )
     for row, entry in zip(rows, inventory.providers, strict=True):
         if not isinstance(row, dict) or set(row) != _GENERATED_PROVIDER_KEYS:
-            raise ToolRegistryAssetError("generated-tool-registry-provider-invalid")
-        if {key: row[key] for key in _GENERATED_PROVIDER_KEYS - {"tools"}} != provider_fields(entry):
-            raise ToolRegistryAssetError("generated-tool-registry-provider-stale")
+            raise ToolRegistryAssetError(
+                "generated-tool-registry-provider-invalid"
+            )
+        if {
+            key: row[key] for key in _GENERATED_PROVIDER_KEYS - {"tools"}
+        } != provider_fields(entry):
+            raise ToolRegistryAssetError(
+                "generated-tool-registry-provider-stale"
+            )
         if not isinstance(row["tools"], list):
-            raise ToolRegistryAssetError("generated-tool-registry-tools-invalid")
+            raise ToolRegistryAssetError(
+                "generated-tool-registry-tools-invalid"
+            )
     return rows
 
 
@@ -212,26 +264,40 @@ def _tools(
     try:
         current, names = _tool_payloads(factory())
     except Exception as error:
-        raise ToolRegistryAssetError("tool-descriptor-factory-failed") from error
+        raise ToolRegistryAssetError(
+            "tool-descriptor-factory-failed"
+        ) from error
     if stable_json(current) != stable_json(row["tools"]):
-        raise ToolRegistryAssetError("generated-tool-registry-descriptor-stale")
+        raise ToolRegistryAssetError(
+            "generated-tool-registry-descriptor-stale"
+        )
     try:
         tools = tuple(types.Tool.model_validate(tool) for tool in row["tools"])
     except (TypeError, ValueError) as error:
-        raise ToolRegistryAssetError("generated-tool-registry-tools-invalid") from error
+        raise ToolRegistryAssetError(
+            "generated-tool-registry-tools-invalid"
+        ) from error
     for tool in tools:
         _validator(tool.input_schema, "input")
         _validator(tool.output_schema, "output")
     return tools, names
 
 
-def _public_names(value: dict[str, Any], known: list[str], blacklist: frozenset[str]) -> set[str]:
+def _public_names(
+    value: dict[str, Any], known: list[str], blacklist: frozenset[str]
+) -> set[str]:
     names = value["public_tools"]
-    if not all(isinstance(name, str) for name in names) or len(names) != len(set(names)):
-        raise ToolRegistryAssetError("generated-tool-registry-public-tools-invalid")
+    if not all(isinstance(name, str) for name in names) or len(names) != len(
+        set(names)
+    ):
+        raise ToolRegistryAssetError(
+            "generated-tool-registry-public-tools-invalid"
+        )
     expected = {name for name in known if name not in blacklist}
     if set(names) != expected:
-        raise ToolRegistryAssetError("generated-tool-registry-public-tools-stale")
+        raise ToolRegistryAssetError(
+            "generated-tool-registry-public-tools-stale"
+        )
     return expected
 
 
@@ -274,6 +340,10 @@ def load_active_registry(asset_root: Path, root: Path, gateway: Any) -> ActiveTo
 
 
 __all__ = [
-    "ActiveToolRegistry", "ToolInputValidationError", "ToolOutputValidationError",
-    "ToolRegistryRuntimeError", "ToolRegistryStaleError", "load_active_registry",
+    "ActiveToolRegistry",
+    "ToolInputValidationError",
+    "ToolOutputValidationError",
+    "ToolRegistryRuntimeError",
+    "ToolRegistryStaleError",
+    "load_active_registry",
 ]

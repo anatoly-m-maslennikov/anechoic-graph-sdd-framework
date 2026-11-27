@@ -1,6 +1,10 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-2351
+concern:
+  subject: "Carrier"
+  path: "Model"
+  relation: "is_contained_by"
 container:
   component: C16
 tier: 4
@@ -8,8 +12,8 @@ context:
   lens: DES
 state:
   status: active
-  version: 10
-  updated_at: 2026-10-27 19:59:59 +0400
+  version: 11
+  updated_at: "2026-11-27T16:16:01.404965+00:00"
 ---
 ## Summary
 

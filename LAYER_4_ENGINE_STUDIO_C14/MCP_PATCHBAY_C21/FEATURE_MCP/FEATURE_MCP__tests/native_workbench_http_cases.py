@@ -13,9 +13,17 @@ from starlette.applications import Starlette
 from . import test_native_query_stdio as fixture
 from .native_query_test_support import create_native_gateway
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import NativeQueryOwner
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import resolve_native_project
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.work_journal__pub import PROJECT_DATABASE, append_sealed_events, journal_inbox
-from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import workbench_routes as routes
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import (
+    resolve_native_project,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.work_journal__pub import (
+    PROJECT_DATABASE,
+    append_sealed_events,
+    journal_inbox,
+)
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import (
+    workbench_routes as routes,
+)
 
 
 class NativeWorkbenchStateCases:
@@ -75,8 +83,14 @@ class NativeWorkbenchStateCases:
                                                           result_delivery="inline")["rows"])
                     owner.rebuild("all")
                     self.assertEqual("SELECT 1", owner.load(saved)["sql"])
-                    self.assertEqual(workbench == "disk" or journal == "duckdb", (root / PROJECT_DATABASE).is_file())
-                    self.assertEqual(journal == "files", (root / fixture.CONTROL / "_journal").is_dir())
+                    self.assertEqual(
+                        workbench == "disk" or journal == "duckdb",
+                        (root / PROJECT_DATABASE).is_file(),
+                    )
+                    self.assertEqual(
+                        journal == "files",
+                        (root / fixture.CONTROL / "_journal").is_dir(),
+                    )
                 finally:
                     owner.close()
                 owner = NativeQueryOwner(selected, inputs)
@@ -93,18 +107,31 @@ class NativeWorkbenchStateCases:
 
 
     async def _check_workspace_refusals(self, client, call, path, workspace):
-        wrong_root = await call('workspace_get', {'workspace_id': workspace['workspace_id']},
-                                project_root='/wrong/project')
+        wrong_root = await call(
+            "workspace_get",
+            {"workspace_id": workspace["workspace_id"]},
+            project_root="/wrong/project",
+        )
         self.assertEqual(400, wrong_root.status_code)
-        wrong_query = await client.post(f'{path}/schema', json={'project_root': '/wrong/project'})
+        wrong_query = await client.post(
+            f"{path}/schema", json={"project_root": "/wrong/project"}
+        )
         self.assertEqual(400, wrong_query.status_code)
-        wrong_page = await client.get('/anechoic/workbench/Anechoic?project_root=/wrong/project')
+        wrong_page = await client.get(
+            "/anechoic/workbench/Anechoic?project_root=/wrong/project"
+        )
         self.assertEqual(400, wrong_page.status_code)
-        wrong_name = await client.post('/anechoic/wrong/api/interface', json={
-            'operation': 'workspace_open', 'arguments': {'session_id': 'wrong'},
-        })
+        wrong_name = await client.post(
+            "/anechoic/wrong/api/interface",
+            json={
+                "operation": "workspace_open",
+                "arguments": {"session_id": "wrong"},
+            },
+        )
         self.assertEqual(404, wrong_name.status_code)
-        unsupported = await client.post(f'{path}/archive-load', json={'scopes': []})
+        unsupported = await client.post(
+            f"{path}/archive-load", json={"scopes": []}
+        )
         self.assertEqual(404, unsupported.status_code)
 
 
@@ -114,8 +141,10 @@ class NativeWorkbenchStateCases:
             path = '/anechoic/Anechoic/api'
             status = await client.post(f'{path}/status', json={})
             self.assertEqual(200, status.status_code, status.text)
-            self.assertEqual({'mode': 'live_index'}, status.json())
-            wrong_status_root = await client.post(f'{path}/status', json={'project_root': '/wrong/project'})
+            self.assertEqual({"mode": "live_index"}, status.json())
+            wrong_status_root = await client.post(
+                f"{path}/status", json={"project_root": "/wrong/project"}
+            )
             self.assertEqual(400, wrong_status_root.status_code)
 
             async def call(operation, arguments, **envelope):
@@ -129,8 +158,13 @@ class NativeWorkbenchStateCases:
             self.assertEqual('Anechoic', workspace['project_name'])
             self.assertIn('/anechoic/iwe-console/Anechoic?workspace=http-session', workspace['workspace_url'])
             identity = {'workspace_id': workspace['workspace_id'], 'view_id': workspace['active_view_id']}
-            sql = "SELECT exact_ref FROM native_references WHERE exact_ref = 'AN-T-009@2'"
-            updated = await call('view_update', identity | {'sql': sql, 'expected_revision': 0})
+            sql = (
+                'SELECT exact_ref FROM native_references WHERE exact_ref = '
+                "'AN-T-009@2'"
+            )
+            updated = await call(
+                "view_update", identity | {"sql": sql, "expected_revision": 0}
+            )
             self.assertEqual(200, updated.status_code, updated.text)
             checked = await call('view_check', identity)
             self.assertTrue(checked.json()['valid'], checked.text)
@@ -152,14 +186,30 @@ class NativeWorkbenchStateCases:
 
     async def test_workspace_view_and_bound_root(self):
         source = self.root / fixture.CONTROL
-        before = {p.relative_to(source): p.read_bytes() for p in source.rglob('*') if p.is_file()}
-        gateway = create_native_gateway(self.root, fixture.CONTROL, fixture._native_inputs())
+        before = {
+            p.relative_to(source): p.read_bytes()
+            for p in source.rglob("*")
+            if p.is_file()
+        }
+        gateway = create_native_gateway(
+            self.root, fixture.CONTROL, fixture._native_inputs()
+        )
         await gateway.initialize()
         self.addAsyncCleanup(gateway.close)
-        self.assertIn('module_imports', gateway._native_query.schema()['tables'])
-        self.assertTrue({'workspace_open', 'view_run', 'view_fetch'} <= {tool.name for tool in gateway.tools})
-        self.assertIn('workbench_status', {tool.name for tool in gateway.tools})
-        status = await gateway.call(None, types.CallToolRequestParams(name='workbench_status', arguments={}))
+        self.assertIn(
+            "module_imports", gateway._native_query.schema()["tables"]
+        )
+        self.assertTrue(
+            {"workspace_open", "view_run", "view_fetch"}
+            <= {tool.name for tool in gateway.tools}
+        )
+        self.assertIn(
+            "workbench_status", {tool.name for tool in gateway.tools}
+        )
+        status = await gateway.call(
+            None,
+            types.CallToolRequestParams(name="workbench_status", arguments={}),
+        )
         self.assertFalse(status.is_error, status.structured_content)
         self.assertEqual({'mode': 'live_index'}, status.structured_content)
         mcp_open = await gateway.call(None, types.CallToolRequestParams(
@@ -172,8 +222,9 @@ class NativeWorkbenchStateCases:
         self.assertTrue(refused.is_error)
         app = Starlette(routes=routes(gateway))
         await self._check_workspace_http(app)
-        self.assertEqual(before, {path: (source / path).read_bytes() for path in before})
-
+        self.assertEqual(
+            before, {path: (source / path).read_bytes() for path in before}
+        )
 
     async def _wait_for_atom(self, gateway, predicate):
         async with asyncio.timeout(15):
@@ -193,9 +244,12 @@ class NativeWorkbenchStateCases:
 
 
     async def test_external_atom_changes_are_indexed_without_rebuild(self):
-        gateway = create_native_gateway(self.root, fixture.CONTROL, fixture._native_inputs())
+        gateway = create_native_gateway(
+            self.root, fixture.CONTROL, fixture._native_inputs()
+        )
         gateway.selection = gateway._native_query.selection = replace(
-            gateway.selection, parameters={'runtime': {'workbench': {'import_graph': False}}},
+            gateway.selection,
+            parameters={"runtime": {"workbench": {"import_graph": False}}},
         )
         with patch.dict('os.environ', {'ANECHOIC_RUNTIME_NAMESPACE': 'docker'}):
             await gateway.initialize()

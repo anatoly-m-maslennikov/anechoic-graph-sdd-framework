@@ -8,8 +8,8 @@ context:
   lens: DES
 state:
   status: active
-  version: 28
-  updated_at: 2026-11-02 19:44:26 +0400
+  version: 29
+  updated_at: "2026-11-27T16:29:34.309627+00:00"
 ---
 ## Summary
 
@@ -22,9 +22,7 @@ at `.anechoic_runtime/` **and** one project-local temporary-state root at
 `.anechoic_tmp/`. the runtime **contains** content-addressed executable releases,
 shared non-executable libraries, machine-readable registries, declared
 dependencies, stable launchers, Hook Carriers, logs, sessions, databases,
-service state, **and** resumable state. the temporary-state root **contains** **only**
-disposable scratch, staging, cache, build, Evaluation, atomic-write
-intermediate, **and** interrupted-cleanup Carriers.
+service state, **and** resumable state. Apply AN-S-1245 to the temporary root.
 
 an installed Tool **must** import executable **and** non-executable implementation
 **only** from its selected release under `.anechoic_runtime/tools/`; it **must not**

@@ -1,13 +1,16 @@
 
 import { expect, test, type Page, type Request } from '@playwright/test';
+import { toolRequest } from './tool_rest_fixture';
 
 const url = process.env.WORKBENCH_E2E_URL!;
 const projectRoot = new URL(url).searchParams.get('project_root');
 const editor = (page: Page) => page.getByRole('textbox', { name: 'Query editor' });
 const viewTabs = (page: Page) => page.locator('.tab-strip');
-const executionOperations = new Set(['view_run', 'view_check', 'view_save', 'query_run', 'query_check']);
+const executionOperations = new Set(['view_run',
+  'view_check', 'view_save', 'query_run', 'query_check']);
 
-type WorkspaceView = { id: string; sql: string; name?: string; revision: number; cursor_position: number; result?: { query_id?: string | null } };
+type WorkspaceView = { id: string; sql: string; name?: string; revision:
+  number; cursor_position: number; result?: { query_id?: string | null } };
 type WorkspaceState = { workspace_id: string; active_view_id: string; views: WorkspaceView[] };
 
 function tab(page: Page, name: string | RegExp) {
@@ -15,10 +18,12 @@ function tab(page: Page, name: string | RegExp) {
 }
 
 async function call(workspaceUrl: URL, operation: string, arguments_: Record<string, unknown>) {
-  const endpoint = new URL(`${workspaceUrl.pathname.replace(/\/$/, '')}/interface`, workspaceUrl.origin);
+  const endpoint = new URL(`${workspaceUrl.pathname.replace(
+    /\/$/, '')}/interface`, workspaceUrl.origin);
   const response = await fetch(endpoint, {
     method: 'POST', headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ operation, arguments: arguments_, ...(projectRoot ? { project_root: projectRoot } : {}) }),
+    body: JSON.stringify({ operation, arguments: arguments_,
+      ...(projectRoot ? { project_root: projectRoot } : {}) }),
   });
   const body = await response.text();
   expect(response.ok, `${operation} failed: ${body}`).toBeTruthy();
@@ -42,8 +47,8 @@ async function replaceSql(page: Page, sql: string) {
 
 async function replaceAndFlushSql(page: Page, sql: string) {
   const update = page.waitForRequest((request) => request.method() === 'POST'
-    && new URL(request.url()).pathname.endsWith('/interface')
-    && request.postDataJSON()?.operation === 'view_update'
+    && new URL(request.url()).pathname.endsWith('/tools')
+    && request.postDataJSON()?.name === 'view_update'
     && request.postDataJSON()?.arguments?.sql === sql);
   await replaceSql(page, sql);
   await page.evaluate(() => window.dispatchEvent(new Event('focus')));
@@ -87,15 +92,17 @@ async function contextAction(page: Page, viewName: string | RegExp, action: stri
 function observedOperations(page: Page) {
   const operations: string[] = [];
   page.on('request', (request) => {
-    if (request.method() !== 'POST' || !new URL(request.url()).pathname.endsWith('/interface')) return;
-    const operation = request.postDataJSON()?.operation;
+    if (request.method() !== 'POST' || !new URL(request.url(
+      )).pathname.endsWith('/tools')) return;
+    const operation = request.postDataJSON()?.name;
     if (operation) operations.push(operation);
   });
   return operations;
 }
 
 async function state(workspaceUrl: URL, workspaceId: string) {
-  return await call(workspaceUrl, 'workspace_get', { workspace_id: workspaceId }) as WorkspaceState;
+  return await call(workspaceUrl, 'workspace_get', {
+    workspace_id: workspaceId }) as WorkspaceState;
 }
 
 async function verifySavedReuse(
@@ -112,7 +119,8 @@ async function verifySavedReuse(
   let current = await state(fixture.workspaceUrl, fixture.workspace);
   expect(current.views).toHaveLength(countBefore);
   expect(current.active_view_id).toBe(sourceId);
-  expect(current.views.find((view) => view.id === sourceId)!.result?.query_id).toBe(retainedQueryId);
+  expect(current.views.find((view) =>
+    view.id === sourceId)!.result?.query_id).toBe(retainedQueryId);
 
   await tab(page, 'View 2').click();
   operations.length = 0;
@@ -141,7 +149,8 @@ async function verifySavedReuse(
   await expect(editor(page)).toContainText(draft);
 }
 
-test('reuses exact saved View identity without navigation or equal-SQL merging', async ({ page }) => {
+test('reuses exact saved View identity without navigation or equal-SQL merging',
+  async ({ page }) => {
   const fixture = await disposableWorkspace('saved-actions');
   const sourceId = fixture.opened.views[0].id;
   const sql = 'SELECT 11 AS retained_value';
@@ -152,7 +161,8 @@ test('reuses exact saved View identity without navigation or equal-SQL merging',
   const firstName = `First saved ${fixture.workspace}`;
   const first = await saveCurrentView(page, firstName);
   await page.getByRole('tab', { name: 'Bookmarks and saved Views', exact: true }).click();
-  const savedItem = page.locator('.saved-item').filter({ has: page.locator('.saved-preview', { hasText: firstName }) });
+  const savedItem = page.locator('.saved-item').filter({ has:
+    page.locator('.saved-preview', { hasText: firstName }) });
   await expect(savedItem.locator('.saved-kind')).toHaveText('Bookmark');
   await tab(page, 'View 1').click();
   await page.getByRole('button', { name: 'New View', exact: true }).click();
@@ -160,7 +170,8 @@ test('reuses exact saved View identity without navigation or equal-SQL merging',
   await replaceSql(page, sql);
   const second = await saveCurrentView(page, 'Second saved');
   expect(second.id).not.toBe(first.id);
-  const secondId = (await state(fixture.workspaceUrl, fixture.workspace)).views.find((view) => view.id !== sourceId)!.id;
+  const secondId = (await state(fixture.workspaceUrl,
+    fixture.workspace)).views.find((view) => view.id !== sourceId)!.id;
 
   await tab(page, 'View 1').click();
   await expect(page.getByRole('grid')).toBeVisible();
@@ -170,7 +181,8 @@ test('reuses exact saved View identity without navigation or equal-SQL merging',
   await replaceAndFlushSql(page, draft);
   await expect(page.getByRole('grid')).toContainText('retained_value');
 
-  await verifySavedReuse(page, fixture, sourceId, first.id, second.href, secondId, draft, operations, retainedQueryId);
+  await verifySavedReuse(page, fixture, sourceId, first.id,
+    second.href, secondId, draft, operations, retainedQueryId);
 });
 
 async function renameViews(page: Page) {
@@ -194,7 +206,8 @@ async function renameViews(page: Page) {
 
 }
 
-async function verifyPaletteDuplicate(page: Page, fixture: Awaited<ReturnType<typeof disposableWorkspace>>, sourceId: string, sourceQueryId: string | null | undefined, firstCopy: WorkspaceView, currentSource: WorkspaceView, operations: string[], editedSql: string) {
+async function verifyPaletteDuplicate(page: Page, fixture: Awaited<ReturnType<typeof disposableWorkspace>>, sourceId: string, sourceQueryId:
+  string | null | undefined, firstCopy: WorkspaceView, currentSource: WorkspaceView, operations: string[], editedSql: string) {
   await tab(page, /^Report(?: \*)?$/).click();
   await expect(page.getByRole('grid')).toBeVisible();
   operations.length = 0;
@@ -209,7 +222,8 @@ async function verifyPaletteDuplicate(page: Page, fixture: Awaited<ReturnType<ty
   expect(secondCopy.cursor_position).toBe(currentSource.cursor_position);
   expect(secondCopy.result).toBeUndefined();
   expect(current.active_view_id).toBe(secondCopy.id);
-  expect(current.views[current.views.findIndex((view) => view.id === sourceId) + 1].id).toBe(secondCopy.id);
+  expect(current.views[current.views.findIndex((view) =>
+    view.id === sourceId) + 1].id).toBe(secondCopy.id);
   expect(operations).toContain('view_duplicate');
   expect(operations.filter((operation) => executionOperations.has(operation))).toEqual([]);
   await expect(page.getByRole('grid')).toHaveCount(0);
@@ -218,8 +232,10 @@ async function verifyPaletteDuplicate(page: Page, fixture: Awaited<ReturnType<ty
   await editor(page).press('Meta+Enter');
   await expect(page.getByRole('grid')).toBeVisible();
   current = await state(fixture.workspaceUrl, fixture.workspace);
-  expect(current.views.find((view) => view.id === sourceId)!.result?.query_id).toBe(sourceQueryId);
-  expect(current.views.find((view) => view.id === secondCopy.id)!.result?.query_id).not.toBe(sourceQueryId);
+  expect(current.views.find((view) =>
+    view.id === sourceId)!.result?.query_id).toBe(sourceQueryId);
+  expect(current.views.find((view) =>
+    view.id === secondCopy.id)!.result?.query_id).not.toBe(sourceQueryId);
 
   await page.evaluate(() => window.dispatchEvent(new Event('pagehide')));
   await page.reload();
@@ -231,7 +247,8 @@ async function verifyPaletteDuplicate(page: Page, fixture: Awaited<ReturnType<ty
   await expect(page.getByRole('grid')).toBeVisible();
 }
 
-test('renames and duplicates Views from context and palette without copying results or saved identity', async ({ page }) => {
+test('renames and duplicates Views from context and palette without copying results or saved identity',
+  async ({ page }) => {
   const fixture = await disposableWorkspace('duplicate-actions');
   const sourceId = fixture.opened.views[0].id;
   const operations = observedOperations(page);
@@ -244,7 +261,8 @@ test('renames and duplicates Views from context and palette without copying resu
 
   const editedSql = 'SELECT 22 AS copied_value';
   await replaceAndFlushSql(page, editedSql);
-  const source = (await state(fixture.workspaceUrl, fixture.workspace)).views.find((view) => view.id === sourceId)!;
+  const source = (await state(fixture.workspaceUrl,
+    fixture.workspace)).views.find((view) => view.id === sourceId)!;
   expect(source.result?.query_id).toBeTruthy();
   expect(source.cursor_position).toBeGreaterThan(0);
   const sourceQueryId = source.result!.query_id;
@@ -262,13 +280,15 @@ test('renames and duplicates Views from context and palette without copying resu
   expect(currentSource.sql).toBe(editedSql);
   expect(currentSource.result?.query_id).toBe(sourceQueryId);
   expect(current.active_view_id).toBe(firstCopy.id);
-  expect(current.views[current.views.findIndex((view) => view.id === sourceId) + 1].id).toBe(firstCopy.id);
+  expect(current.views[current.views.findIndex((view) =>
+    view.id === sourceId) + 1].id).toBe(firstCopy.id);
   expect(operations).toContain('view_duplicate');
   expect(operations.filter((operation) => executionOperations.has(operation))).toEqual([]);
   await expect(page.getByRole('grid')).toHaveCount(0);
   await expect(page.locator('.saved-reference a')).toHaveCount(0);
 
-  await verifyPaletteDuplicate(page, fixture, sourceId, sourceQueryId, firstCopy, currentSource, operations, editedSql);
+  await verifyPaletteDuplicate(page, fixture, sourceId,
+    sourceQueryId, firstCopy, currentSource, operations, editedSql);
 });
 
 
@@ -286,19 +306,22 @@ test('keeps local View selection after a stale background refresh', async ({ pag
   const initial = await state(fixture.workspaceUrl, fixture.workspace);
   let intercepted = false;
   let interceptedRequest: Request;
-  await page.route('**/interface', async (route) => {
-    if (intercepted || route.request().postDataJSON()?.operation !== 'workspace_get') return route.continue();
+  await page.route('**/tools', async (route) => {
+    if (intercepted || toolRequest(route)?.name !== 'workspace_get') {
+      return route.fallback();
+    }
     intercepted = true;
     interceptedRequest = route.request();
     const response = await route.fetch();
-    captured((await response.json()).active_view_id);
+    captured((await response.json()).result.value.active_view_id);
     await held;
     await route.fulfill({ response });
   });
   try {
     const oldId = await stale;
     expect(oldId).toBe(initial.active_view_id);
-    const focus = page.waitForResponse((item) => item.request().postDataJSON()?.operation === 'view_focus'
+    const focus = page.waitForResponse((item) => item.url().endsWith('/tools')
+      && item.request().postDataJSON()?.name === 'view_focus'
       && item.request().postDataJSON()?.arguments?.view_id === fixture.opened.views[0].id);
     await tab(page, 'View 1').click();
     expect((await focus).ok()).toBe(true);
@@ -306,7 +329,8 @@ test('keeps local View selection after a stale background refresh', async ({ pag
     const response = page.waitForResponse((item) => item.request() === interceptedRequest);
     release();
     await response;
-    await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    await page.evaluate(() => new Promise((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(resolve))));
     expect(await tab(page, /^View 1(?: \*)?$/).getAttribute('aria-selected')).toBe('true');
     expect(await editor(page).innerText()).toContain(expected);
   } finally { release(); }

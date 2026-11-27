@@ -146,33 +146,38 @@ def archive_versions(reader, roots, rows, prefix):
     pending = list(roots)
     count = 0
     while pending:
-        directory = reader._allowed_lexical(pending.pop())
-        descriptor = open_regular(directory, directory=True)
-        try:
-            with os.scandir(descriptor) as entries:
-                for entry in entries:
-                    count += 1
-                    if count > reader.limits["max_candidates"]:
-                        raise LimitReached("max_candidates")
-                    if entry.name == ".DS_Store":
-                        continue
-                    if entry.is_dir(follow_symlinks=False):
-                        child = directory / entry.name
-                        if not protected(child):
-                            pending.append(child)
-                    elif entry.is_file(
-                        follow_symlinks=False
-                    ) and entry.name.endswith(".md"):
-                        match = pattern.match(entry.name)
-                        if match and (
-                            entry.name[match.end() :] == ".md"
-                            or entry.name[match.end() :].startswith("-")
-                        ):
-                            add(*match.groups())
-        finally:
-            os.close(descriptor)
+        count = _scan_archive_directory(reader, pending, count, pattern, add)
     for row in rows:
         ref = row.get("ref")
         if isinstance(ref, str) and (match := pattern.fullmatch(ref)):
             add(*match.groups())
     return versions
+
+
+def _scan_archive_directory(reader, pending, count, pattern, add):
+    directory = reader._allowed_lexical(pending.pop())
+    descriptor = open_regular(directory, directory=True)
+    try:
+        with os.scandir(descriptor) as entries:
+            for entry in entries:
+                count += 1
+                if count > reader.limits["max_candidates"]:
+                    raise LimitReached("max_candidates")
+                if entry.name == ".DS_Store":
+                    continue
+                if entry.is_dir(follow_symlinks=False):
+                    child = directory / entry.name
+                    if not protected(child):
+                        pending.append(child)
+                elif entry.is_file(
+                    follow_symlinks=False
+                ) and entry.name.endswith(".md"):
+                    match = pattern.match(entry.name)
+                    if match and (
+                        entry.name[match.end() :] == ".md"
+                        or entry.name[match.end() :].startswith("-")
+                    ):
+                        add(*match.groups())
+    finally:
+        os.close(descriptor)
+    return count
