@@ -175,10 +175,10 @@ Each Principle shows its authored support relations and the Axioms it applies. T
 
 
 
-## 3.2 SST — Keep a Single Source of Truth
+## 3.2 SSOT — Keep a Single Source of Truth
 
 
-[AN-S-1446](../_anechoic_anechoic/01_TIER_1_ARCHITECTURE/AN-S-1446-SWD-APPLICABLE_PRINCIPLE--sst-keep-a-single-source-of-truth.md)
+[AN-S-5073](../_anechoic_anechoic/01_TIER_1_ARCHITECTURE/AN-S-5073-SWD-APPLICABLE_PRINCIPLE--ssot-keep-a-single-source-of-truth.md)
 
 > Keep one source of truth for each piece of Project information. Make copies from that source instead of editing each copy separately.
 

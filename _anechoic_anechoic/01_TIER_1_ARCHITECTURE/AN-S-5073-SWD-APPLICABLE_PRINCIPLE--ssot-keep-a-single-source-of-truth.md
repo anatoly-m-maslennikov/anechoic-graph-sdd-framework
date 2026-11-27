@@ -1,6 +1,6 @@
 ---
 atom_family: SPEC
-atom_id: AN-S-1446
+atom_id: AN-S-5073
 concern:
   subject: Single Source of Truth
   path: Project Practice/Project information and context
@@ -13,18 +13,20 @@ context:
   template: applicable_principle
 state:
   status: "active"
-  version: 7
-  updated_at: "2026-11-27T13:13:58.995011+00:00"
+  version: 1
+  updated_at: "2026-11-27T14:48:15.929584+00:00"
 relations:
   APPLIES:
   - AN-S-1432
+  IS_REPLACEMENT_FOR:
+  - AN-S-1446
 ---
 
 **3.2**
 
 ## Summary
 
-SST — Keep a Single Source of Truth
+SSOT — Keep a Single Source of Truth
 
 ## Claim
 
