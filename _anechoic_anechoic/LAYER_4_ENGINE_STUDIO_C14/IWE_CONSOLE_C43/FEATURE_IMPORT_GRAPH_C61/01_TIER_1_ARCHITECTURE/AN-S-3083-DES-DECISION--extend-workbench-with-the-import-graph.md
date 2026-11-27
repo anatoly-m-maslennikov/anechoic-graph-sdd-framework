@@ -7,14 +7,10 @@ tier: 1
 context:
   template: DECISION
   lens: DES
-relations:
-  IS_REFERENCE:
-  - AN-S-3159@2
-  - AN-S-3179@2
 state:
   status: active
   version: 6
-  updated_at: "2026-11-22T09:00:09.215152+00:00"
+  updated_at: '2026-11-26T16:38:46.228224+00:00'
 ---
 
 ## Summary

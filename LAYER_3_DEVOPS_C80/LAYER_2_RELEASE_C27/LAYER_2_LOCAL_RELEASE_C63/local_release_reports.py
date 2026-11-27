@@ -60,6 +60,14 @@ def write_receipt(root, receipt, run_id, image_mode, test_scope, test_selection,
         f"Verification source SHA for `{phase}`: `{proof['source_sha']}`\n\n"
         for phase, proof in evidence.get("verified_phases", {}).items()
     )
+    elapsed = evidence.get("ready_seconds")
+    timing = f"Seconds to readiness: `{elapsed}`\n\n" if elapsed is not None else ""
+    if evidence.get("functional_suite") == "fast":
+        if elapsed is None:
+            timing = "Start-to-readiness time unavailable for this run.\n\n"
+        else:
+            timing += f"Fast path met the ideal 10-minute target: `{evidence['fast_target_met']}`\n\n"
+            timing += f"Fast path met the mandatory 15-minute limit: `{evidence['fast_limit_met']}`\n\n"
     atomic_write(
         receipt,
         "# Simple local release receipt\n\n"
@@ -70,12 +78,21 @@ def write_receipt(root, receipt, run_id, image_mode, test_scope, test_selection,
         f"Canary endpoint: `{canary_endpoint}`\n\n"
         f"Endpoint: `{endpoint or 'not reported'}`\n\n"
         + deployment
+        + timing
         + verification
         + _test_logs(test_log_paths)
         + f"Image cleanup: {cleanup_note}\n\n{staging_note}"
         + _attempt_history(evidence.get("failed_attempts", ())),
     )
     return receipt.relative_to(root).as_posix()
+
+
+def record_receipt(run):
+    run.receipt_path = write_receipt(
+        run.root, receipt_path(run.root, run.run_id), run.run_id, run.image_mode,
+        run.test_scope, run.test_selection, run.canary_endpoint, run.endpoint,
+        run.test_log_paths, run.cleanup_note, "", evidence=run.journal.data["evidence"],
+    )
 
 
 def failure_path(root, run_id):

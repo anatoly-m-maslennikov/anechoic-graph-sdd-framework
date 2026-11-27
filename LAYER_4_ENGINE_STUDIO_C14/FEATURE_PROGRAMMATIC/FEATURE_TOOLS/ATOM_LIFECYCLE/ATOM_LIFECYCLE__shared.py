@@ -16,7 +16,8 @@ from .header_relation_rules import compile_header_relation_rules, load_header_re
 from .native_asset import create_asset
 from .native_draft import create_draft, promote_draft
 from .native_draft_source import _revision_root
-from .native_update import change_ticket_status
+from .native_draft_update import update_draft
+from .native_update import change_ticket_status, ticket_status_options
 from .native_update_archive import archive_ticket, direct_update
 from .native_update_spec import archive_spec_draft, change_spec_status
 from .placement import _predecessor_status, _role_root, derive_destination
@@ -39,5 +40,5 @@ __all__ = [
     "load_header_constraints", "load_header_ordering", "load_header_relation_rules", "load_placement",
     "load_role_form", "load_status_model", "native_update", "pin", "promote_draft", "read_selected",
     "render_carrier", "result", "select_source", "select_sources", "source_module", "status_memberships",
-    "validate_header_order", "validate_selection",
+    "ticket_status_options", "update_draft", "validate_header_order", "validate_selection",
 ]

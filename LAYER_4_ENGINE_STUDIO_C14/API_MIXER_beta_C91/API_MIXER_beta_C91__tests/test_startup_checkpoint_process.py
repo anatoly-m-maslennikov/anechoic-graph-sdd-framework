@@ -10,6 +10,7 @@ from tempfile import TemporaryDirectory, TemporaryFile
 from time import monotonic, sleep
 import unittest
 
+import duckdb
 import httpx2
 
 from .test_archive_process import API, ENGINE, OWNER, write_manifest
@@ -100,7 +101,8 @@ class StartupCheckpointProcessTest(unittest.TestCase):
         self.assertIn("result", data, data)
         return data["result"]["value"]["rows"]
 
-    def cycle(self, earlier, mode):
+    @contextmanager
+    def live_runtime(self):
         with ExitStack() as stack:
             owner = stack.enter_context(self.process(OWNER))
             self.wait((self.runtime / "peers.ready").is_file, owner, "Peer owner did not become ready")
@@ -109,23 +111,29 @@ class StartupCheckpointProcessTest(unittest.TestCase):
             self.wait(socket.is_socket, api, "API socket did not open")
             client = stack.enter_context(httpx2.Client(transport=httpx2.HTTPTransport(uds=str(socket)),
                                                        base_url="http://private", trust_env=False, timeout=5))
+            yield api, client
 
-            def settled():
-                health = client.get("/health").json()
-                return health if health.get("state") == "ready" and not health.get("archive_pending") else None
+    def settled(self, client):
+        health = client.get("/health").json()
+        return health.get("state") == "ready" and not health.get("archive_pending")
 
+    def cycle(self, earlier, mode, component_name=None):
+        with self.live_runtime() as (api, client):
             def startup():
                 events = self.query(client, STARTUP_RUNS)
                 return events if len(events) > len(earlier) else None
 
-            self.wait(settled, api, "API generation did not settle")
+            self.wait(lambda: self.settled(client), api, "API generation did not settle")
             events = self.wait(startup, api, "Startup result was not published")
             self.assertEqual(earlier, events[:-1])
             self.assertEqual(mode, events[-1][1], events)
             rows = self.query(client, TICKETS)
+            if component_name is not None:
+                names = self.query(client, "SELECT json_extract_string(fields, '$.name') FROM project_structure WHERE component_id = 'C2'")
+                self.assertEqual([[component_name]], names)
         for name in ("peers.ready", "api.sock", "db.sock", "jobs.sock"):
             self.assertFalse((self.runtime / name).exists(), name)
-        database, = (self.root / ".anechoic_runtime/workbench/beta").glob("*.duckdb")
+        database, = (self.root / ".anechoic_runtime/iwe_console/beta").glob("*.duckdb")
         stat = database.stat()
         return events, rows, (database, stat.st_dev, stat.st_ino)
 
@@ -156,3 +164,70 @@ class StartupCheckpointProcessTest(unittest.TestCase):
         self.assertEqual([["AN-T-1", edited.name, "Updated"], ["AN-T-100@1", history.name, "Offline archive"],
                           ["AN-T-2", destination.name, "Original"], ["AN-T-4", added.name, "Added"],
                           ["AN-T-99@1", archived.name, "History"]], rows)
+
+    def test_live_watcher_recovers_missed_edits_without_full_rebuild(self):
+        edited = write_ticket(self.tickets, 1, "Before coverage gap")
+        deleted = write_ticket(self.tickets, 2, "Before removal")
+        archive = write_ticket(self.archive, 99, "Before history edit", archived=True)
+        control = self.tickets.parent.parent
+        detached = self.runtime / "detached"
+        with self.live_runtime() as (api, client):
+            self.wait(lambda: self.settled(client), api, "API generation did not settle")
+            control.rename(detached)
+            try:
+                self.wait(lambda: client.get("/health").json().get("state") != "ready", api,
+                          "Watcher did not lose coverage")
+                for path, before, after in ((edited, "Before coverage gap", "After coverage gap"),
+                                            (archive, "Before history edit", "After history edit")):
+                    carrier = detached / path.relative_to(control)
+                    carrier.write_text(carrier.read_text().replace(before, after), encoding="utf-8")
+                (detached / deleted.relative_to(control)).unlink()
+                added = write_ticket(detached / self.tickets.relative_to(control), 3, "Added during coverage gap")
+            finally:
+                detached.rename(control)
+            expected = [["AN-T-1", edited.name, "After coverage gap"], ["AN-T-3", added.name, "Added during coverage gap"],
+                        ["AN-T-99@1", archive.name, "After history edit"]]
+
+            def reconciled():
+                if self.settled(client) and self.query(client, TICKETS) == expected:
+                    modes = self.query(client, "SELECT json_extract_string(detail, '$.kind') FROM flow_events "
+                                       "WHERE component = 'C68' AND name = 'generation_result' AND outcome = 'succeeded'")
+                    return modes if len(modes) > 1 else None
+                return None
+
+            modes = self.wait(reconciled, api, "Projection did not reconcile missed live and Archive edits")
+            if ["native_delta"] not in modes:
+                self.fail(self.query(client, "SELECT o.run_id, o.name, o.outcome, o.detail FROM flow_events o "
+                                     "WHERE o.component = 'C68' ORDER BY o.at"))
+            self.assertEqual(1, modes.count(["full"]), modes)
+
+    def test_offline_manifest_edit_compiles_without_rebuilding_atom_projection(self):
+        component = self.tickets.parents[1] / "AN-S-2-SPEC-COMPONENT_MANIFEST--declare-example.md"
+        body = (
+            "---\natom_family: SPEC\natom_id: AN-S-2\ncontainer: {component: C00}\ntier: 1\n"
+            "context: {template: component_manifest, lens: SPEC}\n"
+            "state: {status: active, version: 1, updated_at: '2026-11-19T00:00:00Z'}\n---\n"
+            "\n## Summary\n\nDeclare example\n\n## Purpose\n\nServe the example.\n\n"
+            "## Component Identity\n\n```python\nfrom anechoic.model import ComponentManifest\n"
+            "ComponentManifest(component_id='C2', name='Before edit')\n```\n"
+        )
+        component.write_text(body, encoding="utf-8")
+        ticket = write_ticket(self.tickets, 1, "Existing")
+        archive = write_ticket(self.archive, 99, "History", archived=True)
+        expected = [["AN-T-1", ticket.name, "Existing"], ["AN-T-99@1", archive.name, "History"]]
+        events, rows, database = self.cycle([], "full", "Before edit")
+        self.assertEqual(expected, rows)
+
+        component.write_text(body.replace("Before edit", "After edit"), encoding="utf-8")
+        events, rows, retained = self.cycle(events, "compiler_refresh", "After edit")
+        self.assertEqual(database, retained)
+        self.assertEqual(expected, rows)
+
+        with duckdb.connect(str(database[0])) as connection:
+            connection.execute("ALTER TABLE mrt_atoms ADD COLUMN obsolete VARCHAR")
+        component.write_text(body.replace("Before edit", "After schema change"), encoding="utf-8")
+        _, rows, _ = self.cycle(events, "full", "After schema change")
+        self.assertEqual(expected, rows)
+        with duckdb.connect(str(database[0]), read_only=True) as connection:
+            columns = {row[1] for row in connection.execute("PRAGMA table_info('mrt_atoms')").fetchall()}
+        self.assertNotIn("obsolete", columns)

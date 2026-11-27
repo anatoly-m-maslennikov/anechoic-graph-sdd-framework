@@ -2,16 +2,24 @@
 import http.client
 import json
 import os
+from pathlib import Path
 import subprocess
 import sys
+import tempfile
 from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
 from .abort import WorkerAborted
-from .generation import MAX_WARM_DELTA_PATHS, parse_worker_result, read_accepted_model, worker_failure, worker_request
+from .archive_jobs import ArchiveCoverageLost, ArchiveInputsChanged, _ARCHIVE_FENCE_MESSAGE
+from .generation import (
+    MAX_WARM_DELTA_PATHS, DeltaRequiresReconciliation, parse_worker_result, read_accepted_model,
+    read_reuse, worker_failure, worker_request,
+)
 from .jobs import ENGINE, operation_timeout
+from .startup_checkpoint import compatible_checkpoint
 from .warm_worker import validated_result as warm_result
+from .worker_reply import parse_archive_result, parse_worker_data
 from .warm_worker_process import process_environment
 from .watcher_diagnostics import FOREGROUND_FENCE_MESSAGE, emit_record, report_graph_restart
 
@@ -111,22 +119,40 @@ class ForegroundInputsChanged(ValueError):
 
 
 class GenerationWorker:
+    def _flow_effect(self, name, **values):
+        if self.flow is not None:
+            targets = {"worker_request": "C69", "worker_started": "C69",
+                       "generation_admission": "C71", "generation_reuse_check": "C71",
+                       "generation_reuse_write": "C68.generation_reuse"}
+            self.flow.add("effect", name, target=targets[name], **values)
+
     def health(self):
         status = super().health()
         status["watcher_active"] = (self.thread is not None and self.thread.is_alive()
                                     and self.watcher.capture_epoch() is not None)
         return status
 
-    def _capture_generation(self, directory, reuse, paths, *, explicit, reconciliation, strict):
+    def _recover_watcher_coverage(self, target):
+        if self.watcher.capture_epoch() is None:
+            raise ForegroundCoverageLost(FOREGROUND_FENCE_MESSAGE)
+        checkpoint = read_reuse(self.database_socket, self.instance_id)
+        reuse = checkpoint.model_dump(exclude_unset=True) if checkpoint is not None else None
+        self.graph_queued = True
+        try:
+            return self._attempt_generation(target, reuse, recover_coverage=True)
+        except DeltaRequiresReconciliation:
+            return self._attempt_generation(target, None, recover_coverage=True)
+
+    def _capture_generation(self, directory, reuse, paths, *, explicit, reconciliation, strict, recover_coverage, force_model=False):
         replay = self.thread is not None and not (explicit or strict)
-        options, epoch = self._generation_options(reuse, paths, explicit, reconciliation, strict, replay)
+        options, epoch = self._generation_options(reuse, paths, explicit, reconciliation, strict, replay, recover_coverage)
         if self.startup_capture and not options.get("incremental") and not reconciliation:
             reuse = None
         timeout = operation_timeout(45)
         run_id = self.active.run_id if self.active else None
         queued = self.watcher.foreground_events() if replay and epoch is not None else None
         try:
-            result = self._run_worker(directory, reuse, paths, **options)
+            result = self._run_worker(directory, reuse, paths, force_model=force_model, **options)
         except WorkerAborted:
             raise
         except GENERATION_ERRORS as error:
@@ -145,7 +171,13 @@ class GenerationWorker:
                 raise error(FOREGROUND_FENCE_MESSAGE)
         return result, reuse, options
 
-    def _generation_options(self, reuse, paths, explicit, reconciliation, strict, replay):
+    def _generation_options(self, reuse, paths, explicit, reconciliation, strict, replay, recover_coverage):
+        if recover_coverage:
+            epoch = self.watcher.capture_epoch(trace=True)
+            if epoch is None:
+                raise ForegroundCoverageLost(FOREGROUND_FENCE_MESSAGE)
+            return {"foreground": True, "watcher_guarded": True, "defer_graph": True,
+                    "incremental": not self.skip_archives and compatible_checkpoint(reuse)}, epoch
         options, epoch = (({}, None) if reconciliation and not self.skip_archives else
                           self._capture_options(reuse, paths, explicit=explicit))
         if strict:
@@ -153,7 +185,7 @@ class GenerationWorker:
             if options:
                 options["watcher_guarded"] = False
                 options.pop("incremental", None)
-        elif replay and epoch is None and paths is not None:
+        elif replay and epoch is None and (paths is not None or self.watcher.capture_epoch() is None):
             raise ForegroundCoverageLost(FOREGROUND_FENCE_MESSAGE)
         if not explicit and (self.graph_queued or self.graph_thread is not None):
             options["defer_graph"] = True
@@ -161,7 +193,7 @@ class GenerationWorker:
             options["replay_graph"] = True
         return options, epoch
 
-    def _run_worker(self, directory, reuse, paths, **options):
+    def _run_worker(self, directory, reuse, paths, *, force_model=False, **options):
         if self.worker_socket and paths is not None and len(paths) <= MAX_WARM_DELTA_PATHS:
             try:
                 result = self._run_warm_worker(reuse, paths)
@@ -174,7 +206,12 @@ class GenerationWorker:
                 return result
         request = worker_request(self.binding, self.database_socket, self.instance_id, reuse, paths)
         request["batch_full"] = True
-        request["model_source"] = {"accepted_model": read_accepted_model(self.database_socket, self.instance_id)}
+        request["model_source"] = {
+            "accepted_model": read_accepted_model(self.database_socket, self.instance_id),
+            "spec_database": {"socket": str(self.database_socket), "instance_id": self.instance_id},
+        }
+        if force_model:
+            request["model_source"]["force_rebuild"] = True
         request.update(options)
         stdout = self._communicate_worker(directory, request)
         result = parse_worker_result(stdout, reuse, paths, request.get("structure"),
@@ -232,6 +269,48 @@ class GenerationWorker:
                 self._flow_effect("worker_started", outcome="succeeded")
             setattr(self, slot, process)
         return process
+
+    def _archive_snapshot(self, endpoints, checkpoint=None, deferred=None):
+        epoch = self.watcher.capture_epoch(archive=True, trace=True)
+        roots = self.watcher.archive_roots()
+        if epoch is None:
+            raise ArchiveCoverageLost("Archive watcher coverage is unavailable")
+        temporary = tempfile.TemporaryDirectory(prefix="anechoic-archive-")
+        try:
+            request = {"binding": self.binding, "reuse": checkpoint, "watcher_guarded": True,
+                       "archive": {"roots": roots, "endpoints": endpoints}}
+            if deferred is not None:
+                request["archive"]["seed"] = {key: deferred[key] for key in ("snapshot", "carrier_hashes")}
+                request["batch_full"] = True
+            result = self._run_archive_worker(str(Path(temporary.name).resolve()), request)
+            stable = self.watcher.capture_fence(epoch, archive=True, timeout=None, run_id=(self.archive_run.run_id if self.archive_run else None))
+            if stable is None:
+                raise ArchiveCoverageLost(_ARCHIVE_FENCE_MESSAGE)
+            if not stable or roots != self.watcher.archive_roots():
+                raise ArchiveInputsChanged("Archived Atom paths changed during capture")
+            if "batch_artifact" in result:
+                result["_archive_temp"] = temporary
+                temporary = None
+            return endpoints, result
+        finally:
+            if temporary is not None:
+                temporary.cleanup()
+
+    def _run_archive_worker(self, directory, request):
+        checkpoint = request["reuse"]
+        if checkpoint is not None:
+            incremental = {key: value for key, value in request.items() if key != "batch_full"}
+            incremental["incremental"] = True
+            incremental["archive"] = {key: value for key, value in request["archive"].items() if key != "seed"}
+            stdout = self._communicate_worker(directory, incremental, archive=True)
+            decoded = json.loads(stdout)
+            if decoded != {"incompatible": True}:
+                result = parse_worker_data(decoded, checkpoint, None)
+                if "paths" not in result and result.get("unchanged") is not True:
+                    raise ValueError("Worker returned invalid incremental Archive result")
+                return result
+        result = parse_archive_result(self._communicate_worker(directory, request | {"reuse": None}, archive=True))
+        return result | {"replace": True} if checkpoint is not None else result
 
     def _run_warm_worker(self, reuse, paths):
         try:

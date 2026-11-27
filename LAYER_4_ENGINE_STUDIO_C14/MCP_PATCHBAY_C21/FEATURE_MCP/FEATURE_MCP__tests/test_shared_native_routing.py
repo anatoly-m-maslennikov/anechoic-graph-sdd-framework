@@ -92,6 +92,7 @@ class SharedNativeRoutingTests(unittest.IsolatedAsyncioTestCase):
             self.assertIn("project_root", tools["query_schema"].input_schema["required"])
             self.assertIn("atom_lifecycle_update", tools)
             self.assertNotIn("workbench_archive_load", tools)
+            await self._assert_missing_and_outside_roots(session)
             retired = await session.call_tool("query_schema", {"project_root": str(self.legacy)})
             self.assertTrue(retired.is_error)
             self.assertEqual(["invalid_project_root"], retired.structured_content["diagnostics"])
@@ -111,7 +112,8 @@ class SharedNativeRoutingTests(unittest.IsolatedAsyncioTestCase):
             self.assertTrue(all(not response.is_error for response in responses), responses)
             self.assertEqual(["alpha", "beta"], [r.structured_content["project_name"] for r in responses])
             for root in self.projects_by_name.values():
-                self.assertEqual(1, len(list((root / ".anechoic_runtime/workbench/workspaces").glob("*.json"))))
+                workspaces = root / ".anechoic_runtime/iwe_console/workspaces"
+                self.assertEqual(1, len(list(workspaces.glob("*.json"))))
             created = await session.call_tool("view_create", {
                 "project_root": str(self.projects_by_name["alpha"]), "workspace_id": "same-id",
             })
@@ -122,8 +124,36 @@ class SharedNativeRoutingTests(unittest.IsolatedAsyncioTestCase):
                 }) for name in ("alpha", "beta")
             ))
             self.assertEqual([2, 1], [len(r.structured_content["views"]) for r in states])
+            await self._assert_manifest_drift_refused(session, coordinator, owners)
         for pid in [coordinator, *owners.values()]:
             await self._assert_exited(pid)
+
+    async def _assert_missing_and_outside_roots(self, session):
+        common = {}
+        missing = await session.call_tool("query_schema", common)
+        outside = await session.call_tool(
+            "query_schema",
+            {**common, "project_root": str(self.root)},
+        )
+        self.assertTrue(missing.is_error)
+        self.assertTrue(outside.is_error)
+        self.assertIn("project_root", str(missing.structured_content).lower())
+        self.assertIn("outside", str(outside.structured_content).lower())
+
+    async def _assert_manifest_drift_refused(self, session, coordinator, owners):
+        root = self.projects_by_name["alpha"]
+        manifest = root / ".anechoic_alpha/ALPHA-S-001-PROJECT_MANIFEST--declare.md"
+        manifest.write_text(manifest.read_text(encoding="utf-8") + "\n", encoding="utf-8")
+        before = {path: path.read_bytes() for path in manifest.parent.rglob("*") if path.is_file()}
+        reply = await session.call_tool("atom_lifecycle_create_draft", {
+            "project_root": str(root), "newAtom": {
+                "template": "task", "label": "Task", "container": {"component": "C00"},
+                "body": "## Summary\n\nMust not be written.\n",
+            },
+        })
+        self.assertEqual("project_manifest_reload_required", reply.structured_content["errors"][0]["code"])
+        self.assertEqual(before, {path: path.read_bytes() for path in manifest.parent.rglob("*") if path.is_file()})
+        self.assertEqual(owners[str(root)], (await self._backend_children(coordinator))[str(root)])
 
     async def _backend_children(self, coordinator):
         status = await self.app.gateway.status()
@@ -177,27 +207,6 @@ class SharedNativeRoutingTests(unittest.IsolatedAsyncioTestCase):
         await self._assert_exited(current)
         await self._assert_exited(coordinator)
 
-    async def test_cached_backend_refuses_lifecycle_after_manifest_drift(self):
-        root = self.projects_by_name["alpha"]
-        async with self._session() as session:
-            ready = await session.call_tool("query_schema", {"project_root": str(root)})
-            self.assertFalse(ready.is_error, ready.structured_content)
-            coordinator = (await self.app.gateway.status())["pid"]
-            self._expected_roots = (root,)
-            owner = (await self._backend_children(coordinator))[str(root)]
-            manifest = root / ".anechoic_alpha/ALPHA-S-001-PROJECT_MANIFEST--declare.md"
-            manifest.write_text(manifest.read_text(encoding="utf-8") + "\n", encoding="utf-8")
-            before = {path: path.read_bytes() for path in manifest.parent.rglob("*") if path.is_file()}
-            reply = await session.call_tool("atom_lifecycle_create_draft", {
-                "project_root": str(root), "newAtom": {
-                    "template": "task", "label": "Task", "container": {"component": "C00"},
-                    "body": "## Summary\n\nMust not be written.\n",
-                },
-            })
-            self.assertEqual("project_manifest_reload_required", reply.structured_content["errors"][0]["code"])
-            self.assertEqual(before, {path: path.read_bytes() for path in manifest.parent.rglob("*") if path.is_file()})
-            self.assertEqual(owner, (await self._backend_children(coordinator))[str(root)])
-
     async def test_single_project_mcp_and_workbench_schema(self):
         root = self.projects_by_name["alpha"]
         self.config_path.write_text(
@@ -223,19 +232,6 @@ class SharedNativeRoutingTests(unittest.IsolatedAsyncioTestCase):
             )
             self.assertTrue(outside.is_error)
             self.assertEqual(["outside_project_root"], outside.structured_content["diagnostics"])
-
-    async def test_frontdoor_refuses_missing_and_outside_project_root(self):
-        async with self._session() as session:
-            common = {}
-            missing = await session.call_tool("query_schema", common)
-            outside = await session.call_tool(
-                "query_schema",
-                {**common, "project_root": str(self.root)},
-            )
-            self.assertTrue(missing.is_error)
-            self.assertTrue(outside.is_error)
-            self.assertIn("project_root", str(missing.structured_content).lower())
-            self.assertIn("outside", str(outside.structured_content).lower())
 
 
 if __name__ == "__main__":  # pragma: no cover

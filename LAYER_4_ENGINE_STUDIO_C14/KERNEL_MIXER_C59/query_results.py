@@ -125,7 +125,7 @@ class QueryResults:
             shaped_rows = [[result_value(value) for value in row[1:len(result.columns) + 1]] for row in rows]
         except ValueError as exc:
             print(f"query result delivery failed: {exc}", file=sys.stderr)
-            raise ValueError(f"query result delivery failed: {exc}") from exc
+            raise QueryExecutionError(f"query result delivery failed: {exc}") from exc
         except Exception as exc:
             self._available = False
             print(f"query store unavailable: {exc}", file=sys.stderr)
@@ -172,7 +172,7 @@ class QueryResults:
                 }
             try:
                 return self._read_page(query_id, result, 0, page_size, Grid((), (), None))
-            except ValueError:
+            except (QueryExecutionError, ValueError):
                 self.drop(query_id)
                 raise
 

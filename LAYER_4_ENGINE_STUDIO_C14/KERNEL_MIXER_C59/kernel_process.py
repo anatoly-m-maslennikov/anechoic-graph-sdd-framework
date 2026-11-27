@@ -65,7 +65,8 @@ def _with_storage_defaults(selection, workbench, journal):
     parameters = deepcopy(selection.parameters)
     runtime = parameters.setdefault("runtime", {})
     if isinstance(runtime, dict):
-        for name, storage in (("workbench", workbench), ("journal", journal)):
+        console = "iwe_console" if "iwe_console" in runtime or "workbench" not in runtime else "workbench"
+        for name, storage in ((console, workbench), ("journal", journal)):
             if storage is None:
                 continue
             section = runtime.setdefault(name, {})
@@ -84,6 +85,7 @@ def _inputs(model):
         ticket_labels=model.ticket_labels,
         validate_project_spec=model.validate_project_spec,
         require_manifest_summary=model.declares_summary("Project Manifest"),
+        status_domains=model.status_domains,
     )
 
 

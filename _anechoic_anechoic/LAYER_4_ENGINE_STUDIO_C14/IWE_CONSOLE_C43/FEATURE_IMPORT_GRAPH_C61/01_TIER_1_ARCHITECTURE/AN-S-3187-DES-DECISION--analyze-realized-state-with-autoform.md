@@ -8,16 +8,12 @@ context:
   template: DECISION
   lens: DES
 relations:
-  IS_REFERENCE:
-  - AN-S-2780@25
-  - AN-S-3083@4
-  - AN-T-2952
   IS_SOLUTION_FOR:
   - AN-S-3182@11
 state:
-  status: active
+  status: "active"
   version: 1
-  updated_at: '2026-11-22T23:52:17.262612+00:00'
+  updated_at: "2026-11-26T16:43:14.621274+00:00"
 ---
 
 ## Summary

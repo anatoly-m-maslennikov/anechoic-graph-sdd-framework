@@ -14,11 +14,11 @@ def database():
     db = duckdb.connect()
     db.execute('CREATE TABLE ops_ingestion_issues(source VARCHAR, atom_ref VARCHAR, relative_path VARCHAR)')
     db.execute('CREATE TABLE generation(id VARCHAR, model VARCHAR, structure VARCHAR)')
+    db.execute('CREATE VIEW int_lifecycle_generation AS SELECT * FROM generation')
     db.execute('INSERT INTO generation VALUES (?, ?, ?)', ['g', json.dumps({'ticket_labels': ['TASK']}), '{}'])
     db.execute('CREATE TABLE atoms(reference VARCHAR, relative_path VARCHAR, filename VARCHAR, status_group VARCHAR, "header.state.version" BIGINT, "header.state.status" VARCHAR)')
     db.execute('CREATE TABLE native_references(reference VARCHAR, exact_ref VARCHAR)')
     db.execute('CREATE TABLE relations(source_kind VARCHAR, source_ref VARCHAR, target_kind VARCHAR, target_ref VARCHAR, relation_type VARCHAR, derived BOOLEAN)')
-    db.execute('CREATE TABLE generation_carriers(hashes VARCHAR)')
     db.execute('CREATE TABLE lifecycle_lenses(reference VARCHAR, lens VARCHAR)')
     atoms = [('AN-T-1', 'AN-T-1@1', 'Current', 1, 'active'),
              ('AN-T-1@2-draft', 'AN-T-1@2-draft', 'Draft', 2, 'draft'),
@@ -28,7 +28,6 @@ def database():
     for ref, exact, group, version, status in atoms:
         db.execute('INSERT INTO atoms VALUES (?, ?, ?, ?, ?, ?)', [ref, '.', ref + '.md', group, version, status])
         db.execute('INSERT INTO native_references VALUES (?, ?)', [ref, exact])
-    db.execute('INSERT INTO generation_carriers VALUES (?)', [json.dumps({ref+'.md': 'a'*64 for ref, *_ in atoms})])
     for source, target in [('AN-T-1', 'AN-T-2'), ('AN-T-2', 'AN-T-3'), ('AN-T-3', 'C00')]:
         db.execute('INSERT INTO relations VALUES (?, ?, ?, ?, ?, false)', ['Atom', source, 'Component' if target == 'C00' else 'Atom', target, 'CONTAINED_BY'])
     db.execute("INSERT INTO lifecycle_lenses VALUES ('AN-T-1', 'DES'), ('AN-T-2', 'DES')")
@@ -86,7 +85,9 @@ class LifecycleQueryTests(unittest.TestCase):
     def test_model_omits_declarations_and_duplicate_labels(self):
         db = database()
         db.execute("UPDATE generation SET model=?", [json.dumps({"declarations": [1], "ticket_labels": ["TASK"], "other": 2})])
-        sql = lifecycle_sql("AN", "atom_lifecycle_create_draft", {"newAtom": {"template": "axiom"}})
+        sql = lifecycle_sql("AN", "atom_lifecycle_create_draft", {
+            "newAtom": {"template": "project_rule", "container": {"component": "C00"}},
+        })
         row = db.execute(sql).fetchone()
         self.assertEqual(json.loads(row[2]), {"other": 2})
         self.assertEqual(json.loads(row[3]), ["TASK"])
@@ -124,7 +125,7 @@ class LifecycleQueryTests(unittest.TestCase):
         child = next(c for c in json.loads(row[6]) if c['ref'] == 'AN-T-4' and c['owner_ref'] == 'AN-T-1')
         self.assertTrue(row[7])
         self.assertFalse(child['read'])
-        self.assertIsNone(child['_source_sha256'])
+        self.assertNotIn('_source_sha256', child)
         db.execute("UPDATE relations SET relation_type='IS_CONTAINED_BY' WHERE source_ref='AN-T-4'")
         row = db.execute(lifecycle_sql('AN', 'atom_lifecycle_update', {'target': {'ref_id': 'AN-T-1'}})).fetchone()
         child = next(c for c in json.loads(row[6]) if c['ref'] == 'AN-T-4' and c['owner_ref'] == 'AN-T-1')

@@ -15,7 +15,7 @@ from MCP_PATCHBAY_C21.FEATURE_MCP.runtime_request_context import current_request
 from MCP_PATCHBAY_C21.FEATURE_MCP.runtime_stack import beta_runtime_arguments, runtime_stack
 
 
-_MODULE = "IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.backend_process"
+_MODULE = "IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.backend_process"
 _STARTUP_SECONDS = 180
 _DEV_LOCAL_STARTUP_SECONDS = 420
 

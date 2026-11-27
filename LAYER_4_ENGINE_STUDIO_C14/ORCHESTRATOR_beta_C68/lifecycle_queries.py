@@ -4,8 +4,6 @@ import json
 from pathlib import PurePosixPath
 import re
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model_ontology_path__pub import component_path, is_ontology_model_source
-
 from .jobs import UnixConnection
 
 
@@ -61,7 +59,7 @@ _SQL = '''WITH RECURSIVE
       coalesce((SELECT arg_max(number, (length(number), number)) FROM numbers WHERE family='T' AND number<>''), '0'),
       coalesce((SELECT arg_max(number, (length(number), number)) FROM numbers WHERE family='S' AND number<>''), '0'),
       coalesce((SELECT to_json(list(struct_pack(ref := ref, _exact_ref := exact_ref, source_path := path,
-        _source_sha256 := CASE WHEN should_read THEN json_extract_string((SELECT hashes FROM main.generation_carriers), '/' || replace(replace(path, '~', '~0'), '/', '~1')) ELSE NULL END, version := version, status := status, status_group := status_group,
+        version := version, status := status, status_group := status_group,
         id := id, owner_kind := owner_kind, owner_ref := owner_ref, read := should_read)))::VARCHAR
         FROM selected), '[]'),
       EXISTS(SELECT 1 FROM main.relations WHERE relation_type IN ('IS_CONTAINED_BY', 'CONTAINED_BY') AND NOT derived
@@ -70,7 +68,7 @@ _SQL = '''WITH RECURSIVE
         WHERE parent.id={target_lit} AND (parent.ref={exact_lit} OR parent.status_group='Current')), 
       coalesce((SELECT to_json(list(DISTINCT lens))::VARCHAR FROM main.lifecycle_lenses WHERE lens IS NOT NULL), '[]'),
       {archive_version} AS max_archived_version
-    FROM main.generation g'''
+    FROM main.int_lifecycle_generation g'''
 
 def _literal(value):
     return "'" + value.replace("'", "''") + "'"
@@ -101,7 +99,9 @@ def lifecycle_sql(prefix, name, arguments, *, archive_versions=False):
     sources = "('AN-S-1928','AN-S-1834','AN-S-1831')" if name == 'atom_lifecycle_change_status' else "('')"
     numbers = "TRUE" if is_create else "FALSE"
     template = new.get('template') if isinstance(new, dict) else None
-    needs_model = (is_create and isinstance(template, str) and template in {'project_contract', 'axiom', 'applicable_principle'}
+    needs_model = (is_create and name == 'atom_lifecycle_create_draft'
+                   and isinstance(template, str) and template not in {'task', 'epic'}
+                   and container == {'component': 'C00'}
                    or '-S-' in target_id and name in {'atom_lifecycle_promote_draft', 'atom_lifecycle_change_status'})
     model_sql = "json_merge_patch(g.model::JSON, '{\"declarations\":null,\"ticket_labels\":null}')::VARCHAR" if needs_model else 'NULL'
     archive_version = (f"COALESCE((SELECT max_version FROM main.ops_archive_versions WHERE atom_id={target_lit}), 0)::VARCHAR"
@@ -120,7 +120,7 @@ def ticket_allocation(socket_path, instance_id, base_generation, prefix, *, arch
     )
     SELECT id, coalesce(nullif((SELECT arg_max(number, (length(number), number)) FROM numbers), ''), '0'),
         json_extract(model, '$.ticket_labels')::VARCHAR
-    FROM main.generation"""
+    FROM main.int_lifecycle_generation"""
     rows = _query_rows(socket_path, instance_id, sql, "Ticket allocation")
     if (not isinstance(rows, list) or len(rows) != 1 or not isinstance(rows[0], list)
             or len(rows[0]) != 3 or rows[0][0] != base_generation):
@@ -186,7 +186,13 @@ def requires_project_capture(job, context, control):
         }
     if operation not in {"atom_lifecycle_promote_draft", "atom_lifecycle_change_status", "atom_lifecycle_archive"}:
         return False
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+        is_ontology_model_source, ontology_component_path,
+    )
+
     atom_id = ref.partition("@")[0]
+    archiving_spec = "-S-" in atom_id and (operation == "atom_lifecycle_archive"
+        or (operation == "atom_lifecycle_change_status" and job.arguments.get("targetStatus") == "archived"))
     control_path = PurePosixPath(control)
     custom = {PurePosixPath(directory, "CUSTOM_MODEL")
               for directory in ("__PROJECT_CONFIG", "002_PROJECT_CONFIG")}
@@ -197,8 +203,9 @@ def requires_project_capture(job, context, control):
             path = PurePosixPath(carrier["source_path"]).relative_to(control_path)
         except ValueError:
             continue
-        active_model = is_ontology_model_source(path) or path.parent in custom
-        scope = component_path(path, "C9")
+        plain_des_archive = archiving_spec and path.parent.name == "_DES" and path.name.startswith(f"{atom_id}-DES--")
+        active_model = (not plain_des_archive and is_ontology_model_source(path)) or path.parent in custom
+        scope = ontology_component_path(path)
         if ((carrier["status"] == "active" and active_model)
                 or (job.arguments.get("targetStatus") == "active"
                     and (scope is not None or any(path.is_relative_to(root) for root in custom)))):

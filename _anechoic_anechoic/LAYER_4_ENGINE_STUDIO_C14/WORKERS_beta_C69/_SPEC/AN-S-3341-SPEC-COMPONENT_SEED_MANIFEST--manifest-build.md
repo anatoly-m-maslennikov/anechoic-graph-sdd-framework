@@ -42,7 +42,7 @@ declare_entity(
                 'client': {'manifest_compiler': {
                     'transport': 'cli',
                     'runner': 'managed_python',
-                    'module': 'FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.manifest_compiler_CS1.compiler',
+                    'module': 'FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.compile_project__pub',
                 }},
             },
             'state': {'reads': ['pinned Project Manifest and active declarations'], 'writes': ['staged generation']},

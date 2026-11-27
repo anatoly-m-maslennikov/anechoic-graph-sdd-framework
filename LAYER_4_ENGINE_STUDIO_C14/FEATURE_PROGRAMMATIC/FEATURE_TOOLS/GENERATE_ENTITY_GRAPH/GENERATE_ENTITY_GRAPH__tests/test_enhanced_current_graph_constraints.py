@@ -12,47 +12,30 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GR
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import read_current_model_carriers
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import compose_enhanced_current_graph
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import render_model
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__tests.enhanced_graph_test_support import carrier, property_population_records, fenced_scope_records
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__tests.enhanced_graph_test_support import carrier
 
 
 class EnhancedCurrentGraphTests(unittest.TestCase):
-    def test_scoped_claims_are_preserved_without_unqualified_bindings(self):
-        records, diagnostics = extract_claim_constraints(carrier("CA-R-1001", {}, """## Claim
-```CFEL
-# model
-Atom/(.Header.Role: Plan);
-Atom/(.Header.Role: Plan).Header.Priority: [string]{:0..1};
-Atom/(.Header.Role: Plan).Header.Priority.*[]{:0};
-Atom/(.Header.Role: Plan).Header.Priority: High;
-# instances
-Atom/(.Header.Role: Plan)//$atom;
-Atom/(.Header.Role: )//$bad;
-IF (A) THEN (B)
-```
-"""))
-        self.assertEqual(["subject_expression", "property_constraint", "property_constraint", "allowed_literal", "instance_binding"],
-                         [row["kind"] for row in records])
-        self.assertTrue(all(".Header.Role: Plan" in row.get("property_selector", row.get("kind_selector", row.get("expression", ""))) for row in records))
-        self.assertEqual("atom", records[-1]["variable"])
-        self.assertEqual(["Atom/(.Header.Role: )//$bad", "IF (A) THEN (B)"], [row["expression"] for row in diagnostics])
-
-    def test_grouped_constraints_keep_declaration_model_and_instance_evidence_separate(self) -> None:
+    def test_grouped_constraints_keep_declaration_model_and_instance_evidence_separate(self):
         block = """# model
-Node.Name: [string]{:1};
-Node ((CONTAINS)) Node;
+property_rule(address='Node.Name', value_format='string', values='1')
+relation(source='Node', name='CONTAINS', target='Node')
 # instances
-Node//$n;
-$n.Name: [integer]{:1};
-$n ((CONTAINS)) Node//$child
+property_rule(address='Node//$n.Name', value_format='integer', values='1')
+relation(source='Node//$n', name='CONTAINS', target='Node//$child')
 """
         graph, _ = compose_enhanced_current_graph([
             carrier("CA-R-1", {"active": "Node", "passive": []}, declaration=True),
-            carrier("CA-R-2", {"active": "Node.Name", "passive": []}, "## Claim\n### Formal Claim\n```CFEL\n" + block + "```\n", declaration=True),
-            carrier("CA-R-3", {"active": "Node.Name", "passive": []}, "## Claim\n```CFEL\n# model\nNode.Name: [integer]{:1};\n```\n", declaration=True, form="Rule"),
+            carrier("CA-R-2", {"active": "Node.Name", "passive": []}, "## Claim\n```python\n" + block + "```\n", declaration=True),
+            carrier("CA-R-3", {"active": "Node.Name", "passive": []}, """## Claim
+```python
+property_rule(address='Node.Name', value_format='integer', values='1')
+```
+""", declaration=True, form="Rule"),
         ])
         self.assertEqual(["string"], [row["value_format"] for row in graph["model_contracts"]])
         self.assertEqual(["integer"], [row["value_format"] for row in graph["source_constraints"]])
-        self.assertEqual({"instance_binding", "property_constraint", "relation_cardinality"},
+        self.assertEqual({"property_constraint", "relation_cardinality"},
                          {row["kind"] for row in graph["instance_constraints"]})
         self.assertTrue(any(row.get("relation") == "CONTAINS" for row in graph["constraints"]))
         self.assertIn(block, [row["block"] for row in graph["formal_claim_blocks"]])
@@ -62,12 +45,9 @@ $n ((CONTAINS)) Node//$child
         graph, _ = compose_enhanced_current_graph([
             carrier("CA-R-1001", {"active": "Node >| Independence", "passive": []}, declaration=True),
             carrier("CA-R-1002", {"active": "Node.Property: literal", "passive": []}, """## Claim
-```CFEL
-Node.Property{:0..1}: [string]{:1};
-Node.Content.**[string]{:0+}: [markdown]{:1};
-Journal// {:0+}((CONTAINS)) Event Record//;
-Node >| Independence == Primary Node;
-IF Node THEN Property
+```python
+property_rule(address='Node.Property', value_format='string', values='1')
+relation(source='Journal//', name='CONTAINS', target='Event Record//', source_count='0+')
 ```
 """, declaration=True),
             carrier("CA-R-1003", {"active": "Workflow//Daily", "passive": []}, declaration=True),
@@ -82,91 +62,23 @@ IF Node THEN Property
         self.assertEqual(["Node.Property"], [row["identity"] for row in graph["model"]["properties"]])
         self.assertEqual(["Workflow//Daily"], [row["identity"] for row in graph["model"]["instances"]])
         self.assertEqual([], graph["model"]["relations"])
-        self.assertEqual([], graph["model"]["classifications"])
+        self.assertEqual([], graph["model"]["axes"])
         self.assertEqual([], graph["model"]["allowed_literals"])
         self.assertIn("Node >| Independence", [
             row["expression"] for row in graph["model"]["selected_subject_expressions"]
         ])
         self.assertEqual(
-            {"property_constraint", "relation_cardinality", "classification_condition"},
+            {"property_constraint", "relation_cardinality"},
             {row["kind"] for row in graph["constraints"]},
         )
-        self.assertEqual(["cfel-expression-unsupported"], [row["code"] for row in graph["cfel_diagnostics"]])
+        self.assertEqual([], graph["claim_diagnostics"])
 
-    def test_property_value_count_is_per_property_and_recursive_name_count_stays_separate(self) -> None:
-        records, diagnostics = extract_claim_constraints(carrier("CA-R-1001", {}, """## Claim
-```CFEL
-Property: [string]{:1};
-Property.**[string]{:0+}: [markdown]{:1}
-```
-"""))
-        self.assertEqual([], diagnostics)
-        values = next(row for row in records if row["selection"] == "values")
-        recursive = next(row for row in records if row["selection"] == "recursive_dependents")
-        self.assertEqual("Property", values["property_selector"])
-        self.assertIsNone(values["occurrence_cardinality"])
-        self.assertEqual({"minimum": 1, "maximum": 1}, values["value_cardinality"])
-        self.assertEqual({"minimum": 0, "maximum": None}, recursive["occurrence_cardinality"])
-        self.assertEqual({"minimum": 1, "maximum": 1}, recursive["value_cardinality"])
-
-    def test_named_property_occurrences_and_property_population_scopes(self) -> None:
-        records, diagnostics = property_population_records()
-        self.assertEqual([], diagnostics)
-        (bare, bare_explicit, implicit, explicit, bounded, impossible, required, inherited, inherited_explicit,
-         forbidden, scheme, scheme_children, inherited_scope, wildcard, prop_population, kind_population) = records
-        one = {"minimum": 1, "maximum": 1}
-        optional = {"minimum": 0, "maximum": 1}
-        self.assertEqual(optional, bare["effective_occurrence_cardinality"])
-        self.assertEqual(one, bare_explicit["effective_occurrence_cardinality"])
-        self.assertEqual(optional, implicit["effective_occurrence_cardinality"])
-        self.assertEqual(one, explicit["effective_occurrence_cardinality"])
-        self.assertEqual(optional, bounded["occurrence_cardinality"])
-        self.assertEqual(optional, bounded["effective_occurrence_cardinality"])
-        self.assertIsNone(impossible["effective_occurrence_cardinality"])
-        self.assertTrue(impossible["occurrence_conflict"])
-        self.assertEqual(one, required["effective_occurrence_cardinality"])
-        self.assertEqual(optional, inherited["value_cardinality"])
-        self.assertIsNone(inherited["value_format"])
-        self.assertEqual(optional, inherited_explicit["effective_occurrence_cardinality"])
-        self.assertIsNone(inherited_explicit["value_format"])
-        zero = {"minimum": 0, "maximum": 0}
-        self.assertEqual(zero, forbidden["effective_occurrence_cardinality"])
-        self.assertFalse(forbidden["occurrence_conflict"])
-        self.assertEqual(optional, scheme["effective_occurrence_cardinality"])
-        self.assertEqual(one, scheme["value_cardinality"])
-        self.assertEqual("markdown", scheme["value_format"])
-        self.assertEqual(zero, scheme_children["occurrence_cardinality"])
-        self.assertEqual(("recursive_dependent_values", "markdown", None),
-                         (inherited_scope["selection"], inherited_scope["value_format"], inherited_scope["value_cardinality"]))
-        self.assertNotIn("effective_occurrence_cardinality", inherited_scope)
-        self.assertEqual(optional, implicit["value_cardinality"])
-        self.assertEqual({"minimum": 0, "maximum": None}, wildcard["effective_occurrence_cardinality"])
-        self.assertEqual(("property_instance_population_constraint", "Node", "per_bearer_each_schema", one),
-                         (prop_population["kind"], prop_population["bearer_selector"], prop_population["scope"], prop_population["population_cardinality"]))
-        self.assertEqual(("instance_population_constraint", "PrimaryKind", "project", one),
-                         (kind_population["kind"], kind_population["kind_selector"], kind_population["scope"], kind_population["population_cardinality"]))
-
-    def test_bounded_extractor_preserves_structural_and_reverse_classification_notation(self) -> None:
-        records, diagnostics = extract_claim_constraints(carrier("CA-R-1001", {}, """## Claim
-```CFEL
-Workflow// {:1+}<+{:1} Step//;
-Independence |< Node == Primary Node
-```
-"""))
-        self.assertEqual([], diagnostics)
-        relation = next(row for row in records if row["kind"] == "relation_cardinality")
-        self.assertEqual("<+", relation["relation_notation"])
-        self.assertIsNone(relation["relation"])
-        classification = next(row for row in records if row["kind"] == "classification_condition")
-        self.assertEqual(("Node", "Independence", "Primary Node"),
-                         (classification["subject_selector"], classification["axis"], classification["value"]))
-
-    def test_model_renderer_keeps_constraints_and_unsupported_cfel_visible(self) -> None:
+    def test_model_renderer_keeps_constraint_and_unsupported_helper_visible(self):
         graph, provenance = compose_enhanced_current_graph([
             carrier("CA-R-1001", {"active": "Node.Property: literal", "passive": []}, """## Claim
-```CFEL
-Node.Property: [string]{:1};
-IF Node THEN Property
+```python
+property_rule(address='Node.Property', value_format='string', values='1')
+deliver(source='Atom//$atom', carrier='Carrier//$carrier')
 ```
 """, declaration=True),
         ])
@@ -175,44 +87,19 @@ IF Node THEN Property
             source_selection="Current Atoms in sources",
             projection_identity={"projection_id": "CA-PROJ-901", "named_selection": "Current Atoms"},
         )
-        for heading in ("## Model graph", "## Primary Nodes", "## Properties", "## Allowed literals", "## Constraints", "## Unsupported CFEL"):
+        for heading in ("## Model graph", "## Primary Nodes", "## Properties", "## Allowed literals",
+                        "## Constraints", "## Python Formal Claim diagnostics"):
             self.assertIn(heading, document)
-        self.assertIn("Node.Property: [string]{:1}", document)
-        self.assertIn("IF Node THEN Property", document)
-
-    def test_fail_closed_claim_scope_controls_selectors_and_markdown_fences(self) -> None:
-        records, diagnostics = fenced_scope_records()
-        property_constraint = next(row for row in records if row["kind"] == "property_constraint")
-        self.assertEqual("A", property_constraint["property_selector"])
-        self.assertEqual({"minimum": 1, "maximum": 1}, property_constraint["occurrence_cardinality"])
-        self.assertEqual({"minimum": 1, "maximum": 1}, property_constraint["value_cardinality"])
-        default_relation = next(row for row in records if row["kind"] == "relation_cardinality")
-        self.assertEqual(("Node", "*", None, "all_relations"), (
-            default_relation["source_selector"], default_relation["relation"],
-            default_relation["target_selector"], default_relation["selection"],
-        ))
-        grouped = next(row for row in records if row["kind"] == "classification_condition")
-        self.assertEqual(("Journal", "Container", "yes"),
-                         (grouped["subject_selector"], grouped["axis"], grouped["value"]))
-        self.assertFalse(any(row.get("property_selector") == "Node >| Container" for row in records))
-        self.assertFalse(any(row.get("relation") == "RUN" for row in records))
-        unsupported = [row["expression"] for row in diagnostics if row["code"] == "cfel-expression-unsupported"]
-        self.assertTrue(any(row["kind"] == "subject_expression" and row["expression"] == "Atom/(.Role := Requirement)/(.Form := Rule)" for row in records))
-        self.assertIn("IF(A) THEN(B ((RUN)) C)", unsupported)
-        self.assertTrue(any(row.get("kind") == "classification_allowed_value" and row.get("value") == "yes" for row in records))
-        self.assertNotIn("Node >| Container: yes", unsupported)
-        self.assertIn("Label: 'a;b'", unsupported)
-        self.assertIn("FENCED_LABELS(Atom.Content.Claim): [in (CFEL)]{:0..1}", unsupported)
-        self.assertIn("A + B{:1}", unsupported)
-        self.assertEqual(1, sum(row["code"] == "cfel-fence-outside-claim" for row in diagnostics))
+        self.assertIn("Node.Property:: [string]{::1}", document)
+        self.assertIn("Atom//$atom >> Carrier//$carrier", document)
 
     def test_reverse_named_relation_clause_normalizes_endpoints_and_written_counts(self) -> None:
         records, diagnostics = extract_claim_constraints(carrier("CA-R-1001", {}, """## Claim
-```CFEL
-Step {:1}((IS_CONTAINED_BY)){:2} Workflow;
-Workflow {:2}<((IS_CONTAINED_BY)){:1} Step;
+```python
+relation(source='Step', name='IS_CONTAINED_BY', target='Workflow', source_count='1', target_count='2')
+relation(source='Workflow', name='IS_CONTAINED_BY', target='Step', source_count='2', target_count='1', reverse=True)
 ```
-"""))
+""", declaration=True))
         self.assertEqual([], diagnostics)
         forward, reverse = records
         self.assertEqual(
@@ -245,7 +132,7 @@ Workflow {:2}<((IS_CONTAINED_BY)){:1} Step;
             write("CA-R-9001", "Requirement", "Declaration", "Node")
             write(
                 "CA-R-9002", "Requirement", "Declaration", "Projection.Form",
-                "## Claim\n```CFEL\nProjection.Form{:1}: [string]{:1};\nProjection.Form: Catalog;\nProjection.Form: Map\n```\n",
+                "## Claim\n```python\nfrom anechoic.formal_claims import declare_entity\ndeclare_entity(entity_name='Form', relation_name='IS_PROPERTY_OF', base_path='Projection', allowed_values=('Catalog', 'Map'), property_occurrence_cardinality=1, value_cardinality=1, value_format=str)\n```\n",
             )
             write("CA-R-9003", "Requirement", "Relation Definition", "Entity/CFEL <+ Relation//RUN")
             write("CA-R-9004", "Requirement", "Declaration", "Node/Continuant")
@@ -261,7 +148,7 @@ Workflow {:2}<((IS_CONTAINED_BY)){:1} Step;
         self.assertEqual(["Projection.Form"], [row["identity"] for row in graph["model"]["properties"]])
         self.assertEqual(["Relation//RUN"], [row["identity"] for row in graph["model"]["relations"]])
         self.assertEqual(
-            {"Projection.Form: Catalog", "Projection.Form: Map"},
+            {"Projection.Form :: Catalog", "Projection.Form :: Map"},
             {row["expression"] for row in graph["constraints"] if row["kind"] == "allowed_literal"},
         )
         self.assertNotIn("CA-R-9006", [row["source"]["atom_id"] for row in graph["model"]["selected_subject_expressions"]])

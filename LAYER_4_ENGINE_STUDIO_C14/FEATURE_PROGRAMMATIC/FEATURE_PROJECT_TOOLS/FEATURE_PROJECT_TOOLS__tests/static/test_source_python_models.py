@@ -95,7 +95,11 @@ custom = Namespace(id=1, title="A")
             "sample.py:4: types.SimpleNamespace record",
             "sample.py:5: types.SimpleNamespace record",
         ])
-        self.assertEqual(python_model_findings("sample__tests/fixture.py", source), [])
+        self.assertEqual(python_model_findings("sample__tests/fixture.py", source), [
+            "sample__tests/fixture.py:3: types.SimpleNamespace record",
+            "sample__tests/fixture.py:4: types.SimpleNamespace record",
+            "sample__tests/fixture.py:5: types.SimpleNamespace record",
+        ])
 
     def test_dictionary_records_and_ordinary_maps(self):
         source = '''from typing import Any as Value, Dict, Union

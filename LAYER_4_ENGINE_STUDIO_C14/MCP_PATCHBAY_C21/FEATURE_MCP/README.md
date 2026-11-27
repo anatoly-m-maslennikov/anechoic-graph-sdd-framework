@@ -29,7 +29,7 @@ inventory. Generate its checked-in `tool_registry.json` with:
 
 ```sh
 UV_PROJECT_ENVIRONMENT="$PWD/LAYER_4_ENGINE_STUDIO_C14/.venv-dev" PYTHONPATH="$PWD/LAYER_4_ENGINE_STUDIO_C14" uv run --no-compile-bytecode --project LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine --locked --no-sync --group dev python -B -P -m \
-  IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.generate_tool_registry \
+  IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.generate_tool_registry \
   --package-root .
 ```
 
@@ -62,13 +62,12 @@ default to CSV and `query_run` defaults to `json_matrix`. Pass
 
 Use `component` with `fetch_contracts`, `fetch_solutions`,
 `get_component_manifest`, or `get_component_purpose`. It accepts a
-Component ID or a case-insensitive Manifest name. Contracts and Solutions
-list Current Spec Atoms directly owned by the Component. Contracts include
-Tier 0 Atoms and Tier 1 `component_contract` Atoms. Solutions include other
-Tier 1 Atoms.
-Use the ID if names coincide. The `components` table exposes Manifest
-settings and source references for custom SQL. Purpose lookup returns the
-Component Manifest when it contains a `## Purpose` section with prose.
+Component ID or a case-insensitive Manifest name. Contract lookup returns the
+Component Manifest when it has a `## Component Contract` section. Solution
+lookup returns Active Tier 0 Solution Atoms owned by the Component. Use the ID if
+names coincide. The `components` table exposes Manifest settings and source
+references for custom SQL. Purpose lookup returns the Component Manifest when
+it contains a `## Purpose` section with prose.
 
 ## Planning Ticket lifecycle
 
@@ -84,18 +83,11 @@ terminal descendants retain their statuses.
 Use `list_tickets` with `label` to filter by navigation label. The result
 reports Label separately from Template.
 
-## Component Contract lifecycle
+## Component Contract coverage
 
-Use `atom_lifecycle_create_draft` with `newAtom.template` set to
-`component_contract`. Supply `newAtom.container.component` as the Component ID,
-`newAtom.lens` as an enabled Lens, and `newAtom.body` as Markdown with
-`## Summary` and a nonempty `## Guarantee`. The tool sets Tier 1.
-
-Use the exact Draft reference and version from `savedDraft` with
-`atom_lifecycle_promote_draft` to publish the Contract. Put its exact Current
-revision in the `implements` list of the owning Component Package's
-`<package-folder-name>__spec_bind.yaml`. Workbench reports coverage for each
-Current Contract in `package_audit.component_contracts`.
+Put the Component Manifest's exact Current revision in the `implements` list
+of the owning Component Package's `<package-folder-name>__spec_bind.yaml`.
+Workbench reports coverage in `package_audit.component_contracts`.
 
 ## Run
 

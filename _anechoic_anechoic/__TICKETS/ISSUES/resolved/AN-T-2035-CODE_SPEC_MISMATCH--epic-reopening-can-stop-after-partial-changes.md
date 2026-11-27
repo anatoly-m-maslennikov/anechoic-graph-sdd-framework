@@ -6,13 +6,10 @@ container:
 priority: 2
 context:
   template: Code-Spec Mismatch
-relations:
-  IS_REFERENCE:
-  - AN-S-3160@6
 state:
   status: resolved
   version: 1
-  updated_at: '2026-11-21T10:05:38.098003+00:00'
+  updated_at: '2026-11-26T16:39:56.839685+00:00'
 ---
 ## Summary
 

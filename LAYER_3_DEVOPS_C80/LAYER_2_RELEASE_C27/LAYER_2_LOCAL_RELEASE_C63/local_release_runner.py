@@ -19,7 +19,7 @@ from LAYER_1_RUNTIME_IMAGES_C81.LAYER_1_RUNTIME_IMAGES_C81__shared import (
 )  # noqa: E402
 from LAYER_1_RUNTIME_IMAGES_C81.LAYER_1_RUNTIME_IMAGES_C81__shared import read_release_selection  # noqa: E402
 from .local_release_gates import run_gate  # noqa: E402
-from .local_release_recovery import ResumableRelease
+from .local_release_recovery import FAST_LIMIT_SECONDS, FAST_TARGET_SECONDS, ResumableRelease
 from .local_release_state import failure_evidence, release_evidence
 from .local_release_previous import previous_container  # noqa: E402
 from . import local_release_package_phases as package_phases  # noqa: E402
@@ -52,13 +52,16 @@ def _failed_test_output(root: Path, run_id: str, result: Any, *, log_path: str |
 
 
 class LocalReleaseRun(ResumableRelease):
-    def __init__(self, project_root, run_id, runner, test_modules, image_mode, *, resume=False):
+    def __init__(self, project_root, run_id, runner, test_modules, image_mode, *, resume=False, functional_suite=None, started_at=None):
         self.project_root = project_root
         self.run_id = run_id
         self.runner = runner
         self.test_modules = test_modules
         self.requested_image_mode, self.image_mode = image_mode, image_mode if image_mode is not None else "refresh"
         self.resume = resume
+        self.release_started_at = started_at
+        self._checked_test_environment = False
+        self.requested_functional_suite = functional_suite
         self.journal = None
         self._setup_options()
         self._setup_state()
@@ -136,6 +139,8 @@ class LocalReleaseRun(ResumableRelease):
         self.failed_step = phase.replace(' ', '_')
         suite_phase = _TEST_GATES[phase]
         log_phase = "image" if suite_phase == "image-tests" else suite_phase
+        options = self._test_gate_options()
+        options["functional_fast"] = self.functional_suite == "fast"
         if suite_phase == "canary" and self.canary_endpoint is not None:
             _verify_package(self.package, self.package_identity)
             if "image" in self.test_log_paths:
@@ -147,8 +152,8 @@ class LocalReleaseRun(ResumableRelease):
                 self.root, suite_phase, self.candidate_image, self.package, self.package_identity,
                 self.selection, self.run_id, None if self.default_runner else self.runner,
                 self.test_log_paths, verify=_verify_package, target=_target, named_file=tempfile.NamedTemporaryFile,
-                logged_process=partial(run_logged_test_process, lock_fd=self.lock_fd),
-                failed_output=_failed_test_output, record_logs=self.journal.record_logs, **self._test_gate_options(),
+                logged_process=partial(run_logged_test_process, lock_fd=self.lock_fd, check_abort=self.journal.check_abort),
+                failed_output=_failed_test_output, record_logs=self.journal.record_logs, **options,
             )
         finally:
             self.test_log_path = self.test_log_paths.get(log_phase)
@@ -237,15 +242,22 @@ class LocalReleaseRun(ResumableRelease):
             raise LocalReleaseError("local-release-resume-endpoint-changed")
 
     def _receipt_evidence(self):
-        return release_evidence(self)
+        elapsed = self._release_seconds()
+        return release_evidence(self) | {
+            "functional_suite": self.functional_suite, "ready_seconds": elapsed,
+            "fast_target_met": elapsed <= FAST_TARGET_SECONDS if elapsed is not None and self.functional_suite == "fast" else None,
+            "fast_limit_met": elapsed <= FAST_LIMIT_SECONDS if elapsed is not None and self.functional_suite == "fast" else None,
+        }
 
     def _after_start(self):
         if not self.journal.data.get("production_tagged"):
             self.failed_step = 'promote_candidate_image'
             try:
                 self.manager.mark_production_image(self.candidate_image)
-            except (RuntimeError, OSError) as error:
-                raise LocalReleaseError('local-release-production-image-tag-failed') from error
+            except (RuntimeError, OSError):
+                self.cleanup_pending = True
+                self.cleanup_note += '\nProduction image tag failed. Cleanup deferred.'
+                return reports.record_receipt(self)
             self.journal.data["production_tagged"] = True
             self.journal.save()
         self.failed_step = 'final'
@@ -268,7 +280,6 @@ class LocalReleaseRun(ResumableRelease):
         if self.prior_image is not None and self.previous_image is None and (self.prior_image != self.candidate_image):
             self.cleanup.pending = True
             self.cleanup.notes.append('Prior image retained: readiness evidence unavailable.')
-        receipt = reports.receipt_path(self.root, self.run_id)
         try:
             removed, blocked = prune_temporary_files(self.root)
             self.cleanup.notes.append(f'Removed {removed} temporary paths older than 48 hours.')
@@ -280,8 +291,7 @@ class LocalReleaseRun(ResumableRelease):
             self.cleanup.notes.append('Temporary file cleanup failed.')
         self.cleanup_pending |= self.cleanup.pending
         self.cleanup_note = '\n'.join([self.cleanup_note, *self.cleanup.notes])
-        self.receipt_path = reports.write_receipt(self.root, receipt, self.run_id, self.image_mode, self.test_scope, self.test_selection, self.canary_endpoint, self.endpoint, self.test_log_paths, self.cleanup_note, "",
-                                                  evidence=self.journal.data["evidence"])
+        reports.record_receipt(self)
 
     def run(self):
         try:

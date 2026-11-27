@@ -1,7 +1,6 @@
 """Own the accepted Project snapshot and serve queries over a private Unix socket."""
 
 import argparse
-from contextlib import asynccontextmanager
 from functools import partial
 import json
 import os
@@ -13,25 +12,27 @@ import threading
 
 import duckdb
 from starlette.applications import Starlette
-from starlette.requests import Request
+from starlette.concurrency import run_in_threadpool
 from starlette.responses import JSONResponse, Response
 from starlette.routing import Route
 import uvicorn
 
 from .http_logging import http_log_config
+from .accepted_model import initialize as initialize_accepted_model, managed
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import attach_framework
 
 from ..model_host_CS5.model_host_CS5__shared import reviewed_native_model
 from ..structure_host_CS6.structure_host_CS6__shared import read_structure
-from .carrier_checkpoint import reuse_route
+from .carrier_checkpoint import initialize_checkpoint, reuse_route
+from .database_lifespan import database_lifespan
 from .database_route import database_route
 from .archive_generation import archive_pending, archive_route
-from .generation import FULL_GENERATION_BODY_LIMIT, replace_generation
-from .generation_batch import read_full_generation, unpack_batch
+from .generation_batch import generation_route
 from .flows import flow_route, initialize_flows
 from . import ingestion_issues
 from .native_delta import native_generation_route
+from .compiler_refresh import compiler_refresh_route
 from .persistence import open_bound_database
 from .query_engine import connect
 from .query_history import QueryHistory
@@ -39,6 +40,7 @@ from .query_results import ProjectGraphPending, QueryResults
 from .query_schema import public_schema
 from .query_settings import result_ttl
 from .realization_projection import has_table, prepare, restore_property_graph
+from .spec_snapshot import route as spec_snapshot_route
 from .saved_query_journal import SAVED_QUERY_OPERATIONS, SavedQueryJournal
 from .table_names import sync_query_views
 from .workspace_store import WorkspaceStore
@@ -72,6 +74,8 @@ def open_database(database_path=None, manifest_sha256=None, instance_id=None, jo
     try:
         connection.execute("BEGIN TRANSACTION")
         ingestion_issues.initialize(connection)
+        if database_path is None:
+            initialize_checkpoint(connection)
         connection.execute("COMMIT")
         if database_path is None:
             connection.execute('CREATE TABLE mrt_atoms (reference VARCHAR PRIMARY KEY, "content.summary" VARCHAR)')
@@ -111,7 +115,7 @@ async def _read_object(request, size_limit, *allowed_fields):
         if len(body) + len(chunk) > size_limit:
             raise ValueError("Request is too large")
         body.extend(chunk)
-    data = json.loads(body)
+    data = await run_in_threadpool(json.loads, body) if len(body) > 65536 else json.loads(body)
     if not isinstance(data, dict) or set(data) not in allowed_fields:
         raise ValueError("Invalid request fields")
     return data
@@ -172,37 +176,6 @@ def _rebuild_route(connection, instance_id, lock, queries, workspaces, journal_s
     return rebuild
 
 
-def _generation_route(connection, instance_id, manifest_sha256, lock, queries, workspaces, journal_sync):
-    async def admit_generation(request: Request):
-        try:
-            data = await read_full_generation(request, _read_object, FULL_GENERATION_BODY_LIMIT)
-            if data["instance_id"] != instance_id:
-                return _error("foreign_instance", "Instance does not match", 403)
-            unpack_batch(data)
-            with lock:
-                selected = None
-                if "refresh_target" in data:
-                    if journal_sync is not None:
-                        journal_sync()
-                    queries.prune()
-                    selected = queries._selection(connection, data["refresh_target"], generation=True)
-                stage = None if selected is None else lambda: queries.stage_generation(connection, selected)
-                generation, captured = replace_generation(connection, data, manifest_sha256, stage_refresh=stage)
-                result = {"generation": generation}
-                if captured is not None:
-                    replacements = queries.publish(captured)
-                    if workspaces is not None:
-                        workspaces.replace_results(replacements)
-                    result["result_ids"] = {key: value["query_id"] for key, value in replacements.items()}
-            return JSONResponse({"result": result})
-        except (ValueError, TypeError, UnicodeError, duckdb.Error) as error:
-            return _error("invalid_generation", str(error), 400)
-        except (OSError, RuntimeError):
-            return _error("journal_unavailable", "Work Journal is unavailable", 409)
-
-    return admit_generation
-
-
 def _schema_route(connection, instance_id, lock):
     async def schema(request):
         if list(request.query_params.multi_items()) != [("instance_id", instance_id)]:
@@ -219,8 +192,16 @@ def _artifact_route(connection, instance_id, lock):
     async def artifact(request):
         if list(request.query_params.multi_items()) != [("instance_id", instance_id)]:
             return _error("foreign_instance", "Instance does not match", 403)
-        reader = reviewed_native_model if request.url.path == "/model" else read_structure
-        row = reader(connection, lock)
+        if request.url.path == "/model" and managed(connection):
+            with lock:
+                state = managed(connection)
+                generation = connection.execute("SELECT id FROM ops_generation").fetchone()
+                if not generation or not state[1]:
+                    return _error("generation_required", state[2], 409)
+                row = (generation[0], state[1])
+        else:
+            reader = reviewed_native_model if request.url.path == "/model" else read_structure
+            row = reader(connection, lock)
         if row is None:
             return _error("generation_required", "Generation admission required", 409)
         return Response(row[1],
@@ -229,9 +210,31 @@ def _artifact_route(connection, instance_id, lock):
     return artifact
 
 
+def _health_route(connection, instance_id, manifest_sha256, lock):
+    async def health(request):
+        with lock:
+            row = connection.execute("SELECT id FROM ops_generation").fetchone()
+            pending = archive_pending(connection)
+        return JSONResponse({"result": {"instance_id": instance_id, "pid": os.getpid(),
+            "manifest_sha256": manifest_sha256, "ready": row is not None,
+            "archive_pending": pending, "generation": row[0] if row else None}})
+
+    return health
+
+
 def create_app(connection, instance_id, manifest_sha256, project_root=None, result_ttl_seconds=3600,
                journal_sync=None, saved_queries=None):
     lock = threading.Lock()
+    if project_root is not None and has_table(connection, "main", "ops_project_binding"):
+        initialize_accepted_model(connection, project_root)
+        state = managed(connection)
+        restore_model = connection.execute("SELECT count(*) FROM duckdb_tables() WHERE database_name = 'temp' "
+                                           "AND table_name = 'model_projection_restore_needed'").fetchone()[0]
+        if restore_model:
+            if state[1] and connection.execute("SELECT id FROM ops_generation").fetchone():
+                from .model_projection import replace_model_projection
+                replace_model_projection(connection, json.loads(state[1]))
+            connection.execute("DROP TABLE temp.main.model_projection_restore_needed")
     history = QueryHistory(project_root, connection) if project_root is not None else None
     queries = QueryResults(result_ttl_seconds, history)
 
@@ -244,25 +247,11 @@ def create_app(connection, instance_id, manifest_sha256, project_root=None, resu
     workspaces = ViewQueries(WorkspaceStore(project_root), connection, queries, sync_sources, project_root,
                              saved_queries=saved_queries) if project_root is not None else None
 
-    @asynccontextmanager
-    async def lifespan(_):
-        try:
-            yield
-        finally:
-            if history is not None:
-                history.close()
-
-    async def health(request):
-        with lock:
-            row = connection.execute("SELECT id FROM ops_generation").fetchone()
-            pending = archive_pending(connection)
-        return JSONResponse({"result": {"instance_id": instance_id, "pid": os.getpid(),
-            "manifest_sha256": manifest_sha256, "ready": row is not None,
-            "archive_pending": pending, "generation": row[0] if row else None}})
-
     return Starlette(routes=[
-        Route("/health", health),
+        Route("/health", _health_route(connection, instance_id, manifest_sha256, lock)),
         Route("/schema", _schema_route(connection, instance_id, lock)),
+        Route("/spec-snapshot", spec_snapshot_route(connection, instance_id, manifest_sha256, lock,
+                                                  _read_object, _error), methods=["GET", "PUT"]),
         Route("/ingestion/issues", ingestion_issues.route(connection, instance_id, lock, _read_object, _error), methods=["GET", "PUT"]),
         Route("/flow/events", flow_route(connection, instance_id, lock, _read_object, _error), methods=["POST"]),
         Route("/database", database_route(connection, instance_id, lock, queries, sync_sources, project_root,
@@ -271,12 +260,14 @@ def create_app(connection, instance_id, manifest_sha256, project_root=None, resu
         Route("/results/rebuild", _rebuild_route(connection, instance_id, lock, queries, workspaces, sync_sources), methods=["POST"]),
         Route("/generation/reuse", reuse_route(connection, instance_id, lock, _read_object, _error), methods=["GET", "PUT"]),
         Route("/generation/archive", archive_route(connection, instance_id, manifest_sha256, lock, _read_object, _error), methods=["PUT"]),
+        Route("/generation/compiler", compiler_refresh_route(connection, instance_id, manifest_sha256, lock, _read_object, _error), methods=["PUT"]),
         Route("/generation/native", native_generation_route(connection, instance_id, manifest_sha256, lock, _read_object, _error), methods=["PUT"]),
         Route("/generation/native-delta", native_generation_route(connection, instance_id, manifest_sha256, lock, _read_object, _error), methods=["PUT"]),
-        Route("/generation", _generation_route(connection, instance_id, manifest_sha256, lock, queries, workspaces, sync_sources), methods=["PUT"]),
+        Route("/generation", generation_route(connection, instance_id, manifest_sha256, lock, queries, workspaces,
+                                             sync_sources, _read_object, _error), methods=["PUT"]),
         Route("/model", _artifact_route(connection, instance_id, lock)),
         Route("/structure", _artifact_route(connection, instance_id, lock)),
-    ], lifespan=lifespan)
+    ], lifespan=partial(database_lifespan, connection, lock, history))
 
 
 def _open_sources(args, parser):

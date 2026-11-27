@@ -67,7 +67,7 @@ def _add_path(
 
 
 def _native_subjects(carriers):
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.cfel_claim_constraints import extract_claim_constraints
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.claim_constraints import extract_claim_constraints
     from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import model_class_target
     native_subjects = set()
     for carrier in carriers:

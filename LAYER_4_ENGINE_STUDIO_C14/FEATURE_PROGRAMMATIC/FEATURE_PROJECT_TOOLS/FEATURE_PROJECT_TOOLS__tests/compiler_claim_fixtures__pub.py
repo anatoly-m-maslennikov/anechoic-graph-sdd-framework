@@ -112,8 +112,6 @@ declare_entity(entity_name='Work Report', entity_class=WorkReport, qualification
 ANALYSIS = """from anechoic.formal_claims import declare_entity
 declare_entity(entity_name="Status", relation_name="IS_PROPERTY_OF", base_path="Atom.Header.State", applies_to_role="Analysis and Advisory", applies_to_forms=("Analysis Report", "Rationale"), allowed_values=("Done",))"""
 
-CLASSIFICATION_CFEL_BODY = "## Claim\n### Formal Claim\n```CFEL\n# model\nNode >| Container: yes;\nNode >| Container: no\n```\n"
-
 CLASSIFICATION_PYTHON_BODY = '## Claim\n### Formal Claim\n```python\nfrom anechoic.formal_claims import declare_entity\ndeclare_entity(entity_name="Node", allowed_classification_values={"Container": ("yes", "no")})\n```\n'
 
 EVENT_CLAIM = """from anechoic.formal_claims import declare_entity

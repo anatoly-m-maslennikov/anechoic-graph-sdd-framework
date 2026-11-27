@@ -50,31 +50,3 @@ class NonTicketRevisionMatrix(unittest.TestCase):
                     create_draft(self.selection, {'sourceCurrent': {'ref_id': atom_id + '@1', 'version': 1}},
                                  current_rows=rows())
                 self.assertEqual(before, {p: p.read_bytes() for p in self.control.rglob('*.md')})
-
-class ComponentContractMatrix(unittest.TestCase):
-    write = fixtures.NativeDraftTests.write
-    spec = fixtures.NativeRevisionCarrierTests.spec
-
-    def test_new_and_revision_routes(self):
-        fixtures.ComponentContractLifecycleTests.setUp(self)
-        rows = lambda: capture_native(self.selection).atoms
-        created = create_draft(self.selection, self.new, current_rows=rows(), structure_snapshot=self.snapshot)
-        self.assertEqual('completed', created['outcome'])
-        draft = created['savedDraft']
-        before = {p: p.read_bytes() for p in self.control.rglob('*.md')}
-        with self.assertRaises(InputError):
-            promote_draft(self.selection, {'target': {'ref_id': draft['ref_id'], 'version': 1},
-                          'targetStatus': 'active'}, current_rows=rows(), structure_snapshot=self.snapshot)
-        self.assertEqual(before, {p: p.read_bytes() for p in self.control.rglob('*.md')})
-        published = promote_draft(self.selection, {'target': {'ref_id': draft['ref_id'], 'version': 1},
-                                  'targetStatus': 'ready'}, current_rows=rows(), structure_snapshot=self.snapshot)
-        self.assertEqual('ready', published['artifact']['status'])
-        revision = create_draft(self.selection,
-            {'sourceCurrent': {'ref_id': published['artifact']['ref_id'], 'version': 1}},
-            current_rows=rows(), structure_snapshot=self.snapshot)
-        self.assertEqual('completed', revision['outcome'])
-        result = promote_draft(self.selection,
-            {'target': {'ref_id': revision['savedDraft']['ref_id'], 'version': 2}, 'targetStatus': 'ready'},
-            current_rows=rows(), structure_snapshot=self.snapshot)
-        self.assertEqual('completed', result['outcome'], result)
-        self.assertIn(published['artifact']['ref_id'] + '@1', [row['_exact_ref'] for row in rows()])

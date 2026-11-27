@@ -29,7 +29,8 @@ def is_ontology_model_source(relative):
     if component is None or path.suffix != '.md':
         return False
     parts = path.relative_to(component).parts
-    return len(parts) == 1 or (len(parts) == 2 and parts[0] in {'_SPEC', '_DES'})
+    return (len(parts) == 1 or (len(parts) == 2 and parts[0] in {'_SPEC', '_DES'})
+            or (len(parts) == 3 and parts[:2] == ('_DOM', 'CONT')))
 
 
 def find_ontology_component(control):

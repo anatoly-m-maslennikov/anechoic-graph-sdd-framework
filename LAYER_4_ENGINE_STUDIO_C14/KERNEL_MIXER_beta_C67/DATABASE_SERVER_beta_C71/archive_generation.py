@@ -3,10 +3,13 @@ import json
 from pathlib import PurePosixPath
 
 import duckdb
+from starlette.concurrency import run_in_threadpool
 from starlette.responses import JSONResponse
 
-from .carrier_checkpoint import read_checkpoint, update_checkpoint
+from .accepted_model import generation_rows
+from .carrier_checkpoint import archive_checkpoint_paths, checkpoint_exists, update_checkpoint
 from .generation import GenerationBaseChanged, _digest
+from .generation_batch import unpack_batch
 from .ingestion_issues import archive_path, clear_archive_failure, duplicate_dependencies, replace_issues
 from .native_atoms import DuplicateNativeAtom, stage_atom_rows, validate_native_snapshot, write_staged_atoms
 from .native_delta import DeltaReconciliationRequired, _inverse, _validate_edges, apply_native_delta
@@ -78,7 +81,7 @@ def change_archive_pending(connection, base, pending):
         if (row is None or row[0] != base or not has_table(connection, "native_graph", "int_labels")
                 or (not pending and not archive_pending(connection))):
             raise GenerationBaseChanged("Generation base changed or archive is complete")
-        if read_checkpoint(connection) is None:
+        if not checkpoint_exists(connection):
             raise ValueError("Archive transition requires a retained carrier checkpoint")
         if pending:
             backfill_archive_versions(connection)
@@ -92,7 +95,14 @@ def change_archive_pending(connection, base, pending):
         raise
 
 
-def _validate_archive(connection, data, manifest_sha256, model, *, replacing):
+def _prepare_archive(data, manifest_sha256, model):
+    replacing = data.get("replace", False)
+    if type(replacing) is not bool:
+        raise ValueError("Invalid archive replacement")
+    if "batch_artifact" in data:
+        unpack_batch(data, "anechoic-archive-")
+        if data.pop("graph") is not None:
+            raise ValueError("Archive admission cannot replace the Realization Graph")
     snapshot = data["snapshot"]
     if _digest(snapshot) != data["snapshot_sha256"]:
         raise ValueError("Archive snapshot digest mismatch")
@@ -111,22 +121,26 @@ def _validate_archive(connection, data, manifest_sha256, model, *, replacing):
     _validate_edges(edges, inverse)
     if replacing and any("09_archived" not in a.relative_path.split("/") for a in atoms):
         raise ValueError("Archive replacement requires canonical archive paths")
+    paths = [row["relative_path"] for row in snapshot.get("ingestion_issues", [])]
+    if replacing and any(not archive_path(path) for path in paths):
+        raise ValueError("Archive replacement requires canonical archive issue paths")
+    return replacing
+
+
+def _validate_archive(connection, snapshot, *, replacing):
     if replacing:
         _remove_canonical_archive(connection)
-    stage_atom_rows(connection, atoms)
+    stage_atom_rows(connection, snapshot["atoms"])
     collision = connection.execute('''SELECT 1 FROM main.mrt_atom_references n
         JOIN int_admission_atoms a USING (relative_path, filename) LIMIT 1''').fetchone()
     if collision:
         raise ValueError("Archived Atom path collides with an admitted Atom")
-    _validate_archive_issues(connection, snapshot, replacing=replacing)
+    _validate_archive_issues(connection, snapshot)
     _check_archive_duplicates(connection, snapshot)
-    return edges
 
 
-def _validate_archive_issues(connection, snapshot, *, replacing):
+def _validate_archive_issues(connection, snapshot):
     paths = [row["relative_path"] for row in snapshot.get("ingestion_issues", [])]
-    if replacing and any(not archive_path(path) for path in paths):
-        raise ValueError("Archive replacement requires canonical archive issue paths")
     if paths and connection.execute("""SELECT 1 FROM main.mrt_atom_references
             WHERE concat(CASE WHEN relative_path = '.' THEN '' ELSE relative_path || '/' END, filename)
             IN (SELECT unnest(?)) LIMIT 1""", [paths]).fetchone():
@@ -145,12 +159,10 @@ def _check_archive_duplicates(connection, snapshot):
 
 
 def _insert_edges(connection, edges):
-    keys = ("source_kind", "source_ref", "target_kind", "target_ref", "relation_type", "derived")
-    values = [dict(zip(keys, row)) for row in edges]
     connection.execute('''INSERT INTO main.mrt_atom_graph_relations
         SELECT e.source_kind, e.source_ref, e.target_kind, e.target_ref, e.relation_type, e.derived
         FROM UNNEST(?::STRUCT(source_kind VARCHAR, source_ref VARCHAR, target_kind VARCHAR,
-            target_ref VARCHAR, relation_type VARCHAR, derived BOOLEAN)[]) AS t(e)''', [values])
+            target_ref VARCHAR, relation_type VARCHAR, derived BOOLEAN)[]) AS t(e)''', [edges])
 
 
 def _remove_canonical_archive(connection):
@@ -167,35 +179,31 @@ def _remove_canonical_archive(connection):
 
 
 def _archive_checkpoint_paths(connection, data, *, replacing):
-    checkpoint = read_checkpoint(connection)
-    if checkpoint is None:
+    if not checkpoint_exists(connection):
         raise ValueError("Archive admission requires a retained carrier checkpoint")
     snapshot = data["snapshot"]
     paths = set(data["carrier_hashes"])
     if replacing:
-        removed = {path for path in checkpoint if archive_path(path)}
+        removed = archive_checkpoint_paths(connection)
         if duplicate_dependencies(connection, snapshot, removed):
             raise DeltaReconciliationRequired("Archive replacement touches a duplicate Atom group")
         paths.update(removed)
     return [[PurePosixPath(path).parent.as_posix(), PurePosixPath(path).name] for path in sorted(paths)]
 
 
-def admit_archive(connection, data, manifest_sha256):
+def admit_archive(connection, data, binding, replacing):
     connection.execute("BEGIN TRANSACTION")
     graph_dropped = False
     try:
-        row = connection.execute("SELECT id, model, structure FROM ops_generation").fetchone()
-        if (row is None or row[0] != data["base_generation"] or not archive_pending(connection)
+        row = next(iter(generation_rows(connection)), None)
+        if (row is None or row != binding or row[0] != data["base_generation"] or not archive_pending(connection)
                 or not has_table(connection, "native_graph", "int_labels")):
             raise GenerationBaseChanged("Generation base changed or archive is complete")
-        replacing = data.get("replace", False)
-        if type(replacing) is not bool:
-            raise ValueError("Invalid archive replacement")
-        edges = _validate_archive(connection, data, manifest_sha256, row[1], replacing=replacing)
+        _validate_archive(connection, data["snapshot"], replacing=replacing)
         paths = _archive_checkpoint_paths(connection, data, replacing=replacing)
         update_checkpoint(connection, {**data, "paths": paths}, delta=True)
         write_staged_atoms(connection)
-        _insert_edges(connection, edges)
+        _insert_edges(connection, data["snapshot"]["relations"])
         connection.execute("DROP PROPERTY GRAPH IF EXISTS anechoic")
         graph_dropped = True
         components = {"C00", *json.loads(row[2])["components"]}
@@ -221,19 +229,30 @@ def archive_route(connection, instance_id, manifest_sha256, lock, read_object, e
     async def admit(request):
         try:
             fields = {"instance_id", "base_generation", "snapshot", "snapshot_sha256", "carrier_hashes"}
+            batch = (fields - {"snapshot", "carrier_hashes"}) | {"batch_artifact"}
             data = await read_object(request, 64 * 1024 * 1024, fields, fields | {"paths"},
-                                     fields | {"replace"}, {"instance_id", "base_generation", "unchanged"})
+                                     fields | {"replace"}, batch, batch | {"replace"},
+                                     {"instance_id", "base_generation", "unchanged"})
             if data["instance_id"] != instance_id:
                 return error_response("foreign_instance", "Instance does not match", 403)
-            with lock:
-                if "paths" in data:
-                    generation = apply_native_delta(connection, data, manifest_sha256, archive=True)
-                elif "unchanged" in data:
-                    if data["unchanged"] is not True:
-                        raise ValueError("Invalid unchanged archive result")
-                    generation = change_archive_pending(connection, data["base_generation"], False)
-                else:
-                    generation = admit_archive(connection, data, manifest_sha256)
+            if "paths" not in data and "unchanged" not in data:
+                with lock:
+                    binding = next(iter(generation_rows(connection)), None)
+                    if (binding is None or binding[0] != data["base_generation"]
+                            or not archive_pending(connection)
+                            or not has_table(connection, "native_graph", "int_labels")):
+                        raise GenerationBaseChanged("Generation base changed or archive is complete")
+                replacing = await run_in_threadpool(_prepare_archive, data, manifest_sha256, binding[1])
+                with lock:
+                    generation = admit_archive(connection, data, binding, replacing)
+            else:
+                with lock:
+                    if "paths" in data:
+                        generation = apply_native_delta(connection, data, manifest_sha256, archive=True)
+                    else:
+                        if data["unchanged"] is not True:
+                            raise ValueError("Invalid unchanged archive result")
+                        generation = change_archive_pending(connection, data["base_generation"], False)
             return JSONResponse({"result": {"generation": generation}})
         except GenerationBaseChanged as error:
             return error_response("generation_base_changed", str(error), 409)

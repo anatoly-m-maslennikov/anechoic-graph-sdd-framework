@@ -6,19 +6,7 @@ from pathlib import Path
 import re
 from typing import Any, Literal
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.markdown_content__pub import parse_content
-
-
-_ARCHIVED_SUMMARY = re.compile(rb"\A(?:\r?\n)?## Summary\r?\n\r?\n[A-Za-z0-9][^\r\n]*\r?\n\r?\n(?=#{1,2} [^\r\n])")
-
-
-def _content_properties(body: bytes, group: str, mode: bool | Literal["archive-summary"]) -> list[dict]:
-    if not mode:
-        return []
-    if mode == "archive-summary" and group == "Archived":
-        if match := _ARCHIVED_SUMMARY.match(body):
-            body = body[:match.end()]
-    return parse_content(body.decode("utf-8"), tolerate_duplicate_siblings=True, compact=True)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.markdown_content__pub import parse_content, summary_title
 
 
 def json_value(value: Any) -> Any:
@@ -65,14 +53,14 @@ def _reference(atom_id: Any, version: Any, explicit: Any, group: str, source_pat
 
 def atom(
     path: Path, root: Path, header: dict[str, Any], view: dict[str, Any],
-    body: str | bytes, group: str, *, include_content_properties: bool | Literal["archive-summary"] = True,
+    body: str | bytes, group: str, *, include_content_properties: bool | Literal["summary"] = True,
 ) -> dict[str, Any]:
     cached_body = body.encode("utf-8") if isinstance(body, str) else body
     if not isinstance(cached_body, bytes):
         raise TypeError("Markdown body must be UTF-8 text or bytes")
     atom_id, version = view.get("atom_id"), view.get("version")
     source_path = path.relative_to(root).as_posix()
-    return {
+    row = {
         "source_path": source_path,
         "status_group": group,
         "id": atom_id if isinstance(atom_id, str) else None,
@@ -87,10 +75,16 @@ def atom(
         "updated_at": view.get("updated_at"),
         "header_json": header,
         "_content_bytes": cached_body,
-        "content_properties_json": _content_properties(cached_body, group, include_content_properties),
+        "content_properties_json": (
+            parse_content(cached_body.decode("utf-8"), tolerate_duplicate_siblings=True, compact=True)
+            if include_content_properties is True else []
+        ),
         "relation_edges_json": [],
         "hash": None,
     }
+    if include_content_properties == "summary":
+        row["_summary_title"] = summary_title(cached_body)
+    return row
 
 
 

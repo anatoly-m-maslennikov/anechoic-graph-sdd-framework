@@ -13,7 +13,9 @@ from starlette.responses import FileResponse, JSONResponse, Response, StreamingR
 from starlette.routing import BaseRoute, Mount, Route
 from starlette.staticfiles import StaticFiles
 
-from MCP_PATCHBAY_C21.FEATURE_MCP.http_paths import PROJECT_API_PATH, WORKBENCH_PATH
+from MCP_PATCHBAY_C21.FEATURE_MCP.http_paths import (
+    IWE_CONSOLE_PATH, PROJECT_API_PATH, WORKBENCH_PATH,
+)
 from MCP_PATCHBAY_C21.FEATURE_MCP.backend_client import ToolProtocolError
 
 from MCP_PATCHBAY_C21.FEATURE_MCP.mcp_startup_boundary import warning
@@ -30,13 +32,15 @@ _INTERFACE_TOOLS = frozenset({
     "workspace_open", "workspace_list", "workspace_get", "view_create", "view_duplicate",
     "view_list", "view_get", "view_update", "view_run", "view_check", "view_fetch",
     "view_focus", "view_rename", "view_remove", "query_log_list", "query_log_get", "view_save",
+    "iwe_console_atom_document", "atom_lifecycle_create_draft", "atom_lifecycle_update",
+    "atom_lifecycle_promote_draft", "atom_lifecycle_change_status",
 })
 
 _FRONTEND = (
     Path(__file__).resolve().parents[2]
     / "IWE_CONSOLE_C43"
-    / "APP_WORKBENCH"
-    / "FEATURE_WORKBENCH_FRONTEND"
+    / "APP_IWE_CONSOLE"
+    / "FEATURE_IWE_CONSOLE_FRONTEND"
     / "dist"
 )
 
@@ -65,7 +69,8 @@ def _error(error: Exception) -> JSONResponse:
         payload["tool_result"] = error.tool_result
     if secondary is not None:
         payload["diagnostic_error"] = secondary
-    return JSONResponse(payload, status_code=400)
+    status = 502 if isinstance(error, ToolProtocolError) and error.code == "project_receipt_mismatch" else 400
+    return JSONResponse(payload, status_code=status)
 
 
 def _json_stream(value: dict[str, Any]) -> Iterator[str]:
@@ -88,12 +93,11 @@ async def _selection(gateway: Any, project_root: Any, shared: bool) -> Any:
 
 
 async def _execute(gateway: Any, name: str, arguments: dict[str, Any], shared: bool,
-                   public_base_url: str, asserted_project_root: str | None) -> dict[str, Any]:
+                   public_base_url: str, **routing: Any) -> dict[str, Any]:
     if name == "query_run":
         arguments = {"result_delivery": "file", **arguments}
     if not shared and name in getattr(gateway, "tool_blacklist", frozenset()):
         raise WorkbenchRequestError("Unknown Tool")
-    routing = {} if shared else {"asserted_project_root": asserted_project_root}
     return (await gateway.call_tool(name, arguments, public_base_url=public_base_url, **routing))["value"]
 
 
@@ -155,7 +159,8 @@ def _operation(gateway, shared, fixed_name=None):
                     arguments = native_arguments(arguments, selection, gateway.root)
                 except ValueError as error:
                     raise WorkbenchRequestError(str(error)) from error
-            value = await _execute(gateway, name, arguments, shared, str(request.base_url), asserted_root)
+            routing = {"project_instance_id": selection["instance_id"]} if shared else {"asserted_project_root": asserted_root}
+            value = await _execute(gateway, name, arguments, shared, str(request.base_url), **routing)
             return StreamingResponse(_json_stream(value), media_type="application/json")
         except Exception as error:
             return _error(error)
@@ -173,17 +178,16 @@ def routes(gateway: Any, *, shared: bool = False, frontend: Path | None = None) 
         ("rebuild", "query_rebuild"), ("view-save", "view_save"),
         ("load", "query_load"), ("saved-list", "query_saved_list"),
     )]
+    prefixes = (IWE_CONSOLE_PATH, WORKBENCH_PATH)
+    pages = [f"{prefix}/{{project_name}}" for prefix in prefixes]
+    bases = [PROJECT_API_PATH, *pages]
+    assets = StaticFiles(directory=frontend / "assets", check_dir=False)
     return [
-        Route(f"{WORKBENCH_PATH}/{{project_name}}", page),
-        Route(f"{WORKBENCH_PATH}/{{project_name}}/interface", interface, methods=["POST"]),
-        Route(f"{PROJECT_API_PATH}/interface", interface, methods=["POST"]),
+        *[Route(path, page) for path in pages],
+        *[Route(f"{base}/interface", interface, methods=["POST"]) for base in bases],
         *[Route(f"{base}/{path}", handler, methods=["POST"])
-          for path, handler in operations
-          for base in (PROJECT_API_PATH, f"{WORKBENCH_PATH}/{{project_name}}")],
-        Mount(
-            f"{WORKBENCH_PATH}/assets",
-            app=StaticFiles(directory=frontend / "assets", check_dir=False),
-        ),
+          for path, handler in operations for base in bases],
+        *[Mount(f"{prefix}/assets", app=assets) for prefix in prefixes],
     ]
 
 

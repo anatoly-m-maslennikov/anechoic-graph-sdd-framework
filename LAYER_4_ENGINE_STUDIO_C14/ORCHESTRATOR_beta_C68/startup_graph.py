@@ -5,12 +5,34 @@ import tempfile
 import threading
 
 from .generation import admit_generation, worker_request
-from .generation_worker import GENERATION_ERRORS
+from .generation_worker import GENERATION_ERRORS, ForegroundCoverageLost
 from .jobs import operation_timeout
-from .watcher_diagnostics import emit_record
+from .startup_checkpoint import ReuseRecord
+from .watcher_diagnostics import FOREGROUND_FENCE_MESSAGE, emit_record
 from .worker_reply import parse_graph_result
 
 class StartupGraphJobs:
+    def _attempt_explicit_graph(self, reuse):
+        if reuse is None or reuse.get("graph_config") is None:
+            raise ValueError("Realization Graph requires an admitted core generation")
+        epoch = self.watcher.capture_epoch()
+        if epoch is None:
+            raise ForegroundCoverageLost(FOREGROUND_FENCE_MESSAGE)
+        request = worker_request(self.binding, self.database_socket, self.instance_id, reuse, None)
+        if "structure" not in request:
+            raise ValueError("Realization Graph requires an admitted Structure")
+        request.update(graph_only=True, force_graph=True, watcher_guarded=True)
+        with tempfile.TemporaryDirectory(prefix="anechoic-graph-") as directory:
+            payload = parse_graph_result(self._communicate_worker(directory, request), reuse["base_generation"])
+            if self.watcher.capture_fence(epoch, timeout=operation_timeout(45),
+                                          run_id=self.active.run_id if self.active else None) is not True:
+                raise ForegroundCoverageLost(FOREGROUND_FENCE_MESSAGE)
+            admitted = admit_generation(self.database_socket, self.instance_id, None, payload, None, force_graph=True)
+        self.live_generation = admitted["generation"]
+        self.generation_reuse = ReuseRecord.model_validate({
+            **reuse, **payload["reuse"], "base_generation": self.live_generation})
+        return {"state": "succeeded", **admitted, "result_ids": {}}
+
     def _initialize_startup_graph(self):
         self.graph_queued = False
         self.graph_thread = None
@@ -26,6 +48,10 @@ class StartupGraphJobs:
             self.graph_thread = None
             self._finish_startup_graph()
         if not self.graph_queued:
+            return
+        if (self.archive_reconciliation_pending or
+                self.archive_thread is not None and self.archive_run is not None or
+                self.deferred_archive is not None and (self.archive_run is None or self.archive_dirty)):
             return
         witness = self.generation_reuse
         if witness is None or witness.graph_config is None:

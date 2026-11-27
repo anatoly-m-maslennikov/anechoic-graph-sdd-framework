@@ -11,11 +11,11 @@ from starlette.routing import Route
 
 from .admission import Readiness, failure, peer
 from .models import Page, PageRequest, Query, Sql, SqlResult, ToolRequest, WorkerRuns
-from . import lifecycle, projection, saved_sql, view_tools, workspace
+from . import atom_document, lifecycle, projection, saved_sql, view_tools, workspace
 from .query_contract import query_schema
 from .schema import read_schema
 
-PROJECTION_TOOLS = frozenset({"workbench_status", "workbench_abort", "query_rebuild"})
+PROJECTION_TOOLS = frozenset({"iwe_console_status", "iwe_console_abort", "workbench_status", "workbench_abort", "query_rebuild"})
 SAVED_TOOLS = frozenset({"query_load", "query_saved_list", "view_save"})
 WORKSPACE_TOOLS = frozenset({"workspace_open", "workspace_list", "workspace_get", "query_log_list", "query_log_get"})
 WORKSPACE_TOOLS |= frozenset(view_tools.MODELS)
@@ -60,6 +60,7 @@ def descriptors():
     result.update(workspace.descriptors())
     result.update(view_tools.descriptors())
     result.update(lifecycle.descriptors())
+    result[atom_document.NAME] = atom_document.descriptor()
     return result
 
 
@@ -128,8 +129,31 @@ async def run_query(database, instance, name, arguments, *, context=None):
         return failure("workbench_unavailable", "Kernel unavailable")
 
 
+async def _invoke_direct(data, database, jobs, worker_binding, instance, project_name, workbench_public_url):
+    if data.name in PROJECTION_TOOLS:
+        result = await projection.invoke(data.name, data.arguments, database, jobs, worker_binding, instance)
+    elif data.name == atom_document.NAME:
+        result = await atom_document.invoke(data.arguments, jobs, worker_binding, instance)
+    elif data.name in LIFECYCLE_TOOLS:
+        result = await lifecycle.invoke(data.name, data.arguments, jobs, worker_binding, instance)
+    elif data.name == "query_schema":
+        result = await read_schema(database, instance, data.arguments)
+    else:
+        context = saved_sql.LinkContext(project_name=project_name, base=data.public_base_url,
+                                        root=data.asserted_project_root, configured_url=workbench_public_url)
+        result = await execute_core(database, instance, data.name, data.arguments, context, data.session_id)
+    code = result.get("error", {}).get("code")
+    return JSONResponse(result, status_code=503 if code == "workbench_unavailable" else 200)
+
+
 def create_app(instance, digest, project_root, database, jobs, *, host_root=None, blacklist=(), worker_binding=None,
                project_name=None, workbench_public_url=None):
+    blacklist = set(blacklist)
+    for suffix in ("status", "abort"):
+        aliases = {f"workbench_{suffix}", f"iwe_console_{suffix}"}
+        if blacklist & aliases:
+            blacklist |= aliases
+    blacklist = tuple(sorted(blacklist))
     readiness = Readiness(instance, digest, database, jobs)
     tools = descriptors()
     async def health(_request):
@@ -159,18 +183,7 @@ def create_app(instance, digest, project_root, database, jobs, *, host_root=None
             status = await readiness.status()
             if status["state"] != "ready":
                 return refusal(status)
-        if data.name in PROJECTION_TOOLS:
-            result = await projection.invoke(data.name, data.arguments, database, jobs, worker_binding, instance)
-        elif data.name in LIFECYCLE_TOOLS:
-            result = await lifecycle.invoke(data.name, data.arguments, jobs, worker_binding, instance)
-        elif data.name == "query_schema":
-            result = await read_schema(database, instance, data.arguments)
-        else:
-            context = saved_sql.LinkContext(project_name=project_name, base=data.public_base_url,
-                                            root=data.asserted_project_root, configured_url=workbench_public_url)
-            result = await execute_core(database, instance, data.name, data.arguments, context, data.session_id)
-        code = result.get("error", {}).get("code")
-        return JSONResponse(result, status_code=503 if code == "workbench_unavailable" else 200)
+        return await _invoke_direct(data, database, jobs, worker_binding, instance, project_name, workbench_public_url)
     return Starlette(routes=[Route("/health", health), Route("/tools", catalog), Route("/tools", invoke, methods=["POST"]),
                              Route("/jobs/worker-runs", worker_runs_route(jobs, instance))])
 

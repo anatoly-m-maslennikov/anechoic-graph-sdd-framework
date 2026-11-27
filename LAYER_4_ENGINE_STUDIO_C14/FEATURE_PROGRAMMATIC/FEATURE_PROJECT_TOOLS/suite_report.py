@@ -3,6 +3,7 @@
 from contextlib import contextmanager
 from datetime import datetime, timezone
 import json
+import os
 from pathlib import Path
 import sys
 from tempfile import NamedTemporaryFile
@@ -13,6 +14,10 @@ from time import monotonic
 def suite_report(root, arguments):
     from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import owned_temporary_root
 
+    if arguments.phase == "functional" and os.environ.get("ANECHOIC_FUNCTIONAL_HISTORY_ROOT"):
+        from .functional_history import history_roots
+
+        root = history_roots(root)[-1]
     directory = owned_temporary_root(root, "test_reports")
     started = datetime.now(timezone.utc)
     clock = monotonic()

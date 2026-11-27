@@ -39,6 +39,7 @@ def _test_environment(engine):
     env = {key: value for key, value in os.environ.items()
            if key not in {"PYTHONHOME", "VIRTUAL_ENV", "PYTHONPATH"}}
     env.update(PYTHONPATH=str(engine), UV_PROJECT_ENVIRONMENT=str(engine / ".venv-dev"))
+    env.setdefault("ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY", str(engine.parent / ".anechoic_tmp/workbench/extensions"))
     return env
 
 
@@ -121,7 +122,12 @@ def _run_gate_command(root, cwd, run_id, suite_phase, argv, runner, log_paths, *
                     log.write(output if isinstance(output, bytes) else output.encode("utf-8"))
             return result
         try:
-            return logged_process(argv, cwd, log, env=_test_environment(engine))
+            env = _test_environment(engine)
+            if suite_phase == "functional":
+                env.update(ANECHOIC_FUNCTIONAL_HISTORY_ROOT=str(root), ANECHOIC_FUNCTIONAL_SAMPLE_SEED=run_id)
+                if "--functional-suite" in argv:
+                    env.setdefault("ANECHOIC_TEST_FANOUT", "3")
+            return logged_process(argv, cwd, log, env=env)
         except OSError as error:
             guidance = f" {argv[0]}. {_PREFLIGHT_SETUP}" if suite_phase == "preflight" or argv[0] != "uv" else ""
             raise LocalReleaseError(f"local-release-command-unavailable:{guidance}") from error
@@ -130,7 +136,7 @@ def _run_gate_command(root, cwd, run_id, suite_phase, argv, runner, log_paths, *
 def run_gate(root, suite_phase, candidate_image, package, package_identity, selection, run_id, runner, log_paths,
              *, verify, target, named_file, logged_process, failed_output, source_root=None,
              source_bound=False, canary_root=None, log_directory=None, canary_settings_sha256=None,
-             record_logs=None):
+             record_logs=None, functional_fast=False):
     cwd = source_root or root
     source_bound = source_bound or source_root is not None
     engine = (cwd if source_bound else _ROOT) / "LAYER_4_ENGINE_STUDIO_C14"
@@ -138,6 +144,10 @@ def run_gate(root, suite_phase, candidate_image, package, package_identity, sele
     if source_root is not None and runner is None and suite_phase in {"image-tests", "canary"}:
         suite_phase = _source_image_phase(cwd, suite_phase, engine)
     argv = _gate_command(cwd, suite_phase, engine, source_bound)
+    if suite_phase == "functional" and functional_fast:
+        argv += ("--functional-suite", "fast")
+    if suite_phase in {"image", "image-tests", "canary"} and functional_fast:
+        argv += ("--image-suite", "fast")
     if suite_phase in {"image", "image-tests", "canary"}:
         if candidate_image is None:
             raise LocalReleaseError("local-release-candidate-image-invalid")

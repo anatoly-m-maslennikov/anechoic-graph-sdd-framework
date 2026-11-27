@@ -10,9 +10,17 @@ import sys
 
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.suite_config import load_suite_config
 
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS import source_comments as sources
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.source_comments import CODE_ROOTS, ROOT
 
 SOURCE_ROOTS = (*CODE_ROOTS, ".github/workflows")
+STATIC_ROOTS = ("LAYER_3_DEVOPS_C80", "LAYER_4_ENGINE_STUDIO_C14",
+                "LAYER_5_USER_SETUP_C65", ".github/workflows")
+STATIC_SUFFIXES = {
+    ".py", ".pyi", ".js", ".mjs", ".cjs", ".jsx", ".ts", ".mts",
+    ".cts", ".tsx", ".svelte", ".html", ".css", ".lean", ".sh",
+    ".bash", ".zsh", ".fish", ".ps1", ".bat", ".cmd", ".sql",
+}
 NEXT_LINE_DIRECTIVE = b"editorconfig-checker-disable-" b"next-line"
 
 
@@ -105,26 +113,56 @@ def line_length_findings(root, base_ref):
     return sorted(findings)
 
 
-def main():
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--base", default="HEAD", help="Git base (default HEAD)",
-    )
-    parser.add_argument("--project-root", type=Path, default=ROOT)
-    args = parser.parse_args()
-    root = args.project_root.resolve()
+def enabled(root):
     try:
         config = load_suite_config(root)
-        settings = config.get("tool", {}).get("anechoic", {})
-        enabled = settings.get("test_suite", {}).get(
-            "enforce_source_line_length", False,
-        )
-        if type(enabled) is not bool:
-            raise ValueError("enforce_source_line_length must be a boolean")
-        if not enabled:
+    except FileNotFoundError:
+        return False
+    settings = config.get("tool", {}).get("anechoic", {})
+    value = settings.get("test_suite", {}).get(
+        "enforce_source_line_length", False,
+    )
+    if type(value) is not bool:
+        raise ValueError("enforce_source_line_length must be a boolean")
+    return value
+
+
+def static_findings(root):
+    if not (root / ".editorconfig").is_file():
+        raise FileNotFoundError(root / ".editorconfig")
+    paths = set(sources.source_paths(root, STATIC_SUFFIXES, STATIC_ROOTS))
+    paths.update(
+        path for path in sources.source_paths(root, roots=STATIC_ROOTS)
+        if path.name == "Dockerfile"
+    )
+    paths.update(sources.source_paths(root, {".yml", ".yaml"}, (".github/workflows",)))
+    for path in paths:
+        if (root / path).resolve() != root / path:
+            raise ValueError(f"{path}: source path traverses a symbolic link")
+    files = sorted(path.as_posix() for path in paths if (root / path).is_file())
+    findings = [
+        (path, number, "Next-line suppression is disabled")
+        for path in files
+        for number, line in enumerate((root / path).read_bytes().splitlines(), 1)
+        if NEXT_LINE_DIRECTIVE in line
+    ]
+    for offset in range(0, len(files), 200):
+        for item in checker_findings(root, files[offset:offset + 200]):
+            location = item["location"]
+            start = location["lines"]["begin"]
+            end = start + location["lines"]["end"]
+            findings.extend((location["path"], line, item["description"])
+                            for line in range(start, end + 1))
+    return sorted(findings)
+
+
+def report(root, base=None):
+    try:
+        if not enabled(root):
             print("Source line length check is disabled")
             return 0
-        findings = line_length_findings(root, args.base)
+        findings = (static_findings(root) if base is None
+                    else line_length_findings(root, base))
     except FileNotFoundError as error:
         if error.filename == "ec":
             print(
@@ -135,12 +173,28 @@ def main():
         else:
             print(f"Line length check failed: {error}", file=sys.stderr)
         return 2
-    except (OSError, CalledProcessError, TimeoutExpired, ValueError) as error:
+    except (OSError, CalledProcessError, TimeoutExpired, ValueError,
+            KeyError, TypeError, AttributeError) as error:
         print(f"Line length check failed: {error}", file=sys.stderr)
         return 2
     for path, line, description in findings:
         print(f"{path}:{line}: {description}")
     return int(bool(findings))
+
+
+def check(root: Path) -> int:
+    """Check all covered source files in the authored checkout."""
+    return report(root.resolve())
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--base", default="HEAD", help="Git base (default HEAD)",
+    )
+    parser.add_argument("--project-root", type=Path, default=ROOT)
+    args = parser.parse_args()
+    return report(args.project_root.resolve(), args.base)
 
 
 if __name__ == "__main__":

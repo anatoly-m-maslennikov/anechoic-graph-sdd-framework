@@ -216,7 +216,7 @@ def extract(method, order, tree, released):
 
 def check(events, order, edges):
     root = next(p for p in Path(__file__).resolve().parents if (p / '_anechoic_anechoic').is_dir())
-    solution = root / '_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/FEATURE_WORKBENCH_BACKEND_C45/_SWD/AN-S-1363-SWD--keep-duckdb-projection-ownership-in-the-existing-server.md'
+    solution = root / '_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/FEATURE_IWE_CONSOLE_BACKEND_C45/_SWD/AN-S-1363-SWD--keep-duckdb-projection-ownership-in-the-existing-server.md'
     match = re.search(r'### Formal Claim\s+.*?```lean\n(.*?)```', solution.read_text(), re.DOTALL)
     if not match or 'namespace SavedQueryRebuild' not in match.group(1):
         raise ValueError('saved-query formal claim not found')

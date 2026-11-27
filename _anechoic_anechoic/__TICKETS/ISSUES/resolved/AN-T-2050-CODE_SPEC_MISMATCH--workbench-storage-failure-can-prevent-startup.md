@@ -19,4 +19,4 @@ Workbench storage failure can prevent startup
 
 ### Prose Claim
 
-CA-E-683@10 requires visible browser storage failure, and CA-M-470@13 governs draft persistence. `FEATURE_WORKBENCH_FRONTEND/src/App.svelte` reads and writes standalone Workspace storage before its guarded restore and error display are initialized. A blocked localStorage call can exit component construction before Workbench can render its error.
+CA-E-683@10 requires visible browser storage failure, and CA-M-470@13 governs draft persistence. `FEATURE_IWE_CONSOLE_FRONTEND/src/App.svelte` reads and writes standalone Workspace storage before its guarded restore and error display are initialized. A blocked localStorage call can exit component construction before Workbench can render its error.

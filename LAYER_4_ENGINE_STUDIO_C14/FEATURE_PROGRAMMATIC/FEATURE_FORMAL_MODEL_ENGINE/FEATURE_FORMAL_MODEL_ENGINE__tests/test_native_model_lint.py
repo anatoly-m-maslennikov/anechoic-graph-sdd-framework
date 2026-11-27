@@ -34,7 +34,7 @@ class NativeModelLintTests(unittest.TestCase):
                 (source.replace('    id: int', '    extra: str\n    id: int'), 'unsupported dataclass field contract'),
                 (source.replace("'value_cardinality': 1", "'other': 1"), 'require occurrence and value cardinalities'),
                 (source.replace('id: int', 'id: list[int]'), 'unsupported compiler format'),
-                (source.replace("entity_class=Example)", "entity_class=Example, classifications={'Container': 'yes'})"), 'unsupported dataclass field contract declaration'),
+                (source.replace("entity_class=Example)", "entity_class=Example, axes={'Container': 'yes'})"), 'unsupported dataclass field contract declaration'),
             ):
                 with self.subTest(message=message):
                     self.assertIn(message, self.lint(modified)[0])

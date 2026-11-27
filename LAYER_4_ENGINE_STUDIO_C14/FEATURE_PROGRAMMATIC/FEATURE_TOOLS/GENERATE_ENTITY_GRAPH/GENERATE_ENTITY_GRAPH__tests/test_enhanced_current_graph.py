@@ -2,15 +2,12 @@
 
 from pathlib import Path
 import sys
-import tempfile
 import unittest
 
 TOOL = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(TOOL.parent), str(TOOL)]
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import preview_constraints_from_paths
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import compose_current_graph, compose_enhanced_current_graph
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import render_model
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__tests.enhanced_graph_test_support import carrier
 
 
@@ -29,34 +26,6 @@ class EnhancedCurrentGraphTests(unittest.TestCase):
         for value in values:
             with self.assertRaisesRegex(ValueError, "Complex Subject selection"):
                 compose_current_graph([carrier("CA-R-1", {"active": value})])
-
-    def test_model_binder_is_opaque_and_population_count_applies_to_selection(self) -> None:
-        block = '''# model
-IF $model_node in (Node, Node.**) THEN (
-  $model_node.Name: [string]{:1};
-  IF $model_node >| Category == "A; B" THEN ($model_node.X: [string]{:1})
-);
-Relation//$relation ((HAS_INVERSE)) Relation//$relation_2;
-# instances
-Node//$n{:1..3};
-$n.Name: [string]{:1}
-'''
-        graph, _ = compose_enhanced_current_graph([
-            carrier("CA-R-1", {"active": "Node", "passive": []}, declaration=True),
-            carrier("CA-R-2", {"active": "Node.Name", "passive": []}, "## Claim\n### Formal Claim\n```CFEL\n" + block + "```\n", declaration=True),
-        ])
-        binder = next(row for row in graph["constraints"] if row["kind"] == "model_binding")
-        self.assertEqual("model_node", binder["variable"])
-        self.assertEqual("Node, Node.**", binder["selection"])
-        self.assertIn('"A; B"', binder["expression"])
-        self.assertEqual("opaque", binder["interpretation"])
-        self.assertEqual([], graph["model_contracts"])
-        population = next(row for row in graph["instance_constraints"] if row["kind"] == "instance_population_constraint")
-        self.assertEqual({"minimum": 1, "maximum": 3}, population["population_cardinality"])
-        self.assertEqual("Node", population["kind_selector"])
-        self.assertTrue(any(row.get("relation") == "HAS_INVERSE" for row in graph["constraints"]))
-        self.assertFalse(any("$" in row["identity"] for row in graph["model"]["primary_nodes"]))
-        self.assertIn(block, [row["block"] for row in graph["formal_claim_blocks"]])
 
     def test_migrated_subject_keys_keep_the_legacy_graph_shape(self) -> None:
         legacy, _ = compose_current_graph([
@@ -89,37 +58,6 @@ $n.Name: [string]{:1}
         )
         self.assertTrue(any("CA-R-1016" in row and "Subject projection failed" in row for row in graph["diagnostics"]))
         self.assertTrue(any("CA-R-1016" in row and "Model target unavailable" in row for row in graph["diagnostics"]))
-
-    def test_model_renderer_keeps_nonexpression_cfel_diagnostic_visible(self) -> None:
-        graph, provenance = compose_enhanced_current_graph([
-            carrier("CA-R-1001", {"active": "Node", "passive": []}, """## Claim
-```CFEL
-Node: [string]{:1}
-""", declaration=True),
-        ])
-        document = render_model(
-            graph, provenance, updated_at="2026-11-01 00:00:00 +0000",
-            source_selection="Current Atoms in sources",
-            projection_identity={"projection_id": "CA-PROJ-901", "named_selection": "Current Atoms"},
-        )
-        self.assertIn("CFEL fence has no closing fence", document)
-
-    def test_explicit_draft_paths_are_read_only_preview_inputs(self) -> None:
-        with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary)
-            path = root / "draft" / "CA-R-1001@1-draft.md"
-            path.parent.mkdir()
-            path.write_text(
-                "---\natom_id: CA-R-1001\nversion: 1\nstatus: Draft\nsubjects:\n  active: Node\n"
-                "---\n## Claim\n```CFEL\nNode.Property: [string]{:1};\nIF Node THEN Property\n```\n",
-                encoding="utf-8",
-            )
-            before = path.read_bytes()
-            records, diagnostics = preview_constraints_from_paths([path], repository=root)
-            self.assertEqual("property_constraint", records[0]["kind"])
-            self.assertEqual("draft/CA-R-1001@1-draft.md", records[0]["source"]["path"])
-            self.assertEqual("cfel-expression-unsupported", diagnostics[0]["code"])
-            self.assertEqual(before, path.read_bytes())
 
     def test_qualified_declaration_admits_its_node_but_other_roles_do_not(self) -> None:
         graph, _ = compose_enhanced_current_graph([

@@ -8,9 +8,11 @@ from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.suite_config import load_suite_c
 
 from .full_suite_docker import APP
 
-WORKBENCH = Path("LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH")
+WORKBENCH = Path("LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE")
 WORKBENCH_TESTS = WORKBENCH / (WORKBENCH.name + "__tests")
 MCP_TESTS = APP / (APP.name + "__tests")
+_FAST_BOUNDARY = MCP_TESTS / "image/test_packaged_boundary_docker_e2e.py"
+_FAST_IMAGE_MODULES = (_FAST_BOUNDARY.as_posix(), (MCP_TESTS / "test_beta_project_supervision_docker_e2e.py").as_posix())
 _CANARY_TEST_DIRECTORY = (
     "LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests"
 )
@@ -76,7 +78,11 @@ def _required_unit_modules(root, discovered):
         raise ValueError(f"functional_test_modules configuration is invalid: {error}") from error
 
 
-def select_phase_modules(root, discovered, phase, focused, required):
+def select_phase_modules(root, discovered, phase, focused, required, *, image_suite="full"):
+    if image_suite == "fast":
+        return _select_test_modules(root, discovered, _FAST_IMAGE_MODULES)
+    if focused is None:
+        discovered = [module for module in discovered if module != root / _FAST_BOUNDARY]
     if phase == "canary":
         return _select_test_modules(root, discovered, _CANARY_TEST_MODULES)
     if required or phase == "functional":

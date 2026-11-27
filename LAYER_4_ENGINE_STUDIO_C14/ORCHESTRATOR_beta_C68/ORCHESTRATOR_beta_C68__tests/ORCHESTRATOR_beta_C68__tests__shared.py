@@ -22,7 +22,8 @@ ENGINE = Path(__file__).resolve().parents[2]
 
 
 def restore_reuse(jobs, generation):
-    witness = {"base_generation": generation, "inputs": {}, "graph_config": None, "endpoints": {}}
+    witness = {"base_generation": generation, "inputs": {}, "graph_config": None, "endpoints": {},
+               "checkpoint_scope": "foreground"}
     with patch("ORCHESTRATOR_beta_C68.generation.UnixConnection") as connection, patch.object(jobs, "_watch_queue"):
         response = connection.return_value.getresponse.return_value
         response.status = 200
@@ -68,10 +69,17 @@ def project(root):
 
 class Kernel(BaseHTTPRequestHandler):
     def do_GET(self):
+        if self.path.startswith("/spec-snapshot?"):
+            self.reply(200, {"result": self.server.spec_snapshot})
+            return
         self.reply(409 if self.path.startswith("/model?") else 404, {})
 
     def do_PUT(self):
         payload = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+        if self.path == "/spec-snapshot":
+            self.server.spec_snapshot = {"snapshot_id": "test-snapshot", "rows": payload["rows"]}
+            self.reply(200, {"result": {"snapshot_id": "test-snapshot"}})
+            return
         if self.path == '/ingestion/issues':
             self.send_response(200)
             self.send_header('Content-Length', '0')

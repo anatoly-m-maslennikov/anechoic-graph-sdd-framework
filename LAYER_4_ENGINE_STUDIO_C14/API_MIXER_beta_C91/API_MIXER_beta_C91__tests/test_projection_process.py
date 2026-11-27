@@ -2,7 +2,6 @@
 
 import json
 import os
-import socketserver
 import subprocess
 import sys
 import tempfile
@@ -10,91 +9,13 @@ import threading
 import time
 import unittest
 from concurrent.futures import ThreadPoolExecutor
-from http.server import BaseHTTPRequestHandler
 from pathlib import Path
 
 import httpx2
 
+from .projection_peer_fixture import DIGEST, INSTANCE, QUERY_ID, Owner, Peer, Server
+
 ENGINE = Path(__file__).resolve().parents[2]
-DIGEST = "a" * 64
-INSTANCE = "b" * 64
-QUERY_ID = "c" * 32
-
-
-class Server(socketserver.ThreadingMixIn, socketserver.UnixStreamServer):
-    daemon_threads = True
-
-
-class Peer(BaseHTTPRequestHandler):
-    def log_message(self, *_args):
-        pass
-
-    def do_GET(self):
-        self.server.requests.append(("GET", self.path, None))
-        if getattr(self.server, "unreachable", False):
-            self.close_connection = True
-            return
-        if self.path.startswith("/jobs/worker-runs"):
-            runs = {"active": {"state": "running", "run_id": "run-1", "worker_alive": True},
-                    "latest": {"state": "succeeded", "finished_at": 1.0}, "archive": {"state": "ready"}}
-            return self.reply({"result": getattr(self.server, "runs", runs)})
-        if self.path.startswith("/ingestion/issues"):
-            return self.reply({"result": {"rows": [{"code": "warning"}]}})
-        result = {"instance_id": INSTANCE, "pid": os.getpid()}
-        if self.server.kind == "db":
-            ready = getattr(self.server, "ready", False)
-            result.update(manifest_sha256=DIGEST, ready=ready, generation="g1" if ready else None)
-            pending = getattr(self.server, "archive_pending", None)
-            if pending is not None:
-                result["archive_pending"] = pending
-        else:
-            result["startup_replay_pending"] = getattr(self.server, "startup_replay_pending", True)
-            result["watcher_active"] = getattr(self.server, "watcher_active", True)
-        self.reply({"result": result})
-
-    def do_POST(self):
-        data = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
-        self.server.requests.append(("POST", self.path, data))
-        if self.path == "/database":
-            if hasattr(self.server, "entered"):
-                self.server.entered.set()
-                if not self.server.release.wait(8):
-                    return
-            result = {"query_id": QUERY_ID, "columns": [{"name": "answer", "type": "INTEGER", "has_values": True}],
-                      "rows": [[42]], "offset": 0, "has_more": False}
-        elif self.path == "/jobs/abort":
-            result = {"run_id": data["run_id"], "state": "aborting"}
-        else:
-            result = {"result_ids": {QUERY_ID: "d" * 32}}
-        self.reply({"result": result})
-
-    def reply(self, value):
-        data = json.dumps(value).encode()
-        self.send_response(200)
-        self.send_header("Content-Length", str(len(data)))
-        self.end_headers()
-        self.wfile.write(data)
-
-
-class Owner(socketserver.StreamRequestHandler):
-    def handle(self):
-        request = json.loads(self.rfile.readline())
-        self.server.requests.append(request)
-        operation = request["operation"]
-        if operation == "status":
-            value = {"loaded_project_count": 0, "max_loaded_projects": 2, "loaded_project_processes": []}
-        elif operation == "select":
-            value = self.server.binding
-        else:
-            value = self.server.lease if request["start"] or not self.server.cold else None
-        self.send(value)
-        if operation == "lease":
-            self.server.releases.append(self.rfile.read(1))
-            self.send(None)
-
-    def send(self, value):
-        self.wfile.write(json.dumps({"result": value}).encode() + b"\n")
-        self.wfile.flush()
 
 
 class ProjectionTest(unittest.TestCase):
@@ -207,8 +128,13 @@ class ProjectionTest(unittest.TestCase):
         sql = {"sql": "SELECT 42", "result_delivery": "inline"}
         for index in (0, 1):
             self.assertIn("result", self.call(index, "query_run", sql))
+        self.servers[2].cold = False
         jobs.watcher_active = False
         self.assertEqual("degraded", self.clients[0].get("/health").json()["state"])
+        for index in (0, 1):
+            health = self.call(index, "iwe_console_status", {"include_health": True})["result"]["value"]["health"]
+            self.assertEqual("degraded", health["state"])
+            self.assertIn("watcher is unavailable", health["error"]["message"])
         self.assertEqual("project_build_unavailable", self.call(1, "query_run", sql)["error"]["code"])
         jobs.watcher_active, jobs.unreachable = True, True
         self.assertEqual("unavailable", self.clients[0].get("/health").json()["state"])
@@ -247,6 +173,8 @@ class ProjectionTest(unittest.TestCase):
         self.assertEqual("project_build_pending", refused["error"]["code"])
         refused = self.call(0, "atom_lifecycle_archive", {"target": {"ref": "AN-S-1"}})
         self.assertEqual("project_build_pending", refused["error"]["code"])
+        self.assertEqual(self.call(0, "workbench_status", {}), self.call(0, "iwe_console_status", {}))
+        self.assertEqual("aborting", self.call(0, "iwe_console_abort", {"run_id": "run-1"})["result"]["value"]["state"])
         value = self.call(0, "workbench_status", {})["result"]["value"]
         self.assertEqual((True, "run-1", True), (value["syncing"], value["run_id"], value["worker_alive"]))
         self.assertEqual([{"code": "warning"}], value["ingestion_issues"])
@@ -261,6 +189,23 @@ class ProjectionTest(unittest.TestCase):
         count = len(self.servers[1].requests) + len(self.servers[0].requests)
         self.assertEqual("tool_input_invalid", self.call(0, "query_rebuild", {"target": "unknown"})["error"]["code"])
         self.assertEqual(count, len(self.servers[1].requests) + len(self.servers[0].requests))
+
+    def test_graph_rebuild_routes_to_worker(self):
+        result = self.call(0, "query_rebuild", {"target": "realization_graph"})["result"]["value"]
+        self.assertEqual("realization_graph", result["target"])
+        self.assertEqual(("POST", "/jobs/build", {**self.worker_binding, "instance_id": INSTANCE,
+                                                  "refresh_target": "realization_graph"}),
+                         self.servers[1].requests[-1])
+
+    def test_model_projection_rebuild_targets(self):
+        for name in ("model_tree", "model_primary_entities"):
+            for target in (name, "mrt_" + name, "main.mrt_" + name):
+                with self.subTest(target=target):
+                    result = self.call(0, "query_rebuild", {"target": target})["result"]["value"]
+                    self.assertEqual(target, result["target"])
+                    self.assertEqual(("POST", "/jobs/build", {**self.worker_binding, "instance_id": INSTANCE,
+                                                              "refresh_target": name}),
+                                     self.servers[1].requests[-1])
 
     def test_shared_cold_status_abort_do_not_start_project(self):
         status = self.call(1, "workbench_status", {})["result"]["value"]

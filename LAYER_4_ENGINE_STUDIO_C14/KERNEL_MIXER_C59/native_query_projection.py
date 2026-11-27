@@ -12,7 +12,7 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import NativeCapture, NativeManifestChanged, check_native_manifest, capture_native
 from .package_audit import replace_package_audit
 from .query_store import QueryStore
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.import_graph__shared import (
+from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IMPORT_GRAPH_C61.import_graph__shared import (
     PACKAGE_SUFFIX, SUFFIX, is_trace_path, native_trace_snapshot,
 )
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import CEILINGS, ReadContext
@@ -27,7 +27,7 @@ class NativeQueryProjection:
         if config is False:
             return None
         if not isinstance(config, dict):
-            raise ValueError("runtime.workbench.import_graph must be a mapping or false")
+            raise ValueError("runtime.iwe_console.import_graph must be a mapping or false")
         result = []
         for name, default in (("python_roots", None), ("include", [])):
             values = config.get(name, default)
@@ -222,7 +222,8 @@ class NativeQueryProjection:
     def _capture_for_projection(self, paths=None) -> tuple[NativeCapture, NativeProjectSelection]:
         selection = self._projection_selection
         try:
-            return capture_native(selection, previous=self._capture, paths=paths), selection
+            return capture_native(selection, previous=self._capture, paths=paths,
+                                  domains=self._inputs.status_domains), selection
         except NativeManifestChanged:
             selection = resolve_native_project(
                 self._root, self.selection.control_relative, validate_manifest=self._inputs.validate_manifest,
@@ -233,7 +234,7 @@ class NativeQueryProjection:
                     or selection.project_prefix != self.selection.project_prefix
                     or selection.manifest_ref.partition("@")[0] != self.selection.manifest_ref.partition("@")[0]):
                 raise ValueError("Project identity changed. Restart required.")
-            return capture_native(selection), selection
+            return capture_native(selection, domains=self._inputs.status_domains), selection
 
     def _refresh_atom_sources(self, store: QueryStore, paths: set[PurePosixPath] | None) -> NativeCapture:
         previous = self._capture
@@ -266,7 +267,7 @@ class NativeQueryProjection:
             if read_only:
                 capture, selection = self._capture_for_projection()
             else:
-                capture = capture_native(self.selection)
+                capture = capture_native(self.selection, domains=self._inputs.status_domains)
 
         def finish(graph) -> None:
             if before_commit is None:

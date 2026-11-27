@@ -4,6 +4,7 @@ import json
 from hashlib import sha256
 from pathlib import Path, PurePosixPath
 import re
+from tempfile import TemporaryDirectory
 from time import monotonic_ns
 from typing import Any
 
@@ -26,9 +27,18 @@ class _ReuseHint(BaseModel):
     graph_config: Any
     carrier_hashes: Any = None
     folder_hashes: Any = None
+    status_domains: dict[str, list[str]] | None = None
 
     @model_validator(mode="after")
     def _checkpoint_fields(self):
+        if self.status_domains is not None and (
+            set(self.status_domains) != {"S", "T", "P", "C"}
+            or any(not values or len(set(values)) != len(values)
+                   or any(not value or value != value.strip() for value in values)
+                   for values in self.status_domains.values())
+            or self.status_domains["P"] != self.status_domains["C"]
+        ):
+            raise ValueError("Invalid admitted Status domains")
         if "folder_hashes" in self.model_fields_set and "carrier_hashes" not in self.model_fields_set:
             raise ValueError("Folder hashes require a carrier checkpoint")
         return self
@@ -74,7 +84,7 @@ def artifact_inputs(binding, config, *, watcher_guarded=False, defer_graph=False
     elif defer_graph:
         graph = "pending"
     else:
-        from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.import_graph__shared import (
+        from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IMPORT_GRAPH_C61.import_graph__shared import (
             graph_input_signature,
         )
 
@@ -91,6 +101,11 @@ def artifact_inputs(binding, config, *, watcher_guarded=False, defer_graph=False
     return {"manifest": manifest, "graph": graph, "carrier_schema": schema}
 
 
+def _domain_option(reuse):
+    return ({"domains": {key: set(values) for key, values in reuse.status_domains.items()}}
+            if reuse.status_domains is not None else {})
+
+
 def _ticket_delta(binding, reuse, paths, capture_ticket_delta=None):
     if reuse is None:
         return None
@@ -100,7 +115,8 @@ def _ticket_delta(binding, reuse, paths, capture_ticket_delta=None):
         )
 
     try:
-        result = capture_ticket_delta(binding, paths, reuse.endpoints, include_hashes=True)
+        result = capture_ticket_delta(binding, paths, reuse.endpoints, include_hashes=True,
+                                      **_domain_option(reuse))
     except (OSError, RuntimeError, TypeError, ValueError):
         return None
     if result is None:
@@ -154,7 +170,8 @@ def _representable(binding, paths):
 def _startup_delta(binding, reuse, current, paths, *, archive):
     from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import capture_carrier_delta
 
-    result = capture_carrier_delta(binding, paths, reuse.endpoints, include_hashes=True)
+    result = capture_carrier_delta(binding, paths, reuse.endpoints, include_hashes=True,
+                                   **_domain_option(reuse))
     if result["carrier_hashes"] != {path: current[path] for path in paths if path in current}:
         raise ValueError("Carrier changed during incremental capture")
     if archive and any(row["status_group"] != "Archived" for row in result["snapshot"]["atoms"]):
@@ -221,6 +238,45 @@ def _mark_reused(foreground, config, *, graph=True):
             mark_startup_timing("realization_graph_ready", mode="disabled" if config is None else "reused")
 
 
+def _compile_refresh(binding, reuse, before, output, compile_artifacts):
+    with TemporaryDirectory(prefix=".beta-compile-", dir=Path(output).parent) as temporary:
+        stage = Path(temporary)
+        receipt, _, endpoints = compile_artifacts(binding, stage)
+        compiler = {"receipt": receipt, "model": (stage / "model.json").read_text(encoding="utf-8"),
+                    "structure": (stage / "structure.json").read_text(encoding="utf-8")}
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import status_domains
+    domains = status_domains(json.loads(compiler["model"])["bindings"])
+    if domains != _domain_option(reuse).get("domains", status_domains({})):
+        return None
+    candidate = reuse.model_copy(update={"endpoints": endpoints})
+    delta = startup_incremental(binding, candidate, before=before, foreground=True,
+                                watcher_guarded=True, defer_graph=True)
+    if delta is None:
+        return None
+    result = {"base_generation": reuse.base_generation, "compiler": compiler,
+              "reuse": {"inputs": before, "graph_config": reuse.graph_config, "endpoints": endpoints}}
+    if not delta.get("unchanged"):
+        result["delta"] = {key: value for key, value in delta.items() if key != "base_generation"}
+    return result
+
+
+def deferred_incremental(binding, reuse, foreground, guarded, output, compile_artifacts):
+    if reuse is None:
+        return None
+    before = artifact_inputs(binding, reuse.graph_config, watcher_guarded=guarded, defer_graph=True)
+    if before is None or before.get("carrier_schema") != reuse.inputs.get("carrier_schema"):
+        return None
+    if before.get("manifest") != reuse.inputs.get("manifest"):
+        if foreground and guarded and compile_artifacts is not None:
+            return _compile_refresh(binding, reuse, before, output, compile_artifacts)
+        return None
+    result = startup_incremental(binding, reuse, before=before, foreground=foreground,
+                                 watcher_guarded=guarded, defer_graph=True)
+    if result is not None:
+        _mark_reused(foreground, reuse.graph_config, graph=False)
+    return result
+
+
 def _incremental_reuse(binding, reuse, before, foreground, watcher_guarded):
     result = startup_incremental(binding, reuse, before=before, foreground=foreground,
                                  watcher_guarded=watcher_guarded)
@@ -247,7 +303,7 @@ def refresh(binding, reuse, capture, paths=None, structure=None, rebuild_graph=N
                 or before["manifest"] != reuse.inputs["manifest"]
                 or before["graph"] == reuse.inputs["graph"]):
             return None
-        result = rebuild_graph(binding, config, structure, reuse.endpoints)
+        result = rebuild_graph(binding, config, structure, reuse.endpoints, **_domain_option(reuse))
         if result is None:
             return None
         snapshot, graph, carrier_hashes = result
@@ -264,7 +320,7 @@ def refresh(binding, reuse, capture, paths=None, structure=None, rebuild_graph=N
         startup = _startup_refresh(binding, reuse, before, watcher_guarded)
         if startup is not None:
             return startup
-    result = capture(binding, reuse.endpoints)
+    result = capture(binding, reuse.endpoints, **_domain_option(reuse))
     if result["graph_config"] != config or artifact_inputs(binding, config, watcher_guarded=watcher_guarded) != before:
         return None
     snapshot = result["snapshot"]

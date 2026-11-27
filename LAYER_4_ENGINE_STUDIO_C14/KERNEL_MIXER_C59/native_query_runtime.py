@@ -48,6 +48,7 @@ class NativeQueryInputs:
     ticket_labels: tuple[str, ...] = ()
     validate_project_spec: Callable[[str, dict[str, object], str, str | None], object] | None = None
     require_manifest_summary: bool = False
+    status_domains: dict[str, set[str]] | None = None
 
 
 
@@ -89,7 +90,7 @@ class NativeQueryRuntime(NativeQueryProjection, NativeQueryRebuild, ServiceInter
 
         storage = workbench.get("storage", "disk")
         if storage not in ("disk", "memory"):
-            raise ValueError("Project Manifest runtime.workbench.storage must be disk or memory")
+            raise ValueError("Project Manifest runtime.iwe_console.storage must be disk or memory")
         options = {key: workbench[key] for key in ("result_ttl_seconds", "schema_mode", "inline_result_limit_kib")
                    if key in workbench}
         path = migrate_project_database(self._root)
@@ -131,9 +132,9 @@ class NativeQueryRuntime(NativeQueryProjection, NativeQueryRebuild, ServiceInter
         store = None
         try:
             runtime = self.selection.parameters.get("runtime", {})
-            workbench = runtime.get("workbench", {}) if isinstance(runtime, dict) else None
+            workbench = runtime.get("iwe_console", runtime.get("workbench", {})) if isinstance(runtime, dict) else None
             if not isinstance(workbench, dict):
-                raise ValueError("Project Manifest runtime.workbench must be a mapping")
+                raise ValueError("Project Manifest runtime.iwe_console must be a mapping")
             self._realization_options = self._import_options(workbench)
             store = self._open_store(workbench)
             store.sync_work_journal(self._root)

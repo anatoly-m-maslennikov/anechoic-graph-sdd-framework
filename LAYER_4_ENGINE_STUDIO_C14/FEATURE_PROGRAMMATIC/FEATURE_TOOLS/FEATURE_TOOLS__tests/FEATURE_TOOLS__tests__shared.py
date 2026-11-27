@@ -11,7 +11,7 @@ from pathlib import Path
 import sys
 
 TOOLS = Path(__file__).resolve().parents[1]
-WORKBENCH = TOOLS.parent.parent / 'IWE_CONSOLE_C43/APP_WORKBENCH'
+WORKBENCH = TOOLS.parent.parent / 'IWE_CONSOLE_C43/APP_IWE_CONSOLE'
 sys.path.insert(0, str(TOOLS.parents[2]))
 sys.path.insert(0, str(TOOLS.parent))
 sys.path.insert(0, str(TOOLS))
@@ -29,7 +29,7 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import header_value  # noqa: E402
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import SubjectNotationError, parse_subject_expression, render_subject  # noqa: E402
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import compile_content_schema  # noqa: E402
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__shared import (  # noqa: E402
+from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.FEATURE_IWE_CONSOLE_BACKEND__shared import (  # noqa: E402
     compile_schema, load_image_schema, schema_asset,
 )
 

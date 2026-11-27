@@ -6,13 +6,10 @@ container:
 priority: 2
 context:
   template: question
-relations:
-  IS_REFERENCE:
-  - AN-S-3160@5
 state:
   status: resolved
   version: 21
-  updated_at: '2026-11-21T09:55:23.430097+00:00'
+  updated_at: '2026-11-26T16:39:56.962561+00:00'
 ---
 
 ## Summary

@@ -6,6 +6,7 @@ from pathlib import Path
 import subprocess
 from tempfile import TemporaryDirectory
 import unittest
+from unittest.mock import patch
 
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.test_suite__shared import run_full_suite
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.test_suite__shared import (
@@ -19,7 +20,8 @@ ROOT = Path(__file__).resolve().parents[5]
 
 
 class SourceSizeTests(unittest.TestCase):
-    def test_static_phase_applies_only_the_configured_size_limits(self):
+    @patch("FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.static_checks._python_quality", return_value=())
+    def test_static_phase_applies_only_the_configured_size_limits(self, _quality):
         with TemporaryDirectory() as directory:
             root = Path(directory).resolve()
             subprocess.run(("git", "init", "--quiet", str(root)), check=True)
@@ -71,6 +73,22 @@ class SourceSizeTests(unittest.TestCase):
         functions = list(python_functions("example.py", source))
         self.assertEqual(25, len(functions))
         self.assertEqual([], check_functions("example.py", functions))
+
+    def test_added_web_suffixes_are_measured(self):
+        from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS import source_sizes
+        with TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            subprocess.run(("git", "init", "--quiet", str(root)), check=True)
+            folder = root / "LAYER_5_USER_SETUP_C65"
+            folder.mkdir()
+            body = "const run = () => {\n" + "  void 0;\n" * 44 + "};\n"
+            for suffix in ("jsx", "tsx", "mts"):
+                (folder / f"example.{suffix}").write_text(body)
+            with unittest.mock.patch.object(source_sizes, "web_functions") as parse:
+                parse.side_effect = lambda root, files: web_functions(ROOT, files)
+                findings = source_sizes.source_size_findings(root)
+            self.assertEqual(3, len(findings))
+            self.assertTrue(all("run has 46 lines" in item for item in findings))
 
     def test_javascript_and_typescript_function_limit(self):
         arrow = "const run = () => {\n" + "  void 0;\n\n  \n" * 43 + "};"

@@ -4,6 +4,7 @@ from contextlib import closing
 import json
 import re
 import stat
+import sys
 from pathlib import Path
 from urllib.parse import urlencode
 
@@ -24,6 +25,10 @@ class GenerationBaseChanged(RuntimeError):
 
 class DeltaRequiresReconciliation(RuntimeError):
     """The Kernel refused a delta without admitting it."""
+
+
+class CompilerColumnsChanged(RuntimeError):
+    """The candidate requires a different native projection layout."""
 
 
 class WorkerIngestionFailure(RuntimeError):
@@ -119,20 +124,37 @@ def _ticket_path(root, control, ticket, value):
     return relative
 
 
-def read_reuse(socket_path, instance_id):
+def live_reuse(socket_path, instance_id, generation, result, prior, witness):
+    carrier_delta = ("paths" in result and "compiler" not in result and "reuse" not in result
+                     and prior is not None and result.get("base_generation") == prior.get("base_generation")
+                     and isinstance(prior.get("status_domains"), dict))
+    if result.get("unchanged") is True or carrier_delta:
+        domains = witness.get("status_domains")
+    else:
+        admitted = read_reuse(socket_path, instance_id)
+        domains = admitted.status_domains if admitted is not None and admitted.base_generation == generation else None
+    fields = {key: value for key, value in witness.items() if key not in CHECKPOINT_FIELDS | {"status_domains"}}
+    fields["base_generation"] = generation
+    if domains is not None:
+        fields["status_domains"] = domains
+    return ReuseRecord.model_validate(fields)
+
+
+def read_reuse(socket_path, instance_id, scope=None):
     connection = None
     try:
         connection = UnixConnection(socket_path)
-        connection.request("GET", "/generation/reuse?" + urlencode({"instance_id": instance_id}))
+        connection.request("GET", "/generation/reuse?" + urlencode({"instance_id": instance_id} | ({"scope": scope} if scope else {})))
         response = connection.getresponse()
         if response.status != 200:
             return None
         result = json.loads(response.read())["result"]
         if (not isinstance(result, dict)
-                or set(result) - CHECKPOINT_FIELDS != REUSE_FIELDS | {"base_generation"}
+                or set(result) - CHECKPOINT_FIELDS - {"status_domains"} != REUSE_FIELDS | {"base_generation"}
                 or not isinstance(result["base_generation"], str) or not result["base_generation"]
                 or not isinstance(result["inputs"], dict) or not isinstance(result["endpoints"], dict)
                 or ("archive_pending" in result and result["archive_pending"] is not True)
+                or result.get("checkpoint_scope") != scope
                 or any(key in result and not isinstance(result[key], dict) for key in ("carrier_hashes", "folder_hashes"))):
             return None
         return ReuseRecord.model_validate(result)
@@ -148,6 +170,12 @@ def read_accepted_model(socket_path, instance_id):
         connection.request("GET", "/model?" + urlencode({"instance_id": instance_id}))
         response = connection.getresponse()
         if response.status == 409:
+            try:
+                reason = json.loads(response.read()).get("error", {}).get("message")
+            except (AttributeError, ValueError):
+                reason = None
+            print(f"Using the bundled Model: {reason or 'Project Model asset is unavailable'}",
+                  file=sys.stderr)
             return None
         if response.status != 200:
             raise ValueError("Cannot retrieve the accepted Project Model")
@@ -157,8 +185,9 @@ def read_accepted_model(socket_path, instance_id):
         return model
 
 
+
 def worker_request(binding, socket_path, instance_id, reuse, paths):
-    witness = None if reuse is None else {key: value for key, value in reuse.items() if key != "archive_pending"}
+    witness = None if reuse is None else {key: value for key, value in reuse.items() if key not in {"archive_pending", "checkpoint_scope"}}
     request = {"binding": binding, "reuse": witness}
     if paths is not None:
         request["paths"] = paths
@@ -204,7 +233,9 @@ def _admission_error(status, body, kind):
             code = json.loads(body)["error"]["code"]
         except (ValueError, TypeError, KeyError):
             code = None
-        if code == "generation_base_changed":
+        if kind == "compiler_refresh" and code == "model_columns_changed":
+            return CompilerColumnsChanged(message)
+        if kind != "compiler_refresh" and code == "generation_base_changed":
             return GenerationBaseChanged(message)
         if kind in ("native_delta", "archive") and code == "delta_full_reconciliation":
             return DeltaRequiresReconciliation(message)
@@ -214,6 +245,8 @@ def _admission_error(status, body, kind):
 def _admission_route(result, archive):
     if archive:
         return "/generation/archive", "archive"
+    if "compiler" in result:
+        return "/generation/compiler", "compiler_refresh"
     if result.get("unchanged") is True:
         return "/generation/reuse", "reused"
     if "paths" in result:
@@ -223,17 +256,21 @@ def _admission_route(result, archive):
     return "/generation", "full"
 
 
-def admit_generation(socket_path, instance_id, directory, result, target, *, archive=False):
+def admit_generation(socket_path, instance_id, directory, result, target, *, archive=False, force_graph=False):
     path, kind = _admission_route(result, archive)
     payload = {"instance_id": instance_id, **result}
+    if force_graph:
+        if kind != "graph_refresh" or "snapshot" in result:
+            raise ValueError("Force requires graph-only admission")
+        payload["force_graph"] = True
     if kind == "reused":
         del payload["unchanged"]
     if kind == "full":
         for field in ("model", "structure"):
             payload[field] = (Path(directory) / f"{field}.json").read_bytes().decode("utf-8")
-        if "batch_artifact" in payload:
-            artifact = Path(directory) / "generation-batches.jsonl"
-            payload["batch_artifact"] = payload["batch_artifact"] | {"path": str(artifact)}
+    if kind in ("full", "archive") and "batch_artifact" in payload:
+        artifact = Path(directory) / "generation-batches.jsonl"
+        payload["batch_artifact"] = payload["batch_artifact"] | {"path": str(artifact)}
     if target is not None:
         payload["refresh_target"] = target
     connection = UnixConnection(socket_path)

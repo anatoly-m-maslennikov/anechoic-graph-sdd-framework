@@ -28,7 +28,7 @@ Specify the Import Graph Component and its architecture.
 4. Add the [import resolution and relation semantics Spec](../../../LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/FEATURE_IMPORT_GRAPH_C61/__DES/AN-S-3085-DES--resolve-imports-and-derive-module-and-package-relations.md).
 5. Add the [Workbench refresh, DuckDB publication, and query Spec](../../../LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/FEATURE_IMPORT_GRAPH_C61/__SWD/AN-S-3086-SWD--publish-and-query-the-import-graph-through-workbench.md).
 6. Add the [Import Graph acceptance Spec](../../../LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/FEATURE_IMPORT_GRAPH_C61/__QA/AN-S-3087-QA--verify-the-import-graph-through-public-workbench-queries.md).
-7. Update the [Workbench SQL and graph acceptance Atom](../../../LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/FEATURE_WORKBENCH_BACKEND_C45/__QA/AN-S-1366-QA--query-native-sql-results-and-typed-relation-expansion.md).
+7. Update the [Workbench SQL and graph acceptance Atom](../../../LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/FEATURE_IWE_CONSOLE_BACKEND_C45/__QA/AN-S-1366-QA--query-native-sql-results-and-typed-relation-expansion.md).
 
 ## Definition of Done
 

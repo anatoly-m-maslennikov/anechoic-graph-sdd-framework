@@ -6,10 +6,10 @@
 
 FROM node:22.20.0-bookworm-slim AS workbench_frontend
 WORKDIR /frontend
-COPY LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND/package.json \
-     LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND/package-lock.json ./
+COPY LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_FRONTEND/package.json \
+     LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_FRONTEND/package-lock.json ./
 RUN npm ci
-COPY LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND ./
+COPY LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_FRONTEND ./
 RUN npm run build
 
 FROM python:3.14.7-slim@sha256:51dafde81dbdb6ebde285137a295cf18a47ca95234fe388a343719cb97305b3d AS runtime_build
@@ -56,7 +56,7 @@ COPY LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43 ./LAYER_4_ENGINE_STUDIO_C14/IWE_C
 COPY LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_SKILLS/ane \
      ./LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_SKILLS/ane
 COPY --from=workbench_frontend /frontend/dist \
-     ./LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND/dist
+     ./LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_FRONTEND/dist
 RUN mkdir -p /var/lib/anechoic /workspace/.anechoic_install \
     /workspace/.anechoic_tmp /workspace/tmp /workspace/.anechoic_anechoic \
     && chmod -R a+rX /workspace/LAYER_1_META_ONTOLOGY_C9 /workspace/LAYER_2_META_METHODOLOGY_C58 \
@@ -68,13 +68,13 @@ RUN PYTHONPYCACHEPREFIX=/workspace/.anechoic_tmp/python/bytecode /opt/venv/bin/p
     /usr/local/lib/python3.14 /opt/venv/lib/python3.14/site-packages /workspace/LAYER_4_ENGINE_STUDIO_C14 \
     && chmod -R a+rX "$PYTHONPYCACHEPREFIX"
 HEALTHCHECK --interval=2s --timeout=5s --start-period=420s --retries=25 \
-    CMD ["python", "-B", "LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/healthcheck.py"]
+    CMD ["/opt/venv/bin/python", "-B", "LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/healthcheck.py"]
 ENTRYPOINT ["/opt/venv/bin/python", "-B", "LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/entrypoint.py"]
 
 FROM runtime_base AS beta_base
 COPY --from=workbench_frontend /usr/local/bin/node /usr/local/bin/node
-COPY --from=workbench_frontend /frontend/node_modules/typescript ./LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND/node_modules/typescript
-COPY --from=workbench_frontend /frontend/node_modules/svelte ./LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND/node_modules/svelte
+COPY --from=workbench_frontend /frontend/node_modules/typescript ./LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_FRONTEND/node_modules/typescript
+COPY --from=workbench_frontend /frontend/node_modules/svelte ./LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_FRONTEND/node_modules/svelte
 COPY LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_beta_C67 ./LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_beta_C67
 COPY LAYER_4_ENGINE_STUDIO_C14/ORCHESTRATOR_beta_C68 ./LAYER_4_ENGINE_STUDIO_C14/ORCHESTRATOR_beta_C68
 COPY LAYER_4_ENGINE_STUDIO_C14/WORKERS_beta_C69 ./LAYER_4_ENGINE_STUDIO_C14/WORKERS_beta_C69

@@ -18,6 +18,9 @@ from LAYER_1_RUNTIME_IMAGES_C81.LAYER_1_RUNTIME_IMAGES_C81__shared import (
     LocalReleaseError, _owned_directory, _project_path, _root, read_release_selection,
 )
 
+from .release_support import _read_version
+from .snapshot_inputs import _source_version
+
 
 _COMMIT = re.compile(r"(?:[0-9a-f]{40}|[0-9a-f]{64})\Z")
 _PROTECTED = {".git", ".ssh", ".aws", ".gnupg"}
@@ -66,9 +69,10 @@ def _validate_base(root, base):
         _parts(path, overlay=False)
 
 
-def _checkout(root, checkout, base, identity):
+def _checkout(root, checkout, base, identity, *, full_history):
     _git(checkout, "init", "--quiet", "--template=", "--object-format=" + ("sha1" if len(base) == 40 else "sha256"))
-    _git(checkout, "fetch", "--quiet", "--depth=1", "--no-tags", "--no-recurse-submodules", "--", str(root), base)
+    depth = () if full_history else ("--depth=1",)
+    _git(checkout, "fetch", "--quiet", *depth, "--no-tags", "--no-recurse-submodules", "--", str(root), base)
     _git(checkout, "checkout", "--quiet", "--detach", base)
     for key, value in zip(("user.name", "user.email"), identity, strict=True):
         _git(checkout, "config", "--local", key, value)
@@ -219,15 +223,25 @@ def _seal(checkout, base, copied):
 def _prepare_checkout(root, stage, base, paths, port, identity, selection):
     checkout = stage / "checkout"
     checkout.mkdir(mode=0o700)
-    _checkout(root, checkout, base, identity)
+    _checkout(root, checkout, base, identity, full_history=port is None)
     copied = {path: _overlay(root, checkout, path) for path in paths}
-    pinned = _pin_port(checkout, selection, port)
+    if port is None:
+        pinned = read_release_selection(checkout, selection.control_relative)
+        installed = _project_path(root, Path(".anechoic_runtime/simple_local_release/package/version.toml"),
+                                  label="installed-version")
+        installed_version = _source_version(installed.parent) if installed.exists() else ""
+        version_path, version = _read_version(checkout, installed_version=installed_version)
+        version_path.write_text(version, encoding="utf-8")
+        with version_path.open("rb") as source:
+            copied[version_path.relative_to(checkout)] = file_digest(source, "sha256").hexdigest()
+    else:
+        pinned = _pin_port(checkout, selection, port)
+        copied[pinned.manifest_path.relative_to(checkout)] = pinned.manifest_sha256
     manifest = pinned.manifest_path.relative_to(checkout)
-    copied[manifest] = pinned.manifest_sha256
     revision = _seal(checkout, base, copied)
     return {"outcome": "completed", "project_root": str(checkout), "revision": revision, "base": base,
             "changed_paths": [path.as_posix() for path in paths], "manifest_path": manifest.as_posix(),
-            "manifest_sha256": pinned.manifest_sha256, "instance_id": pinned.instance_id, "port": port}
+            "manifest_sha256": pinned.manifest_sha256, "instance_id": pinned.instance_id, "port": _project_port(pinned)}
 
 
 def _new_stage(stage):
@@ -245,7 +259,7 @@ def _new_stage(stage):
 def _prepare(root, stage, base, changed_paths, port):
     if not isinstance(base, str) or not _COMMIT.fullmatch(base):
         raise LocalReleaseError("prepare-local-base-invalid")
-    if type(port) is not int or not 1 <= port <= 65535:
+    if port is not None and (type(port) is not int or not 1 <= port <= 65535):
         raise LocalReleaseError("prepare-local-port-invalid")
     paths = tuple(_parts(path, overlay=True) for path in changed_paths)
     if not paths or len(set(paths)) != len(paths):
@@ -268,13 +282,14 @@ def _prepare(root, stage, base, changed_paths, port):
         raise
 
 
-def prepare_local(project_root, *, run_id, base, changed_paths, port):
+def prepare_local(project_root, *, run_id, base, changed_paths, port=None):
     """Prepare one private checkout and report the exact revision to release."""
     root = _root(project_root)
     if not isinstance(run_id, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,95}", run_id):
         raise LocalReleaseError("prepare-local-run-id-invalid")
-    temporary = Path(tempfile.gettempdir()).resolve(strict=True)
-    stage = temporary / f"anechoic-local-release-{os.getuid()}" / run_id
+    owner = (Path.home() / f".anechoic-local-release-{os.getuid()}" if port is None else
+             Path(tempfile.gettempdir()) / f"anechoic-local-release-{os.getuid()}")
+    stage = owner.parent.resolve(strict=True) / owner.name / run_id
     try:
         if stage.is_relative_to(root):
             raise LocalReleaseError("prepare-local-scratch-inside-source")

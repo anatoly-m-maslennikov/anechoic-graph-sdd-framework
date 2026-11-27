@@ -4,8 +4,9 @@ import json
 from pathlib import Path
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
-    formal_claim_fences,
+    component_contract_fences,
     parse_carrier,
+    parse_component_manifest,
 )
 
 _OUTCOMES = {'success', 'invalid_input', 'internal_error'}
@@ -105,11 +106,14 @@ def contract_to_lean(path: Path) -> str:
     parsed = parse_carrier(path.read_bytes(), path)
     meta = parsed.metadata
     state = meta.get('state', {})
-    if (meta.get('atom_id') != 'AN-S-3185' or meta.get('atom_family') != 'SPEC'
-            or meta.get('container', {}).get('component') != 'C45'
+    if (meta.get('atom_id') != 'AN-S-3059' or meta.get('atom_family') != 'SPEC'
+            or meta.get('container', {}).get('component') != 'C43'
+            or meta.get('tier') != 1 or meta.get('context', {}).get('template') != 'component_manifest'
             or state.get('status') != 'active' or type(state.get('version')) is not int):
         raise ValueError('invalid Contract identity or state')
-    fences = list(formal_claim_fences(parsed.body))
+    if parse_component_manifest(parsed.body, tier=1)[0].get('component_id') != 'C45':
+        raise ValueError('Manifest does not declare C45')
+    fences = list(component_contract_fences(parsed.body) or ())
     if len(fences) != 1 or fences[0][0] != 'python contract':
         raise ValueError('expected exactly one python contract formal claim')
     args = _call(fences[0][1])

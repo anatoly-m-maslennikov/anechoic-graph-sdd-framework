@@ -29,7 +29,7 @@ declare_entity(
         component_id='C57',
         name='SUBJECT_ATOM_GATHERER_PROMPT',
         lens_whitelist=['DES'],
-        boundaries={'code': {'imports': {'only': []}},
+        boundaries={'code': {'exports': {}, 'imports': {'only': []}},
                     'state': {'reads': [], 'writes': []},
                     'io': {'server': {'guide_subject_atom_gathering': {'outcomes': {
                         'read_only_handoff': {

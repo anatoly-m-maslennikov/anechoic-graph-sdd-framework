@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections import defaultdict
 from collections.abc import Mapping
 from dataclasses import replace
-import re
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
     Path as _subject_Path,
@@ -27,7 +26,7 @@ def _formal_claims(entries: list[Record]) -> list[Record]:
     return [
         {"source": dict(entry["source"]), "block": block["block"],
          **({"label": block["label"]} if "label" in block else {})}
-        for entry in entries for block in [*entry["cfel_blocks"], *entry.get("python_blocks", [])]
+        for entry in entries for block in entry.get("python_blocks", [])
     ]
 
 
@@ -71,7 +70,7 @@ def _property_record(row: Record) -> Record | None:
     }
 
 
-def _applicable_formats(property: Record, candidates: list[Record], entries: list[Record]) -> list[Record]:
+def _applicable_formats(property: Record, candidates: list[Record]) -> list[Record]:
     identity = property["identity"]
     matches = []
     for clause in candidates:
@@ -84,15 +83,6 @@ def _applicable_formats(property: Record, candidates: list[Record], entries: lis
                    or selection in {"immediate_dependents", "immediate_dependent_values"} and suffix is not None and "." not in suffix)
         if applies:
             matches.append(clause)
-    if not matches and property.get("applicable_entity_classes"):
-        for entry in entries:
-            for block in entry["cfel_blocks"]:
-                for match in re.finditer(
-                    r"(?m)^\s*([A-Za-z][A-Za-z0-9_. ]*)\.\*\*\s*::\s*\[([A-Za-z][A-Za-z0-9_]*)\]",
-                    block["block"],
-                ):
-                    if identity.startswith(match[1].strip() + "."):
-                        matches.append({"value_format": match[2], "source": block["source"]})
     return matches
 
 
@@ -156,7 +146,7 @@ def _resolve_property_formats(properties: list[Record], entries: list[Record]) -
             if clause.get("kind") == "native_class":
                 class_bindings[clause["class_name"]].append((entry["target"], dict(clause["source"])))
     for property in properties:
-        applicable = _applicable_formats(property, candidates, entries)
+        applicable = _applicable_formats(property, candidates)
         resolved = _bind_value_formats(property["identity"], applicable, class_bindings, diagnostics)
         if resolved is not None:
             _apply_effective_format(property, resolved, diagnostics)

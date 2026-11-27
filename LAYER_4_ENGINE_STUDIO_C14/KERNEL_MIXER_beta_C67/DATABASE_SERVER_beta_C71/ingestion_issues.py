@@ -161,8 +161,9 @@ def route(connection, instance_id, lock, read_object, error_response):
                 try:
                     _replace_admitted_issues(connection, batch)
                     if "model_diagnostics" in data:
-                        row = connection.execute("SELECT model FROM ops_generation").fetchone()
-                        fingerprint = json.loads(row[0])["model_sha256"] if row else None
+                        from .accepted_model import generation_rows
+                        row = next(iter(generation_rows(connection)), None)
+                        fingerprint = json.loads(row[1])["model_sha256"] if row else None
                         replace_model_diagnostics(connection, validate_model_diagnostics(data["model_diagnostics"], fingerprint))
                     connection.execute("COMMIT")
                 except BaseException:

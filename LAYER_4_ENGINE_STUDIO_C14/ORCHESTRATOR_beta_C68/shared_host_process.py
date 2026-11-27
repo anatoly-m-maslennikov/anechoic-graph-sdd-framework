@@ -20,7 +20,7 @@ def open_peers(selection, stop, warm_worker=None):
         "project_prefix": selection.project_prefix,
     }
     runtime = selection.parameters.get("runtime", {})
-    workbench = runtime.get("workbench", {})
+    workbench = runtime.get("iwe_console", runtime.get("workbench", {}))
     with TemporaryDirectory(prefix="anechoic-beta-project-", dir="/tmp") as tmp:
         with open_project_peers(Path(tmp).resolve(), selection.instance_id, binding, stop,
                                 watch_code=workbench.get("import_graph") is not False,

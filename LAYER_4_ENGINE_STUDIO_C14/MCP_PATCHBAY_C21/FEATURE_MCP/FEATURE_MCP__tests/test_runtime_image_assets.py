@@ -25,9 +25,9 @@ IMAGE_ID = "sha256:" + "a" * 64
 
 
 BETA_NEXT_REQUIRED_FIXTURE_FILES = (
-    "FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_MODEL_VALIDATION/project_admission__pub.py",
+    "FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/LAYER_2_FORMAL_MODEL_C51/FEATURE_MODEL_VALIDATION/project_admission__pub.py",
     "FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ADAPTERS_C30/native_snapshot_cli.py",
-    "IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_IMPORT_GRAPH_C61/realization_graph_cli.py",
+    "IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IMPORT_GRAPH_C61/realization_graph_cli.py",
     "KERNEL_MIXER_beta_C67/DATABASE_SERVER_beta_C71/DATABASE_SERVER_beta_C71__shared.py",
     "ORCHESTRATOR_beta_C68/ORCHESTRATOR_beta_C68__shared.py",
     "ORCHESTRATOR_beta_C68/warm_worker.py",
@@ -39,8 +39,8 @@ BETA_NEXT_REQUIRED_FIXTURE_FILES = (
     "API_MIXER_beta_C91/shared_runtime.py",
 )
 
-_FRONTEND = "IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND/index.html"
-_CURRENT_ONLY = ("IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/legacy.py", "KERNEL_MIXER_C59/legacy.py")
+_FRONTEND = "IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_FRONTEND/index.html"
+_CURRENT_ONLY = ("IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_BACKEND/legacy.py", "KERNEL_MIXER_C59/legacy.py")
 _RETIRED_BACKEND = "WORKBENCH_BACKEND_beta_C70/query_run.json"
 
 
@@ -146,7 +146,7 @@ class LifecycleImageAssetsTests(unittest.TestCase):
             self.assertIn(f"{images.FINGERPRINT_LABEL}={candidate.fingerprint}", command)
 
     def test_registry_generator_stages_backend_assets_without_touching_source(self):
-        backend = "LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND"
+        backend = "LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_BACKEND"
         self.assertEqual(f"{backend}/generate_tool_registry.py", images.TOOL_REGISTRY_COMPILER)
         self.assertEqual(f"{backend}/tool_providers.json", images.TOOL_PROVIDERS)
         self.assertEqual(f"{backend}/tool_registry.json", images.TOOL_REGISTRY)

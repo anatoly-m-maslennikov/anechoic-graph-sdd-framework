@@ -137,28 +137,42 @@ class SharedRuntimeTest(unittest.TestCase):
             server.server_close()
         self.temp.cleanup()
 
-    def call(self, name="query_run", arguments=None):
+    def call(self, name="query_run", arguments=None, *, headers=None):
         return self.client.post("/tools", json={"name": name, "arguments": arguments or {},
-                                                "session_id": None, "public_base_url": None}).json()
+                                                "session_id": None, "public_base_url": None}, headers=headers).json()
 
     def test_explicit_selection_query_and_release(self):
         catalog = self.client.get("/tools").json()["result"]["tools"]
         self.assertEqual({"query_run", "query_check", "query_page", "query_schema",
-                          "workbench_status", "workbench_abort", "query_rebuild",
+                          "iwe_console_status", "iwe_console_abort", "workbench_status", "workbench_abort", "query_rebuild",
                           "query_load", "query_saved_list", "view_save", "workspace_open", "workspace_list",
                           "workspace_get", "query_log_list", "query_log_get", "view_create", "view_duplicate", "view_list",
                           "view_get", "view_update", "view_focus", "view_rename", "view_remove", "view_run", "view_check", "view_fetch",
-                          "atom_lifecycle_create_draft", "atom_lifecycle_update", "atom_lifecycle_promote_draft", "atom_lifecycle_change_status", "atom_lifecycle_archive", "atom_lifecycle_create_asset", "atom_lifecycle_direct_update"},
+                          "atom_lifecycle_create_draft", "atom_lifecycle_update", "atom_lifecycle_promote_draft", "atom_lifecycle_change_status", "atom_lifecycle_archive", "atom_lifecycle_create_asset", "atom_lifecycle_direct_update", "iwe_console_atom_document"},
                          {t["name"] for t in catalog})
         self.assertTrue(all("project_root" in t["inputSchema"]["required"] for t in catalog))
         selected = self.client.post("/selection", json={"project_root": str(self.path)}).json()["result"]
         self.assertEqual({"instance_id": INSTANCE, "project_name": "Project", "project_prefix": "AN"}, selected)
         self.assertEqual({"operation": "select", "project_root": str(self.path)}, self.servers[0].requests[-1])
-        result = self.call(arguments={"project_root": str(self.path), "sql": "SELECT 42", "result_delivery": "inline"})
+        result = self.call(arguments={"project_root": str(self.path), "sql": "SELECT 42", "result_delivery": "inline"},
+                           headers={"X-Anechoic-Project-Instance": selected["instance_id"]})
         self.assertEqual([[42]], result["result"]["value"]["rows"])
         self.assertEqual({"prefix": "AN", "instance_id": INSTANCE}, result["project"])
         self.assertEqual([b"R"], self.servers[0].releases)
         self.assertEqual(INSTANCE, self.servers[1].requests[-1]["instance_id"])
+
+    def test_rebound_project_refuses_lifecycle_before_a_lease_or_write(self):
+        owner, database, jobs = self.servers
+        root = str(self.path)
+        selected = self.client.post("/selection", json={"project_root": root}).json()["result"]
+        owner.binding["instance_id"] = "c" * 64
+        result = self.call("atom_lifecycle_archive", {"project_root": root, "target": {"ref_id": "AN-S-1@1"}},
+                           headers={"X-Anechoic-Project-Instance": selected["instance_id"]})
+        self.assertEqual("project_declarations_stale", result["error"]["code"])
+        self.assertNotIn("result", result)
+        self.assertEqual(["select", "select"], [r["operation"] for r in owner.requests if r["operation"] != "status"])
+        self.assertEqual([], database.requests)
+        self.assertEqual([], jobs.requests)
 
     def test_root_required_blacklist_and_binding_checks(self):
         owner = self.servers[0]
@@ -167,6 +181,10 @@ class SharedRuntimeTest(unittest.TestCase):
         root = str(self.path)
         owner.binding["tool_blacklist"] = ["query_run"]
         self.assertEqual("tool_unavailable", self.call(arguments={"project_root": root, "sql": "SELECT 1"})["error"]["code"])
+        for denied, called in (("workbench_status", "iwe_console_status"),
+                               ("iwe_console_abort", "workbench_abort")):
+            owner.binding["tool_blacklist"] = [denied]
+            self.assertEqual("tool_unavailable", self.call(called, {"project_root": root})["error"]["code"])
         owner.binding["tool_blacklist"] = []
         self.servers[1].digest = "c" * 64
         self.assertEqual("project_declarations_stale", self.call(arguments={"project_root": root, "sql": "SELECT 1"})["error"]["code"])

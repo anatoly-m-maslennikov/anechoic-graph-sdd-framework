@@ -36,12 +36,17 @@ class TypedLintTests(unittest.TestCase):
               patch.object(static_checks.python_boundaries, "check", return_value=0),
               patch.object(static_checks.subprocess, "run", side_effect=execute) as run):
             self.assertEqual(static_checks.check(root), 1)
-            self.assertEqual(run.call_args.args[0], ("npm", "run", "lint"))
-            self.assertEqual(run.call_args.kwargs["cwd"], package)
+            npm, = (item for item in run.call_args_list if item.args[0][0] == "npm")
+            self.assertEqual(npm.args[0], ("npm", "run", "lint"))
+            self.assertEqual(npm.kwargs["cwd"], package)
             data["scripts"]["check:types"] = "tsc --noEmit"
             manifest.write_text(json.dumps(data), encoding="utf-8")
+            run.reset_mock()
             self.assertEqual(static_checks.check(root), 1)
-            self.assertEqual(run.call_args.args[0], ("npm", "run", "check:types"))
+            self.assertEqual(
+                [("npm", "run", "check:types"), ("npm", "run", "lint")],
+                [item.args[0] for item in run.call_args_list if item.args[0][0] == "npm"],
+            )
 
     def test_language_gate_reports_baseline_and_enforces_only_when_enabled(self):
         gate = static_checks.source_languages

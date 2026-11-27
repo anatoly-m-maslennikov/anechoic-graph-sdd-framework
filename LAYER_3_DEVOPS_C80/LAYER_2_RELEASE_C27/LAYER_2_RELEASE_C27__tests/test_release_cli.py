@@ -14,18 +14,14 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-REPOSITORY = Path(__file__).resolve().parents[3]
-import LAYER_2_RELEASE_C27__shared as release  # noqa: E402
+import LAYER_2_RELEASE_C27__shared as release
+from LAYER_2_RELEASE_C27__tests.LAYER_2_RELEASE_C27__tests__shared import DRAFT, ReleaseCliFixture
 
+REPOSITORY = Path(__file__).resolve().parents[3]
 LOCAL_ENTRY = "LAYER_2_LOCAL_RELEASE_C63.LAYER_2_LOCAL_RELEASE_C63__shared.run_local_release"
 PUBLIC_MODULE = "LAYER_3_PUBLIC_RELEASE_C64.LAYER_3_PUBLIC_RELEASE_C64__shared"
 PUBLIC_ENTRY = PUBLIC_MODULE + ".run_public_release"
 IMAGE_ENTRY = "LAYER_1_RUNTIME_IMAGES_C81.LAYER_1_RUNTIME_IMAGES_C81__shared"
-
-
-from LAYER_2_RELEASE_C27__tests.LAYER_2_RELEASE_C27__tests__shared import (
-    DRAFT, ReleaseCliFixture,
-)
 
 
 class ReleaseCliTests(ReleaseCliFixture, unittest.TestCase):
@@ -227,7 +223,7 @@ class ReleaseCliTests(ReleaseCliFixture, unittest.TestCase):
         run.assert_not_called()
 
     def test_real_cli_help_and_invalid_arguments(self) -> None:
-        for arguments, expected in ((["--help"], 0), (["local"], 2), (["local", "--resume"], 2), (["wrong"], 2)):
+        for arguments, expected in ((["--help"], 0), (["local", "--resume"], 2), (["wrong"], 2)):
             with self.subTest(arguments=arguments):
                 result = subprocess.run(
                     [

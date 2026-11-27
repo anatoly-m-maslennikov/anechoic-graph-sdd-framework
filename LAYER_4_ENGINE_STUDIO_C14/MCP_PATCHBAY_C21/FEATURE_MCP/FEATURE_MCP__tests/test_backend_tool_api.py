@@ -2,19 +2,24 @@
 import asyncio
 import json
 import os
-from pathlib import Path
 import tempfile
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
+from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.FEATURE_IWE_CONSOLE_BACKEND__shared import (
+    NATIVE_TOOLS,
+)
 from mcp import types
 from mcp.client._memory import InMemoryTransport
 from mcp.client.session import ClientSession
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import (
+    ToolProtocolError,
+    native_runtime_gateway,
+    select_runtime_project,
+)
 
 from . import test_api_backend_process as fixture
-from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import native_runtime_gateway
-from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import select_runtime_project
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__shared import NATIVE_TOOLS
 
 
 class BackendToolApiTests(unittest.IsolatedAsyncioTestCase):
@@ -56,7 +61,7 @@ class BackendToolApiTests(unittest.IsolatedAsyncioTestCase):
     async def _assert_catalog(self, owner, selection):
         response = await asyncio.to_thread(owner._http.get, "/tools", params={"instance_id": selection.instance_id})
         catalog = response.json()["result"]
-        registry = fixture.ROOT / "LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/tool_registry.json"
+        registry = fixture.ROOT / "LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_BACKEND/tool_registry.json"
         baseline = json.loads(registry.read_text(encoding="utf-8"))
         excluded = set(baseline["mcp_blacklist"]) | set(selection.tool_blacklist)
         expected = [types.Tool.model_validate(tool).model_dump(by_alias=True, mode="json")
@@ -68,9 +73,15 @@ class BackendToolApiTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual("value_error", invalid.json()["error"]["code"])
 
     async def _assert_dispatch(self, owner, root):
-        result = await self._post(owner, "query_run", {"sql": "SELECT 42 AS answer", "result_delivery": "inline"})
-        self.assertEqual([[42]], result["result"]["value"]["rows"])
-        self.assertIsNone(result["result"]["text"])
+        reply = await owner.call_tool("query_run", {
+            "sql": "SELECT 42 AS answer", "result_delivery": "inline",
+        })
+        self.assertEqual([[42]], reply["value"]["rows"])
+        self.assertIsNone(reply["text"])
+        with self.assertRaises(ToolProtocolError) as refused:
+            await owner.call_tool("query_run", {"sql": "SELECT missing FROM range(1)"})
+        self.assertEqual("query_error", refused.exception.code)
+        self.assertEqual("failed", refused.exception.tool_result["outcome"])
         for name, args, changes, code in (
             ("query_run", {"sql": 42}, {}, "tool_input_invalid"),
             ("unknown_tool", {}, {}, "tool_unavailable"),

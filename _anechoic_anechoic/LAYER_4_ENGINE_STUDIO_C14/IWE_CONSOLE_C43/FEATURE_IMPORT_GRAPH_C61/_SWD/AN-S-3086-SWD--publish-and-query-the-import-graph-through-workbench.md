@@ -6,15 +6,10 @@ container:
 tier: 2
 context:
   lens: SWD
-relations:
-  IS_REFERENCE:
-  - AN-S-3116@1
-  - AN-S-3083
-  - AN-T-2928@1-draft
 state:
   status: active
   version: 9
-  updated_at: "2026-11-22T10:36:42.735857+00:00"
+  updated_at: '2026-11-26T16:38:46.261466+00:00'
 ---
 
 ## Summary

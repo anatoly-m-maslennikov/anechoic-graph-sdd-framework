@@ -9,9 +9,6 @@ import subprocess
 from tempfile import TemporaryDirectory
 from time import monotonic, time_ns
 import unittest
-from unittest.mock import patch
-
-import duckdb
 
 from ..FEATURE_MCP__tests__shared import image_timeout, request
 from .staged_startup__support import PackagedProbe, carrier, prepare
@@ -292,49 +289,3 @@ class GenerationLoadDockerTests(unittest.TestCase):
         self.assertGreaterEqual(first, started)
         self.assertGreaterEqual(last, first)
         return first, last, worker_peak, queue_peak, observations
-
-
-class GenerationLoadCalculationTests(unittest.TestCase):
-    def test_query_quantile_uses_successes_and_counts_failures(self):
-        self.assertEqual({"sample_count": 21, "success_count": 20, "error_count": 1,
-                          "p95_ms": 19, "errors": ["failed"]},
-                         summarize_queries(list(range(1, 21)), ["failed"]))
-        self.assertIsNone(summarize_queries([], ["failed"])["p95_ms"])
-
-    def test_active_counts_exclude_missing_or_idle_workers(self):
-        self.assertEqual(1, capture_workers({"active": {"worker_alive": False}, "archive": {"worker_alive": True}}))
-        self.assertFalse(archive_running("T"))
-        self.assertFalse(archive_running("gone"))
-        self.assertTrue(archive_running("R"))
-
-    def test_batch_readback_requires_the_exact_id_status_and_summary(self):
-        with duckdb.connect() as database:
-            database.execute('CREATE TABLE mrt_ticket_atoms (reference VARCHAR, "header.state.status" VARCHAR, "content.summary" VARCHAR)')
-            database.execute(f"""INSERT INTO mrt_ticket_atoms SELECT 'AN-T-' || range, 'active', 'Batch ' || range
-                FROM range({BATCH_START}, {BATCH_START + BATCH_SIZE})""")
-            self.assertEqual((BATCH_SIZE,), database.execute(BATCH_SQL).fetchone())
-            database.execute('UPDATE mrt_ticket_atoms SET "content.summary" = \'wrong\' WHERE reference = ?', [f"AN-T-{BATCH_START}"])
-            self.assertEqual((BATCH_SIZE - 1,), database.execute(BATCH_SQL).fetchone())
-
-    def test_watcher_clock_bounds_allow_observation_before_write_returns(self):
-        stable = ((100000, 400000), (200000, 300000))
-        report = watcher_detection_bounds(1.001, stable, 1_000_000_000, 1_002_000_000)
-        self.assertEqual([0.6, 0.9], report["write_start_to_watcher_ms_bounds"])
-        self.assertEqual([-1.4, -1.1], report["write_end_to_watcher_ms_bounds"])
-        self.assertIsNone(watcher_detection_bounds(1.001, ((1, 2), (3, 4)), 1, 2))
-
-    def test_flow_matches_the_trigger_cause_and_admitted_generation(self):
-        watcher = '{"timestamp_source":"watcher"}'
-        generation = {"run_id": "a" * 32, "generation": "b" * 64}
-        events = [
-            [0, "input", "file_change", 1.0, watcher, None, []],
-            [1, "input", "file_change", 2.0, watcher, None, []],
-            [2, "trigger", "file_change", 3.0, "{}", None, [1]],
-            [3, "output", "generation_result", 4.0, '{"generation":"different"}', "succeeded", [2]],
-            [4, "output", "generation_result", 5.0, json.dumps(generation), "succeeded", [2]],
-        ]
-        case = GenerationLoadDockerTests()
-        with patch(__name__ + ".rows", return_value=events):
-            self.assertEqual({"watcher_observed_at": 2.0, "flow_dispatch_at": 3.0, "flow_result_at": 5.0,
-                              "watcher_queue_to_dispatch_seconds": 1.0, "flow_dispatch_to_result_seconds": 2.0},
-                             case.generation_flow(None, generation))

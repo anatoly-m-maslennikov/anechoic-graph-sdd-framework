@@ -13,7 +13,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, InstanceOf
 
-from .retry import CurrentnessRetry
+from .retry import COVERAGE_RECOVERED, CurrentnessRetry
 
 ENGINE = Path(__file__).resolve().parents[1]
 FIELDS = {"instance_id", "root", "control_root", "manifest_path", "manifest_sha256", "project_prefix"}
@@ -184,10 +184,19 @@ class QueuedJobs:
                 self.watcher.queue.put({})
 
     def _run_queued_generation(self, retry, job, changes, due):
+        from .archive_jobs import ARCHIVE_RECONCILIATION
+        graph_only = job is not None and job.target == "realization_graph"
+        if job is not None and not graph_only and any(change.get("event_type") == ARCHIVE_RECONCILIATION for change in changes):
+            self.archive_reconciliation_pending = False
+        if getattr(self.latest, "code", None) == "watcher_coverage_lost" and job is None:
+            changes = [*changes, {"event_type": COVERAGE_RECOVERED}]
         self.flow_context = {"job": job, "changes": changes if job is None else (), "retry": due}
         outcome = self._generate(job.target if job is not None else None,
                                  changes=changes if job is None else ())
         retry.observe(outcome)
+        if graph_only:
+            for change in changes:
+                self.watcher.queue.put(change)
         with self.lock:
             if job is not None:
                 job.outcome = outcome

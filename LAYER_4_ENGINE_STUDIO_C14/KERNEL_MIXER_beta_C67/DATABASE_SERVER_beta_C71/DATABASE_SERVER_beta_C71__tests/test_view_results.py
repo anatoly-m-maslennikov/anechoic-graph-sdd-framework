@@ -15,6 +15,45 @@ def call(client, operation, arguments):
     return client.post("/workspace", json=BINDING | {"operation": operation, "arguments": arguments})
 
 
+class ViewDirectiveTest(unittest.TestCase):
+    def test_strip_only_top_level_trailing_directives(self):
+        with TemporaryDirectory(dir='/tmp') as directory, _server(
+            None, '--project-root', str(Path(directory).resolve()),
+        ) as client:
+            self.assertEqual(200, client.put('/generation', json=_generation()).status_code)
+            opened = call(client, 'workspace_open', {'session_id': 'view-directives'}).json()['result']
+            view = {'workspace_id': opened['workspace_id'], 'view_id': opened['active_view_id']}
+            directives = ('VIEW TABLE', 'VIEW DOC', 'VIEW DOCUMENT', 'VIEW GRAPH',
+                          'VIEW GRAPH VERTICAL', 'VIEW GRAPH HORIZONTAL', 'VIEW IMPORTS',
+                          'VIEW IMPORTS VERTICAL', 'VIEW IMPORTS HORIZONTAL', 'VIEW STRUCTURE')
+            cases = [(f'SELECT 1 {directive}', 1) for directive in directives]
+            cases += [("SELECT 'VIEW GRAPH'", 'VIEW GRAPH'), ('SELECT 1 -- VIEW GRAPH', 1),
+                      ('SELECT (SELECT 1 VIEW GRAPH)', None), ('SELECT 1 /* VIEW GRAPH', None),
+                      ('SELECT 1 VIEW /* comment */ GRAPH -- end', 1),
+                      ('SELECT 1 VIEW -- comment\n GRAPH /* end */ ; -- end', 1),
+                      ("SELECT 'é😀' /* outer /* inner */ end */ VIEW GRAPH", 'é😀'),
+                      ('SELECT $tag$VIEW GRAPH ( /*$tag$ VIEW TABLE', 'VIEW GRAPH ( /*'),
+                      ('SELECT 1 VIEW "GRAPH"', None), ('SELECT 1 VIEW (GRAPH)', None),
+                      ('SELECT 1 VIEW GRAPH (HORIZONTAL)', None),
+                      ('SELECT 1 VIEW GRAPH "HORIZONTAL"', None),
+                      ('SELECT 1 VIEW IMPORTS "HORIZONTAL"', None),
+                      ('SELECT 1 VIEW GRAPH /*/', None),
+                      ('SELECT 1 VIEW GRAPH /* outer /* inner */', None)]
+            for revision, (sql, expected) in enumerate(cases):
+                with self.subTest(sql=sql):
+                    response = call(client, 'view_update', view | {'sql': sql, 'expected_revision': revision})
+                    self.assertEqual(200, response.status_code, response.text)
+                    checked = call(client, 'view_check', view)
+                    if expected is None:
+                        self.assertNotEqual(200, checked.status_code, checked.text)
+                        continue
+                    self.assertEqual(200, checked.status_code, checked.text)
+                    run = call(client, 'view_run', view)
+                    self.assertEqual('success', run.json()['result']['status'], run.text)
+                    fetched = call(client, 'view_fetch', view)
+                    self.assertEqual([[expected]], fetched.json()['result']['rows'], fetched.text)
+
+
 class ResultTTLSettingsTest(unittest.TestCase):
     def setUp(self):
         self.root = Path(self.enterContext(TemporaryDirectory(dir="/tmp"))).resolve()
@@ -53,6 +92,24 @@ class ViewResultsTest(unittest.TestCase):
         self.value(client.put("/generation", json=_generation()))
         state = self.value(call(client, "workspace_open", {"session_id": "view-test"}))
         return {"workspace_id": state["workspace_id"], "view_id": state["active_view_id"]}
+
+    def test_view_directive_is_preserved_for_check_run_and_save(self):
+        with TemporaryDirectory(dir="/tmp") as directory, _server(
+            None, "--project-root", str(Path(directory).resolve()), "--journal-relative", "control/journal",
+        ) as client:
+            view = self.open_view(client)
+            sql = "SELECT 42 /* é😀 */ VIEW /* comment */ IMPORTS -- comment\n HORIZONTAL; /* end */"
+            self.value(call(client, "view_update", view | {"sql": sql, "expected_revision": 0}))
+            self.assertTrue(self.value(call(client, "view_check", view))["valid"])
+            run = self.value(call(client, "view_run", view | {"save": True}))
+            self.assertEqual("success", run["status"])
+            saved_run = self.value(call(client, "query_load", {"reference": run["saved_query_id"]}))
+            self.assertEqual(sql, saved_run["sql"])
+            self.assertEqual([[42]], self.value(call(client, "view_fetch", view))["rows"])
+            self.assertEqual(sql, self.value(call(client, "view_get", view))["sql"])
+            snapshot = self.value(call(client, "view_save", view))
+            saved = self.value(call(client, "query_load", {"reference": snapshot["saved_query_id"]}))
+            self.assertEqual(sql, saved["sql"])
 
     def test_pinned_result_survives_expiry_until_view_removal(self):
         with TemporaryDirectory(dir="/tmp") as directory:
@@ -186,7 +243,7 @@ class WorkspaceDocumentTest(unittest.TestCase):
             view_id = opened["active_view_id"]
             args = {"workspace_id": "test", "view_id": view_id}
             self.assertEqual(200, call(client, "view_rename", args | {"name": "named"}).status_code)
-            path = next((root / ".anechoic_runtime/workbench/beta/workspaces").glob("*.json"))
+            path = next((root / ".anechoic_runtime/iwe_console/beta/workspaces").glob("*.json"))
             document = json.loads(path.read_text())
             self.assertEqual("named", document["views"][0]["name"])
             self.assertEqual(document, call(client, "workspace_get", {"workspace_id": "test"}).json()["result"])

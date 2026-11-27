@@ -37,7 +37,7 @@ declare_entity(
         layer=4,
         lens_whitelist=['DES', 'DevOps', 'QA', 'SPEC', 'SWD'],
         boundaries={
-            'code': {'imports': []},
+            'code': {'exports': {}, 'imports': []},
             'io': {'server': {'admit_studio_readiness': {
                 'outcomes': {
                     'ready': {

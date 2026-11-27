@@ -13,7 +13,7 @@ import unittest
 ROOT = next(path for path in Path(__file__).resolve().parents if (path / '_anechoic_anechoic').is_dir())
 STUDIO = ROOT / 'LAYER_4_ENGINE_STUDIO_C14'
 SOURCE = STUDIO / 'KERNEL_MIXER_C59/native_query_rebuild.py'
-CLAIM = ROOT / '_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/FEATURE_WORKBENCH_BACKEND_C45/01_TIER_1_ARCHITECTURE/AN-S-3116-DES-DECISION--store-native-workbench-duckdb-data-on-disk.md'
+CLAIM = ROOT / '_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/FEATURE_IWE_CONSOLE_BACKEND_C45/01_TIER_1_ARCHITECTURE/AN-S-3116-DES-DECISION--store-native-workbench-duckdb-data-on-disk.md'
 OBSERVER = 'MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__tests.native_rebuild_failure_trace'
 EVENTS = {'failed', 'diagnostic', 'published', 'clientError', 'clientSuccess'}
 

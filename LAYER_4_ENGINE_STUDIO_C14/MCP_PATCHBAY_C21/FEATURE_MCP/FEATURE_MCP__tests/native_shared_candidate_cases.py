@@ -150,7 +150,7 @@ class SharedCandidateCases:
         processes, listing = self._processes()
         mcp = self._one(processes, _MCP_MODULE, listing)
         beta = [item for item in processes if self._backend_module in item[2]]
-        current = [item for item in processes if "FEATURE_WORKBENCH_BACKEND.shared_backend_process" in item[2]]
+        current = [item for item in processes if "FEATURE_IWE_CONSOLE_BACKEND.shared_backend_process" in item[2]]
         self.assertEqual(1, len(beta) + len(current), listing)
         self.assertEqual(self._shared_candidate_beta, bool(beta), listing)
         if beta:
@@ -204,9 +204,9 @@ class SharedCandidateCases:
         return matches[0]
 
     def _assert_current_processes(self, processes, coordinator, projects, listing):
-        self.assertFalse(any("FEATURE_WORKBENCH_BACKEND.project_admission" in command
+        self.assertFalse(any("FEATURE_IWE_CONSOLE_BACKEND.project_admission" in command
                              for _, _, command in processes), listing)
-        backends = [item for item in processes if "FEATURE_WORKBENCH_BACKEND.backend_process" in item[2]]
+        backends = [item for item in processes if "FEATURE_IWE_CONSOLE_BACKEND.backend_process" in item[2]]
         kernels = [item for item in processes if "KERNEL_MIXER_C59.kernel_process" in item[2]]
         self.assertEqual(2, len(backends), listing)
         self.assertEqual(2, len(kernels), listing)

@@ -10,8 +10,9 @@ from fcntl import flock, LOCK_EX
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import console_state_path
 
-_DIRECTORY = (".anechoic_runtime", "workbench", "beta", "workspaces")
+
 _DIRECTORY_FLAGS = os.O_DIRECTORY | os.O_NOFOLLOW | os.O_RDONLY
 _WORKSPACE = {"workspace_id"}
 _VIEW = _WORKSPACE | {"view_id"}
@@ -151,7 +152,7 @@ class WorkspaceStore:
     def _open_directory(self, create):
         fd = os.open(self._root, _DIRECTORY_FLAGS)
         try:
-            for part in _DIRECTORY:
+            for part in (*console_state_path(self._root).relative_to(self._root).parts, "beta", "workspaces"):
                 if create:
                     try:
                         os.mkdir(part, mode=0o700, dir_fd=fd)

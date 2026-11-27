@@ -1,4 +1,4 @@
-"""Source-bound subject projections without CFEL evaluation."""
+"""Source-bound subject projections without executing Claim code."""
 
 from __future__ import annotations
 
@@ -236,7 +236,7 @@ def build_subject_projection_data(carriers: list[Record]) -> Record:
     """Build additive source-bound views from the supplied Current frontier.
 
     Tree admission uses all supplied carriers. Property contracts and formal
-    claims use only exact Requirement / Declaration carriers before CFEL
+    claims use only exact Requirement / Declaration carriers before Claim
     extraction, so no other RMED body becomes declaration authority.
     """
     tree, tree_provenance = compose_narrowing_graph(carriers)

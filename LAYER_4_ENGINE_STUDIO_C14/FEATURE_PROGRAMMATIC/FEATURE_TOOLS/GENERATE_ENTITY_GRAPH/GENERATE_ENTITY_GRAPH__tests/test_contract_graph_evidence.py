@@ -15,14 +15,14 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GR
 
 
 class ContractGraphTests(unittest.TestCase):
-    def test_named_claim_children_keep_prose_markdown_and_only_extract_formal_cfel(self):
+    def test_named_claim_children_keep_prose_markdown_and_only_extract_formal_python(self):
         graph = compose_contract_graph([
             carrier("CA-R-1", "Atom", """## Claim
 
 ### Formal Claim
 
-```CFEL
-Atom.Header: [YAML]{:1};
+```python
+property_rule(address='Atom.Header', value_format='YAML', values='1')
 ```
 
 ### Prose Claim
@@ -31,8 +31,8 @@ Atom.Header: [YAML]{:1};
 
 Prose with an example:
 
-```CFEL
-Atom.Example: [wrong]{:1};
+```python
+property_rule(address='Atom.Example', value_format='wrong', values='1')
 ```
 """),
         ])
@@ -40,24 +40,16 @@ Atom.Example: [wrong]{:1};
         self.assertEqual(["Atom.Header"], [row["property_selector"] for row in entry["clauses"]])
         self.assertIn("#### Context", entry["prose"])
         self.assertIn("Atom.Example", entry["prose"])
-        self.assertEqual(1, len(entry["cfel_blocks"]))
+        self.assertEqual(1, len(entry["python_blocks"]))
 
-    def test_prose_only_claim_does_not_interpret_cfel_examples(self):
-        graph = compose_contract_graph([
-            carrier("CA-R-1", "Atom", """## Claim
+    def test_retired_claim_fence_is_only_authored_evidence(self):
+        source = carrier("CA-R-1", "Node", body("```CFEL", "Node.Name: [string]{:1};", "```"))
 
-### Prose Claim
-
-```CFEL
-Atom.Example: [wrong]{:1};
-```
-"""),
-        ])
-        entry = graph["entities"][0]["own"][0]
+        self.assertEqual(([], []), extract_claim_constraints(source))
+        entry = compose_contract_graph([source])["entities"][0]["own"][0]
+        self.assertEqual("CFEL", entry["blocks"][0]["label"])
         self.assertEqual([], entry["clauses"])
-        self.assertEqual([], entry["cfel_blocks"])
         self.assertEqual([], entry["diagnostics"])
-        self.assertIn("Atom.Example", entry["prose"])
 
     def test_prose_claim_keeps_unrecognized_headings_at_any_level(self):
         graph = compose_contract_graph([carrier("CA-R-1", "Atom", """## Claim
@@ -67,8 +59,8 @@ Opening.
 Sibling text.
 ## Dependent Selection
 More text.
-```CFEL
-Atom.Example: [wrong]{:1};
+```text
+Atom.Example
 ```
 ## Expression Lists
 Last text.
@@ -115,30 +107,29 @@ Actual root detail.
         graph = compose_contract_graph([
             carrier("CA-R-1", "Atom", body("Atom.")),
             carrier("CA-R-2", "Atom.Header.Name", body(
-                "### Formal Claim", "```CFEL", "# model",
-                "Atom.Header.Name: [string]{:1};", 'alias(Relation//CONTAINS) == "# instances";',
-                "# a full-line comment", "# instances", "Atom//$atom;", "$atom.Header.Name: [string]{:1};", "```")),
+                "### Formal Claim", "```python", "# model",
+                "property_rule(address='Atom.Header.Name', value_format='string', values='1')", "# a full-line comment",
+                "# instances", "property_rule(address='Atom//$atom.Header.Name', value_format='string', values='1')", "```")),
         ])
         row = next(row for row in graph["entities"] if row["target"] == "Atom.Header.Name")
         entry = row["own"][0]
-        self.assertEqual(["model", "model"], [x["group"] for x in entry["clauses"]])
-        self.assertEqual(["instance_binding", "property_constraint"], [x["kind"] for x in entry["instance_clauses"]])
-        self.assertEqual("$atom.Header.Name", entry["instance_clauses"][1]["property_selector"])
-        self.assertEqual("# instances", entry["clauses"][1]["glyph"])
+        self.assertEqual(["model"], [x["group"] for x in entry["clauses"]])
+        self.assertEqual(["property_constraint"], [x["kind"] for x in entry["instance_clauses"]])
+        self.assertEqual("Atom//$atom.Header.Name", entry["instance_clauses"][0]["property_selector"])
         self.assertEqual([], entry["diagnostics"])
-        self.assertIn("# instances", entry["cfel_blocks"][0]["block"])
+        self.assertIn("# instances", entry["python_blocks"][0]["block"])
         self.assertFalse(any("$atom" in x["target"] for x in graph["entities"]))
         self.assertIn("Instance constraints:", render_contract_graph(graph))
 
-    def test_preserved_unsupported_cfel_is_partial_extraction_not_a_display_gap(self):
+    def test_unsupported_helper_is_partial_extraction_without_a_display_gap(self):
         graph = compose_contract_graph([
-            carrier("CA-R-1", "Node", body("```CFEL", "IF Node THEN Property", "```")),
+            carrier("CA-R-1", "Node", body("```python", "deliver(source='Atom//$atom', carrier='Carrier//$carrier')", "```")),
         ])
 
         self.assertEqual("complete", graph["display_coverage"])
-        self.assertEqual("partial", graph["structured_cfel"])
+        self.assertEqual("partial", graph["structured_claims"])
         self.assertEqual("complete", graph["outcome"])
-        self.assertIn("IF Node THEN Property", render_contract_graph(graph))
+        self.assertIn("Atom//$atom >> Carrier//$carrier", render_contract_graph(graph))
 
     def test_preserves_unlabelled_claim_blocks_and_reports_unbound_source(self):
         graph = compose_contract_graph([

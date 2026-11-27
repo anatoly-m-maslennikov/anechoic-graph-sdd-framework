@@ -18,7 +18,7 @@ from watchdog.observers.polling import PollingObserver
 REPOSITORY = Path(__file__).resolve().parents[4]
 PROGRAMMATIC = REPOSITORY / "LAYER_4_ENGINE_STUDIO_C14" / "FEATURE_PROGRAMMATIC"
 MCP = REPOSITORY / "LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP"
-APP = REPOSITORY / "LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH"
+APP = REPOSITORY / "LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE"
 
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import MCP_PATH, WORKBENCH_PATH  # noqa: E402
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import create_http_app as create_app  # noqa: E402
@@ -121,7 +121,7 @@ class WorkspaceEndToEndTests(unittest.IsolatedAsyncioTestCase):
             self._check_workspace_persistence()
 
     def _check_workspace_persistence(self):
-        workspace_files = list((self.root / ".anechoic_runtime" / "workbench" / "workspaces").glob("*.json"))
+        workspace_files = list((self.root / ".anechoic_runtime/iwe_console/workspaces").glob("*.json"))
         self.assertEqual(1, len(workspace_files))
         self.assertNotIn("project_name", workspace_files[0].read_text(encoding="utf-8"))
 

@@ -29,7 +29,59 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared im
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__tests.lifecycle_route_support import LifecycleRouteSupport
 
 
+class Model:
+    enabled = True
+
+    def project_spec_template(self, template):
+        return ('Probe', 0, self.enabled) if template == 'probe' else None
+
+    def validate_project_spec(self, template, header, owner, body):
+        context = header.get('context', {})
+        if (template != 'probe' or owner != 'C00' or header.get('tier') != 0
+                or context.get('lens') != 'SPEC' or '## Guarantee' not in body):
+            raise ValueError('Invalid Project SPEC')
+
+
 class LifecycleRouteMatrix(LifecycleRouteSupport, unittest.TestCase):
+    def test_project_template_creation_and_disabled_history(self):
+        fixtures.NativeRevisionCarrierTests.setUp(self)
+        project = self.selection
+        project.manifest_path.write_text(project.manifest_path.read_text().replace('component: C0}', 'component: C00}'))
+        project = replace(project, manifest_sha256=sha256(project.manifest_path.read_bytes()).hexdigest())
+        values = {'template': 'probe', 'container': {'component': 'C00'}, 'lens': 'SPEC',
+                  'body': '\n## Summary\n\nProbe\n\n## Guarantee\n\nThe Project records the decision.\n'}
+
+        model = Model()
+        validate = model.validate_project_spec
+        created = create_draft(project, {'newAtom': values}, current_rows=capture_native(project).atoms,
+                               validate_project_spec_model=validate)
+        self.assertEqual('completed', created['outcome'], created)
+        for invalid in ({'tier': 2}, {'lens': 'DES'}, {'template': 'unknown'},
+                        {'body': '\n## Summary\n\nMissing Guarantee\n'}):
+            with self.subTest(invalid=invalid), self.assertRaises(InputError):
+                create_draft(project, {'newAtom': {**values, **invalid}},
+                             current_rows=capture_native(project).atoms, validate_project_spec_model=validate)
+        model.enabled = False
+        before = self.files(project)
+        with self.assertRaises(InputError):
+            create_draft(project, {'newAtom': values}, current_rows=capture_native(project).atoms,
+                         validate_project_spec_model=validate)
+        self.assertEqual(before, self.files(project))
+        target = {'ref_id': created['savedDraft']['ref_id'], 'version': 1}
+        self.assertTrue(any(row['_exact_ref'] == target['ref_id'] for row in capture_native(project).atoms))
+        ready = promote_draft(project, {'target': target, 'targetStatus': 'ready'},
+                              current_rows=capture_native(project).atoms, validate_project_spec_model=validate)
+        self.assertEqual('ready', ready['artifact']['status'], ready)
+        current = {'ref_id': ready['artifact']['ref_id'], 'version': 1}
+        revision = create_draft(project, {'sourceCurrent': current}, current_rows=capture_native(project).atoms)
+        self.assertEqual('completed', revision['outcome'], revision)
+        promoted = promote_draft(project, {'target': {'ref_id': revision['savedDraft']['ref_id'], 'version': 2},
+                                  'targetStatus': 'ready'}, current_rows=capture_native(project).atoms,
+                                  validate_project_spec_model=validate)
+        self.assertEqual('ready', promoted['artifact']['status'], promoted)
+        self.assertTrue(any(row['id'] == current['ref_id'] and row['version'] == 1
+                            and row['status_group'] == 'Archived' for row in capture_native(project).atoms))
+
     def test_flat_ticket_archive_requires_replacement(self):
         templates = ('task', 'epic', 'problem', 'question', 'code_spec_mismatch', 'opportunity',
                      'analysis_report', 'work_report', 'work_log', 'spec_proposal')
@@ -70,6 +122,65 @@ class LifecycleRouteMatrix(LifecycleRouteSupport, unittest.TestCase):
             for contained in (False, True):
                 with self.subTest(template=template, contained=contained):
                     self._check_project_spec_template(template, contained)
+
+    def test_project_spec_checks_candidate_status_before_writing(self):
+        fixtures.NativeRevisionCarrierTests.setUp(self)
+        project = self.selection
+        project.manifest_path.write_text(project.manifest_path.read_text().replace('component: C0}', 'component: C00}'))
+        project = replace(project, manifest_sha256=sha256(project.manifest_path.read_bytes()).hexdigest())
+        values = {'template': 'axiom', 'container': {'component': 'C00'}, 'lens': 'SPEC',
+                  'body': '\n## Summary\n\nExample\n'}
+
+        def allow(template, header, owner, body):
+            return None
+
+        def reject(template, header, owner, body):
+            if header['state']['status'] != 'draft':
+                raise ValueError('Status is not enabled')
+
+        def publish(draft, validate):
+            target = {'ref_id': draft['ref_id'], 'version': draft['version']}
+            return promote_draft(project, {'target': target, 'targetStatus': 'ready'},
+                                 current_rows=capture_native(project).atoms, validate_project_spec_model=validate)
+
+        first = create_draft(project, {'newAtom': values}, current_rows=capture_native(project).atoms,
+                             validate_project_spec_model=allow)['savedDraft']
+        before = self.files(project)
+        with self.assertRaisesRegex(InputError, 'Status is not enabled'):
+            publish(first, reject)
+        self.assertEqual(before, self.files(project))
+
+        ready = publish(first, allow)['artifact']
+        target = {'ref_id': ready['ref_id'], 'version': ready['version']}
+        revision = create_draft(project, {'sourceCurrent': target}, current_rows=capture_native(project).atoms)
+        before = self.files(project)
+        with self.assertRaisesRegex(InputError, 'Status is not enabled'):
+            publish(revision['savedDraft'], reject)
+        with self.assertRaisesRegex(InputError, 'Status is not enabled'):
+            change_spec_status(project, {'target': target, 'targetStatus': 'active'},
+                               current_rows=capture_native(project).atoms, validate_project_spec_model=reject)
+        self.assertEqual(before, self.files(project))
+
+    def test_archive_rejects_manifest_property_with_a_plain_des_filename(self):
+        fixtures.NativeRevisionCarrierTests.setUp(self)
+        project = self.selection
+        owner = project.control_root / 'META_ONTOLOGY_C9'
+        header = canonical_native_header({
+            'identity': {'atom_id': 'AN-S-2'},
+            'context': {'container': {'component': 'C9'}, 'tier': 4, 'lens': 'DES', 'template': 'manifest_property'},
+            'state': {'status': 'active', 'version': 1, 'updated_at': '2026-01-01'},
+        })
+        canonical = native_carrier_path(header, 'Example', project_root=project.control_root,
+                                        owner_directory=owner)
+        path = canonical.with_name('AN-S-2-DES--example.md')
+        path.parent.mkdir(parents=True)
+        path.write_text('---\n' + yaml.safe_dump(header) + '---\n\n## Summary\n\nExample\n')
+        before = self.files(project)
+        capture = capture_native(project)
+        with self.assertRaisesRegex(InputError, 'path disagrees'):
+            change_spec_status(project, {'target': {'ref_id': 'AN-S-2', 'version': 1}, 'targetStatus': 'archived'},
+                               current_rows=capture.atoms, previous_capture=capture)
+        self.assertEqual(before, self.files(project))
 
     def _check_project_spec_template(self, template, contained):
         fixtures.NativeRevisionCarrierTests.setUp(self)

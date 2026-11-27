@@ -13,7 +13,7 @@ from .WORKERS_beta_C69__tests__shared import command_with_fixture
 SCRIPT = Path(__file__).resolve().parents[1] / "web_code_units.ts"
 
 
-FRONTEND = SCRIPT.parents[1] / "IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND"
+FRONTEND = SCRIPT.parents[1] / "IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_FRONTEND"
 
 
 class ScannerDeadlineTests(unittest.TestCase):

@@ -47,7 +47,7 @@ def _render_layout(name: str, args: dict, node: ast.AST, ref: Callable[[str], st
         raise _error(node, "grouped must be a boolean")
     notation = args.get("notation", "assignment")
     if notation == "relation" and not grouped:
-        return f"{ref('address')} ((HAS_CLASSIFICATION)) {axis} == {value}"
+        return f"{ref('address')} ((HAS_AXIS)) {axis} == {value}"
     if notation not in ("assignment", "allowed"):
         raise _error(node, "notation must be 'assignment', 'allowed', or 'relation' without grouping")
     assignment = f"{axis} == {value}" if notation == "assignment" else f"{axis}: {value}"

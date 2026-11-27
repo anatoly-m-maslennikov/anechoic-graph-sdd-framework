@@ -16,6 +16,7 @@ import uuid
 from pydantic import BaseModel, ConfigDict
 
 
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import console_state_path
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import configured_journal_root, validated_journal_root  # noqa: E402
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import append_sealed_events  # noqa: E402
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import open_regular  # noqa: E402
@@ -47,7 +48,7 @@ class SavedQueryStore:
         self._journal_root = journal_root
         self._journal_mode = journal_mode
         self._read_journal_events = read_journal_events
-        self._legacy_directory = self._root / ".anechoic_runtime" / "workbench" / "saved_queries"
+        self._legacy_directory = console_state_path(self._root) / "saved_queries"
 
     @staticmethod
     def _sql(value: object) -> str:

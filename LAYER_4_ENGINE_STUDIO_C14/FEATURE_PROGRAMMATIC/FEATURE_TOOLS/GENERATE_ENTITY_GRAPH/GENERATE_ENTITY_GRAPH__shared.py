@@ -1,6 +1,6 @@
 """Entity graph family interface."""
 
-from .cfel_claim_constraints import _native_constraints, extract_claim_constraints, preview_constraints_from_paths
+from .claim_constraints import _native_constraints, extract_claim_constraints
 from .contract_graph import compose_contract_graph
 from .contract_graph_render import _clause, render_contract_graph
 from .current_subject_graph import compose_current_graph, compose_enhanced_current_graph, compose_narrowing_graph
@@ -16,7 +16,7 @@ _PROJECTION_VIEWS = ("_claims", "_formal_fence", "render_primary_projection", "s
 
 __all__ = [
     "_native_constraints", "compose_contract_graph", "compose_current_graph", "compose_enhanced_current_graph",
-    "compose_narrowing_graph", "extract_claim_constraints", "preview_constraints_from_paths", "render_contract_graph",
+    "compose_narrowing_graph", "extract_claim_constraints", "render_contract_graph",
     "build_subject_audits", "compose_declaration_catalog", "render_declarations", "render_subject_audit",
     "resolve_relation_authorities", "select_model_subjects",
     "_clause", *_PROJECTION_DATA, *_READABLE_TREE, *_PROJECTION_VIEWS,

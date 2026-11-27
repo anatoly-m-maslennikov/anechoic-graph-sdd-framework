@@ -11,15 +11,14 @@ from tempfile import TemporaryDirectory
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_structure
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import build_code_access_ownership
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import discover_native_project, is_native_control_name
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.import_graph__shared import capture
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.import_graph__shared import analyze_state
+from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IMPORT_GRAPH_C61.import_graph__shared import capture
+from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IMPORT_GRAPH_C61.import_graph__shared import analyze_state
 
 from .MANIFEST_RUNTIME_C62.model_host_CS2.model_host_CS2__shared import reviewed_native_model
 
 
 _ENGINE = Path(__file__).resolve().parents[1]
-_COMPILER = ("FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR."
-             "manifest_compiler_CS1.compiler")
+_COMPILER = "FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.compile_project__pub"
 
 
 def _structure(selection):
@@ -36,7 +35,8 @@ def _analyze(root):
     model = reviewed_native_model()
     selection = discover_native_project(root, manifest_validator=lambda: model.validate_manifest)
     snapshot = _structure(selection)
-    config = selection.parameters.get("runtime", {}).get("workbench", {}).get("import_graph")
+    runtime = selection.parameters.get("runtime", {})
+    config = runtime.get("iwe_console", runtime.get("workbench", {})).get("import_graph")
     include = tuple(config.get("include", ())) if isinstance(config, dict) else ()
     sources = capture(root, None, include)
     folders = {folder for path in sources for folder in PurePosixPath(path).parents}

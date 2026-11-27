@@ -32,6 +32,10 @@ PHASES = (
 _OLD_PHASES = tuple(phase for phase in PHASES if phase != "verify candidate canary")
 
 
+def abort_request_path(root, journal_path):
+    return _project_path(root, journal_path.parent.relative_to(root) / "abort-requested", label="release-abort")
+
+
 def failure_evidence(journal, error, port):
     data = journal.data if journal is not None else {}
     phases = PHASES[1:2] + PHASES[4:7] + PHASES[9:12]
@@ -157,7 +161,7 @@ def _same_source_binding(recorded, selected):
 
 
 class Journal:
-    def __init__(self, root, run_id, selection, options, resume, *, source_binding=None):
+    def __init__(self, root, run_id, selection, options, resume, *, source_binding=None, started_at=None):
         self.root = root
         self.run_id = run_id
         self.path = _project_path(root, _RUNS / run_id / "state.json", label="resume-journal")
@@ -176,13 +180,21 @@ class Journal:
                 raise LocalReleaseError("local-release-run-id-exists")
             self.data = {"schema": 2, "run_id": run_id, "binding": binding(selection), "options": options,
                          "source_binding": source_binding, "docker_context": os.environ.get("DOCKER_CONTEXT"),
-                         "done": [], "working": None, "logs": {}, "proofs": {}}
+                         "done": [], "working": None, "logs": {}, "proofs": {},
+                         "release_started_at": started_at}
             self.data["delivery_seen"] = _delivery_record(root)[1]
             self.save()
 
     def save(self):
         _project_path(self.root, self.path.relative_to(self.root), label="resume-journal")
         atomic_write(self.path, json.dumps(self.data, sort_keys=True) + "\n")
+
+    def abort_path(self):
+        return abort_request_path(self.root, self.path)
+
+    def check_abort(self):
+        if self.abort_path().exists():
+            raise LocalReleaseError("local-release-aborted")
 
     def begin(self, phase):
         self.data["working"] = phase
@@ -279,13 +291,14 @@ def source_identity(root, runner_root, *, external=True):
 
 
 def test_environment():
+    image_fanout = os.environ.get("ANECHOIC_TEST_IMAGE_FANOUT")
     return (
         sys.platform, os.uname().machine, sys.version, os.environ.get("PATH"),
         os.environ.get("DOCKER_HOST"), os.environ.get("DOCKER_CONTEXT"),
         os.environ.get("ANECHOIC_TEST_IMAGE_DEADLINES"),
         os.environ.get("ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY"),
         os.environ.get("ANECHOIC_TEST_FANOUT"),
-        os.environ.get("PLAYWRIGHT_BROWSERS_PATH"),
+        os.environ.get("PLAYWRIGHT_BROWSERS_PATH"), *((image_fanout,) if image_fanout is not None else ()),
     )
 
 def _hash_tree(digest, root):

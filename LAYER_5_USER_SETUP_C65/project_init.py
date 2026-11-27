@@ -14,7 +14,7 @@ def initialize_project(source_checkout: Path, project: Path, name: str, prefix: 
                        workbench_storage: str, journal_storage: str) -> Path:
     """Create a Project control root; refuse existing Projects and unsafe paths."""
     source = Path(source_checkout)
-    model = source / "LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_GENERATED_MODEL_C52"
+    model = source / "LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/LAYER_2_FORMAL_MODEL_C51/FEATURE_GENERATED_MODEL_C52"
     if not all((model / filename).is_file() for filename in
                ("native-graph-claims.json", "native-spec-template-claims.json")):
         raise ValueError("Source checkout does not contain the reviewed native Model")
@@ -56,7 +56,7 @@ def _manifest_body(atom_id: str, name: str, prefix: str, workbench_storage: str,
             f"        prefix={prefix!r},\n"
             "        parameters={\n"
             "            'runtime': {\n"
-            f"                'workbench': {{'storage': {workbench_storage!r}}},\n"
+            f"                'iwe_console': {{'storage': {workbench_storage!r}}},\n"
             f"                'journal': {{'storage': {journal_storage!r}}},\n"
             "            },\n"
             "            'project': {\n"

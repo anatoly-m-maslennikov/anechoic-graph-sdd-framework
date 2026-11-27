@@ -7,7 +7,7 @@ import re
 from pathlib import Path
 import sys
 
-from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.FEATURE_MODEL_VALIDATION__shared import (
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.FEATURE_MODEL_VALIDATION.FEATURE_MODEL_VALIDATION__shared import (
     open_admitted_model, open_serialized_model,
 )
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
@@ -26,7 +26,8 @@ def _selection(binding, model, structure):
         raise ValueError("Invalid Project binding")
     selection = resolve_native_project(binding["root"], binding["control_root"],
         validate_manifest=model.validate_manifest, require_atom_state=model.requires_atom_state,
-        require_atom_header=model.requires_atom_header)
+        require_atom_header=model.requires_atom_header,
+        require_manifest_summary=model.declares_summary("Project Manifest"))
     if (str(selection.root) != binding["root"] or selection.control_relative.as_posix() != binding["control_root"]
             or selection.manifest_path.relative_to(selection.root).as_posix() != binding["manifest_path"]
             or selection.manifest_sha256 != binding["manifest_sha256"] or selection.project_prefix != binding["project_prefix"]):
@@ -85,15 +86,21 @@ def _run_context(request):
                 raise ValueError("Admitted Structure disagrees with the Project Manifest")
             selection = _indexed_selection(binding, {"manifest_ref": structure.project["ref"]})
             selection = replace(selection, parameters=context["structure"]["project"].get("parameters", {}))
-            capture = capture_indexed_lifecycle(selection, context["carriers"], context["max_numbers"],
-                                                lenses=context["lenses"],
-                                                max_archived_version=context.get("max_archived_version", 0))
             descriptor = context["model"]
+            projected_domains = context.get("status_domains")
+            domains = ({family: set(values) for family, values in projected_domains.items()}
+                       if projected_domains is not None else None)
             validate = None
             if descriptor is not None:
                 if descriptor.get("model_sha256") != structure.model_sha256:
                     raise ValueError("Admitted Model disagrees with the Structure")
-                validate = stack.enter_context(open_serialized_model(descriptor)).validate_project_spec
+                model = stack.enter_context(open_serialized_model(descriptor))
+                validate = model.validate_project_spec
+                domains = model.status_domains
+            capture = capture_indexed_lifecycle(selection, context["carriers"], context["max_numbers"],
+                                                lenses=context["lenses"],
+                                                max_archived_version=context.get("max_archived_version", 0),
+                                                domains=domains)
         except (OSError, RuntimeError, TypeError, ValueError, KeyError) as error:
             return result(errors=[{"code": "source_changed", "message": str(error)}])
         with bind_native_runtime(selection):
@@ -123,7 +130,7 @@ def run(request):
         raise ValueError("Generation does not match Project binding")
     with open_admitted_model(generation, receipt["model_sha256"], receipt["model_descriptor_sha256"]) as model:
         selection = _selection(request["binding"], model, structure)
-        capture = capture_native(selection, include_content_properties=False)
+        capture = capture_native(selection, include_content_properties=False, domains=model.status_domains)
         if capture.errors:
             raise ValueError("Native Project capture failed before lifecycle operation")
         with bind_native_runtime(selection):

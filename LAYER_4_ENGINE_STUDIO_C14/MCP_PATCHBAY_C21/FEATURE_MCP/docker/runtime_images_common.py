@@ -25,7 +25,7 @@ LICENSE_INPUTS = ("LICENSE", "LICENSE.TLDR.md", DOCKER_ROOT + "/DuckPGQ.LICENSE"
 RETIRED_ASSETS = frozenset(
     ENGINE_ROOT + "/" + directory + "/" + name
     for directory, names in (
-        ("IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND",
+        ("IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_BACKEND",
          ("canonical_relation_registry.json", "workbench_schema.json")),
         ("FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ATOM_LIFECYCLE",
          ("status_model.json", "candidate_schema.json")),

@@ -14,24 +14,28 @@ def carrier(atom_id, subject, expression, *, form="Declaration"):
     return {
         "source": {"atom_id": atom_id, "version": 1, "path": atom_id + ".md"},
         "subjects": {"active": subject, "passive": []},
-        "body": "## Claim\n\n### Formal Claim\n\n```CFEL\n" + expression + "\n```\n",
+        "body": "## Claim\n\n### Formal Claim\n\n```python\n" + expression + "\n```\n",
         "read_view": {"content_role": "Requirement", "type": form},
     }
 
 
 class RuleOriginTests(unittest.TestCase):
     def test_symbolic_relation_requires_an_unambiguous_declared_alias(self):
-        node = carrier("CA-R-1", "Node", "# model\nNode +> Node;")
+        node = carrier("CA-R-1", "Node", "# model\ncomposition(container='Node', parts=('Node',))")
         declared = carrier("CA-R-2", "CFEL <+ Relation//LINKS",
-                           'alias(Relation//LINKS) == "+>";\n'
-                           'Relation//LINKS ((HAS_CLASSIFICATION)) Derivation == Direct;',
+                           'from anechoic.formal_claims import declare_relation\n'
+                           "declare_relation(relation_name='LINKS', written_alias='<+', "
+                           "source_endpoint={'level': 'model_entities'}, target_endpoint={'level': 'model_entities'})",
                            form="Relation Declaration")
         data = build_subject_projection_data([node, declared])
         entity = next(row for row in data["entities"] if row["identity"] == "Node")
         relation, = entity["relation_rule_origins"]["declared_here"]
         self.assertEqual(("LINKS", "Direct"), (relation["relation"], relation["derivation"]))
         competing = carrier("CA-R-3", "CFEL <+ Relation//OTHER",
-                            'alias(Relation//OTHER) == "+>";', form="Relation Declaration")
+                            "from anechoic.formal_claims import declare_relation\n"
+                            "declare_relation(relation_name='OTHER', written_alias='<+', "
+                            "source_endpoint={'level': 'model_entities'}, target_endpoint={'level': 'model_entities'})",
+                            form="Relation Declaration")
         data = build_subject_projection_data([node, declared, competing])
         entity = next(row for row in data["entities"] if row["identity"] == "Node")
         self.assertEqual([], entity["relation_rule_origins"]["declared_here"])
@@ -39,8 +43,8 @@ class RuleOriginTests(unittest.TestCase):
     def test_unbounded_structural_fact_is_not_an_inherited_relation_rule(self):
         data = build_subject_projection_data([
             carrier("CA-R-1", "Node",
-                    "Node ((NARROWER_THAN)) Root;\nNode {::0+}((NARROWER_THAN)) Node;"),
-            carrier("CA-R-2", "Node/Child", "Node/Child ((NARROWER_THAN)) Node;"),
+                    "relation(source='Node', name='NARROWER_THAN', target='Root')\nrelation(source='Node', name='NARROWER_THAN', target='Node', source_count='0+')"),
+            carrier("CA-R-2", "Node/Child", "relation(source='Node/Child', name='NARROWER_THAN', target='Node')"),
         ])
         child = next(row for row in data["entities"] if row["identity"] == "Node/Child")
         self.assertEqual([], child["relation_rule_origins"]["overridden_here"])
@@ -63,14 +67,14 @@ class RuleOriginTests(unittest.TestCase):
     def test_local_overrides_keep_source_and_level_separate(self):
         data = build_subject_projection_data([
             carrier("CA-R-1", "Node",
-                    "# model\nNode {::0+}((LINKS)) Node;\n"
-                    "# instances\nNode//$n {::0+}((LINKS)) Node//$m;"),
+                    "# model\nrelation(source='Node', name='LINKS', target='Node', source_count='0+')\n"
+                    "# instances\nrelation(source='Node//$n', name='LINKS', target='Node//$m', source_count='0+')"),
             carrier("CA-R-2", "Node/Child",
-                    "# model\nNode/Child {::1}((LINKS)) Node;"),
-            carrier("CA-R-3", "Node.Status", "Node.Status: [string]{:1};"),
-            carrier("CA-R-4", "Node/Child.Status", "Node/Child.Status: [integer]{:1};"),
+                    "# model\nrelation(source='Node/Child', name='LINKS', target='Node', source_count='1')"),
+            carrier("CA-R-3", "Node.Status", "property_rule(address='Node.Status', value_format='string', values='1')"),
+            carrier("CA-R-4", "Node/Child.Status", "property_rule(address='Node/Child.Status', value_format='integer', values='1')"),
             carrier("CA-R-5", "CFEL <+ Relation//LINKS",
-                    "Relation//LINKS ((HAS_CLASSIFICATION)) Derivation == Direct;",
+                    "classify(address='Relation//LINKS', axis='Derivation', value='Direct', notation='relation')",
                     form="Relation Declaration"),
         ])
         child = next(row for row in data["entities"] if row["identity"] == "Node/Child")
@@ -89,19 +93,19 @@ class RuleOriginTests(unittest.TestCase):
         self.assertIn("Relation `LINKS` (Direct, model, forward)", rendered)
         self.assertIn("Replaces rule from `Node` — CA-R-3@1", rendered)
         self.assertIn("property: `Node.Status` (relative `Status`) [inherited] [overridden]", rendered)
-        self.assertIn("contract: `Node.Status: [string]{:1}` — CA-R-3@1", rendered)
+        self.assertIn("contract: `Node.Status:: [string]{::1}` — CA-R-3@1", rendered)
         self.assertIn("Rule: `Node {::0+}((LINKS)) Node`", rendered)
 
     def test_only_authored_relations_get_permissions_and_classification(self):
         data = build_subject_projection_data([
             carrier("CA-R-1", "Node",
-                    "# model\nNode ((LINKS)) Node;\nNode <((BELONGS)) Node;\n"
-                    "# instances\nNode ((LINKS)) Node;"),
+                    "# model\nrelation(source='Node', name='LINKS', target='Node')\nrelation(source='Node', name='BELONGS', target='Node', reverse=True)\n"
+                    "# instances\nrelation(source='Node', name='LINKS', target='Node')"),
             carrier("CA-R-2", "CFEL <+ Relation//LINKS",
-                    "Relation//LINKS ((HAS_CLASSIFICATION)) Derivation == Direct;",
+                    "classify(address='Relation//LINKS', axis='Derivation', value='Direct', notation='relation')",
                     form="Relation Declaration"),
             carrier("CA-R-3", "CFEL <+ Relation//BELONGS",
-                    "Relation//BELONGS ((HAS_CLASSIFICATION)) Derivation == Derived;",
+                    "classify(address='Relation//BELONGS', axis='Derivation', value='Derived', notation='relation')",
                     form="Relation Declaration"),
         ])
         node = next(row for row in data["entities"] if row["identity"] == "Node")
@@ -121,7 +125,7 @@ class RuleOriginTests(unittest.TestCase):
         native = carrier("CA-R-2", "Node/Child", "")
         native["body"] = "## Claim\n\n### Formal Claim\n\n```python\n" + python + "\n```\n"
         data = build_subject_projection_data([
-            carrier("CA-R-1", "Node", "Node ((NARROWER_THAN)) Root;"),
+            carrier("CA-R-1", "Node", "relation(source='Node', name='NARROWER_THAN', target='Root')"),
             native,
         ])
         child = next(row for row in data["entities"] if row["identity"] == "Node/Child")
@@ -143,8 +147,8 @@ class RuleOriginTests(unittest.TestCase):
             "target_endpoint={'level': 'instances', 'entity_paths': ('Node',)})\n```\n"
         )
         data = build_subject_projection_data([
-            carrier("CA-R-1", "Node", "# model\nNode ((LINKED_BY)) Node;"),
-            carrier("CA-R-3", "Node/Other", "# model\nNode/Other ((LINKS)) Node;"),
+            carrier("CA-R-1", "Node", "# model\nrelation(source='Node', name='LINKED_BY', target='Node')"),
+            carrier("CA-R-3", "Node/Other", "# model\nrelation(source='Node/Other', name='LINKS', target='Node')"),
             declaration,
         ])
         node = next(row for row in data["entities"] if row["identity"] == "Node")

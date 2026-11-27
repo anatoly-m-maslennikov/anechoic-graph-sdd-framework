@@ -79,6 +79,34 @@ class NativeDeltaTest(unittest.TestCase):
             rows = _query(client, "SELECT \"header.state.status\" FROM mrt_atoms WHERE reference = 'AN-T-1'")
             self.assertEqual([["done"]], rows.json()["result"]["rows"])
 
+    def test_canonical_model_project_config_status_domain(self):
+        data = base_generation()
+        model = json.loads(data["model"])
+        root = "Graph/Node//Artifact//SSOT//Prescribed/Content/Atom"
+        model["bindings"]["declarations"] = [
+            [name, {"kind": "entity", "arguments": {"entity_name": "Status", "entity_kind": "Property",
+              "relation_name": "IS_PROPERTY_OF", "base_path": root + ".Header.State",
+              "applies_to_entity_classes": [root + "//" + name], "allowed_values": values}}]
+            for name, values in (("Specification", ["draft", "active", "archived"]),
+                                 ("Ticket", ["draft", "active", "archived"]),
+                                 ("project_config", ["draft", "active", "reviewed", "archived"]))
+        ]
+        source = data["snapshot"]["atoms"][0]
+        data["snapshot"]["atoms"].append(source | {
+            "reference": "AN-C-7", "exact_ref": "AN-C-7@1", "filename": "AN-C-7.md",
+            "version": 1, "status": "reviewed", "status_group": "Current"})
+        data["model"] = json.dumps(model)
+        data["receipt"]["model_descriptor_sha256"] = sha256(data["model"].encode()).hexdigest()
+        data["receipt"]["snapshot_sha256"] = _digest(data["snapshot"])
+        with _server() as client:
+            admitted = client.put("/generation", json=data)
+            self.assertEqual(200, admitted.status_code, admitted.text)
+            data["snapshot"]["atoms"][-1]["status"] = "unknown"
+            data["receipt"]["snapshot_sha256"] = _digest(data["snapshot"])
+            refused = client.put("/generation", json=data)
+            self.assertEqual(400, refused.status_code, refused.text)
+            self.assertIn("Invalid native Atom Status", refused.json()["error"]["message"])
+
     def test_partial_and_invalid_family_status_bindings_fail(self):
         args = {"entity_name": "Status", "entity_kind": "Property", "relation_name": "IS_PROPERTY_OF",
                 "base_path": "Node//Artifact//Atom.Header.State", "allowed_values": ["active"],

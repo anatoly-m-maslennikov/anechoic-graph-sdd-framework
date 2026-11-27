@@ -11,23 +11,21 @@ from pathlib import Path
 from .abort import AbortJobs, WorkerAborted
 from .flow import Flow, safe_target
 from .generation import (
+    CompilerColumnsChanged,
     DeltaRequiresReconciliation,
     GenerationBaseChanged,
     WorkerIngestionFailure,
     admit_generation,
     confirm_reuse,
+    live_reuse,
     read_reuse,
     replace_ingestion_issues,
     ticket_delta_paths,
     wait_build,
 )
 from .archive_jobs import ARCHIVE_RECONCILIATION, ArchiveCoverageLost, ArchiveInputsChanged, ArchiveJobs
-from .generation_worker import (
-    GENERATION_ERRORS,
-    ForegroundCoverageLost,
-    ForegroundInputsChanged,
-    GenerationWorker,
-)
+from .generation_worker import (GENERATION_ERRORS, ForegroundCoverageLost,
+                                ForegroundInputsChanged, GenerationWorker)
 from .jobs import FIELDS, Jobs, QueuedJobs, _GenerationJob, _Run
 from .lifecycle import LifecycleJobs
 from .retry import COVERAGE_RECOVERED, CurrentnessRetry as CurrentnessRetry, source_changed
@@ -64,10 +62,8 @@ class GenerationJobs(ArchiveJobs, StartupGraphJobs, GenerationWorker, AbortJobs,
         self.watcher = SourceWatcher(root, root / binding["control_root"], watch_code=watch_code,
                                      defer_archives=True)
         self.thread = None
-        self.pending = self.inflight = None
-        self.generation_reuse = None
-        self.flow = None
-        self.flow_context = None
+        self.pending = self.inflight = self.generation_reuse = None
+        self.flow = self.flow_context = None
         self.startup_capture = False
         self._initialize_archive()
         self._initialize_startup_graph()
@@ -127,17 +123,12 @@ class GenerationJobs(ArchiveJobs, StartupGraphJobs, GenerationWorker, AbortJobs,
         return wait_build(job, None)
 
     def _watch(self):
-        self.generation_reuse = read_reuse(self.database_socket, self.instance_id)
+        self.generation_reuse = read_reuse(self.database_socket, self.instance_id, scope="foreground")
         self._watch_queue()
 
-    def _flow_effect(self, name, **values):
-        if self.flow is not None:
-            targets = {"worker_request": "C69", "worker_started": "C69",
-                       "generation_admission": "C71", "generation_reuse_check": "C71",
-                       "generation_reuse_write": "C68.generation_reuse"}
-            self.flow.add("effect", name, target=targets[name], **values)
-
-    def _attempt_generation(self, target, reuse, paths=None, *, reconciliation=False, strict=False):
+    def _attempt_generation(self, target, reuse, paths=None, *, reconciliation=False, strict=False, recover_coverage=False):
+        if target == "realization_graph":
+            return self._attempt_explicit_graph(reuse)
         with tempfile.TemporaryDirectory(prefix="anechoic-generation-") as temporary:
             directory = str(Path(temporary).resolve(strict=True))
             started = time.monotonic()
@@ -148,7 +139,10 @@ class GenerationJobs(ArchiveJobs, StartupGraphJobs, GenerationWorker, AbortJobs,
                                                     for path in paths):
                 paths = None
             result, reuse, options = self._capture_generation(
-                directory, reuse, paths, explicit=explicit, reconciliation=reconciliation, strict=strict)
+                directory, reuse, paths, explicit=explicit, reconciliation=reconciliation, strict=strict,
+                recover_coverage=recover_coverage, force_model=target in {
+                    "all", "model_entities", "model_properties", "model_tree", "model_primary_entities",
+                    "mrt_model_entities", "mrt_model_properties", "mrt_model_tree", "mrt_model_primary_entities"})
             deferred = result.pop("deferred_archive", None)
             if self.skip_archives:
                 deferred = None
@@ -170,9 +164,9 @@ class GenerationJobs(ArchiveJobs, StartupGraphJobs, GenerationWorker, AbortJobs,
                 admitted["delta_path_count"] = len(result["paths"])
         self._accept_live_generation(admitted["generation"], result, deferred)
         if witness is not None:
-            self.generation_reuse = ReuseRecord.model_validate({
-                **{key: value for key, value in witness.items() if key not in CHECKPOINT_FIELDS},
-                "base_generation": admitted["generation"]})
+            self.generation_reuse = live_reuse(
+                self.database_socket, self.instance_id, admitted["generation"], result, reuse, witness,
+            )
             self._flow_effect("generation_reuse_write", outcome="succeeded", detail={"state": "stored"})
         return {"state": "succeeded", **admitted}
 
@@ -231,9 +225,10 @@ class GenerationJobs(ArchiveJobs, StartupGraphJobs, GenerationWorker, AbortJobs,
         return job
 
     def _generation_reuse(self, target, changes, startup):
-        reuse = self.generation_reuse if target is None and (startup or any(changes)) else None
+        reuse = self.generation_reuse if (target == "realization_graph" or
+                                          target is None and (startup or any(changes))) else None
         if self.startup_capture and not startup and target is None and self.inflight is None and reuse is None:
-            reuse = read_reuse(self.database_socket, self.instance_id)
+            reuse = read_reuse(self.database_socket, self.instance_id, scope="foreground")
         return reuse.model_dump(exclude_unset=True) if isinstance(reuse, ReuseRecord) else reuse
 
     def _generate(self, target=None, *, changes=(), startup=False):
@@ -252,10 +247,14 @@ class GenerationJobs(ArchiveJobs, StartupGraphJobs, GenerationWorker, AbortJobs,
             outcome = {"state": "aborted", "code": "worker_aborted", "message": "Worker aborted"}
         except GENERATION_ERRORS as error:
             outcome["message"] = str(error)[-2048:]
+            if isinstance(error, ForegroundCoverageLost):
+                outcome["code"] = "watcher_coverage_lost"
             if (self.startup_capture or self.startup_replay) and source_changed(outcome):
                 outcome["retrying"] = True
             self._record_ingestion_failure(error.__cause__ if isinstance(error, ForegroundInputsChanged) else error)
         finally:
+            if target == "realization_graph" and self.generation_reuse is None and reuse is not None:
+                self.generation_reuse = ReuseRecord.model_validate(reuse)
             with self.lock:
                 self.latest = _Run(**(self.active.model_dump(exclude_unset=True) | outcome), finished_at=time.time())
                 if self.worker_mode is not None:
@@ -272,25 +271,25 @@ class GenerationJobs(ArchiveJobs, StartupGraphJobs, GenerationWorker, AbortJobs,
         paths = ticket_delta_paths(self.binding, changes) if reuse is not None and not self.startup_capture else None
         event_types = {change.get("event_type") for change in changes if change}
         try:
-            try:
-                if ARCHIVE_RECONCILIATION in event_types:
-                    outcome = self._attempt_generation(target, reuse, reconciliation=True, strict=True)
-                elif COVERAGE_RECOVERED in event_types:
-                    outcome = self._attempt_generation(target, None, strict=True)
-                else:
-                    outcome = self._attempt_generation(target, reuse, paths)
-            except GenerationBaseChanged:
-                outcome = self._attempt_generation(target, None)
-            except DeltaRequiresReconciliation:
-                if reuse is None:
-                    raise
-                witness = {key: value for key, value in reuse.items() if key not in CHECKPOINT_FIELDS}
-                outcome = self._attempt_generation(target, witness, reconciliation=True)
+            if ARCHIVE_RECONCILIATION in event_types:
+                self.archive_reconciliation_pending = False
+                return self._attempt_generation(target, reuse, reconciliation=True, strict=True)
+            if COVERAGE_RECOVERED in event_types:
+                return self._recover_watcher_coverage(target)
+            return self._attempt_generation(target, reuse, paths)
+        except (GenerationBaseChanged, CompilerColumnsChanged):
+            if target == "realization_graph":
+                raise
+            return self._attempt_generation(target, None, recover_coverage=COVERAGE_RECOVERED in event_types)
+        except DeltaRequiresReconciliation:
+            if reuse is None:
+                raise
+            witness = {key: value for key, value in reuse.items() if key not in CHECKPOINT_FIELDS}
+            return self._attempt_generation(target, witness, reconciliation=True)
         except ForegroundCoverageLost:
             if self.stopping.is_set():
                 raise WorkerAborted("Worker aborted")
-            outcome = self._attempt_generation(target, None, strict=True)
-        return outcome
+            raise
 
     def _record_ingestion_failure(self, error):
         message = str(error)[-8192:] or type(error).__name__

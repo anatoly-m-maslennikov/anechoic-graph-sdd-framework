@@ -15,7 +15,7 @@ from mcp.client.stdio import StdioServerParameters, stdio_client
 ENGINE = Path(__file__).resolve().parents[3]
 COMPONENTS = ("FEATURE_PROGRAMMATIC", "ARCHITECTURE_ANALYSIS_C73", "MCP_PATCHBAY_C21", "KERNEL_MIXER_beta_C67",
               "ORCHESTRATOR_beta_C68", "WORKERS_beta_C69", "API_MIXER_beta_C91",
-              "IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_IMPORT_GRAPH_C61")
+              "IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IMPORT_GRAPH_C61")
 PUBLIC_PAGE = "https://workbench.example.test/anechoic/workbench/Example"
 
 

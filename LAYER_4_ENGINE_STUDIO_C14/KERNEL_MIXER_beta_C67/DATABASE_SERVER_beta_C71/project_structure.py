@@ -7,6 +7,20 @@ def ensure_structure_table(connection):
     connection.execute("""CREATE TABLE IF NOT EXISTS mrt_project_structure (
         component_id VARCHAR PRIMARY KEY, parent VARCHAR, source_path VARCHAR,
         ref VARCHAR, sha256 VARCHAR, fields VARCHAR, component_extra VARCHAR, present_keys VARCHAR)""")
+    exists = connection.execute("SELECT count(*) FROM information_schema.tables WHERE table_schema = 'main' AND table_name = 'mrt_component_seeds'").fetchone()[0]
+    connection.execute("""CREATE TABLE IF NOT EXISTS mrt_component_seeds (
+        seed_id VARCHAR PRIMARY KEY, parent VARCHAR, ref VARCHAR, fields VARCHAR)""")
+    if not exists and connection.execute("SELECT count(*) FROM information_schema.tables WHERE table_schema = 'main' AND table_name = 'ops_generation'").fetchone()[0]:
+        row = connection.execute("SELECT structure FROM ops_generation").fetchone()
+        if row and row[0]:
+            _replace_seeds(connection, json.loads(row[0]))
+
+
+def _replace_seeds(connection, document):
+    connection.execute("DELETE FROM mrt_component_seeds")
+    for seed_id, item in document.get("packages", {}).items():
+        connection.execute("INSERT INTO mrt_component_seeds VALUES (?, ?, ?, ?)",
+                           [seed_id, item.get("component"), item.get("ref"), json.dumps(item.get("fields"))])
 
 
 def replace_structure(connection, structure):
@@ -15,6 +29,7 @@ def replace_structure(connection, structure):
     project = document["project"]
     facts = {key: value for key, value in document.items() if key != "components"}
     facts["project"] = {key: value for key, value in project.items() if key not in ("ref", "sha256")}
+    _replace_seeds(connection, document)
     connection.execute("DELETE FROM mrt_project_structure")
     connection.execute("INSERT INTO mrt_project_structure VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                        ["C00", None, None, project.get("ref"), project.get("sha256"), None, None, None])

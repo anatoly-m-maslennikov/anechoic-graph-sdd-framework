@@ -8,6 +8,7 @@ import re
 import duckdb
 from starlette.responses import JSONResponse
 
+from .accepted_model import generation_rows
 from .analysis_projection import apply_spec_delta, snapshot_sizes
 from .carrier_checkpoint import update_checkpoint
 from .generation import FULL_GENERATION_BODY_LIMIT, GenerationBaseChanged, _digest, replace_native_generation
@@ -105,7 +106,7 @@ def _validate_delta(connection, data, model, manifest_sha256, *, archive=False):
                 or match.group(2) and match.group(1) + match.group(2) != atom.exact_ref):
             raise ValueError("Atom does not belong to an addressed native path")
     old = _old_rows(connection, paths, archive=archive)
-    stage_atom_rows(connection, atoms)
+    stage_atom_rows(connection, snapshot["atoms"])
     conflict = connection.execute("""SELECT 1 FROM (
         SELECT relative_path, filename FROM main.mrt_atom_references WHERE reference IN (SELECT reference FROM int_admission_atoms)
         UNION ALL
@@ -192,47 +193,53 @@ def _write_lenses(connection, snapshot):
             connection.execute("DROP VIEW IF EXISTS main.lifecycle_lenses")
 
 
+def apply_native_delta_in_transaction(connection, data, manifest_sha256, base, model, structure, *, archive=False):
+    """Apply a validated delta in the caller's transaction."""
+    from .archive_generation import backfill_archive_versions
+
+    if data.get("archive_pending"):
+        backfill_archive_versions(connection)
+    snapshot, old, new_edges, inverse = _validate_delta(connection, data, model, manifest_sha256, archive=archive)
+    generation = _delta_generation(base, data["snapshot_sha256"])
+    update_checkpoint(connection, data, delta=True)
+    if not old and not snapshot["atoms"]:
+        changed = _finish_delta(connection, data, archive, old, check_changes=True)
+        if changed:
+            connection.execute("UPDATE ops_generation SET id = ?", [generation])
+        connection.execute("DROP TABLE int_delta_paths")
+        connection.execute("DROP TABLE int_admission_atoms")
+        return generation if changed else base
+    _stage_owned_edges(connection, old, inverse)
+    components = {"C00", *json.loads(structure)["components"]}
+    if not archive:
+        _write_lenses(connection, snapshot)
+    _write_atoms(connection)
+    _finish_delta(connection, data, archive, old)
+    _write_relations(connection, new_edges)
+    if not archive and has_table(connection, "main", "biz_architecture_spec_metrics"):
+        apply_spec_delta(connection, [exact for _, exact in old if "-S-" in exact], snapshot_sizes(snapshot))
+    _write_graph(connection, components)
+    connection.execute("UPDATE ops_generation SET id = ?", [generation])
+    for table in ("int_delta_paths", "int_delta_old", "int_admission_atoms", "int_delta_owned_edges",
+                  "int_delta_new_edges", "int_delta_affected", "int_delta_vertices", "int_delta_components"):
+        connection.execute(f"DROP TABLE {table}")
+    return generation
+
+
 def apply_native_delta(connection, data, manifest_sha256, *, archive=False):
-    from .archive_generation import archive_pending, backfill_archive_versions
+    from .archive_generation import archive_pending
 
     if "archive_pending" in data and (data["archive_pending"] is not True or "carrier_hashes" not in data):
         raise ValueError("Invalid startup archive transition")
     connection.execute("BEGIN TRANSACTION")
     try:
-        rows = connection.execute("SELECT id, model, structure FROM ops_generation").fetchall()
+        rows = generation_rows(connection)
         if (len(rows) != 1 or rows[0][0] != data["base_generation"]
                 or not has_table(connection, "native_graph", "int_labels")
                 or not has_table(connection, "main", "mrt_atom_graph_relations")
                 or (archive and not archive_pending(connection))):
             raise GenerationBaseChanged("Generation base changed or is not native")
-        base, model, structure = rows[0]
-        if data.get("archive_pending"):
-            backfill_archive_versions(connection)
-        snapshot, old, new_edges, inverse = _validate_delta(connection, data, model, manifest_sha256, archive=archive)
-        generation = _delta_generation(base, data["snapshot_sha256"])
-        update_checkpoint(connection, data, delta=True)
-        if not old and not snapshot["atoms"]:
-            changed = _finish_delta(connection, data, archive, old, check_changes=True)
-            if changed:
-                connection.execute("UPDATE ops_generation SET id = ?", [generation])
-            connection.execute("DROP TABLE int_delta_paths")
-            connection.execute("DROP TABLE int_admission_atoms")
-            connection.execute("COMMIT")
-            return generation if changed else base
-        _stage_owned_edges(connection, old, inverse)
-        components = {"C00", *json.loads(structure)["components"]}
-        if not archive:
-            _write_lenses(connection, snapshot)
-        _write_atoms(connection)
-        _finish_delta(connection, data, archive, old)
-        _write_relations(connection, new_edges)
-        if not archive and has_table(connection, "main", "biz_architecture_spec_metrics"):
-            apply_spec_delta(connection, [exact for _, exact in old if "-S-" in exact], snapshot_sizes(snapshot))
-        _write_graph(connection, components)
-        connection.execute("UPDATE ops_generation SET id = ?", [generation])
-        for table in ("int_delta_paths", "int_delta_old", "int_admission_atoms", "int_delta_owned_edges",
-                      "int_delta_new_edges", "int_delta_affected", "int_delta_vertices", "int_delta_components"):
-            connection.execute(f"DROP TABLE {table}")
+        generation = apply_native_delta_in_transaction(connection, data, manifest_sha256, *rows[0], archive=archive)
         connection.execute("COMMIT")
     except BaseException:
         connection.execute("ROLLBACK")
@@ -276,7 +283,8 @@ def native_generation_route(connection, instance_id, manifest_sha256, lock, read
                                                  allowed | {"graph", "graph_sha256", "reuse"})
             alternatives += tuple(fields | {"carrier_hashes"} for fields in alternatives)
             if not delta:
-                alternatives += ({"instance_id", "base_generation", "graph", "graph_sha256", "reuse"},)
+                graph_only = {"instance_id", "base_generation", "graph", "graph_sha256", "reuse"}
+                alternatives += (graph_only, graph_only | {"force_graph"})
             if delta:
                 alternatives += (allowed | {"carrier_hashes", "archive_pending"},)
             limit = 64 * 1024 * 1024 if delta else FULL_GENERATION_BODY_LIMIT

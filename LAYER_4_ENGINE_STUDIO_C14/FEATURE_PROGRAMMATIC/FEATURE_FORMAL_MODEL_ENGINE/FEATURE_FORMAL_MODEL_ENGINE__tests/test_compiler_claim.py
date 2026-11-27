@@ -1,7 +1,6 @@
 """Native declarations retain the existing compilers' explicit inputs."""
 
 import unittest
-from pathlib import Path
 
 
 from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.FEATURE_FORMAL_MODEL_ENGINE__shared import (  # noqa: E402
@@ -19,31 +18,8 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import
     parse_native_model_claim,  # noqa: E402
 )
 
-FEATURE = Path(__file__).resolve().parents[1]
-PROGRAMMATIC = FEATURE.parent
-TOOLS = PROGRAMMATIC / "FEATURE_TOOLS"
-
-
 def _compile(source):
     return compiler_model_statements(parse_native_model_claim(source))
-
-
-def _body(statements):
-    return "## Claim\n\n### Formal Claim\n\n```CFEL\n" + ";\n".join(statements) + ";\n```\n"
-
-
-def _row(statements):
-    body = _body(statements)
-    return {"id": "CA-R-1", "ref": "CA-R-1", "version": 1, "source_path": "source.md",
-            "status_group": "Current", "role": "Requirement", "form": "Declaration",
-            "_content_bytes": body.encode(), "content_markdown": body}
-
-
-def _native_row(source, identifier="CA-R-1"):
-    result = _row(())
-    body = f"## Claim\n### Formal Claim\n```python\n{source}\n```\n"
-    return result | {"id": identifier, "ref": identifier, "_content_bytes": body.encode(),
-                     "content_markdown": body}
 
 
 class CompilerClaimTests(unittest.TestCase):
@@ -93,16 +69,16 @@ declare_entity(entity_name="Dependencies", relation_name="IS_PROPERTY_OF",
             with self.assertRaisesRegex(ValueError, "invalid Aspect instance address"):
                 compiler_model_statements(modified)
 
-    def test_allowed_classification_values_are_not_fixed_classifications(self):
+    def test_allowed_axis_values_are_not_fixed_axes(self):
         claim = """from anechoic.formal_claims import declare_entity
-declare_entity(entity_name="Node", allowed_classification_values={"Container": ("yes", "no")})
+declare_entity(entity_name="Node", allowed_axis_values={"Container": ("yes", "no")})
 """
         self.assertEqual(("Node >| Container: yes", "Node >| Container: no"), _compile(claim))
         for bad in ('("yes", "yes")', '()', '["yes"]'):
             with self.assertRaises(ValueError):
                 _compile(claim.replace('("yes", "no")', bad))
         with self.assertRaises(ValueError):
-            _compile(claim.replace('entity_name="Node",', 'entity_name="Node", classifications={"Container": "yes"},'))
+            _compile(claim.replace('entity_name="Node",', 'entity_name="Node", axes={"Container": "yes"},'))
 
     def test_same_bearer_fallback_requires_a_declared_property(self):
         from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.FEATURE_FORMAL_MODEL_ENGINE__shared import (
@@ -244,17 +220,17 @@ declare_entity(
         )
 
 
-    def test_relation_classifications_compile_only_when_explicit(self):
+    def test_relation_axes_compile_only_when_explicit(self):
         source = """from anechoic.formal_claims import declare_relation
 declare_relation(relation_name="LINKS", inverse_alias="LINKED_BY",
     source_endpoint={"level": "model_entities"}, target_endpoint={"level": "model_entities"},
-    classifications={"Direction": "Forward"}, inverse_classifications={"Direction": "Reverse"})
+    axes={"Direction": "Forward"}, inverse_axes={"Direction": "Reverse"})
 """
         self.assertEqual(_compile(source), (
             "Relation//LINKS", "Relation//LINKED_BY ((IS_INVERSE_ALIAS_FOR)) Relation//LINKS",
             "Relation//LINKS >| Direction == Forward", "Relation//LINKED_BY >| Direction == Reverse",
         ))
-        self.assertEqual(_compile(source.replace(',\n    classifications={"Direction": "Forward"}, inverse_classifications={"Direction": "Reverse"}', '')), (
+        self.assertEqual(_compile(source.replace(',\n    axes={"Direction": "Forward"}, inverse_axes={"Direction": "Reverse"}', '')), (
             "Relation//LINKS", "Relation//LINKED_BY ((IS_INVERSE_ALIAS_FOR)) Relation//LINKS",
         ))
 

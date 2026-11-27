@@ -22,6 +22,8 @@ Build a transient Project snapshot and staged generation for Kernel.
 Run an admitted Ticket lifecycle operation in a short-lived process.
 
 The `atom_snapshot` success effects below cover cold full generation.
+Stage captured Project Spec rows in C71 under the Project binding. Pass
+the rows returned for that snapshot ID to the Spec Engine before compilation.
 Other modes remain as declared by the endpoint and its Contract.
 
 ## Formal manifest
@@ -36,18 +38,26 @@ declare_entity(
         component_id='C69',
         name='Workers Beta',
         lens_whitelist=['DES', 'SPEC'],
-        boundaries={'code': {'imports': {'only': ['metrics__shared.code_rows',
-                                                'ADAPTERS_C30__shared.capture_carrier_delta',
-                                                'FEATURE_TOOLS__shared.indexed_draft_runner',
-                                                'ADAPTERS_C30__shared.capture_ticket_delta',
-                                                'ADAPTERS_C30__shared.prepare_generation_snapshot',
-                                                'ADAPTERS_C30__shared.native_carrier_hashes',
-                                           'import_graph__shared.run_graph_build',
-                                           'import_graph__shared.graph_input_signature',
-                                           'manifest_build_CS4__shared.manifest_input_signature',
-                                           'WORKERS_beta_C69__shared.python_context_restoration',
-                                           'WORKERS_beta_C69__shared.python_import_order',
-                                           'WORKERS_beta_C69__shared.python_code_units']}},
+        boundaries={'code': {'exports': {'WORKERS_beta_C69__shared.python_code_units': {'private': ['LAYER_4_ENGINE_STUDIO_C14/WORKERS_beta_C69/WORKERS_beta_C69__tests',
+                                                                                'C74']},
+                     'WORKERS_beta_C69__shared.python_context_restoration': {'private': ['LAYER_4_ENGINE_STUDIO_C14/WORKERS_beta_C69/WORKERS_beta_C69__tests']},
+                     'WORKERS_beta_C69__shared.python_import_order': {'private': ['LAYER_4_ENGINE_STUDIO_C14/WORKERS_beta_C69/WORKERS_beta_C69__tests']}},
+         'imports': {'only': ['metrics__shared.code_rows',
+                              'ADAPTERS_C30__shared.capture_carrier_delta',
+                              'ADAPTERS_C30__shared.UnrepresentableCarrierDelta',
+                              'FEATURE_TOOLS__shared.indexed_draft_runner',
+                              'ADAPTERS_C30__shared.capture_ticket_delta',
+                              'ADAPTERS_C30__shared.prepare_generation_snapshot',
+                              'ADAPTERS_C30__shared.NativeSnapshotChanged',
+                              'ADAPTERS_C30__shared.owned_temporary_root',
+                              'ADAPTERS_C30__shared.mark_startup_timing',
+                              'ADAPTERS_C30__shared.native_carrier_hashes',
+                              'import_graph__shared.run_graph_build',
+                              'import_graph__shared.graph_input_signature',
+                              'manifest_build_CS4__shared.manifest_input_signature',
+                              'WORKERS_beta_C69__shared.python_context_restoration',
+                              'WORKERS_beta_C69__shared.python_import_order',
+                              'WORKERS_beta_C69__shared.python_code_units']}},
          'io': {'server': {'atom_snapshot': {'outcomes': {'succeeded': {'must_effect': [('C69.model_structure', 'compiled'), ('C69.snapshot_graph', 'captured'), ('C69.artifacts', 'sealed'), ('C69.receipt', 'returned_with_artifact_seals')]}},
                                              'transport': 'cli',
                                              'runner': 'managed_python',
@@ -107,6 +117,7 @@ declare_entity(
                            }}},
                 'client': {'task_lifecycle': {'component': 'C16', 'interface': 'task_lifecycle', 'transport': 'cli'},
                            'manifest_build': {'component_seed': 'CS4', 'transport': 'cli'},
+                           'spec_snapshot': {'component': 'C71', 'interface': 'database_api', 'transport': 'http'},
                            'native_snapshot': {'component': 'C30',
                                                'interface': 'native_snapshot'},
                            'realization_graph': {'component': 'C61', 'interface': 'build_graph',

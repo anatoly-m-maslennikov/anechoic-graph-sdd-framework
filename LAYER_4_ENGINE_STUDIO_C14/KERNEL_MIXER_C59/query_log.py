@@ -13,6 +13,8 @@ import threading
 from typing import Any, Callable
 import uuid
 
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import console_state_path
+
 
 class QueryLog:
     """Persist temporary attempt metadata for one selected Project."""
@@ -20,7 +22,7 @@ class QueryLog:
     _TTL = dt.timedelta(hours=48)
 
     def __init__(self, root: Path) -> None:
-        runtime = Path(root) / ".anechoic_runtime" / "workbench"
+        runtime = console_state_path(Path(root))
         self._directory = runtime / "query_log"
         self._legacy_path = runtime / "query-log.json"
         self._lock = threading.RLock()

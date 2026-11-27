@@ -36,7 +36,7 @@ def write_project(root):
     )
 
 
-_ADMISSION = "FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.project_admission__pub"
+_ADMISSION = "FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.FEATURE_MODEL_VALIDATION.project_admission__pub"
 _OWNER = "ORCHESTRATOR_beta_C68.shared_peer_owner"
 _BUSY = {"error": "ValueError", "message": "project_gateway_busy"}
 
@@ -150,7 +150,7 @@ class PeerOwnerTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(set(self.first), set(selected))
         self.assertEqual(self.first["root"], selected["root"])
         self.assertEqual(self.first["instance_id"], selected["instance_id"])
-        self.assertEqual({"workbench": {"storage": "disk"}, "journal": {"storage": "files"}},
+        self.assertEqual({"iwe_console": {"storage": "disk"}, "journal": {"storage": "files"}},
                          selected["parameters"]["runtime"])
         async with self._lease(selected, start=False) as (reader, _):
             self.assertEqual({"result": None}, await _response(reader))
@@ -226,7 +226,7 @@ class PeerOwnerTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_disconnect_during_start_returns_slot(self):
         await self._start_owner()
-        storage = Path(self.first["root"]) / ".anechoic_runtime" / "workbench" / "beta"
+        storage = Path(self.first["root"]) / ".anechoic_runtime" / "iwe_console" / "beta"
         async with self._lease(self.first) as (reader, _):
             reply = asyncio.create_task(_response(reader))
             try:

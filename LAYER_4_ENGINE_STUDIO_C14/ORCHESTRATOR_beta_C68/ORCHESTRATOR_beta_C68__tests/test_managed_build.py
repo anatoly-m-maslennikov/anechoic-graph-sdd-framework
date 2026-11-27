@@ -1,6 +1,9 @@
 """Exercise managed builds through the CLI and private Unix socket."""
 import http.client
 import json
+import os
+import subprocess
+import sys
 import socket
 import tempfile
 import threading
@@ -9,7 +12,7 @@ import unittest
 from hashlib import sha256
 from pathlib import Path
 
-from .ORCHESTRATOR_beta_C68__tests__shared import watch_project
+from .ORCHESTRATOR_beta_C68__tests__shared import ENGINE, project, request_json, wait_for, watch_project
 
 
 class Connection(http.client.HTTPConnection):
@@ -34,6 +37,81 @@ def request(path, binding):
 
 
 class ManagedBuildTests(unittest.TestCase):
+    def test_model_targets_rebuild_same_generation_with_real_kernel(self):
+        with tempfile.TemporaryDirectory(prefix="ane-model-build-", dir="/tmp") as directory:
+            root = Path(directory).resolve()
+            control, manifest = project(root)
+            (control / "__TKT").mkdir()
+            binding = {"root": str(root), "control_root": control.name, "manifest_path": manifest.name,
+                       "manifest_sha256": sha256(manifest.read_bytes()).hexdigest(), "project_prefix": "AN"}
+            (root / "binding.json").write_text(json.dumps(binding))
+            env = {**os.environ, "PYTHONPATH": str(ENGINE)}
+            env.setdefault("ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY", str(ENGINE.parent / ".anechoic_tmp/workbench/extensions"))
+            db, jobs, worker = (str(root / name) for name in ("db.sock", "jobs.sock", "worker.sock"))
+            processes = []
+            def start(module, *args):
+                process = subprocess.Popen([sys.executable, "-B", "-P", "-m", module, *args], cwd=ENGINE, env=env)
+                processes.append(process)
+                return process
+            try:
+                database = start("KERNEL_MIXER_beta_C67.DATABASE_SERVER_beta_C71.DATABASE_SERVER_beta_C71__shared",
+                                 "--socket", db, "--instance-id", "test", "--manifest-sha256", binding["manifest_sha256"])
+                wait_for(Path(db).exists, database, timeout=10)
+                runner = start("WORKERS_beta_C69.warm_worker", "--socket", worker)
+                wait_for(Path(worker).exists, runner, timeout=10)
+                orchestrator = start("ORCHESTRATOR_beta_C68.ORCHESTRATOR_beta_C68__shared", "--socket", jobs,
+                    "--instance-id", "test", "--binding-file", str(root / "binding.json"),
+                    "--database-socket", db, "--worker-socket", worker, "--worker-load-seconds", "1")
+                wait_for(Path(jobs).exists, orchestrator, timeout=10)
+                def ready():
+                    status, body = request_json(db, "GET", "/health")
+                    return status == 200 and body["result"]["ready"] and not body["result"]["archive_pending"]
+                wait_for(ready, orchestrator, timeout=90)
+                self._assert_full_and_graph_rebuild(control, db, jobs, binding)
+                self._assert_model_targets(db, jobs, binding)
+            finally:
+                for process in reversed(processes):
+                    process.terminate()
+                    process.wait(timeout=10)
+
+    def _assert_full_and_graph_rebuild(self, control, db, jobs, binding):
+        source = control / "__TKT" / "AN-T-1-TASK--check-rebuild.md"
+        source.write_text("---\nidentity:\n  atom_id: AN-T-1\ncontext:\n  container:\n    component: C00\n"
+                          "state:\n  status: active\n  version: 1\n---\n\n## Summary\n\nFresh source\n")
+        status, body = request(jobs, binding | {"instance_id": "test", "refresh_target": "all"})
+        self.assertEqual(200, status, body)
+        def query(sql):
+            status, body = request_json(db, "POST", "/database", {"instance_id": "test",
+                "sql": sql, "page_size": 10})
+            self.assertEqual(200, status, body)
+            return body["result"]["rows"]
+        atoms = query('SELECT reference, "content.summary" FROM atoms ORDER BY reference')
+        self.assertIn(["AN-T-1", "Fresh source"], atoms)
+        model = request_json(db, "GET", "/model?instance_id=test")
+        structure = request_json(db, "GET", "/structure?instance_id=test")
+        for _ in range(2):
+            status, body = request(jobs, binding | {"instance_id": "test", "refresh_target": "realization_graph"})
+            self.assertEqual(200, status, body)
+            self.assertEqual({}, body["result"]["result_ids"])
+            self.assertEqual(atoms, query('SELECT reference, "content.summary" FROM atoms ORDER BY reference'))
+            self.assertEqual(model, request_json(db, "GET", "/model?instance_id=test"))
+            self.assertEqual(structure, request_json(db, "GET", "/structure?instance_id=test"))
+
+    def _assert_model_targets(self, db, jobs, binding):
+        for target in ("model_tree", "model_primary_entities"):
+            with self.subTest(target=target):
+                queries = []
+                for table in ("mrt_model_tree", "model_primary_entities"):
+                    status, body = request_json(db, "POST", "/database", {"instance_id": "test",
+                        "sql": f"SELECT * FROM {table}", "page_size": 2})
+                    self.assertEqual(200, status, body)
+                    queries.append(body["result"]["query_id"])
+                before = request_json(db, "GET", "/health")[1]["result"]["generation"]
+                status, body = request(jobs, binding | {"instance_id": "test", "refresh_target": target})
+                self.assertEqual(200, status, body)
+                self.assertEqual(before, body["result"]["generation"])
+                self.assertTrue(set(queries) <= set(body["result"]["result_ids"]))
+
     def test_socket_waits_for_fresh_admission_and_reports_failure(self):
         with tempfile.TemporaryDirectory(prefix="ane-managed-", dir="/tmp") as directory:
             root = Path(directory).resolve()

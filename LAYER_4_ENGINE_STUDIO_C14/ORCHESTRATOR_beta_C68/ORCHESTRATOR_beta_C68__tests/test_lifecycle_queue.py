@@ -42,6 +42,7 @@ class LifecycleQueueTests(unittest.TestCase):
         self.request = self.jobs.binding | {"instance_id": "test", "name": "atom_lifecycle_create_draft",
             "arguments": {"newAtom": {"template": "task", "container": {"component": "C00"}}}}
         restore_reuse(self.jobs, "original")
+        self.jobs.generation_reuse.status_domains = {"S": ["active"], "T": ["active"], "P": ["active"], "C": ["active"]}
         self.structure = {"project": {"ref": "AN-S-1@1"}, "components": {}}
         self.kernel.structure = self.structure
         self.kernel.generation = "original"
@@ -180,19 +181,49 @@ class LifecycleQueueTests(unittest.TestCase):
             ("archive", "AN-S-2", True, [self.carrier("LAYER_1_META_ONTOLOGY_C9/_SPEC")], True),
             ("archive", "AN-S-2", True, [self.carrier("_SPEC")], False),
         ):
-            with self.subTest(name=name, descendants=descendants, carriers=carriers), \
-                    patch.object(self.jobs, "lifecycle_job", None):
-                self.kernel.query_values = [
-                    json.dumps(self.structure), None, "[]", "1", "2", json.dumps(carriers), descendants, "[]", "0",
-                ]
-                request = lifecycle_job(self.jobs, f"atom_lifecycle_{name}", {"target": {"ref_id": ref}})
-                base, structure, facts = self.jobs._lifecycle_inputs(request)
-                self.assertEqual(("original", self.structure), (base, structure))
-                if coordinated:
-                    self.assertEqual({}, facts)
-                else:
-                    self.assertEqual(carriers, facts["lifecycle_context"]["carriers"])
-                    self.assertEqual(descendants, facts["lifecycle_context"]["has_descendants"])
+            with self.subTest(name=name, descendants=descendants, carriers=carriers):
+                self.assert_lifecycle_context(name, ref, descendants, carriers, coordinated)
+
+    def test_model_lifecycle_uses_capture_for_relocated_claims(self):
+        owner = "control/ONTOLOGY_SCORE_C91/CONTINUANT_PITCHFORK_C9"
+        for status, path, target, coordinated in (
+            ("active", f"{owner}/_DES/a.md", None, True),
+            ("draft", f"{owner}/_SPEC/01_draft/a.md", None, False),
+            ("draft", f"{owner}/_SPEC/01_draft/a.md", "active", True),
+            ("draft", "elsewhere/CONTINUANT_PITCHFORK_C9/a.md", "active", False),
+        ):
+            with self.subTest(status=status, source=path, target=target):
+                carrier = {"id": "AN-S-2", "status": status, "source_path": path}
+                self.assert_lifecycle_context("change_status", "AN-S-2", False, [carrier], coordinated, target)
+
+    def test_only_model_claims_require_capture_on_archive(self):
+        owner = "control/ONTOLOGY_SCORE_C82/CONTINUANT_PITCHFORK_C9"
+        for filename, coordinated in (
+            ("_DES/AN-S-2-DES--prose.md", False),
+            ("_DES/AN-S-2-DES-MANIFEST_PROPERTY--property.md", True),
+            ("_SPEC/AN-S-2-SPEC-MANIFEST_NODE--node.md", True),
+        ):
+            carrier = {"id": "AN-S-2", "status": "active", "source_path": f"{owner}/{filename}"}
+            for name, target in (("archive", None), ("change_status", "archived")):
+                with self.subTest(source=filename, operation=name):
+                    self.assert_lifecycle_context(name, "AN-S-2", False, [carrier], coordinated, target)
+
+    def assert_lifecycle_context(self, name, ref, descendants, carriers, coordinated, target=None):
+        self.kernel.query_values = [
+            json.dumps(self.structure), None, "[]", "1", "2", json.dumps(carriers), descendants, "[]", "0",
+        ]
+        arguments = {"target": {"ref_id": ref}}
+        if target is not None:
+            arguments["targetStatus"] = target
+        with patch.object(self.jobs, "lifecycle_job", None):
+            job = lifecycle_job(self.jobs, f"atom_lifecycle_{name}", arguments)
+            base, structure, facts = self.jobs._lifecycle_inputs(job)
+        self.assertEqual(("original", self.structure), (base, structure))
+        if coordinated:
+            self.assertEqual({}, facts)
+        else:
+            self.assertEqual(carriers, facts["lifecycle_context"]["carriers"])
+            self.assertEqual(descendants, facts["lifecycle_context"]["has_descendants"])
 
     def test_pending_archive_accepts_allocation_after_first_checkpoint(self):
         self.jobs.deferred_archive = {}

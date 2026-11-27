@@ -104,7 +104,7 @@ class GenerationTests(unittest.TestCase):
         (archive / "AN-S-19@12--broken.md").write_bytes(b"\xff")
         request = {"binding": binding, "reuse": None, "replay_graph": True,
                    "watcher_guarded": True, "foreground": True}
-        analyzer = "IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.import_graph__shared.graph_input_signature"
+        analyzer = "IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IMPORT_GRAPH_C61.import_graph__shared.graph_input_signature"
         with patch(analyzer, return_value="fixture-graph-signature") as fingerprint:
             response, _, scans = self._run_graph(request, output, subprocess.CompletedProcess([], 0, '{"nodes":[]}', ""))
         self.assertEqual(0, response.returncode, response.stderr)
@@ -119,7 +119,7 @@ class GenerationTests(unittest.TestCase):
     @patch.dict(os.environ, {"ANECHOIC_STARTUP_TIMING": "1"})
     def test_deferred_core_and_graph_only(self):
         binding, output, _ = generation_fixture(self.enterContext(tempfile.TemporaryDirectory()))
-        fingerprint = "IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.import_graph__shared.graph_input_signature"
+        fingerprint = "IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IMPORT_GRAPH_C61.import_graph__shared.graph_input_signature"
         request = {"binding": binding, "reuse": None, "defer_graph": True}
         with patch(fingerprint, side_effect=AssertionError("graph scanned")):
             response, _, scans = self._run_graph(request, output)
@@ -143,6 +143,12 @@ class GenerationTests(unittest.TestCase):
         self.assertEqual({"base_generation": "a" * 64, "unchanged": True}, json.loads(response.stdout))
         self.assertIn('"mode":"reused","phase":"realization_graph_ready"', response.stderr)
         self.assertEqual([], scans)
+        request["force_graph"] = True
+        with patch(fingerprint, return_value="signature"):
+            response, _, scans = self._run_graph(request, output, subprocess.CompletedProcess([], 0, '{"nodes":[]}', ""))
+        self.assertEqual(0, response.returncode, response.stderr)
+        self.assertEqual({"nodes": []}, json.loads(response.stdout)["graph"])
+        self.assertEqual(1, len(scans))
 
     def test_graph_restart_exhaustion_reports_last_typed_difference(self):
         details = {"sources": {"change": "changed", "path": "main.py", "fields": ["status"]}}

@@ -31,14 +31,13 @@ _ATOM_AND_FLOW_NAMES = {
     "component_flows": "mrt_flow_actions",
 }
 _DOMAIN_NAMES = _REAL_GRAPH_NAMES | _DIAG_NAMES | _ATOM_AND_FLOW_NAMES
-DOMAIN_COMPATIBILITY = {
-    **{f"mrt_{old}": new for old, new in _DOMAIN_NAMES.items()},
-    "ops_carrier_hashes": "ops_generation_carrier_hashes",
-}
+DOMAIN_COMPATIBILITY = {f"mrt_{old}": new for old, new in _DOMAIN_NAMES.items()}
 PUBLIC_NAMES = {
     "project_structure": "mrt_project_structure",
     "model_entities": "mrt_model_entities",
     "model_properties": "mrt_model_properties",
+    "model_tree": "mrt_model_tree",
+    "model_primary_entities": "mrt_model_primary_entities",
     "diag_model_manifests": "mrt_diag_model_manifests",
     **{name: f"mrt_{name}" for name in ("atoms", "flow_overlap_candidates", "flow_similar_actions")},
     **_DOMAIN_NAMES,
@@ -54,14 +53,13 @@ _MAIN_NAMES = {old: new for old, new in PUBLIC_NAMES.items() if not new.startswi
     "project_binding": "ops_project_binding",
     "generation": "ops_generation",
     "generation_reuse": "ops_generation_reuse",
-    "generation_carriers": "ops_generation_carrier_hashes",
     "lifecycle_lenses": "int_lifecycle_lenses",
 }
 _ALIASES = {
     **{old: new for old, new in _MAIN_NAMES.items() if old in PUBLIC_NAMES},
     **DOMAIN_COMPATIBILITY,
     "generation": "ops_generation",
-    "generation_carriers": "ops_generation_carrier_hashes",
+    "int_lifecycle_generation": "ops_generation",
     "lifecycle_lenses": "int_lifecycle_lenses",
 }
 _REALIZATION_WORK = {
@@ -85,7 +83,7 @@ def sync_query_views(connection):
                            f"WHERE split_part(reference, '-', 2) IN ({choices})")
     for old, new in _ALIASES.items():
         if new in objects:
-            columns = 'carrier_sha256_by_path AS hashes' if old == "generation_carriers" else "*"
+            columns = "*, axes AS classifications" if old == "model_primary_entities" else "*"
             connection.execute(f"CREATE OR REPLACE VIEW main.{old} AS SELECT {columns} FROM main.{new}")
         elif objects.get(old) == "VIEW":
             connection.execute(f"DROP VIEW main.{old}")
@@ -102,9 +100,6 @@ def migrate_legacy_names(connection, objects, *, legacy):
         if kind is not None:
             _move_projection(connection, old, new, kind)
     if legacy:
-        if "generation_carriers" in objects:
-            connection.execute("ALTER TABLE main.ops_generation_carrier_hashes "
-                               "RENAME COLUMN hashes TO carrier_sha256_by_path")
         _migrate_graph_tables(connection)
     if {"import_nodes", "mrt_import_nodes", "mrt_real_graph_import_nodes"} & objects.keys():
         realization_projection.prepare(connection)

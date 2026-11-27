@@ -3,7 +3,6 @@
 from .compiler_claim_fixtures__pub import (
     ANALYSIS,
     BASE,
-    CLASSIFICATION_CFEL_BODY,
     CLASSIFICATION_PYTHON_BODY,
     CONTENT_PROPERTY,
     DEPENDENCIES,
@@ -51,7 +50,6 @@ from .smalltest_support__pub import (
 __all__ = [
     "ANALYSIS",
     "BASE",
-    "CLASSIFICATION_CFEL_BODY",
     "CLASSIFICATION_PYTHON_BODY",
     "CONTENT_PROPERTY",
     "DEPENDENCIES",

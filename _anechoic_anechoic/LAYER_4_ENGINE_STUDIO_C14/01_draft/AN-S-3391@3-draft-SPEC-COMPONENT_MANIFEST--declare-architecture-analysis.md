@@ -36,7 +36,7 @@ declare_entity(
         component_id='C73',
         name='Architecture Analysis',
         lens_whitelist=['DES', 'SPEC'],
-        boundaries={'code': {'imports': []}, 'io': {'server': {}}},
+        boundaries={'code': {'exports': {}, 'imports': []}, 'io': {'server': {}}},
     ),
 )
 ```

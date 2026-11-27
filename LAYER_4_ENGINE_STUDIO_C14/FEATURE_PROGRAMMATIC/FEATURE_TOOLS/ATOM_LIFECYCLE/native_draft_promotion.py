@@ -4,7 +4,7 @@ from pathlib import Path
 import re
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import native_header_view
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (native_carrier_path, spec_lens_directories,
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (spec_lens_directories,
     DRAFT_DIRECTORY, READY_DIRECTORY, TICKET_DIRECTORY)
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import revalidate_native
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import frontmatter_bounds
@@ -14,14 +14,14 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import
 from . import common, effects
 from .effects import _project_write_lock
 from .native_draft_guards import (
-    _check_owner, _native_slug, _summary, _validate_contract,
+    _check_owner, _native_slug, _reject_component_contract,
     _check_first_spec, is_c9_typed_manifest,
 )
 from .native_draft_source import _revision_header, _revision_root, _state_bytes, _task_path
 from .native_draft_revision import _promote_revision
 from .native_replacement_promotion import _plan_replacements, _archive_replacements
 from .native_draft_custom_replacement import _publish_custom_replacement
-from .native_project_spec import PROJECT_SPEC_TIERS
+from .native_project_spec import PROJECT_SPEC_TIERS, project_spec_template
 from .source import bind_query_reader
 
 
@@ -139,6 +139,8 @@ def _publish_first_spec(selection, draft, current_rows, structure_snapshot, prev
 
 def _preflight_first_spec(selection, draft, structure_snapshot, previous_capture, validate_project_spec_model,
                           atom_id, ref_id, path, digest):
+    from .native_draft import _validate_project_template
+
     try:
         capture = revalidate_native(selection, previous_capture)
         history = [row for row in capture.atoms if row['id'] == atom_id]
@@ -148,7 +150,8 @@ def _preflight_first_spec(selection, draft, structure_snapshot, previous_capture
         header = draft['header_json']
         context = native_header_view(header)['context']
         lens = context.get('lens')
-        if (context.get('template') not in (None, 'component_contract', *PROJECT_SPEC_TIERS)
+        if (context.get('template') not in (None, *PROJECT_SPEC_TIERS)
+                and not (validate_project_spec_model and project_spec_template(context.get('template'), validate_project_spec_model))
                 and not is_c9_typed_manifest(header)
                 or re.search(r'-(?:PROJECT|COMPONENT)_MANIFEST(?:--|\.md$)', path.name, re.I)):
             raise common.InputError('target', 'Select a Spec Draft with a lens and without a structural template.')
@@ -171,10 +174,10 @@ def _preflight_first_spec(selection, draft, structure_snapshot, previous_capture
                 or parse_carrier(raw, path).metadata != header or reader.currentness()['state'] != 'unchanged'):
             raise common.SourceChanged('Spec Draft source changed after selection.')
         body = raw[bounds[2]:].decode('utf-8')
-        _check_first_spec(selection, header, body, path, structure_snapshot, capture, owner,
-                          validate_project_spec_model)
+        _check_first_spec(selection, header, body, path, owner)
         version = draft['version']
         promoted = _state_bytes(raw, bounds, path, version, body, 'ready')
+        _validate_project_template(parse_carrier(promoted, destination).metadata, validate_project_spec_model, body)
     except (common.InputError, common.SourceChanged):
         raise
     except (OSError, RuntimeError, TypeError, ValueError) as error:
@@ -208,7 +211,7 @@ def _cleanup_published_draft(selection, target, status, draft, current, structur
         companion = paths[0].with_suffix('')
         if '-T-' in atom_id and (companion.exists() or companion.is_symlink()):
             raise common.InputError('target', 'Recover the interrupted Draft companion before removing its carrier.')
-        _preflight_cleanup(selection, target, status, draft, current, structure_snapshot, current_rows,
+        _preflight_cleanup(selection, target, status, draft, current, current_rows,
                            previous_capture, atom_id, version, root, paths)
         with bind_query_reader(None):
             removed = effects.remove(selection.root, paths[0], draft['_source_sha256'])
@@ -217,7 +220,7 @@ def _cleanup_published_draft(selection, target, status, draft, current, structur
 
 
 
-def _preflight_cleanup(selection, target, status, draft, current, structure_snapshot, current_rows,
+def _preflight_cleanup(selection, target, status, draft, current, current_rows,
                        previous_capture, atom_id, version, root, paths):
     try:
         capture = revalidate_native(selection, previous_capture)
@@ -239,15 +242,6 @@ def _preflight_cleanup(selection, target, status, draft, current, structure_snap
                 raise common.SourceChanged('Draft or published carrier changed after selection.')
         if reader.currentness()['state'] != 'unchanged': raise common.SourceChanged('Draft or published carrier changed after selection.')
         draft_header, current_header = draft['header_json'], current['header_json']
-        contract_body = draft['_content_bytes'].decode('utf-8')
-        contract_owner = _validate_contract(selection, draft_header, contract_body, paths[0], structure_snapshot, capture)
-        if contract_owner is not None and (contract_owner != root or
-                paths[0] != native_carrier_path(draft_header, _summary(contract_body),
-                    project_root=selection.control_root, owner_directory=root) or
-                paths[1] != native_carrier_path(current_header, _summary(contract_body),
-                    project_root=selection.control_root, owner_directory=root,
-                    parameters=getattr(selection, 'parameters', None))):
-            raise common.InputError('target', 'Component Contract paths disagree with their Headers and Summary.')
         if '-T-' in atom_id:
             owner = _check_owner(selection, native_header_view(current_header)['context'].get('container'), current_rows, capture)
         if '-T-' in atom_id and 'atom_family' in current_header:
@@ -286,6 +280,7 @@ def promote_draft(selection, params, *, current_rows, structure_snapshot=None, p
     predecessors = [row for row in current_rows if row.get('id') == atom_id and row.get('status_group') == 'Current']
     if len(chosen) != 1 or len(predecessors) > 1:
         raise common.SourceChanged('Draft or Current predecessor is missing or ambiguous.')
+    _reject_component_contract(native_header_view(chosen[0]['header_json'])['context'].get('template'), 'target')
     if '-T-' in atom_id and status != 'backlog' and 'atom_family' in chosen[0]['header_json']:
         raise common.InputError('targetStatus', 'A native Ticket Draft must be published to Backlog.')
     if not predecessors:

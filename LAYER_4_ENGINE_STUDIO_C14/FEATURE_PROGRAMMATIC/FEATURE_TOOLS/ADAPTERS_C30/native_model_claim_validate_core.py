@@ -8,15 +8,23 @@ from .native_model_claim_values import _fail
 from .native_model_claim_aspects import validate_aspect_hierarchy, validate_aspect_instance
 
 
-def _validate_classification(arguments, declaration, function, classes, functions, imports, property_manifest):
-    if "allowed_classification_values" in arguments:
-        values = arguments["allowed_classification_values"]
-        if (set(arguments) != {"entity_name", "allowed_classification_values"}
+def _validate_axes(arguments, declaration, function, classes, functions, imports, property_manifest):
+    if "axes" in arguments:
+        axes = arguments["axes"]
+        if (not isinstance(axes, dict) or not axes
+                or any(not isinstance(axis, str) or not axis or axis != axis.strip()
+                       or type(value) not in (str, int, float, bool)
+                       or (isinstance(value, str) and (not value or value != value.strip()))
+                       for axis, value in axes.items())):
+            _fail(declaration, "axes must map nonempty trimmed axis names to values")
+    if "allowed_axis_values" in arguments:
+        values = arguments["allowed_axis_values"]
+        if (set(arguments) != {"entity_name", "allowed_axis_values"}
                 or not isinstance(values, dict) or not values
                 or any(not isinstance(axis, str) or not axis.strip() or not isinstance(items, tuple)
                        or not items or any(not isinstance(item, str) or not item.strip() for item in items)
                        or len(set(items)) != len(items) for axis, items in values.items())):
-            _fail(declaration, "allowed_classification_values requires named nonempty tuples of distinct text values")
+            _fail(declaration, "allowed_axis_values requires named nonempty tuples of distinct text values")
     if "form_roles" in arguments:
         roles = arguments["form_roles"]
         values = arguments.get("allowed_values")

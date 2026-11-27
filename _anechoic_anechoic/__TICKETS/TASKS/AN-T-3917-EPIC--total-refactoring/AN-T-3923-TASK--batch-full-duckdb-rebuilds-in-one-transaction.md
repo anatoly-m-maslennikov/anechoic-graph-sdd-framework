@@ -45,6 +45,10 @@ The main checkout stages full rebuild rows in a pinned artifact. Kernel
 verifies it before its existing transaction. Delta admission uses the
 existing path.
 
+Kernel still assembles all frames in memory for cross-row validation.
+Direct DuckDB staging remains open. Preserve artifact verification,
+cross-batch validation, and atomic publication when loading frames.
+
 A host rebuild on the target Studio indexed 7,001 rows from a 71.04 MiB
 artifact. The largest frame was below 10 MiB. A watcher edit reached
 SQL through a native delta. A forced error inside admission preserved

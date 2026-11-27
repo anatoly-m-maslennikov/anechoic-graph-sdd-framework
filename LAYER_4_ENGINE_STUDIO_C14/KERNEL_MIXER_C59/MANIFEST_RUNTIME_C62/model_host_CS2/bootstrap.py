@@ -8,7 +8,7 @@ from tempfile import TemporaryDirectory
 from threading import Lock
 
 from ..MANIFEST_RUNTIME_C62__shared import compile_reviewed_model
-from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.FEATURE_MODEL_VALIDATION__shared import open_admitted_model
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.FEATURE_MODEL_VALIDATION.FEATURE_MODEL_VALIDATION__shared import open_admitted_model
 
 _lock = Lock()
 _stack = ExitStack()

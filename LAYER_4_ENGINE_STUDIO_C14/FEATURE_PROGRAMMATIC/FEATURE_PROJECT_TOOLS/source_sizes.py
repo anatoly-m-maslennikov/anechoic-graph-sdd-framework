@@ -13,7 +13,7 @@ from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS import source_comments as source
 
 MODULE_LIMIT = 300
 FUNCTION_LIMIT = 45
-WEB_FUNCTIONS = {".js", ".mjs", ".cjs", ".ts", ".cts", ".svelte"}
+WEB_FUNCTIONS = {".js", ".mjs", ".cjs", ".ts", ".cts", ".jsx", ".tsx", ".mts", ".svelte"}
 
 
 def nonblank_lines(lines):
@@ -61,7 +61,7 @@ def check_functions(path, functions):
 def source_size_findings(root: Path) -> list[str]:
     """Measure the tracked and nonignored source files under the suite roots."""
     findings, web = [], []
-    for relative in sources.source_paths(root):
+    for relative in sources.source_paths(root, WEB_FUNCTIONS | {".py"}):
         if relative.suffix not in WEB_FUNCTIONS | {".py"}:
             continue
         path = root / relative

@@ -2,8 +2,10 @@
 
 import ast
 
+NODE_LINK_PREFIX = "=>"
+
 _DOTTED_FIELDS = {
-    "identity", "classifications", "tier", "lens", "container_type", "lens_path", "control_flow",
+    "identity", "axes", "classifications", "ssot_carrier", "creation_enabled", "template", "tier", "lens", "container_type", "lens_path", "control_flow", "parts", "alternatives", "aliases",
 }
 
 
@@ -13,6 +15,17 @@ def parse_typed_manifest_node(text):
         tree = ast.parse(text)
     except SyntaxError as error:
         raise ValueError(f"invalid typed manifest: {error.msg}") from error
+    if len(tree.body) == 1 and isinstance(tree.body[0], ast.Expr):
+        call = tree.body[0].value
+        if (not isinstance(call, ast.Call) or not isinstance(call.func, ast.Name)
+                or call.func.id != 'node' or call.keywords or not call.args
+                or any(not isinstance(arg, ast.Name) for arg in call.args)):
+            raise ValueError("typed node marker requires a name and optional bases")
+        name, *bases = (arg.id for arg in call.args)
+        if len(bases) != len(set(bases)) or set(bases) & {'Property', 'Relation', 'NodeConstraints'}:
+            raise ValueError("invalid typed node bases")
+        return {"name": name, "bases": tuple(bases), "identity": None, "values": {},
+                "axes": None}
     imports, node = {}, None
     for item in tree.body:
         if isinstance(item, ast.ImportFrom) and item.level == 0 and item.module in {"anechoic.model", "anechoic.formal_claims"}:
@@ -29,13 +42,13 @@ def parse_typed_manifest_node(text):
     bases = tuple(base.id for base in node.bases)
     if any(imports.get(base) != "anechoic.model" for base in bases):
         raise ValueError("typed node bases must be imported")
-    values, identity, classifications = _node_values(node, imports)
+    values, identity, axes, metadata = _node_values(node, imports)
     return {"name": node.name, "bases": bases, "identity": identity, "values": values,
-            "classifications": classifications}
+            "axes": axes, **metadata}
 
 
 def _node_values(node, imports):
-    values, identity, classifications = {}, None, None
+    values, identity, axes, metadata = {}, None, None, {}
     for item in node.body:
         if isinstance(item, ast.Pass) and len(node.body) == 1:
             continue
@@ -49,10 +62,15 @@ def _node_values(node, imports):
             case _:
                 raise ValueError("typed node body requires value assignments")
         call = item.value
-        if name == "classifications":
-            if classifications is not None:
-                raise ValueError("classifications requires a nonempty literal text mapping")
-            classifications = _classifications(call)
+        if name in {"parts", "alternatives", "aliases"}:
+            if name in metadata or not isinstance(item.targets[0], ast.Attribute):
+                raise ValueError(f"duplicate or invalid node.{name}")
+            metadata[name] = _node_metadata(name, call, imports)
+            continue
+        if name in {"axes", "classifications"}:
+            if axes is not None:
+                raise ValueError("axes requires a nonempty literal text mapping")
+            axes = _axes(call)
             continue
         if name == "identity":
             if identity is not None or not (isinstance(call, ast.Attribute) and call.attr == "atom_id"
@@ -65,7 +83,7 @@ def _node_values(node, imports):
         if name in values or not isinstance(call, ast.Call) or not isinstance(call.func, ast.Name) or call.func.id != "value" or call.args or len(call.keywords) != 1 or call.keywords[0].arg not in {"fixed", "default"}:
             raise ValueError("value requires one fixed or default argument")
         values[name] = _decode_value(call, imports)
-    return values, identity, classifications
+    return values, identity, axes, metadata
 
 
 def _decode_value(call, imports):
@@ -87,14 +105,55 @@ def _decode_value(call, imports):
     return call.keywords[0].arg, decoded
 
 
-def _classifications(call):
+def _axes(call):
     if (not isinstance(call, ast.Dict) or not call.keys
             or any(not isinstance(key, ast.Constant) or not isinstance(key.value, str) or not key.value.strip()
                    for key in call.keys)
             or any(not isinstance(value, ast.Constant) or not isinstance(value.value, str) or not value.value.strip()
                    for value in call.values)):
-        raise ValueError("classifications requires a nonempty literal text mapping")
+        raise ValueError("axes requires a nonempty literal text mapping")
     keys = [key.value for key in call.keys]
     if len(keys) != len(set(keys)):
-        raise ValueError("duplicate classification axis")
+        raise ValueError("duplicate axis")
     return dict(zip(keys, (value.value for value in call.values), strict=True))
+
+
+def _node_metadata(name, expression, imports):
+    def target(value):
+        if not isinstance(value, ast.Name) or imports.get(value.id) != "anechoic.model":
+            raise ValueError(f"node.{name} targets must be imported Model classes")
+        return value.id
+
+    if name == "aliases":
+        if not isinstance(expression, (ast.Tuple, ast.List)) or not expression.elts:
+            raise ValueError("node.aliases requires nonempty distinct ordinary names")
+        names = [value.value if isinstance(value, ast.Constant) else None for value in expression.elts]
+        if (any(not isinstance(value, str) or not value or value != value.strip()
+                or any(char in value for char in "/\n\r@=>") for value in names)
+                or len(names) != len(set(names))):
+            raise ValueError("node.aliases requires nonempty distinct ordinary names")
+        return tuple(names)
+    if name == "parts":
+        if not isinstance(expression, ast.Dict) or not expression.keys:
+            raise ValueError("node.parts requires a nonempty literal mapping")
+        labels = [key.value if isinstance(key, ast.Constant) else None for key in expression.keys]
+        names = [label.removeprefix(NODE_LINK_PREFIX) if isinstance(label, str) else "" for label in labels]
+        if (any(not name or name != name.strip() or any(char in name for char in "/\n\r@=>")
+                for name in names)
+                or len(labels) != len(set(labels))):
+            raise ValueError("node.parts requires distinct valid labels")
+        return dict(zip(labels, (target(value) for value in expression.values), strict=True))
+    if not isinstance(expression, (ast.Tuple, ast.List)) or not expression.elts:
+        raise ValueError("node.alternatives requires nonempty groups")
+    groups = []
+    for group in expression.elts:
+        if not isinstance(group, (ast.Tuple, ast.List)) or not group.elts:
+            raise ValueError("node.alternatives requires nonempty groups")
+        if any(not isinstance(value, ast.Constant) or not isinstance(value.value, str)
+               or not value.value for value in group.elts):
+            raise ValueError("node.alternatives members must be part labels")
+        members = tuple(value.value for value in group.elts)
+        if len(members) != len(set(members)) or frozenset(members) in map(frozenset, groups):
+            raise ValueError("node.alternatives requires distinct groups and members")
+        groups.append(members)
+    return tuple(groups)

@@ -29,15 +29,15 @@ def _validate_forbidden_status_pairs(declaration):
 def _validate_relation(arguments, declaration, function, classes, functions, imports, property_manifest):
     if function == "declare_relation":
         _validate_forbidden_status_pairs(declaration)
-        for field in ("classifications", "inverse_classifications"):
+        for field in ("axes", "inverse_axes"):
             if field in arguments:
                 values = arguments[field]
                 if (not isinstance(values, dict) or not values
                         or any(not isinstance(item, str) or not item or item != item.strip()
                                for pair in values.items() for item in pair)):
                     _fail(declaration, f"{field} must map nonempty trimmed axis names to values")
-        if "inverse_classifications" in arguments and not arguments.get("inverse_alias"):
-            _fail(declaration, "inverse_classifications requires inverse_alias")
+        if "inverse_axes" in arguments and not arguments.get("inverse_alias"):
+            _fail(declaration, "inverse_axes requires inverse_alias")
         if "derived_from" in arguments:
             base = arguments["derived_from"]
             if (not isinstance(base, str) or not re.fullmatch(r"[A-Za-z_][A-Za-z_0-9]*", base)

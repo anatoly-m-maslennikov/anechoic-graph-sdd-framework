@@ -14,9 +14,9 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.source_watcher__pub import 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import ARCHIVE_DIRECTORY, DRAFT_DIRECTORY, READY_DIRECTORY
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import owned_temporary_root
 
-from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.FEATURE_MODEL_VALIDATION__shared import open_admitted_model
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.FEATURE_MODEL_VALIDATION.FEATURE_MODEL_VALIDATION__shared import open_admitted_model
 from ..ORCHESTRATOR_C66.ORCHESTRATOR_C66__shared import Orchestrator
-from .process import _BUILDER_PACKAGE, _CODE_ROOT, _command, _environment
+from .process import _CODE_ROOT, _command, _environment
 from .structure_host_CS3.structure_host_CS3__shared import publish_structure
 
 _TIMEOUT = 15
@@ -29,7 +29,7 @@ def _compile(selection, generation, *options, orchestrator):
                else _TIMEOUT)
     result = orchestrator.run_worker(
         kind,
-        (*_command(f"{_BUILDER_PACKAGE}.compiler"), str(selection.root),
+        (*_command("FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.compile_project__pub"), str(selection.root),
          selection.control_relative.as_posix(), selection.manifest_sha256, str(generation), *options),
         cwd=_CODE_ROOT, env=_environment(), timeout=timeout,
     )

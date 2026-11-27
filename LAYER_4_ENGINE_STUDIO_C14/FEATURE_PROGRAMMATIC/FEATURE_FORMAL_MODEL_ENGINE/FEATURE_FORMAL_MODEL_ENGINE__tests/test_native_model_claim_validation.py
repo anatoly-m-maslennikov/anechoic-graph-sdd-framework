@@ -42,7 +42,7 @@ class NativeModelClaimValidationTests(unittest.TestCase):
             '{"level": "instances", "extra": "unexpected"}',
             '{"level": "instances", "entity_paths": "Atom"}',
             '{"level": "instances", "entity_paths": ("",)}',
-            '{"level": "instances", "classification_axis": 1}',
+            '{"level": "instances", "axis": 1}',
             '{"level": "instances", "ephemeral": "false"}',
         )
         for endpoint in invalid:

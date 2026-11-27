@@ -155,7 +155,7 @@ def profile(binding, directory, foreground=False):
 
 
 def select_project(root, directory):
-    module = 'FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.project_admission__pub'
+    module = 'FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.FEATURE_MODEL_VALIDATION.project_admission__pub'
     request = {'project_root': str(root), 'control_root': None, 'instance_id': None, 'host_root': None}
     result = subprocess.run([sys.executable, '-B', '-m', module], input=json.dumps(request) + '\n',
                             text=True, capture_output=True)

@@ -12,6 +12,26 @@ def workspace(client, operation, arguments):
 
 
 class GenerationRefreshTest(unittest.TestCase):
+    def test_model_targets_refresh_all_model_results_on_same_generation(self):
+        with TemporaryDirectory(dir="/tmp") as directory, _server(None, "--project-root", str(Path(directory).resolve())) as client:
+            generation = _generation()
+            original = client.put("/generation", json=generation).json()["result"]["generation"]
+            for target in ("model_tree", "mrt_model_tree", "model_primary_entities", "mrt_model_primary_entities"):
+                with self.subTest(target=target):
+                    names = ("model_tree", "mrt_model_primary_entities", "model_entities", "mrt_model_properties")
+                    results = [_query(client, f"SELECT * FROM {name}", page_size=2).json()["result"] for name in names]
+                    unrelated = _query(client, "SELECT * FROM atoms", page_size=2).json()["result"]["query_id"]
+                    response = client.put("/generation", json=generation | {"refresh_target": target})
+                    self.assertEqual(200, response.status_code, response.text)
+                    refreshed = response.json()["result"]
+                    self.assertEqual(original, refreshed["generation"])
+                    self.assertTrue({row["query_id"] for row in results} <= set(refreshed["result_ids"]))
+                    self.assertNotIn(unrelated, refreshed["result_ids"])
+                    for row in results:
+                        page = client.post("/database", json=BINDING | {
+                            "query_id": refreshed["result_ids"][row["query_id"]], "offset": 0, "page_size": 10})
+                        self.assertEqual(row["rows"], page.json()["result"]["rows"])
+
     def test_failed_refresh_preserves_generation_cache_and_view_then_success_rekeys(self):
         with TemporaryDirectory(dir="/tmp") as directory, _server(None, "--project-root", str(Path(directory).resolve())) as client:
             original = client.put("/generation", json=_generation()).json()["result"]["generation"]

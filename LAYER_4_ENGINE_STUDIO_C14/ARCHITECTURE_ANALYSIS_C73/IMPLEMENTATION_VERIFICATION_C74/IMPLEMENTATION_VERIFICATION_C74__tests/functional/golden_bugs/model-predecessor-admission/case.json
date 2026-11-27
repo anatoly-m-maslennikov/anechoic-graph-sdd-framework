@@ -1,0 +1,22 @@
+{
+  "title": "Validate predecessor images on both Model source paths",
+  "invariant": "A supplied predecessor must be immutable and inspect as the exact Linux runtime image with schema label 1 before Model compilation.",
+  "scope": "Complete historical stage_model modules replayed with empty authored or absent Model directories and ReadContext; Docker inspection, selector execution, selector file copies, and compilation are stubbed. This tests admission ordering, not actual Docker, selector, or compiler behavior. Lean labels are not a proof of Python semantics.",
+  "checks": [
+    {
+      "file": "observations.lean"
+    }
+  ],
+  "before": {
+    "revision": "225bfa20b2a9164c950b682a8ce27d132246bd4d",
+    "source": "LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_FORMAL_MODEL_GENERATOR/manifest_compiler_CS1/image_model_stage.py",
+    "fixture": "before.py.txt",
+    "sha256": "5a14080b06b134ba5aa8410530b6fd1461539a5f2eb8ae508db65bb4a5991fea"
+  },
+  "fixed": {
+    "revision": "b43a7c58128e1ca993e66b8996a3a149503a4ca9",
+    "source": "LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_FORMAL_MODEL_GENERATOR/manifest_compiler_CS1/image_model_stage.py",
+    "fixture": "fixed.py.txt",
+    "sha256": "a411c7981c83037107614c007736f469a3486cc890b7d21b80302f5f1ae164c4"
+  }
+}

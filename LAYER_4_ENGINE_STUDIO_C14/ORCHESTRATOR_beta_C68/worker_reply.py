@@ -29,6 +29,12 @@ class _Archive(BaseModel):
     carrier_hashes: InstanceOf[dict]
 
 
+class _BatchedArchive(BaseModel):
+    model_config = ConfigDict(strict=True, extra="forbid")
+    batch_artifact: "_BatchArtifact"
+    snapshot_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+
 class _Reuse(BaseModel):
     model_config = ConfigDict(strict=True, extra="forbid")
     inputs: Any
@@ -92,6 +98,41 @@ class _GraphOnly(BaseModel):
     reuse: _Reuse
 
 
+class _CompiledArtifacts(BaseModel):
+    model_config = ConfigDict(strict=True, extra="forbid")
+    receipt: dict[str, str]
+    model: str
+    structure: str
+
+
+class _CompilerDelta(BaseModel):
+    model_config = ConfigDict(strict=True, extra="forbid")
+    paths: list[list[str]]
+    snapshot: dict
+    snapshot_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    carrier_hashes: dict[str, str]
+
+
+class _CompilerRefresh(BaseModel):
+    model_config = ConfigDict(strict=True, extra="forbid")
+    base_generation: str
+    compiler: _CompiledArtifacts
+    reuse: _Reuse
+    delta: _CompilerDelta | None = None
+
+
+def _compiler_refresh(result, reuse, paths, foreground):
+    message = "Worker returned an invalid compiler refresh"
+    if not foreground or paths is not None or reuse is None or "carrier_hashes" not in reuse:
+        raise ValueError(message)
+    reply = _validate(_CompilerRefresh, result, message)
+    if reply.base_generation != reuse["base_generation"]:
+        raise ValueError("Worker returned an unexpected compiler generation base")
+    if "delta" in result and (reply.delta is None or checkpoint_paths(reply.delta.paths) != reply.delta.paths):
+        raise ValueError("Worker returned invalid compiler delta paths")
+    return reply.model_dump(exclude_unset=True)
+
+
 def _validate(model, value, message):
     try:
         return model.model_validate(value)
@@ -150,8 +191,12 @@ def _select(result, fields, reuse, paths, structure, foreground):
 
 def parse_archive_result(stdout):
     result = json.loads(stdout)
-    reply = _validate(_Archive, result, "Worker returned invalid Archive result")
-    return _shallow(reply, result)
+    model = _BatchedArchive if isinstance(result, dict) and "batch_artifact" in result else _Archive
+    reply = _validate(model, result, "Worker returned invalid Archive result")
+    output = _shallow(reply, result)
+    if "batch_artifact" in output:
+        output["batch_artifact"] = output["batch_artifact"].model_dump()
+    return output
 
 
 def parse_graph_result(stdout, base):
@@ -170,6 +215,8 @@ def parse_worker_result(stdout, reuse, paths, structure=None, *, foreground=Fals
 def parse_worker_data(result, reuse, paths, structure=None, *, foreground=False):
     if not isinstance(result, dict):
         raise TypeError("Worker returned invalid generation")
+    if "compiler" in result:
+        return _compiler_refresh(result, reuse, paths, foreground)
     fields = set(result) - {"carrier_hashes"}
     deferred = _deferred(result, fields, foreground)
     if "model_diagnostics" in fields:

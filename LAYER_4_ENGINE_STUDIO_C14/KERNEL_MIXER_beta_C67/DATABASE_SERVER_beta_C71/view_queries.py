@@ -1,10 +1,39 @@
 """Transient View result ownership over the shared Kernel query cache."""
 
+import re
+
 import duckdb
 
 from .query_results import query, validate_select
 from .result_delivery import deliver, validate_delivery
 from .saved_query_runs import save_run_fields, save_sql, validate_name, validate_run_save
+
+
+_VIEW = re.compile(r"VIEW (?:TABLE|DOC(?:UMENT)?|STRUCTURE|(?:GRAPH|IMPORTS)(?: (?:VERTICAL|HORIZONTAL))?)(?: ;)?", re.I | re.ASCII)
+
+
+def _view_sql(sql):
+    """Remove a trailing directive formed by plain, top-level SQL tokens."""
+    source = sql.encode("utf-8")
+    tokens = duckdb.tokenize(sql)
+    words, depth = [], 0
+    for index, (start, kind) in enumerate(tokens):
+        end = tokens[index + 1][0] if index + 1 < len(tokens) else len(source)
+        value = source[start:end].decode("utf-8").strip()
+        if kind == duckdb.token_type.comment:
+            if value.startswith("/*"):
+                markers = re.findall(r"/\*|\*/", value)
+                if markers.count("/*") != markers.count("*/"):
+                    return sql
+            continue
+        words.append((value, depth, start))
+        depth += (value in ("(", "[", "{")) - (value in (")", "]", "}"))
+    for index, (value, level, start) in enumerate(words):
+        if value.upper() == "VIEW" and level == 0:
+            suffix = words[index:]
+            if all(item[1] == 0 for item in suffix) and _VIEW.fullmatch(" ".join(item[0] for item in suffix)):
+                return source[:start].decode("utf-8").rstrip()
+    return sql
 
 
 class ViewQueries:
@@ -90,7 +119,7 @@ class ViewQueries:
             if self.journal_sync is not None:
                 self.journal_sync()
         if operation == "view_check":
-            result = query(self.connection, view["sql"])
+            result = query(self.connection, _view_sql(view["sql"]))
             return identity | {"valid": True, "columns": result["columns"], "row_count": len(result["rows"]),
                                "column_count": len(result["columns"])}
         if operation == "view_run":
@@ -115,7 +144,7 @@ class ViewQueries:
         if prior and prior.get("query_id"):
             self.queries.drop(prior["query_id"])
         try:
-            page = self.queries.run(self.connection, sql, 1, preview=args.get("preview"))
+            page = self.queries.run(self.connection, _view_sql(sql), 1, preview=args.get("preview"))
             self.queries.pins.add(page["query_id"])
             metadata = {"status": "success", "error": None, "query_id": page["query_id"],
                         "row_count": page["row_count"], "column_count": page["column_count"]}
@@ -137,5 +166,5 @@ class ViewQueries:
         else:
             raise ValueError("invalid view_save arguments")
         sql = source["sql"]
-        validate_select(self.connection, sql)
+        validate_select(self.connection, _view_sql(sql))
         return save_sql(self.saved_queries, sql, "view", source.get("name"))

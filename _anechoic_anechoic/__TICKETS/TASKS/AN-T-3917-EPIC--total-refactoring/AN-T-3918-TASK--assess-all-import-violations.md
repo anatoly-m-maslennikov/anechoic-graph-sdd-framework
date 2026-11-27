@@ -30,7 +30,7 @@ Package, 12 undeclared bypasses, 11 unresolved imports, and 153 declared
 bypasses. Test Packages account for 421 of the 451 denied sites.
 
 The non-test import is Workbench `playwright.config.ts:2`, which imports
-`browser-deadlines` from `FEATURE_WORKBENCH_FRONTEND__tests`. Before the graph
+`browser-deadlines` from `FEATURE_IWE_CONSOLE_FRONTEND__tests`. Before the graph
 refresh, whole-Project import ownership lint reported zero findings. The Python
 child boundary check and Ruff F401 each reported zero findings on 1,223 files.
 

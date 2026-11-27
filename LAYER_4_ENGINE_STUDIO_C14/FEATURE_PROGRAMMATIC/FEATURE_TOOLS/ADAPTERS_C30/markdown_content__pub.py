@@ -13,6 +13,10 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.content_records__pub import
 
 
 _MARKDOWN_HEADINGS = MarkdownIt("commonmark").disable("inline")
+_SUMMARY_TITLE = re.compile(
+    rb"\A(?:[ \t]*\r?\n)*## Summary[ \t]*\r?\n(?:[ \t]*\r?\n)*"
+    rb"(?![0-9]{1,9}[.)][ \t])([A-Za-z0-9][^\r\n]*)(?=\r?\n(?:[ \t]*\r?\n|\Z)|\Z)"
+)
 
 
 def _unfenced_lines(body: str) -> list[tuple[int, str]]:
@@ -47,6 +51,8 @@ def formal_claim_fences(body: str) -> Iterator[tuple[str, str]]:
     tokens = MarkdownIt("commonmark").parse(body)
     headings: list[tuple[int, str]] = []
     for index, token in enumerate(tokens):
+        if token.level != 0:
+            continue
         if token.type == "heading_open":
             level = int(token.tag[1:])
             while headings and headings[-1][0] >= level:
@@ -79,6 +85,24 @@ def parse_content(
 def content_lines(body: str) -> list[str]:
     """Split Markdown exactly as the CommonMark source parser does."""
     return list(StringIO(body, newline=""))
+
+
+def summary_title(body: bytes) -> str:
+    """Read the title from the declared Summary field."""
+    if match := _SUMMARY_TITLE.match(body):
+        return match[1].decode("utf-8").strip()
+    text = body.decode("utf-8")
+    headings = _headings(_MARKDOWN_HEADINGS.parse(text))
+    root_level = 7
+    for heading in headings:
+        if heading["heading_level"] <= root_level:
+            root_level = heading["heading_level"]
+            if content_key(heading["heading"]) == "summary":
+                lines = content_lines(text)
+                end = _section_end(heading, headings, len(lines))
+                return next((line.strip() for line in lines[heading["body_start"]:end]
+                             if line.strip()), "")
+    return ""
 
 
 def source_markdown(row: Mapping[str, Any]) -> str | None:

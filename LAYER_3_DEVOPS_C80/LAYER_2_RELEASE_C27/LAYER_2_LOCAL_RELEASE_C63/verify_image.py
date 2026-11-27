@@ -23,6 +23,7 @@ from . import local_release_package_phases as package_phases
 from .local_release_gates import run_gate
 from .local_release_state import atomic_write, source_identity
 from .local_release_test_process import run_logged_test_process
+from .prepare_test_environment import check_locked_engine
 from .release_support import _failed_test_output
 
 _REPORTS = Path(".anechoic_runtime/simple_local_release/reports/verify-image")
@@ -92,6 +93,8 @@ def _verify_candidate(root, selection, run_id, runner, result, gate):
     inputs = source_identity(root, root)
     result.update(source_revision=provenance["head_commit"], source_sha256=inputs)
     result["failed_step"] = "preflight_tests"
+    if runner is None and (root / "LAYER_4_ENGINE_STUDIO_C14/.venv-dev/bin/python").is_file():
+        check_locked_engine(root)
     gate(root, "preflight", None, None, {}, selection, run_id)
     result["failed_step"] = "build_package"
     package_phases.validate_package_inputs(root, selection)

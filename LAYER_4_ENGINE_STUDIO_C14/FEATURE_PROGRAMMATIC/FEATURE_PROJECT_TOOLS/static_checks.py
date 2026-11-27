@@ -5,12 +5,14 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+import tomllib
 
-from . import python_boundaries, python_bytecode, source_languages, source_sizes
+from . import python_boundaries, python_bytecode, source_languages, source_line_length, source_sizes
 
 
 CODE_ROOTS = ("LAYER_4_ENGINE_STUDIO_C14", "LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27", "LAYER_5_USER_SETUP_C65")
 FRAMEWORK = Path(__file__).resolve().parents[3]
+ENGINE_CONFIG = "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/pyproject.toml"
 ESLINT_CONFIGS = ("eslint.config.js", "eslint.config.mjs", "eslint.config.cjs",
                   "eslint.config.ts", "eslint.config.mts", "eslint.config.cts",
                   ".eslintrc", ".eslintrc.js", ".eslintrc.cjs", ".eslintrc.json",
@@ -38,35 +40,51 @@ def npm_static_commands(root):
                 yield package, "lint"
 
 
-def check(root):
-    if python_bytecode.check(root):
-        return 1
-    print("Static check: Python imports and mutable defaults", flush=True)
+def _run(label, command, root, timeout):
+    print(f"Static check: {label}", flush=True)
     try:
-        status = subprocess.run(
-            (sys.executable, "-B", "-m", "ruff", "check", "--config",
-             "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/pyproject.toml", "--select", "F401,B006", "--no-fix", *CODE_ROOTS),
-            cwd=root, check=False, timeout=60,
-        ).returncode
-        if status or source_sizes.check(root) or source_languages.check(root) or python_boundaries.check(root):
-            return 1
-        for package, command in npm_static_commands(root):
-            print(f"Static check: npm run {command} in {package.relative_to(root)}", flush=True)
-            if subprocess.run(("npm", "run", command), cwd=package, check=False, timeout=120).returncode:
-                return 1
-        print("Static check: import ownership", flush=True)
-        ownership = subprocess.run(
-            (sys.executable, "-B", "-m", "IWE_CONSOLE_C43.APP_WORKBENCH."
-             "FEATURE_IMPORT_GRAPH_C61.import_ownership", str(root.resolve())),
-            cwd=FRAMEWORK / CODE_ROOTS[0], check=False, timeout=90,
-        ).returncode
-        if ownership:
-            return ownership
-        print("Static check: state boundaries", flush=True)
-        return subprocess.run(
-            (sys.executable, "-B", "-m", "KERNEL_MIXER_C59.state_lint", str(root.resolve())),
-            cwd=FRAMEWORK, check=False, timeout=120,
-        ).returncode
+        return subprocess.run(command, cwd=root, check=False, timeout=timeout).returncode
     except (OSError, ValueError, subprocess.TimeoutExpired) as error:
-        print(f"Static check failed: {error}", file=sys.stderr)
+        print(f"Static check failed: {label}: {error}", file=sys.stderr)
         return 1
+
+
+def _python_quality(root):
+    ruff = (sys.executable, "-B", "-m", "ruff")
+    yield _run("Ruff lint", (*ruff, "check", "--config", ENGINE_CONFIG, "--extend-select",
+                            "F401,B006", "--no-fix", *CODE_ROOTS), root, 60)
+    path = root / ENGINE_CONFIG
+    try:
+        config = tomllib.loads(path.read_text(encoding="utf-8")).get("tool", {}) if path.is_file() else {}
+    except (OSError, ValueError) as error:
+        print(f"Static check failed: {ENGINE_CONFIG}: {error}", file=sys.stderr)
+        yield 1
+        return
+    if "ruff" in config:
+        yield _run("Ruff format", (*ruff, "format", "--check", "--config", ENGINE_CONFIG, *CODE_ROOTS), root, 60)
+    if "mypy" in config:
+        yield _run("Mypy", (sys.executable, "-B", "-m", "mypy", "--config-file", ENGINE_CONFIG), root, 120)
+
+
+def _typed_web(root):
+    try:
+        for package, command in npm_static_commands(root):
+            yield _run(f"npm run {command} in {package.relative_to(root)}",
+                       ("npm", "run", command), package, 120)
+    except (OSError, ValueError) as error:
+        print(f"Static check failed: npm configuration: {error}", file=sys.stderr)
+        yield 1
+
+
+def check(root):
+    checks = [
+        python_bytecode.check(root), *_python_quality(root), source_sizes.check(root),
+        source_line_length.check(root), source_languages.check(root), python_boundaries.check(root),
+        *_typed_web(root),
+        _run("import ownership", (sys.executable, "-B", "-m", "IWE_CONSOLE_C43.APP_IWE_CONSOLE."
+                                  "FEATURE_IMPORT_GRAPH_C61.import_ownership", str(root.resolve())),
+             FRAMEWORK / CODE_ROOTS[0], 90),
+        _run("state boundaries", (sys.executable, "-B", "-m", "KERNEL_MIXER_C59.state_lint",
+                                  str(root.resolve())), FRAMEWORK, 120),
+    ]
+    return int(any(checks))

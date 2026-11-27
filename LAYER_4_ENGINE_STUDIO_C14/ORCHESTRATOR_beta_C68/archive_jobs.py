@@ -5,15 +5,13 @@ import json
 import os
 from pathlib import Path
 import signal
-import tempfile
 import threading
 import time
 from uuid import uuid4
 
 from .abort import WorkerAborted
 from .jobs import _Run
-from .generation import DeltaRequiresReconciliation, WorkerIngestionFailure, admit_generation
-from .worker_reply import parse_archive_result, parse_worker_data
+from .generation import DeltaRequiresReconciliation, WorkerIngestionFailure, admit_generation, read_reuse
 from .startup_checkpoint import archive_checkpoint, compatible_checkpoint
 from .watcher_diagnostics import emit_record
 
@@ -33,11 +31,10 @@ class ArchiveCoverageLost(RuntimeError):
 class ArchiveJobs:
     def _initialize_archive(self):
         self.deferred_archive = None
-        self.archive_run = None
-        self.archive_process = None
-        self.archive_thread = None
-        self.archive_result = None
+        self.archive_run = self.archive_process = None
+        self.archive_thread = self.archive_result = None
         self.archive_dirty = False
+        self.archive_reconciliation_pending = False
         self.archive_watching = False
         self.live_generation = None
 
@@ -66,14 +63,20 @@ class ArchiveJobs:
         return {"watcher_guarded": epoch is not None, "foreground": foreground}, epoch
 
     def _restart_archive(self, reuse, result):
-        if "unchanged" not in result and "paths" not in result:
+        if not {"unchanged", "paths", "compiler"} & result.keys():
             return None
+        if reuse.get("checkpoint_scope") == "foreground":
+            return {"roots": list(self.watcher.archive_roots()), "snapshot": {"atoms": [], "relations": []},
+                    "carrier_hashes": {}, "endpoints": result.get("reuse", reuse)["endpoints"],
+                    "checkpoint_source": result.get("reuse", reuse)}
         checkpoint = archive_checkpoint(reuse)
+        if "compiler" in result:
+            checkpoint["endpoints"] = result["reuse"]["endpoints"]
         roots = self.watcher.archive_roots()
         if not roots and not checkpoint["carrier_hashes"] and not reuse.get("archive_pending"):
             return None
         return {"roots": list(roots), "snapshot": {"atoms": [], "relations": []}, "carrier_hashes": {},
-                "endpoints": reuse["endpoints"], "checkpoint": checkpoint}
+                "endpoints": checkpoint["endpoints"], "checkpoint": checkpoint}
 
     def _needs_foreground(self, result):
         if "paths" not in result:
@@ -85,7 +88,8 @@ class ArchiveJobs:
     @staticmethod
     def _include_archive_pending(result, deferred):
         if deferred and (deferred["roots"] or deferred["snapshot"]["atoms"]
-                         or deferred["snapshot"].get("ingestion_issues") or "checkpoint" in deferred):
+                         or deferred["snapshot"].get("ingestion_issues") or "checkpoint" in deferred
+                         or "checkpoint_source" in deferred):
             result["archive_pending"] = True
             if "archive_versions" in deferred:
                 result["archive_versions"] = deferred.pop("archive_versions")
@@ -134,10 +138,10 @@ class ArchiveJobs:
     def _accept_deferred_archive(self, deferred):
         previous = self.deferred_archive
         self.deferred_archive = deferred
-        if previous is not None and deferred is not None:
-            keys = ["roots", "endpoints", "checkpoint"]
-            if self.archive_run is not None and self.archive_run.state == "failed":
-                keys.append("carrier_hashes")
+        if previous is None:
+            self.archive_dirty |= deferred is not None and self.archive_run is not None
+        elif deferred is not None:
+            keys = ("roots", "endpoints", "checkpoint", "checkpoint_source", "snapshot", "carrier_hashes")
             self.archive_dirty |= any(previous.get(key) != deferred.get(key) for key in keys)
 
     def _run_archive(self):
@@ -167,43 +171,35 @@ class ArchiveJobs:
                 raise ArchiveCoverageLost("Archive watcher coverage is unavailable")
             self.archive_watching = True
             if deferred is not None:
-                self.archive_result = self._archive_snapshot(deferred["endpoints"], deferred.get("checkpoint"))
+                checkpoint = deferred.get("checkpoint")
+                source = deferred.get("checkpoint_source")
+                if source is not None:
+                    record = read_reuse(self.database_socket, self.instance_id, scope="archive")
+                    candidate = record.model_dump(exclude_unset=True) if record is not None else None
+                    if compatible_checkpoint(candidate) and candidate["inputs"] == source["inputs"]:
+                        checkpoint = archive_checkpoint(candidate)
+                        checkpoint["endpoints"] = deferred["endpoints"]
+                endpoints, result = self._archive_snapshot(deferred["endpoints"], checkpoint, deferred)
+                replace = deferred.get("replace") or (source is not None and checkpoint is None)
+                if self.stopping.is_set():
+                    if (temporary := result.pop("_archive_temp", None)) is not None:
+                        temporary.cleanup()
+                    return
+                self.archive_result = endpoints, result | {"replace": True} if replace else result
         except _ARCHIVE_ERRORS as error:
             self.archive_result = error
         finally:
             self.watcher.queue.put({})
 
-    def _archive_snapshot(self, endpoints, checkpoint=None):
-        epoch = self.watcher.capture_epoch(archive=True, trace=True)
-        roots = self.watcher.archive_roots()
-        if epoch is None:
-            raise ArchiveCoverageLost("Archive watcher coverage is unavailable")
-        with tempfile.TemporaryDirectory(prefix="anechoic-archive-") as directory:
-            request = {"binding": self.binding, "reuse": checkpoint, "watcher_guarded": True,
-                       "archive": {"roots": roots, "endpoints": endpoints}}
-            result = self._run_archive_worker(directory, request)
-        stable = self.watcher.capture_fence(epoch, archive=True, timeout=None, run_id=(self.archive_run.run_id if self.archive_run else None))
-        if stable is None:
-            raise ArchiveCoverageLost(_ARCHIVE_FENCE_MESSAGE)
-        if not stable or roots != self.watcher.archive_roots():
-            raise ArchiveInputsChanged("Archived Atom paths changed during capture")
-        return endpoints, result
-
-    def _run_archive_worker(self, directory, request):
-        checkpoint = request["reuse"]
-        if checkpoint is not None:
-            stdout = self._communicate_worker(directory, request | {"incremental": True}, archive=True)
-            decoded = json.loads(stdout)
-            if decoded != {"incompatible": True}:
-                result = parse_worker_data(decoded, checkpoint, None)
-                if "paths" not in result and result.get("unchanged") is not True:
-                    raise ValueError("Worker returned invalid incremental Archive result")
-                return result
-        result = parse_archive_result(self._communicate_worker(directory, request | {"reuse": None}, archive=True))
-        return result | {"replace": True} if checkpoint is not None else result
-
     def _finish_archive(self):
         result, self.archive_result = self.archive_result, None
+        try:
+            self._finish_archive_result(result)
+        finally:
+            if isinstance(result, tuple) and (temporary := result[1].pop("_archive_temp", None)) is not None:
+                temporary.cleanup()
+
+    def _finish_archive_result(self, result):
         if self.archive_run is None:
             if isinstance(result, Exception):
                 emit_record("WARNING", "archive_watcher_unavailable", "archive", "degraded")
@@ -221,9 +217,16 @@ class ArchiveJobs:
                     raise result
                 self._admit_archive(result[1])
             except DeltaRequiresReconciliation:
-                state, message = "superseded", "Archive requires full native reconciliation"
-                self.watcher.queue.put({"event_type": ARCHIVE_RECONCILIATION, "old_path": None,
-                                        "new_path": None, "is_directory": True})
+                if "paths" in result[1] or result[1].get("unchanged") is True:
+                    state, message = "superseded", "Archive requires full capture"
+                    self.deferred_archive = {key: value for key, value in self.deferred_archive.items()
+                                             if key != "checkpoint"} | {"replace": True}
+                    self.archive_dirty = True
+                else:
+                    state, message = "superseded", "Archive requires full native reconciliation"
+                    self.archive_reconciliation_pending = True
+                    self.watcher.queue.put({"event_type": ARCHIVE_RECONCILIATION, "old_path": None,
+                                            "new_path": None, "is_directory": True})
             except _ARCHIVE_ERRORS as error:
                 state, message = "failed", str(error)[-2048:]
                 self._record_archive_failure(error)
@@ -259,11 +262,16 @@ class ArchiveJobs:
         return self.archive_dirty
 
     def _admit_archive(self, result):
-        if "paths" in result or result.get("unchanged") is True:
+        temporary = result.get("_archive_temp")
+        if "batch_artifact" in result:
+            payload = {key: value for key, value in result.items() if key != "_archive_temp"}
+            payload["base_generation"] = self.live_generation
+        elif "paths" in result or result.get("unchanged") is True:
             payload = result | {"base_generation": self.live_generation}
         else:
             payload = self._archive_snapshot_payload(result)
-        outcome = admit_generation(self.database_socket, self.instance_id, None, payload, None, archive=True)
+        outcome = admit_generation(self.database_socket, self.instance_id,
+                                   str(Path(temporary.name).resolve()) if temporary else None, payload, None, archive=True)
         if os.environ.get("ANECHOIC_STARTUP_TIMING") == "1":
             from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import mark_startup_timing
             mode = "reused" if result.get("unchanged") is True else "native_delta" if "paths" in result else "full"
@@ -292,6 +300,9 @@ class ArchiveJobs:
             self._stop_archive()
         if self.archive_thread is not None:
             self.archive_thread.join(1)
+            if not self.archive_thread.is_alive() and isinstance(self.archive_result, tuple):
+                if (temporary := self.archive_result[1].pop("_archive_temp", None)) is not None:
+                    temporary.cleanup()
 
     def _stop_archive(self):
         if self.archive_process is not None and self.archive_process.poll() is None:

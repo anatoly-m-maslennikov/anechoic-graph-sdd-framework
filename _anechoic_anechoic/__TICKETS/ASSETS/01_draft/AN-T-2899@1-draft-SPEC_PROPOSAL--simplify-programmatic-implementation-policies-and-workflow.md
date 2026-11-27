@@ -33,14 +33,14 @@ What this change does: Workbench reads Current and Draft Atoms, builds a queryab
    - Problem: `SELECT 'NaN'::DOUBLE` fails conversion after registering the result. The caller gets no query ID, but the result table and registry entry remain. A later Page conversion can fail in the same way.
    - Fix: Release that result's table and registry entry when result conversion fails. Keep the original error; do not retry the query.
    - If skipped: Repeated failed requests keep consuming storage until restart.
-   - Evidence: `FEATURE_WORKBENCH_BACKEND/query_store.py:233–270`; `tests/test_query_store.py:414–438` checks continued use after the error, but not cleanup.
+   - Evidence: `FEATURE_IWE_CONSOLE_BACKEND/query_store.py:233–270`; `tests/test_query_store.py:414–438` checks continued use after the error, but not cleanup.
 
 2. **Closing a Worksheet can keep it open or change the wrong tab.**
    - What this is: Closing a tab removes it and chooses what remains visible.
    - Problem: Closing the only clean tab appends a replacement without removing the old tab. Closing an inactive tab always selects the first remaining tab.
    - Fix: Assign the remaining tab list once. Keep the active tab if it remains; otherwise choose a remaining tab or create one blank Worksheet.
    - If skipped: Close behaves differently from what the user requested.
-   - Evidence: `FEATURE_WORKBENCH_FRONTEND/src/App.svelte:45–48`. No existing browser flow closes the last or an inactive tab.
+   - Evidence: `FEATURE_IWE_CONSOLE_FRONTEND/src/App.svelte:45–48`. No existing browser flow closes the last or an inactive tab.
 
 ### Should fix
 
@@ -63,7 +63,7 @@ What this change does: Workbench reads Current and Draft Atoms, builds a queryab
    - Problem: The stored tab omits its saved identity, so the Saved ID/link disappears after reload even when SQL is restored.
    - Fix: Persist the small saved-identity object with the tab. Continue excluding result rows. Verify Save/reload and Open Saved/reload through the browser.
    - If skipped: The restored Worksheet loses its connection to the last explicitly saved or loaded item.
-   - Evidence: `FEATURE_WORKBENCH_FRONTEND/src/lib/workspace.js:13–31`; `src/App.svelte:49–52,83,114`.
+   - Evidence: `FEATURE_IWE_CONSOLE_FRONTEND/src/lib/workspace.js:13–31`; `src/App.svelte:49–52,83,114`.
 
 ### Nice to have
 
@@ -72,7 +72,7 @@ What this change does: Workbench reads Current and Draft Atoms, builds a queryab
    - Problem: Derived `_projection` changes trigger scans although those files are excluded from the reader. Even a no-change scan releases successful parse caches under the current Decision.
    - Fix: Ignore projection-only events alongside Journal-only events. Keep full inventory refresh for admitted source changes. Review cache policy separately before changing its lifetime.
    - If skipped: Rebuilding projections causes avoidable scanning; no incorrect result was found.
-   - Evidence: `FEATURE_WORKBENCH_BACKEND/service.py:54–101`; `source_reader.py:182–197`.
+   - Evidence: `FEATURE_IWE_CONSOLE_BACKEND/service.py:54–101`; `source_reader.py:182–197`.
 
 ### Architecture and leftovers
 
@@ -187,7 +187,7 @@ Do not require a separate Analysis Atom or report for each changed Atom, module 
 
 ## Sources
 
-The review paths below are relative to `LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_APPS/APP_WORKBENCH` unless prefixed with `FEATURE_MCP`.
+The review paths below are relative to `LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_APPS/APP_IWE_CONSOLE` unless prefixed with `FEATURE_MCP`.
 
 - Current Policies: CA-M-402@11, CA-M-403@9, CA-M-410@9, CA-M-424@12, CA-M-431@11, CA-M-432@8.
 - Current local Decisions: CA-M-462@7, CA-M-463@4, CA-M-465@11; Workbench test guidance CA-M-472@1.

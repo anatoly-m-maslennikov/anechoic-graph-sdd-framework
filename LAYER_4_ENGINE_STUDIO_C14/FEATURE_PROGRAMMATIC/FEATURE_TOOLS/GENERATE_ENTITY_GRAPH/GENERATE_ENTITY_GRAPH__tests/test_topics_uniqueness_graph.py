@@ -26,17 +26,17 @@ declare_entity(
 '''
 
 
-def carrier(code, label="python", subject="Atom.Header.Context.Topics.Dependencies"):
+def carrier(code, subject="Atom.Header.Context.Topics.Dependencies"):
     return {
         "source": {"atom_id": "CA-R-2708", "version": 2, "path": "source.md", "sha256": "reviewed"},
         "subjects": {"active": subject, "passive": []},
         "read_view": {"content_role": "Requirement", "type": "Declaration"},
-        "body": f"## Claim\n\n### Formal Claim\n\n```{label}\n{code}\n```\n",
+        "body": f"## Claim\n\n### Formal Claim\n\n```python\n{code}\n```\n",
     }
 
 
 class TopicsUniquenessGraphTests(unittest.TestCase):
-    def test_class_dependent_property_constraint_matches_formal_claim(self):
+    def test_class_dependent_property_constraint_keeps_cardinality_and_names(self):
         code = '''from anechoic.formal_claims import declare_entity
 class Atom:
     pass
@@ -47,13 +47,11 @@ declare_entity(entity_name="Atom", entity_class=Atom,
         rows, diagnostics = extract_claim_constraints(carrier(code, subject="Atom"))
         self.assertEqual([], diagnostics)
         actual, = [row for row in rows if row.get("selection") == "immediate_dependents"]
-        legacy, diagnostics = extract_claim_constraints(
-            carrier("Atom.*[string,in(Header,Content)]{::2};", label="CFEL", subject="Atom"))
-        self.assertEqual([], diagnostics)
-        expected, = [row for row in legacy if row.get("selection") == "immediate_dependents"]
-        for key in ("property_selector", "selection", "name_format", "occurrence_cardinality",
-                    "effective_occurrence_cardinality", "occurrence_conflict"):
-            self.assertEqual(expected[key], actual[key], key)
+        count = {"minimum": 2, "maximum": 2}
+        self.assertEqual("Atom", actual["property_selector"])
+        self.assertEqual(count, actual["occurrence_cardinality"])
+        self.assertEqual(count, actual["effective_occurrence_cardinality"])
+        self.assertFalse(actual["occurrence_conflict"])
         self.assertEqual(("Header", "Content"), actual["allowed_names"])
         graph = compose_contract_graph([carrier(code, subject="Atom")])
         entry, = [e for n in graph["entities"] for e in n["own"] if e["source"]["atom_id"] == "CA-R-2708"]
@@ -73,16 +71,6 @@ declare_entity(entity_name="Atom", entity_class=Atom,
         self.assertEqual("str", prop["value_format"])
         dependent, = [c for c in clauses if c.get("selection") == "immediate_dependents"]
         self.assertEqual({"minimum": 0, "maximum": 0}, dependent["effective_occurrence_cardinality"])
-        old, _ = extract_claim_constraints(carrier('''# model
-Atom.Header.Context.Topics.Dependencies{::0..1}:: [string]{::0+};
-Atom.Header.Context.Topics.Dependencies.*[]{::0}
-''', label="CFEL"))
-        legacy_prop, = [c for c in old if c.get("selection") == "property"]
-        legacy_dependent, = [c for c in old if c.get("selection") == "immediate_dependents"]
-        for field in ("effective_occurrence_cardinality", "value_cardinality"):
-            self.assertEqual(legacy_prop[field], prop[field])
-        self.assertEqual(legacy_dependent["effective_occurrence_cardinality"], dependent["effective_occurrence_cardinality"])
-        self.assertEqual("string", legacy_prop["value_format"])
         graph = compose_contract_graph([row])
         entry, = [e for n in graph["entities"] for e in n["own"] if e["source"]["atom_id"] == "CA-R-2708"]
         self.assertEqual([check], entry["instance_clauses"])

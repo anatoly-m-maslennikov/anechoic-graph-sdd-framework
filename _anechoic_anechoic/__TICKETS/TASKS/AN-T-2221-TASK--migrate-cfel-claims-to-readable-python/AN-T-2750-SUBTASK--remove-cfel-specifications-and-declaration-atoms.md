@@ -8,9 +8,9 @@ context:
   template: task
   label: Subtask
 state:
-  status: in_queue
+  status: "in_queue"
   version: 1
-  updated_at: '2026-11-13T17:14:01.288598+00:00'
+  updated_at: "2026-11-26T13:36:50.197577+00:00"
 ---
 ## Summary
 
@@ -23,6 +23,8 @@ Remove CFEL specifications and Declaration Atoms
 3. After the surviving Claims and build readers have moved to Python, activate the Python-only revision of CA-R-2721. Remove CFEL-only RMEDO and obsolete Declaration carriers from the Current and Draft source sets, including CA-R-2487, CA-R-2563, and language-only Operator, Construct, and Function Declarations.
 4. Verify no live Declaration, Topic, or applicable Model rule depends on the retired CFEL branch.
 5. Retire the legacy dependency Relation Declarations CA-R-1026, CA-R-1200 and CA-R-2422 and the associated ordering Atoms CA-M-239 and CA-E-404. Drop the remaining legacy Relation links. Use `topics.dependencies` for Subject dependencies. CA-R-2762 owns IS_BLOCKED_BY and its inverse alias BLOCKS.
+
+**Current scope.** Retire any remaining CFEL-only Specs and declaration carriers. Put the surviving compact syntax in the Concern Path Manifest. Preserve the exact archived carriers.
 
 ## Progress
 
@@ -56,3 +58,7 @@ still require the compatible runtime.
 The checked Workbench schema and Relation registry had the same functional
 output with CA-R-2487 excluded. Automatic review held its retirement
 while the Graph fence path and dependent fixtures remain in use.
+
+Archived 17 exact CFEL-only Drafts in Continuant Pitchfork. The surviving path notation is in the Concern Path Manifest Draft.
+
+The production index has no Active CFEL definition in the canonical Project. Archived four legacy Subject syntax Specs and two superseded Drafts. MCP found only Component containment links before the move. The archive preserves all six bodies. Concern Path promotion remains open.

@@ -9,6 +9,7 @@ import sys
 import tempfile
 import unittest
 import uuid
+from contextlib import chdir
 from pathlib import Path
 from unittest.mock import patch
 
@@ -89,8 +90,15 @@ class PlainJournalTests(unittest.TestCase):
 
     def test_disk_inbox_keeps_duplicate_records_in_order(self) -> None:
         rows = [{"value": 1}, {"value": 1}, {"value": 2}]
-        receipts = append_sealed_events(self.root, rows, **self.partition, storage="duckdb")
+        legacy = self.root / ".anechoic_runtime/workbench"
+        legacy.mkdir(parents=True)
+        with chdir(self.root / ".anechoic_anechoic"):
+            receipts = append_sealed_events(
+                self.root, rows, **self.partition, storage="duckdb",
+            )
         inbox = journal_inbox(self.root)
+        self.assertEqual(legacy / "journal-inbox", inbox)
+        self.assertFalse(legacy.with_name("iwe_console").exists())
         files = sorted(inbox.glob("*.json"))
         self.assertEqual([receipt["record_id"] for receipt in receipts], [path.stem for path in files])
         self.assertEqual(rows, [json.loads(path.read_text())["event"] for path in files])

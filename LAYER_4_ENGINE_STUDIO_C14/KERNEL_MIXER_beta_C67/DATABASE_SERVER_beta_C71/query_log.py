@@ -16,6 +16,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import console_state_path
 from .work_journal import _open_directory
 
 
@@ -71,6 +72,7 @@ class QueryLog:
 
     def __init__(self, root: Path):
         self.root = Path(root)
+        self._state = console_state_path(self.root).relative_to(self.root).parts
         self._files = threading.RLock()
         self._submit = threading.Lock()
         self._pending_lock = threading.Lock()
@@ -97,7 +99,7 @@ class QueryLog:
         try:
             with self._files:
                 self._hourly(self._now(), cleanup=True)
-                directory = _open_directory(self.root, (".anechoic_runtime", "workbench", "query_log"), create=True, same_device=True)
+                directory = _open_directory(self.root, (*self._state, "query_log"), create=True, same_device=True)
                 try:
                     name = _at(record).strftime("query-log-%Y-%m-%d-%H.ndjson")
                     descriptor = _open_file(directory, name, os.O_WRONLY | os.O_APPEND | os.O_CREAT)
@@ -114,7 +116,7 @@ class QueryLog:
 
     def _hourly(self, now, cleanup):
         try:
-            directory = _open_directory(self.root, (".anechoic_runtime", "workbench", "query_log"), create=False, same_device=True)
+            directory = _open_directory(self.root, (*self._state, "query_log"), create=False, same_device=True)
         except FileNotFoundError:
             return []
         records = []
@@ -135,7 +137,7 @@ class QueryLog:
     def _read(self, now, *, cleanup):
         records = self._hourly(now, cleanup)
         try:
-            directory = _open_directory(self.root, (".anechoic_runtime", "workbench"), create=False, same_device=True)
+            directory = _open_directory(self.root, self._state, create=False, same_device=True)
         except FileNotFoundError:
             return records
         try:

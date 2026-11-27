@@ -35,6 +35,7 @@ class RestartCheckpointTests(unittest.TestCase):
     def test_warm_dispatch_only_marks_unknown_after_possible_write(self):
         jobs = self._jobs(worker_socket="worker", worker_load_seconds=1)
         restore_reuse(jobs, "base")
+        jobs.generation_reuse.status_domains = {"S": ["active"], "T": ["active"], "P": ["active"], "C": ["active"]}
         job = lifecycle_job(jobs, "atom_lifecycle_create_draft", {
             "newAtom": {"template": "epic", "container": {"component": "C00"}}})
         structure = {"components": {}, "project": {"ref": "AN-S-1@1"}}
@@ -53,6 +54,7 @@ class RestartCheckpointTests(unittest.TestCase):
     def test_unadmitted_write_blocks_second_indexed_allocation(self):
         jobs = self._jobs()
         restore_reuse(jobs, "base")
+        jobs.generation_reuse.status_domains = {"S": ["active"], "T": ["active"], "P": ["active"], "C": ["active"]}
         job = lifecycle_job(jobs, "atom_lifecycle_create_draft", {
             "newAtom": {"template": "task", "container": {"component": "C00"}}})
         structure = {"components": {}, "project": {"ref": "AN-S-1@1"}}
@@ -97,7 +99,7 @@ class RestartCheckpointTests(unittest.TestCase):
         jobs = self._jobs("test id")
         witness = {"base_generation": "old", "inputs": {}, "graph_config": None, "endpoints": {},
                    "carrier_hashes": {"control/a.md": "a" * 64}}
-        reuse = witness | {"archive_pending": True}
+        reuse = witness | {"archive_pending": True, "checkpoint_scope": "foreground"}
         calls = []
         class Connection:
             def __init__(self, path): pass
@@ -126,7 +128,24 @@ class RestartCheckpointTests(unittest.TestCase):
             jobs.start()
             jobs.thread.join(5)
         self.assertFalse(jobs.thread.is_alive())
-        self.assertEqual([("GET", "/generation/reuse?instance_id=test+id")], calls)
+        self.assertEqual([("GET", "/generation/reuse?instance_id=test+id&scope=foreground")], calls)
+
+    def test_scoped_request_never_falls_back_to_full_checkpoint(self):
+        calls = []
+        result = {"base_generation": "old", "inputs": {}, "graph_config": None, "endpoints": {}}
+        class Connection:
+            def __init__(self, path): pass
+            def request(self, method, path): calls.append(path)
+            def getresponse(self):
+                class Response:
+                    status = 403 if len(calls) == 1 else 200
+                    def read(self): return json.dumps({"result": result}).encode()
+                return Response()
+            def close(self): pass
+        with patch("ORCHESTRATOR_beta_C68.generation.UnixConnection", Connection):
+            self.assertIsNone(module.read_reuse("socket", "test", scope="foreground"))
+            self.assertIsNone(module.read_reuse("socket", "test", scope="foreground"))
+        self.assertEqual(["/generation/reuse?instance_id=test&scope=foreground"] * 2, calls)
 
     def test_full_admission_persists_worker_witness(self):
         jobs = self._jobs()
@@ -141,7 +160,8 @@ class RestartCheckpointTests(unittest.TestCase):
                     def read(self): return b'{"result": {"generation": "new"}}'
                 return Response()
             def close(self): pass
-        def worker(directory, reuse, paths):
+        def worker(directory, reuse, paths, *, force_model=False):
+            self.assertFalse(force_model)
             for name in ("model", "structure"):
                 (Path(directory) / (name + ".json")).write_text("{}")
             return {"snapshot": {}, "receipt": {}, "graph": None, "reuse": witness, "model_diagnostics": [], "carrier_hashes": {"control/a.md": "a" * 64}}
@@ -190,7 +210,9 @@ class RestartCheckpointTests(unittest.TestCase):
                 patch.object(subprocess, "Popen", graph_worker(graph_result, requests)):
             outcome = jobs._attempt_generation(None, reuse)
         self.assertEqual({"binding": jobs.binding, "reuse": reuse, "structure": {"nodes": []},
-                          "model_source": {"accepted_model": None}, "batch_full": True}, requests[0])
+                          "model_source": {"accepted_model": None,
+                                           "spec_database": {"socket": str(jobs.database_socket),
+                                                             "instance_id": "test id"}}, "batch_full": True}, requests[0])
         self.assertEqual(("GET", "/structure?instance_id=test+id"), calls[0][:2])
         self.assertEqual("/generation/native", calls[1][1])
         self.assertEqual({"instance_id", "base_generation", "snapshot", "snapshot_sha256", "graph", "graph_sha256", "reuse"},

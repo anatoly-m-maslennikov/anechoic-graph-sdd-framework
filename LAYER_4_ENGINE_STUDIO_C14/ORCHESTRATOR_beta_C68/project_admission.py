@@ -12,7 +12,7 @@ import sys
 from typing import Literal
 
 from .jobs import ENGINE as _ENGINE
-_MODULE = "FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.project_admission__pub"
+_MODULE = "FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.FEATURE_MODEL_VALIDATION.project_admission__pub"
 
 
 @dataclass(frozen=True, config=ConfigDict(strict=True, extra="forbid"))

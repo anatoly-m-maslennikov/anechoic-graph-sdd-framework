@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "strict": true,
+    "isolatedModules": true
+  },
+  "include": [
+    "src",
+    "scripts/**/*.ts",
+    "FEATURE_IWE_CONSOLE_FRONTEND__tests/*.test.ts",
+    "FEATURE_IWE_CONSOLE_FRONTEND__tests/mcp-app.e2e.ts",
+    "FEATURE_IWE_CONSOLE_FRONTEND__tests/FEATURE_IWE_CONSOLE_FRONTEND__tests__shared.ts"
+  ],
+  "exclude": [
+    "src/**/*.test.mjs"
+  ]
+}

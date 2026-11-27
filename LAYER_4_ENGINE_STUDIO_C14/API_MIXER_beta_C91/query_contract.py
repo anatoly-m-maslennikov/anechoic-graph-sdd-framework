@@ -8,7 +8,7 @@ from .models import Query
 
 ROOT = Path(__file__).resolve().parents[2]
 SCHEMA_PATH = Path(__file__).with_name("query_run.schema.json")
-TYPE_PATH = ROOT / "LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND/src/lib/query_run.generated.ts"
+TYPE_PATH = ROOT / "LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_FRONTEND/src/lib/query_run.generated.ts"
 
 
 def query_schema():

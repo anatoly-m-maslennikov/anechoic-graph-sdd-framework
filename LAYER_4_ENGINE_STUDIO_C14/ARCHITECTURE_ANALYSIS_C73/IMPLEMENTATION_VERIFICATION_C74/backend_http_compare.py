@@ -7,13 +7,13 @@ import tempfile
 from pathlib import Path
 
 from .backend_http_checks import extract_backend_checks
-from SPEC_ENGINE_C75.LAYER_3_LEAN_TRANSLATOR_C84.lean_values__pub import lean_string
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_3_LEAN_TRANSLATOR_C84._package__shared import lean_string
 
 from .backend_http_contract import contract_to_lean
 from .backend_http_source import extract_http_observations
 
-_CONTRACT = '_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/FEATURE_WORKBENCH_BACKEND_C45/AN-S-3185-DES-COMPONENT_CONTRACT--run-one-read-only-workbench-query.md'
-_SOURCE = 'LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/backend_tool_api.py'
+_CONTRACT = '_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/01_TIER_1_ARCHITECTURE/AN-S-3059-SPEC-COMPONENT_MANIFEST--declare-iwe-console-backend.md'
+_SOURCE = 'LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_BACKEND/backend_tool_api.py'
 
 
 def _actual(rows, checks):
@@ -131,8 +131,8 @@ def _compare_formal(root, lean, emit):
     results.extend({'check': key, 'contract': observed.get(key), 'manifest': None,
                     'status': 'unresolved'} for key in required if key not in expected)
     pins = solution.metadata.get('relations', {}).get('IS_SOLUTION_FOR', [])
-    target = f"AN-S-3185@{sources['contract']['version']}"
-    reason = ('Solution binding does not pin the active Contract' if target not in pins else
+    target = f"AN-S-3059@{sources['manifest']['version']}"
+    reason = ('Solution binding targets a retired Contract, not the active Manifest' if target not in pins else
               'Workflow event and trace semantics have no modeled mapping to HTTP Contract facts')
     manifest_solution = [{'check': row['check'], 'manifest': row['manifest'],
                           'status': 'unresolved', 'reason': reason} for row in results]

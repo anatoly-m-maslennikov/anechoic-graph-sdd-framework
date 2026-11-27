@@ -87,6 +87,27 @@ class SourceLineLengthTests(unittest.TestCase):
                 (new, 2, "Next-line suppression is disabled"), results,
             )
 
+    def test_static_checks_all_covered_files_and_reports_tool_errors(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            lint.git(root, "init", "--quiet")
+            config = root / "pyproject.toml"
+            config.write_text(
+                "[tool.anechoic.test_suite]\n"
+                "enforce_source_line_length = true\n",
+            )
+            (root / ".editorconfig").write_text("root = true\n")
+            path = root / "LAYER_3_DEVOPS_C80/example.tsx"
+            path.parent.mkdir()
+            path.write_text("x" * 80 + "\n")
+            with patch.object(lint, "checker_findings", return_value=[
+                finding("LAYER_3_DEVOPS_C80/example.tsx", 1),
+            ]) as checker, redirect_stdout(StringIO()):
+                self.assertEqual(lint.check(root), 1)
+                self.assertIn("LAYER_3_DEVOPS_C80/example.tsx", checker.call_args[0][1])
+            with patch.object(lint, "checker_findings", side_effect=ValueError("broken")):
+                self.assertEqual(lint.check(root), 2)
+
     def test_line_endings_do_not_create_changed_lines(self):
         self.assertEqual(
             {2}, lint.new_lines(b"old\r\nkeep\r\n", b"keep\nnew\n"),

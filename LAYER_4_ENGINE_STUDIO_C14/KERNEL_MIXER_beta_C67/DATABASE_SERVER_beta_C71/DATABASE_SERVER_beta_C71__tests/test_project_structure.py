@@ -14,6 +14,7 @@ class ProjectStructureTest(unittest.TestCase):
     def test_projection_replaces_atomically_and_preserves_structure(self):
         payload = _generation()
         structure = json.loads(payload["structure"])
+        structure["packages"] = {"CS1": {"component": "C1", "ref": "AN-S-2", "fields": {"purpose": "Build", "solution": "Do"}}}
         structure["components"] = {"C1": {"parent": "C00", "source_path": "a", "ref": "r", "sha256": "h", "fields": {"name": "first"}}}
         with _server() as client:
             for components, expected in ((structure["components"], [["C00", None], ["C1", "a"]]),
@@ -23,11 +24,30 @@ class ProjectStructureTest(unittest.TestCase):
                 payload["receipt"]["structure_sha256"] = sha256(payload["structure"].encode()).hexdigest()
                 response = client.put("/generation", json=payload)
                 self.assertEqual(200, response.status_code, response.text)
+                self.assertEqual([["CS1", "C1", "AN-S-2", "Build"]], _query(client, "SELECT seed_id, parent, ref, json_extract_string(fields, '$.purpose') FROM mrt_component_seeds").json()["result"]["rows"])
                 self.assertEqual(payload["structure"], client.get("/structure", params=BINDING).text)
                 self.assertEqual(expected, _query(client, "SELECT component_id, source_path FROM mrt_project_structure ORDER BY component_id").json()["result"]["rows"])
             payload["receipt"]["structure_sha256"] = "0" * 64
             self.assertEqual(400, client.put("/generation", json=payload).status_code)
             self.assertEqual(expected, _query(client, "SELECT component_id, source_path FROM mrt_project_structure ORDER BY component_id").json()["result"]["rows"])
+
+    def test_existing_projection_backfills_seeds(self):
+        with TemporaryDirectory(dir="/tmp") as directory:
+            path = Path(directory).resolve() / "db"
+            payload = _generation()
+            structure = json.loads(payload["structure"])
+            structure["packages"] = {"CS1": {"component": "C1", "ref": "AN-S-2", "fields": {"purpose": "Build"}}}
+            payload["structure"] = json.dumps(structure)
+            payload["receipt"]["structure_sha256"] = sha256(payload["structure"].encode()).hexdigest()
+            with _server(path) as client:
+                response = client.put("/generation", json=payload)
+                self.assertEqual(200, response.status_code, response.text)
+            with duckdb.connect(str(path)) as db:
+                db.execute("DROP TABLE mrt_component_seeds")
+            query = "SELECT seed_id, parent, ref FROM mrt_component_seeds"
+            for _ in range(2):
+                with _server(path) as client:
+                    self.assertEqual([["CS1", "C1", "AN-S-2"]], _query(client, query).json()["result"]["rows"])
 
     def test_existing_generation_migrates_in_place(self):
         with TemporaryDirectory(dir="/tmp") as directory:

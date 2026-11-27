@@ -26,14 +26,14 @@ _COUNT_KEYS = {
     "targets_per_source", "sources_per_target",
 }
 _ENDPOINT_KEYS = {
-    "level", "entity_paths", "reference_form", "dependency", "classification_axis",
+    "level", "entity_paths", "reference_form", "dependency", "axis",
     "ephemeral", "address_form",
 }
 _ENDPOINT_LEVELS = {"model_entities", "instances", "model_entities_or_instances"}
 
 _DECLARATION_KEYS = {
     "declare_entity": {
-        "entity_name", "entity_class", "instance", "instance_check", "qualification_property_path", "incoming_model_relations", "structure_paths", "aspect_memberships",
+        "entity_name", "entity_class", "ssot_carrier_path", "creation_enabled", "instance", "instance_check", "qualification_property_path", "incoming_model_relations", "structure_paths", "aspect_memberships",
         "entity_kind", "identity_properties", "field_options", "derived_from_properties", "constraints_for",
         "relation_name", "base_path", "value_format", "value_cardinality", "property_occurrence_cardinality",
         "dependent_property_cardinality", "dependent_property_name_format", "dependent_property_value_format",
@@ -42,7 +42,7 @@ _DECLARATION_KEYS = {
         "recursive_dependent_property_value_format", "ordered_dependent_property_roles",
         "allowed_dependent_property_names", "ordered_dependent_property_pairs", "allowed_values", "allowed_relation_names",
         "minimum_value", "applies_to_entity_classes",
-        "instance_population_cardinality", "instance_population_scope", "population_entity_path", "population_functional_dependencies", "population_unique_constraints", "classifications", "allowed_classification_values", "fallback_property_name", "fallback_value", "fallback_chain", "maximum_value",
+        "instance_population_cardinality", "instance_population_scope", "population_entity_path", "population_functional_dependencies", "population_unique_constraints", "axes", "allowed_axis_values", "fallback_property_name", "fallback_value", "fallback_chain", "maximum_value",
         "required_instance_property_values", "instance_property_constraints", "model_relation_constraints",
         "instance_relation_constraints", "status_order_numbers", "applies_to_role", "applies_to_forms", "status_groups",
         "form_roles", "form_content", "project_form_content",
@@ -51,7 +51,7 @@ _DECLARATION_KEYS = {
         "relation_name", "source_endpoint", "target_endpoint", "endpoint_pairs", "inverse_alias", "written_alias", "derived_from",
         "reverse_written_alias", "targets_per_source", "sources_per_target", "acyclic",
         "same_immediate_bearer", "swap_endpoints", "swap_endpoint_cardinalities",
-        "classifications", "inverse_classifications", "forbidden_status_pairs",
+        "axes", "inverse_axes", "forbidden_status_pairs",
     },
 }
 _RELATION_CONSTRAINT_KEYS = {"target_entity_paths", "targets_per_source", "sources_per_target"}
@@ -125,6 +125,10 @@ def _validate_cardinalities(value: Any, node: ast.AST) -> None:
 
 
 def _validate_endpoint(value: Any, label: str, node: ast.AST) -> None:
+    if isinstance(value, dict) and "classification_axis" in value:
+        if "axis" in value:
+            _fail(node, f"{label} has duplicate axis flags")
+        value["axis"] = value.pop("classification_axis")
     if not isinstance(value, dict) or set(value) - _ENDPOINT_KEYS:
         _fail(node, f"{label} must be a supported endpoint mapping")
     value.setdefault("level", "model_entities_or_instances")
@@ -139,7 +143,7 @@ def _validate_endpoint(value: Any, label: str, node: ast.AST) -> None:
     for key in ("reference_form", "dependency", "address_form"):
         if key in value and (not isinstance(value[key], str) or not value[key].strip()):
             _fail(node, f"{label} {key} must be a nonempty string")
-    for key in ("classification_axis", "ephemeral"):
+    for key in ("axis", "ephemeral"):
         if key in value and type(value[key]) is not bool:
             _fail(node, f"{label} {key} must be a boolean")
 
@@ -222,6 +226,8 @@ def _validate_manifest_arguments(arguments, node):
                 or any(not isinstance(item, str) or not item.strip() for item in items)
                 or len(set(items)) != len(items)):
             _fail(node, f"{key} requires distinct Property paths on a {required_kind} declaration")
+    if "creation_enabled" in arguments and (kind != "Primary" or type(arguments["creation_enabled"]) is not bool):
+        _fail(node, "creation_enabled requires a boolean on a Primary declaration")
     if "field_options" in arguments and kind != "Property":
         _fail(node, "Only a Property can declare field_options")
     if "constraints_for" in arguments:

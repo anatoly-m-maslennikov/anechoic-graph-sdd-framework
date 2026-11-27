@@ -16,7 +16,8 @@ BIZ = ("package_coupling", "architecture_code_metrics", "architecture_spec_metri
        "package_review_profiles", "package_largest_files")
 ALIASES = {f"{'biz' if name in BIZ else 'mrt'}_{name}": name for name in TABLES}
 ALIASES.update({f"{'src' if name == 'flow_events' else 'mrt'}_{name}": name for name in FLOWS})
-ALIASES.update({f"mrt_{name}": name for name in ("project_structure", "model_entities", "model_properties", "diag_model_manifests")})
+ALIASES.update({f"mrt_{name}": name for name in ("project_structure", "model_entities", "model_properties",
+                                              "model_tree", "model_primary_entities", "diag_model_manifests")})
 ALIASES.update({f"ops_{name}": name for name in ("work_journal", "query_log")})
 ALIASES.update({f"mrt_real_graph_{name}": name for name in ("import_edges", "package_imports",
                 "package_external_imports", "code_units", "code_unit_calls", "test_edges", "tested_by_edges")})

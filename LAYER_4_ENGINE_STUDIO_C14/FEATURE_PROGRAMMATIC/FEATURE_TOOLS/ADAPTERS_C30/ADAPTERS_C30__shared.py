@@ -1,12 +1,7 @@
 """Shared adapter API."""
 from .subject_notation__pub import (
-    Span,
-    Name,
-    ValueLiteral,
-    FormatReference,
-    Cardinality,
-    Qualification,
-    DeclaredReference,
+    Span, Name, ValueLiteral, FormatReference,
+    Cardinality, Qualification, DeclaredReference,
     SelectionGroup,
     SelectionSuffix,
     PathStep,
@@ -37,8 +32,9 @@ from .ADAPTERS_C30__pub import (
     protected,
     validate_directory_components,
 )
+from .native_status_domains import status_domains
 from .carrier_read__pub import CarrierError, ParsedCarrier, parse_carrier
-from .typed_manifest_node import parse_typed_manifest_node
+from .typed_manifest_node import NODE_LINK_PREFIX, parse_typed_manifest_node
 from .markdown_content__pub import (
     content_key, content_lines, direct_markdown, formal_claim_fences,
     parse_content, section_markdown, source_markdown, unfenced_atx_headings,
@@ -46,11 +42,12 @@ from .markdown_content__pub import (
 from .content_records__pub import content_record_span, records_by_path, value_excluding_declared_children
 from .framework_database__pub import attach_framework
 from .model_catalog__pub import bindings_from_workbench_rows, class_bindings
+from .model_ontology_path__pub import is_ontology_model_source, ontology_component_path
 from .model_class_subject__pub import (
     canonical_model_address, model_class_target, model_declaration_subject, simple_model_address,
 )
 from .native_snapshot_cli import NativeSnapshotChanged, UnrepresentableCarrierDelta, capture_carrier_delta, capture_ticket_delta, native_carrier_hashes, prepare_generation_snapshot
-from .project_database__pub import migrate_project_database
+from .project_database__pub import console_state_path, migrate_project_database
 from .indexed_lifecycle_capture import capture_indexed_lifecycle
 from .project_manifest__pub import (
     ProjectSelectionError, active_manifest_carriers, manifest_inputs,
@@ -70,7 +67,7 @@ from .native_model_claim__pub import (
 )
 from .native_carrier_placement__pub import (
     ARCHIVE_DIRECTORY, COMPLETE_DIRECTORY, CUSTOM_MODEL_DIRECTORY, DRAFT_DIRECTORY,
-    PROJECT_CONFIG_DIRECTORY, READY_DIRECTORY, TICKET_DIRECTORY, active_spec_directories,
+    PROJECT_CONFIG_DIRECTORY, READY_DIRECTORY, TICKET_DIRECTORY, active_spec_directories, component_manifest_parent,
     native_carrier_path, native_ticket_asset, native_ticket_label, project_goal_filename,
     spec_folder_layout, spec_lens_directories,
 )
@@ -107,11 +104,11 @@ from .property_order__pub import bind_ordering_declarations, order_properties
 from .realization_ownership__pub import realization_component_paths
 from .structure_snapshot__pub import StructureSnapshot, parse_structure, read_structure
 
-from .atom_reference__pub import atom_identifier
+from .atom_reference__pub import atom_identifier, derive_atom_ref
 from .carrier_syntax__pub import UniqueSafeLoader, check_yaml_resources
-from .code_access_rules__pub import module_visibility
+from .code_access_rules__pub import module_visibility, parse_code_access
 from .component_contract__pub import read_component_contract
-from .component_manifest__pub import parse_component_manifest, parse_component_manifest_fields
+from .component_manifest__pub import component_contract_fences, parse_component_manifest, parse_component_manifest_fields
 from .component_seed_manifest__pub import read_component_seed_manifest
 from .current_carriers__pub import read_current_carriers, read_current_model_carriers
 from .formal_claim__pub import formal_claim, iter_formal_claims
@@ -147,7 +144,7 @@ __all__ = [
     "UniqueSafeLoader",
     "active_manifest_carriers",
     "append_record", "append_sealed_events",
-    "atom_identifier",
+    "atom_identifier", "derive_atom_ref",
     "CodeAccessOwnership", "build_code_access_ownership",
     "canonical_json_bytes",
     "canonical_native_header",
@@ -166,10 +163,10 @@ __all__ = [
     "manifest_inputs",
     "manifest_sources",
     "manifest_state_fields",
-    "module_visibility",
+    "module_visibility", "parse_code_access",
     "native_header_model_fields",
     "native_header_view",
-    "parse_component_manifest", "parse_component_manifest_fields",
+    "component_contract_fences", "parse_component_manifest", "parse_component_manifest_fields",
     "parse_grouped_python_model_claim",
     "parse_python_model_claim",
     "parse_structured_python_model_claim",
@@ -240,7 +237,7 @@ __all__ = [
     "StructureSnapshot",
     "TemporaryBoundaryError",
     "TICKET_DIRECTORY",
-    "active_spec_directories",
+    "active_spec_directories", "component_manifest_parent",
     "admitted_parent",
     "bind_ordering_declarations",
     "bound_selection",
@@ -250,6 +247,7 @@ __all__ = [
     "attach_framework",
     "NativeSnapshotChanged", "UnrepresentableCarrierDelta", "capture_carrier_delta", "capture_ticket_delta",
     "mark_startup_timing", "native_carrier_hashes", "prepare_generation_snapshot",
+    "console_state_path",
     "migrate_project_database",
     "canonical_role_name",
     "canonical_status",
@@ -264,7 +262,7 @@ __all__ = [
     "header_path",
     "header_value",
     "is_current_requirement_declaration",
-    "is_logical_container",
+    "is_logical_container", "is_ontology_model_source", "ontology_component_path",
     "matches_carrier_label",
     "matches_named_value",
     "model_class_target",
@@ -277,6 +275,7 @@ __all__ = [
     "open_regular",
     "parse_structure",
     "parse_native_model_claim",
+    "NODE_LINK_PREFIX",
     "parse_typed_manifest_node",
     "path_value",
     "project_root_container_view",
@@ -290,6 +289,7 @@ __all__ = [
     "source_body",
     "spec_folder_layout",
     "spec_lens_directories",
+    "status_domains",
     "validate_aspect_hierarchy",
     "validate_aspect_instance",
     "validate_directory_components",

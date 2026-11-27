@@ -35,16 +35,16 @@ def carriers():
     return [
         carrier(
             "CA-R-NODE", "Node",
-            claim("```CFEL", "Node.Status[status]{:1}: [string]{:1+};", "```"),
+            claim("```python", "from anechoic.formal_claims import declare_entity, Cardinality", "declare_entity(entity_name='Status', relation_name='IS_PROPERTY_OF', base_path='Node', property_occurrence_cardinality=1, value_format='string', value_cardinality=Cardinality(minimum=1, maximum=None))", "```"),
         ),
         carrier("CA-R-CHILD", "Node/Child", claim("Child declaration.")),
         carrier(
             "CA-R-STATUS", "Node.Status",
-            claim("```CFEL", "Node.Status[status]{:1}: [string]{:1+};", "```"),
+            claim("```python", "from anechoic.formal_claims import declare_entity, Cardinality", "declare_entity(entity_name='Status', relation_name='IS_PROPERTY_OF', base_path='Node', property_occurrence_cardinality=1, value_format='string', value_cardinality=Cardinality(minimum=1, maximum=None))", "```"),
         ),
         carrier(
             "CA-R-CHILD-STATUS", "Node/Child.Status",
-            claim("```CFEL", "Node/Child.Status[child]{:0..1}: [integer]{:2};", "```"),
+            claim("```python", "from anechoic.formal_claims import declare_entity, Cardinality", "declare_entity(entity_name='Status', relation_name='IS_PROPERTY_OF', base_path='Node/Child', property_occurrence_cardinality=Cardinality(minimum=0, maximum=1), value_format='integer', value_cardinality=2)", "```"),
         ),
         carrier(
             "CA-M-POISON", "Node.Poison",
@@ -70,7 +70,7 @@ def projection(*, namespace=False):
 
 
 class SubjectProjectionViewTests(unittest.TestCase):
-    def test_native_and_legacy_authority_mode_formats_agree(self):
+    def test_authority_mode_children_inherit_native_value_format(self):
         prefix = "Project.Settings.Authority Modes"
         children = ("Default Scope Unit Authority Mode", "Project Authority Mode")
         python_claim = claim(
@@ -81,22 +81,20 @@ class SubjectProjectionViewTests(unittest.TestCase):
             "    dependent_property_value_format=str)", "```",
         )
         rows = [carrier("CA-R-1", "Project", claim("Project.")),
-                carrier("CA-R-2632", prefix, python_claim),
-                carrier("CA-R-LEGACY", prefix, claim("```CFEL", f"{prefix}.*: [string];", "```"))]
+                carrier("CA-R-2632", prefix, python_claim)]
         rows.extend(carrier(f"CA-R-{index}", f"{prefix}.{name}",
-                            claim("```CFEL", f"{prefix}.{name}: {{:1}};", "```"))
+                            native_property(name, prefix, "value_cardinality=1"))
                     for index, name in enumerate(children, 2633))
         data = build_subject_projection_data(rows)
         properties = next(row for row in data["entities"] if row["identity"] == "Project")["direct_properties"]
         for name in children:
             prop = next(row for row in properties if row["identity"] == f"{prefix}.{name}")
             self.assertEqual("string", prop["effective_value_format"])
-            self.assertEqual({"CA-R-2632", "CA-R-LEGACY"},
+            self.assertEqual({"CA-R-2632"},
                              {source["atom_id"] for source in prop["effective_value_format_sources"]})
         self.assertFalse(any(row.get("code") == "conflicting_property_value_formats" for row in data["diagnostics"]))
         document = views.render_primary_projection(data, 4)
         self.assertIn("dependent_property_value_format=str", document)
-        self.assertIn(f"{prefix}.*: [string]", document)
 
     def test_unrelated_native_str_keeps_its_format(self):
         data = build_subject_projection_data([
@@ -114,7 +112,7 @@ class SubjectProjectionViewTests(unittest.TestCase):
             carrier("CA-R-1", "Node", claim("Node.")),
             carrier("CA-R-2", "Node.Section", native_property("Section", "Node", "recursive_dependent_property_cardinality=Cardinality(minimum=0, maximum=None)", "recursive_dependent_property_value_format='markdown'")),
             carrier("CA-R-3", "Node.Section.Group", native_property("Group", "Node.Section", "property_occurrence_cardinality=1", "value_cardinality=0")),
-            carrier("CA-R-4", "Node.Section.Group.Summary", claim("```CFEL", "Node/(.Header.Role in RMED).Section.Group.Summary: {:0..1};", "```")),
+            carrier("CA-R-4", "Node.Section.Group.Summary", claim("```python", "property_rule(address='Node/(.Header.Role in RMED).Section.Group.Summary', value_format=None, values='0..1')", "```")),
         ])
         properties = next(row for row in data["entities"] if row["identity"] == "Node")["direct_properties"]
         group = next(row for row in properties if row["identity"] == "Node.Section.Group")
@@ -156,19 +154,15 @@ class SubjectProjectionViewTests(unittest.TestCase):
         self.assertIn("Conflicting applicable value formats for Node.Section.Summary", document)
         self.assertIn("CA-R-2@1, CA-R-3@1", document)
 
-    def test_level_three_shows_effective_occurrence_and_population_scopes(self):
+    def test_level_three_shows_effective_occurrence_and_value_counts(self):
         data = build_subject_projection_data([
             carrier("CA-R-1", "Node", claim("Node.")),
-            carrier("CA-R-2", "Node.Name", claim(
-                "```CFEL", "# model", "Node.Name{:0..1}: [string]{:0..1};",
-                "# instances", "Node.**//{:1};", "Node//$node{:1}", "```")),
+            carrier("CA-R-2", "Node.Name", claim("```python", "from anechoic.formal_claims import declare_entity, Cardinality", "declare_entity(entity_name='Name', relation_name='IS_PROPERTY_OF', base_path='Node', property_occurrence_cardinality=Cardinality(minimum=0, maximum=1), value_format='string', value_cardinality=Cardinality(minimum=0, maximum=1))", "```")),
         ])
         document = views.render_primary_projection(data, 3)
         self.assertIn("occurrence cardinality: `0..1`", document)
         self.assertIn("effective occurrence cardinality: `0..1`", document)
         self.assertIn("value cardinality: `0..1`", document)
-        self.assertIn("scope: each Property schema per bearer", document)
-        self.assertIn("scope: project population", document)
 
     def test_explicit_new_namespace_roots_render_without_invented_parent(self):
         data = projection()
@@ -207,9 +201,8 @@ class SubjectProjectionViewTests(unittest.TestCase):
         self.assertIn("## Effective properties", document)
         self.assertIn("property: `Node.Status` (relative `Status`) [inherited]", document)
         self.assertIn("origin: `Node`", document)
-        self.assertIn("Node/Child.Status[child]{:0..1}: [integer]{:2}", document)
+        self.assertIn("property_occurrence_cardinality=Cardinality(minimum=0, maximum=1)", document)
         self.assertIn("nesting: `property`", document)
-        self.assertIn("name format: `child`", document)
         self.assertIn("occurrence cardinality: `0..1`", document)
         self.assertIn("value format: `integer`", document)
         self.assertIn("value cardinality: `2`", document)
@@ -219,8 +212,8 @@ class SubjectProjectionViewTests(unittest.TestCase):
     def test_level_four_copies_formal_claim_blocks_verbatim_without_prose(self):
         document = views.render_primary_projection(projection(), 4)
         self.assertIn("## Primary Declaration Formal Claims", document)
-        self.assertIn("Node.Status[status]{:1}: [string]{:1+};", document)
-        self.assertIn("Node/Child.Status[child]{:0..1}: [integer]{:2};", document)
+        self.assertIn("value_cardinality=Cardinality(minimum=1, maximum=None)", document)
+        self.assertIn("value_format='integer', value_cardinality=2)\n```", document)
         self.assertIn("ancestor Declaration `Node`", document)
         self.assertIn("Property Declaration Formal Claim", document)
         self.assertNotIn("Child declaration.", document)

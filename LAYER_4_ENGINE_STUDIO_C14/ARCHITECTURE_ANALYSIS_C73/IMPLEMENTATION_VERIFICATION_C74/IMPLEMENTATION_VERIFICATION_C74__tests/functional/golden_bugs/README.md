@@ -8,7 +8,7 @@ Each case also lists frozen Lean demonstrations in `checks`. They test the state
 
 The Python snippets are golden inputs for future translator checks. This runner does not execute them or establish that a translation matches Python. Passing a Lean check establishes only the bounded claim expressed in that frozen demonstration.
 
-Run from the repository root: `UV_PROJECT_ENVIRONMENT="$PWD/LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/.venv" uv run --project LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine --locked --offline --no-sync --no-env-file python -B -m unittest discover -s LAYER_4_ENGINE_STUDIO_C14/ARCHITECTURE_ANALYSIS_C73/IMPLEMENTATION_VERIFICATION_C74/IMPLEMENTATION_VERIFICATION_C74__tests/functional -p test_golden_bugs.py`. Install Lean on `PATH` or set `LEAN_BIN` to its executable. Missing Lean is a test failure. Selected editor synthetic controls also require Node and the locked Workbench frontend TypeScript dependency in the verifier checkout.
+Run from the repository root: `UV_PROJECT_ENVIRONMENT="$PWD/LAYER_4_ENGINE_STUDIO_C14/.venv-dev" uv run --project LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine --locked --offline --no-env-file --python 3.14 --managed-python python -B -m unittest discover -s LAYER_4_ENGINE_STUDIO_C14/ARCHITECTURE_ANALYSIS_C73/IMPLEMENTATION_VERIFICATION_C74/IMPLEMENTATION_VERIFICATION_C74__tests/functional -p test_golden_bugs.py`. Install Lean on `PATH` or set `LEAN_BIN` to its executable. Missing Lean is a test failure. Selected editor synthetic controls also require Node and the locked Workbench frontend TypeScript dependency in the verifier checkout.
 
 The generalized release-result analyzer accepts `CHECKOUT --lean LEAN --file RELATIVE` to select a source file. The saved-query analyzer accepts `--case GRAPH.json` for a supplied dependency graph, and the workflow analyzer accepts `--scenario CONFIG.json` for a supplied finite configuration; both also require `CHECKOUT --lean LEAN`. Unsupported inputs remain unresolved.
 
@@ -17,7 +17,7 @@ The generalized release-result analyzer accepts `CHECKOUT --lean LEAN --file REL
 To scan an existing historical checkout, run:
 
 ```sh
-UV_PROJECT_ENVIRONMENT="$PWD/LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/.venv" uv run --project LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine --locked --offline --no-sync --no-env-file python -B LAYER_4_ENGINE_STUDIO_C14/ARCHITECTURE_ANALYSIS_C73/IMPLEMENTATION_VERIFICATION_C74/IMPLEMENTATION_VERIFICATION_C74__tests/functional/historical_checkout_scan.py --checkout /path/to/checkout
+UV_PROJECT_ENVIRONMENT="$PWD/LAYER_4_ENGINE_STUDIO_C14/.venv-dev" uv run --project LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine --locked --offline --no-env-file --python 3.14 --managed-python python -B LAYER_4_ENGINE_STUDIO_C14/ARCHITECTURE_ANALYSIS_C73/IMPLEMENTATION_VERIFICATION_C74/IMPLEMENTATION_VERIFICATION_C74__tests/functional/historical_checkout_scan.py --checkout /path/to/checkout
 ```
 
 The scanner runs each case whose `case.json` declares `"analyzer": "analyze.py"`. It passes the checkout and `--lean` executable to each analyzer. Set `LEAN_BIN` or put Lean on `PATH`. Each analyzer discovers its own applicable source and emits JSON with `findings` and `unresolved` lists. Findings contain `path` and `detail` strings.
@@ -31,7 +31,7 @@ The scanner emits case-tagged findings and unresolved results, plus a separate l
 To replay declared cases at their recorded before and fixed Git revisions, run:
 
 ```sh
-UV_PROJECT_ENVIRONMENT="$PWD/LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/.venv" uv run --project LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine --locked --offline --no-sync --no-env-file python -B LAYER_4_ENGINE_STUDIO_C14/ARCHITECTURE_ANALYSIS_C73/IMPLEMENTATION_VERIFICATION_C74/IMPLEMENTATION_VERIFICATION_C74__tests/functional/historical_checkout_replay.py --case docker-watcher-process-exhaustion
+UV_PROJECT_ENVIRONMENT="$PWD/LAYER_4_ENGINE_STUDIO_C14/.venv-dev" uv run --project LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine --locked --offline --no-env-file --python 3.14 --managed-python python -B LAYER_4_ENGINE_STUDIO_C14/ARCHITECTURE_ANALYSIS_C73/IMPLEMENTATION_VERIFICATION_C74/IMPLEMENTATION_VERIFICATION_C74__tests/functional/historical_checkout_replay.py --case docker-watcher-process-exhaustion
 ```
 
 Omit `--case` to replay all declared cases. The command uses a temporary shared clone with sparse historical layer directories and leaves the source checkout untouched. It scans each revision with all available analyzers. It reports target findings and unresolved results, retains other findings as untriaged indications, and reports old-case recall and the maximum total and extra findings per analyzed checkout. It exits nonzero when a target is unresolved, missed before, or still reported fixed. Cases without analyzers are gaps, not successful replays.

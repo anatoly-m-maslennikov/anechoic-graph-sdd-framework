@@ -1,5 +1,6 @@
 """Continue a Local Release from verified phase outputs."""
 import sys
+from time import time
 
 from LAYER_1_RUNTIME_IMAGES_C81.LAYER_1_RUNTIME_IMAGES_C81__shared import (
     LocalReleaseError,
@@ -13,6 +14,7 @@ from . import local_release_package_phases as package_phases
 from .local_release_delivery import (
     COPY_PHASES,
     INSTALL_PHASES,
+    abort_lock,
     check_targets,
     launcher_lock,
     verify_recorded_targets,
@@ -23,20 +25,27 @@ from .release_support import _build_predecessor
 
 _VERSION = "bump candidate version"
 _PUBLISH = "start mcp"
+FAST_TARGET_SECONDS = 600
+FAST_LIMIT_SECONDS = 900
 
 
 class ResumableRelease(ReleaseProgress):
     def _execute(self):
+        if self.release_started_at is None:
+            self.release_started_at = time()
         self.failed_step = "installation_lock"
         self.lock_fd = self.installation_lock.enter_context(_installation_lock(self.root, self.selection))
         self.failed_step = "resume" if self.resume else "validate_inputs"
         options = [self.image_mode, list(self.test_modules) if self.test_modules is not None else None]
         self.journal = Journal(self.root, self.run_id, self.selection, options, self.resume,
-                               source_binding=self._source_binding())
+                               source_binding=self._source_binding(), started_at=self.release_started_at)
+        self._select_functional_suite()
         self._bind_target()
         self._phase_input_cache = {}
         if self.resume:
             self._restore_options()
+            with abort_lock(self.root, self.journal.path):
+                self.journal.abort_path().unlink(missing_ok=True)
             recorded = self._resume()
             if recorded is not None:
                 return recorded
@@ -50,6 +59,22 @@ class ResumableRelease(ReleaseProgress):
 
     def _source_binding(self):
         return None
+
+    def _release_seconds(self):
+        started_at = self.journal.data.get("release_started_at")
+        return None if started_at is None else round(max(0, time() - started_at), 3)
+
+    def _select_functional_suite(self):
+        requested = self.requested_functional_suite
+        recorded = self.journal.data.get("functional_suite", "full")
+        self.functional_suite = recorded if self.resume else requested or "full"
+        if self.functional_suite not in {"full", "fast"} or (self.resume and requested not in (None, recorded)):
+            raise LocalReleaseError("local-release-functional-suite-invalid")
+        if self.functional_suite == "fast":
+            self.test_selection = "recently failing Test Packages and a sampled 10% of others"
+            if not self.resume:
+                self.journal.data["functional_suite"] = self.functional_suite
+                self.journal.save()
 
     def _restore_options(self):
         mode, modules = self.journal.data["options"]
@@ -118,6 +143,8 @@ class ResumableRelease(ReleaseProgress):
             self._launcher_locked = True
 
     def _run_phase(self, phase):
+        self.failed_step = phase.replace(" ", "_")
+        self.journal.check_abort()
         print(f"Local release phase START: {self._phase_label(phase)}", file=sys.stderr, flush=True)
         self.failed_step = "validate_project_selection"
         if read_release_selection(self.root) != self.selection:
@@ -145,6 +172,7 @@ class ResumableRelease(ReleaseProgress):
         if phase in (BUILD, IMAGE, _PUBLISH):
             self._verify_release_inputs()
         self.journal.finish(phase, **self._phase_output(phase))
+        self.journal.check_abort()
 
     def _prepare_delivery_phase(self, phase):
         self.failed_step = "validate_gate_inputs"
@@ -160,7 +188,9 @@ class ResumableRelease(ReleaseProgress):
         self._verify_canary_inputs()
         if phase in INSTALL_PHASES:
             self._before_delivery(phase)
-            self.journal.delivery(claim=True)
+            with abort_lock(self.root, self.journal.path):
+                self.journal.check_abort()
+                self.journal.delivery(claim=True)
 
     def _checkpoint_phase(self, phase, interrupted):
         data = self.journal.data

@@ -9,16 +9,16 @@ STUDIO = MCP.parents[1]
 
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import NativeQueryInputs, NativeQueryOwner
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import QueryExecutionError, WorkbenchUnavailableError
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.workbench_operations import WorkbenchOperations  # noqa: E402
+from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.workbench_operations import WorkbenchOperations  # noqa: E402
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import ExplicitBlockingRuntimeFailure, resolve_native_project  # noqa: E402
 
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__shared import (
+from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.FEATURE_IWE_CONSOLE_BACKEND__shared import (
     load_active_registry, ToolInputValidationError, ToolOutputValidationError,
     ToolRegistryRuntimeError, ToolRegistryStaleError,
 )
 
 
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.backend_tool_api import (
+from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.backend_tool_api import (
     tool_failure_result,
 )
 
@@ -35,12 +35,12 @@ class FixtureToolClient:
         self.registry = None
 
     async def catalog(self):
-        from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.project_admission import project_tool_policy
-        from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.registry_release_command_provider import RELEASE_COMMAND_TOOLS
+        from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.project_admission import project_tool_policy
+        from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.registry_release_command_provider import RELEASE_COMMAND_TOOLS
         if self.registry is None:
             try:
                 self.registry = load_active_registry(
-                    STUDIO / "IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND", self.gateway.root, self.gateway,
+                    STUDIO / "IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_BACKEND", self.gateway.root, self.gateway,
                 )
             except ToolRegistryRuntimeError as error:
                 raise _tool_fault("tool_runtime_failure", str(error)) from error
@@ -102,7 +102,7 @@ class WorkbenchTools:
         return await self.tool_client.call_tool(name, arguments, **kwargs)
 
     async def release_command(self, name, arguments):
-        from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.backend_process import _release_command
+        from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.backend_process import _release_command
 
         return await asyncio.to_thread(_release_command, self._query_owner.selection, name, arguments)
 

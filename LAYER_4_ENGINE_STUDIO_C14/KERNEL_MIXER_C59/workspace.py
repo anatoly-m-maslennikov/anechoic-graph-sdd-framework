@@ -11,6 +11,8 @@ import uuid
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import console_state_path
+
 
 class WorkspaceView(BaseModel):
     model_config = ConfigDict(strict=True, extra="allow")
@@ -39,7 +41,7 @@ class WorkspaceStore:
         self._transient_results = transient_results
         self._results: dict[tuple[str, str], dict[str, Any]] = {}
         self._root = Path(root)
-        self._directory = self._root / ".anechoic_runtime" / "workbench" / "workspaces"
+        self._directory = console_state_path(self._root) / "workspaces"
 
     @staticmethod
     def text(value: object, field: str, *, required: bool = True) -> str | None:

@@ -41,7 +41,7 @@ component_workflow(
                 'graph_build_requested': {'target': 'capturing', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'trigger', 'target': 'build_graph', 'detail': {
                         'transport': 'cli', 'runner': 'managed_python',
-                        'module': 'IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.realization_graph_cli',
+                        'module': 'IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IMPORT_GRAPH_C61.realization_graph_cli',
                         'input_fields': ['root', 'config'],
                         'optional_paired_inputs': ['structure', 'control_root']}}}},
             }},

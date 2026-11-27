@@ -11,15 +11,16 @@ import subprocess
 import tempfile
 
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import NativeSnapshotChanged, mark_startup_timing
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import NativeSnapshotChanged, mark_startup_timing, status_domains
 
+from .spec_staging import _stage_spec_rows
 from .graph_consistency import _graph_consistency
 from .managed_request import _managed_request
-from .generation_batches import _write_generation_batches
+from .generation_batches import _capture_archive, _write_generation_batches
 from .python_code_units import python_code_units as python_code_units
 from .python_context_restoration import python_context_restoration as python_context_restoration
 from .python_import_order import python_import_order as python_import_order
-from .native_refresh import _mark_reused, _reuse_hint, _ticket_delta, artifact_inputs, digest, refresh, reusable_graph, startup_incremental
+from .native_refresh import _domain_option, _reuse_hint, _ticket_delta, artifact_inputs, deferred_incremental, digest, refresh, reusable_graph, startup_incremental
 
 sys.dont_write_bytecode = True
 
@@ -59,11 +60,11 @@ def _run_job(module, payload, *arguments):
     return json.loads(result.stdout)
 
 
-def _capture(binding, endpoints=None, *, watcher_guarded=False):
+def _capture(binding, endpoints=None, *, watcher_guarded=False, domains=None):
     if endpoints is not None:
         from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import prepare_generation_snapshot
 
-        config, finish = prepare_generation_snapshot(binding, include_hashes=True, watcher_guarded=watcher_guarded)
+        config, finish = prepare_generation_snapshot(binding, include_hashes=True, watcher_guarded=watcher_guarded, domains=domains)
         snapshot, hashes = finish(endpoints)
         return {"snapshot": snapshot, "graph_config": config, "carrier_hashes": hashes}
     request = binding
@@ -106,13 +107,13 @@ def _build_graph(binding, config, structure, *, replay_graph=False):
                             graph_consistency=error.graph_consistency) from None
 
 
-def _rebuild_graph(binding, config, structure, endpoints, *, watcher_guarded=False, replay_graph=False):
+def _rebuild_graph(binding, config, structure, endpoints, *, watcher_guarded=False, replay_graph=False, domains=None):
     from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
         prepare_generation_snapshot,
     )
 
     current_config, finish_snapshot = prepare_generation_snapshot(
-        binding, include_hashes=True, watcher_guarded=watcher_guarded)
+        binding, include_hashes=True, watcher_guarded=watcher_guarded, domains=domains)
     if current_config != config:
         return None
     graph = _build_graph(binding, config, structure, replay_graph=replay_graph)
@@ -148,10 +149,18 @@ class _ModelAttemptFailure(ValueError):
 
 
 def _compile_ingested(binding, stage, inputs, source, *, fallback=None, diagnostics=None):
-    if not isinstance(source, dict) or set(source) != {"accepted_model"}:
+    if (not isinstance(source, dict) or "accepted_model" not in source
+            or set(source) - {"accepted_model", "force_rebuild", "spec_database"}
+            or type(source.get("force_rebuild", False)) is not bool):
         raise ValueError("Invalid accepted Model source")
     model_inputs = {"rows": inputs["rows"], "has_c9": inputs["has_c9"],
                     "issues": list(inputs["issues"]), "accepted_model": source["accepted_model"]}
+    if "spec_rows" in inputs:
+        model_inputs.update(spec_rows=inputs["spec_rows"], manifest_path=inputs["manifest_path"],
+                            snapshot_id=inputs["snapshot_id"],
+                            structure_alias_issues=inputs.get("structure_alias_issues", ()))
+    if source.get("force_rebuild"):
+        model_inputs["force_rebuild"] = True
     previous = [] if diagnostics is None else diagnostics
     if fallback is not None:
         for child in stage.iterdir():
@@ -175,10 +184,12 @@ def _compile_ingested(binding, stage, inputs, source, *, fallback=None, diagnost
 
 
 def _compile_and_capture(binding, stage, model_inputs, model_source, finish_snapshot):
+    if model_source is not None and "spec_database" in model_source:
+        model_inputs = _stage_spec_rows(binding, model_inputs, model_source["spec_database"])
     compiled = (_compile(binding, stage) if model_source is None else
                 _compile_ingested(binding, stage, model_inputs, model_source))
     try:
-        captured = finish_snapshot(compiled[2])
+        captured = finish_snapshot(compiled[2], status_domains(json.loads((stage / "model.json").read_text())["bindings"]))
     except NativeSnapshotChanged:
         raise
     except ValueError as error:
@@ -189,7 +200,7 @@ def _compile_and_capture(binding, stage, model_inputs, model_source, finish_snap
         compiled = _compile_ingested(binding, stage, model_inputs, model_source, fallback=error,
                                      diagnostics=compiled[3])
         try:
-            captured = finish_snapshot(compiled[2])
+            captured = finish_snapshot(compiled[2], status_domains(json.loads((stage / "model.json").read_text())["bindings"]))
         except (OSError, RuntimeError, TypeError, ValueError) as failure:
             raise _ModelAttemptFailure(failure, compiled[3]) from failure
     return compiled, captured
@@ -220,10 +231,9 @@ def _deferred_archive(deferred, endpoints, archive_versions):
 
 
 def build_generation(binding, output, *, managed=False, watcher_guarded=False, foreground=False,
-                     replay_graph=False, model_source=None, batch_full=False, defer_graph=False):
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
-        prepare_generation_snapshot,
-    )
+                     replay_graph=False, model_source=None, batch_full=False, defer_graph=False,
+                     domains=None):
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import prepare_generation_snapshot
 
     output = Path(output)
     if (not output.is_absolute() or output.is_symlink() or not output.is_dir()
@@ -231,10 +241,11 @@ def build_generation(binding, output, *, managed=False, watcher_guarded=False, f
         raise ValueError("Generation directory must be an existing empty canonical directory")
     archive_versions = {}
     captured = prepare_generation_snapshot(
-        binding, include_hashes=True, watcher_guarded=watcher_guarded,
+        binding, include_hashes=True, watcher_guarded=watcher_guarded, domains=domains,
         archive_stage="foreground" if foreground else None,
         **({"archive_versions": archive_versions} if foreground else {}),
-        **({"include_model_inputs": True} if model_source is not None else {}))
+        **({"include_model_inputs": True, "include_spec_rows": "spec_database" in model_source}
+           if model_source is not None else {}))
     config, finish_snapshot = captured[:2]
     model_inputs = captured[2] if model_source is not None else None
     control = Path(binding["root"]) / binding["control_root"]
@@ -267,7 +278,7 @@ def build_generation(binding, output, *, managed=False, watcher_guarded=False, f
 
 
 
-def _graph_only(binding, reuse, structure, guarded):
+def _graph_only(binding, reuse, structure, guarded, force=False):
     if reuse is None or reuse.graph_config is None or not isinstance(structure, dict):
         raise ValueError("Graph-only capture requires reuse, graph config, and structure")
     config = reuse.graph_config
@@ -275,7 +286,7 @@ def _graph_only(binding, reuse, structure, guarded):
     if (before is None or before.get("manifest") != reuse.inputs.get("manifest")
             or before.get("carrier_schema") != reuse.inputs.get("carrier_schema")):
         raise ValueError("Core artifact inputs changed before graph capture")
-    if before == reuse.inputs:
+    if before == reuse.inputs and not force:
         mark_startup_timing("realization_graph_ready", mode="reused")
         return {"base_generation": reuse.base_generation, "unchanged": True}
     graph = _build_graph(binding, config, structure)
@@ -283,20 +294,6 @@ def _graph_only(binding, reuse, structure, guarded):
         raise ValueError("Graph inputs changed during capture")
     return {"base_generation": reuse.base_generation, "graph": graph, "graph_sha256": digest(graph),
             "reuse": {"inputs": before, "graph_config": config, "endpoints": reuse.endpoints}}
-
-
-def _deferred_incremental(binding, reuse, foreground, guarded):
-    if reuse is None:
-        return None
-    before = artifact_inputs(binding, reuse.graph_config, watcher_guarded=guarded, defer_graph=True)
-    if (before is None or before.get("manifest") != reuse.inputs.get("manifest")
-            or before.get("carrier_schema") != reuse.inputs.get("carrier_schema")):
-        return None
-    result = startup_incremental(binding, reuse, before=before, foreground=foreground,
-                                 watcher_guarded=guarded, defer_graph=True)
-    if result is not None:
-        _mark_reused(foreground, reuse.graph_config, graph=False)
-    return result
 
 
 def _run(request, output):
@@ -308,13 +305,15 @@ def _run(request, output):
     binding, reuse = admitted.binding, _reuse_hint(admitted.reuse)
     guarded, foreground, incremental = admitted.watcher_guarded, admitted.foreground, admitted.incremental
     if admitted.graph_only:
-        return _graph_only(binding, reuse, admitted.structure, guarded)
+        return _graph_only(binding, reuse, admitted.structure, guarded, admitted.force_graph)
     if "archive" in admitted.model_fields_set:
         if incremental:
-            return startup_incremental(binding, reuse, archive_roots=admitted.archive["roots"], watcher_guarded=guarded)
-        return _capture_archive(binding, admitted.archive, guarded)
+            return startup_incremental(binding, reuse, archive_roots=admitted.archive.roots, watcher_guarded=guarded)
+        return _capture_archive(binding, admitted.archive, guarded, output if admitted.batch_full else None,
+                                **(_domain_option(reuse) if reuse is not None else {}))
     if admitted.defer_graph and incremental and admitted.paths is None:
-        native = _deferred_incremental(binding, reuse, foreground, guarded)
+        compile_artifacts = _compile if admitted.model_source is None else None
+        native = deferred_incremental(binding, reuse, foreground, guarded, output, compile_artifacts)
         if native is not None:
             return native
     if (foreground or admitted.defer_graph) and admitted.paths is not None:
@@ -330,17 +329,8 @@ def _run(request, output):
             return native
     return build_generation(binding, output, managed=True, watcher_guarded=guarded, foreground=foreground,
                             replay_graph=admitted.replay_graph, model_source=admitted.model_source, batch_full=admitted.batch_full,
-                            defer_graph=admitted.defer_graph)
-
-
-def _capture_archive(binding, archive, watcher_guarded):
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import prepare_generation_snapshot
-
-    _, finish = prepare_generation_snapshot(
-        binding, include_hashes=True, archive_stage="archive", archive_roots=archive["roots"],
-        watcher_guarded=watcher_guarded)
-    snapshot, hashes = finish(archive["endpoints"])
-    return {"snapshot": snapshot, "carrier_hashes": hashes}
+                            defer_graph=admitted.defer_graph,
+                            **(_domain_option(reuse) if reuse is not None else {}))
 
 
 def main():

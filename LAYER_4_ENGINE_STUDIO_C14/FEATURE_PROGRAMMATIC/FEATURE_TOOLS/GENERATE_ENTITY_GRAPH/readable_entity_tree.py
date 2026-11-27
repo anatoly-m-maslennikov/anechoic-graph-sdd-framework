@@ -87,9 +87,9 @@ def _header(
         "dependent entities appear in detail sections.",
         "",
         "Notation: / NARROWER_THAN; // INSTANCE_OF; . IS_PROPERTY_OF; "
-        ": IS_ALLOWED_VALUE_OF; <+ CONTAINS (derived reverse of IS_CONTAINED_BY); >| HAS_CLASSIFICATION. Relations are traversed from broader to narrower, "
+        ": IS_ALLOWED_VALUE_OF; <+ CONTAINS (derived reverse of IS_CONTAINED_BY); >| HAS_AXIS. Relations are traversed from broader to narrower, "
         "kind to named instance (the source INSTANCE_OF direction is instance to kind), "
-        "bearer to dependent, Entity to allowed value, whole to part, and Entity to classification.",
+        "bearer to dependent, Entity to allowed value, whole to part, and Entity to Axis value.",
         "",
         "This is a derived Projection, not independent model authority.",
         "",
@@ -190,7 +190,7 @@ def _model_header(
         "---", frontmatter, "---", "", "## Model graph", "",
         "Source selection: " + text(source_selection, "source selection"), "",
         "Display selection: direct Declaration targets, selected Subject expressions, "
-        "Relations, classifications and constraint records. Literal values, Formats "
+        "Relations, Axes and constraint records. Literal values, Formats "
         "and cardinalities remain constraints, not graph Nodes.", "",
         "This is a derived Projection, not independent model authority.", "",
     ]
@@ -210,18 +210,18 @@ def _occurrences(row: Record) -> str:
     return "" if not values else " — " + ", ".join(str(value) for value in values)
 
 
-def _cfel_diagnostic_text(row: Record) -> str:
+def _claim_diagnostic_text(row: Record) -> str:
     expression = row.get("expression")
     if isinstance(expression, str) and expression.strip():
         return expression
-    return text(row.get("message"), "CFEL diagnostic message")
+    return text(row.get("message"), "Claim diagnostic message")
 
 
 def render_model(
     graph: Record, provenance: Record, *, updated_at: str, source_selection: str,
     projection_identity: Record | None = None,
 ) -> str:
-    """Render the bounded enhanced graph view without evaluating CFEL."""
+    """Render the bounded enhanced graph view without executing Claim code."""
 
     graph = record(graph)
     model = record(graph.get("model"))
@@ -244,14 +244,14 @@ def render_model(
         return "`" + text(row.get("kind"), "Relation") + "` `" + text(row.get("source"), "Relation source") + "` → `" + text(row.get("target"), "Relation target") + "`"
 
     def classification_text(row: Record) -> str:
-        return "`" + text(row.get("source"), "classification subject") + "` >| `" + text(row.get("target"), "classification axis") + "`"
+        return "`" + text(row.get("source"), "axis subject") + "` >| `" + text(row.get("target"), "axis") + "`"
 
     body.extend(_model_rows(
         "Relations", rows(model.get("relations")),
         lambda row: relation_text(row) + _occurrences(row),
     ))
     body.extend(_model_rows(
-        "Classifications", rows(model.get("classifications")),
+        "Axes", rows(model.get("axes")),
         lambda row: classification_text(row) + _occurrences(row),
     ))
     _append_model_constraints(body, model, graph)
@@ -276,9 +276,9 @@ def _append_model_constraints(body, model, graph):
         + " — " + text(record(row.get("source")).get("atom_id"), "constraint source Atom"),
     ))
     body.extend(_model_rows(
-        "Unsupported CFEL", rows(graph.get("cfel_diagnostics")),
-        lambda row: "`" + text(row.get("code"), "CFEL diagnostic code") + "`: `"
-        + _cfel_diagnostic_text(row) + "`"
-        + (" — " + text(record(row.get("source")).get("atom_id"), "CFEL source Atom")
+        "Python Formal Claim diagnostics", rows(graph.get("claim_diagnostics")),
+        lambda row: "`" + text(row.get("code"), "Claim diagnostic code") + "`: `"
+        + _claim_diagnostic_text(row) + "`"
+        + (" — " + text(record(row.get("source")).get("atom_id"), "Claim source Atom")
            if row.get("source") else ""),
     ))

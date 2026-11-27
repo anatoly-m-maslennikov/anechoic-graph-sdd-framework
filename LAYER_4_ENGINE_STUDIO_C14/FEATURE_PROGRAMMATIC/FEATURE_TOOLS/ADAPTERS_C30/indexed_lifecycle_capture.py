@@ -13,8 +13,9 @@ from .ADAPTERS_C30__pub import ReadContext, open_regular
 from .atom_reference__pub import derive_atom_ref
 from .native_carrier_header__pub import native_header_view
 from .native_carrier_placement__pub import project_goal_filename
+from .native_status_domains import status_domains as default_status_domains
 from .native_source_rows__pub import (
-    NativeCapture, CURRENT_STATUSES, _container, _preserve_capture_data, capture_native,
+    NativeCapture, _container, _preserve_capture_data, capture_native,
 )
 
 
@@ -28,7 +29,7 @@ class IndexedLifecycleCapture(NativeCapture):
     _validate_index_facts = field_validator("carriers", "max_numbers", "lenses", mode="wrap")(_preserve_capture_data)
 
 
-def capture_indexed_lifecycle(selection: Any, carriers, max_numbers, *, lenses=(), max_archived_version=0) -> IndexedLifecycleCapture:
+def capture_indexed_lifecycle(selection: Any, carriers, max_numbers, *, lenses=(), max_archived_version=0, domains=None) -> IndexedLifecycleCapture:
     """Capture addressed carriers and retain index facts for lifecycle guards."""
     if (type(max_archived_version) is not int or not 0 <= max_archived_version <= 2**63 - 1
             or not isinstance(carriers, (list, tuple)) or not isinstance(max_numbers, dict)
@@ -38,13 +39,14 @@ def capture_indexed_lifecycle(selection: Any, carriers, max_numbers, *, lenses=(
             or not isinstance(lenses, (list, tuple))
             or any(not isinstance(lens, str) or not lens for lens in lenses)):
         raise ValueError("Invalid indexed lifecycle facts")
-    descriptors = _validate_descriptors(selection, carriers)
-    return _capture(selection, descriptors, max_numbers, lenses, max_archived_version)
+    descriptors = _validate_descriptors(selection, carriers, domains)
+    return _capture(selection, descriptors, max_numbers, lenses, max_archived_version, domains)
 
 
-def _validate_descriptors(selection, carriers):
-    fields = {"ref", "_exact_ref", "source_path", "_source_sha256", "version", "status",
+def _validate_descriptors(selection, carriers, domains):
+    fields = {"ref", "_exact_ref", "source_path", "version", "status",
               "status_group", "id", "owner_kind", "owner_ref", "read"}
+    domains = domains or default_status_domains({})
     descriptors, paths, exacts = [], set(), set()
     for item in carriers:
         if not isinstance(item, dict) or set(item) != fields or type(item['read']) is not bool:
@@ -63,13 +65,11 @@ def _validate_descriptors(selection, carriers):
         version, status, group = row['version'], row['status'], row['status_group']
         if (match is None or type(version) is not int or version < 1 or not isinstance(status, str)
                 or group not in {'Current', 'Draft', 'Archived'}
-                or group != ('Current' if status in CURRENT_STATUSES[match[1]] else status.title() if status in ('draft', 'archived') else None)
+                or status not in domains[match[1]]
+                or group != (status.title() if status in ('draft', 'archived') else 'Current')
                 or row['_exact_ref'] != derive_atom_ref(atom_id, version, status)
                 or row['ref'] != (atom_id if group == 'Current' else row['_exact_ref'])
-                or row['_exact_ref'] in exacts
-                or (row['_source_sha256'] is None and row['read'])
-                or (row['_source_sha256'] is not None and (not isinstance(row['_source_sha256'], str)
-                    or not re.fullmatch(r'[0-9a-f]{64}', row['_source_sha256'])))):
+                or row['_exact_ref'] in exacts):
             raise ValueError("Invalid indexed carrier identity")
         _container({str(row['owner_kind']).lower(): row['owner_ref']}, atom_id,
                    re.escape(selection.project_prefix) + r'-([STPC])-[0-9]+')
@@ -79,10 +79,10 @@ def _validate_descriptors(selection, carriers):
     return descriptors
 
 
-def _capture(selection, descriptors, max_numbers, lenses, max_archived_version):
+def _capture(selection, descriptors, max_numbers, lenses, max_archived_version, domains):
     wanted = {PurePosixPath(row['source_path']) for row in descriptors if row['read']}
     captured = capture_native(selection, previous=NativeCapture([], [], {}), paths=wanted,
-                              manifest_admitted=True, include_content_properties=False)
+                              manifest_admitted=True, include_content_properties=False, domains=domains)
     if captured.errors or len(captured.atoms) != len(wanted):
         raise ValueError("Indexed carrier is missing or unreadable")
     by_path = {row['source_path']: row for row in captured.atoms}
@@ -91,16 +91,17 @@ def _capture(selection, descriptors, max_numbers, lenses, max_archived_version):
         kind = item['owner_kind'].lower()
         if item['read']:
             row = by_path[item['source_path']]
-            if (any(row.get(key) != item[key] for key in ('ref', '_exact_ref', 'source_path', '_source_sha256', 'version', 'status', 'status_group', 'id'))
+            if (any(row.get(key) != item[key] for key in ('ref', '_exact_ref', 'source_path', 'version', 'status', 'status_group', 'id'))
                     or native_header_view(row['header_json']).get('context', {}).get('container') != {kind: item['owner_ref']}):
                 raise ValueError("Indexed carrier changed")
         else:
-            row = {key: item[key] for key in ('ref', '_exact_ref', 'source_path', '_source_sha256', 'version', 'status', 'status_group', 'id')}
+            row = {key: item[key] for key in ('ref', '_exact_ref', 'source_path', 'version', 'status', 'status_group', 'id')}
+            row['_source_sha256'] = None
             row['header_json'] = {'context': {'container': {kind: item['owner_ref']}}}
         rows.append(row)
         edges.append({'source_kind': 'Atom', 'source_ref': row['ref'], 'relation_type': 'CONTAINED_BY',
                       'target_kind': kind.title(), 'target_ref': item['owner_ref'], 'derived': False})
-    return IndexedLifecycleCapture(rows, edges, {}, captured.versions, tuple(descriptors), {key: int(value) for key, value in max_numbers.items()}, tuple(lenses), max_archived_version)
+    return IndexedLifecycleCapture(rows, edges, {}, captured.versions, tuple(descriptors), {key: int(value) for key, value in max_numbers.items()}, tuple(lenses), max_archived_version, status_domains=domains)
 
 
 

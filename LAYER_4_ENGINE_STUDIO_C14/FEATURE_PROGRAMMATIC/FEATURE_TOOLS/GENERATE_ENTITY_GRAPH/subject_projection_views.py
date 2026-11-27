@@ -13,7 +13,7 @@ def _claims(value: object) -> list[tuple[str | None, str, str]]:
     if not isinstance(value, Sequence) or isinstance(value, (str, bytes, bytearray)):
         return []
     return [
-        (_source_ref(row.get("source")), row["block"], row.get("label", "CFEL"))
+        (_source_ref(row.get("source")), row["block"], row.get("label", "python"))
         for row in value
         if isinstance(row, Mapping) and isinstance(row.get("block"), str)
     ]
@@ -38,7 +38,7 @@ def _entities(data: Mapping[str, Any]) -> list[Mapping[str, Any]]:
 
 def _declaration_claims(data: Mapping[str, Any], identity: str) -> list[tuple[str | None, str, str]]:
     entries = data.get("declarations", {}).get("primary_nodes", {}).get(identity, [])
-    return [claim for entry in entries for claim in _claims([*entry.get("cfel_blocks", []), *entry.get("python_blocks", [])])]
+    return [claim for entry in entries for claim in _claims(entry.get("python_blocks", []))]
 
 
 def _entity_claims(data: Mapping[str, Any], entity: Mapping[str, Any]) -> list[tuple[str | None, str, str]]:

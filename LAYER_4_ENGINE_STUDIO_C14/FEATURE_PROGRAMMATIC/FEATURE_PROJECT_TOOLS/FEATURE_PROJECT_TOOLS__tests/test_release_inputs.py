@@ -19,8 +19,7 @@ class ReleaseInputsTests(unittest.TestCase):
             Path.cwd(), manifest_validator=lambda: reviewed_native_model().validate_manifest,
         )
         module = (
-            "FEATURE_PROGRAMMATIC.FEATURE_MODEL."
-            "FEATURE_FORMAL_MODEL_GENERATOR.manifest_compiler_CS1.compiler"
+            "FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.compile_project__pub"
         )
         with TemporaryDirectory(prefix="anechoic-release-inputs-") as generation:
             result = subprocess.run(

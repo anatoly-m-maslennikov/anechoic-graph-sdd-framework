@@ -117,7 +117,7 @@ def _module_command(child, module, environment, required):
         environment["UV_PROJECT_ENVIRONMENT"] = (
             str(child / (".venv-release" if child.as_posix().endswith(CODE_ROOTS[1]) else ".venv-setup"))
         )
-        command = ("uv", "run", "--project", str((child.parent.parent if child.as_posix().endswith(CODE_ROOTS[1]) else child.parent) / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72" / ("release" if child.as_posix().endswith(CODE_ROOTS[1]) else "setup")), "--locked", "--no-env-file", "python", "-B")
+        command = ("uv", "run", "--project", str((child.parent.parent if child.as_posix().endswith(CODE_ROOTS[1]) else child.parent) / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72" / ("release" if child.as_posix().endswith(CODE_ROOTS[1]) else "setup")), "--locked", "--no-env-file", "--python", "3.14", "--managed-python", "python", "-B")
     return (*command, "-P", "-c", CHILD, name, *(("required",) if required else ()))
 
 
@@ -129,7 +129,7 @@ def run_module(
     child = next(root / name for name in CODE_ROOTS if module.is_relative_to(root / name))
     environment = _module_environment(child, environment, image_module=_docker_module(root, module))
     environment["ANECHOIC_TEST_IMPORT_DIRS"] = os.pathsep.join((
-        str(module.parent), str(module.parent.parent), str(root / WORKBENCH / "FEATURE_WORKBENCH_BACKEND"),
+        str(module.parent), str(module.parent.parent), str(root / WORKBENCH / "FEATURE_IWE_CONSOLE_BACKEND"),
     ))
     required = environment.pop("ANECHOIC_FUNCTIONAL_REQUIRED", None) == "1"
     print(f"Test module START: {module.relative_to(root)}", flush=True)
@@ -164,13 +164,24 @@ def _docker_module(root: Path, module: Path) -> bool:
     return _test_phase(root, module) == "image"
 
 
+def _discover_for_phase(root, phase, focused, host_gate, functional_suite, image_suite, report):
+    modules = select_phase_modules(root, discover_test_modules(root), phase, focused, host_gate, image_suite=image_suite)
+    if functional_suite == "fast":
+        from .functional_history import select_fast
+
+        return select_fast(root, modules, report)
+    return modules
+
+
 def run_full_suite(root: Path, test_modules: tuple[str, ...] | None = None, *,
                    image_mode: str = "existing", phase: str = "full",
                    candidate_image: str | None = None, required: bool = False,
-                   report: dict | None = None) -> int:
+                   report: dict | None = None, functional_suite: str = "full", image_suite: str = "full") -> int:
     """Run a source phase; retain legacy Python phase names for existing callers."""
     report = {} if report is None else report
-    if not valid_test_request(phase, candidate_image, test_modules, required):
+    if (functional_suite not in ("full", "fast") or functional_suite == "fast" and phase != "functional"
+            or image_suite not in ("full", "fast") or image_suite == "fast" and phase != "image"
+            or not valid_test_request(phase, candidate_image, test_modules, required)):
         print("Invalid test phase or candidate image selection", file=sys.stderr)
         return 1
     if phase == "preflight":
@@ -183,19 +194,16 @@ def run_full_suite(root: Path, test_modules: tuple[str, ...] | None = None, *,
     host_gate = required or phase in ("functional", "canary")
     report["step"] = "discovery"
     try:
-        modules = select_phase_modules(root, discover_test_modules(root), phase, test_modules, host_gate)
-    except OSError as error:
+        modules = _discover_for_phase(root, phase, test_modules, host_gate, functional_suite, image_suite, report)
+    except (OSError, ValueError) as error:
         report["error"] = str(error)
-        print(f"Test discovery failed: {error}", file=sys.stderr)
-        return 1
-    except ValueError as error:
-        report["error"] = str(error)
-        print(f"Invalid test selection: {error}", file=sys.stderr)
+        label = "Test discovery failed" if isinstance(error, OSError) else "Invalid test selection"
+        print(f"{label}: {error}", file=sys.stderr)
         return 1
     scope = phase if test_modules is None else "focused"
     if test_modules is not None:
         selection = ", ".join(test_modules)
-    elif host_gate:
+    elif host_gate or image_suite == "fast":
         selection = ", ".join(module.relative_to(root).as_posix() for module in modules)
     else:
         selection = "all discovered modules" if phase == "full" else f"{phase} modules"
@@ -219,6 +227,7 @@ def _run_selected_modules(root, modules, candidate_image, image_mode, *, require
     try:
         with context as additions:
             environment = {**os.environ, **additions}
+            environment.setdefault("ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY", str(root / ".anechoic_tmp/workbench/extensions"))
             if required:
                 environment["ANECHOIC_FUNCTIONAL_REQUIRED"] = "1"
             else:
@@ -258,7 +267,10 @@ def _run_modules(root: Path, modules: list[Path], environment: dict, modules_rep
                     and _docker_module(root, module)), None)
     failed, tests, skipped = [], 0, 0
     host_workers = int(environment.get("ANECHOIC_TEST_FANOUT", "2"))
-    with ThreadPoolExecutor(max_workers=host_workers) as ordinary, ThreadPoolExecutor(max_workers=2) as docker:
+    image_workers = int(environment.get("ANECHOIC_TEST_IMAGE_FANOUT", "2"))
+    if image_workers not in (2, 3):
+        raise ValueError("ANECHOIC_TEST_IMAGE_FANOUT must be 2 or 3")
+    with ThreadPoolExecutor(max_workers=host_workers) as ordinary, ThreadPoolExecutor(max_workers=image_workers) as docker:
         try:
             if browser in modules:
                 first = {docker.submit(run_module, root, browser, environment): browser}
@@ -291,6 +303,8 @@ def main() -> int:
     parser.add_argument("--test-module", action="append", dest="test_modules", metavar="PATH")
     parser.add_argument("--phase", default="unit",
                         choices=("preflight", "static", "functional", "unit", "image", "image-tests", "canary"))
+    parser.add_argument("--functional-suite", choices=("full", "fast"), default="full")
+    parser.add_argument("--image-suite", choices=("full", "fast"), default="full")
     parser.add_argument("--required", action="store_true", help="run the configured required host selection with the unit phase")
     parser.add_argument("--candidate-image")
     parser.add_argument("--canary-package", type=Path)

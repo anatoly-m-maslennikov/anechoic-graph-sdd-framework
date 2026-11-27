@@ -47,12 +47,12 @@ class ImageGoldenTests(ImageFixture, unittest.TestCase):
         docker = "LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/"
         self.assertIn(docker + "docker__shared.py", paths)
         self.assertNotIn(docker + "runtime_images.py", paths)
-        self.assertIn("LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND/package.json", paths)
+        self.assertIn("LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_FRONTEND/package.json", paths)
         context = self.fixture_root / "real-context"
         context.mkdir()
         self.manager(source, no_docker)._assemble(context, before)
         self.assertTrue((context / "LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/server.py").is_file())
-        self.assertTrue((context / "LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND/package.json").is_file())
+        self.assertTrue((context / "LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_FRONTEND/package.json").is_file())
 
     def test_retired_assets_stay_out_of_context_and_fingerprint(self) -> None:
         source = self.source_fixture()

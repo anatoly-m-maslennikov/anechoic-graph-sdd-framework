@@ -7,65 +7,10 @@ priority: 2
 context:
   template: task
   label: Epic
-relations:
-  IS_REFERENCE:
-  - AN-T-1034
-  - AN-T-1035
-  - AN-T-1037
-  - AN-T-1671
-  - AN-T-2029
-  - AN-T-2035
-  - AN-T-2036
-  - AN-T-2037
-  - AN-T-2038
-  - AN-T-2039
-  - AN-T-2040
-  - AN-T-2041
-  - AN-T-2042
-  - AN-T-2043
-  - AN-T-2044
-  - AN-T-2045
-  - AN-T-2046
-  - AN-T-2047
-  - AN-T-2048
-  - AN-T-2049
-  - AN-T-2050
-  - AN-T-2051
-  - AN-T-2052
-  - AN-T-2053
-  - AN-T-2056
-  - AN-T-2057
-  - AN-T-2062
-  - AN-T-2063
-  - AN-T-2064
-  - AN-T-2066
-  - AN-T-2067
-  - AN-T-2069
-  - AN-T-2225
-  - AN-T-2227
-  - AN-T-2229
-  - AN-T-2480
-  - AN-T-2485
-  - AN-T-2486
-  - AN-T-2755
-  - AN-T-2756
-  - AN-T-2781
-  - AN-T-2783
-  - AN-T-2784
-  - AN-T-2785
-  - AN-T-2786
-  - AN-T-2787
-  - AN-T-2788
-  - AN-T-2789
-  - AN-T-2790
-  - AN-T-2799
-  - AN-T-2933
-  - AN-T-2936
-  - AN-T-2937
 state:
   status: done
   version: 1
-  updated_at: '2026-11-21T00:58:05.205946+00:00'
+  updated_at: '2026-11-26T16:39:57.192886+00:00'
 ---
 ## Summary
 

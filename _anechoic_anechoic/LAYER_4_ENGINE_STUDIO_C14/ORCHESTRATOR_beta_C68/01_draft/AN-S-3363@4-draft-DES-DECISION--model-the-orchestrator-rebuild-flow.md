@@ -473,7 +473,7 @@ Use the Engine Python environment and set
 `PYTHONPATH=LAYER_4_ENGINE_STUDIO_C14`. Keep `lean` on the executable
 path for trace checking.
 
-Run `python -m IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.workflow_spec`
+Run `python -m IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IMPORT_GRAPH_C61.workflow_spec`
 with this Atom path and `render` to write Mermaid. Use `check <matrix.json>`
 to check a run. Export one run from `flow_events` as a Workbench JSON matrix
 with all columns and order the rows by `sequence`.

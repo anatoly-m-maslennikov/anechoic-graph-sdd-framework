@@ -7,13 +7,22 @@ import re
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from .ingestion_issues import validate_carrier_issues
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import status_domains as _status_domains
 
 _ATOM = re.compile(r"[A-Z]+-[STPC]-[0-9]+")
 _ATOM_REF = re.compile(r"[A-Z]+-[STPC]-[0-9]+(?:@[1-9][0-9]*(?:-draft)?)?")
-_CURRENT = {
-    "S": {"active", "ready"},
-    "T": {"active", "in_queue", "backlog", "done", "canceled", "resolved", "complete"},
-    "P": {"active"}, "C": {"active"},
+NATIVE_PROJECTION_COLUMNS = {
+    "mrt_atoms": (
+        ("reference", "VARCHAR"), ("content.summary", "VARCHAR"), ("relative_path", "VARCHAR"),
+        ("filename", "VARCHAR"), ("status_group", "VARCHAR"), ("header.state.version", "BIGINT"),
+        ("header.state.status", "VARCHAR"), ("header.container.component", "VARCHAR"),
+        ("header.tier", "BIGINT"), ("header.context.template", "VARCHAR"),
+    ),
+    "mrt_atom_references": tuple((name, "VARCHAR") for name in
+                                  ("relative_path", "filename", "status_group", "reference", "stable_ref", "exact_ref")),
+    "mrt_atom_graph_relations": tuple((name, "VARCHAR") for name in
+                                       ("source_kind", "source_ref", "target_kind", "target_ref", "relation_type"))
+                                + (("derived", "BOOLEAN"),),
 }
 
 
@@ -27,6 +36,9 @@ class NativeAtom(BaseModel):
     summary: str
     status: str
     version: int
+    container_component: str | None = None
+    tier: int | None = None
+    template: str | None = None
 
 
 class NativeRelation(BaseModel):
@@ -65,44 +77,6 @@ def _endpoint(kind, ref):
             kind == "Component" and bool(re.fullmatch(r"C[0-9]+", ref)))
 
 
-def _status_domains(bindings):
-    declarations = bindings.get("declarations", [])
-    if not isinstance(declarations, list):
-        raise ValueError("Invalid Model declarations")
-    names = {"Node//Artifact//Atom//Spec Atom": "S", "Node//Artifact//Atom//Ticket Atom": "T",
-             "Node//Artifact//Atom//Project Config Atom": "P"}
-    domains = {}
-    for entry in declarations:
-        if not isinstance(entry, list) or len(entry) != 2 or not isinstance(entry[1], dict):
-            raise ValueError("Invalid Model declaration")
-        args = entry[1].get("arguments", {})
-        if not isinstance(args, dict):
-            raise ValueError("Invalid Model declaration arguments")
-        if (args.get("entity_name") != "Status" or args.get("base_path") != "Node//Artifact//Atom.Header.State"
-                or "applies_to_entity_classes" not in args):
-            continue
-        scopes, values = args["applies_to_entity_classes"], args.get("allowed_values")
-        if not isinstance(scopes, list) or not scopes or any(not _string(scope) for scope in scopes):
-            raise ValueError("Invalid scoped Model Status declaration")
-        selected = [names[scope] for scope in scopes if scope in names]
-        if not selected:
-            continue
-        if (args.get("entity_kind") != "Property" or args.get("relation_name") != "IS_PROPERTY_OF"
-                or not isinstance(values, list) or not values or any(not _string(value) for value in values)
-                or len(set(values)) != len(values)):
-            raise ValueError("Invalid scoped Model Status declaration")
-        for family in selected:
-            if family in domains:
-                raise ValueError("Duplicate scoped Model Status declaration")
-            domains[family] = set(values)
-    if not domains:
-        return {family: values | {"draft", "archived"} for family, values in _CURRENT.items()}
-    if set(domains) != {"S", "T", "P"}:
-        raise ValueError("Incomplete scoped Model Status declarations")
-    domains["C"] = domains["P"]
-    return domains
-
-
 def _atom_references(atoms, domains):
     exacts, references, paths = set(), set(), set()
     records = []
@@ -115,6 +89,9 @@ def _atom_references(atoms, domains):
             raise ValueError("Invalid native Atom fields") from error
         if (any(not _string(getattr(row, key)) for key in ("reference", "exact_ref", "status_group",
                 "relative_path", "filename", "status")) or row.version < 1):
+            raise ValueError("Invalid native Atom fields")
+        if (any(value is not None and not value.strip() for value in (row.container_component, row.template))
+                or row.tier is not None and not -(2**63) <= row.tier < 2**63):
             raise ValueError("Invalid native Atom fields")
         records.append(row)
         exact, group, status = row.exact_ref, row.status_group, row.status
@@ -208,53 +185,49 @@ def validate_native_snapshot(snapshot, manifest_sha256, bindings=None):
     return atoms, records
 
 
-def stage_atom_rows(connection, atoms):
+def stage_atom_rows(connection, rows):
     """Stage validated Atom rows once for both public tables."""
-    rows = [row.model_dump() for row in atoms]
     connection.execute('''CREATE OR REPLACE TEMP TABLE int_admission_atoms AS
         SELECT atom.reference AS reference, atom.summary AS "content.summary",
             atom.relative_path AS relative_path, atom.filename AS filename,
             atom.status_group AS status_group, atom.version AS "header.state.version",
-            atom.status AS "header.state.status", atom.exact_ref AS exact_ref
+            atom.status AS "header.state.status", atom.exact_ref AS exact_ref,
+            atom.container_component AS "header.container.component", atom.tier AS "header.tier",
+            atom.template AS "header.context.template"
         FROM UNNEST(?::STRUCT(reference VARCHAR, summary VARCHAR, relative_path VARCHAR,
-            filename VARCHAR, status_group VARCHAR, version BIGINT, status VARCHAR, exact_ref VARCHAR)[]) AS t(atom)''', [rows])
+            filename VARCHAR, status_group VARCHAR, version BIGINT, status VARCHAR, exact_ref VARCHAR,
+            container_component VARCHAR, tier BIGINT, template VARCHAR)[]) AS t(atom)''', [rows])
 
 
 def write_staged_atoms(connection):
     """Insert the staged rows into both public Atom tables."""
     connection.execute('''INSERT INTO main.mrt_atoms
         SELECT reference, "content.summary", relative_path, filename, status_group,
-            "header.state.version", "header.state.status" FROM int_admission_atoms''')
+            "header.state.version", "header.state.status", "header.container.component",
+            "header.tier", "header.context.template" FROM int_admission_atoms''')
     connection.execute('''INSERT INTO main.mrt_atom_references
         SELECT relative_path, filename, status_group, reference,
             CASE WHEN status_group = 'Current' THEN reference ELSE NULL END, exact_ref
         FROM int_admission_atoms''')
 
 
-def replace_native_atoms(connection, snapshot, atoms, relations):
+def replace_native_atoms(connection, snapshot):
     """Replace public tables inside the caller's active transaction."""
     existing = connection.execute("SELECT table_type FROM information_schema.tables WHERE table_catalog = current_database() "
                                   "AND table_schema = 'main' AND table_name = 'mrt_atom_references'").fetchone()
     if existing and existing[0] == "VIEW":
         connection.execute("DROP VIEW main.mrt_atom_references")
-    connection.execute('''CREATE OR REPLACE TABLE main.mrt_atoms (
-        reference VARCHAR PRIMARY KEY, "content.summary" VARCHAR, relative_path VARCHAR,
-        filename VARCHAR, status_group VARCHAR, "header.state.version" BIGINT,
-        "header.state.status" VARCHAR)''')
-    connection.execute('''CREATE OR REPLACE TABLE main.mrt_atom_references (
-        relative_path VARCHAR, filename VARCHAR, status_group VARCHAR, reference VARCHAR,
-        stable_ref VARCHAR, exact_ref VARCHAR)''')
-    stage_atom_rows(connection, atoms)
+    for table, columns in NATIVE_PROJECTION_COLUMNS.items():
+        definitions = ", ".join(f'"{name}" {kind}' for name, kind in columns)
+        key = ", PRIMARY KEY (reference)" if table == "mrt_atoms" else ""
+        connection.execute(f"CREATE OR REPLACE TABLE main.{table} ({definitions}{key})")
+    stage_atom_rows(connection, snapshot["atoms"])
     write_staged_atoms(connection)
     connection.execute("DROP TABLE int_admission_atoms")
-    connection.execute('''CREATE OR REPLACE TABLE main.mrt_atom_graph_relations (
-        source_kind VARCHAR, source_ref VARCHAR, target_kind VARCHAR, target_ref VARCHAR,
-        relation_type VARCHAR, derived BOOLEAN)''')
-    relations = [row.model_dump() for row in relations]
     connection.execute('''INSERT INTO main.mrt_atom_graph_relations
         SELECT edge.source_kind, edge.source_ref, edge.target_kind, edge.target_ref, edge.relation_type, edge.derived
         FROM UNNEST(?::STRUCT(source_kind VARCHAR, source_ref VARCHAR, target_kind VARCHAR,
-            target_ref VARCHAR, relation_type VARCHAR, derived BOOLEAN)[]) AS t(edge)''', [relations])
+            target_ref VARCHAR, relation_type VARCHAR, derived BOOLEAN)[]) AS t(edge)''', [snapshot["relations"]])
 
     connection.execute("DROP TABLE IF EXISTS main.int_lifecycle_lenses")
     if "lifecycle_lenses" in snapshot:

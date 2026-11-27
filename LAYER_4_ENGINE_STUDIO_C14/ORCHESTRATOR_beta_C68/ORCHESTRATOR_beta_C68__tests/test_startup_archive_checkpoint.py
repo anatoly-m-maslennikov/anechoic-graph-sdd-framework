@@ -93,13 +93,61 @@ class StartupArchiveCheckpointTests(unittest.TestCase):
               patch.object(orchestrator, "confirm_reuse", return_value={"generation": "old", "kind": "reused"}) as admit):
             outcome = self.jobs._attempt_generation(None, self.reuse)
         self.assertEqual("reused", outcome["kind"])
-        self.assertEqual({"incremental": True, "foreground": True, "watcher_guarded": True}, worker.call_args.kwargs)
+        self.assertEqual({"incremental": True, "foreground": True, "watcher_guarded": True,
+                          "force_model": False}, worker.call_args.kwargs)
         self.assertTrue(admit.call_args.args[-1]["archive_pending"])
         deferred = self.jobs.deferred_archive
         self.assertEqual([], deferred["roots"])
         self.assertEqual({"control/09_archived/a.md": "c" * 64}, deferred["checkpoint"]["carrier_hashes"])
         self.assertEqual({"control/09_archived": "e" * 64}, deferred["checkpoint"]["folder_hashes"])
         self.assertNotIn("folder_hashes", self.jobs.generation_reuse)
+
+    def test_scoped_startup_loads_archive_checkpoint_in_background(self):
+        foreground = self.reuse | {"checkpoint_scope": "foreground", "carrier_hashes": {}, "folder_hashes": {}}
+        self.jobs.deferred_archive = self.jobs._restart_archive(foreground, {"unchanged": True})
+        result = {"unchanged": True}
+        self.jobs.watcher.watch_archives.return_value = True
+        record = orchestrator.ReuseRecord.model_validate(self.reuse | {"checkpoint_scope": "archive"})
+        with (patch("ORCHESTRATOR_beta_C68.archive_jobs.read_reuse", return_value=record) as read,
+              patch.object(self.jobs, "_archive_snapshot", return_value=({}, result)) as capture):
+            self.jobs._capture_archive(self.jobs.deferred_archive)
+        read.assert_called_once_with("socket", "test", scope="archive")
+        self.assertEqual({"control/09_archived/a.md": "c" * 64}, capture.call_args.args[1]["carrier_hashes"])
+        self.assertEqual(({}, result), self.jobs.archive_result)
+
+    def test_compiler_refresh_uses_updated_archive_witness(self):
+        foreground = self.reuse | {"checkpoint_scope": "foreground", "carrier_hashes": {}, "folder_hashes": {}}
+        witness = {"inputs": self.reuse["inputs"] | {"manifest": "d" * 64},
+                   "graph_config": None, "endpoints": {"new": "endpoint"}}
+        self.jobs.deferred_archive = self.jobs._restart_archive(foreground, {"compiler": {}, "reuse": witness})
+        self.jobs.watcher.watch_archives.return_value = True
+        record = orchestrator.ReuseRecord.model_validate(self.reuse | witness | {"checkpoint_scope": "archive"})
+        with (patch("ORCHESTRATOR_beta_C68.archive_jobs.read_reuse", return_value=record),
+              patch.object(self.jobs, "_archive_snapshot", return_value=({}, {"unchanged": True})) as capture):
+            self.jobs._capture_archive(self.jobs.deferred_archive)
+        self.assertEqual(witness["endpoints"], capture.call_args.args[1]["endpoints"])
+        self.assertEqual({"control/09_archived/a.md": "c" * 64}, capture.call_args.args[1]["carrier_hashes"])
+
+    def test_scoped_unchanged_startup_confirms_without_another_checkpoint_read(self):
+        foreground = self.reuse | {"checkpoint_scope": "foreground", "carrier_hashes": {}, "folder_hashes": {}}
+        result = {"base_generation": "old", "unchanged": True}
+        with (patch.object(self.jobs, "_run_worker", return_value=result),
+              patch.object(self.jobs, "_record_ingestion_issues"),
+              patch("ORCHESTRATOR_beta_C68.generation.read_reuse") as read,
+              patch("ORCHESTRATOR_beta_C68.generation.admit_generation", return_value={"generation": "old", "kind": "reused"}) as admit):
+            self.jobs._attempt_generation(None, foreground)
+        read.assert_not_called()
+        self.assertTrue(admit.call_args.args[3]["archive_pending"])
+
+    def test_missing_background_checkpoint_forces_archive_replacement(self):
+        foreground = self.reuse | {"checkpoint_scope": "foreground", "carrier_hashes": {}, "folder_hashes": {}}
+        self.jobs.deferred_archive = self.jobs._restart_archive(foreground, {"unchanged": True})
+        self.jobs.watcher.watch_archives.return_value = True
+        with (patch("ORCHESTRATOR_beta_C68.archive_jobs.read_reuse", return_value=None),
+              patch.object(self.jobs, "_archive_snapshot", return_value=({}, {"snapshot": {}})) as capture):
+            self.jobs._capture_archive(self.jobs.deferred_archive)
+        self.assertIsNone(capture.call_args.args[1])
+        self.assertTrue(self.jobs.archive_result[1]["replace"])
 
     def test_legacy_or_uncovered_checkpoint_builds_fresh_foreground(self):
         result = {"snapshot": {}, "deferred_archive": {"roots": [], "snapshot": {"atoms": []}, "endpoints": {}}}
@@ -111,7 +159,8 @@ class StartupArchiveCheckpointTests(unittest.TestCase):
                   patch.object(orchestrator, "admit_generation", return_value={"generation": "new", "kind": "full"})):
                 self.assertEqual("full", self.jobs._attempt_generation(None, reuse)["kind"])
             self.assertIsNone(worker.call_args.args[1])
-            self.assertEqual({"foreground": True, "watcher_guarded": epoch is not None}, worker.call_args.kwargs)
+            self.assertEqual({"foreground": True, "watcher_guarded": epoch is not None,
+                              "force_model": False}, worker.call_args.kwargs)
 
     def test_failed_foreground_fence_keeps_legacy_error_and_passes_run_id(self):
         self.jobs.active = RunFixture(state="running", started_at=0, run_id="a" * 32)
@@ -123,17 +172,51 @@ class StartupArchiveCheckpointTests(unittest.TestCase):
                 self.assertEqual("a" * 32, self.jobs.watcher.capture_fence.call_args.kwargs["run_id"])
         self.jobs.watcher.capture_epoch.assert_called_with(trace=True)
 
-    def test_replay_coverage_loss_discards_result_and_runs_strict_reconciliation(self):
+    def test_replay_coverage_loss_discards_result_until_recovery(self):
         self.jobs.thread = object()
         self.jobs.watcher.watch_code = False
         self.jobs.watcher.replay_fence.return_value = None
-        with (patch.object(self.jobs, "_run_worker", side_effect=[{"snapshot": {}}, {"snapshot": {}}]) as worker,
-              patch.object(self.jobs, "_admit_live_result", return_value={"generation": "new"}) as admit):
-            self.assertEqual("succeeded", self.jobs._generate(startup=True)["state"])
-        self.assertEqual([{"foreground": True, "watcher_guarded": True},
-                          {"foreground": True, "watcher_guarded": False}],
-                         [call.kwargs for call in worker.call_args_list])
-        admit.assert_called_once()
+        with (patch.object(self.jobs, "_run_worker", return_value={"snapshot": {}}) as worker,
+              patch.object(self.jobs, "_admit_live_result") as admit):
+            outcome = self.jobs._generate(startup=True)
+        self.assertEqual("watcher_coverage_lost", outcome["code"])
+        self.assertTrue(outcome["retrying"])
+        worker.assert_called_once()
+        admit.assert_not_called()
+
+    def test_timed_recovery_loads_persisted_checkpoint_and_preserves_archive_scope(self):
+        self.jobs.startup_capture = False
+        self.jobs.thread = object()
+        self.jobs.watcher.replay_fence.return_value = True
+        self.jobs.latest = Mock(code="watcher_coverage_lost")
+        self.jobs.archive_run = RunFixture(state="succeeded")
+        checkpoint = Mock()
+        checkpoint.model_dump.return_value = self.reuse
+        unchanged = {"base_generation": "old", "unchanged": True}
+        with (patch("ORCHESTRATOR_beta_C68.generation_worker.read_reuse", return_value=checkpoint) as read,
+              patch.object(self.jobs, "_run_worker", return_value=unchanged) as worker,
+              patch.object(orchestrator, "confirm_reuse", return_value={"generation": "old", "kind": "reused"}) as admit):
+            self.jobs._run_queued_generation(orchestrator.CurrentnessRetry(), None, [], True)
+        read.assert_called_once_with("socket", "test")
+        self.assertEqual(self.reuse, worker.call_args.args[1])
+        self.assertEqual({"foreground": True, "watcher_guarded": True, "defer_graph": True, "incremental": True,
+                          "force_model": False}, worker.call_args.kwargs)
+        self.assertEqual(unchanged | {"archive_pending": True}, admit.call_args.args[-1])
+        self.assertEqual({"control/09_archived/a.md": "c" * 64},
+                         self.jobs.deferred_archive["checkpoint"]["carrier_hashes"])
+        self.assertTrue(self.jobs.archive_dirty)
+        self.assertTrue(self.jobs.graph_queued)
+
+    def test_recovery_falls_back_to_fenced_capture_for_an_incompatible_delta(self):
+        checkpoint = Mock()
+        checkpoint.model_dump.return_value = self.reuse
+        outcome = {"state": "succeeded", "kind": "full"}
+        with (patch("ORCHESTRATOR_beta_C68.generation_worker.read_reuse", return_value=checkpoint),
+              patch.object(self.jobs, "_attempt_generation",
+                           side_effect=[orchestrator.DeltaRequiresReconciliation(), outcome]) as attempt):
+            self.assertEqual(outcome, self.jobs._recover_watcher_coverage(None))
+        self.assertEqual([(None, self.reuse), (None, None)], [call.args for call in attempt.call_args_list])
+        self.assertTrue(all(call.kwargs == {"recover_coverage": True} for call in attempt.call_args_list))
 
     def test_run_snapshot_preserves_result_ids_and_replay_state(self):
         outcome = {"state": "succeeded", "generation": "g", "result_ids": {"old": "new"}}

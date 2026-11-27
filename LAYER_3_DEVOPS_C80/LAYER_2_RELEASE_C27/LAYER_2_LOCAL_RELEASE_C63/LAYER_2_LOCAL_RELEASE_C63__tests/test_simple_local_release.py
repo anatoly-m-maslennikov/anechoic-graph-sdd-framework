@@ -113,12 +113,12 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
         cleanup.assert_not_called()
         prune.assert_not_called()
         self.image.prune_build_cache.assert_not_called()
-        self.assertEqual(("failed", "promote_candidate_image"), (result["outcome"], result["failed_step"]))
+        self.assertEqual(("completed_with_cleanup_pending", None), (result["outcome"], result["failed_step"]))
         self.assertEqual("healthy", result["evidence"]["readiness"])
-        report = (self.root / result["report_path"]).read_text()
-        self.assertIn("promote_candidate_image", report)
-        self.assertIn(result["endpoint"], report)
-        self.assertNotIn("tag unavailable", report)
+        receipt = (self.root / result["receipt_path"]).read_text()
+        self.assertIn("Production image tag failed. Cleanup deferred.", receipt)
+        self.assertIn(result["endpoint"], receipt)
+        self.assertNotIn("tag unavailable", receipt)
 
         self.image.mark_production_image.side_effect = None
         calls.clear()

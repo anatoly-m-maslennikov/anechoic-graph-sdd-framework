@@ -53,7 +53,7 @@ class FullTestSuiteTests(unittest.TestCase):
             self.file("LAYER_4_ENGINE_STUDIO_C14/component/component__tests/test_engine.py"),
             self.file("LAYER_4_ENGINE_STUDIO_C14/capability/test_service.py"),
             self.file(str(APP / "FEATURE_MCP__tests/test_mcp.py")),
-            self.file(str(full.WORKBENCH / "APP_WORKBENCH__tests/test_workbench.py")),
+            self.file(str(full.WORKBENCH / "APP_IWE_CONSOLE__tests/test_workbench.py")),
             self.file("LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/test_project.py"),
             self.file("LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/LAYER_2_RELEASE_C27__tests/test_release.py"),
             self.file("LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/LAYER_3_PUBLIC_RELEASE_C64/LAYER_3_PUBLIC_RELEASE_C64__tests/test_public.py"),
@@ -81,7 +81,7 @@ class FullTestSuiteTests(unittest.TestCase):
         self.assertIn("tests run: 2; skipped: 0; failed modules: 0", self.output.getvalue())
 
     def test_backend_provider_is_importable_by_its_registry_name(self) -> None:
-        self.file(str(full.WORKBENCH / "FEATURE_WORKBENCH_BACKEND/fixture_provider.py"), "VALUE = 42\n")
+        self.file(str(full.WORKBENCH / "FEATURE_IWE_CONSOLE_BACKEND/fixture_provider.py"), "VALUE = 42\n")
         self.file(
             "LAYER_4_ENGINE_STUDIO_C14/component/component__tests/test_provider.py",
             "import unittest\nfrom fixture_provider import VALUE\n"
@@ -208,7 +208,7 @@ class FullTestSuiteTests(unittest.TestCase):
                 args = command.call_args.args[0]
                 env = command.call_args.kwargs["env"]
                 self.assertEqual(("uv", "run", "--project", str(self.root / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72" / ("release" if child == full.CODE_ROOTS[1] else "setup")),
-                                  "--locked", "--no-env-file", "python"), args[:7])
+                                  "--locked", "--no-env-file", "--python", "3.14", "--managed-python", "python"), args[:10])
                 self.assertEqual("package.test_example", args[-1])
                 self.assertEqual(str(self.root / child), env["PYTHONPATH"])
                 self.assertEqual(str(self.root / child / environment_name), env["UV_PROJECT_ENVIRONMENT"])
@@ -239,12 +239,12 @@ class FullTestSuiteTests(unittest.TestCase):
 
     def test_child_imports_moved_component_packages(self) -> None:
         self.file(str(APP / "__init__.py"), "VALUE = 'mcp'\n")
-        self.file(str(full.WORKBENCH / "FEATURE_WORKBENCH_BACKEND/__init__.py"), "VALUE = 'workbench'\n")
+        self.file(str(full.WORKBENCH / "FEATURE_IWE_CONSOLE_BACKEND/__init__.py"), "VALUE = 'workbench'\n")
         self.file(
             "LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/test_component_imports.py",
             "import unittest\n"
             "from MCP_PATCHBAY_C21 import FEATURE_MCP\n"
-            "from IWE_CONSOLE_C43.APP_WORKBENCH import FEATURE_WORKBENCH_BACKEND as app_backend\n"
+            "from IWE_CONSOLE_C43.APP_IWE_CONSOLE import FEATURE_IWE_CONSOLE_BACKEND as app_backend\n"
             "class Test(unittest.TestCase):\n"
             " def test_imports(self):\n"
             "  self.assertEqual('mcp', FEATURE_MCP.VALUE)\n"

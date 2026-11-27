@@ -46,7 +46,7 @@ def _declared_target(carrier, occurrence, expression):
         assert isinstance(expression, _subject_Path)
         target = _model_target(expression)
         if kind == "instance" and target.startswith("Node/") and "//" in target:
-            from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.cfel_claim_constraints import extract_claim_constraints
+            from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.claim_constraints import extract_claim_constraints
             from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import model_class_target
             clauses, _ = extract_claim_constraints(carrier)
             if any(clause.get("kind") == "native_class" and
@@ -108,7 +108,7 @@ def _enhanced_categories(
     }
     categories: dict[str, list[Record]] = {
         "primary_nodes": [], "properties": [], "instances": [], "relations": [],
-        "classifications": [], "allowed_literals": [], "selected_subject_expressions": [],
+        "axes": [], "allowed_literals": [], "selected_subject_expressions": [],
     }
     active_count = {
         source_path: sum(
@@ -175,14 +175,14 @@ def _source_sets(carriers):
 
 
 def compose_enhanced_current_graph(carriers: list[Record]) -> tuple[Record, Record]:
-    """Add model/instance and CFEL inventories to the stable Subject graph.
+    """Add model/instance and Python Formal Claim inventories to the stable Subject graph.
 
     These records are source-bound observations.  They intentionally do not
-    evaluate CFEL, synthesize inherited facts, or turn literals and constraint
+    execute Python, synthesize inherited facts, or turn literals and constraint
     annotations into graph Nodes.
     """
 
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.cfel_claim_constraints import claim_cfel_blocks, claim_python_blocks, constraints_for
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.claim_constraints import claim_python_blocks, constraints_for
 
     graph, provenance = compose_current_graph(carriers, unsupported_as_diagnostics=True)
     constraints, unresolved = constraints_for(carriers)
@@ -213,7 +213,7 @@ def compose_enhanced_current_graph(carriers: list[Record]) -> tuple[Record, Reco
         "source_constraints": [row for row in constraints if row.get("group") != "instances" and non_declaration_property(row)],
         "instance_constraints": [row for row in constraints if row.get("group") == "instances"],
         "formal_claim_blocks": [block for carrier in carriers for block in
-                                [*claim_cfel_blocks(carrier), *claim_python_blocks(carrier)]],
-        "cfel_diagnostics": unresolved,
+                                claim_python_blocks(carrier)],
+        "claim_diagnostics": unresolved,
     }
     return enhanced, provenance

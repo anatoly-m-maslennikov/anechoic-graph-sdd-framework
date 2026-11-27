@@ -5,6 +5,8 @@ from pathlib import Path, PurePosixPath
 import sys
 from types import SimpleNamespace
 
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import component_contract_fences
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_component_manifest
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import native_header_view
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import read_component_contract
 
@@ -18,19 +20,31 @@ def _contract_candidates(selection, capture):
     edges = {edge['source_ref']: edge for edge in capture.containment}
     specs = defaultdict(list)
     component_contracts = defaultdict(list)
+    embedded_contracts = defaultdict(list)
     for row in capture.atoms:
         edge = edges.get(row['ref'], {})
         if row['status_group'] != 'Current' or edge.get('target_kind') != 'Component':
             continue
         header = row['header_json']
         context = native_header_view(header).get('context', {})
-        if context.get('template') != 'component_contract' and (
-                context.get('template') != 'component_seed_manifest' or context.get('lens') != 'SPEC'):
+        if context.get('template') not in ('component_contract', 'component_seed_manifest', 'component_manifest'):
+            continue
+        if context.get('template') != 'component_contract' and context.get('lens') != 'SPEC':
             continue
         path = Path(row['source_path'])
         carrier = SimpleNamespace(  # pragma: anechoic-model-adapter - carrier parser
             metadata=header, body=row['_content_bytes'].decode('utf-8'),
         )
+        if context.get('template') == 'component_manifest':
+            if row['tier'] != 1:
+                continue
+            try:
+                fields, _ = parse_component_manifest(carrier.body, tier=1)
+                if component_contract_fences(carrier.body) is not None:
+                    embedded_contracts[fields['component_id']].append(row['_exact_ref'])
+            except ValueError as error:
+                print(f'Invalid Component Manifest {path}: {error}', file=sys.stderr)
+            continue
         if context.get('template') == 'component_contract':
             try:
                 fields = read_component_contract(path, carrier, edge['target_ref'], selection.project_prefix)
@@ -48,6 +62,7 @@ def _contract_candidates(selection, capture):
         if fields:
             specs[(edge['target_ref'], fields['component_seed_id'])].append(fields['ref_id'])
 
+    component_contracts.update(embedded_contracts)
     return specs, component_contracts
 
 

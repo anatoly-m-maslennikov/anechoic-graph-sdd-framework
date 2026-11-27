@@ -79,15 +79,12 @@ def _native_relation_records(
     return records
 
 
-def _cfel_relation_records(
+def _helper_relation_records(
     identity: str, entry: Record, derivations: Mapping[str, str | None], notations: Mapping[str, str],
 ) -> list[Record]:
     records = []
     for level, clauses in (("model", entry.get("clauses", [])),
                            ("instances", entry.get("instance_clauses", []))):
-        bindings = {clause.get("variable") for clause in clauses
-                    if clause.get("kind") == "instance_binding"
-                    and clause.get("kind_selector") == identity}
         for clause in clauses:
             if clause.get("kind") != "relation_cardinality":
                 continue
@@ -104,8 +101,7 @@ def _cfel_relation_records(
             if level == "model":
                 matches = selector == identity
             else:
-                matches = (re.fullmatch(re.escape(identity) + r"//\$[A-Za-z_]\w*", selector) is not None
-                           or (selector.startswith("$") and selector[1:] in bindings))
+                matches = re.fullmatch(re.escape(identity) + r"//\$[A-Za-z_]\w*", selector) is not None
             if not matches:
                 continue
             records.append({
@@ -125,7 +121,7 @@ def _relation_records(
     records = []
     for entry in entries:
         records.extend(_native_relation_records(identity, entry, derivations))
-        records.extend(_cfel_relation_records(identity, entry, derivations, notations))
+        records.extend(_helper_relation_records(identity, entry, derivations, notations))
     return records
 
 

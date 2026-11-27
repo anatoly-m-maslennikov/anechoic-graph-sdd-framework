@@ -73,15 +73,20 @@ class BatchedGenerationTests(unittest.TestCase):
                   patch("ORCHESTRATOR_beta_C68.generation_worker.read_accepted_model", return_value=None),
                   patch("ORCHESTRATOR_beta_C68.generation.UnixConnection", Connection)):
                 jobs._generate()
-            self.assertEqual("g1", jobs.status()["latest"]["generation"])
-            self.assertEqual("full", jobs.status()["latest"]["kind"])
-            self.assertEqual([{"binding": binding, "reuse": None, "batch_full": True,
-                               "model_source": {"accepted_model": None}}], worker_requests)
-            self.assertEqual(("PUT", "/generation"), sent[0][:2])
-            self.assertEqual(json.dumps(sent[0][2], ensure_ascii=False, separators=(",", ":")).encode(), sent[0][3])
-            self.assertEqual('{"line":"a"}\r\n', sent[0][2]["model"])
-            self.assertEqual({"instance_id", "snapshot", "receipt", "graph", "model", "structure"}, set(sent[0][2]))
-            self.assertEqual(400, jobs.build({})[0])
+            self._assert_handoff(jobs, root, binding, worker_requests, sent)
+
+    def _assert_handoff(self, jobs, root, binding, worker_requests, sent):
+        self.assertEqual("g1", jobs.status()["latest"]["generation"])
+        self.assertEqual("full", jobs.status()["latest"]["kind"])
+        self.assertEqual([{"binding": binding, "reuse": None, "batch_full": True,
+                           "model_source": {"accepted_model": None,
+                                            "spec_database": {"socket": str(root / "kernel.sock"),
+                                                              "instance_id": "test"}}}], worker_requests)
+        self.assertEqual(("PUT", "/generation"), sent[0][:2])
+        self.assertEqual(json.dumps(sent[0][2], ensure_ascii=False, separators=(",", ":")).encode(), sent[0][3])
+        self.assertEqual('{"line":"a"}\r\n', sent[0][2]["model"])
+        self.assertEqual({"instance_id", "snapshot", "receipt", "graph", "model", "structure"}, set(sent[0][2]))
+        self.assertEqual(400, jobs.build({})[0])
 
     def _assert_worker_failure(self, jobs):
         with (patch.object(subprocess, "Popen", side_effect=OSError("broken")),

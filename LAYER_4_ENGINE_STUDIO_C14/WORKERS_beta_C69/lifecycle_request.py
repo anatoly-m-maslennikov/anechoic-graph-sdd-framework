@@ -43,6 +43,7 @@ class _LifecycleContext(BaseModel):
     model: dict | None
     has_descendants: bool
     endpoints: dict
+    status_domains: dict[str, list[str]] | None = None
     max_archived_version: int = Field(default=0, ge=0, le=2**63 - 1)
 
 

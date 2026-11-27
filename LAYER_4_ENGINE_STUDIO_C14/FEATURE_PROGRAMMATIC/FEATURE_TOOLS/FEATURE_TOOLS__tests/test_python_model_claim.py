@@ -5,7 +5,7 @@ import sys
 import unittest
 
 TOOLS = Path(__file__).resolve().parents[1]
-sys.path[:0] = [str(TOOLS), str(TOOLS.parent.parent / "IWE_CONSOLE_C43/APP_WORKBENCH")]
+sys.path[:0] = [str(TOOLS), str(TOOLS.parent.parent / "IWE_CONSOLE_C43/APP_IWE_CONSOLE")]
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (  # noqa: E402
     PythonModelClaimError,
@@ -13,14 +13,6 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import
     parse_python_model_claim,
     parse_structured_python_model_claim,
 )
-
-
-def declaration(text):
-    return {
-        "status_group": "Current", "role": "Requirement", "form": "Declaration",
-        "id": "CA-R-1", "ref": "CA-R-1", "version": 1, "source_path": "CA-R-1.md",
-        "_content_bytes": ("## Claim\n### Formal Claim\n```CFEL\n" + text + "\n```\n").encode(),
-    }
 
 
 class PythonModelClaimTests(unittest.TestCase):

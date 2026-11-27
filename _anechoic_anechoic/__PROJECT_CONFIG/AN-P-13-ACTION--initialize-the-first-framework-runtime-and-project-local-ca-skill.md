@@ -7,9 +7,9 @@ structure:
 context:
   template: action
 state:
-  status: active
-  version: 14
-  updated_at: 2026-10-27 19:59:47 +0400
+  status: "active"
+  version: 15
+  updated_at: "2026-11-26T15:17:28.837145+00:00"
 ---
 # Summary
 
@@ -21,7 +21,7 @@ Initialize the first Framework runtime and project-local `ca` Skill **means** th
 
 ## Scope
 
-The Action binds one sealed current source frontier, one empty runtime/Skill state, one complete manifest-addressed package, one immutable image digest, explicit target-Project metadata, settings, Project Structure and selected control-root `.anechoic_<project>/operators_registry.toml` bytes, selected extension/configuration revisions from one admitted pinned catalog, and one canonical Action Run. Bootstrap or adoption **must not** fabricate a Project identity, metadata, settings, structure, registry, selected extension or configuration. An adopt entry admits only those existing Project carriers and **no** already-active Framework runtime; upgrade and idempotent reinstallation are outside this first-initialization Action. Its canonical started-Run input binds `requested_run_id`, package-manifest SHA-256, sealed source-context SHA-256, catalog/configuration identity and immutable image digest as one exact intent. It is a bootstrap Action outside CA-O-164's selected Release Version Workflow.
+The Action binds one sealed current source frontier, one empty runtime/Skill state, one complete manifest-addressed package, one immutable image digest, explicit target-Project metadata, settings, Project Structure, selected extension/configuration revisions from one admitted pinned catalog, and one canonical Action Run. Bootstrap or adoption **must not** fabricate a Project identity, metadata, settings, structure, selected extension or configuration. An adopt entry admits only those existing Project carriers and **no** already-active Framework runtime; upgrade and idempotent reinstallation are outside this first-initialization Action. Its canonical started-Run input binds `requested_run_id`, package-manifest SHA-256, sealed source-context SHA-256, catalog/configuration identity and immutable image digest as one exact intent. It is a bootstrap Action outside CA-O-164's selected Release Version Workflow.
 
 ## Details
 

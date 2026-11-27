@@ -117,6 +117,10 @@ and carrier hashes against the latest live generation in one transaction.
 Preserve Current and Draft rows and the Realization Graph. Clear the
 pending marker only when Archive admission succeeds.
 
+Read and validate full generation and Archive batch artifacts while
+serving the admitted generation. Serialize live database checks and
+publication. Recheck the Archive base before publishing.
+
 Accept a native-only refresh against the named current generation.
 Validate the native snapshot against the admitted Model. Replace Atom
 and native relation rows in one transaction. Retain Model, Structure,

@@ -29,7 +29,7 @@ declare_entity(
         component_id='C20',
         name='APPS',
         lens_whitelist=['DES', 'DevOps', 'QA', 'SPEC', 'SWD'],
-        boundaries={'code': {'imports': []}, 'io': {'server': {}}},
+        boundaries={'code': {'exports': {}, 'imports': []}, 'io': {'server': {}}},
     ),
 )
 ```

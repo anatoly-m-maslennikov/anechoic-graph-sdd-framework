@@ -129,25 +129,22 @@ class ContractGraphTests(unittest.TestCase):
         self.assertEqual("outside_model_scope", graph["outside_model_scope"][0]["selection_disposition"])
 
     def test_namespace_declaration_preserves_claim_without_creating_node(self):
-        graph = compose_contract_graph([carrier("CA-R-1", "ANECHOIC_MODEL", body("```CFEL", "MODEL >| (Container == yes)", "```")),
+        graph = compose_contract_graph([carrier("CA-R-1", "ANECHOIC_MODEL", body("```python", "classify(address='MODEL', axis='Container', value='yes', notation='relation')", "```")),
                                         carrier("CA-R-2", "UNKNOWN_MODEL", body("Unknown."))])
         self.assertEqual(["ANECHOIC_MODEL"], [row["target"] for row in graph["namespaces"]])
         self.assertEqual(["UNKNOWN_MODEL"], [row["target"] for row in graph["entities"]])
         self.assertEqual([], graph["coverage_gaps"])
-        self.assertIn("MODEL >| (Container == yes)", render_contract_graph(graph))
+        self.assertIn("`MODEL` — HAS_AXIS → `Container == yes`", render_contract_graph(graph))
 
-    def test_render_occurrence_and_population_scopes(self):
+    def test_render_written_and_effective_occurrence_and_value_bounds(self):
         graph = compose_contract_graph([
             carrier("CA-R-1", "Node", body("Node.")),
             carrier("CA-R-2", "Node.Name", body(
-                "```CFEL", "# model", "Node.Name{:0..1}: [string]{:0..1};",
-                "# instances", "Node.**//{:1};", "Node//$node{:1}", "```")),
+                "```python", "from anechoic.formal_claims import declare_entity, Cardinality", "declare_entity(entity_name='Name', relation_name='IS_PROPERTY_OF', base_path='Node', property_occurrence_cardinality=Cardinality(minimum=0, maximum=1), value_format='string', value_cardinality=Cardinality(minimum=0, maximum=1))", "```")),
         ])
         document = render_contract_graph(graph)
         self.assertIn("written names count=0..1; effective names count=0..1", document)
         self.assertIn("values count=0..1", document)
-        self.assertIn("for each Property schema per bearer", document)
-        self.assertIn("in project population", document)
 
     def test_binds_only_source_proven_scope_unit_declaration_instance_contexts(self):
         graph = scope_context_graph()

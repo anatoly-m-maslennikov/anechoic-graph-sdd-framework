@@ -1,0 +1,13 @@
+_TRANSIENT_DIRECTORIES = frozenset({
+    ".git", "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache",
+    ".tox", ".nox", ".venv", ".virtualenv", "venv", "virtualenv",
+    "node_modules", "testcache", ".testcache", "tmp",
+})
+
+_CREDENTIAL_DIRECTORIES = frozenset({
+    "vault", ".vault", "secrets", ".secrets", "credentials", ".credentials",
+})
+
+def _excluded_directory(name: str) -> bool:
+    return (name in _TRANSIENT_DIRECTORIES or name in _CREDENTIAL_DIRECTORIES
+            or name.startswith(".anechoic_"))

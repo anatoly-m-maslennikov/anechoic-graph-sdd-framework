@@ -8,15 +8,12 @@ context:
   template: DECISION
   lens: SPEC
 relations:
-  IS_REFERENCE:
-  - AN-S-3361@2
-  - AN-S-3387@2
   IS_SOLUTION_FOR:
   - AN-S-3186@4
 state:
-  status: active
+  status: "active"
   version: 2
-  updated_at: '2026-11-23T03:50:52.802684+00:00'
+  updated_at: "2026-11-26T16:43:14.645763+00:00"
 ---
 
 ## Summary

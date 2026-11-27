@@ -55,12 +55,12 @@ class ContractGraphTests(unittest.TestCase):
         row = carrier("CA-R-1", "ANECHOIC_MODEL", body(
             "### Formal Claim", "```python", "from anechoic.formal_claims import declare_entity",
             "from anechoic.model import Node", "class Model(Node):", "    pass",
-            'declare_entity(entity_class=Model, entity_name="MODEL", classifications={"Container": "yes"})',
+            'declare_entity(entity_class=Model, entity_name="MODEL", axes={"Container": "yes"})',
             "```"))
         graph = compose_contract_graph([row])
         namespace, = graph["namespaces"]
         entry, = namespace["own"]
-        condition, = [clause for clause in entry["clauses"] if clause["kind"] == "classification_condition"]
+        condition, = [clause for clause in entry["clauses"] if clause["kind"] == "axis_condition"]
         self.assertEqual(("MODEL", "Container", "==", "yes"),
                          tuple(condition[key] for key in ("subject_selector", "axis", "operator", "value")))
         self.assertEqual(row["source"], condition["source"])
@@ -201,7 +201,7 @@ class ContractGraphTests(unittest.TestCase):
             "                 inverse_alias='IS_CARRIED_BY', targets_per_source=1)", "```",
             "### Prose Claim", "The Carrier represents the object."))
         inverse = carrier("CA-R-2", "Relation//IS_CARRIED_BY", body(
-            "### Formal Claim", "```CFEL", "Relation//IS_CARRIED_BY <((HAS_INVERSE)) Relation//CARRIES", "```"))
+            "### Formal Claim", "```python", "relation(source='Relation//IS_CARRIED_BY', name='HAS_INVERSE', target='Relation//CARRIES', reverse=True)", "```"))
         graph = compose_contract_graph([direct, inverse])
         view = next(row["derived_view"] for row in graph["relations"] if row["target"] == "IS_CARRIED_BY")
         endpoint, = view["endpoints"]

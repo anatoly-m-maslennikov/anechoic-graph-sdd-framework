@@ -11,10 +11,10 @@ import unittest
 MCP = Path(__file__).resolve().parents[1]
 TOOLS = MCP.parents[1] / "FEATURE_PROGRAMMATIC" / "FEATURE_TOOLS"
 
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__shared import load_host_runtime_config  # noqa: E402
+from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.FEATURE_IWE_CONSOLE_BACKEND__shared import load_host_runtime_config  # noqa: E402
 from mcp import types  # noqa: E402
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import ToolProtocolError  # noqa: E402
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.project_tool_session import ToolProtocolError as BackendToolProtocolError  # noqa: E402
+from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.project_tool_session import ToolProtocolError as BackendToolProtocolError  # noqa: E402
 from .test_native_startup import RuntimeSelectionTests  # noqa: E402
 from .shared_backend_fixture import backend_gateway  # noqa: E402
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import SharedGatewayRefusal  # noqa: E402
@@ -48,7 +48,7 @@ class _Gateway:
         self.selection = selection
         self.tool_blacklist = self.blacklists.get(str(root), frozenset())
         self.ready = True
-        from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__shared import native_tools
+        from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.FEATURE_IWE_CONSOLE_BACKEND__shared import native_tools
         self.tools = [tool.model_dump(mode="json", by_alias=True) for tool in native_tools()]
         self.workbench = _Workbench()
         self.workbenches.append(self.workbench)

@@ -7,13 +7,10 @@ priority: 2
 context:
   template: task
   label: Task
-relations:
-  IS_REFERENCE:
-  - AN-S-3359@1
 state:
   status: done
   version: 1
-  updated_at: "2026-11-22T18:55:53.687041+00:00"
+  updated_at: '2026-11-26T16:39:58.798811+00:00'
 ---
 
 ## Summary

@@ -50,7 +50,7 @@ class SavedQueryWriteTests(unittest.TestCase):
                 self.assertEqual(200, events.status_code, events.text)
                 (author, event), = events.json()["result"]["rows"]
                 self.assertEqual((AUTHOR, saved), (author, json.loads(event)))
-            self.assertFalse((root / ".anechoic_runtime/workbench/journal-inbox").exists())
+            self.assertFalse((root / ".anechoic_runtime/iwe_console/journal-inbox").exists())
             with _server(*arguments) as client:
                 self.assertEqual(saved, self.load(client, saved["saved_query_id"]))
 

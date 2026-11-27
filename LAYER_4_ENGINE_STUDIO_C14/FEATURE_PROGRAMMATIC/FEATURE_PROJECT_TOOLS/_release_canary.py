@@ -18,7 +18,7 @@ import time
 from pathlib import Path
 from urllib.request import ProxyHandler, build_opener
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import project_goal_filename
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import ARCHIVE_DIRECTORY, project_goal_filename
 
 from .full_suite_docker import IMAGE_DEADLINES, image_deadline_mode, image_timeout
 
@@ -29,7 +29,7 @@ class CanaryError(Exception):
     pass
 
 
-def _copy_tree(source: Path, destination: Path) -> None:
+def _copy_tree(source: Path, destination: Path, *, skip_archives: bool = False) -> None:
     if source.is_symlink() or not source.is_dir() or destination.exists() or destination.is_symlink():
         raise CanaryError("canary-copy-unsafe")
 
@@ -38,17 +38,17 @@ def _copy_tree(source: Path, destination: Path) -> None:
 
     for folder, directories, names in os.walk(source, followlinks=False, onerror=fail):
         base = Path(folder)
-        directories[:] = [name for name in directories if not _ignored(name)]
+        directories[:] = [name for name in directories if not _ignored(name, skip_archives)]
         for name in directories + [name for name in names if not _ignored(name)]:
             entry = base / name
             mode = entry.lstat().st_mode
             if not (stat.S_ISDIR(mode) or stat.S_ISREG(mode)):
                 raise CanaryError("canary-copy-unsafe")
-    shutil.copytree(source, destination, ignore=lambda _, names: [n for n in names if _ignored(n)])
+    shutil.copytree(source, destination, ignore=lambda _, names: [n for n in names if _ignored(n, skip_archives)])
 
 
-def _ignored(name: str) -> bool:
-    return name == ".DS_Store" or name.startswith(".env") or name.endswith(".env")
+def _ignored(name: str, skip_archives: bool = False) -> bool:
+    return name == ".DS_Store" or name.startswith(".env") or name.endswith(".env") or (skip_archives and name == ARCHIVE_DIRECTORY)
 
 
 def _workspace(root: Path, package: Path, run_id: str) -> Path:
@@ -213,7 +213,7 @@ def _remove_late_finder_metadata(function, path, error) -> None:
     os.rmdir(path)
 
 
-def verify_candidate_image(root: Path, package: Path, image: str, *, run_id: str, selection: dict) -> str:
+def verify_candidate_image(root: Path, package: Path, image: str, *, run_id: str, selection: dict, skip_archives=False) -> str:
     """Start the immutable image and verify that MCP serves a real query."""
     if not re.fullmatch(r"sha256:[0-9a-f]{64}", image):
         raise CanaryError("local-release-canary-image-invalid")
@@ -224,7 +224,7 @@ def verify_candidate_image(root: Path, package: Path, image: str, *, run_id: str
     failure = None
     try:
         with _candidate_tag(root, attempt, image, run_id):
-            return _verify_candidate_image(root, selection, package, attempt, image)
+            return _verify_candidate_image(root, selection, package, attempt, image, skip_archives=skip_archives)
     except BaseException as error:
         failure = error
         raise
@@ -237,13 +237,13 @@ def verify_candidate_image(root: Path, package: Path, image: str, *, run_id: str
             failure.add_note(f"Canary attempt cleanup failed: {error}")
 
 
-def _verify_candidate_image(root: Path, selection, package: Path, attempt: Path, image: str) -> str:
+def _verify_candidate_image(root: Path, selection, package: Path, attempt: Path, image: str, *, skip_archives=False) -> str:
     project = attempt / "canary-project"
     cidfile = attempt / "canary-container-id"
     if "," in str(project):
         raise CanaryError("local-release-canary-path-invalid")
     try:
-        _start_canary_container(root, selection, package, project, cidfile, image)
+        _start_canary_container(root, selection, package, project, cidfile, image, skip_archives=skip_archives)
         container = cidfile.read_text().strip()
         if not re.fullmatch(r"[0-9a-f]{64}", container):
             raise CanaryError("local-release-canary-container-invalid")
@@ -260,11 +260,11 @@ def _verify_candidate_image(root: Path, selection, package: Path, attempt: Path,
 
 
 def _start_canary_container(
-    root: Path, selection: dict, package: Path, project: Path, cidfile: Path, image: str,
+    root: Path, selection: dict, package: Path, project: Path, cidfile: Path, image: str, *, skip_archives=False,
 ) -> None:
     _copy_tree(package, project)
     control = project / selection["control_root"]
-    _copy_tree(root / selection["control_root"], control)
+    _copy_tree(root / selection["control_root"], control, skip_archives=skip_archives)
     manifest = root / selection["manifest_path"]
     root_atoms = [manifest] if manifest.parent == root else []
     root_atoms.extend(path for path in root.iterdir() if project_goal_filename(path.name))

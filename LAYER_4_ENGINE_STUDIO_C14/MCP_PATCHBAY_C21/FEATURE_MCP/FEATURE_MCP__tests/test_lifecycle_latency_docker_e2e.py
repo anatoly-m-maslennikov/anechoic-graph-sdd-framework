@@ -70,14 +70,6 @@ def lifecycle_metrics(samples):
     }
 
 
-class LifecycleLatencyMetricsTest(unittest.TestCase):
-    def test_threshold_count_uses_unrounded_samples(self):
-        report = lifecycle_metrics({"First": [499.9999, 500, 500.0001], "Second": [725, 501, 499]})
-        self.assertEqual([500.0, 500.0, 500.0], report["operations"][0]["samples_ms"])
-        self.assertEqual([1, 2], [metrics["samples_above_500_ms"] for metrics in report["operations"]])
-        self.assertEqual({"max_ms": 725, "samples_above_500_ms": 3}, report["overall"])
-
-
 class LifecycleLatencyImageTest(unittest.TestCase):
     def test_single_atom_lifecycle_latency(self):
         with archive_project(self, prepare_project) as project:

@@ -15,9 +15,9 @@ LIFECYCLE_TOOLS = frozenset({
 def _lifecycle_target(name, arguments):
     from .ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import InputError
 
-    field = "sourceCurrent" if name in {"atom_lifecycle_create_draft", "atom_lifecycle_update"} else "target"
-    if name == "atom_lifecycle_update" and field not in arguments:
-        raise InputError(field, "Supply one Current carrier to revise.")
+    field = "sourceCurrent" if name == "atom_lifecycle_create_draft" or name == "atom_lifecycle_update" and "sourceCurrent" in arguments else "target"
+    if name == "atom_lifecycle_update" and (("sourceCurrent" in arguments) == ("target" in arguments)):
+        raise InputError("target", "Supply exactly one Draft target or Current source.")
     target = arguments.get(field)
     ref = target.get("ref_id") if isinstance(target, dict) else None
     if isinstance(ref, str) and any(
@@ -31,12 +31,15 @@ def _dispatch_lifecycle(selection, name, arguments, rows, structure_snapshot, *,
                         previous_capture, ticket_labels, validate_project_spec, indexed_task=None):
     from .ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import (
         archive_ticket, change_ticket_status, create_asset, create_draft, direct_update, promote_draft,
+        update_draft,
     )
     from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.native_workflow_definition import bind_status_specifications
 
     if name == "atom_lifecycle_create_asset":
         return create_asset(selection, arguments, current_rows=rows, previous_capture=previous_capture)
     field, ref = _lifecycle_target(name, arguments)
+    if name == "atom_lifecycle_update" and field == "target":
+        return update_draft(selection, arguments, current_rows=rows, previous_capture=previous_capture)
     if name == "atom_lifecycle_direct_update":
         return direct_update(selection, arguments, current_rows=rows, previous_capture=previous_capture)
     if field == "sourceCurrent":

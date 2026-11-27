@@ -1,6 +1,6 @@
-import type * as Acorn from '../../../../../../IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND/node_modules/acorn';
+import type * as Acorn from '../../../../../../IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_FRONTEND/node_modules/acorn';
 const fs = require('fs');
-const acorn: typeof Acorn = require('../../../../../../IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND/node_modules/acorn/dist/acorn.js');
+const acorn: typeof Acorn = require('../../../../../../IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_FRONTEND/node_modules/acorn/dist/acorn.js');
 const text = fs.readFileSync(process.argv[2], 'utf8');
 const tree = acorn.parse(text, {ecmaVersion: 'latest', sourceType: 'module'});
 function walk(node: unknown, predicate: (node: Acorn.AnyNode) => boolean, found: Acorn.AnyNode[] = []): Acorn.AnyNode[] {

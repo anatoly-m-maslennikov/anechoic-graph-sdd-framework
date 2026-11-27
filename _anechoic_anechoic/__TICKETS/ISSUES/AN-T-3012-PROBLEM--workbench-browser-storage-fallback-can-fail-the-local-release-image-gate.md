@@ -6,15 +6,10 @@ container:
 priority: 2
 context:
   template: problem
-relations:
-  IS_REFERENCE:
-  - AN-T-3011
-  - AN-T-3009
-  - AN-T-2207
 state:
   status: in_queue
   version: 1
-  updated_at: '2026-11-23T05:28:19.388245+00:00'
+  updated_at: '2026-11-26T16:38:46.282078+00:00'
 ---
 ## Summary
 

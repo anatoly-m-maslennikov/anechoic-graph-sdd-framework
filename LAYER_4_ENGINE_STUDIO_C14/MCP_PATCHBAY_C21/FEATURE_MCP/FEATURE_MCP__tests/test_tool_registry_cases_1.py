@@ -15,8 +15,8 @@ from mcp.client.session import ClientSession
 
 
 MCP = Path(__file__).resolve().parents[1]
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.generate_tool_registry import generate  # noqa: E402
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.tool_registry_assets import ToolRegistryAssetError  # noqa: E402
+from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.generate_tool_registry import generate  # noqa: E402
+from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.tool_registry_assets import ToolRegistryAssetError  # noqa: E402
 
 
 
@@ -52,7 +52,7 @@ class ToolRegistryTests(ToolRegistryFixture, unittest.IsolatedAsyncioTestCase):
 
     async def test_real_transport_quarantines_one_invalid_installed_descriptor(self) -> None:
         self._write_provider(_mixed_descriptor_provider_source())
-        with self.assertLogs("IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.generate_tool_registry", level="WARNING") as generated:
+        with self.assertLogs("IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.generate_tool_registry", level="WARNING") as generated:
             generate(self.package)
         self.assertIn("broken", generated.output[0])
         root = Path(self.temporary.name).resolve()
@@ -62,7 +62,7 @@ class ToolRegistryTests(ToolRegistryFixture, unittest.IsolatedAsyncioTestCase):
 
         with patch("native_query_test_support.load_active_registry", side_effect=registry_loader):
             gateway = _native_gateway(root)
-            with self.assertLogs("IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.generate_tool_registry", level="WARNING") as loaded:
+            with self.assertLogs("IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.generate_tool_registry", level="WARNING") as loaded:
                 await gateway.initialize()
             self.assertIn("broken", loaded.output[0])
             try:
@@ -99,9 +99,9 @@ class ToolRegistryTests(ToolRegistryFixture, unittest.IsolatedAsyncioTestCase):
             "factory": "create_provider", "descriptor_factory": "tool_descriptors",
         })
         inventory_path.write_text(json.dumps(inventory), encoding="utf-8")
-        with self.assertLogs("IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.generate_tool_registry", level="WARNING"):
+        with self.assertLogs("IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.generate_tool_registry", level="WARNING"):
             generate(self.package)
-        with self.assertLogs("IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.generate_tool_registry", level="WARNING"):
+        with self.assertLogs("IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.generate_tool_registry", level="WARNING"):
             active = self._registry(Path(self.temporary.name).resolve(), object())
         self.assertEqual({"demo"}, {tool.name for tool in active.tools})
         self.assertEqual({"name": "demo", "arguments": {}}, await active.call("demo", {}))

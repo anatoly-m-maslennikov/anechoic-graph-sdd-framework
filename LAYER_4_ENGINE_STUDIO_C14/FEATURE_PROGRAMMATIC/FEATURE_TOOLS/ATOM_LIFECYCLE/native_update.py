@@ -60,11 +60,12 @@ def _check_ticket_tree(selection, path, selected, capture, tree, close_tree, req
         if _read_tree(selection.root, companion) != tree:
             raise SourceChanged('Ticket companion changed during validation.')
 
-def _read_ticket(selection, target, selected, digest, path, *, close_tree=False, placement=False, require_terminal=False, previous_capture=None):
+def _read_ticket(selection, target, selected, digest, path, *, close_tree=False, placement=False,
+                 require_terminal=False, previous_capture=None, domains=None):
     try:
         companion = path.with_suffix('')
         tree = _read_tree(selection.root, companion) if close_tree and companion.is_dir() else None
-        capture = (capture_native(selection) if previous_capture is None
+        capture = (capture_native(selection, domains=domains) if previous_capture is None
                    else revalidate_native(selection, previous_capture))
         if capture.errors:
             raise SourceChanged('Native carrier capture is incomplete.')
@@ -114,7 +115,18 @@ def _ticket_source_intact(selection, path, digest, close_tree, tree, companion):
         return False
 
 
-def _move_ticket(selection, target, selected, digest, path, destination, status, check_definition, *, close_tree=False, require_terminal=False, locked=False, preflight=None, previous_capture=None):
+def _ticket_definition_intact(check_definition, errors):
+    try:
+        check_definition()
+        return True
+    except Exception as error:
+        errors.append({'code': 'definition_revalidation_required', 'message': str(error)})
+        return False
+
+
+def _move_ticket(selection, target, selected, digest, path, destination, status, check_definition, *,
+                 close_tree=False, require_terminal=False, locked=False, preflight=None,
+                 previous_capture=None, domains=None, candidate=None):
     with nullcontext() if locked else _project_write_lock(selection.root):
         companion = path.with_suffix('')
         target_companion = destination.with_suffix('')
@@ -123,20 +135,14 @@ def _move_ticket(selection, target, selected, digest, path, destination, status,
             return result(errors=[{'code': 'destination_exists', 'message': 'Ticket destination already exists.'}])
         if preflight is None:
             raw, bounds, tree, _ = _read_ticket(selection, target, selected, digest, path, close_tree=close_tree, placement=True,
-                                                require_terminal=require_terminal, previous_capture=previous_capture)
+                                                require_terminal=require_terminal, previous_capture=previous_capture,
+                                                domains=domains)
         else:
             raw, bounds, tree = preflight
-        candidate = _status_bytes(raw, bounds, path, status)
+        if candidate is None:
+            candidate = _status_bytes(raw, bounds, path, status)
         recorded, recorded_errors = [], []
-
-        def check():
-            try:
-                check_definition()
-                return True
-            except Exception as error:
-                recorded_errors.append({'code': 'definition_revalidation_required', 'message': str(error)})
-                return False
-
+        check = partial(_ticket_definition_intact, check_definition, recorded_errors)
         source_intact = partial(_ticket_source_intact, selection, path, digest, close_tree, tree, companion)
 
         def rollback():
@@ -164,21 +170,23 @@ def _move_ticket(selection, target, selected, digest, path, destination, status,
         return result(effects=recorded, errors=recorded_errors, **data)
 
 
-def _check_ticket_transition(selected, template, status):
+def _check_ticket_transition(selected, template, status, project_statuses):
     if 'atom_family' in selected['header_json']:
         issue = template in {'problem', 'question', 'code_spec_mismatch', 'opportunity'}
         planning = template in {'task', 'epic'}
         if issue or planning:
             terminals = {'resolved', 'canceled'} if issue else {'done', 'canceled'}
-            permitted = ((selected['status'] == 'backlog' and status == 'in_queue')
-                         or (selected['status'] in {'in_queue', 'active'} and status in terminals)
-                         or (selected['status'] == 'active' and status == 'in_queue'))
+            previous = selected['status']
+            work = {'in_queue', 'active'} | project_statuses
+            permitted = ((previous == 'backlog' and status in {'in_queue'} | project_statuses)
+                         or (previous in work and status in terminals | project_statuses)
+                         or (previous in {'active'} | project_statuses and status == 'in_queue'))
             if not permitted:
                 raise InputError('targetStatus', 'Ticket Status transition is not supported for its Template.')
 
 
 def _apply_status_actions(selection, actions, selected, status, current_rows, terminal,
-                          check_definition, raw, bounds, tree, recorded):
+                          check_definition, raw, bounds, tree, recorded, domains):
     for row in actions:
         is_parent = row['id'] == selected['id']
         action_status = status if is_parent else 'canceled'
@@ -192,14 +200,16 @@ def _apply_status_actions(selection, actions, selected, status, current_rows, te
             if destination == action_path:
                 if len(actions) > 1:
                     _read_ticket(selection, action_target, current, action_digest, action_path,
-                                 close_tree=action_tree, placement=True, require_terminal=terminal)
+                                 close_tree=action_tree, placement=True, require_terminal=terminal,
+                                 domains=domains)
                 outcome = result(artifact=saved(selection, action_path, current['id'], current['id'],
                                                 action_target['version'], current['status']))
             else:
                 outcome = _move_ticket(selection, action_target, current, action_digest, action_path,
                                        destination, action_status, check_definition, close_tree=action_tree,
                                        require_terminal=terminal, locked=True,
-                                       preflight=(raw, bounds, tree) if len(actions) == 1 else None)
+                                       preflight=(raw, bounds, tree) if len(actions) == 1 else None,
+                                       domains=domains)
         except (InputError, SourceChanged, OSError, ValueError, RuntimeError, TypeError, KeyError) as error:
             if not recorded:
                 raise
@@ -212,27 +222,53 @@ def _apply_status_actions(selection, actions, selected, status, current_rows, te
     return result(effects=recorded, artifact=outcome['artifact'])
 
 
-def _ticket_template(selected, status):
+def _ticket_template(selected, status, project_statuses):
     template = native_header_view(selected['header_json']).get('context', {}).get('template')
     context = native_header_view(selected['header_json']).get('context', {})
     detached_asset = native_ticket_asset(template) and 'component' in context.get('container', {})
     if status == 'complete' and not detached_asset:
         raise InputError('targetStatus', 'Only a standalone Ticket Asset can be completed.')
-    if detached_asset and status == 'complete' and selected['status'] != 'in_queue':
+    if detached_asset and status == 'complete' and selected['status'] not in {'in_queue'} | project_statuses:
         raise InputError('targetStatus', 'Only an In Queue Asset can be completed.')
-    _check_ticket_transition(selected, template, status)
+    _check_ticket_transition(selected, template, status, project_statuses)
     return template
+
+
+def _ticket_status_domain(domains):
+    return set(domains['T'] if domains is not None else CURRENT_STATUSES['T']) - {'active', 'draft', 'archived'}
+
+
+def ticket_status_options(metadata, domains=None):
+    """List candidate Current Status moves under the same policy as a write."""
+    current = native_header_view(metadata)['state']['status']
+    selected = {'header_json': metadata, 'status': current}
+    allowed = _ticket_status_domain(domains)
+    project_statuses = allowed - CURRENT_STATUSES['T']
+    options = []
+    for status in sorted(allowed - {current}, key=lambda value: (value == 'canceled', value)):
+        try:
+            _ticket_template(selected, status, project_statuses)
+        except InputError:
+            continue
+        options.append(status)
+    return options
+
+
+def _requested_status(value, allowed):
+    if not isinstance(value, str) or value.casefold() not in allowed:
+        raise InputError('targetStatus', 'Supply a Current Ticket Status.', allowed_values=allowed)
+    return value.casefold()
+
 
 def change_ticket_status(selection, params, *, current_rows, check_definition, previous_capture=None):
     if not isinstance(params, dict) or set(params) != {'target', 'targetStatus'}:
         raise InputError('target', 'Supply one target and target Status.')
-    status = params['targetStatus']
-    if not isinstance(status, str) or status.casefold() not in CURRENT_STATUSES['T'] - {'active'}:
-        raise InputError('targetStatus', 'Supply a Current Ticket Status.', allowed_values=CURRENT_STATUSES['T'] - {'active'})
-    status = status.casefold()
+    domains = getattr(previous_capture, 'status_domains', None)
+    allowed = _ticket_status_domain(domains)
+    status = _requested_status(params['targetStatus'], allowed)
     target = params['target']
     selected, digest, path = _select_ticket(selection, target, current_rows)
-    template = _ticket_template(selected, status)
+    template = _ticket_template(selected, status, allowed - CURRENT_STATUSES['T'])
     move_tree = template in ('task', 'epic')
     terminal = move_tree and status in ('done', 'canceled')
     recorded = []
@@ -266,7 +302,7 @@ def change_ticket_status(selection, params, *, current_rows, check_definition, p
         actions = [row for row in planned if terminal and row['status'] not in ('done', 'canceled', 'resolved', 'complete')]
         actions.append(selected)
         return _apply_status_actions(selection, actions, selected, status, current_rows, terminal,
-                                     check_definition, raw, bounds, tree, recorded)
+                                     check_definition, raw, bounds, tree, recorded, domains)
 
 
 from .native_update_promotion import promote_ticket_tree

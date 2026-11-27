@@ -210,6 +210,15 @@ class NativeRefreshTest(unittest.TestCase):
             self.assertEqual(400, _query(client, "SELECT * FROM import_nodes").status_code)
 
 class PendingGraphTest(unittest.TestCase):
+    def assert_graph_publish_rejections(self, client, payload):
+        self.assertEqual(409, client.put('/generation/native', json=payload | {'base_generation': 'stale'}).status_code)
+        self.assertEqual(400, client.put('/generation/native', json=payload | {'graph_sha256': '0' * 64}).status_code)
+        changed = payload['reuse'] | {'graph_config': {'changed': True}}
+        self.assertEqual(409, client.put('/generation/native', json=payload | {'reuse': changed}).status_code)
+        bad_graph = payload['graph'] | {'test_edges': [['missing', 'C00']]}
+        invalid = payload | {'graph': bad_graph, 'graph_sha256': _digest(bad_graph)}
+        self.assertEqual(400, client.put('/generation/native', json=invalid).status_code)
+
     def test_pending_graph_publish_keeps_core_and_rejects_stale_base(self):
         data = graph_payload()
         graph = data['graph']
@@ -221,6 +230,7 @@ class PendingGraphTest(unittest.TestCase):
             response = client.put('/generation', json=data | {'reuse': witness})
             self.assertEqual(200, response.status_code, response.text)
             base = response.json()['result']['generation']
+            pending_reuse = client.get('/generation/reuse', params=BINDING).json()['result']
             artifacts = [client.get(path, params=BINDING).content for path in ('/model', '/structure')]
             core = _query(client, 'SELECT * FROM atoms').json()['result']['rows']
             joined = _query(client, 'SELECT count(*) FROM atoms JOIN native_references USING (reference)')
@@ -235,22 +245,22 @@ class PendingGraphTest(unittest.TestCase):
             ready = deepcopy(witness)
             ready['inputs']['graph'] = 'b' * 64
             payload = BINDING | {'base_generation': base, 'graph': graph, 'graph_sha256': _digest(graph), 'reuse': ready}
-            self.assertEqual(409, client.put('/generation/native', json=payload | {'base_generation': 'stale'}).status_code)
-            self.assertEqual(400, client.put('/generation/native', json=payload | {'graph_sha256': '0' * 64}).status_code)
-            changed = deepcopy(ready)
-            changed['graph_config'] = {'changed': True}
-            self.assertEqual(409, client.put('/generation/native', json=payload | {'reuse': changed}).status_code)
-            bad_graph = deepcopy(graph)
-            bad_graph['test_edges'] = [['missing', 'C00']]
-            self.assertEqual(400, client.put('/generation/native', json=payload | {'graph': bad_graph, 'graph_sha256': _digest(bad_graph)}).status_code)
+            self.assert_graph_publish_rejections(client, payload)
             published = client.put('/generation/native', json=payload)
             self.assertEqual(200, published.status_code, published.text)
             self.assertEqual(base, published.json()['result']['generation'])
             self.assertEqual(409, client.put('/generation/native', json=payload).status_code)
+            self.assertEqual(400, client.put('/generation/native', json=payload | {'force_graph': False}).status_code)
+            self.assertEqual(409, client.put('/generation/native', json=payload | {'force_graph': True, 'base_generation': 'stale'}).status_code)
+            refreshed_graph = deepcopy(graph)
+            refreshed_graph['code_access_findings'][0][5] = 'uncertain'
+            forced = client.put('/generation/native', json=payload | {'force_graph': True,
+                                'graph': refreshed_graph, 'graph_sha256': _digest(refreshed_graph)})
+            self.assertEqual(200, forced.status_code, forced.text)
             self.assertEqual(core, _query(client, 'SELECT * FROM atoms').json()['result']['rows'])
             self.assertEqual(artifacts, [client.get(path, params=BINDING).content for path in ('/model', '/structure')])
-            self.assertEqual([['denied']], _query(client, 'SELECT status FROM code_access_findings').json()['result']['rows'])
-            self.assertEqual({'base_generation': base, **ready}, client.get('/generation/reuse', params=BINDING).json()['result'])
+            self.assertEqual([['uncertain']], _query(client, 'SELECT status FROM code_access_findings').json()['result']['rows'])
+            self.assertEqual(pending_reuse | {'inputs': ready['inputs']}, client.get('/generation/reuse', params=BINDING).json()['result'])
 
     def test_warm_graph_publish_and_disabled_rejection(self):
         data = graph_payload()

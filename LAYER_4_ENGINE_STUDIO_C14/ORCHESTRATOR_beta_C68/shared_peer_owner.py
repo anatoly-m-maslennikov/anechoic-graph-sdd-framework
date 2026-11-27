@@ -97,7 +97,8 @@ def _check_paths(config, selection):
 def _configured(config, selected):
     parameters = deepcopy(selected.parameters)
     runtime = parameters.setdefault("runtime", {})
-    runtime.setdefault("workbench", {}).setdefault("storage", config.workbench_storage)
+    name = "iwe_console" if "iwe_console" in runtime or "workbench" not in runtime else "workbench"
+    runtime.setdefault(name, {}).setdefault("storage", config.workbench_storage)
     runtime.setdefault("journal", {}).setdefault("storage", config.journal_storage)
     return replace(selected, parameters=parameters)
 

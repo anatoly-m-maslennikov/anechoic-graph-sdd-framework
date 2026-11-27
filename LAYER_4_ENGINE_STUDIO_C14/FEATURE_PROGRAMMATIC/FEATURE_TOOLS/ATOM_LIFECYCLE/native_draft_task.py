@@ -52,6 +52,8 @@ def _create_task(selection, values, current_rows, structure_snapshot, ticket_lab
         with bind_query_reader(None):
             outcome = common.write_destination(selection.root, path, raw)
         data = {} if outcome.errors else {'savedDraft': common.saved(selection, path, atom_id, ref, 1, 'Draft')}
+        if data:
+            data['savedDraft']['updated_at'] = header['state']['updated_at']
         return common.result(effects=outcome.effects, errors=outcome.errors, **data)
 
 

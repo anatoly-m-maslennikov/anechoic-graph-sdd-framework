@@ -36,7 +36,7 @@ class MutableDefaultTests(unittest.TestCase):
               patch.object(static_checks.subprocess, "run", side_effect=execute)):
             source.write_text("def collect(items=[]):\n    return items\n", encoding="utf-8")
             self.assertEqual(static_checks.check(root), 1)
-            self.assertIn("B006", output[-1])
+            self.assertIn("B006", "".join(output))
             source.write_text("def collect(items=None):\n    return [] if items is None else items\n", encoding="utf-8")
             self.assertEqual(static_checks.check(root), 0)
             source.write_text("def collect(items=[]):  # noqa: B006\n    return items\n", encoding="utf-8")

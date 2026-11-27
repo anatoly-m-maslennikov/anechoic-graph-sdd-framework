@@ -4,7 +4,7 @@ import unittest
 
 TOOLS = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(TOOLS))
-sys.path.insert(0, str(TOOLS.parent.parent / 'IWE_CONSOLE_C43/APP_WORKBENCH'))
+sys.path.insert(0, str(TOOLS.parent.parent / 'IWE_CONSOLE_C43/APP_IWE_CONSOLE'))
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import compile_role_form, load_role_form  # noqa: E402
 
 

@@ -17,4 +17,4 @@ The zero-pin check counts applicable standards
 
 ## Concern
 
-CA-M-1015@1 excludes `applies` pins from implementation coverage. The draft test at `APP_WORKBENCH/tests/test_spec_trace_e2e.py` checks zero pins without filtering to `implements`. Its fixture lacks an Applies-only Package, so the check cannot distinguish coverage from applicability.
+CA-M-1015@1 excludes `applies` pins from implementation coverage. The draft test at `APP_IWE_CONSOLE/tests/test_spec_trace_e2e.py` checks zero pins without filtering to `implements`. Its fixture lacks an Applies-only Package, so the check cannot distinguish coverage from applicability.

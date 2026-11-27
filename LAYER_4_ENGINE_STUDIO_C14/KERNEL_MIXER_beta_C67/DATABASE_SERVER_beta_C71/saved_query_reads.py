@@ -11,13 +11,13 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict
 
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import console_state_path
 from .work_journal import MAX_DATABASE_EVENT_BYTES, _fingerprint, _open_directory
 
 
 SAVED_QUERY_AUTHOR = "workbench-saved-items"
 _UUID7 = re.compile(r"[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}")
 _LEGACY_ID = re.compile(r"[qw]_[0-9a-f]{32}")
-_LEGACY_DIRECTORY = (".anechoic_runtime", "workbench", "saved_queries")
 _EVENT_FIELDS = {"saved_query_id", "kind", "sql", "saved_at"}
 _WORDS = re.compile(r"\S+")
 
@@ -110,8 +110,9 @@ def _legacy_record(directory, saved_query_id):
 
 def _legacy_items(project_root):
     project_root = Path(project_root)
+    legacy = console_state_path(project_root) / "saved_queries"
     try:
-        directory = _open_directory(project_root, _LEGACY_DIRECTORY, create=False, same_device=True)
+        directory = _open_directory(project_root, legacy.relative_to(project_root).parts, create=False, same_device=True)
     except FileNotFoundError:
         return
     try:
@@ -124,7 +125,7 @@ def _legacy_items(project_root):
                     record, mtime = _legacy_record(directory, saved_query_id)
                     saved_at = datetime.fromtimestamp(mtime, UTC).isoformat()
                 except (OSError, ValueError, RecursionError, OverflowError):
-                    print(f"saved query skipped: {project_root.joinpath(*_LEGACY_DIRECTORY, entry.name)}", file=sys.stderr)
+                    print(f"saved query skipped: {legacy / entry.name}", file=sys.stderr)
                     continue
                 yield record.model_copy(update={"saved_at": saved_at})
     finally:
@@ -135,8 +136,10 @@ def load_saved_query(project_root, events, saved_query_id):
     """Load an exact saved SQL string by its already Project-bound ID."""
     saved_query_id = validate_saved_query_id(saved_query_id)
     if _LEGACY_ID.fullmatch(saved_query_id):
+        project_root = Path(project_root)
+        legacy = console_state_path(project_root) / "saved_queries"
         try:
-            directory = _open_directory(project_root, _LEGACY_DIRECTORY, create=False, same_device=True)
+            directory = _open_directory(project_root, legacy.relative_to(project_root).parts, create=False, same_device=True)
             try:
                 record, _ = _legacy_record(directory, saved_query_id)
                 return record.as_event()

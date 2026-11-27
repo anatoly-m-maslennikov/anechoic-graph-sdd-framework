@@ -8,7 +8,7 @@ from .native_model_claim_values import NativeModelClaimError, _DECLARATIONS, _IM
 from .native_model_claim_syntax import _class, _instance_check
 
 
-def _read_tree(tree, text):
+def _read_tree(tree, text, declarations=_DECLARATIONS):
     imports: dict[str, str] = {}
     names: set[str] = set()
     classes = []
@@ -37,7 +37,7 @@ def _read_tree(tree, text):
             functions.append(_instance_check(item, names, text))
             names.add(item.name)
         elif (isinstance(item, ast.Expr) and isinstance(item.value, ast.Call)
-              and isinstance(item.value.func, ast.Name) and item.value.func.id in _DECLARATIONS):
+              and isinstance(item.value.func, ast.Name) and item.value.func.id in declarations):
             if declaration is not None:
                 _fail(item, "a Model Claim must contain exactly one declaration")
             declaration = item.value

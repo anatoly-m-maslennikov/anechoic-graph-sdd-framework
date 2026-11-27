@@ -36,7 +36,8 @@ def invoke(binding, name, arguments, *, structure_sha256=None, indexed_task=None
 
 def copy_lifecycle_definitions(control):
     source = ENGINE.parent / "_anechoic_anechoic"
-    for relative in ("LAYER_1_META_ONTOLOGY_C9", "LAYER_1_META_ONTOLOGY_C9/_SPEC", "__PROJECT_CONFIG/CUSTOM_MODEL"):
+    for relative in ("LAYER_1_META_ONTOLOGY_C9", "LAYER_1_META_ONTOLOGY_C9/_SPEC",
+                     "LAYER_1_META_ONTOLOGY_C9/_DOM/CONT", "__PROJECT_CONFIG/CUSTOM_MODEL"):
         destination = control / relative
         destination.mkdir(parents=True, exist_ok=True)
         for path in (source / (relative.replace("LAYER_1_META_ONTOLOGY_C9", "ONTOLOGY_SCORE_C82/CONTINUANT_PITCHFORK_C9") if relative.startswith("LAYER_1_META_ONTOLOGY_C9") else relative)).glob("*.md"):
@@ -128,6 +129,15 @@ class LifecycleWorkerTests(unittest.TestCase):
     def test_stale_structure_refuses_before_write(self):
         with tempfile.TemporaryDirectory(prefix="ane-lifecycle-", dir="/tmp") as directory:
             binding, _, _ = generation_fixture(directory)
+            result = invoke({**binding, "manifest_sha256": "0" * 64}, "atom_lifecycle_create_draft", {})
+            self.assertNotEqual(0, result.returncode)
+            result = invoke(binding, "atom_lifecycle_create_draft", {"newAtom": {"template": "component_contract"}})
+            self.assertEqual(0, result.returncode, result.stderr)
+            lifecycle = json.loads(result.stdout)["lifecycle"]
+            self.assertEqual("needs_input", lifecycle["outcome"])
+            self.assertEqual("Add the Component Contract to the Component Manifest.",
+                             lifecycle["requested_input"]["newAtom"]["error"])
+            self.assertEqual([], lifecycle["effects"])
             response = invoke(binding, "atom_lifecycle_create_draft", {"newAtom": {
                 "template": "task", "container": {"component": "C00"}, "body": "## Summary\n\nCanary.\n"}},
                 structure_sha256="0" * 64)
@@ -284,15 +294,6 @@ class LifecycleWorkerTests(unittest.TestCase):
             self.assertEqual((task_header + before).encode(), task.read_bytes())
             self.assertEqual((typed_header + body).encode(), typed.read_bytes())
             self.assertEqual((untyped_header + body).encode(), untyped.read_bytes())
-
-    def test_invalid_binding_and_out_of_scope_refused(self):
-        with tempfile.TemporaryDirectory(prefix="ane-lifecycle-", dir="/tmp") as directory:
-            binding, _, _ = generation_fixture(directory)
-            result = invoke({**binding, "manifest_sha256": "0" * 64}, "atom_lifecycle_create_draft", {})
-            self.assertNotEqual(0, result.returncode)
-            result = invoke(binding, "atom_lifecycle_create_draft", {"newAtom": {"template": "component_contract"}})
-            self.assertEqual(0, result.returncode, result.stderr)
-            self.assertNotEqual("completed", json.loads(result.stdout)["lifecycle"]["outcome"])
 
     def test_indexed_worker_uses_only_published_carrier(self):
         with tempfile.TemporaryDirectory(prefix="ane-indexed-", dir="/tmp") as directory:

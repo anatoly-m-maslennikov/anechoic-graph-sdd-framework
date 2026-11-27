@@ -105,13 +105,13 @@ class RenderEntityTreeTests(unittest.TestCase):
     def test_model_view_renders_constraint_sections_without_publishing(self):
         self.source.write_text(
             atom(subject="Node.Property: literal").replace(
-                "# Source\n", "# Source\n\n## Claim\n\n```CFEL\nNode.Property: [string]{:1};\nIF Node THEN Property\n```\n"
+                "# Source\n", "# Source\n\n## Claim\n\n```python\nproperty_rule(address='Node.Property', value_format='string', values='1')\n```\n"
             ), encoding="utf-8",
         )
         before = self.source_bytes()
         result = self.run_cli(view="model", stdout=True)
         self.assertEqual(0, result.returncode, result.stderr)
-        for heading in ("## Model graph", "## Properties", "## Allowed literals", "## Constraints", "## Unsupported CFEL"):
+        for heading in ("## Model graph", "## Properties", "## Allowed literals", "## Constraints", "## Python Formal Claim diagnostics"):
             self.assertIn(heading, result.stdout)
         self.assertFalse(self.output.exists())
         self.assertEqual(before, self.source_bytes())

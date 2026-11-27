@@ -4,6 +4,7 @@ from pathlib import Path
 import re
 
 _NATIVE_REF = re.compile(r"[A-Z]+-[STPC]-[0-9]+(?:@[1-9][0-9]*(?:-draft)?)?")
+COMPONENT_MANIFEST_FILENAME = re.compile(r'[A-Z]+-S-[0-9]+-SPEC-(COMPONENT(?:_SEED)?_MANIFEST)--.+\.md$')
 
 
 def is_native_atom_reference(value) -> bool:

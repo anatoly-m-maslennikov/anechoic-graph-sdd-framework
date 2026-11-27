@@ -29,7 +29,7 @@ declare_entity(
         component_id='C23',
         name='SKILLS',
         lens_whitelist=['DES', 'DevOps', 'QA', 'SWD'],
-        boundaries={'code': {'imports': {'only': []}},
+        boundaries={'code': {'exports': {}, 'imports': {'only': []}},
                     'state': {'reads': [], 'writes': []},
                     'io': {'server': {'guided_anechoic_mcp_use': {'outcomes': {
                         'guidance_provided': {

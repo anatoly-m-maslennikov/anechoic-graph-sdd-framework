@@ -64,7 +64,7 @@ def _conditional_target(
         )
         target = _target(subject)
         if target is not None and target in catalog:
-            return target, "classification_context", {"axis": _subject_render_subject(axis)}
+            return target, "axis_context", {"axis": _subject_render_subject(axis)}
         return None
     if not isinstance(expression, _subject_Path):
         return None

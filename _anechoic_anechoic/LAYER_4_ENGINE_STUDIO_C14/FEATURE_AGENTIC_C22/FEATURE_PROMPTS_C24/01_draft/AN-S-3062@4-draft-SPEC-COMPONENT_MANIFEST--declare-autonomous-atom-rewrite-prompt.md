@@ -29,7 +29,7 @@ declare_entity(
         component_id='C55',
         name='AUTONOMOUS_ATOM_REWRITE_PROMPT',
         lens_whitelist=['DES'],
-        boundaries={'code': {'imports': {'only': []}},
+        boundaries={'code': {'exports': {}, 'imports': {'only': []}},
                     'state': {'reads': [], 'writes': []},
                     'io': {'server': {'autonomous_atom_rewrite': {'outcomes': {'draft_reported': {
                         'must_effect': [('source_meaning_guidance', 'provided'), ('uncertainty_guidance', 'required')],

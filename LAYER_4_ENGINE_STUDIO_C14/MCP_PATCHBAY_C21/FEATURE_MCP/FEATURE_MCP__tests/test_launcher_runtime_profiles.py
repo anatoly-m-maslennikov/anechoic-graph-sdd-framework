@@ -9,13 +9,14 @@ import subprocess
 import sys
 from tempfile import TemporaryDirectory
 from threading import Event
+from types import SimpleNamespace
 import unittest
 from unittest.mock import Mock, patch
 
 import httpx2
 
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import (
-    DirectGateway, runtime_stack, server_main,
+    DirectGateway, beta_runtime_arguments, runtime_stack, server_main,
 )
 from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import supervise_project
 from .FEATURE_MCP__tests__shared import write_manifest
@@ -33,6 +34,21 @@ class LauncherRuntimeProfileTests(unittest.TestCase):
         self.environment = {key: value for key, value in os.environ.items() if key not in PROFILE_KEYS}
         runtime_stack.cache_clear()
         self.addCleanup(runtime_stack.cache_clear)
+
+    def test_manifest_console_settings_take_precedence_and_legacy_falls_back(self):
+        selection = SimpleNamespace(
+            root=self.root, control_relative=Path("_anechoic_anechoic"),
+            instance_id="id", manifest_sha256="hash", manifest_path=self.manifest,
+            project_prefix="AN", project_name="Anechoic", host_root=None,
+            tool_blacklist=[], parameters={"runtime": {"workbench": {"storage": "memory"}}},
+        )
+        with patch.dict(os.environ, self.environment, clear=True):
+            args = beta_runtime_arguments(selection, "socket")
+            self.assertEqual("memory", args[args.index("--workbench-storage") + 1])
+            selection.parameters["runtime"]["iwe_console"] = {"storage": "disk", "import_graph": False}
+            args = beta_runtime_arguments(selection, "socket")
+            self.assertEqual("disk", args[args.index("--workbench-storage") + 1])
+            self.assertNotIn("--watch-code", args)
 
     def host_http(self):
         argv = [str(HOST_HTTP), "--project-root", str(self.root), "--port", "1234"]

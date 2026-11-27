@@ -37,7 +37,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         from .ORCHESTRATOR_beta_C68__shared import GenerationJobs
-        if self.path not in {"/jobs/build", "/jobs/lifecycle", "/jobs/abort"}:
+        if self.path not in {"/jobs/build", "/jobs/lifecycle", "/jobs/abort", "/jobs/atom-document"}:
             return self.respond(404, {"error": {"code": "not_found", "message": "Unknown endpoint"}})
         try:
             length = int(self.headers.get("Content-Length", ""))
@@ -46,8 +46,11 @@ class Handler(BaseHTTPRequestHandler):
             request = json.loads(self.rfile.read(length))
         except (ValueError, UnicodeDecodeError):
             return self.respond(400, {"error": {"code": "invalid_request", "message": "Invalid JSON request"}})
-        if self.path in {"/jobs/lifecycle", "/jobs/abort"} and not isinstance(self.server.jobs, GenerationJobs):
+        if self.path in {"/jobs/lifecycle", "/jobs/abort", "/jobs/atom-document"} and not isinstance(self.server.jobs, GenerationJobs):
             return self.respond(503, {"error": {"code": "unavailable", "message": "Lifecycle is unavailable"}})
+        if self.path == "/jobs/atom-document":
+            from .atom_document import document
+            return self.respond(*document(self.server.jobs, request))
         status, body = (self.server.jobs.lifecycle(request) if self.path == "/jobs/lifecycle"
                         else self.server.jobs.abort(request) if self.path == "/jobs/abort"
                         else self.server.jobs.build(request))

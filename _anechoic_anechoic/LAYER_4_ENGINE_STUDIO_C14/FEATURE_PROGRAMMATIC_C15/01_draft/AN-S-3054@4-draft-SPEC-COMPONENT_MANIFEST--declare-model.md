@@ -29,7 +29,7 @@ declare_entity(
         component_id='C51',
         name='MODEL',
         lens_whitelist=['DES', 'SPEC'],
-        boundaries={'code': {'imports': []}, 'io': {'server': {}}},
+        boundaries={'code': {'exports': {}, 'imports': []}, 'io': {'server': {}}},
     ),
 )
 ```

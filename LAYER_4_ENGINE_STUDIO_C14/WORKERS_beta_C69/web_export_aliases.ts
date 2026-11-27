@@ -2,8 +2,8 @@ import fs from 'node:fs';
 import {createRequire} from 'node:module';
 import path from 'node:path';
 
-const require = createRequire(new URL('../IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND/package.json', import.meta.url));
-const ts: typeof import('../IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND/node_modules/typescript') =
+const require = createRequire(new URL('../IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_FRONTEND/package.json', import.meta.url));
+const ts: typeof import('../IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_FRONTEND/node_modules/typescript') =
   require('typescript');
 
 type Node = Parameters<typeof ts.isIdentifier>[0];

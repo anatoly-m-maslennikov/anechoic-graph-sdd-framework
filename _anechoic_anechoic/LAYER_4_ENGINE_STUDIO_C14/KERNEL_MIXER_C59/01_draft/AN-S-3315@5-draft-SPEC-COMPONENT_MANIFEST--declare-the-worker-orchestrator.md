@@ -33,9 +33,7 @@ declare_entity(
         name='Orchestrator',
         lens_whitelist=['DES', 'SPEC'],
         boundaries={
-            'code': {
-                'imports': {'only': []},
-            },
+            'code': {'exports': {'ORCHESTRATOR_C66__shared.Orchestrator': None}, 'imports': {'only': []}},
             'io': {
                 'server': {
                     'compiler_worker': {

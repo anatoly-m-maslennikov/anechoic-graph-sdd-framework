@@ -56,16 +56,16 @@ def _compile_dataclass_fields(declaration, args):
 
 
 
-def _compile_classifications(args):
-    if set(args) != {"entity_name", "allowed_classification_values"}:
-        raise ValueError("unsupported allowed classification declaration")
-    values = args["allowed_classification_values"]
+def _compile_axes(args):
+    if set(args) != {"entity_name", "allowed_axis_values"}:
+        raise ValueError("unsupported allowed axis declaration")
+    values = args["allowed_axis_values"]
     if not isinstance(values, Mapping) or not values:
-        raise ValueError("allowed classification values must be a nonempty mapping")
+        raise ValueError("allowed axis values must be a nonempty mapping")
     statements = []
     for axis, items in values.items():
         if not isinstance(items, tuple) or not items or len(set(items)) != len(items):
-            raise ValueError("allowed classification values must be distinct tuples")
+            raise ValueError("allowed axis values must be distinct tuples")
         statements.extend(f"{_name(args['entity_name'])} >| {_name(axis)}: {_name(item)}" for item in items)
     return tuple(statements)
 
@@ -80,7 +80,7 @@ def _compile_relation(args):
             statements.append(f"Relation//{name} ((HAS_INVERSE)) Relation//{inverse}")
         else:
             statements.append(f"Relation//{inverse} ((IS_INVERSE_ALIAS_FOR)) Relation//{name}")
-    for key, relation in (("classifications", name), ("inverse_classifications", args.get("inverse_alias"))):
+    for key, relation in (("axes", name), ("inverse_axes", args.get("inverse_alias"))):
         values = args.get(key, {})
         if not isinstance(values, Mapping) or (values and not relation):
             raise ValueError(f"invalid {key}")
@@ -99,9 +99,9 @@ def _compile_qualified(declaration, args, name):
         return (f"Projection.Form :: {name}", f"Projection/(.Form in ({name}))")
     if qualifier == "Atom.Header.Context.Role":
         statements = [f"{qualifier} :: {name}"]
-        classifications = args.get("classifications", {})
-        if "Role Order Number" in classifications:
-            order = classifications["Role Order Number"]
+        axes = args.get("axes", {})
+        if "Role Order Number" in axes:
+            order = axes["Role Order Number"]
             if type(order) is not int or order < 1:
                 raise ValueError("Role Order Number must be a positive integer")
             statements.append(f"Atom/(.Header.Context.Role := {name}) >| (Role Order Number == {order})")
@@ -138,8 +138,8 @@ def compiler_model_statements(declaration: Mapping[str, Any], *, model_class_bin
         from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import validate_aspect_hierarchy
         paths, memberships = validate_aspect_hierarchy(dict(args))
         return paths + tuple(f"({address}) ((INSTANCE_OF)) Aspect" for address in memberships)
-    if declaration["kind"] == "entity" and "allowed_classification_values" in args:
-        return _compile_classifications(args)
+    if declaration["kind"] == "entity" and "allowed_axis_values" in args:
+        return _compile_axes(args)
     if declaration["kind"] == "entity" and args.get("instance", {}).get("type") == "Aspect":
         return _aspect_statements(args)
     if declaration["kind"] == "relation":

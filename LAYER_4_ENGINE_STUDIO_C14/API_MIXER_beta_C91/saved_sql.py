@@ -12,6 +12,10 @@ from .admission import failure, peer
 from .projection import PeerError
 
 
+_IWE_CONSOLE_PATH = "/anechoic/iwe-console"
+_LEGACY_WORKBENCH_PATH = "/anechoic/workbench"
+
+
 class StrictModel(BaseModel):
     model_config = ConfigDict(strict=True, extra="forbid")
 
@@ -118,7 +122,7 @@ def saved_id(value):
 def public_page(context):
     name, base, configured = context.project_name, context.base, context.configured_url
     if base is not None:
-        return f"{base.rstrip('/')}/anechoic/workbench/{quote(name, safe='')}" if name and base else None
+        return f"{base.rstrip('/')}{_IWE_CONSOLE_PATH}/{quote(name, safe='')}" if name and base else None
     if (not configured or any(char.isspace() or ord(char) < 32 or ord(char) == 127 for char in configured)
             or "?" in configured or "#" in configured):
         return None
@@ -150,8 +154,10 @@ def reference(value, context):
         raise ValueError("saved query reference must be an ID or this Project's URL")
     parsed = urlparse(value)
     query = parse_qs(parsed.query, keep_blank_values=True)
+    name = quote(context.project_name, safe="")
+    expected_paths = {f"{_IWE_CONSOLE_PATH}/{name}", f"{_LEGACY_WORKBENCH_PATH}/{name}"}
     if (f"{parsed.scheme}://{parsed.netloc}" != context.base.rstrip("/")
-            or parsed.path != f"/anechoic/workbench/{quote(context.project_name, safe='')}" or parsed.params or parsed.fragment
+            or parsed.path not in expected_paths or parsed.params or parsed.fragment
             or set(query) - {"query", "project_root"} or len(query.get("query", [])) != 1
             or ("project_root" in query and query["project_root"] != [context.root]) or not saved_id(query["query"][0])):
         raise ValueError("saved query URL is not for this Project")

@@ -67,7 +67,7 @@ declare_cli_contract(
     interface='build_graph',
     action='import_graph_build_snapshot',
     runner='managed_python',
-    module='IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.realization_graph_cli',
+    module='IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IMPORT_GRAPH_C61.realization_graph_cli',
     input_fields=('root', 'config'),
     optional_paired_inputs=('structure', 'control_root'),
     output_fields=('nodes', 'occurrences', 'edges', 'test_edges', 'read_issues',

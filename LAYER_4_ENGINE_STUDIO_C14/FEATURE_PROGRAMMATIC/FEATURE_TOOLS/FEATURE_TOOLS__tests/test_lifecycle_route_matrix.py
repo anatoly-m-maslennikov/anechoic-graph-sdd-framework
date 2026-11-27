@@ -216,20 +216,20 @@ declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Te
         return (
             route == 'create_draft' and situation == 'new' and
                 ((family == 'TKT' and template in {'task', 'epic'}) or
-                 (family == 'SPEC' and not contained and template in project_specs | {'component_contract'})) or
+                 (family == 'SPEC' and not contained and template in project_specs)) or
             route in {'create_draft', 'update'} and situation == 'current' and
                 ((family == 'TKT' and template in {'task', 'epic'}) or
                  (family == 'PROJECT_CONFIG' and template is not None and not contained) or
-                 (family == 'SPEC' and template != 'project_manifest' and not contained)) or
+                 (family == 'SPEC' and template not in {'project_manifest', 'component_contract'} and not contained)) or
             route == 'create_asset' and situation == 'new' and family == 'TKT' and template in assets or
             route == 'direct_update' and situation in {'current', 'draft'} and family == 'TKT' and template in assets or
             route == 'promote_draft' and situation == 'draft' and
                 ((family == 'TKT' and template in {'task', 'epic'}) or
-                 (family == 'SPEC' and not contained and template in {None, 'component_contract'} | project_specs) or
+                 (family == 'SPEC' and not contained and template in {None} | project_specs) or
                  (family == 'PROJECT_CONFIG' and template is not None and not contained)) or
             route == 'change_status' and situation == 'current' and
                 (family == 'TKT' and self._grid_ticket_transition_supported(case) or
-                 family == 'SPEC' and not contained and template != 'project_manifest') or
+                 family == 'SPEC' and not contained and template not in {'project_manifest', 'component_contract'}) or
             route == 'archive' and family == 'SPEC' and not contained and
                 (situation == 'draft' or situation == 'current' and template != 'project_manifest')
         )

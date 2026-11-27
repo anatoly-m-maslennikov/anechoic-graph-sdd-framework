@@ -43,6 +43,8 @@ Paths below are relative to `ProjectManifest.parameters`. The Project Manifest c
 
 Component and Component Seed Manifests own Structure. The Meta-Ontology and Project Config Custom Model own Atom types, properties and relations. Project Config owns release Workflows; the Project Manifest gate controls their MCP exposure. See AN-T-2978.
 
+`runtime.workbench` is accepted for older Project Manifests. When both blocks are present, `runtime.iwe_console` takes precedence.
+
 | Parameter | Meaning |
 | --- | --- |
 | `project.root.prefix` | `dot` selects `.anechoic_<project_name>`; `underscore` selects `_anechoic_<project_name>`. Both use the case-folded Manifest name. |
@@ -53,12 +55,12 @@ Component and Component Seed Manifests own Structure. The Meta-Ontology and Proj
 | `runtime.project_mcp.build_if_missing` | Permit a missing compatible runtime image to be built. Default `True`. |
 | `runtime.project_mcp.build_timeout_seconds` | Maximum image build time. Default 600 seconds. |
 | `runtime.project_mcp.startup_timeout_seconds` | Maximum startup and readiness time. Default 420 seconds. |
-| `runtime.workbench.import_graph` | Import Graph options. A mapping or omission enables it; `False` disables it. |
-| `runtime.workbench.import_graph.include` | Named Project-relative authored files included despite Git ignore rules. Default empty list. |
-| `runtime.workbench.import_graph.python_roots` | Optional ordered Project-relative roots for Python import resolution. If omitted, infer one root from each direct child directory with a uv Project and lock. Resolve each child against its own root. Use `.` when there are no such children. |
-| `runtime.workbench.import_graph.python_image_imports` | Map of Project-relative Python source files to lists of dotted Python module names. Default empty mapping. |
-| `runtime.workbench.inline_result_limit_kib` | Inline query result size limit in KiB. Default 4. |
-| `runtime.workbench.public_url` | Workbench page URL for saved query links when no request URL is available. |
-| `runtime.workbench.result_ttl_seconds` | Retention in seconds for query results not pinned by an open View. Default 3600. |
-| `runtime.workbench.schema_mode` | Header selection: `1` uses declared paths; `2` (default) uses observed paths. |
-| `runtime.workbench.storage` | `disk` (default) uses the Project DuckDB file; `memory` makes other Workbench tables ephemeral. Independent of Journal storage. |
+| `runtime.iwe_console.import_graph` | Import Graph options. A mapping or omission enables it; `False` disables it. |
+| `runtime.iwe_console.import_graph.include` | Named Project-relative authored files included despite Git ignore rules. Default empty list. |
+| `runtime.iwe_console.import_graph.python_roots` | Optional ordered Project-relative roots for Python import resolution. If omitted, infer one root from each direct child directory with a uv Project and lock. Resolve each child against its own root. Use `.` when there are no such children. |
+| `runtime.iwe_console.import_graph.python_image_imports` | Map of Project-relative Python source files to lists of dotted Python module names. Default empty mapping. |
+| `runtime.iwe_console.inline_result_limit_kib` | Inline query result size limit in KiB. Default 4. |
+| `runtime.iwe_console.public_url` | Workbench page URL for saved query links when no request URL is available. |
+| `runtime.iwe_console.result_ttl_seconds` | Retention in seconds for query results not pinned by an open View. Default 3600. |
+| `runtime.iwe_console.schema_mode` | Header selection: `1` uses declared paths; `2` (default) uses observed paths. |
+| `runtime.iwe_console.storage` | `disk` (default) uses the Project DuckDB file; `memory` makes other Workbench tables ephemeral. Independent of Journal storage. |

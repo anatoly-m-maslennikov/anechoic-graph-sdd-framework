@@ -13,7 +13,7 @@ relations:
 state:
   status: draft
   version: 5
-  updated_at: '2026-11-25T10:46:02.868446+00:00'
+  updated_at: '2026-11-26T20:30:26.177912+00:00'
 ---
 ## Summary
 
@@ -34,13 +34,21 @@ For a Model or Structure request, the Server checks the Project binding and
 pairs accepted content with its corresponding generation ID before returning
 it. For the Structure-specific outcome, the Server renders canonical Structure
 from accepted rows and generation facts before pairing it with its generation
-ID. A foreign instance or missing generation returns no pair.
+ID. A bound Model request can return the accepted file with an empty
+generation header when no generation is admitted. Structure requires an admitted generation.
+Reject a foreign instance.
 
 For full generation admission, the Server checks the Project binding and
 verifies admission inputs before it commits paired artifacts and the Project
 snapshot, including the enabled Realization Graph where relevant, in one
-transaction. On validation or admission failure it retains the prior generation.
-A foreign instance cannot commit a generation.
+transaction. On validation or admission failure before commit it retains the
+prior generation. A foreign instance cannot commit a generation.
+
+After commit, the Server makes the Model asset available with the exact
+descriptor digest from the verified admission receipt.
+It initializes the asset on the first fallback and skips a write when the
+bytes already match. If publication fails, it invalidates the generation
+receipt, retains the previous file, and reports failure.
 
 The carrier delta profile checks the Project binding and named base
 before admission. One commit publishes the changed Atom and Model-defined
@@ -146,6 +154,8 @@ component_workflow(
             'reading': {'on': {
                 'content_and_generation_paired': {'target': 'responding', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'effect', 'target': 'artifact_content_generation', 'outcome': 'paired'}}},
+                'standalone_model_returned': {'target': 'succeeded', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'output', 'outcome': 'succeeded', 'detail': {'generation_id': ''}}}},
                 'no_generation': {'target': 'rejected', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'output', 'outcome': 'no_generation'}}},
             }},
@@ -182,15 +192,27 @@ component_workflow(
             }},
             'verifying': {'on': {
                 'inputs_verified': {'target': 'committing', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'effect', 'target': 'C71.admission_inputs', 'outcome': 'verified'}}},
+                    {'kind': 'effect', 'target': 'C71.admission_inputs', 'outcome': 'verified',
+                     'bind': {'descriptor': 'model_descriptor_sha256'}}}},
                 'validation_failed': {'target': 'failed_response', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'effect', 'target': 'C71.previous_generation', 'outcome': 'retained'}}},
             }},
             'committing': {'on': {
-                'generation_committed': {'target': 'responding', 'guard': {'type': 'matchesTrace', 'params':
+                'generation_committed': {'target': 'ensuring_asset', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'effect', 'target': 'C71.generation', 'outcome': 'committed'}}},
                 'admission_failed': {'target': 'failed_response', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'effect', 'target': 'C71.previous_generation', 'outcome': 'retained'}}},
+            }},
+            'ensuring_asset': {'on': {
+                'asset_available': {'target': 'responding', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'C71.accepted_model_asset', 'outcome': 'available',
+                     'same_as': {'model_descriptor_sha256': 'descriptor'}}}},
+                'publication_failed': {'target': 'invalidating_receipt', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'C71.accepted_model_asset', 'outcome': 'publication_failed'}}},
+            }},
+            'invalidating_receipt': {'on': {
+                'receipt_invalidated': {'target': 'failed_response', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'C71.generation_receipt', 'outcome': 'invalidated'}}},
             }},
             'responding': {'on': {
                 'admission_succeeded': {'target': 'succeeded', 'guard': {'type': 'matchesTrace', 'params':

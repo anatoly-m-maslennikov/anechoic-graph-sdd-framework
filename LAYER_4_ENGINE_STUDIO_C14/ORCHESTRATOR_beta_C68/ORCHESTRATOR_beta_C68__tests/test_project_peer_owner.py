@@ -126,7 +126,7 @@ class ProjectPeerOwnerTests(unittest.TestCase):
             else:
                 identity = sha256(b"test").hexdigest()
                 databases = {f"projection-{identity}-{self.digest}{projection}.duckdb"}
-            self.assertEqual(databases, {file.name for file in (runtime / "workbench/beta").glob("*.duckdb")})
+            self.assertEqual(databases, {file.name for file in (runtime / "iwe_console/beta").glob("*.duckdb")})
             self.assertEqual(journal == "duckdb", (runtime / "db/project.duckdb").is_file())
             status, runs = request(self.jobs, "/jobs/worker-runs?instance_id=test")
             self.assertEqual(200, status)

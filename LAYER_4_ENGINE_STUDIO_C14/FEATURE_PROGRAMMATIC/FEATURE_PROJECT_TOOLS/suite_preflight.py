@@ -11,8 +11,8 @@ from .functional_suite import WORKBENCH
 from .suite_config import load_suite_config
 
 
-FRONTEND = WORKBENCH / "FEATURE_WORKBENCH_FRONTEND"
-CHROMIUM_PROBE = FRONTEND / "FEATURE_WORKBENCH_FRONTEND__tests/pinned_chromium_probe.ts"
+FRONTEND = WORKBENCH / "FEATURE_IWE_CONSOLE_FRONTEND"
+CHROMIUM_PROBE = FRONTEND / "FEATURE_IWE_CONSOLE_FRONTEND__tests/pinned_chromium_probe.ts"
 WORKBENCH_CACHE = Path(".anechoic_tmp/workbench")
 DUCKPGQ_VERSION = "9c11bc192a"
 

@@ -9,8 +9,8 @@ from urllib.parse import urlencode
 MCP = Path(__file__).resolve().parents[1]
 programmatic = MCP.parents[1] / "FEATURE_PROGRAMMATIC"
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import ProjectBinding  # noqa: E402
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.registry_workbench_provider import WorkbenchProvider  # noqa: E402
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.workbench_links import public_saved  # noqa: E402
+from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.registry_workbench_provider import WorkbenchProvider  # noqa: E402
+from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.workbench_links import public_saved  # noqa: E402
 
 
 class SavedPublicLinksTests(unittest.TestCase):
@@ -27,7 +27,7 @@ class SavedPublicLinksTests(unittest.TestCase):
             linked = provider.present_result("query_saved_list", {"items": [saved]}, context)["items"][0]
             self.assertEqual("https://example.test/custom/page?" + urlencode({"query": "q_1", "project_root": str(root)}), linked["saved_query_url"])
             request = SimpleNamespace(base_url="http://localhost/")
-            self.assertEqual("http://localhost/anechoic/workbench/alpha?query=q_1", public_saved(saved, request, selection)["saved_query_url"])
+            self.assertEqual("http://localhost/anechoic/iwe-console/alpha?query=q_1", public_saved(saved, request, selection)["saved_query_url"])
 
     def test_native_stdio_uses_only_manifest_public_url(self):
         with tempfile.TemporaryDirectory() as directory:

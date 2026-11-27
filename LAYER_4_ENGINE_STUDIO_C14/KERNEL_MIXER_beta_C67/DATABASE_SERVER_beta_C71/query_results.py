@@ -12,6 +12,11 @@ from .result_values import result_value
 from .table_names import _REAL_GRAPH_NAMES, _DIAG_NAMES, PUBLIC_NAMES
 
 
+_MODEL_PROJECTIONS = tuple(PUBLIC_NAMES[name] for name in (
+    "model_entities", "model_properties", "model_tree", "model_primary_entities",
+))
+
+
 def validate_preview(value):
     if value is not None and (type(value) is not int or value < 0):
         raise ValueError("preview must be a non-negative integer")
@@ -144,9 +149,14 @@ class QueryResults:
                                         [target]).fetchone()
             if not exists:
                 raise ValueError("Projection table is unavailable")
-            quoted = target.replace('"', '""')
-            sources = {name.lower() for name in connection.get_table_names(f'SELECT * FROM "{quoted}"')}
-            selected = {key: item for key, item in self.results.items() if _affected(connection, item[0], sources)}
+            canonical = PUBLIC_NAMES.get(target, target)
+            targets = _MODEL_PROJECTIONS if generation and canonical in _MODEL_PROJECTIONS else (target,)
+            sources = []
+            for name in targets:
+                quoted = name.replace('"', '""')
+                sources.append({table.lower() for table in connection.get_table_names(f'SELECT * FROM "{quoted}"')})
+            selected = {key: item for key, item in self.results.items()
+                        if any(_affected(connection, item[0], source) for source in sources)}
         return selected
 
     @staticmethod

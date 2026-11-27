@@ -10,9 +10,13 @@ relations:
   IS_REPLACEMENT_FOR:
   - AN-C-3193
 state:
-  status: "active"
-  version: 2
-  updated_at: "2026-11-25T16:00:38.447667+00:00"
+  status: active
+  version: 4
+  updated_at: '2026-11-26T17:13:39.857096+00:00'
+concern:
+  path: Model/Graph/Node//Artifact//SSOT//Prescribed/Content/Atom//Specification//.Header.Context
+  relation: .
+  subject: Template := axiom
 ---
 
 ## Summary
@@ -32,6 +36,7 @@ from anechoic.formal_claims import value
 from anechoic.model import Lens, Project, SpecAtom
 
 class Axiom(SpecAtom):
+    node.template = value(fixed='axiom')
     node.tier = value(fixed=0)
     node.lens = value(fixed=Lens.SPEC)
     node.container_type = value(fixed=Project)

@@ -1,0 +1,28 @@
+{
+  "title": "Exclude test directories from runtime image inputs",
+  "invariant": "Directory names ending in __tests are excluded along with existing transient, credential and .anechoic_ directories.",
+  "scope": "Historical constants and directory predicate only; six Python and Lean witnesses. Does not build a Docker image.",
+  "analyzer": "analyze.py",
+  "checks": [
+    {
+      "file": "before.lean",
+      "stdout_suffix": "[false,false,false,true,true,true]\n"
+    },
+    {
+      "file": "fixed.lean",
+      "stdout_suffix": "[true,false,false,true,true,true]\n"
+    }
+  ],
+  "before": {
+    "revision": "c2b4c14def983984d427469dfe2f499b29f6a18e",
+    "source": "LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/runtime_images.py",
+    "fixture": "before.py.txt",
+    "sha256": "193bf6374ab80f04b8f3201f38dabbe6a3bc4cdc58e2b4a3f62f1cb32c895d90"
+  },
+  "fixed": {
+    "revision": "f042dbbe5e3dd6c8d5806aa90613af46e86e7344",
+    "source": "LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/runtime_images.py",
+    "fixture": "fixed.py.txt",
+    "sha256": "cfffad5af64879a01a81e3a8c5f9284ce5b83e7cece2eaefedb246c4000bfd40"
+  }
+}

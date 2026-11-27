@@ -3,7 +3,7 @@ atom_family: SPEC
 atom_id: AN-S-3400
 container:
   component: C00
-tier: 4
+tier: 1
 context:
   template: component_manifest
   lens: SPEC
@@ -21,7 +21,7 @@ Declare Assets
 
 Maintain the source files for Anechoic brand assets.
 
-## Formal manifest
+## Component Identity
 
 ```python
 from anechoic.formal_claims import declare_entity
@@ -33,13 +33,28 @@ declare_entity(
         component_id='C78',
         name='Assets',
         lens_whitelist=['DES', 'SPEC'],
-        boundaries={'io': {'server': {'describe_assets_scope': {'outcomes': {'assets_scope_described': {
-            'must_effect': [('assets.logo', 'declared')],
-        }}}}}},
     ),
 )
 ```
 
-## Boundary scope
+## Component Boundaries
 
 This describes the source resource boundary. It does not assert a callable operation or a runtime effect.
+
+```python
+{'io': {'server': {'describe_assets_scope': {'outcomes': {'assets_scope_described': {
+    'must_effect': [('assets.logo', 'declared')],
+}}}}}}
+```
+
+## Component Contract
+
+The Assets Component contains the declared Logo Component C77.
+
+```python trace
+declare_trace_contract(
+    action='describe_assets_scope',
+    output='assets_scope_described',
+    must_effect=(('assets.logo', 'declared'),),
+)
+```

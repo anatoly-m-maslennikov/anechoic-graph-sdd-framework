@@ -11,7 +11,7 @@ import unittest
 
 
 MCP = Path(__file__).resolve().parents[1]
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__shared import (  # noqa: E402
+from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.FEATURE_IWE_CONSOLE_BACKEND__shared import (  # noqa: E402
     load_active_registry,
 )
 
@@ -19,7 +19,7 @@ from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_B
 
 class MovedRegistryStagingTests(unittest.TestCase):
     def test_checked_in_tool_registry_is_current(self):
-        load_active_registry(MCP.parents[1] / "IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND", MCP.parents[2], None)
+        load_active_registry(MCP.parents[1] / "IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_BACKEND", MCP.parents[2], None)
 
     def test_staged_compiler_loads_moved_components(self):
         sys.path.insert(0, str(MCP / "docker"))

@@ -16,12 +16,12 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GR
 class ContractGraphTests(unittest.TestCase):
     def test_minimal_inverse_uses_corroborated_direct_meaning_and_reversed_endpoint_view(self):
         direct = carrier("CA-R-1", "CFEL <+ Relation//DIRECT", body(
-            "### Formal Claim", "```CFEL", "$left ((DIRECT)) $right;",
-            "Relation//DIRECT ((HAS_INVERSE)) Relation//INVERSE;",
-            "Relation//DIRECT ((HAS_CLASSIFICATION)) Derivation == Direct", "```",
+            "### Formal Claim", "```python", "relation(source='$left', name='DIRECT', target='$right')",
+            "relation(source='Relation//DIRECT', name='HAS_INVERSE', target='Relation//INVERSE')",
+            "classify(address='Relation//DIRECT', axis='Derivation', value='Direct', notation='relation')", "```",
             "### Prose Claim", "Direct meaning."))
         inverse = carrier("CA-R-2", "CFEL <+ Relation//INVERSE", body(
-            "### Formal Claim", "```CFEL", "Relation//INVERSE <((HAS_INVERSE)) Relation//DIRECT", "```"))
+            "### Formal Claim", "```python", "relation(source='Relation//INVERSE', name='HAS_INVERSE', target='Relation//DIRECT', reverse=True)", "```"))
         graph = compose_contract_graph([direct, inverse])
         row = next(row for row in graph["relations"] if row["target"] == "INVERSE")
         self.assertEqual("Derived", row["derived_view"]["classification"])
@@ -35,22 +35,12 @@ class ContractGraphTests(unittest.TestCase):
         self.assertEqual(1, missing["coverage"]["missing_relation_semantics"])
         self.assertNotIn("derived_view", missing["relations"][0])
         conflicting = carrier("CA-R-3", "CFEL <+ Relation//OTHER", body(
-            "### Formal Claim", "```CFEL", "Relation//OTHER ((HAS_INVERSE)) Relation//INVERSE;",
-            "Relation//OTHER ((HAS_CLASSIFICATION)) Derivation == Direct", "```",
+            "### Formal Claim", "```python", "relation(source='Relation//OTHER', name='HAS_INVERSE', target='Relation//INVERSE')",
+            "classify(address='Relation//OTHER', axis='Derivation', value='Direct', notation='relation')", "```",
             "### Prose Claim", "Other meaning."))
         ambiguous = compose_contract_graph([direct, inverse, conflicting])
         inverse_row = next(row for row in ambiguous["relations"] if row["target"] == "INVERSE")
         self.assertNotIn("derived_view", inverse_row)
-
-    def test_relation_bounds_and_quoted_counterpart_alias_remain_distinct(self):
-        clauses, diagnostics = extract_claim_constraints(carrier("CA-R-1", "Node", body(
-            "```CFEL", 'alias(HAS_INVERSE) == "<-->";',
-            "Node{:1}((REL)){:2}Node;", "Node:{:1}((REL)){:2}Node;", "```")))
-        alias = next(row for row in clauses if row["kind"] == "relation_alias")
-        relation = next(row for row in clauses if row["kind"] == "relation_cardinality")
-        self.assertEqual("<-->", alias["glyph"])
-        self.assertEqual({"minimum": 2, "maximum": 2}, relation["target_cardinality"])
-        self.assertEqual(1, len(diagnostics))
 
     def test_relation_declaration_and_scoped_property_projection(self):
         from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import build_subject_projection_data
@@ -114,8 +104,8 @@ class ContractGraphTests(unittest.TestCase):
 
     def test_unary_relation_counts_keep_source_scope_and_no_target(self):
         graph = compose_contract_graph([
-            carrier("CA-R-1", "Node", body("```CFEL", "# model", "(Node, Node.**) {:1}((IS_DECLARED_BY));", "```")),
-            carrier("CA-R-2", "Atom", body("```CFEL", "# instances", "Atom//$atom {:0..1}((HAS_ACTIVE_SUBJECT));", "Atom//$atom {:0..1}((GOVERNS));", "```")),
+            carrier("CA-R-1", "Node", body("```python", "# model", "relation(source='(Node, Node.**)', name='IS_DECLARED_BY', source_count='1')", "```")),
+            carrier("CA-R-2", "Atom", body("```python", "# instances", "relation(source='Atom//$atom', name='HAS_ACTIVE_SUBJECT', source_count='0..1')", "relation(source='Atom//$atom', name='GOVERNS', source_count='0..1')", "```")),
         ])
         node = next(row for row in graph["entities"] if row["target"] == "Node")
         atom = next(row for row in graph["entities"] if row["target"] == "Atom")
@@ -136,8 +126,8 @@ class ContractGraphTests(unittest.TestCase):
 
     def test_qualified_declared_by_derivation_is_not_an_unconditional_inverse(self):
         graph = compose_contract_graph([carrier("CA-R-1", "CFEL <+ Relation//IS_DECLARED_BY", body(
-            "### Formal Claim", "```CFEL", "# model",
-            "Relation//IS_DECLARED_BY ((IS_DERIVED_RELATION_OF)) Relation//GOVERNS;", "```",
+            "### Formal Claim", "```python", "# model",
+            "relation(source='Relation//IS_DECLARED_BY', name='IS_DERIVED_RELATION_OF', target='Relation//GOVERNS')", "```",
             "### Prose Claim", "Only governing links satisfying the Declaration ownership rule."))])
         relation = graph["relations"][0]
         self.assertEqual(["GOVERNS"], [row["name"] for row in relation["derivation_links"]])
@@ -145,24 +135,15 @@ class ContractGraphTests(unittest.TestCase):
         self.assertNotIn("derived_view", relation)
         self.assertIn("not structurally interpreted", relation["derivation_scope"])
 
-    def test_instance_group_does_not_supply_relation_classification_or_alias(self):
-        graph = compose_contract_graph([carrier("CA-R-1", "CFEL <+ Relation//TEST", body(
-            "### Formal Claim", "```CFEL", "# instances",
-            "Relation//TEST ((HAS_CLASSIFICATION)) Derivation == Direct;",
-            'alias(Relation//TEST) == "/";', "```"))])
-        relation = graph["relations"][0]
-        self.assertEqual([], relation["metadata"])
-        self.assertEqual(2, len(relation["own"][0]["instance_clauses"]))
-
     def test_relation_metadata_is_case_preserving_and_inverse_is_not_another_declaration(self):
         graph = compose_contract_graph([
             carrier(
                 "CA-R-1", "CFEL <+ Relation//depends_on",
                 body(
-                    "```CFEL", "Step// {:1}((depends_on)){:1} Action//;",
-                    "((depends_on)) ((HAS_INVERSE)) ((is_depended_on));",
-                    "((depends_on)) ((IS_DERIVED_RELATION_OF)) ((is_depended_on));",
-                    "((depends_on)) == <<;", "((depends_on)) >| Derivation == Direct;", "```",
+                    "```python", "relation(source='Step//', name='depends_on', target='Action//', source_count='1', target_count='1')",
+                    "relation(source='Relation//depends_on', name='HAS_INVERSE', target='Relation//is_depended_on')",
+                    "relation(source='Relation//depends_on', name='IS_DERIVED_RELATION_OF', target='Relation//is_depended_on')",
+                    "classify(address='Relation//depends_on', axis='Derivation', value='Direct', notation='relation')", "```",
                     semantics="Dependency direction.",
                 ),
             ),
@@ -172,38 +153,26 @@ class ContractGraphTests(unittest.TestCase):
         self.assertEqual("depends_on", relation["target"])
         self.assertEqual(["is_depended_on"], [row["name"] for row in relation["inverses"]])
         self.assertEqual(["is_depended_on"], [row["name"] for row in relation["derivation_links"]])
-        self.assertEqual({"notation", "derivation"}, {row["kind"] for row in relation["metadata"]})
+        self.assertEqual({"derivation"}, {row["kind"] for row in relation["metadata"]})
         self.assertEqual(0, graph["coverage"]["missing_relation_semantics"])
         rendered = render_contract_graph(graph)
         self.assertIn("does not certify an undeclared inverse Relation", rendered)
         self.assertIn("Derivation interpretation gap", rendered)
         self.assertNotIn("((is_depended_on)) — declared Relation", rendered)
 
-    def test_typed_relation_alias_and_inverse_are_source_bound_in_either_direction(self):
+    def test_typed_relation_inverse_is_source_bound_in_either_direction(self):
         def read(binding):
             return compose_contract_graph([
-                carrier("CA-R-1", "CFEL <+ Relation//NARROWER_THAN", body(
-                    "### Formal Claim", "```CFEL",
-                    'alias(Relation//NARROWER_THAN) == "/";',
-                    binding,
-                    "Node ((NARROWER_THAN)) Node;", "```")),
+                carrier("CA-R-1", "Relation//NARROWER_THAN", body(
+                    "### Formal Claim", "```python", binding,
+                    "relation(source='Node', name='NARROWER_THAN', target='Node')", "```")),
             ])["relations"][0]
 
-        forward = read("Relation//NARROWER_THAN ((HAS_INVERSE)) Relation//BROADER_THAN;")
-        reverse = read("Relation//BROADER_THAN <((HAS_INVERSE)) Relation//NARROWER_THAN;")
-        glyph = read("Relation//NARROWER_THAN <--> Relation//BROADER_THAN;")
+        forward = read("relation(source='Relation//NARROWER_THAN', name='HAS_INVERSE', target='Relation//BROADER_THAN')")
+        reverse = read("relation(source='Relation//BROADER_THAN', name='HAS_INVERSE', target='Relation//NARROWER_THAN', reverse=True)")
         self.assertEqual(["BROADER_THAN"], [row["name"] for row in forward["inverses"]])
         self.assertEqual(forward["inverses"], reverse["inverses"])
-        self.assertEqual(forward["inverses"], glyph["inverses"])
-        self.assertEqual(["/"], [row["value"] for row in forward["metadata"]])
         self.assertEqual(["Node"], [row["source_selector"] for row in forward["host_target"]])
-        self.assertEqual(1, len(forward["host_target"]))
-
-        graph = compose_contract_graph([carrier("CA-R-2", "CFEL <+ Relation//CONTAINS", body(
-            "### Formal Claim", "```CFEL", 'alias(Relation//CONTAINS) == "<+";', "```"))])
-        self.assertEqual([], graph["entities"])
-        self.assertEqual([], graph["relations"][0]["host_target"])
-        self.assertEqual("<+", graph["relations"][0]["metadata"][0]["value"])
 
     def test_declared_derived_relation_keeps_its_own_metadata(self):
         graph = compose_contract_graph([

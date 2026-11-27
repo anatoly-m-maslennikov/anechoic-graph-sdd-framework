@@ -2,15 +2,10 @@
 from __future__ import annotations
 
 from contextlib import ExitStack, contextmanager
-from datetime import datetime, timezone
 from hashlib import sha256
 import re
 
-import yaml
-
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import canonical_native_header, native_header_view
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (native_carrier_path, spec_lens_directories,
-                                      DRAFT_DIRECTORY)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import DRAFT_DIRECTORY, native_header_view
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import revalidate_native
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import frontmatter_bounds
@@ -18,12 +13,12 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import CEILINGS, ReadContext
 
 from . import common
-from .native_draft_guards import _check_owner, _summary, _validate_contract
+from .native_draft_guards import _check_owner, _reject_component_contract, _summary
 from .native_draft_source import _revision_root, _state_bytes, _task_path
 from .native_draft_task import _create_task
 from .native_draft_promotion import promote_draft as promote_draft
 from .effects import _project_write_lock
-from .native_project_spec import PROJECT_SPEC_TIERS, create_project_spec, validate_project_spec
+from .native_project_spec import PROJECT_SPEC_TIERS, create_project_spec, project_spec_template, validate_project_spec
 from .source import bind_query_reader
 
 
@@ -39,7 +34,9 @@ def _first_spec_write_lock(root):
 
 def _validate_project_template(header, validate, body=None):
     template = native_header_view(header)['context'].get('template')
-    if isinstance(template, str) and template in PROJECT_SPEC_TIERS:
+    _reject_component_contract(template, 'target')
+    if isinstance(template, str) and (template in PROJECT_SPEC_TIERS or
+            (validate is not None and project_spec_template(template, validate) is not None)):
         if validate is None:
             raise common.InputError('target', 'The compiled Model does not admit this Project SPEC Template.')
         validate_project_spec(header, validate, body)
@@ -57,18 +54,19 @@ def create_draft(selection, params, *, current_rows, structure_snapshot=None, ti
             raise common.InputError('newAtom', 'Supply only new Task or Epic properties.')
         values = params['newAtom']
         template = values.get('template') if isinstance(values, dict) else None
-        if isinstance(template, str) and template in PROJECT_SPEC_TIERS:
+        _reject_component_contract(template, 'newAtom')
+        if isinstance(template, str) and template not in ('task', 'epic') and (
+                template in PROJECT_SPEC_TIERS or isinstance(values, dict) and 'lens' in values):
             if validate_project_spec_model is None:
                 raise common.InputError('newAtom', 'The compiled Model does not admit this Project SPEC Template.')
             return create_project_spec(selection, values, validate_project_spec_model, previous_capture)
-        if template == 'component_contract':
-            return _create_component_contract(selection, params['newAtom'], structure_snapshot, previous_capture)
         return _create_task(selection, params['newAtom'], current_rows, structure_snapshot, ticket_labels, previous_capture, indexed_task)
     return _create_revision(selection, params, current_rows, structure_snapshot, previous_capture)
 
 
 def _create_revision(selection, params, current_rows, structure_snapshot, previous_capture):
     target, changes, selected, digest, relative = _revision_input(selection, params, current_rows)
+    _reject_component_contract(native_header_view(selected['header_json'])['context'].get('template'), 'sourceCurrent')
     path = selection.root / relative
     root = _revision_root(selection, selected, structure_snapshot, current_rows)
     with _project_write_lock(selection.root):
@@ -133,6 +131,10 @@ def _write_revision(selection, target, selected, path, root, raw, bounds, body, 
         raise common.SourceChanged('No representable revision Version remains.')
     data = {} if outcome.errors else {'savedDraft': common.saved(selection, destination, target['ref_id'],
                     f"{target['ref_id']}@{version}-draft", version, 'Draft')}
+    if data:
+        timestamp = parse_carrier(candidate, destination).metadata.get('state', {}).get('updated_at')
+        if timestamp is not None:
+            data['savedDraft']['updated_at'] = str(timestamp)
     return common.result(effects=outcome.effects, errors=outcome.errors, **data)
 
 
@@ -159,41 +161,3 @@ def _revision_input(selection, params, current_rows):
             or not isinstance(relative, str)):
         raise common.SourceChanged('Current carrier capture lacks a valid path or source digest.')
     return target, changes, selected, digest, relative
-
-
-def _create_component_contract(selection, values, structure_snapshot, previous_capture):
-    if (set(values) != {'template', 'container', 'lens', 'body'} or not isinstance(values['body'], str)
-            or not isinstance(values['lens'], str) or not values['lens'].strip()
-            or not isinstance(values['container'], dict) or set(values['container']) != {'component'}
-            or not isinstance(values['container']['component'], str)
-            or not re.fullmatch(r'C[0-9]+', values['container']['component'])):
-        raise common.InputError('newAtom', 'Supply a Component Contract template, Component, Lens, and Markdown body.')
-    try:
-        spec_lens_directories(values['lens'])
-    except ValueError as error:
-        raise common.InputError('lens', 'Supply a valid Lens.') from error
-    if (not selection.root.is_absolute() or not selection.control_root.is_relative_to(selection.root)
-            or selection.manifest_path.parent not in {selection.root, selection.control_root}):
-        raise common.SourceChanged('Selected Project path is invalid.')
-    with _first_spec_write_lock(selection.root):
-        try:
-            capture = revalidate_native(selection, previous_capture)
-        except (OSError, RuntimeError, ValueError) as error:
-            raise common.SourceChanged('Native carriers changed during Contract selection.') from error
-        if capture.errors:
-            raise common.SourceChanged('Native carrier capture is incomplete.')
-        atom_id = f'{selection.project_prefix}-S-{common.next_native_number(selection, capture, "S")}'
-        header = canonical_native_header({'identity': {'atom_id': atom_id},
-            'context': {'container': values['container'], 'tier': 0, 'template': 'component_contract', 'lens': values['lens']},
-            'state': {'status': 'draft', 'version': 1, 'updated_at': datetime.now(timezone.utc).isoformat()}})
-        body = values['body']
-        owner = _validate_contract(selection, header, body, selection.control_root, structure_snapshot, capture)
-        try:
-            path = native_carrier_path(header, _summary(body), project_root=selection.control_root, owner_directory=owner)
-            raw = b'---\n' + yaml.safe_dump(header, sort_keys=False).encode() + b'---\n' + body.encode('utf-8')
-        except (ValueError, UnicodeError) as error:
-            raise common.InputError('summary', 'Summary cannot be used in a Contract filename.') from error
-        with bind_query_reader(None):
-            outcome = common.write_destination(selection.root, path, raw)
-        data = {} if outcome.errors else {'savedDraft': common.saved(selection, path, atom_id, f'{atom_id}@1-draft', 1, 'Draft')}
-        return common.result(effects=outcome.effects, errors=outcome.errors, **data)

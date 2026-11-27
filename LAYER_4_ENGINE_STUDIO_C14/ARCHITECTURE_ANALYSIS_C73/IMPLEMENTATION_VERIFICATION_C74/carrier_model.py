@@ -56,7 +56,7 @@ def _analyze(root, source_bytes):
     evidence = {'source': _SOURCE, 'source_sha256': hashlib.sha256(raw).hexdigest(),
                 'symbols': selected, 'calls': calls, 'search_mode': mode,
                 'unresolved': ['Only the exact admitted AST shapes and byte regex are modeled.',
-                               'Finite cases do not prove equivalence for all inputs.',
+                               'CPython regex execution and path conversion require separate evidence.',
                                'Project state effects are outside this model.']}
     return opening_lf, opening_crlf, mode, evidence
 

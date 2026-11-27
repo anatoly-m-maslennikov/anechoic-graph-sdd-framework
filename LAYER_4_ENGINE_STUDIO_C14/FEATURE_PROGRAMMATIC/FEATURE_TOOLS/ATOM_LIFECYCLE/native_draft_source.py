@@ -18,7 +18,7 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import CEILINGS, ReadContext
 
 from . import common
-from .native_draft_guards import _check_owner, _component_manifest_parent, _summary
+from .native_draft_guards import _check_owner, _summary
 
 
 def _revision_root(selection, row, structure_snapshot=None, current_rows=None):
@@ -98,13 +98,13 @@ def _spec_revision_root(selection, structure_snapshot, path, header, context, st
     container = context.get("container")
     if not isinstance(lens, str) or not isinstance(container, dict) or set(container) != {"component"}:
         raise common.InputError("sourceCurrent", "Select a component-owned SPEC carrier.")
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import manifest_inputs
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import component_manifest_parent, manifest_inputs
     try:
         reader = ReadContext(roots=[str(selection.root)], limits=dict(CEILINGS))
         raw = reader.read(selection.manifest_path)
         if sha256(raw).hexdigest() != selection.manifest_sha256:
             raise ValueError("Manifest changed")
-        _, project_component = manifest_inputs(selection.manifest_path, parse_carrier(raw, selection.manifest_path))
+        fields, project_component = manifest_inputs(selection.manifest_path, parse_carrier(raw, selection.manifest_path))
         root = path.parent.parent if status == 'ready' and path.parent.name == READY_DIRECTORY else path.parent
         tier = header.get('tier', context.get('tier'))
         root = _spec_lens_owner(root, tier, lens, status, getattr(selection, 'parameters', None))
@@ -119,8 +119,9 @@ def _spec_revision_root(selection, structure_snapshot, path, header, context, st
         snapshot_path = getattr(selection, "structure_snapshot", None)
         if (structure_snapshot is not None or snapshot_path is not None) and root != selection.control_root:
             snapshot = structure_snapshot if structure_snapshot is not None else read_structure(snapshot_path)
-            declaration = selection.control_root / snapshot.component(component).source_path
-            if _component_manifest_parent(declaration) != root.parent:
+            declaration = Path(snapshot.component(component).source_path)
+            parent = component_manifest_parent(declaration, fields.get('parameters'))
+            if selection.control_root / parent != root.parent:
                 raise ValueError("Component parent contradicts the current Structure")
     except (OSError, RuntimeError, TypeError, ValueError, AttributeError, KeyError) as error:
         raise common.InputError("sourceCurrent", "SPEC carrier must be in its lens and component root.") from error

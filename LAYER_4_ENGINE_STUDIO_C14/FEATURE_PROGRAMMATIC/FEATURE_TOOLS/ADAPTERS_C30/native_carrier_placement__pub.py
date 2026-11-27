@@ -1,4 +1,5 @@
 """Pure projection of authored native carrier fields into a Markdown path."""
+from collections.abc import Mapping
 from pathlib import Path
 import re
 import unicodedata
@@ -69,17 +70,23 @@ def spec_lens_directories(lens):
 def spec_folder_layout(parameters=None):
     """Read the Tier layout, with defaults for Projects without a declaration."""
     project = (parameters or {}).get('project', {})
-    if not isinstance(project, dict) or 'folder_layout' not in project:
+    if not isinstance(project, Mapping) or 'folder_layout' not in project:
         return _DEFAULT_SPEC_LAYOUT.copy()
     folders = project['folder_layout']
-    layout = folders.get('active_spec_by_tier') if isinstance(folders, dict) else None
-    tier_one = layout.get('1') if isinstance(layout, dict) else None
+    layout = folders.get('active_spec_by_tier') if isinstance(folders, Mapping) else None
+    tier_one = layout.get('1') if isinstance(layout, Mapping) else None
     if (not isinstance(tier_one, str) or re.fullmatch(r'01_[A-Z][A-Z0-9_]*', tier_one) is None
             or re.search(r'_C[0-9]+$', tier_one) is not None
             or tier_one.casefold() == DRAFT_DIRECTORY or len(tier_one) > 255
             or layout != {**_DEFAULT_SPEC_LAYOUT, '1': tier_one}):
         raise ValueError('Invalid Project Manifest project.folder_layout.active_spec_by_tier')
-    return layout.copy()
+    return dict(layout)
+
+
+def component_manifest_parent(source_path, parameters=None):
+    """Return the owning directory of a control-relative Component Manifest."""
+    parent = source_path.parent
+    return parent.parent if parent.name in {'_SPEC', spec_folder_layout(parameters)['1']} else parent
 
 
 def active_spec_directories(tier, lens_directories, *, parameters=None, atom_owned=False):
@@ -118,7 +125,9 @@ def native_carrier_path(header, summary, *, project_root, owner_directory, owner
     atom_id = view['identity']['atom_id']
     context, state = view['context'], view['state']
     status, version = state['status'].lower(), state['version']
-    if (status not in {'active', 'in_queue', 'backlog', 'done', 'complete', 'canceled', 'resolved', 'draft', 'ready', 'archived'}
+    model_ticket_status = family == 'TKT' and re.fullmatch(r'[a-z][a-z0-9_]*', status) is not None
+    if (not model_ticket_status
+            and status not in {'active', 'in_queue', 'backlog', 'done', 'complete', 'canceled', 'resolved', 'draft', 'ready', 'archived'}
             or (status == 'ready' and family != 'SPEC') or (status in {'in_queue', 'complete'} and family != 'TKT')):
         raise ValueError('Unsupported authored Status')
     revision = DRAFT_DIRECTORY if status == 'draft' else ARCHIVE_DIRECTORY if status == 'archived' else None

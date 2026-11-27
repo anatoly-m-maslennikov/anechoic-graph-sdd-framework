@@ -177,7 +177,7 @@ def _declared_orders(requirement_rows):
                 continue
             args = claim['arguments']
             if args.get('qualification_property_path') == 'Atom.Header.Context.Role':
-                order = args.get('classifications', {}).get('Role Order Number')
+                order = args.get('axes', {}).get('Role Order Number')
                 if order is not None:
                     role_orders.append((args['entity_name'], order, source))
             for name, order in args.get('status_order_numbers', {}).items():

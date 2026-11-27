@@ -8,7 +8,7 @@ from pathlib import Path, PurePosixPath
 import subprocess
 
 from ARCHITECTURE_ANALYSIS_C73.CODE_AND_SPEC_METRICS_C76.metrics__shared import code_rows
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.import_graph__shared import run_graph_build
+from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IMPORT_GRAPH_C61.import_graph__shared import run_graph_build
 
 from .python_code_units import python_code_units
 from .python_context_restoration import python_context_restoration

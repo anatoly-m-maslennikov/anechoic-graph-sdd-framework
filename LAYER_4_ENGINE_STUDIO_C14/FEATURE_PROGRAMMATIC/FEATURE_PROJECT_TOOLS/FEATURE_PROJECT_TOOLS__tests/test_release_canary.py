@@ -25,7 +25,7 @@ class CanaryTests(unittest.TestCase):
             folders = []
             injected = False
 
-            def verify(_root, _selection, _package, attempt, _image):
+            def verify(_root, _selection, _package, attempt, _image, *, skip_archives=False):
                 folder = attempt / "canary-project" / "ontology"
                 folder.mkdir(parents=True)
                 folders.append(folder)
@@ -170,6 +170,18 @@ class CanaryTests(unittest.TestCase):
             with self.assertRaises(release_canary.CanaryError):
                 release_canary._workspace(root, package, "other")
 
+    def test_fast_canary_copy_keeps_live_inputs_and_omits_archive(self):
+        root = Path(self.enterContext(tempfile.TemporaryDirectory())).resolve()
+        source, copy = root / "source", root / "copy"
+        archive = source / "tickets/09_archived"
+        archive.mkdir(parents=True)
+        (archive / "old.md").write_text("archive")
+        live = source / "tickets/current.md"
+        live.write_text("active")
+        release_canary._copy_tree(source, copy, skip_archives=True)
+        self.assertEqual("active", (copy / live.relative_to(source)).read_text())
+        self.assertFalse((copy / archive.relative_to(source)).exists())
+
     def test_rejects_invalid_selection_and_manifest_changes(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -227,8 +239,8 @@ class CanaryTests(unittest.TestCase):
                          "project_name": "test", "project_prefix": "AN", "query_enabled": True}
             copy = release_canary._copy_tree
 
-            def tamper(source, destination):
-                copy(source, destination)
+            def tamper(source, destination, *, skip_archives=False):
+                copy(source, destination, skip_archives=skip_archives)
                 if source == control:
                     (destination / "AN-S-1-SPEC--manifest.md").write_text("changed")
 

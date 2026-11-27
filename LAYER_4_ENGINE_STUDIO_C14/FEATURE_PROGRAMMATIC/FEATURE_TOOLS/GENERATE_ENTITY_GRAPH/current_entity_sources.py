@@ -17,7 +17,7 @@ def build_current_graph(
 def build_enhanced_current_graph(
     source_root: Path, repository: Path
 ) -> tuple[dict[str, Any], dict[str, Any]]:
-    """Discover current carriers and add diagnostic-only model/CFEL records."""
+    """Discover current carriers and add diagnostic-only model and Claim records."""
 
     from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.current_subject_graph import compose_enhanced_current_graph
 

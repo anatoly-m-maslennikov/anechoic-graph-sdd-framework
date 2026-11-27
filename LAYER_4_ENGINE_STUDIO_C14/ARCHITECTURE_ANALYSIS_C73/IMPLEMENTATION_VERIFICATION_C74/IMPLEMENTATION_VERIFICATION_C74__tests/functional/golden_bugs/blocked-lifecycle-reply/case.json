@@ -1,0 +1,22 @@
+{
+  "title": "Preserve blocked lifecycle outcomes at the API Mixer",
+  "invariant": "A known blocked write preserves its blocked status and error; inconsistent blocked responses fail closed.",
+  "scope": "Complete historical lifecycle modules replayed through invoke with an in-process stub of the peer transport and admission failure helper. Lean records outcome labels only; this does not exercise HTTP or prove Python semantics.",
+  "checks": [
+    {
+      "file": "observations.lean"
+    }
+  ],
+  "before": {
+    "revision": "7d52cef082f1265c1940f929eb37a5b0ad5390fa",
+    "source": "LAYER_4_ENGINE_STUDIO_C14/API_MIXER_beta_C82/lifecycle.py",
+    "fixture": "before.py.txt",
+    "sha256": "341b4ee639ff6bbaeae8d3e2ce88f7baf4f82603d8d4239d46a40c3919bac60e"
+  },
+  "fixed": {
+    "revision": "a77b2ff04768acb8114996efd1f93078b4c49df1",
+    "source": "LAYER_4_ENGINE_STUDIO_C14/API_MIXER_beta_C82/lifecycle.py",
+    "fixture": "fixed.py.txt",
+    "sha256": "e85b87a2b6dd44adfb1c90abbc7a7a5629140e3e407ff76b6a5c0edbf8cef4a0"
+  }
+}

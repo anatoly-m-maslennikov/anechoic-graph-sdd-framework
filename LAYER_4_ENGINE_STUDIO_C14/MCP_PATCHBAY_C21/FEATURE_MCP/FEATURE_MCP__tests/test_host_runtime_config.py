@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[4]
 TOOLS = ROOT / "LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS"
 MCP = ROOT / "LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP"
 
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__shared import (  # noqa: E402
+from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.FEATURE_IWE_CONSOLE_BACKEND__shared import (  # noqa: E402
     HostRuntimeConfig,
     HostRuntimeConfigError,
     load_host_runtime_config,
@@ -149,19 +149,26 @@ class HostRuntimeConfigTests(unittest.TestCase):
         config = load_host_runtime_config(path)
         self.assertTrue(config.single_project)
         selection = resolve_host_project(config, root)
-        self.assertEqual("memory", selection.parameters["runtime"]["workbench"]["storage"])
+        self.assertEqual("memory", selection.parameters["runtime"]["iwe_console"]["storage"])
         self.assertEqual("duckdb", selection.parameters["runtime"]["journal"]["storage"])
         with self.assertRaises(ValueError):
             resolve_host_project(config, self.projects / "beta")
         with self.assertRaises(ValueError):
             resolve_host_project(config, root / ".anechoic_alpha")
         from dataclasses import replace
-        with patch("IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.project_admission.select_runtime_project", return_value=replace(
+        with patch("IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.project_admission.select_runtime_project", return_value=replace(
             selection, parameters={"runtime": {"workbench": {"storage": "disk"}}}
         )):
             resolved = resolve_host_project(config, root)
         self.assertEqual("disk", resolved.parameters["runtime"]["workbench"]["storage"])
         self.assertEqual("duckdb", resolved.parameters["runtime"]["journal"]["storage"])
+        with patch("IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.project_admission.select_runtime_project", return_value=replace(
+            selection, parameters={"runtime": {"workbench": {"storage": "memory"},
+                                               "iwe_console": {"storage": "disk"}}}
+        )):
+            resolved = resolve_host_project(config, root)
+        self.assertEqual("disk", resolved.parameters["runtime"]["iwe_console"]["storage"])
+        self.assertEqual("memory", resolved.parameters["runtime"]["workbench"]["storage"])
 
     def test_rejects_ambiguous_roots_and_invalid_defaults(self):
         prefix = f'schema_version = 1\n[shared_mcp]\nproject_root = "{self.projects}"\nhttp_port = 1\n'

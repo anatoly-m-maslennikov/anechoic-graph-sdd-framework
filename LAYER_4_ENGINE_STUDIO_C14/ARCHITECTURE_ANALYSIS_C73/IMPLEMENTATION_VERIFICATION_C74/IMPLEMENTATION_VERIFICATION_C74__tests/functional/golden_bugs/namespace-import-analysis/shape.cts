@@ -1,9 +1,9 @@
-import type * as TypeScript from '../../../../../../IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND/node_modules/typescript';
+import type * as TypeScript from '../../../../../../IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_FRONTEND/node_modules/typescript';
 const fs = require('fs');
 const compilerOverride = process.env.TYPESCRIPT_PATH;
 const ts: typeof TypeScript = compilerOverride
   ? require(compilerOverride)
-  : require('../../../../../../IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND/node_modules/typescript/lib/typescript.js');
+  : require('../../../../../../IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_FRONTEND/node_modules/typescript/lib/typescript.js');
 const source = ts.createSourceFile('input.mjs', fs.readFileSync(process.argv[2], 'utf8'), ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
 if ((source as TypeScript.SourceFile & { parseDiagnostics: readonly TypeScript.Diagnostic[] }).parseDiagnostics.length) throw Error('source parse failed');
 const scan = source.statements.filter((n): n is TypeScript.FunctionDeclaration => ts.isFunctionDeclaration(n) && n.name?.text === 'scan');

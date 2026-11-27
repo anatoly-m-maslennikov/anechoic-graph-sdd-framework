@@ -7,9 +7,9 @@ tier: 3
 context:
   lens: DES
 state:
-  status: active
-  version: 17
-  updated_at: 2026-10-27 19:59:59 +0400
+  status: "active"
+  version: 18
+  updated_at: "2026-11-26T15:17:28.853758+00:00"
 ---
 ## Summary
 
@@ -29,6 +29,6 @@ the `VALIDATE_ATOMS` Tool **must** implement **=1** methodology Action, Check At
 - a Workflow invokes the Action through a Step; the Tool does **not** implement **or** own the Workflow graph **or** impose a Workflow on direct Action calls.
 - return the Action's results faithfully, including failed **and** incomplete assessments; do **not** add repair, promotion, archive, **or** semantic-review behavior.
 - this binding follows CA-R-1516-PROJECT_CONFIGURATION-REQUIREMENT--bind-each-tool-to-one-methodology-action **and** CA-R-1517-PROJECT_CONFIGURATION-RULE--keep-tool-operational-authority-outside-its-own-subtree. this binding **must not** declare a new Scope Unit **or** require a particular Workflow **to** build the Tool.
-- supported mechanical coverage **must** include Author membership **in** the Project's Operator registry **and** the current Content Role-specific body Property contracts. effective Plan Assignee resolution is deferred, **not** a membership check against this registry. distinguish an implemented check blocked by unavailable context from a deferred implementation; neither outcome establishes conformance.
+- supported mechanical coverage **must** include the current Content Role-specific body Property contracts. Effective Plan Assignee resolution is deferred. distinguish an implemented check blocked by unavailable context from a deferred implementation; neither outcome establishes conformance.
 
 ## Details

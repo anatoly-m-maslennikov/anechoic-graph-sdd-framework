@@ -19,7 +19,7 @@ def beta_runtime_arguments(selection, socket, workbench_storage=None, journal_st
             "--manifest-path", selection.manifest_path.relative_to(selection.root).as_posix(),
             "--project-prefix", selection.project_prefix, "--project-name", selection.project_name]
     runtime = selection.parameters.get("runtime", {})
-    workbench = runtime.get("workbench", {})
+    workbench = runtime.get("iwe_console", runtime.get("workbench", {}))
     profile = "ANECHOIC_RUNTIME_PROFILE" in os.environ
     if not profile:
         storage = workbench.get("storage", workbench_storage or "disk")

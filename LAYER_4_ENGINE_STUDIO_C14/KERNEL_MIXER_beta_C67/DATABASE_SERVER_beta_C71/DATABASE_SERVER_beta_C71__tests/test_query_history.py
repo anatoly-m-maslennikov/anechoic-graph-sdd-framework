@@ -33,7 +33,7 @@ class QueryHistoryTest(unittest.TestCase):
             sleep(0.03)
         self.fail(f"Expected {count} query log records")
 
-    def test_history_is_project_local_and_survives_an_orderly_restart(self):
+    def test_history_and_workspace_survive_an_offline_state_rename(self):
         with TemporaryDirectory(dir="/tmp") as directory:
             root = Path(directory).resolve()
             legacy = root / ".anechoic_runtime/workbench/query-log.json"
@@ -55,9 +55,17 @@ class QueryHistoryTest(unittest.TestCase):
                 foreign = client.post("/workspace", json={"instance_id": "foreign", "operation": "query_log_list", "arguments": {}})
                 self.assertEqual(403, foreign.status_code)
             self.assertEqual(old_bytes, legacy.read_bytes())
+            canonical = legacy.parent.with_name("iwe_console")
+            legacy.parent.rename(canonical)
             with _server(*arguments) as client:
                 self.assertEqual(records, self.attempts(client, len(records)))
                 self.assertEqual(400, self.call(client, "query_log_get", {"log_id": "expired"}).status_code)
+                workspace = self.value(self.call(client, "workspace_get", {
+                    "workspace_id": "query-log-test",
+                }))
+                self.assertEqual("SELECT missing", workspace["views"][0]["sql"])
+            self.assertEqual(old_bytes, (canonical / legacy.name).read_bytes())
+            self.assertFalse(legacy.parent.exists())
 
     def run_attempts(self, client):
         self.value(_query(client, "SELECT 33"))

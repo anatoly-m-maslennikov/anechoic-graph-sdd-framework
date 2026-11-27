@@ -1,0 +1,23 @@
+{
+  "title": "Require authored timestamp for strict native Manifest selection",
+  "invariant": "When the model requires Atom state, a selected Project Manifest must provide a parseable datetime updated_at to model validation.",
+  "scope": "Historical selection function with stubbed carrier discovery and model validation, plus the fixed state-field helper. Covers missing, invalid and valid timestamps with require_atom_state enabled; does not exercise carrier parsing, compiled models, Component Manifests, Package Specs, or a complete compiler run. Lean records replay outcomes only.",
+  "checks": [
+    {
+      "file": "observations.lean",
+      "stdout_suffix": "[true,false,true]\n"
+    }
+  ],
+  "before": {
+    "revision": "26f392150a7741a053aece891d9e6f650eca1f3e",
+    "source": "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/native_project_selection.py",
+    "fixture": "before.py.txt",
+    "sha256": "9e5a305acc8b386a6b5206608afc4885490c683ead9ad304adecd63a81a279be"
+  },
+  "fixed": {
+    "revision": "2d497ef3b9062c096c24cce73b52e2d60e310025",
+    "source": "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/native_project_selection.py",
+    "fixture": "fixed.py.txt",
+    "sha256": "09ded29d9c4dd8ea3ff0de218eb7deb978df9e7aae72a3e90c8cc139a358c140"
+  }
+}

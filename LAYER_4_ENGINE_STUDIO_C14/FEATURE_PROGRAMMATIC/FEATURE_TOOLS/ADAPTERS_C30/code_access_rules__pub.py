@@ -43,7 +43,7 @@ def parse_code_access(boundaries):
     """Normalize the authored Code Access rules for ``allows_import``."""
     if boundaries is None:
         return None, None
-    if not isinstance(boundaries, Mapping) or set(boundaries) - {'code', 'state', 'io'}:
+    if not isinstance(boundaries, Mapping) or set(boundaries) - {'code', 'process', 'state', 'io'}:
         raise ValueError('boundaries must map known boundary names')
     access = boundaries.get('code')
     if access is None:

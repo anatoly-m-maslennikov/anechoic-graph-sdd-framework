@@ -5,7 +5,7 @@ import unittest
 
 
 WORKER = Path(__file__).resolve().parents[1]
-FRONTEND = WORKER.parent / 'IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND'
+FRONTEND = WORKER.parent / 'IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_FRONTEND'
 spec = importlib.util.spec_from_file_location('web_export_aliases', WORKER / 'web_export_aliases.py')
 module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)

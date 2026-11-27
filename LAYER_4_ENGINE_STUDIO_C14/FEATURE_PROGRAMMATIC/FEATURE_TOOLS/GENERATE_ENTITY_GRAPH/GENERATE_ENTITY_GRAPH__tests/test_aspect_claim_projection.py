@@ -1,4 +1,4 @@
-"""Explicit Aspect membership in CFEL retains the complete written identity."""
+"""Explicit Aspect membership in Python retains the complete written identity."""
 
 from pathlib import Path
 import sys
@@ -9,17 +9,20 @@ sys.path[:0] = [str(TOOL.parent), str(TOOL)]
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import compose_enhanced_current_graph  # noqa: E402
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import render_model  # noqa: E402
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import extract_claim_constraints  # noqa: E402
 
 
-def carrier(atom_id, subject, expression):
+def carrier(atom_id, subject, address):
+    name = address.rsplit(" <+ ", 1)[-1]
     return {
         "source": {"atom_id": atom_id, "version": 1, "path": f"{atom_id}.md", "sha256": "a" * 64},
         "subjects": {} if subject is None else {"active": subject, "passive": []},
-        "body": f"## Claim\n### Formal Claim\n```CFEL\n{expression};\n```\n",
+        "body": ("## Claim\n### Formal Claim\n```python\n"
+              "from anechoic.formal_claims import declare_entity\n"
+              "from anechoic.model import Aspect\n"
+              f"declare_entity(entity_name={name!r}, instance=Aspect(address={address!r}))\n"
+                 "```\n"),
         "read_view": {"content_role": "Requirement", "type": "Declaration"},
     }
-
 
 def instance_edges(graph):
     identities = {node["id"]: node["identity"] for node in graph["nodes"]}
@@ -34,8 +37,8 @@ class AspectClaimProjectionTests(unittest.TestCase):
         first = "PROJECT STRUCTURE//ANECHOIC <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+ Query Processing"
         second = "PROJECT STRUCTURE//ANECHOIC <+ Aspects <+ Other <+ Query Processing"
         graph, provenance = compose_enhanced_current_graph([
-            carrier("CA-R-1", "Unrelated Main Subject", f"({first}) ((INSTANCE_OF)) Aspect"),
-            carrier("CA-R-2", None, f"({second}) ((INSTANCE_OF)) Aspect"),
+            carrier("CA-R-1", "Unrelated Main Subject", first),
+            carrier("CA-R-2", None, second),
         ])
         edges = instance_edges(graph)
         self.assertIn((first, "Aspect"), edges)
@@ -50,42 +53,16 @@ class AspectClaimProjectionTests(unittest.TestCase):
         self.assertIn(f"`INSTANCE_OF` `{first}` → `Aspect`", rendered)
         self.assertIn(f"`INSTANCE_OF` `{second}` → `Aspect`", rendered)
 
-    def test_typed_aspect_preserves_full_identity_and_provenance(self):
-        path = "PROJECT STRUCTURE//ANECHOIC <+ Aspects <+ Engineering <+ Query Processing"
-        old = carrier("CA-R-1", path, f"# project_structure\n{path};\n({path}) ((INSTANCE_OF)) Aspect")
-        new = carrier("CA-R-1", path, "")
-        new["body"] = ("## Claim\n### Formal Claim\n```python\n"
-                       "from anechoic.formal_claims import declare_entity\n"
-                       "from anechoic.model import Aspect\n"
-                       f"declare_entity(entity_name='Query Processing', instance=Aspect(address={path!r}))\n```\n")
-        old_constraints, old_errors = extract_claim_constraints(old)
-        new_constraints, new_errors = extract_claim_constraints(new)
-        self.assertEqual(old_errors, [])
-        self.assertEqual(new_errors, [])
-        self.assertEqual(old_constraints, new_constraints)
-        old_graph, _ = compose_enhanced_current_graph([old])
-        new_graph, provenance = compose_enhanced_current_graph([new])
-        self.assertEqual(instance_edges(old_graph), instance_edges(new_graph))
-        self.assertIn((path, "Aspect"), instance_edges(new_graph))
-        self.assertTrue(any(row.get("role") == "formal_claim" for row in provenance["occurrences"]))
-
     def test_typed_aspects_with_same_name_keep_distinct_paths(self):
         paths = ["PROJECT STRUCTURE//ANECHOIC <+ Aspects <+ " + parent + " <+ Example"
                  for parent in ("Engineering", "Product")]
-        rows = []
-        for index, path in enumerate(paths):
-            row = carrier(f"CA-R-{index}", path, "")
-            row["body"] = ("## Claim\n### Formal Claim\n```python\n"
-                           "from anechoic.formal_claims import declare_entity\n"
-                           "from anechoic.model import Aspect\n"
-                           f"declare_entity(entity_name='Example', instance=Aspect(address={path!r}))\n```\n")
-            rows.append(row)
+        rows = [carrier(f"CA-R-{index}", path, path) for index, path in enumerate(paths)]
         graph, _ = compose_enhanced_current_graph(rows)
         self.assertTrue({(path, "Aspect") for path in paths} <= instance_edges(graph))
 
     def test_ordinary_claim_does_not_declare_aspect_membership(self):
         path = "PROJECT STRUCTURE//ANECHOIC <+ Aspects <+ Example"
-        row = carrier("CA-R-3", None, f"({path}) ((INSTANCE_OF)) Aspect")
+        row = carrier("CA-R-3", None, path)
         row["read_view"]["type"] = "Requirement"
         graph, _ = compose_enhanced_current_graph([row])
         self.assertNotIn((path, "Aspect"), instance_edges(graph))

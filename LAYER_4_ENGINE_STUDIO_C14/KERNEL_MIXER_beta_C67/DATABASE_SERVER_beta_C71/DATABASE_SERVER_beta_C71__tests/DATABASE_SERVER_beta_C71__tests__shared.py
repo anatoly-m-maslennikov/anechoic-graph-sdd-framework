@@ -52,8 +52,10 @@ def _server(database=None, *arguments):
 
 
 def _generation():
-    model = json.dumps({"model_sha256": "b" * 64, "binding_schema": 1, "modules": {"__init__.py": "d" * 64},
-                        "module_order": [], "class_modules": {}, "bindings": {}}, indent=2)
+    model = json.dumps({"model_sha256": "b" * 64, "binding_schema": 1,
+                        "modules": {"__init__.py": sha256(b"").hexdigest()},
+                        "module_sources": {"__init__.py": ""}, "module_order": [],
+                        "class_modules": {}, "bindings": {}}, indent=2)
     structure = json.dumps({"model_sha256": "b" * 64, "project": {"ref": "AN-S-1", "sha256": PIN},
                             "components": {}}, indent=2)
     return {**BINDING, "snapshot": {"manifest_sha256": PIN, "atoms": [{"reference": "one", "summary": "first"}]},

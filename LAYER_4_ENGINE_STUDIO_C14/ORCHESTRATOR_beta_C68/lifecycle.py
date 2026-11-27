@@ -180,6 +180,10 @@ class LifecycleJobs:
             structure = read_structure(self.database_socket, self.instance_id, reuse)
             if structure is None:
                 raise ValueError("An admitted Structure is required for lifecycle writes")
+            if not isinstance(reuse.get("status_domains"), dict):
+                if archive_pending:
+                    raise ArchiveHistoryPending("Archived Atom history is incomplete")
+                return base, structure, {}
             number, labels = ticket_allocation(self.database_socket, self.instance_id, base,
                                                self.binding["project_prefix"], archive_versions=job.archive_versions)
             facts = {"max_number": number, "component_ids": list(structure["components"]),
@@ -189,12 +193,14 @@ class LifecycleJobs:
         context = lifecycle_context(self.database_socket, self.instance_id, base, self.binding["project_prefix"],
                                     job.name, job.arguments, archive_versions=job.archive_versions)
         structure = context["structure"]
-        full_capture = requires_project_capture(job, context, self.binding["control_root"])
+        full_capture = (requires_project_capture(job, context, self.binding["control_root"])
+                        or context.get("model") is None and not isinstance(reuse.get("status_domains"), dict))
         if archive_pending and (full_capture or needs_exact_archive(job, context)):
             raise ArchiveHistoryPending("Archived Atom history is incomplete")
         if full_capture:
             return base, structure, {}
-        return base, structure, {"lifecycle_context": {**context, "endpoints": reuse["endpoints"]}}
+        domains = {"status_domains": reuse["status_domains"]} if "status_domains" in reuse else {}
+        return base, structure, {"lifecycle_context": {**context, "endpoints": reuse["endpoints"], **domains}}
 
     def _require_lifecycle_coverage(self, *, dispatched=False):
         """Check the queue after the epoch so newly restored coverage cannot bypass recovery."""

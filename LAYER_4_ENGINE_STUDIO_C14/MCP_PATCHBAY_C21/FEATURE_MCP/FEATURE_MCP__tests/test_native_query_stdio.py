@@ -216,9 +216,9 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
 
 
 
-    async def test_project_queries_include_all_current_atoms_at_selected_tier(self):
+    async def test_project_queries_include_only_solutions_at_tier_zero(self):
         self._write("AN-S-1428-axiom.md", "AN-S-1428", "active", 1, template="axiom", tier=-1)
-        self._write("AN-S-1429-contract.md", "AN-S-1429", "active", 1, template=None, tier=0)
+        self._write("AN-S-1429-contract.md", "AN-S-1429", "active", 1, template="solution", tier=0)
         self._write("AN-S-3190-principle.md", "AN-S-3190", "active", 1, template="applicable_principle", tier=2)
         self._write("AN-S-3038-manifest.md", "AN-S-3038", "active", 1, template="component_manifest", tier=0)
         self._write("AN-S-021-tier-one.md", "AN-S-021", "active", 1, template=None, tier=1)
@@ -229,8 +229,8 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
         ):
             await client.initialize()
             for template, expected in (
-                ("fetch_contracts", ["AN-S-1429@1", "AN-S-3038@1"]),
-                ("fetch_solutions", ["AN-S-021@1"]),
+                ("fetch_contracts", []),
+                ("fetch_solutions", ["AN-S-1429@1"]),
             ):
                 result = await client.call_tool("query_template", {
                     "template": template, "component": "C0", "result_format": "json_matrix",

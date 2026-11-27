@@ -1,4 +1,4 @@
-"""Source-bound formal-contract inventory; no CFEL execution or inference."""
+"""Source-bound Python formal-contract inventory."""
 
 from __future__ import annotations
 
@@ -13,8 +13,7 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import
     parse_subject_expression as _subject_parse_subject_expression,
 )
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import carrier_read_view, matches_named_value
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.cfel_claim_constraints import (
-    claim_cfel_blocks,
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.claim_constraints import (
     claim_fenced_blocks,
     claim_python_blocks,
     claim_prose,
@@ -65,7 +64,7 @@ def _entry(carrier: Mapping[str, Any], subject: str, target: str, kind: str) -> 
     source = dict(carrier["source"])
     entry = {
         "source": source, "subject": subject, "target": target, "kind": kind,
-        "blocks": claim_fenced_blocks(carrier), "cfel_blocks": claim_cfel_blocks(carrier),
+        "blocks": claim_fenced_blocks(carrier),
         "clauses": [row for row in clauses if row.get("group") != "instances"],
         "instance_clauses": [row for row in clauses if row.get("group") == "instances"],
         "prose": claim_prose(carrier),
@@ -276,7 +275,7 @@ def _finish_graph(catalog, shared, gaps, outside_scope, narrowing, entities, com
         "declared_entity_targets": len(entities), "declared_component_targets": len(components),
         "declared_relation_targets": len(relations), "shared_sources": sum(len(rows) for rows in shared.values()),
         "fenced_claim_blocks": sum(len(entry["blocks"]) for entry in entries),
-        "cfel_blocks": sum(len(entry["cfel_blocks"]) for entry in entries),
+        "python_blocks": sum(len(entry.get("python_blocks", [])) for entry in entries),
         "recognized_clauses": sum(len(entry["clauses"]) for entry in entries),
         "unsupported_clauses": len(diagnostics), "coverage_gaps": len(gaps),
         "outside_model_scope_sources": len(outside_scope),
@@ -293,7 +292,7 @@ def _finish_graph(catalog, shared, gaps, outside_scope, narrowing, entities, com
         "diagnostics": diagnostics, "inheritance_diagnostics": inheritance_diagnostics,
         "coverage": coverage,
         "display_coverage": "incomplete" if display_incomplete else "complete",
-        "structured_cfel": "partial" if diagnostics else "complete",
+        "structured_claims": "partial" if diagnostics else "complete",
         "outcome": "incomplete" if display_incomplete else "complete",
     }
 

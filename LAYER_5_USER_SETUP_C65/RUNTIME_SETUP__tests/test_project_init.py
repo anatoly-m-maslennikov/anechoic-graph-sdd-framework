@@ -41,7 +41,7 @@ class ProjectInitTests(unittest.TestCase):
         fields = self.manifest_fields(control)
         self.assertEqual("My Project", fields["name"])
         self.assertEqual("MP", fields["prefix"])
-        self.assertEqual({"workbench": {"storage": "memory"}, "journal": {"storage": "duckdb"}},
+        self.assertEqual({"iwe_console": {"storage": "memory"}, "journal": {"storage": "duckdb"}},
                          fields["parameters"]["runtime"])
         self.assertEqual({"0": ".", "1": "01_TIER_1_ARCHITECTURE", "2+": "_{lens}/{sublenses}"},
                          fields["parameters"]["project"]["folder_layout"]["active_spec_by_tier"])
@@ -49,7 +49,7 @@ class ProjectInitTests(unittest.TestCase):
         self.assertIn(
             "        parameters={\n"
             "            'runtime': {\n"
-            "                'workbench': {'storage': 'memory'},\n"
+            "                'iwe_console': {'storage': 'memory'},\n"
             "                'journal': {'storage': 'duckdb'},\n",
             manifest.read_text(encoding="utf-8"),
         )
@@ -79,7 +79,7 @@ class ProjectInitTests(unittest.TestCase):
 
     def test_disk_and_files_modes_are_persisted(self):
         control = self.initialize(workbench_storage="disk", journal_storage="files")
-        self.assertEqual({"workbench": {"storage": "disk"}, "journal": {"storage": "files"}},
+        self.assertEqual({"iwe_console": {"storage": "disk"}, "journal": {"storage": "files"}},
                          self.manifest_fields(control)["parameters"]["runtime"])
 
     def test_fsync_failure_cleans_owned_temporary_and_empty_directory(self):

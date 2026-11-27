@@ -17,4 +17,4 @@ Editing a Package trace rereads the subtree
 
 ## Concern
 
-CA-M-1015@1 limits ordinary refreshes to affected object and pin rows. In `FEATURE_WORKBENCH_BACKEND/spec_trace.py`, `refresh` maps a Package trace edit to its parent directory, deletes descendant rows, and rescans the entire Package subtree. One pin edit rereads unrelated descendant traces.
+CA-M-1015@1 limits ordinary refreshes to affected object and pin rows. In `FEATURE_IWE_CONSOLE_BACKEND/spec_trace.py`, `refresh` maps a Package trace edit to its parent directory, deletes descendant rows, and rescans the entire Package subtree. One pin edit rereads unrelated descendant traces.

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.import_graph__shared import ImportSite, Source
+from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IMPORT_GRAPH_C61.import_graph__shared import ImportSite, Source
 
 
 _CACHE_VERSION = 4

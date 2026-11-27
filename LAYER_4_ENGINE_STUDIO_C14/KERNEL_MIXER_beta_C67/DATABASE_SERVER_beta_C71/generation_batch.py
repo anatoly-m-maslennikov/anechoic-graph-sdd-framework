@@ -8,9 +8,14 @@ import re
 import stat
 import tempfile
 
+import duckdb
 from pydantic import BaseModel, ConfigDict, Field
 
-from .generation import _unique
+from starlette.concurrency import run_in_threadpool
+from starlette.requests import Request
+from starlette.responses import JSONResponse
+
+from .generation import FULL_GENERATION_BODY_LIMIT, _unique, prepare_generation, replace_generation
 from .realization_projection import _ANALYSIS, _TABLES
 
 
@@ -88,12 +93,12 @@ def _read_file(fd, directory, artifact):
     return header
 
 
-def read_batch(value):
+def read_batch(value, directory_prefix):
     artifact = BatchArtifact.model_validate(value)
     path = Path(artifact.path)
     temp = Path(tempfile.gettempdir()).resolve(strict=True)
     if (not path.is_absolute() or str(path) != artifact.path or path.name != "generation-batches.jsonl"
-            or path.parent.parent != temp or not re.fullmatch(r"anechoic-generation-[^/]+", path.parent.name)
+            or path.parent.parent != temp or not re.fullmatch(directory_prefix + r"[^/]+", path.parent.name)
             or not re.fullmatch(r"[0-9a-f]{64}", artifact.sha256)):
         raise ValueError("Invalid batch artifact path or digest")
     flags = os.O_RDONLY | os.O_NOFOLLOW
@@ -123,9 +128,47 @@ async def read_full_generation(request, read_object, size_limit):
     return await read_object(request, size_limit, *alternatives)
 
 
-def unpack_batch(data):
+def unpack_batch(data, directory_prefix="anechoic-generation-"):
     if "batch_artifact" in data:
         try:
-            data.update(read_batch(data.pop("batch_artifact")))
+            data.update(read_batch(data.pop("batch_artifact"), directory_prefix))
         except OSError as error:
             raise ValueError("Batch artifact is unavailable or unsafe") from error
+
+
+def _prepare_full(data, manifest_sha256):
+    unpack_batch(data)
+    return prepare_generation(data, manifest_sha256)
+
+
+def generation_route(connection, instance_id, manifest_sha256, lock, queries, workspaces, journal_sync, read_object, error_response):
+    async def admit_generation(request: Request):
+        try:
+            data = await read_full_generation(request, read_object, FULL_GENERATION_BODY_LIMIT)
+            if data["instance_id"] != instance_id:
+                return error_response("foreign_instance", "Instance does not match", 403)
+            prepared = await run_in_threadpool(_prepare_full, data, manifest_sha256)
+            with lock:
+                selected = None
+                if "refresh_target" in data:
+                    if journal_sync is not None:
+                        journal_sync()
+                    queries.prune()
+                    selected = queries._selection(connection, data["refresh_target"], generation=True)
+                stage = None if selected is None else lambda: queries.stage_generation(connection, selected)
+                generation, captured = replace_generation(connection, data, prepared, stage_refresh=stage)
+                result = {"generation": generation}
+                if captured is not None:
+                    replacements = queries.publish(captured)
+                    if workspaces is not None:
+                        workspaces.replace_results(replacements)
+                    result["result_ids"] = {key: value["query_id"] for key, value in replacements.items()}
+            return JSONResponse({"result": result})
+        except OSError:
+            return error_response("model_publication_failed", "Accepted Model publication failed; reconciliation required", 409)
+        except (ValueError, TypeError, UnicodeError, duckdb.Error) as error:
+            return error_response("invalid_generation", str(error), 400)
+        except (OSError, RuntimeError):
+            return error_response("journal_unavailable", "Work Journal is unavailable", 409)
+
+    return admit_generation

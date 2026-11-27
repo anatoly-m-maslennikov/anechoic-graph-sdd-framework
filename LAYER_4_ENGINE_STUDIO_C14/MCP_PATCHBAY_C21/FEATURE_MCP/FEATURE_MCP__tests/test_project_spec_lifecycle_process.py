@@ -43,7 +43,12 @@ class ProjectSpecLifecycleProcessTests(unittest.IsolatedAsyncioTestCase):
             name='atom_lifecycle_create_draft', arguments={'newAtom': values}))
         self.assertNotEqual('completed', result.structured_content['status'], result.structured_content)
 
-    async def test_axiom_zero_and_negative_tier(self):
+    async def test_project_spec_lifecycle(self):
+        for check in (self._check_axiom, self._check_applicable_principle, self._check_project_contract):
+            with self.subTest(check=check.__name__):
+                await check()
+
+    async def _check_axiom(self):
         await self.reject('axiom', tier=-1)
         await self.reject('axiom', body='\n## Claim\n\nExample\n')
         await self.reject('axiom', body='\n## Summary\n\nExample\n\n## Summary\n\nDuplicate\n')
@@ -65,7 +70,7 @@ class ProjectSpecLifecycleProcessTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(0, yaml.safe_load(path.read_text().split('---', 2)[1])['tier'])
         self.assertEqual(self.root / CONTROL, path.parent)
 
-    async def test_applicable_principle_tiers(self):
+    async def _check_applicable_principle(self):
         for tier in (1, 2):
             with self.subTest(tier=tier):
                 draft = (await self.draft('applicable_principle', tier=tier))['savedDraft']
@@ -75,7 +80,7 @@ class ProjectSpecLifecycleProcessTests(unittest.IsolatedAsyncioTestCase):
             with self.subTest(tier=tier):
                 await self.reject('applicable_principle', tier=tier)
 
-    async def test_project_contract_guarantee(self):
+    async def _check_project_contract(self):
         for body in ('\n## Summary\n\nExample\n', BODY.replace('The output is available.', '   '),
                      BODY + '\n## Guarantee\n\nDuplicate\n'):
             with self.subTest(body=body):

@@ -9,6 +9,8 @@ import sys
 from typing import Any
 from pathlib import Path, PurePosixPath
 
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import console_state_path
+
 from .errors import WorkbenchUnavailableError
 
 
@@ -58,7 +60,7 @@ class WatcherChangeLog:
     MAX_ROWS = 100_000
 
     def __init__(self, root: Path) -> None:
-        self._path = Path(root) / ".anechoic_runtime" / "workbench" / "watcher-change-log.ndjson"
+        self._path = console_state_path(Path(root)) / "watcher-change-log.ndjson"
         self._rows: list[dict[str, str | None]] | None = None
         self._next_expiry: dt.datetime | None = None
 

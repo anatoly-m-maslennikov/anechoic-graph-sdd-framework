@@ -2,21 +2,24 @@
 
 import json
 import os
-from hashlib import sha256
-from pathlib import Path
-import socketserver
 import subprocess
 import sys
 import tempfile
 import threading
 import time
 import unittest
-from http.server import BaseHTTPRequestHandler
+from hashlib import sha256
+from pathlib import Path
 
 import httpx2
 
-
 ENGINE = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ENGINE))
+from API_MIXER_beta_C91.API_MIXER_beta_C91__tests._package__shared import (
+    ApiPeer as Peer,
+)
+from API_MIXER_beta_C91.API_MIXER_beta_C91__tests._package__shared import Server
+
 DIGEST = "a" * 64
 MODULE = "API_MIXER_beta_C91.API_MIXER_beta_C91__shared"
 KERNEL = "KERNEL_MIXER_beta_C67.DATABASE_SERVER_beta_C71.DATABASE_SERVER_beta_C71__shared"
@@ -42,47 +45,6 @@ def generation():
             "snapshot_sha256": sha256(json.dumps(snapshot, sort_keys=True, separators=(",", ":")).encode()).hexdigest(),
             "graph_sha256": sha256(json.dumps(graph, sort_keys=True, separators=(",", ":")).encode()).hexdigest(),
             "model_descriptor_sha256": sha256(model.encode()).hexdigest(), "structure_sha256": sha256(structure.encode()).hexdigest()}}
-
-
-class Server(socketserver.ThreadingMixIn, socketserver.UnixStreamServer):
-    daemon_threads = True
-
-
-class Peer(BaseHTTPRequestHandler):
-    def log_message(self, *_args):
-        pass
-
-    def do_GET(self):
-        if self.path.startswith("/schema?"):
-            self.server.schema_paths.append(self.path)
-            schema = getattr(self.server, "schema", {"tables": {"atoms": [{"name": "reference", "type": "VARCHAR"}]}})
-            self.reply({"result": schema})
-            return
-        result = {"instance_id": "instance", "pid": os.getpid()}
-        if self.server.kind == "db":
-            result.update(manifest_sha256=DIGEST, ready=True, generation="g1", archive_pending=False)
-        else:
-            result.update(startup_replay_pending=False, watcher_active=True)
-        self.reply({"result": result})
-
-    def do_POST(self):
-        data = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
-        self.server.received.append(data)
-        if data.get("sql") == "DELETE FROM atoms" or data.get("grid") == {"bad": True}:
-            self.reply({"error": {"code": "invalid_query", "message": "invalid query"}})
-            return
-        page = {"query_id": "query", "columns": [{"name": "answer", "type": "INTEGER", "has_values": True}],
-                "rows": [[42]], "offset": 0, "has_more": False}
-        if getattr(self.server, "invalid", False):
-            page["columns"] = "invalid"
-        self.reply({"result": page})
-
-    def reply(self, payload):
-        value = json.dumps(payload).encode()
-        self.send_response(200)
-        self.send_header("Content-Length", str(len(value)))
-        self.end_headers()
-        self.wfile.write(value)
 
 
 class ApiProcessTest(unittest.TestCase):
@@ -143,11 +105,11 @@ class ApiProcessTest(unittest.TestCase):
     def test_catalog_query_validation_and_manifest_gate(self):
         catalog = self.client.get("/tools", params={"instance_id": "instance"}).json()["result"]
         self.assertEqual(["query_run", "query_check", "query_page", "query_schema",
-                          "workbench_status", "workbench_abort", "query_rebuild",
+                          "iwe_console_status", "iwe_console_abort", "workbench_status", "workbench_abort", "query_rebuild",
                           "query_load", "query_saved_list", "view_save", "workspace_open", "workspace_list",
                           "workspace_get", "query_log_list", "query_log_get", "view_create", "view_duplicate", "view_list",
                           "view_get", "view_update", "view_focus", "view_rename", "view_remove", "view_run", "view_check", "view_fetch",
-                          "atom_lifecycle_create_draft", "atom_lifecycle_update", "atom_lifecycle_promote_draft", "atom_lifecycle_change_status", "atom_lifecycle_archive", "atom_lifecycle_create_asset", "atom_lifecycle_direct_update"],
+                          "atom_lifecycle_create_draft", "atom_lifecycle_update", "atom_lifecycle_promote_draft", "atom_lifecycle_change_status", "atom_lifecycle_archive", "atom_lifecycle_create_asset", "atom_lifecycle_direct_update", "iwe_console_atom_document"],
                          [tool["name"] for tool in catalog["tools"]])
         result = self.call({"sql": "SELECT 42", "result_delivery": "inline"})
         self.assertEqual([[42]], result["result"]["value"]["rows"])
@@ -194,11 +156,11 @@ class ApiProcessTest(unittest.TestCase):
             time.sleep(0.05)
         else:
             self.fail("Blacklisted API did not start")
-        self.assertEqual(["query_check", "query_page", "query_schema", "workbench_status", "workbench_abort", "query_rebuild",
+        self.assertEqual(["query_check", "query_page", "query_schema", "iwe_console_status", "iwe_console_abort", "workbench_status", "workbench_abort", "query_rebuild",
                           "query_load", "query_saved_list", "view_save", "workspace_open", "workspace_list",
                           "workspace_get", "query_log_list", "query_log_get", "view_create", "view_duplicate", "view_list",
                           "view_get", "view_update", "view_focus", "view_rename", "view_remove", "view_run", "view_check", "view_fetch",
-                          "atom_lifecycle_create_draft", "atom_lifecycle_update", "atom_lifecycle_promote_draft", "atom_lifecycle_change_status", "atom_lifecycle_archive", "atom_lifecycle_create_asset", "atom_lifecycle_direct_update"],
+                          "atom_lifecycle_create_draft", "atom_lifecycle_update", "atom_lifecycle_promote_draft", "atom_lifecycle_change_status", "atom_lifecycle_archive", "atom_lifecycle_create_asset", "atom_lifecycle_direct_update", "iwe_console_atom_document"],
                          [tool["name"] for tool in catalog["result"]["tools"]])
         self.assertEqual(["query_run"], catalog["result"]["blacklist"])
         self.assertEqual("tool_unavailable", self.call({"sql": "SELECT 1"})["error"]["code"])
@@ -231,7 +193,8 @@ class ApiProcessTest(unittest.TestCase):
                                                    name="query_page")["error"]["code"])
 
     def test_query_schema_binding_and_validation(self):
-        names = ("project_structure", "model_entities", "model_properties", "diag_model_manifests")
+        names = ("project_structure", "model_entities", "model_properties", "model_tree",
+                 "model_primary_entities", "diag_model_manifests")
         self.servers[0].schema = {"tables": {key: [] for name in names for key in (name, f"mrt_{name}")}}
         self.assertEqual(self.servers[0].schema, self.call({}, name="query_schema")["result"]["value"])
         self.assertEqual(["/schema?instance_id=instance"], self.servers[0].schema_paths)

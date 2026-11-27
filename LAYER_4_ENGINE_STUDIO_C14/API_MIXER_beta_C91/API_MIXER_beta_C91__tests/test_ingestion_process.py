@@ -93,7 +93,7 @@ class IngestionProcessTest(unittest.IsolatedAsyncioTestCase):
                 await asyncio.sleep(0.05)
 
     def database_identity(self):
-        database, = (self.root / ".anechoic_runtime/workbench/beta").glob("*.duckdb")
+        database, = (self.root / ".anechoic_runtime/iwe_console/beta").glob("*.duckdb")
         info = database.stat()
         return database, info.st_dev, info.st_ino
 

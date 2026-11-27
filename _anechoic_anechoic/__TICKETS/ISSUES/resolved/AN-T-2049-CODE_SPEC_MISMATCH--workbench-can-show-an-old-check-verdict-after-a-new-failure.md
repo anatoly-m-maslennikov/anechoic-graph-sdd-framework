@@ -19,4 +19,4 @@ Workbench can show an old Check verdict after a new failure
 
 ### Prose Claim
 
-CA-M-466@9 requires truthful stale and error states. `FEATURE_WORKBENCH_FRONTEND/src/App.svelte` keeps and displays the previous Check verdict across a query edit and a failed Check. A View can show a Valid verdict alongside an error for the current query.
+CA-M-466@9 requires truthful stale and error states. `FEATURE_IWE_CONSOLE_FRONTEND/src/App.svelte` keeps and displays the previous Check verdict across a query edit and a failed Check. A View can show a Valid verdict alongside an error for the current query.

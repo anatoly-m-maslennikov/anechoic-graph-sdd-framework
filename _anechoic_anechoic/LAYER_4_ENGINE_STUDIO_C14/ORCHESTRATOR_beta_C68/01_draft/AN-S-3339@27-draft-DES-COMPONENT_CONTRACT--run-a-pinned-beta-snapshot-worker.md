@@ -23,8 +23,7 @@ Run a pinned Beta snapshot Worker
 
 Watch before capturing the Project. Admit Current and Draft to make
 Studio ready. Load Archived Atoms in a separate Worker while the live
-lane handles source changes. Report archive progress and failures
-separately. Wait for complete history before admitting lifecycle writes.
+lane handles source changes. Report Archive progress separately.
 Use the watcher's completed observation to guard startup admission.
 Distinguish observed source changes from missing watcher coverage and
 write one bounded stderr record with the run ID, phase, wait time, and
@@ -40,6 +39,9 @@ generation before replying. Serialize rebuild requests with source changes.
 Return the admitted generation and requested result replacements, or a
 typed failure. Overlapping requests for the same target share one
 admission and result map.
+Treat `realization_graph` as a Graph-only request. Use the same background
+Worker as the scheduled refresh and share an active Graph refresh.
+Start the automatic Graph refresh after the initial Archive job settles.
 
 Serialize each accepted lifecycle job with generation builds. Require an
 admitted base. Admit the Worker’s native carrier delta against that base.
@@ -61,9 +63,9 @@ events only while the file contents or absence match the recorded effect.
 Retain the input proof only after Kernel accepts the generation. On a
 watcher event, supply that proof to a short-lived Worker. For a
 change outside the Ticket delta path, supply the Kernel Structure
-when its generation matches the proof. Submit a native or native
-and Realization Graph refresh against that base. Run a full build
-if the base changed. Explicit rebuilds use the full build path.
+when its generation matches the proof. Submit a native refresh against
+that base. Use a full build if the base changed or an explicit native
+rebuild was requested.
 
 Report a failed Code Analyzer restart as a build issue and reserve the
 automatic generation retry for native source currentness failures.
@@ -75,15 +77,18 @@ projection and admit the verified Current and Draft additions, edits,
 moves, and deletions before readiness.
 
 Use a full reload when the projection database or checkpoint is missing,
-the checkpoint is incompatible or cannot be verified, or a Model,
-Structure, or compiler schema input changed. When only Realization
-Graph inputs changed, request a Graph rebuild using the admitted
-Model and Structure.
+or when the checkpoint is incompatible or cannot be verified. For changed
+compiler inputs, request a Model and Structure compile before deciding
+whether a database rebuild is required under AN-S-3389. When only Realization
+Graph inputs change, request a Graph rebuild using the admitted Model and
+Structure.
 
-Run Archive catch-up in the background. Mark Archive pending while it
-catches up, including when prior checkpoint rows are visible. Clear
-that state only after Kernel confirms complete Archive. Report elapsed
-time to live readiness and Archive completion separately.
+Admit maximum versions from the Archive filename scan for allocation.
+Keep the Archive content pending until Kernel admits its background
+load. Put Archive watcher events in the normal queue and process them
+after that admission. A changed or vanished source skips the stale
+item without failing the job. Process newer events normally. Report
+elapsed time to live readiness and Archive completion separately.
 
 Use native notifications for Ticket files where available. Retain
 polling for missed changes and other inputs. Send both paths for a

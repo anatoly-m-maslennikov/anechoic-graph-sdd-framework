@@ -43,7 +43,7 @@ class RenderSubjectProjectionsTests(unittest.TestCase):
             write_atom(sources, 9001, "ANECHOIC <+ MODEL <+ Node", "Node declaration.",
                        dependencies=["ANECHOIC <+ MODEL <+ Missing", "ANECHOIC <+ STRUCTURE <+ Project"])
             write_atom(sources, 9002, "ANECHOIC <+ MODEL <+ Node/Child", "Child declaration.")
-            write_atom(sources, 9003, "ANECHOIC <+ MODEL <+ Node.Name", "```CFEL\nNode.Name: [string]{:1};\n```")
+            write_atom(sources, 9003, "ANECHOIC <+ MODEL <+ Node.Name", "```python\nproperty_rule(address='Node.Name', value_format='string', values='1')\n```")
             drafts = sources / "draft"
             drafts.mkdir()
             write_atom(drafts, 9004, "ANECHOIC <+ MODEL <+ Hidden", "Excluded.")
@@ -53,7 +53,7 @@ class RenderSubjectProjectionsTests(unittest.TestCase):
                 "primary-tree": "Node",
                 "direct-properties": "Node.Name",
                 "inherited-contracts": "Node/Child",
-                "formal-claims": "Node.Name: [string]{:1};",
+                "formal-claims": "property_rule(address='Node.Name', value_format='string', values='1')",
                 "passive-only-subjects": "Missing",
                 "subjects-without-declarations": "CA-R-9001@7",
                 "entity-definition-coverage": "| `Missing` | primary_node | missing | missing |",

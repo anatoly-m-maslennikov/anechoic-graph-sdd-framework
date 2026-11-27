@@ -127,7 +127,7 @@ class NativeWorkbenchStateCases:
             self.assertEqual(200, opened.status_code, opened.text)
             workspace = opened.json()
             self.assertEqual('Anechoic', workspace['project_name'])
-            self.assertIn('/anechoic/workbench/Anechoic?workspace=http-session', workspace['workspace_url'])
+            self.assertIn('/anechoic/iwe-console/Anechoic?workspace=http-session', workspace['workspace_url'])
             identity = {'workspace_id': workspace['workspace_id'], 'view_id': workspace['active_view_id']}
             sql = "SELECT exact_ref FROM native_references WHERE exact_ref = 'AN-T-009@2'"
             updated = await call('view_update', identity | {'sql': sql, 'expected_revision': 0})
@@ -141,9 +141,10 @@ class NativeWorkbenchStateCases:
             saved = await call('view_save', identity)
             self.assertEqual(200, saved.status_code, saved.text)
             saved_url = saved.json()['saved_query_url']
-            self.assertIn('/anechoic/workbench/Anechoic?query=', saved_url)
-            loaded = await client.post(f'{path}/load', json={'reference': saved_url})
-            self.assertEqual(sql, loaded.json()['sql'], loaded.text)
+            self.assertIn('/anechoic/iwe-console/Anechoic?query=', saved_url)
+            for url in (saved_url, saved_url.replace('/iwe-console/', '/workbench/')):
+                loaded = await client.post(f'{path}/load', json={'reference': url})
+                self.assertEqual(sql, loaded.json()['sql'], loaded.text)
             listed = await client.post(f'{path}/saved-list', json={})
             self.assertEqual(saved.json()['saved_query_id'], listed.json()['items'][0]['saved_query_id'])
             await self._check_workspace_refusals(client, call, path, workspace)

@@ -34,7 +34,7 @@ declare_entity(
         name='AGENTIC',
         lens_whitelist=['DES', 'DevOps', 'SPEC', 'SWD'],
         boundaries={
-            'code': {'imports': []},
+            'code': {'exports': {}, 'imports': []},
             'state': {'reads': [], 'writes': []},
             'io': {'server': {'consume_agent_guidance': {
                 'outcomes': {'guidance_received': {

@@ -29,7 +29,7 @@ declare_entity(
         component_id='C54',
         name='ATOM_AUTHORING_PROMPT',
         lens_whitelist=['DES'],
-        boundaries={'code': {'imports': {'only': []}},
+        boundaries={'code': {'exports': {}, 'imports': {'only': []}},
                     'state': {'reads': [], 'writes': []},
                     'io': {'server': {'guided_atom_update': {'outcomes': {'draft_outcome_reported': {
                         'must_effect': [('source_model_guidance', 'provided'), ('gate_guidance', 'required_before_draft_lifecycle')],

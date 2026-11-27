@@ -11,7 +11,7 @@ from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__tests.FEATURE_MCP__tests__shared 
 
 ROOT = Path(__file__).resolve().parents[4]
 ENGINE = "LAYER_4_ENGINE_STUDIO_C14"
-TOOL_REGISTRY = ENGINE + "/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/tool_registry.json"
+TOOL_REGISTRY = ENGINE + "/IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_BACKEND/tool_registry.json"
 RELEASE = ROOT / "LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27"
 RELEASE_FIXTURE = "LAYER_2_LOCAL_RELEASE_C63.LAYER_2_LOCAL_RELEASE_C63__tests.packaged_image_fixture"
 LICENSES = ("LICENSE", "LICENSE.TLDR.md", ENGINE + "/MCP_PATCHBAY_C21/FEATURE_MCP/docker/DuckPGQ.LICENSE")
@@ -41,7 +41,7 @@ class ReleaseImageCompatibilityTests(unittest.TestCase):
             ENGINE + "/mod/mod__tests/test.py": "excluded",
             ENGINE + "/mod/.git/config": "excluded",
             ENGINE + "/mod/secrets/value": "excluded",
-            ENGINE + "/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/workbench_schema.json": "retired",
+            ENGINE + "/IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_BACKEND/workbench_schema.json": "retired",
         }
         for relative, content in self.files.items():
             path = self.root / relative

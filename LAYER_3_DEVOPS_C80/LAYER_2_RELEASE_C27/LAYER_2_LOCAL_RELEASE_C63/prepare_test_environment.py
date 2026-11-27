@@ -12,7 +12,7 @@ from .local_release_gates import _SUITE, _gate_command, _test_environment
 
 _ENGINE = Path("LAYER_4_ENGINE_STUDIO_C14")
 _PROJECT = Path("LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine")
-_FRONTEND = _ENGINE / "IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND"
+_FRONTEND = _ENGINE / "IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_FRONTEND"
 _CACHE = Path(".anechoic_tmp/workbench")
 _EXTENSION_ENV = "ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY"
 _INSTALL_DUCKPGQ = """import sys
@@ -21,6 +21,23 @@ import duckdb
 with duckdb.connect(config={"extension_directory": sys.argv[1]}) as connection:
     connection.execute("INSTALL duckpgq FROM community")
 """
+
+
+def _engine_sync(root):
+    return ("uv", "sync", "--project", str(root / _PROJECT), "--locked", "--all-groups",
+            "--python", "3.14", "--managed-python")
+
+
+def check_locked_engine(root):
+    env = _test_environment(root / _ENGINE)
+    try:
+        config = (root / _ENGINE / ".venv-dev/pyvenv.cfg").read_text(encoding="utf-8")
+        if "include-system-site-packages = false" not in config.splitlines():
+            raise ValueError("Engine virtual environment enables ambient packages")
+        subprocess.run((*_engine_sync(root), "--check"), cwd=root, env=env, stdin=subprocess.DEVNULL,
+                       stdout=sys.stderr, stderr=subprocess.STDOUT, check=True)
+    except (OSError, ValueError, subprocess.SubprocessError) as error:
+        raise LocalReleaseError("local-release-locked-engine-invalid: run local --prepare-environment") from error
 
 
 def _commands(root):
@@ -51,8 +68,7 @@ def _commands(root):
     env.update(PLAYWRIGHT_BROWSERS_PATH=str(browsers), npm_config_global="false")
 
     commands = [
-        ("engine_dependencies", ("uv", "sync", "--project", str(root / _PROJECT), "--locked", "--all-groups",
-                                 "--python", "3.14", "--managed-python"), root),
+        ("engine_dependencies", _engine_sync(root), root),
         ("frontend_dependencies", ("npm", "ci", "--include=dev"), frontend),
         ("chromium", ("node", "node_modules/playwright/cli.js", "install", "chromium"), frontend),
     ]
@@ -63,7 +79,26 @@ def _commands(root):
     return env, commands, extensions
 
 
-def prepare_test_environment(root: Path | str) -> dict[str, object]:
+def missing_test_environment(root: Path) -> bool:
+    return not all((root / path).exists() for path in (
+        _ENGINE / ".venv-dev/bin/python", _FRONTEND / "node_modules/playwright/cli.js",
+        _CACHE / "playwright-browsers", Path(os.environ.get(_EXTENSION_ENV, _CACHE / "extensions")),
+    ))
+
+
+def ensure_test_environment(root, journal):
+    if not journal.data.get("environment_preparing") and not missing_test_environment(root):
+        return
+    journal.data["environment_preparing"] = True
+    journal.save()
+    setup = prepare_test_environment(root, verify=False)
+    if setup["outcome"] != "completed":
+        raise LocalReleaseError(f"local-release-environment-failed: {setup['failed_step']}: {setup['error']}")
+    journal.data.pop("environment_preparing")
+    journal.save()
+
+
+def prepare_test_environment(root: Path | str, *, verify: bool = True) -> dict[str, object]:
     """Prepare prerequisites and run the selected checkout's read-only preflight."""
     completed = []
     result = {"outcome": "failed", "project_root": str(root), "completed_steps": completed,
@@ -73,6 +108,8 @@ def prepare_test_environment(root: Path | str) -> dict[str, object]:
         result["project_root"] = str(root)
         env, commands, extensions = _commands(root)
         for stage, command, cwd in commands:
+            if stage == "preflight" and not verify:
+                continue
             result["failed_step"] = stage
             if stage == "duckpgq":
                 extensions.mkdir(parents=True, exist_ok=True)

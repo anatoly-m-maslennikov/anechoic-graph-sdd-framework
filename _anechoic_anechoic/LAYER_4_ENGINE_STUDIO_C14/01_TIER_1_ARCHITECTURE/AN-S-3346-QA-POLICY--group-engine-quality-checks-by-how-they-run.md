@@ -9,8 +9,8 @@ context:
   lens: QA
 state:
   status: active
-  version: 3
-  updated_at: "2026-11-23T18:00:43.511726+00:00"
+  version: 4
+  updated_at: "2026-11-26T15:27:06.149280+00:00"
 ---
 ## Summary
 
@@ -52,3 +52,10 @@ a behavior-changing refactor or defect fix when feasible.
 Each suite report records phase, selection, outcome, and duration under
 `.anechoic_tmp/test_reports/`. Profilers are diagnostic only. Equivalent
 coverage is not duplicated.
+
+#### Fast Local Release timing
+
+Measure from the first start to production readiness, including fixes and
+continuations. The ideal target is 10 minutes. The mandatory performance
+limit is 15 minutes. Report whether each target was met. An overrun is a QA
+performance miss. Tests and delivery proceed under their normal gates.

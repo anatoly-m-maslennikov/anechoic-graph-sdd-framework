@@ -4,7 +4,7 @@ import re
 
 from markdown_it import MarkdownIt
 
-from .native_model_claim__pub import parse_native_model_claim
+from .native_model_claim__pub import parse_manifest_declaration
 from .code_access_rules__pub import parse_code_access
 from .atom_reference__pub import derive_atom_ref
 from .native_carrier_header__pub import native_header_view
@@ -31,22 +31,19 @@ def _fields(body):
         else:
             end_line = tokens[end].map[0] if end < len(tokens) else len(lines)
             sections[title] = '\n'.join(lines[token.map[1]:end_line]).strip()
-    if (tuple(sections) != ('Formal Manifest', 'Purpose', 'Solution')
-            or not sections['Purpose'] or not sections['Solution']):
-        raise ValueError('Expected Formal Manifest, Purpose and Solution sections in order')
-    claim = parse_native_model_claim(sections['Formal Manifest'])
-    args = claim['arguments'] if claim and claim['kind'] == 'entity' else {}
-    instance = args.get('instance', {})
-    if (set(args) != {'entity_name', 'instance'} or args['entity_name'] != 'Component Seed Manifest'
-            or instance.get('type') != 'ComponentSeedManifest'):
-        raise ValueError('Expected one formal ComponentSeedManifest instance')
-    fields = instance['fields']
+    allowed = ('Formal Manifest', 'Purpose', 'Contract', 'Solution')
+    if (not sections or next(iter(sections)) != 'Formal Manifest'
+            or tuple(sections) != tuple(name for name in allowed if name in sections)
+            or any(not value for name, value in sections.items() if name != 'Formal Manifest')):
+        raise ValueError('Expected Formal Manifest and optional nonempty Purpose, Contract and Solution sections in order')
+    fields = parse_manifest_declaration(sections['Formal Manifest'], entity_name='Component Seed Manifest',
+                                        class_name='ComponentSeedManifest')
     if fields.keys() - {'component_seed_id', 'tier', 'boundaries'}:
         raise ValueError('Invalid Component Seed Manifest fields; prose belongs in sections')
     if not isinstance(fields.get('component_seed_id'), str) or not re.fullmatch(r'CS[0-9]+', fields['component_seed_id']):
         raise ValueError('Invalid Component Seed Manifest ID')
     parse_code_access(fields.get('boundaries'))
-    return fields | {'purpose': sections['Purpose'], 'solution': sections['Solution']}
+    return fields | {name.lower(): value for name, value in sections.items() if name != 'Formal Manifest'}
 
 
 def read_component_seed_manifest(path, carrier, parent, prefix):

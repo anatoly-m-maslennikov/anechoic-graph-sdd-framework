@@ -7,8 +7,11 @@ from typing import Annotated
 from pydantic import BaseModel, ConfigDict, FailFast, ValidationError, field_validator
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
-    canonical_model_address, model_class_target,
+    NODE_LINK_PREFIX, canonical_model_address, model_class_target,
 )
+
+from .model_entity_properties import primary_entity_properties
+from .model_entity_tree import model_tree_rows
 
 
 def ensure_model_tables(connection):
@@ -18,6 +21,22 @@ def ensure_model_tables(connection):
     connection.execute('''CREATE TABLE IF NOT EXISTS mrt_model_properties (
         subject VARCHAR, declaring_node VARCHAR, property_path VARCHAR,
         entity_name VARCHAR, refinements JSON, attributes JSON)''')
+    connection.execute('''CREATE TABLE IF NOT EXISTS mrt_model_tree (
+        entity_path VARCHAR PRIMARY KEY, concern_path VARCHAR, entity_name VARCHAR,
+        parent_path VARCHAR, parent_operator VARCHAR, reference_path VARCHAR)''')
+    tree_columns = {row[1] for row in connection.execute("PRAGMA table_info('mrt_model_tree')").fetchall()}
+    if "reference_path" not in tree_columns:
+        connection.execute("ALTER TABLE mrt_model_tree ADD COLUMN reference_path VARCHAR")
+    connection.execute('''CREATE TABLE IF NOT EXISTS mrt_model_primary_entities (
+        entity_path VARCHAR PRIMARY KEY, concern_path VARCHAR, entity_name VARCHAR, properties JSON,
+        axes JSON, node_rules JSON)''')
+    columns = {row[1] for row in connection.execute("PRAGMA table_info('mrt_model_primary_entities')").fetchall()}
+    if "classifications" in columns and "axes" not in columns:
+        connection.execute("ALTER TABLE mrt_model_primary_entities RENAME COLUMN classifications TO axes")
+        columns.add("axes")
+    for column in ("axes", "node_rules"):
+        if column not in columns:
+            connection.execute(f"ALTER TABLE mrt_model_primary_entities ADD COLUMN {column} JSON")
     connection.execute('''CREATE TABLE IF NOT EXISTS mrt_diag_model_manifests (
         attempt_id VARCHAR, accepted_generation VARCHAR, severity VARCHAR,
         code VARCHAR, message VARCHAR, atom_ref VARCHAR, source_path VARCHAR,
@@ -44,7 +63,7 @@ def _classify_declarations(descriptor):
                 raise ValueError(f'Invalid Model entity subject: {subject}')
             entities.append((subject, target, args))
         elif (args.get('entity_kind') == 'Property' or args.get('relation_name') == 'IS_PROPERTY_OF'
-              or args.get('allowed_classification_values') and ' >| ' in subject):
+              or args.get('allowed_axis_values', args.get('allowed_classification_values')) and ' >| ' in subject):
             properties.append((subject, args))
     return entities, properties, relations
 
@@ -53,10 +72,10 @@ def _property_rows(properties, normalize):
     property_rows = []
     for subject, args in properties:
         declared = canonical_model_address(subject)
-        if ' >| ' in declared and args.get('allowed_classification_values'):
+        if ' >| ' in declared and args.get('allowed_axis_values', args.get('allowed_classification_values')):
             root, axis = declared.split(' >| ', 1)
-            if axis not in args['allowed_classification_values']:
-                raise ValueError(f'Invalid Model classification subject: {subject}')
+            if axis not in args.get('allowed_axis_values', args.get('allowed_classification_values')):
+                raise ValueError(f'Invalid Model axis subject: {subject}')
             property_rows.append((subject, normalize(root), declared, axis, _json([]), _json(args)))
             continue
         declared_root, separator, rest = declared.partition('.')
@@ -65,6 +84,44 @@ def _property_rows(properties, normalize):
         refinements = [normalize(item) for item in args.get('applies_to_entity_classes', [])]
         property_rows.append((subject, owner, path, args['entity_name'], _json(refinements), _json(args)))
     return property_rows
+
+
+def _replace_primary_projections(connection, descriptor, entities, properties, normalize):
+    bases = {cls['name']: cls['bases']
+             for _, declaration in descriptor['bindings'].get('declarations', ())
+             for cls in declaration.get('classes', ())}
+    effective = primary_entity_properties(entities, properties, bases, normalize)
+    tree = model_tree_rows(entities, descriptor.get('node_locations', {}), normalize)
+    arguments = {path: args for _, path, args in entities}
+    subjects = {subject: path for subject, path, _ in entities}
+    subject_by_path = {path: subject for subject, path, _ in entities}
+    display_paths = {path: concern for path, concern, _, _, _ in tree}
+    metadata = {key: descriptor.get(key, {}) for key in ('node_parts', 'node_alternatives', 'node_aliases')}
+    links = [(path + '//' + label, display_paths[path] + '//' + label, label, path, '//', target)
+             for subject, items in metadata['node_parts'].items() if subject in subjects
+             for path in (subjects[subject],)
+             for label, target in items if label.startswith(NODE_LINK_PREFIX)]
+    axis_values = {}
+    for subject, args in properties:
+        allowed = args.get('allowed_axis_values', args.get('allowed_classification_values'))
+        declared = canonical_model_address(subject)
+        if allowed and ' >| ' in declared:
+            root, axis = declared.split(' >| ', 1)
+            axis_values.setdefault(normalize(root), {})[axis] = allowed[axis]
+    entity_fields = {'entity_name', 'entity_class', 'entity_kind', 'axes', 'classifications'}
+    connection.execute('DELETE FROM mrt_model_tree')
+    connection.execute('DELETE FROM mrt_model_primary_entities')
+    if tree:
+        connection.executemany('INSERT INTO mrt_model_tree VALUES (?, ?, ?, ?, ?, ?)',
+                               [(*row, None) for row in tree] + links)
+        connection.executemany('INSERT INTO mrt_model_primary_entities (entity_path, concern_path, entity_name, properties, axes, node_rules) VALUES (?, ?, ?, ?, ?, ?)',
+            [(path, concern, name, _json(effective[path]),
+              _json(arguments[path].get('axes', arguments[path].get('classifications', {}))),
+              _json({key: value for key, value in arguments[path].items() if key not in entity_fields}
+                    | {key: definitions[subject] for key, definitions in metadata.items() if subject in definitions}
+                    | ({'allowed_axis_values': axis_values[path]} if path in axis_values else {})))
+             for path, concern, name, _, _ in tree
+             for subject in [subject_by_path[path]]])
 
 
 def replace_model_projection(connection, descriptor):
@@ -104,6 +161,7 @@ def replace_model_projection(connection, descriptor):
         connection.executemany('INSERT INTO mrt_model_entities VALUES (?, ?, ?, ?, ?, ?)', entity_rows)
     if property_rows:
         connection.executemany('INSERT INTO mrt_model_properties VALUES (?, ?, ?, ?, ?, ?)', property_rows)
+    _replace_primary_projections(connection, descriptor, entities, properties, normalize)
 
 
 def replace_model_diagnostics(connection, rows):

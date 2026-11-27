@@ -7,6 +7,9 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import
     CEILINGS, ReadContext, frontmatter_bounds, native_carrier_path, parse_carrier,
     parse_content, parse_typed_manifest_node, revalidate_native,
 )
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.continuant_concern__pub import (
+    continuant_model_subject, validate_continuant_variant,
+)
 from . import common, effects
 from .effects import _project_write_lock
 from .native_draft_guards import _summary
@@ -35,11 +38,17 @@ def _publish_custom_replacement(selection, draft, current_rows, previous_capture
                     or parse_carrier(raw, path).metadata != header or reader.currentness()['state'] != 'unchanged'):
                 raise common.SourceChanged('Draft source changed after selection.')
             body = raw[bounds[2]:].decode('utf-8')
-            sections = [section for section in parse_content(body) if section['property_path'] == ['formal_manifest']]
+            content = parse_content(body)
+            if header.get('concern') is not None:
+                continuant_model_subject(header['concern'])
+                if any(section['property_path'] == ['claim_scope'] for section in content):
+                    raise common.InputError('target', 'Concern and Claim scope cannot be combined.')
+            sections = [section for section in content if section['property_path'] == ['formal_manifest']]
             tokens = MarkdownIt('commonmark').parse(sections[0]['direct_markdown'] or '') if len(sections) == 1 else []
             if len(tokens) != 1 or tokens[0].type != 'fence' or tokens[0].info.strip() != 'python anechoic-edsl':
                 raise common.InputError('target', 'A typed node manifest is required.')
             parse_typed_manifest_node(tokens[0].content)
+            validate_continuant_variant(header.get('concern'), header.get('context', {}).get('template'), tokens[0].content)
             config_root = selection.control_root / '__PROJECT_CONFIG'
             projected = native_carrier_path(header, _summary(body), project_root=selection.control_root, owner_directory=None)
             if path != config_root / 'CUSTOM_MODEL' / projected.relative_to(config_root):

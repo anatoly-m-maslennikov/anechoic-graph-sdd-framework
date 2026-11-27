@@ -10,16 +10,6 @@ Record = dict[str, Any]
 import re
 from collections import defaultdict
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.cfel_claim_constraints import _grouped_expressions
-
-_METADATA = re.compile(
-    r"^\s*\(\((?P<name>[A-Za-z][A-Za-z0-9_]*)\)\)\s*"
-    r"(?:(?P<notation>==)\s*(?P<short>[^;\r\n]+)|>\|\s*Derivation\s*==\s*(?P<derivation>Direct|Derived))\s*;?\s*$",
-    re.M,
-)
-_CLASSIFICATION = re.compile(r"^\s*Relation//(?P<name>[A-Za-z][A-Za-z0-9_]*)\s*\(\(HAS_CLASSIFICATION\)\)\s*Derivation\s*==\s*(?P<value>Direct|Derived)\s*;?\s*$", re.M)
-
-
 def _token(value: object) -> str | None:
     """Return a declared Relation name from an exact Relation reference only."""
 
@@ -48,7 +38,6 @@ def _metadata(entries: list[Record], relation: str) -> list[Record]:
                 if args.get("reverse_written_alias") is not None:
                     rows.append({"kind": "reverse_notation", "value": args["reverse_written_alias"],
                                  "source": clause["source"]})
-        blocks = [(block, _grouped_expressions(block["block"])) for block in entry["cfel_blocks"]]
         for block in entry.get("python_blocks", []):
             from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_structured_python_model_claim
             try:
@@ -62,20 +51,6 @@ def _metadata(entries: list[Record], relation: str) -> list[Record]:
                         and args.get("axis") == "Derivation" and args.get("notation") == "relation"
                         and args.get("value") in {"Direct", "Derived"}):
                     rows.append({"kind": "derivation", "value": args["value"], "source": block["source"]})
-        for block, expressions in blocks:
-            for expression, group in expressions:
-                if group == "instances":
-                    continue
-                match = _CLASSIFICATION.fullmatch(expression)
-                if match and match.group("name") == relation:
-                    rows.append({"kind": "derivation", "value": match.group("value"), "source": block["source"]})
-                match = _METADATA.fullmatch(expression)
-                if match and match.group("name") == relation:
-                    rows.append({
-                        "kind": "notation" if match.group("notation") else "derivation",
-                        "value": (match.group("short") or match.group("derivation")).strip(),
-                        "source": block["source"],
-                    })
     return rows
 
 

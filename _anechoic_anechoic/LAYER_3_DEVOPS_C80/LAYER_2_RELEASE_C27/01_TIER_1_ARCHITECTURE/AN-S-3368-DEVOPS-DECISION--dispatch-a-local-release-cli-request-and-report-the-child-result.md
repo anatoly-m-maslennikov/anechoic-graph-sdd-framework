@@ -8,15 +8,12 @@ context:
   template: DECISION
   lens: DevOps
 relations:
-  IS_REFERENCE:
-  - AN-S-3361@2
-  - AN-S-3387@2
   IS_SOLUTION_FOR:
   - AN-S-3288@18
 state:
-  status: active
+  status: "active"
   version: 9
-  updated_at: '2026-11-24T18:19:55.278865+00:00'
+  updated_at: "2026-11-26T16:43:14.694900+00:00"
 ---
 
 ## Summary

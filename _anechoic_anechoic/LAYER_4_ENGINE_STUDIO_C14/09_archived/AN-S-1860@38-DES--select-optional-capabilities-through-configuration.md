@@ -1,0 +1,24 @@
+---
+atom_family: SPEC
+atom_id: AN-S-1860
+container:
+  component: C14
+tier: 5
+context:
+  lens: DES
+state:
+  status: "archived"
+  version: 38
+  updated_at: "2026-11-26T09:23:09.709945+00:00"
+---
+## Summary
+Select optional capabilities through Configuration
+
+## Claim
+
+### Prose Claim
+
+
+the ANECHOIC Framework Instance **must** provide configuration capabilities **to** select, combine, parameterize, **or** disable available optional canonical **and** Extension capabilities **only** within declared configuration boundaries **and** **without** redefining governed meanings.
+
+current Extension activation **and** selected Extension revisions use their authoritative Framework Instance Settings under CA-R-1207; this capability does **not** make Project Configuration Atoms a second owner of those selections.

@@ -24,6 +24,13 @@ from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import create_shared_http_
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import HEALTH_PATH, MCP_PATH  # noqa: E402
 
 
+def _query_tool():
+    return types.Tool(name="query_run", inputSchema={
+        "type": "object", "properties": {"sql": {"type": "string"}, "project_root": {"type": "string"}},
+        "required": ["sql", "project_root"],
+    })
+
+
 class FakeGateway:
     instances: list["FakeGateway"] = []
 
@@ -86,11 +93,8 @@ class SharedHTTPTests(unittest.IsolatedAsyncioTestCase):
     async def test_beta_next_gateway_reuses_socket_and_preserves_selection_and_tool_replies(self):
         messages = []
         root = "/canonical/main"
-        project = {"project_name": "Main", "project_prefix": "MA", "instance_id": "instance"}
-        tool = types.Tool(name="query_run", inputSchema={
-            "type": "object", "properties": {"sql": {"type": "string"}, "project_root": {"type": "string"}},
-            "required": ["sql", "project_root"],
-        })
+        project = {"project_name": "Main", "project_prefix": "MA", "instance_id": "a" * 64}
+        tool = _query_tool()
 
         def backend(request):
             key = (request.method, request.url.path)
@@ -98,14 +102,17 @@ class SharedHTTPTests(unittest.IsolatedAsyncioTestCase):
             messages.append((key, data))
             if key == ("POST", "/tools") and "project_root" not in data["arguments"]:
                 fault = {"scope": "project", "code": "missing_project_root", "message": "missing_project_root"}
-                return httpx2.Response(200, json={"error": fault})
+                return httpx2.Response(200, json={"error": fault, "project": None})
             result = {
                 ("GET", "/health"): {"pid": 101, "initialized": True},
                 ("GET", "/tools"): {"tools": [tool.model_dump(mode="json", by_alias=True)]},
                 ("POST", "/selection"): project,
                 ("POST", "/tools"): {"value": {"rows": [[1]]}, "text": None},
             }[key]
-            return httpx2.Response(200, json={"result": result})
+            envelope = {"result": result}
+            if key == ("POST", "/tools"):
+                envelope["project"] = {"prefix": "MA", "instance_id": project["instance_id"]}
+            return httpx2.Response(200, json=envelope)
 
         gateway = create_app(self.config).gateway
         self.addAsyncCleanup(gateway.close)
@@ -130,6 +137,54 @@ class SharedHTTPTests(unittest.IsolatedAsyncioTestCase):
         }), (("POST", "/tools"), {
             "name": "query_run", "arguments": {"sql": "SELECT 1"}, "session_id": None, "public_base_url": None,
         })], messages[-3:])
+
+    async def test_web_and_mcp_refuse_foreign_and_missing_project_receipts(self):
+        app = create_app(self.config)
+        selected = {"project_name": "Main", "project_prefix": "MA", "instance_id": "a" * 64}
+        arguments = {"project_root": "/canonical/main", "sql": "SELECT 1"}
+        calls = []
+
+        def backend(request):
+            data = json.loads(request.content)
+            calls.append(request.url.path)
+            if request.url.path == "/selection":
+                self.assertEqual(arguments["project_root"], data["project_root"])
+                return httpx2.Response(200, json={"result": selected})
+            self.assertEqual(arguments["project_root"], data["arguments"]["project_root"])
+            self.assertEqual(selected["instance_id"], request.headers["X-Anechoic-Project-Instance"])
+            return httpx2.Response(200, json={"project": receipt, "result": {"value": {"rows": [["private"]]}, "text": None}})
+
+        private = httpx2.AsyncClient(transport=httpx2.MockTransport(backend), base_url="http://coordinator")
+        app.gateway._http = await self.enterAsyncContext(private)
+        url = "http://127.0.0.1:8092"
+        public = httpx2.AsyncClient(transport=httpx2.ASGITransport(app=app), base_url=url)
+        client = await self.enterAsyncContext(public)
+        app.gateway.tools = [_query_tool()]
+        app.gateway.ready = True
+        async with (app.starlette_app.router.lifespan_context(app.starlette_app),
+                    streamable_http_client(url + MCP_PATH, http_client=client) as streams,
+                    ClientSession(*streams) as session):
+            await session.initialize()
+            for receipt in ({"prefix": "MA", "instance_id": "b" * 64}, {"prefix": "MA"}, None):
+                with self.subTest(receipt=receipt):
+                    calls.clear()
+                    web = await client.post("/anechoic/Main/api/run", json=arguments)
+                    self.assertEqual(502, web.status_code)
+                    failure = web.json()
+                    self.assertEqual("project_receipt_mismatch", failure["code"])
+                    self.assertEqual("failed", failure["tool_result"]["outcome"])
+                    self.assertNotIn("private", web.text)
+                    mcp = await session.call_tool("query_run", arguments)
+                    self.assertTrue(mcp.is_error)
+                    self.assertEqual(failure["tool_result"], mcp.structured_content)
+                    self.assertEqual(["/selection", "/tools", "/selection", "/tools"], calls)
+            receipt = {"prefix": "MA", "instance_id": selected["instance_id"]}
+            web = await client.post("/anechoic/Main/api/run", json=arguments)
+            mcp = await session.call_tool("query_run", arguments)
+            self.assertEqual(200, web.status_code)
+            self.assertFalse(mcp.is_error)
+            self.assertEqual({"rows": [["private"]]}, web.json())
+            self.assertEqual(web.json(), mcp.structured_content)
 
     async def test_beta_next_gateway_refuses_unsupervised_start(self):
         gateway = create_app(self.config).gateway

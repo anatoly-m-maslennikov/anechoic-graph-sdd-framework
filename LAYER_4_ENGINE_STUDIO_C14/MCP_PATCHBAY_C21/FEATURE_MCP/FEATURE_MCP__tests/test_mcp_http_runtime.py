@@ -7,16 +7,28 @@ from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
-from MCP_PATCHBAY_C21.FEATURE_MCP.backend_client import BackendClient
-
 APP = Path(__file__).resolve().parents[1]
 from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import Runtime  # noqa: E402
-from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import HEALTH_PATH, MCP_PATH  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import (  # noqa: E402
+    HEALTH_PATH, MCP_PATH, BackendClient, ToolProtocolError,
+)
 
 IMAGE = "sha256:" + "a" * 64
 
 
 class BackendStartupBudgetTests(unittest.TestCase):
+    def test_tool_client_preserves_non_success_error_envelope(self):
+        client = BackendClient(None, None, None)
+        for code in ("tool_input_invalid", "internal"):
+            with self.subTest(code=code):
+                failure = {"outcome": "failed", "diagnostics": [code]}
+                fault = {"error": {"code": code, "message": code, "tool_result": failure}}
+                response = SimpleNamespace(is_success=False, json=lambda: fault)
+                with self.assertRaises(ToolProtocolError) as caught:
+                    client._tool_response(response)
+                self.assertEqual(code, caught.exception.code)
+                self.assertEqual(failure, caught.exception.tool_result)
+
     def test_dev_local_budget_only_applies_to_managed_backend(self):
         cases = (
             ("dev-local", True, 419, True),

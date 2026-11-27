@@ -52,16 +52,39 @@ Reuse the unchanged projection and apply only additions, edits, moves,
 and deletions.
 
 Use a full reload when the projection database or checkpoint is missing,
-the checkpoint is incompatible or cannot be verified, or a Model,
-Structure, or compiler schema input changed. When only Realization
-Graph inputs changed, rebuild the Graph with the admitted Model and
-Structure.
+or when the checkpoint is incompatible or cannot be verified.
+After a watcher coverage gap, restore coverage and reconcile the watched
+source inventory against the admitted checkpoint. Apply the carrier delta
+and reconcile Archive and Realization Graph in the background.
+
+When compiler inputs change, recompile the Model from Manifests and
+compile the affected Structure. Compare the projected column names and
+types with the admitted database schema. Rebuild the database for this
+change only if the columns change. Otherwise publish the Model and
+Structure together and update affected rows and relation indexes in place.
+For an enabled Realization Graph, check its inputs after foreground
+readiness and the initial Archive job settles. Check every 10 minutes
+by default. Skip an unchanged Graph.
+Expose `query_rebuild(target="realization_graph")` through the API and MCP
+for immediate refresh. Requests share one short-lived Worker per Project.
+Use the admitted Model and Structure. Pass a pinned Graph artifact to
+Kernel for admission and keep only job state in Orchestrator.
 
 Finish Current and Draft catch-up before Studio reports readiness.
-Reconcile Archive in a background Worker. Archive from a previous
-checkpoint may remain visible with an explicit pending status. On
-cold startup, expose Archive after its admission. Require complete
-Archive before admitting lifecycle writes.
+For an incremental start, fetch and validate only the foreground
+checkpoint before readiness. Fetch and validate the Archive checkpoint
+in the background.
+Scan Archive filenames for the maximum version of each Atom ID.
+Load Archive content in a background Worker. Archive content may be
+pending while lifecycle operations use the admitted version data.
+Operations that need exact Archive content wait for its admission.
+
+The watcher adds Archive changes to the normal queue. Process them
+after the initial Archive load. Skip a stale item if its source
+changed or vanished. Process any newer event through the same queue.
+
+Project only declared Content Properties. The native Atom index uses
+the first line of the declared Summary. Read that field directly.
 
 Detect live Project Manifest edits through the source watcher. Validate
 the new binding and reload the affected Project in the running

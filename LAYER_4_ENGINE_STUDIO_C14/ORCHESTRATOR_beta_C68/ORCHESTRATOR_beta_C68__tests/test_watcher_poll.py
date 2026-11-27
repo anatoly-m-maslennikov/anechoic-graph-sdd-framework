@@ -2,6 +2,7 @@
 
 from contextlib import redirect_stderr
 import errno
+import gc
 from io import StringIO
 import json
 import os
@@ -11,6 +12,7 @@ from threading import Event, Thread
 import time
 import unittest
 from unittest.mock import patch
+import weakref
 
 from pydantic import ValidationError
 from watchdog.events import DirCreatedEvent, DirDeletedEvent, FileSystemEventHandler
@@ -59,6 +61,18 @@ class CaptureFenceTests(unittest.TestCase):
         jobs = project_jobs(self.root)
         self.watcher = jobs.watcher
         self.addCleanup(jobs.close)
+
+    def test_discarded_snapshot_is_released_without_cyclic_collection(self):
+        self.watcher.start()
+        emitter = next(iter(self.watcher.observer.emitters))
+        with self.watcher._proof.sampling_lock:
+            if gc.isenabled():
+                self.addCleanup(gc.enable)
+            gc.disable()
+            snapshot = emitter._take_snapshot()
+            discarded = weakref.ref(snapshot)
+            del snapshot
+            self.assertIsNone(discarded())
 
     def test_fence_detects_restored_mtime_and_leaves_event_queued(self):
         carrier = self.control / "atom.md"
@@ -243,6 +257,19 @@ class CaptureFenceTests(unittest.TestCase):
         self.assertIsNotNone(epoch)
         self.assertIsNot(previous, epoch[0])
         self.assertEqual(["coverage_recovered"], [change["event_type"] for change in self.watcher.changes(0)])
+
+    def test_stopped_archive_observer_restores_on_background_capture(self):
+        self.watcher.start()
+        self.assertTrue(self.watcher.watch_archives())
+        previous = self.watcher.archive_observer
+        emitter = next(iter(previous.emitters))
+        emitter.stop()
+        emitter.join()
+        self.assertIsNone(self.watcher.capture_epoch(archive=True))
+        self.assertTrue(self.watcher.watch_archives())
+        epoch = self.watcher.capture_epoch(archive=True)
+        self.assertIsNotNone(epoch)
+        self.assertIsNot(previous, epoch[0])
 
     def test_fence_refuses_an_incomplete_poll(self):
         carrier = self.control / "atom.md"

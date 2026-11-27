@@ -9,7 +9,7 @@ import unittest
 from unittest.mock import patch
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
-    ReadContext, capture_native, capture_ticket_delta, native_carrier_hashes, prepare_generation_snapshot,
+    ReadContext, capture_native, capture_ticket_delta, native_carrier_hashes, prepare_generation_snapshot, status_domains,
 )
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__tests.ADAPTERS_C30__tests__shared import (
     NativeCaptureFixture,
@@ -17,6 +17,36 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__tests.ADAPTER
 
 
 class NativeGenerationTests(NativeCaptureFixture, unittest.TestCase):
+    def test_generation_capture_uses_admitted_status_domains(self):
+        binding = {"root": str(self.root), "control_root": self.control.name,
+                   "manifest_path": self.manifest.relative_to(self.root).as_posix(),
+                   "manifest_sha256": self.selection.manifest_sha256, "project_prefix": "AN"}
+        domains = status_domains({})
+        domains["C"] = domains["P"] = domains["C"] | {"reviewed"}
+        self.write("__PROJECT_CONFIG/AN-C-1--valid.md", "AN-C-1", "reviewed", 1)
+        unknown = self.write("__PROJECT_CONFIG/AN-C-2--unknown.md", "AN-C-2", "unknown", 1)
+        with patch("FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_snapshot_cli._graph_config", return_value={}):
+            _, finish = prepare_generation_snapshot(binding)
+            result = finish({"CONTAINED_BY": [{"inverse_alias": "CONTAINS"}, False], "CONTAINS": [{}, True]}, domains)
+        row = next(row for row in result["atoms"] if row["reference"] == "AN-C-1")
+        self.assertEqual(("reviewed", "Current"), (row["status"], row["status_group"]))
+        self.assertIn(unknown.relative_to(self.root).as_posix(),
+                      {issue["relative_path"] for issue in result["ingestion_issues"]})
+
+    def test_atom_projection_uses_authored_header_context(self):
+        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_generation_snapshot import _atoms
+
+        base = {"ref": "AN-S-2", "_exact_ref": "AN-S-2@1", "status_group": "Current",
+                "source_path": "spec.md", "_summary_title": "Example", "status": "active", "version": 1}
+        context = {"container": {"component": "C42"}, "tier": 2, "template": "DES"}
+        rows = _atoms([base | {"header_json": {"atom_family": "SPEC", "atom_id": "AN-S-2",
+                                                "container": context["container"], "tier": 2,
+                                                "context": {"template": "DES"}, "state": {"status": "active",
+                                                "version": 1, "updated_at": "2026-11-19T00:00:00Z"}}},
+                       base | {"ref": "AN-S-3", "header_json": {"context": {"container": {"atom": "AN-S-2"}}}}])
+        self.assertEqual(("C42", 2, "DES"), tuple(rows[0][key] for key in ("container_component", "tier", "template")))
+        self.assertEqual((None, None, None), tuple(rows[1][key] for key in ("container_component", "tier", "template")))
+
     def test_staged_capture_reads_archives_without_reopening_foreground_carriers(self):
         binding = {"root": str(self.root), "control_root": self.control.name,
                    "manifest_path": self.manifest.relative_to(self.root).as_posix(),
@@ -236,14 +266,18 @@ class NativeGenerationTests(NativeCaptureFixture, unittest.TestCase):
         archive.write_text(archive.read_text().replace("\n---\n\n## Summary", "\n---\n## Summary").replace("Example\n", "Example\n\nMore detail\n") + original_summary)
         current = self.write("AN-S-2--source.md", "AN-S-2", "active", 2)
         current.write_text(current.read_text().replace("Example\n", "Example\n\nMore detail\n") + original_summary)
+        legacy = self.write("AN-S-3--legacy.md", "AN-S-3", "active", 1)
+        legacy.write_text(legacy.read_text().replace("## Summary\n\nExample", "Summary\n=======\n\nLegacy title"))
         endpoints = {"CONTAINED_BY": [{"inverse_alias": "CONTAINS"}, False],
                      "CONTAINS": [{}, True]}
-        with patch("FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_snapshot_cli._graph_config",
-                   return_value={}):
+        with (patch("FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_snapshot_cli._graph_config",
+                    return_value={}), patch("FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.source_row__pub.parse_content",
+                                            side_effect=AssertionError("Generation must not build Content Properties"))):
             _, finish = prepare_generation_snapshot(binding)
             summaries = {atom["exact_ref"]: atom["summary"] for atom in finish(endpoints)["atoms"]}
         self.assertEqual("Example", summaries["AN-S-2@1"])
         self.assertEqual("Example", summaries["AN-S-2@2"])
+        self.assertEqual("Legacy title", summaries["AN-S-3@1"])
         self.assertIn("More detail", current.read_text())
         self.assertIn("More detail", archive.read_text())
 

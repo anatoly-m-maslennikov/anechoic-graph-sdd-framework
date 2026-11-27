@@ -12,7 +12,7 @@ import httpx2
 
 def write_reviewed_declarations(control, root):
     """Create self-contained carriers from the pinned reviewed Model claims."""
-    assets = root / "LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_GENERATED_MODEL_C52"
+    assets = root / "LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/LAYER_2_FORMAL_MODEL_C51/FEATURE_GENERATED_MODEL_C52"
     ontology = control / "LAYER_1_META_ONTOLOGY_C9"
     ontology.mkdir()
     rows = []
@@ -30,7 +30,7 @@ def write_reviewed_declarations(control, root):
         if subject.endswith("//Component Manifest"):
             number = 3109
             claim = claim.replace('tier: int = field(metadata={"allowed_values": (0,)})',
-                                  'tier: int = field(metadata={"allowed_values": (4,)})')
+                                  'tier: int = field(metadata={"allowed_values": (1,)})')
         name = "declare-component-manifest" if number == 3109 else f"reviewed-{number}"
         (ontology / f"AN-S-{number}-SPEC--{name}.md").write_text(
             f"---\natom_family: SPEC\natom_id: AN-S-{number}\ntier: 2\ncontainer:\n  component: C9\n"

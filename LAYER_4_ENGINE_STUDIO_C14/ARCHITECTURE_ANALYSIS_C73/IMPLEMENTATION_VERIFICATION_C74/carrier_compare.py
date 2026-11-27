@@ -1,21 +1,16 @@
 """Compare the admitted Python carrier, its Lean model, and a Spec model."""
 import argparse
-import hashlib
 import json
 import re
 import shutil
 import subprocess
 import tempfile
-import types
 from pathlib import Path
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
-    frontmatter_bounds,
-    source_body,
-)
-
+from .carrier_direct import compare_direct
 from .carrier_formal import formal_inputs
 from .carrier_model import _SOURCE, generate
+from .carrier_observations import lean_bytes, observe, python_checks
 from .carrier_runtime_effects import analyze_carrier
 
 _CASES = {
@@ -30,66 +25,31 @@ _CASES = {
 }
 
 
-def _lean_bytes(value):
-    return '[' + ', '.join(map(str, value)) + ']'
-
-
-def _loaded_matches(source, path):
-    compiled = compile(source, str(path), 'exec')
-    expected = {c.co_name: c for c in compiled.co_consts if isinstance(c, types.CodeType)}
-    fields = ('co_code', 'co_consts', 'co_names', 'co_varnames',
-              'co_argcount', 'co_kwonlyargcount')
-    return all(fn.__name__ in expected and all(
-        getattr(fn.__code__, field) == getattr(expected[fn.__name__], field)
-        for field in fields) for fn in (frontmatter_bounds, source_body))
-
-
-def _observations(root, evidence, source):
-    path = Path(root) / evidence['source']
-    if hashlib.sha256(source).hexdigest() != evidence['source_sha256']:
-        raise ValueError('carrier source changed during analysis')
-    if (not _loaded_matches(source, path) or any(
-        Path(fn.__code__.co_filename).resolve() != path.resolve()
-        for fn in (frontmatter_bounds, source_body)
-    )):
-        raise ValueError('loaded carrier functions do not match the analyzed path')
-    rows = []
-    for name, raw in _CASES.items():
-        bounds = frontmatter_bounds(raw)
-        try:
-            body = list(source_body(raw, Path('carrier.md')))
-            error = None
-        except ValueError as exc:
-            body, error = None, str(exc)
-        rows.append({'name': name, 'raw': list(raw), 'bounds': bounds,
-                     'body': body, 'error': error})
-    return rows
-
-
 def _checks(rows):
     checks = []
     for row in rows:
-        raw = _lean_bytes(row['raw'])
+        raw = lean_bytes(row['raw'])
         b = row['bounds']
         expected = 'none' if b is None else f'some ({b[0]}, {b[1]}, {b[2]})'
         if row['body'] is None:
-            body = ('match sourceBody ' + raw + ' "carrier.md" with | .error e => e == '
-                    + json.dumps(row['error']) + ' | .ok _ => false')
             suffix = 'missingDelimiter'
         else:
-            value = _lean_bytes(row['body'])
-            body = (f'match sourceBody {raw} "carrier.md" with '
-                    f'| .ok b => b == {value} | .error _ => false')
-            suffix = f'body {value}'
-        checks.extend([f'frontmatterBounds {raw} == {expected}', f'({body})'])
+            suffix = 'body ' + lean_bytes(row['body'])
+        checks.extend(python_checks(row))
         for namespace in ('CarrierBodyContract', 'CarrierBodySolution'):
             checks.extend([f'{namespace}.bounds {raw} == {expected}',
                            f'{namespace}.body {raw} == ({namespace}.Outcome.{suffix})'])
     return '#eval IO.println (Lean.toJson [' + ',\n'.join(checks) + ']).compress\n'
 
 
-def compare(root, lean='lean', formal_only=False):
+def compare(root, lean='lean', formal_only=False, *,
+            manifest=None, solution=None, formal_verifier=None, implementation_sha256=None):
     """Return binding evidence, per-case findings, and explicit unresolved gaps."""
+    if any(item is not None for item in (manifest, solution, formal_verifier, implementation_sha256)):
+        if formal_only or manifest is None or solution is None or not callable(formal_verifier):
+            raise ValueError('direct comparison requires two pins and a formal verifier')
+        return compare_direct(root, manifest, solution, formal_verifier, lean,
+                              implementation_sha256=implementation_sha256)
     if formal_only:
         return _formal_compare(root, lean)
     source = (Path(root) / _SOURCE).read_bytes()
@@ -97,7 +57,7 @@ def compare(root, lean='lean', formal_only=False):
     evidence['effects'] = analyze_carrier(source)
     blocks, evidence['formal'] = formal_inputs(root)
     evidence['unresolved'].append('Spec Engine Python-to-Lean compilation is unsupported')
-    rows = _observations(root, evidence, source)
+    rows = observe(root, evidence, source, _CASES)
     executable = shutil.which(lean)
     if executable is None:
         evidence['unresolved'].append('Lean executable unavailable')
@@ -149,15 +109,15 @@ def _findings(rows, values, evidence):
 def _formal_program(blocks):
     text = '\n'.join(re.sub(r'^\s*import Lean\s*\n', '', block, count=1)
                      for block in blocks)
-    adapters = ['def normalizedBounds (b : Option (Nat × Nat × Nat)) : Option (List Nat) := '
-                'b.map (fun (a, c, d) => [a, c, d])']
+    adapters = [('def normalizedBounds (b : Option (Nat × Nat × Nat)) : Option (List Nat) := '
+                 'b.map (fun (a, c, d) => [a, c, d])')]
     for ns in ('CarrierBodyContract', 'CarrierBodySolution'):
         adapters.append(f"def {ns}Body (raw : List Nat) : Option (List Nat) := "
                         f"match {ns}.body raw with | .missingDelimiter => none "
                         f"| .body bytes => some bytes")
     rows = []
     for raw in _CASES.values():
-        value = _lean_bytes(raw)
+        value = lean_bytes(raw)
         rows.append(f'(normalizedBounds ({{ns}}.bounds {value}), {{ns}}Body {value})')
     expr = ', '.join(row.format(ns=ns) for row in rows
                      for ns in ('CarrierBodyContract', 'CarrierBodySolution'))
@@ -238,14 +198,70 @@ def _valid_formal_values(values):
     return isinstance(values, list) and len(values) == len(_CASES) * 2 and all(map(observation, values))
 
 
+def _validate_spec_pins(pins):
+    for role in ('manifest', 'solution'):
+        source = pins.get(role)
+        if not isinstance(source, dict) or not _valid_digest(source.get('sha256')):
+            raise ValueError(f'{role} pin requires a lowercase SHA-256 digest')
+
+
+def _compare_pinned(root, path, lean, component):
+    request = json.loads(path.read_text(encoding='utf-8'))
+    keys = {'manifest', 'solution', 'implementation_sha256'}
+    if component == 'C87':
+        keys.add('witness')
+    optional = {'export_sha256'} if component in ('C87', 'C90') else set()
+    if not isinstance(request, dict) or request.keys() - optional != keys:
+        raise ValueError('pins require ' + ', '.join(sorted(keys)))
+    _validate_spec_pins(request)
+    if 'export_sha256' in request and not _valid_digest(request['export_sha256']):
+        raise ValueError('export_sha256 must be a lowercase SHA-256 digest')
+
+    from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75._package__shared import (
+        verify_formal_chain,
+    )
+
+    digests = request['implementation_sha256']
+    if component == 'C87':
+        from .renderer_compare import RENDERER_SOURCE_NAMES, compare_renderer
+
+        witness = request['witness']
+        if not isinstance(witness, dict) or witness.keys() != {'manifest', 'solution'}:
+            raise ValueError('renderer witness requires manifest and solution pins')
+        _validate_spec_pins(witness)
+        if (not isinstance(digests, dict) or digests.keys() != set(RENDERER_SOURCE_NAMES)
+                or not all(map(_valid_digest, digests.values()))):
+            raise ValueError('renderer implementation_sha256 requires both source names and lowercase SHA-256 digests')
+        return compare_renderer(root, request, verify_formal_chain, lean)
+    if not _valid_digest(digests):
+        raise ValueError('implementation_sha256 must be a lowercase SHA-256 digest')
+    if component == 'C90':
+        from .diagnostic_compare import compare_diagnostic
+
+        return compare_diagnostic(root, request, verify_formal_chain, lean)
+    return compare(root, lean, formal_verifier=verify_formal_chain, **request)
+
+
+def _valid_digest(value):
+    return isinstance(value, str) and re.fullmatch('[0-9a-f]{64}', value) is not None
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--root', required=True)
     parser.add_argument('--lean', default='lean')
-    parser.add_argument('--formal-only', action='store_true')
+    parser.add_argument('--component', choices=('C30', 'C87', 'C90'), default='C30')
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument('--formal-only', action='store_true')
+    mode.add_argument('--pins', type=Path, help='JSON file with manifest, solution, and implementation_sha256')
     args = parser.parse_args()
+    if args.component != 'C30' and args.pins is None:
+        parser.error(f'{args.component} comparison requires --pins')
     try:
-        report = compare(args.root, args.lean, formal_only=args.formal_only)
+        if args.pins is None:
+            report = compare(args.root, args.lean, formal_only=args.formal_only)
+        else:
+            report = _compare_pinned(args.root, args.pins, args.lean, args.component)
     except (OSError, ValueError, SyntaxError) as exc:
         report = {'status': 'unresolved', 'reason': str(exc)}
     print(json.dumps(report, indent=2))

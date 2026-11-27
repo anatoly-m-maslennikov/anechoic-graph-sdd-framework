@@ -12,8 +12,9 @@ _TEXT = {"type": "string"}
 _DEFINITIONS = {
     "atom_lifecycle_create_draft": ("Create an eligible Atom Draft or revise a Current Atom.", {},
                                     {"newAtom": _FIELDS, "sourceCurrent": _FIELDS, "changes": _FIELDS}),
-    "atom_lifecycle_update": ("Create a Draft revision of an eligible Current Atom.",
-                              {"sourceCurrent": _FIELDS}, {"changes": _FIELDS}),
+    "atom_lifecycle_update": ("Create a Draft revision of a Current Atom or update an exact Draft.",
+                              {}, {"sourceCurrent": _FIELDS, "target": _FIELDS, "changes": _FIELDS,
+                                   "expectedUpdatedAt": _TEXT}),
     "atom_lifecycle_promote_draft": ("Publish an exact Atom Draft revision.", {"target": _FIELDS},
                                      {"targetStatus": _TEXT}),
     "atom_lifecycle_change_status": ("Apply a supported Status transition to a Current Atom.",

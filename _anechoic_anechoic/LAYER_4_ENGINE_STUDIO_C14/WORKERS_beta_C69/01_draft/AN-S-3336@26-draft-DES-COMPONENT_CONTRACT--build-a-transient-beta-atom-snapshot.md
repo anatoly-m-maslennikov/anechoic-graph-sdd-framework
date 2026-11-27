@@ -23,9 +23,12 @@ Build a transient Beta Atom snapshot
 
 Build a pinned Current Atom summary for a standalone snapshot. For a
 generation, derive relations using the attested Model. On cold startup,
-capture Current and Draft first. Skip archive directories during
-foreground traversal. A separate Worker captures their Archived Atoms
-after live admission. Seal the snapshot and Graph in the receipt.
+capture Current and Draft first. Scan Archive filenames for maximum
+versions without reading Archive content. A separate Worker captures
+Archived Atoms after live admission. For queued Archive changes,
+skip an obsolete capture if the observed source changed or vanished.
+Apply a queued deletion as a removal. Seal the snapshot and Graph in
+the receipt.
 Verify source membership and versions before admission. With verified
 watcher coverage, use the watcher's completed observation in place
 of a second Worker scan.
@@ -58,8 +61,8 @@ Return the new native snapshot and its base generation when all
 inputs match. If only Graph inputs changed and Kernel supplies the
 Structure for that base, rebuild the Realization Graph. Return it
 with the native snapshot, digests, and updated input proof. Preserve
-the accepted Model and Structure. Use a full build if the required
-proof is unavailable or changes during capture.
+the accepted Model and Structure. Use a full build if the base cannot
+be verified. Handle changed compiler inputs as specified below.
 
 If the Code Analyzer confirms that graph inputs changed during capture,
 restart only the analyzer once with the same Model, Structure, and native
@@ -73,9 +76,10 @@ path as removals in the change set.
 
 Verify Current and Draft changes before live admission. Verify Archive
 changes in the background. Require a full reload if the checkpoint
-cannot be verified or a Model, Structure, or compiler schema input
-changed. When only Realization Graph inputs changed, rebuild the Graph
-with the admitted Model and Structure.
+cannot be verified. For changed compiler inputs, return the recompiled
+Model and affected Structure for the column compatibility check in
+AN-S-3389 before requesting a database rebuild. When only Realization
+Graph inputs change, rebuild the Graph with the admitted Model and Structure.
 
 For a supported Ticket-only change, capture up to 1,024 named paths
 in one fresh Worker. Return their native delta against the accepted base. An

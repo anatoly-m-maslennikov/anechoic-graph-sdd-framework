@@ -1,5 +1,5 @@
-import type * as TypeScript from '../../../../../../IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND/node_modules/typescript';
-const ts: typeof TypeScript = require('../../../../../../IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND/node_modules/typescript/lib/typescript.js');
+import type * as TypeScript from '../../../../../../IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_FRONTEND/node_modules/typescript';
+const ts: typeof TypeScript = require('../../../../../../IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_FRONTEND/node_modules/typescript/lib/typescript.js');
 const fs = require('fs');
 const source = ts.createSourceFile('test.ts', fs.readFileSync(process.argv[2], 'utf8'), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
 if ((source as TypeScript.SourceFile & { parseDiagnostics: readonly TypeScript.Diagnostic[] }).parseDiagnostics.length) throw Error('TypeScript parse failed');

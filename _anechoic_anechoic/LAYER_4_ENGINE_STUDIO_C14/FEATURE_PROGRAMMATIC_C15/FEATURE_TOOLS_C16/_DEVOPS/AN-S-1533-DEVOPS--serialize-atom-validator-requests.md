@@ -8,8 +8,8 @@ context:
   lens: DevOps
 state:
   status: "active"
-  version: 20
-  updated_at: "2026-11-25T23:19:13.837426+00:00"
+  version: 21
+  updated_at: "2026-11-26T15:17:28.845557+00:00"
 ---
 # Summary
 
@@ -41,7 +41,6 @@ a `VALIDATE_ATOMS` request **must** use the following closed JSON representation
 | `selection` | Selection object below | required |
 | `action_binding` | Atom Binding | optional; **otherwise** resolve the admitted CA-O-087-CORE_META_MODEL-ACTION--check-atoms Revision from methodology |
 | `project_structure` | File Binding | optional; required context **when** unit identity **or** descendants need it |
-| `operators_registry` | File Binding | optional Project Operator registry under CA-D-494-CORE_META_MODEL-DELIVERY--store-operator-registry-in-project-root; required context for Author membership; no implicit path lookup |
 | `reference_roots` | list of Path | optional; default empty; resolution context **only** |
 | `exclude_paths` | list of Path | optional; default empty; exact files **or** directory subtrees excluded from discovery |
 | `limits` | Limits object below | optional partial per-invocation overrides |

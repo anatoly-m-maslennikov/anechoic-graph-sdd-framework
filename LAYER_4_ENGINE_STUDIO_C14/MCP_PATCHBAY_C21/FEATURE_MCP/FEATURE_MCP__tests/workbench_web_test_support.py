@@ -6,7 +6,7 @@ from types import SimpleNamespace
 
 
 MCP_ROOT = Path(__file__).resolve().parents[1]
-FRONTEND_ROOT = MCP_ROOT.parents[1] / "IWE_CONSOLE_C43" / "APP_WORKBENCH" / "FEATURE_WORKBENCH_FRONTEND"
+FRONTEND_ROOT = MCP_ROOT.parents[1] / "IWE_CONSOLE_C43" / "APP_IWE_CONSOLE" / "FEATURE_IWE_CONSOLE_FRONTEND"
 
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import WORKBENCH_PATH  # noqa: E402
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import ToolProtocolError  # noqa: E402
@@ -42,7 +42,7 @@ class FakeWorkbench:
             raise ToolProtocolError("query_error", "sql must be a string")
 
     async def call_tool(self, name, arguments, *, public_base_url=None, asserted_project_root=None):
-        from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.workbench_links import (
+        from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.workbench_links import (
             public_saved, public_workspace, validate_reference,
         )
 
@@ -152,9 +152,9 @@ class FakeGateway:
     async def select_project(self, root):
         if root != "/project":
             raise ValueError("invalid_project_root")
-        return self.selection
+        return {"project_name": self.selection.project_name, "instance_id": "a" * 64}
 
-    async def call_tool(self, name, arguments, *, public_base_url=None, asserted_project_root=None):
+    async def call_tool(self, name, arguments, *, public_base_url=None, asserted_project_root=None, project_instance_id=None):
         if "project_root" in arguments:
             asserted_project_root = arguments["project_root"]
             self.roots.append(asserted_project_root)

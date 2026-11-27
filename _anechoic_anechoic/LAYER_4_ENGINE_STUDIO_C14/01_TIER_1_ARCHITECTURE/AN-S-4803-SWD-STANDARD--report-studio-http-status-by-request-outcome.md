@@ -10,10 +10,8 @@ context:
 state:
   status: active
   version: 1
-  updated_at: '2026-11-24T10:30:42.146551+00:00'
-relations:
-  IS_REFERENCE:
-  - AN-S-4721
+  updated_at: '2026-11-26T16:36:43.717588+00:00'
+
 ---
 
 ## Summary

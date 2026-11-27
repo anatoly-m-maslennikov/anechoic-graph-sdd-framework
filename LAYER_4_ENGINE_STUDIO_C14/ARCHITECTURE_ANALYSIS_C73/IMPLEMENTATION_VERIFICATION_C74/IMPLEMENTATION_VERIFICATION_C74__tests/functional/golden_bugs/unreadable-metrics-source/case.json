@@ -1,0 +1,22 @@
+{
+  "title": "Report unreadable source without a measured size",
+  "invariant": "An unreadable module with no measured size raises an error that names the source.",
+  "scope": "Direct replay of the complete historical code_rows function and its module dependencies. Lean checks the observed outcome labels only; it does not prove Python semantics or the measurement pipeline.",
+  "checks": [
+    {
+      "file": "observations.lean"
+    }
+  ],
+  "before": {
+    "revision": "225bfa20b2a9164c950b682a8ce27d132246bd4d",
+    "source": "LAYER_4_ENGINE_STUDIO_C14/ARCHITECTURE_ANALYSIS_C73/CODE_AND_SPEC_METRICS_C76/metrics__shared.py",
+    "fixture": "before.py.txt",
+    "sha256": "5c0dad236b1850f6929dfb29dd72fba394c6a0596a8516b5375fc66063a87b3f"
+  },
+  "fixed": {
+    "revision": "b43a7c58128e1ca993e66b8996a3a149503a4ca9",
+    "source": "LAYER_4_ENGINE_STUDIO_C14/ARCHITECTURE_ANALYSIS_C73/CODE_AND_SPEC_METRICS_C76/metrics__shared.py",
+    "fixture": "fixed.py.txt",
+    "sha256": "6e1ce57321dd9afac6323e7d0a994e5a563bf74eaa9a89aee54342ca3b8fa33b"
+  }
+}

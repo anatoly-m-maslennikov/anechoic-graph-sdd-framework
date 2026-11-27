@@ -2,7 +2,6 @@
 
 import ast
 from io import StringIO
-from pathlib import PurePath
 import tokenize
 
 
@@ -118,7 +117,6 @@ class _ModelVisitor(ast.NodeVisitor):
         self.path = path
         self.bindings = {}
         self.findings = []
-        self.test_package = any(part.endswith("__tests") for part in PurePath(path).parts[:-1])
         self.namespace_exemptions = _namespace_exemptions(source)
         self.dictionary_literals = {}
         self.model_tags = {}
@@ -188,7 +186,7 @@ class _ModelVisitor(ast.NodeVisitor):
         name = _name(node.func, self.bindings)
         if name in FORBIDDEN:
             self.report(node, name)
-        if name == "types.SimpleNamespace" and not self.test_package and node.lineno not in self.namespace_exemptions:
+        if name == "types.SimpleNamespace" and node.lineno not in self.namespace_exemptions:
             keys = self._namespace_fields(node)
             if _named_fields(keys):
                 self.report(node, "types.SimpleNamespace record")

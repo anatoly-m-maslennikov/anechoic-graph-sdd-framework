@@ -41,6 +41,8 @@ def _bindings(endpoints):
 
 def row_summary(row):
     """Use the first nonblank line of the first Summary as the indexed title."""
+    if "_summary_title" in row:
+        return row["_summary_title"]
     record = next((item for item in row["content_properties_json"] if item["property_path"] == ["summary"]), None)
     if record is None:
         return ""
@@ -57,7 +59,10 @@ def _atoms(rows):
             raise ValueError("Duplicate or missing native references")
         references.add(ref)
         path = PurePosixPath(row["source_path"])
-        atoms.append({"reference": ref, "exact_ref": row["_exact_ref"], "status_group": row["status_group"],
+        context = native_header_view(row["header_json"]).get("context", {})
+        atoms.append({"container_component": context.get("container", {}).get("component"),
+                      "tier": context.get("tier"), "template": context.get("template"),
+                      "reference": ref, "exact_ref": row["_exact_ref"], "status_group": row["status_group"],
                       "relative_path": path.parent.as_posix(), "filename": path.name, "summary": row_summary(row),
                       "status": row["status"], "version": row["version"]})
     return atoms
@@ -132,7 +137,11 @@ def _project_carrier(row, containment, names, inverse):
             unknown.add(edge["relation_type"])
             continue
         _add_edge(edges, edge, names, inverse, references)
-    lens = native_header_view(row["header_json"]).get("context", {}).get("lens")
+    context = native_header_view(row["header_json"]).get("context", {})
+    tier = context.get("tier")
+    if tier is not None and (type(tier) is not int or not -(2**63) <= tier < 2**63):
+        raise ValueError("Invalid native Tier for the indexed range")
+    lens = context.get("lens")
     if lens is not None and (not isinstance(lens, str) or not lens.strip() or lens != lens.strip()):
         raise ValueError("Invalid native lifecycle Lens")
     path = PurePosixPath(row["source_path"])

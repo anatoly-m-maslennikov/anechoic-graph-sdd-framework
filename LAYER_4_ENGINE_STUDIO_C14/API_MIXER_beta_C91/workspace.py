@@ -1,7 +1,7 @@
 """Project Workspace and query-log operations through the Kernel."""
 
 from typing import Any, Literal
-from urllib.parse import quote, urlencode
+from urllib.parse import urlencode
 
 import httpx2
 from pydantic import BaseModel, ConfigDict, Field, RootModel, ValidationError, model_validator
@@ -123,12 +123,11 @@ def present(name, value, context, args):
     elif name in {"workspace_open", "workspace_get"}:
         document = WorkspaceDocument.model_validate(value)
         value = {**value, "project_name": context.project_name}
-        if context.base is not None:
+        if context.base is not None and (page := saved_sql.public_page(context)) is not None:
             query = {"workspace": document.workspace_id}
             if context.root is not None:
                 query["project_root"] = context.root
-            path = f"/anechoic/workbench/{quote(context.project_name, safe='')}"
-            value["workspace_url"] = f"{context.base.rstrip('/')}{path}?{urlencode(query)}"
+            value["workspace_url"] = f"{page}?{urlencode(query)}"
     return value
 
 

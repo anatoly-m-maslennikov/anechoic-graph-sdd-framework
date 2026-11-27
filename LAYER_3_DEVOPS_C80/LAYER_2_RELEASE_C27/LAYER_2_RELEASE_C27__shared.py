@@ -10,7 +10,10 @@ import os
 from pathlib import Path
 import re
 import stat
+import subprocess
 import sys
+from time import time
+from uuid import uuid4
 
 sys.dont_write_bytecode = True
 REPOSITORY = Path(__file__).resolve().parents[2]
@@ -23,7 +26,7 @@ def _arguments(argv: list[str] | None) -> argparse.Namespace:
     for operation in ("local", "public", "build-image", "verify-image", "prepare-local"):
         command = commands.add_parser(operation)
         command.add_argument("--project-root", type=Path, default=REPOSITORY)
-        command.add_argument("--run-id", required=True)
+        command.add_argument("--run-id", required=operation != "local")
         if operation in ("local", "build-image", "verify-image"):
             _engine_argument(command)
         if operation == "public":
@@ -48,7 +51,7 @@ def _arguments(argv: list[str] | None) -> argparse.Namespace:
     run_image.add_argument("--startup-timeout", type=int, default=420)
     run_image.add_argument("--readiness-timeout", type=int, default=420)
     arguments = parser.parse_args(argv)
-    if (arguments.operation in ("local", "verify-image")
+    if (arguments.operation in ("local", "verify-image") and arguments.run_id is not None
             and re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", arguments.run_id) is None):
         parser.error("--run-id must contain only letters, digits, dots, underscores, or hyphens")
     if arguments.operation == "local":
@@ -84,10 +87,16 @@ def _engine_environment(engine):
 def _local_arguments(command):
     mode = command.add_mutually_exclusive_group()
     mode.add_argument("--resume", action="store_true", help="continue the recorded Local Release")
+    mode.add_argument("--continue", dest="continue_run", action="store_true", help="continue from the target journal")
+    mode.add_argument("--abort", action="store_true", help="request a stop at a safe checkpoint")
     mode.add_argument("--status", action="store_true", help="read the recorded Local Release progress")
     mode.add_argument("--prepare-environment", action="store_true", help="provision and verify the checkout's test dependencies")
     command.add_argument("--target-project-root", type=Path, help="Project receiving the verified release")
     command.add_argument("--source-revision", help="exact Git commit for a separate release source")
+    command.add_argument("--suite", choices=("full", "fast"), help="Functional suite (default: full)")
+    command.add_argument("--base", help="exact base commit for a scoped release")
+    command.add_argument("--changed-path", action="append", dest="changed_paths", metavar="PATH",
+                         help="literal file overlay for a scoped release")
     command.add_argument(
         "--image-mode", choices=("refresh", "existing"),
         help="candidate image mode; both use the checked-in build assets",
@@ -100,8 +109,21 @@ def _local_arguments(command):
 
 def _validate_local_arguments(parser, arguments):
     target, revision = arguments.target_project_root, arguments.source_revision
+    if arguments.resume and arguments.run_id is None:
+        parser.error("--resume requires --run-id")
+    if arguments.base is not None or arguments.changed_paths:
+        if (not arguments.base or not arguments.changed_paths or target is not None or revision is not None
+                or any((arguments.resume, arguments.status, arguments.abort,
+                        arguments.continue_run, arguments.prepare_environment))):
+            parser.error("--base and --changed-path must be used together to start a scoped Local Release")
+    if arguments.continue_run or arguments.abort:
+        if any(value is not None for value in (target, revision, arguments.image_mode, arguments.test_modules, arguments.suite)):
+            parser.error("--continue and --abort use the recorded release inputs")
+        return
+    if arguments.run_id is None and not arguments.status:
+        arguments.run_id = uuid4().hex[:12]
     if (arguments.status or arguments.prepare_environment) and any(
-        value is not None for value in (target, revision, arguments.image_mode, arguments.test_modules)
+        value is not None for value in (target, revision, arguments.image_mode, arguments.test_modules, arguments.suite)
     ):
         parser.error("--status and --prepare-environment each take a single --project-root")
     if (target is None) != (revision is None):
@@ -140,7 +162,7 @@ def _invoke(arguments: argparse.Namespace) -> dict[str, object]:
         if arguments.operation == "public"
         else r"[A-Za-z0-9][A-Za-z0-9._-]*"
     )
-    if re.fullmatch(pattern, arguments.run_id) is None:
+    if arguments.run_id is not None and re.fullmatch(pattern, arguments.run_id) is None:
         raise ValueError("release-run-id-invalid")
     if arguments.operation == "prepare-local":
         from LAYER_2_LOCAL_RELEASE_C63.LAYER_2_LOCAL_RELEASE_C63__shared import prepare_local
@@ -180,22 +202,26 @@ def _invalid_selection(run_id):
 def _run_local(root, arguments):
     from LAYER_2_LOCAL_RELEASE_C63.LAYER_2_LOCAL_RELEASE_C63__shared import run_local_release, run_snapshot_release
 
-    if arguments.status:
-        return run_local_release(root, run_id=arguments.run_id, mode="status")
+    if arguments.status or arguments.abort:
+        return run_local_release(root, run_id=arguments.run_id, mode="abort" if arguments.abort else "status")
+    if arguments.continue_run:
+        return _continue_local(root, arguments.run_id, run_local_release, run_snapshot_release)
     if arguments.prepare_environment:
         result = run_local_release(root, run_id=arguments.run_id, mode="prepare")
         result.update(run_id=arguments.run_id, project_root=str(root))
         return result
-    options = {}
+    options = {"resume": True} if arguments.resume else {}
+    options.update({"functional_suite": arguments.suite, "started_at": time()} if arguments.suite is not None else {})
     if arguments.test_modules is not None:
         options["test_modules"] = tuple(arguments.test_modules)
-    if arguments.resume:
-        options["resume"] = True
     if arguments.image_mode is not None:
         options["image_mode"] = arguments.image_mode
     if arguments.target_project_root is None:
         if not arguments.resume:
             options.setdefault("image_mode", "refresh")
+            print(f"Local Release run ID: {arguments.run_id}", file=sys.stderr, flush=True)
+        if arguments.changed_paths:
+            return _start_scoped_local(root, arguments, options, run_snapshot_release)
         result = run_local_release(root, run_id=arguments.run_id, **options)
         result.update(run_id=arguments.run_id, project_root=str(root))
         return result
@@ -209,6 +235,49 @@ def _run_local(root, arguments):
     result.update(run_id=arguments.run_id, source_root=str(root), target_root=str(target),
                   source_revision=arguments.source_revision)
     return result
+
+
+def _start_scoped_local(target, arguments, options, run_snapshot_release):
+    from LAYER_2_LOCAL_RELEASE_C63.LAYER_2_LOCAL_RELEASE_C63__shared import prepare_local
+
+    try:
+        prepared = prepare_local(target, run_id=arguments.run_id, base=arguments.base,
+                                 changed_paths=arguments.changed_paths)
+    except (OSError, ValueError, RuntimeError) as error:
+        return {"outcome": "failed", "run_id": arguments.run_id, "failed_step": "prepare_local",
+                "error_type": type(error).__name__, "error": str(error)}
+    source = Path(prepared["project_root"])
+    revision = prepared["revision"]
+    print(f"Local Release source: {source} at {revision}", file=sys.stderr, flush=True)
+    result = run_snapshot_release(
+        source, target_root=target, source_revision=revision, run_id=arguments.run_id, **options,
+    )
+    return result | {"run_id": arguments.run_id, "project_root": str(target), "source_root": str(source),
+                     "source_revision": revision}
+
+
+def _continue_local(target, run_id, run_local_release, run_snapshot_release):
+    state = run_local_release(target, run_id=run_id, mode="status")
+    if state["outcome"] != "completed":
+        return state
+    run_id = state["run_id"]
+    context = state["docker_context"]
+    engine = None if context is None else ("orbstack" if context == "orbstack" else "docker")
+    with _engine_environment(engine):
+        if state["source_root"] is None:
+            result = run_local_release(target, run_id=run_id, resume=True)
+        else:
+            source = _project_root(Path(state["source_root"]))
+            revision = state["source_revision"]
+            if not state["delivery_started"]:
+                env = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
+                revision = subprocess.check_output(
+                    ("git", "rev-parse", "--verify", "HEAD"), cwd=source, env=env, text=True, timeout=30,
+                ).strip()
+            result = run_snapshot_release(
+                source, target_root=target, source_revision=revision, run_id=run_id, resume=True,
+            )
+    return result | {"run_id": run_id, "project_root": str(target)}
 
 
 def _run_image(arguments: argparse.Namespace) -> dict[str, object]:
@@ -241,7 +310,7 @@ def _invoke_public(root: Path, arguments: argparse.Namespace) -> dict[str, objec
 
 def main(argv: list[str] | None = None) -> int:
     arguments = _arguments(argv)
-    maintenance = getattr(arguments, "status", False) or getattr(arguments, "prepare_environment", False)
+    maintenance = any(getattr(arguments, key, False) for key in ("status", "prepare_environment", "continue_run", "abort"))
     engine = None if maintenance else getattr(arguments, "engine", None)
     try:
         with _engine_environment(engine), redirect_stdout(sys.stderr):
@@ -252,7 +321,7 @@ def main(argv: list[str] | None = None) -> int:
             "failed_step": "invocation",
             "error_type": "KeyboardInterrupt",
         }
-    except (OSError, ValueError, RuntimeError) as error:
+    except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as error:
         result = {
             "outcome": "failed",
             "failed_step": "invocation",

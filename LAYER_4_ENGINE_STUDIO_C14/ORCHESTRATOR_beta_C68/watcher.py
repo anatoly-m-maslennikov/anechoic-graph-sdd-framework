@@ -19,6 +19,11 @@ from .watcher_receipts import WriteReceipts
 MAX_TRACKED_TICKETS = 16384
 
 
+def _observer_running(observer):
+    return (observer is not None and observer.is_alive() and bool(observer.emitters)
+            and all(emitter.is_alive() for emitter in observer.emitters))
+
+
 class SourceWatcher(WatcherCode, FileSystemEventHandler):
     def __init__(self, root, control_root, watch_code=False, *, defer_archives=False):
         super().__init__()
@@ -74,8 +79,7 @@ class SourceWatcher(WatcherCode, FileSystemEventHandler):
     def restore_foreground(self):
         """Reestablish polling after an emitter stopped, then request reconciliation."""
         observer = self.observer
-        if (observer is not None and observer.is_alive() and observer.emitters
-                and all(emitter.is_alive() for emitter in observer.emitters)):
+        if _observer_running(observer):
             return
         if time.monotonic() < self._observer_retry_at:
             return
@@ -110,8 +114,12 @@ class SourceWatcher(WatcherCode, FileSystemEventHandler):
         with self._archive_lock:
             if self._proof.closed or not self.defer_archives:
                 return False
-            if self.archive_observer is not None:
+            if _observer_running(self.archive_observer):
                 return self._proof.ready(self.archive_observer, archive=True)
+            if self.archive_observer is not None:
+                self.archive_observer.stop()
+                self.archive_observer.join()
+                self.archive_observer = None
             observer = polling_observer(self._archives.entries, self._archives, archive=True)
             try:
                 observer.schedule(self, str(self.control_root), recursive=True)
@@ -235,6 +243,8 @@ class SourceWatcher(WatcherCode, FileSystemEventHandler):
         changed = self._ticket_change(event.event_type, paths) if ticket else (event.event_type, paths)
         if changed is not None:
             kind, paths = changed
+            if event.is_directory and self.control_root in paths:
+                kind = COVERAGE_RECOVERED
             self.queue.put({"old_path": str(paths[0]), "new_path": str(paths[1]) if len(paths) > 1 else None,
                             "event_type": kind, "is_directory": event.is_directory, "observed_at": time.time()})
             self._foreground_events += foreground

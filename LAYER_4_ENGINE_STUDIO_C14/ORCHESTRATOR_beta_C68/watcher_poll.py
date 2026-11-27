@@ -67,8 +67,7 @@ class _Snapshot(DirectorySnapshot):
             pass
 
     def __init__(self, path, recursive, entries, skip_directory):
-        self.clean = True
-        self.issue = None
+        self.clean, self.issue = True, None
         self.skip_directory = skip_directory
 
         def observe(path):
@@ -86,6 +85,7 @@ class _Snapshot(DirectorySnapshot):
                 raise
 
         super().__init__(path, recursive=recursive, stat=observe, listdir=listdir)
+        self.stat, self.listdir = os.lstat, entries
 
 
 class _ProofEmitter(PollingEmitter):

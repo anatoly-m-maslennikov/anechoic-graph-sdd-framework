@@ -33,9 +33,12 @@ declare_entity(
         name='Code and Spec Metrics',
         lens_whitelist=['DES', 'SPEC'],
         boundaries={
-            'code': {
-                'imports': ['metrics__shared.code_rows', 'metrics__shared.spec_rows'],
-            },
+            'code': {'exports': {'metrics__shared.code_rows': {'shared': ['C69',
+                                                                  'LAYER_4_ENGINE_STUDIO_C14/ARCHITECTURE_ANALYSIS_C73/CODE_AND_SPEC_METRICS_C76/CODE_AND_SPEC_METRICS_C76__tests']},
+                         'metrics__shared.is_measurement_input': {'shared': ['C61', 'C68']},
+                         'metrics__shared.spec_rows': {'shared': ['C30',
+                                                                  'LAYER_4_ENGINE_STUDIO_C14/ARCHITECTURE_ANALYSIS_C73/CODE_AND_SPEC_METRICS_C76/CODE_AND_SPEC_METRICS_C76__tests']}},
+             'imports': ['metrics__shared.code_rows', 'metrics__shared.spec_rows']},
             'state': {'reads': ['captured code inventory and Current Spec measurements'], 'writes': []},
             'io': {'server': {'report_code_and_spec_metrics': {'outcomes': {
                 'report_returned': {'must_effect': [

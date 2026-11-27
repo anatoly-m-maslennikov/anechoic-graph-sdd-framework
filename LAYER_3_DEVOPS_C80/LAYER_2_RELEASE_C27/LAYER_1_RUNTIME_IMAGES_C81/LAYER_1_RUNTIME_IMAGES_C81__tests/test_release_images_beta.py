@@ -103,7 +103,7 @@ class BetaReleaseImagesTests(ReleaseImageFixture):
         current_kernel = self.package / images.ENGINE / "KERNEL_MIXER_C59/current.py"
         current_kernel.parent.mkdir(parents=True)
         current_kernel.write_text("current")
-        frontend = self.package / images.ENGINE / "IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND/source.js"
+        frontend = self.package / images.ENGINE / "IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_FRONTEND/source.js"
         frontend.parent.mkdir(parents=True)
         frontend.write_text("shared frontend")
         unrelated = self.package / images.ENGINE / "OTHER_beta_C999/source.py"

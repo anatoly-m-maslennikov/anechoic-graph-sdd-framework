@@ -10,12 +10,8 @@ context:
 state:
   status: active
   version: 2
-  updated_at: '2026-11-24T18:19:55.278865+00:00'
-relations:
-  IS_REFERENCE:
-  - AN-S-3346
-  - AN-S-3287
-  - AN-S-4731
+  updated_at: '2026-11-26T16:36:43.732694+00:00'
+
 ---
 
 ## Summary

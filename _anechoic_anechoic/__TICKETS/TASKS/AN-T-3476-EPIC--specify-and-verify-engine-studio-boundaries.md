@@ -9,26 +9,33 @@ context:
   label: Epic
 state:
   status: in_queue
-  version: 4
-  updated_at: '2026-11-24T11:45:22.222468+00:00'
+  version: 5
+  updated_at: '2026-11-26T09:24:34+00:00'
 ---
+
 ## Summary
 
 Specify and verify Engine Studio boundaries
 
 ## Objective
 
-Review realized code and actual boundaries across Engine Studio, record Contracts and main Tier 1 Decisions with formal claims, and verify the resulting Studio implementation in Lean.
+- Make the eDSL for Component Manifests and Solutions clear and consistent.
+  The Manifest declares boundaries and the public Contract. The Solution
+  describes how the Component fulfills that Contract.
+- Make Spec Engine preserve eDSL semantics in Lean and reliably compare
+  that Lean with independently generated Lean from the implementation.
 
-## Work
+## Earlier work
 
-Create the nine bounded reviews below. Reuse Implementation Verification and report unattached declarations and unsupported cases.
+The earlier Studio boundary reviews used Implementation Verification and
+recorded unattached declarations and unsupported cases.
 
 Compile explicit eDSL Model Node, Property, and Relation bindings. Validate the complete admitted Model in Lean before publication, then use that same Model to generate Python runtime modules. Use zero magic; Component boundary Manifests are outside this Model scope.
 
 ## Operator scope correction
 
-Do not review current code or scan current sibling paths. The seven-day work is a golden corpus of bugs already found and fixed. This direction supersedes conflicting active review and scan instructions above and below. Prior findings remain historical.
+The seven-day golden corpus covers bugs already found and fixed. The
+current verification work below covers Spec Engine and selected examples.
 
 ## Seven-day bug replay
 
@@ -36,7 +43,29 @@ Inventory confirmed functional bug fixes from tickets, Git history, and the work
 
 Build a reusable golden corpus from confirmed fixes. Independently state expected behavior from requirements and evidence. Translate the actual buggy and fixed code into Lean where supported, with exact old and fix provenance. Measure the old failure and fixed pass in Lean. Record unsupported cases and coverage gaps.
 
+## Next work on amm/dev
+
+1. Make authoring rules consistent across profiles. Reject contradictory
+   declarations and keep public Action names, HTTP bindings, and Solution
+   execution details distinct.
+2. Fix verified translation and comparison defects. A clean result must
+   account for every obligation in scope. Report unsupported code evidence
+   and unchecked obligations as unresolved.
+3. Use the Spec Engine, its children, and a selected Component example to
+   verify fixes. Revise a Spec Engine Manifest or Solution when the change
+   resolves a confirmed mismatch or gives a useful regression case.
+
+Bulk adoption and reconciliation of Component or Component Seed Specs are
+outside this phase. Preserve revision history for selected changes.
+
 ## Acceptance
+
+The public verifier compares independent Lean evidence from pinned Specs
+and implementation. Each result identifies the source, checked
+obligations, conflicts, and unresolved coverage. Reproduce each confirmed
+defect and keep a working control.
+
+## Earlier acceptance
 
 Each review records realized code, boundary, Contract, formal Tier 1 Decision or reuse, and unresolved coverage. The final review compares the reviewed Studio implementation in Lean.
 

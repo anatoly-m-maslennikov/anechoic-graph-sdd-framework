@@ -1,12 +1,16 @@
 """Keep pre-prefix Beta databases readable after canonical table migration."""
 
 import json
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from tempfile import TemporaryDirectory
 import unittest
+from unittest.mock import patch
 
 import duckdb
 
+from .. import persistence
+from ..carrier_checkpoint import read_checkpoint
+from ..table_names import main_objects
 from .DATABASE_SERVER_beta_C71__tests__shared import BINDING, PIN, _query, _server
 
 
@@ -20,6 +24,7 @@ class TableNamesTest(unittest.TestCase):
                 connection.execute("CREATE TABLE mrt_import_read_issues (relative_path VARCHAR, error_message VARCHAR)")
                 connection.execute("INSERT INTO mrt_import_read_issues VALUES ('bad.py', 'failed to read')")
                 connection.execute("CREATE VIEW import_read_issues AS SELECT * FROM mrt_import_read_issues")
+                connection.execute("DROP VIEW ops_carrier_hashes")
                 connection.execute("CREATE TABLE ops_carrier_hashes (carrier_sha256_by_path VARCHAR)")
                 connection.execute("INSERT INTO ops_carrier_hashes VALUES (?)", [json.dumps({"a.py": "a" * 64})])
             with _server(path):
@@ -53,6 +58,53 @@ class TableNamesTest(unittest.TestCase):
                 self._assert_canonical_rows(connection)
                 self._assert_public_compatibility(connection)
 
+    def test_open_database_migrates_canonical_checkpoint_and_preserves_empty_state(self):
+        for hashes in ({"control/é.md": "b" * 64, "root.md": "c" * 64}, {}, None):
+            with self.subTest(hashes=hashes):
+                directory = self.enterContext(TemporaryDirectory(dir="/tmp"))
+                path = Path(directory).resolve() / "old.duckdb"
+                self._write_canonical_checkpoint(path, hashes)
+                expected = [] if hashes is None else [hashes]
+                rows = [(name, PurePosixPath(name).parent.as_posix(), digest) for name, digest in (hashes or {}).items()]
+                for _ in range(2):
+                    with patch.object(persistence, "connect", duckdb.connect):
+                        with persistence.open_bound_database(str(path), PIN, "instance") as connection:
+                            self.assertEqual(hashes, read_checkpoint(connection))
+                            self._assert_checkpoint_views(connection, expected)
+                            self.assertEqual(sorted(rows), connection.execute(
+                                "SELECT * FROM ops_generation_carrier_digests ORDER BY path"
+                            ).fetchall())
+
+    def test_open_database_restores_canonical_checkpoint_after_migration_failure(self):
+        directory = self.enterContext(TemporaryDirectory(dir="/tmp"))
+        path = Path(directory).resolve() / "old.duckdb"
+        hashes = {"root.md": "b" * 64}
+        self._write_canonical_checkpoint(path, hashes)
+        with patch.object(persistence, "connect", duckdb.connect):
+            with patch.object(persistence, "ensure_structure_table", side_effect=ValueError("late failure")):
+                with self.assertRaisesRegex(ValueError, "late failure"):
+                    persistence.open_bound_database(str(path), PIN, "instance")
+            with duckdb.connect(str(path), read_only=True) as connection:
+                objects = main_objects(connection)
+                self.assertEqual("BASE TABLE", objects["ops_generation_carrier_hashes"])
+                self.assertNotIn("ops_generation_carrier_digests", objects)
+                self.assertEqual([(json.dumps(hashes),)], connection.execute("SELECT * FROM generation_carriers").fetchall())
+            with persistence.open_bound_database(str(path), PIN, "instance") as connection:
+                self.assertEqual(hashes, read_checkpoint(connection))
+
+    @staticmethod
+    def _write_canonical_checkpoint(path, hashes):
+        with duckdb.connect(str(path)) as connection:
+            connection.execute("CREATE TABLE ops_project_binding (manifest_sha256 VARCHAR, instance_id VARCHAR)")
+            connection.execute("INSERT INTO ops_project_binding VALUES (?, ?)", [PIN, "instance"])
+            connection.execute("CREATE TABLE ops_generation_carrier_hashes (carrier_sha256_by_path VARCHAR)")
+            if hashes is not None:
+                connection.execute("INSERT INTO ops_generation_carrier_hashes VALUES (?)", [json.dumps(hashes)])
+            connection.execute("CREATE VIEW ops_carrier_hashes AS SELECT * FROM ops_generation_carrier_hashes")
+            connection.execute("CREATE VIEW generation_carriers AS SELECT carrier_sha256_by_path AS hashes "
+                               "FROM ops_generation_carrier_hashes")
+        path.chmod(0o600)
+
     @staticmethod
     def _write_legacy_database(path):
         connection = duckdb.connect(str(path))
@@ -64,7 +116,8 @@ class TableNamesTest(unittest.TestCase):
             connection.execute('CREATE TABLE atoms (reference VARCHAR PRIMARY KEY, "content.summary" VARCHAR)')
             connection.execute("INSERT INTO atoms VALUES ('legacy-atom', 'retained')")
             connection.execute("CREATE TABLE generation (id VARCHAR, model VARCHAR, structure VARCHAR)")
-            connection.execute("INSERT INTO generation VALUES ('legacy-generation', '{}', '{}')")
+            connection.execute("INSERT INTO generation VALUES ('legacy-generation', '{}', ?)",
+                               [json.dumps({"components": {}, "project": {"ref": "AN-S-1", "sha256": PIN}})])
             connection.execute("CREATE TABLE generation_carriers (hashes VARCHAR)")
             connection.execute("INSERT INTO generation_carriers VALUES (?)", [json.dumps({"a.py": "a" * 64})])
             connection.execute("CREATE TABLE generation_reuse (witness VARCHAR)")
@@ -99,10 +152,18 @@ class TableNamesTest(unittest.TestCase):
         )
 
     def _assert_checkpoint(self, connection):
-        expected = [(json.dumps({"a.py": "a" * 64}),)]
-        for table in ("ops_generation_carrier_hashes", "ops_carrier_hashes"):
-            self.assertEqual(expected, connection.execute(f"SELECT carrier_sha256_by_path FROM {table}").fetchall())
-        self.assertEqual(expected, connection.execute("SELECT hashes FROM generation_carriers").fetchall())
+        self._assert_checkpoint_views(connection, [{"a.py": "a" * 64}])
+        self.assertEqual([("a.py", ".", "a" * 64)],
+                         connection.execute("SELECT * FROM ops_generation_carrier_digests").fetchall())
+
+    def _assert_checkpoint_views(self, connection, expected):
+        objects = main_objects(connection)
+        self.assertEqual("BASE TABLE", objects["ops_generation_carrier_digests"])
+        for table, column in (("ops_generation_carrier_hashes", "carrier_sha256_by_path"),
+                              ("ops_carrier_hashes", "carrier_sha256_by_path"), ("generation_carriers", "hashes")):
+            self.assertEqual("VIEW", objects[table])
+            self.assertEqual(expected, [json.loads(raw) for raw, in connection.execute(
+                f"SELECT {column} FROM {table}").fetchall()])
 
     def _assert_public_compatibility(self, connection):
         self.assertEqual(

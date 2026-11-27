@@ -71,7 +71,7 @@ class StateProjectionWatcherTests(IsolatedAsyncioTestCase):
         from mcp import types
 
         self._source('src/a.py', 'x = 1\n')
-        with patch('IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.state_effects.shutil.which',
+        with patch('IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IMPORT_GRAPH_C61.state_effects.shutil.which',
                    return_value=None):
             gateway = await self._gateway()
             result = await gateway.call(None, types.CallToolRequestParams(name='query_run', arguments={

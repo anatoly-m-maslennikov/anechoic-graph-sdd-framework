@@ -14,7 +14,7 @@ from urllib.parse import quote
 
 from .ADAPTERS_C30__pub import open_regular
 from .journal_settings__pub import configured_journal_root, validated_journal_root
-from .project_database__pub import PROJECT_DATABASE
+from .project_database__pub import PROJECT_DATABASE, console_state_path
 
 
 MODULE_PATH = Path(__file__).resolve()
@@ -75,7 +75,7 @@ def canonical_json_bytes(value: object) -> bytes:
 
 
 def journal_inbox(root: Path) -> Path:
-    return root / ".anechoic_runtime/workbench/journal-inbox"
+    return console_state_path(root) / "journal-inbox"
 
 
 MAX_DATABASE_EVENT_BYTES = 16 * 1024 * 1024
@@ -98,9 +98,11 @@ def _append_disk_event(root: Path, event: Any, author: str, local_date: str) -> 
         raise ValueError("Work Journal entry exceeds the database record size limit")
     if root.is_symlink():
         raise RuntimeError("Project root must not be a symlink")
-    directory = open_regular(root.resolve(strict=True), directory=True)
+    root = root.resolve(strict=True)
+    inbox = journal_inbox(root).relative_to(root)
+    directory = open_regular(root, directory=True)
     try:
-        for part in journal_inbox(Path()).parts:
+        for part in inbox.parts:
             try:
                 os.mkdir(part, 0o700, dir_fd=directory)
                 os.fsync(directory)

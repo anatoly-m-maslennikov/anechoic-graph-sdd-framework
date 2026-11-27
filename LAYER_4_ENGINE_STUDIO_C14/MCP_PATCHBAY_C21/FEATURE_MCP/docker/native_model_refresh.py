@@ -28,7 +28,7 @@ def verify_project_model(project: Path, timeout: float | None, previous: str | N
 
     deadline = None if timeout is None else time.monotonic() + timeout
     control = select_runtime_project(project).control_root
-    module = ("FEATURE_PROGRAMMATIC.FEATURE_MODEL."
+    module = ("FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51."
               "FEATURE_FORMAL_MODEL_GENERATOR.manifest_compiler_CS1.image_model_stage")
     remaining = _remaining(deadline)
     command = [sys.executable, "-B", "-P", "-m", module, str(project), str(control),

@@ -7,7 +7,7 @@ from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEA
 )
 
 class JointClaims(unittest.TestCase):
-    def test_typed_reference_and_status_qualifiers_and_classifications(self):
+    def test_typed_reference_and_status_qualifiers_and_axes(self):
         typed='''from anechoic.formal_claims import declare_entity
 from anechoic.model import NamedSelection
 declare_entity(entity_name="Named Selection", relation_name="IS_PROPERTY_OF", base_path="Projection.Source", value_format=NamedSelection, value_cardinality=1)'''
@@ -21,5 +21,5 @@ declare_entity(entity_name="Named Selection", relation_name="IS_PROPERTY_OF", ba
 from anechoic.model import Atom
 class Method(Atom):
     pass
-declare_entity(entity_class=Method, entity_name="Method", qualification_property_path="Atom.Header.Context.Role", classifications={"Role Order Number": 3})'''
+declare_entity(entity_class=Method, entity_name="Method", qualification_property_path="Atom.Header.Context.Role", axes={"Role Order Number": 3})'''
         self.assertTrue(any('Role Order Number == 3' in statement for statement in compiler_model_statements(parse_native_model_claim(role))))

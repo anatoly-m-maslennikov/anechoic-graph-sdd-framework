@@ -2,17 +2,17 @@
 from hashlib import sha256
 import ast
 from pathlib import Path
-from types import SimpleNamespace
 import re
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import native_header_view, native_carrier_path
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.component_contract__pub import read_component_contract
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.lens_scopes__pub import compile_lens_groups, lens_is_allowed
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import DRAFT_DIRECTORY, TICKET_DIRECTORY, spec_lens_directories
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import DRAFT_DIRECTORY, TICKET_DIRECTORY
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_carrier
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import CEILINGS, ReadContext
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import carrier_slug
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_content, parse_subject_expression, render_subject, parse_native_model_claim
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_content, parse_subject_expression, render_subject, parse_native_model_claim, parse_typed_manifest_node
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.continuant_concern__pub import (
+    CONTINUANT_LENS, continuant_model_subject, implicit_continuant_node, validate_continuant_variant,
+)
 from markdown_it import MarkdownIt
 
 from . import common
@@ -27,7 +27,8 @@ def is_c9_typed_manifest(header):
     template = context.get('template')
     return (header.get('atom_family') == 'SPEC' and context.get('container') == {'component': 'C9'}
             and template in {'manifest_node', 'manifest_property', 'manifest_relation'}
-            and (context.get('lens') == 'SPEC' or (context.get('lens') == 'DES' and template == 'manifest_property')))
+            and (context.get('lens') in {'SPEC', CONTINUANT_LENS}
+                 or (context.get('lens') == 'DES' and template == 'manifest_property')))
 
 
 def _has_formal_declaration(body):
@@ -50,7 +51,16 @@ def _validate_c9_typed_manifest(header, body):
         scopes = [s for s in sections if s['property_path'] == ['claim_scope']]
         manifests = [s for s in sections if s['property_path'] == ['formal_manifest']]
         template = native_header_view(header)['context']['template']
-        if (len(scopes) > 1 or (not scopes and template != 'manifest_property')
+        continuant = native_header_view(header)['context'].get('lens') == CONTINUANT_LENS
+        if continuant:
+            continuant_model_subject(header.get('concern'))
+        if continuant and template == 'manifest_node' and not manifests:
+            if scopes:
+                raise ValueError('Continuant Declaration cannot contain Claim scope')
+            implicit_continuant_node(header.get('concern'))
+            return
+        if (len(scopes) > 1 or (continuant and scopes)
+                or (not continuant and not scopes and template != 'manifest_property')
                 or len(manifests) != 1 or manifests[0]['heading_level'] != 2):
             raise ValueError('Missing typed scope or manifest')
         if scopes:
@@ -65,7 +75,12 @@ def _validate_c9_typed_manifest(header, body):
         if (len(tokens) != 1 or tokens[0].type != 'fence' or tokens[0].info.strip() != 'python anechoic-edsl'
                 or tokens[0].map is None or markdown.splitlines()[tokens[0].map[1] - 1].strip() != tokens[0].markup):
             raise ValueError('Invalid typed Python fence')
+        if continuant:
+            validate_continuant_variant(header.get('concern'), template, tokens[0].content)
         tree = ast.parse(tokens[0].content)
+        if template == 'manifest_node' and len(tree.body) == 1 and isinstance(tree.body[0], ast.Expr):
+            parse_typed_manifest_node(tokens[0].content)
+            return
         classes = [node for node in tree.body if isinstance(node, ast.ClassDef)]
         bases = {'manifest_property': {'Property'}, 'manifest_relation': {'Relation'}}
         if len(classes) != 1 or classes[0].decorator_list or classes[0].keywords or any(
@@ -78,16 +93,16 @@ def _validate_c9_typed_manifest(header, body):
                 or (template == 'manifest_node' and class_bases & {'Property', 'Relation'})
                 or (template != 'manifest_node' and (class_bases != bases[template] or len(classes[0].bases) != 1))):
             raise ValueError('Template and typed class differ')
-        if not scopes:
-            from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.manifest_compiler_CS1.typed_property_relation_lowering import (
+        if not scopes and not continuant:
+            from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.FEATURE_FORMAL_MODEL_GENERATOR.manifest_compiler_CS1.typed_property_relation_lowering import (
                 _field_assignments,
             )
 
             fields, _ = _field_assignments(classes[0], 'Property')
-            if 'bearer' not in fields or 'classification' in fields:
-                raise ValueError('An unscoped Property requires a bearer and cannot declare a classification')
+            if 'bearer' not in fields or 'axis' in fields:
+                raise ValueError('An unscoped Property requires a bearer and cannot declare an axis')
     except (ValueError, TypeError, KeyError, SyntaxError, IndexError) as error:
-        raise common.InputError('target', 'Invalid typed Model scope or Formal Manifest.') from error
+        raise common.InputError('target', 'Invalid typed Model scope, Concern, or Formal Manifest.') from error
 
 
 def _summary(body):
@@ -164,118 +179,15 @@ def _checked_owner_path(selection, row, relative, parent_directory, owner_id, st
         raise common.SourceChanged('Containing Task or Epic source changed.') from error
     return path.with_suffix(''), template
 
-
-def _contract_owner(selection, component, lens, snapshot, capture):
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import manifest_inputs
-
-    if (snapshot is None or not isinstance(component, str) or not re.fullmatch(r'C[0-9]+', component)
-            or (component != 'C00' and component not in snapshot.components)):
-        raise common.InputError('container', 'Supply a Component in the current Project Structure.')
-    try:
-        spec_lens_directories(lens)
-        reader = ReadContext(roots=[str(selection.root)], limits=dict(CEILINGS))
-        raw = reader.read(selection.manifest_path)
-        if sha256(raw).hexdigest() != selection.manifest_sha256:
-            raise ValueError('Project Manifest changed')
-        fields, project_component = manifest_inputs(selection.manifest_path, parse_carrier(raw, selection.manifest_path))
-        if getattr(snapshot, 'project', {}).get('sha256', selection.manifest_sha256) != selection.manifest_sha256:
-            raise ValueError('Structure Project Manifest pin changed')
-        if project_component != 'C00':
-            raise ValueError('Invalid Project Component')
-        owner, allowed = _contract_owner_path(selection, component, snapshot, reader, fields)
-        if any(part.startswith('_') or not re.search(r'_C[0-9]+$', part)
-               for part in owner.relative_to(selection.control_root).parts):
-            raise ValueError('Invalid Component directory')
-        groups = compile_lens_groups(fields.get('parameters'))
-        if not lens_is_allowed(lens, allowed, groups):
-            raise common.InputError('lens', 'Lens is disabled for this Component.')
-        lenses = getattr(capture, 'lenses', None)
-        known = lens in (fields.get('lens_whitelist') or ()) or any(lens in paths for paths in groups.values()) or (
-            lens in lenses if lenses is not None else any(
-                row.get('status_group') == 'Current' and native_header_view(row['header_json']).get('context', {}).get('lens') == lens
-                for row in capture.atoms))
-        if not known:
-            raise common.InputError('lens', 'Supply an existing enabled Lens.')
-        if reader.currentness()['state'] != 'unchanged':
-            raise ValueError('Manifest changed')
-        return owner
-    except common.InputError:
-        raise
-    except (OSError, RuntimeError, TypeError, ValueError, KeyError, AttributeError) as error:
-        raise common.SourceChanged('Component or Project source is unavailable or changed.') from error
+def _reject_component_contract(template, field):
+    if template == 'component_contract':
+        raise common.InputError(field, 'Add the Component Contract to the Component Manifest.')
 
 
-
-def _component_manifest_parent(declaration):
-    parent = declaration.parent
-    return parent.parent if parent.name == '_SPEC' else parent
-
-
-def _contract_owner_path(selection, component, snapshot, reader, fields):
-    owner = selection.control_root
-    allowed = None
-    seen = set()
-    current = component
-    while current != 'C00':
-        if current in seen:
-            raise ValueError('Component cycle')
-        seen.add(current)
-        item = snapshot.component(current)
-        declaration = selection.control_root / item.source_path
-        if (not declaration.is_relative_to(selection.control_root) or '..' in Path(item.source_path).parts
-                or sha256(reader.read(declaration)).hexdigest() != item.sha256):
-            raise ValueError('Component Manifest changed')
-        if current == component:
-            matches = [path for path in _component_manifest_parent(declaration).glob('*_' + component)
-                       if path.is_dir() and not path.is_symlink()]
-            if len(matches) != 1:
-                raise ValueError('Component directory is missing or ambiguous')
-            owner = matches[0]
-        if item.lens_whitelist is not None:
-            allowed = item.lens_whitelist
-            break
-        current = item.parent
-        if current is None:
-            raise ValueError('Component has no Project root')
-    if current == 'C00':
-        allowed = fields.get('lens_whitelist')
-    return owner, allowed
-
-
-def _validate_contract(selection, header, body, path, snapshot, capture):
-    if native_header_view(header).get('context', {}).get('template') != 'component_contract':
-        return
-    view = native_header_view(header)
-    context = view['context']
-    container = context.get('container')
-    if not isinstance(container, dict) or set(container) != {'component'}:
-        raise common.InputError('container', 'Component Contract requires one Component owner.')
-    component = container['component']
-    owner = _contract_owner(selection, component, context.get('lens'), snapshot, capture)
-    candidate = {**header, 'state': {**header['state'], 'status': 'active'}}
-    try:
-        read_component_contract(
-            path, SimpleNamespace(metadata=candidate, body=body),  # pragma: anechoic-model-adapter - carrier parser
-            component, selection.project_prefix,
-        )
-        _native_slug(body)
-    except (ValueError, TypeError, KeyError) as error:
-        raise common.InputError('target', 'Invalid Component Contract Header or Guarantee.') from error
-    return owner
-
-
-
-
-def _check_first_spec(selection, header, body, path, structure_snapshot, capture, owner,
-                      validate_project_spec_model):
-    from .native_draft import _validate_project_template
+def _check_first_spec(selection, header, body, path, owner):
     summary = _summary(body)
-    _validate_project_template(header, validate_project_spec_model, body)
     if is_c9_typed_manifest(header):
         _validate_c9_typed_manifest(header, body)
-    contract_owner = _validate_contract(selection, header, body, path, structure_snapshot, capture)
-    if contract_owner is not None and contract_owner != owner:
-        raise common.InputError('container', 'Component Contract owner disagrees with its path.')
     if 'atom_family' in header:
         try:
             projected = native_carrier_path(header, summary, project_root=selection.control_root,

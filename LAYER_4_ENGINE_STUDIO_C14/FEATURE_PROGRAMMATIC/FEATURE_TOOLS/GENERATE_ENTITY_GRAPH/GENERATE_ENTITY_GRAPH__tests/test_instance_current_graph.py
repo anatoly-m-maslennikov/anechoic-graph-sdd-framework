@@ -120,7 +120,7 @@ class CurrentInstanceGraphTests(unittest.TestCase):
         first, _ = graph_for("Entity >| Classification")
         second, _ = graph_for("Classification |< Entity")
         self.assertEqual(first["edges"], second["edges"])
-        self.assertEqual("HAS_CLASSIFICATION", first["edges"][0]["kind"])
+        self.assertEqual("HAS_AXIS", first["edges"][0]["kind"])
         self.assertTrue(all("kind" not in row for row in first["nodes"]))
 
     def test_relative_qualification_is_whole_entity_and_resolves_property_context(self) -> None:

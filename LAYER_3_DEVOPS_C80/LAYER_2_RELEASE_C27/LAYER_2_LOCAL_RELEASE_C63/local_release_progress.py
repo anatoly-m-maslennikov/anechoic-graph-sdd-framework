@@ -16,6 +16,7 @@ from .local_release_delivery import PRESERVE_FRAMEWORK, verify_recorded_targets
 from .local_release_gates import _LOGS, _ROOT as COMMAND_ROOT, _canary_endpoint
 from .local_release_git import ReleaseGitCheckpoints
 from .local_release_state import PHASES, source_identity
+from .prepare_test_environment import check_locked_engine, ensure_test_environment
 from .release_phase_inputs import phase_inputs
 from .release_support import _ROOT_PROJECT_GOAL
 from .snapshot_inputs import _COMMIT, target_runtime_digest
@@ -170,6 +171,12 @@ class ReleaseProgress(ReleaseGitCheckpoints):
 
     def _ensure_preflight(self):
         data = self.journal.data
+        if self.default_runner and not self._checked_test_environment:
+            self.failed_step = "preflight_tests"
+            source = self._test_gate_options().get("source_root", self.root)
+            ensure_test_environment(source, self.journal)
+            check_locked_engine(source)
+            self._checked_test_environment = True
         if data.get("preflight"):
             return
         if data.get("inputs") is None:

@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import stat
 
+from .carrier_checkpoint import fold_checkpoint, initialize_checkpoint
 from .query_engine import connect
 from .project_structure import ensure_structure_table, replace_structure
 from .model_projection import ensure_model_tables, replace_model_projection
@@ -27,6 +28,36 @@ def database_path(value):
                 or stat.S_IMODE(info.st_mode) & 0o077):
             raise ValueError("Database file is unavailable or unsafe")
     return path
+
+
+def _restore_artifact_projections(connection):
+    objects = main_objects(connection)
+    structure_missing = "mrt_project_structure" not in objects
+    model_missing = not {"mrt_model_entities", "mrt_model_properties",
+                         "mrt_model_tree", "mrt_model_primary_entities"} <= objects.keys()
+    if not model_missing:
+        columns = {row[1] for row in connection.execute(
+            "PRAGMA table_info('mrt_model_primary_entities')").fetchall()}
+        model_missing = not {"axes", "node_rules"} <= columns
+        tree_columns = {row[1] for row in connection.execute(
+            "PRAGMA table_info('mrt_model_tree')").fetchall()}
+        model_missing = model_missing or "reference_path" not in tree_columns
+    ensure_structure_table(connection)
+    ensure_model_tables(connection)
+    if not (structure_missing or model_missing):
+        return False
+    row = connection.execute("SELECT model, structure FROM ops_generation").fetchone()
+    if row:
+        if structure_missing:
+            replace_structure(connection, row[1])
+        if model_missing and isinstance(row[0], str):
+            if row[0].startswith("{"):
+                descriptor = json.loads(row[0])
+                if isinstance(descriptor.get("bindings"), dict):
+                    replace_model_projection(connection, descriptor)
+            else:
+                connection.execute("CREATE TEMP TABLE model_projection_restore_needed (marker BOOLEAN)")
+    return True
 
 
 def open_bound_database(value, manifest_sha256, instance_id):
@@ -53,21 +84,11 @@ def open_bound_database(value, manifest_sha256, instance_id):
         if not rows:
             connection.execute("INSERT INTO ops_project_binding VALUES (?, ?)", [manifest_sha256, instance_id])
         migrated = migrate_legacy_names(connection, objects, legacy=legacy)
+        initialize_checkpoint(connection, objects)
+        fold_checkpoint(connection)
         connection.execute('CREATE TABLE IF NOT EXISTS mrt_atoms (reference VARCHAR PRIMARY KEY, "content.summary" VARCHAR)')
         connection.execute("CREATE TABLE IF NOT EXISTS ops_generation (id VARCHAR, model VARCHAR, structure VARCHAR)")
-        missing = "mrt_project_structure" not in main_objects(connection)
-        model_missing = "mrt_model_entities" not in main_objects(connection)
-        ensure_structure_table(connection)
-        ensure_model_tables(connection)
-        if missing or model_missing:
-            row = connection.execute("SELECT model, structure FROM ops_generation").fetchone()
-            if row:
-                if missing:
-                    replace_structure(connection, row[1])
-                if model_missing and isinstance(json.loads(row[0]).get("bindings"), dict):
-                    replace_model_projection(connection, json.loads(row[0]))
-            migrated = True
-        if migrated:
+        if _restore_artifact_projections(connection) or migrated:
             sync_query_views(connection)
         connection.execute("COMMIT")
     except BaseException:

@@ -29,7 +29,7 @@ declare_entity(
         component_id='C56',
         name='SUBJECT_TREE_ATOM_REWRITE_PROMPT',
         lens_whitelist=['DES'],
-        boundaries={'code': {'imports': {'only': []}},
+        boundaries={'code': {'exports': {}, 'imports': {'only': []}},
                     'state': {'reads': [], 'writes': []},
                     'io': {'server': {'subject_tree_atom_rewrite': {'outcomes': {
                         'verified_draft_reported': {

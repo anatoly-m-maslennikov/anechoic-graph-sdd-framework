@@ -2,6 +2,9 @@
 
 from hashlib import sha256
 import json
+from pathlib import Path
+
+from .native_refresh import digest
 
 _BATCH_TARGET = 10 * 1024 * 1024
 _BATCH_FRAME_LIMIT = 64 * 1024 * 1024
@@ -58,3 +61,26 @@ def _write_batch_rows(write, encode, section, field, rows):
             raise ValueError("Generation batch row exceeds size limit")
     if encoded:
         write(prefix + b",".join(encoded) + suffix)
+
+
+def _capture_archive(binding, archive, watcher_guarded, output=None, *, domains=None):
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import prepare_generation_snapshot
+
+    _, finish = prepare_generation_snapshot(
+        binding, include_hashes=True, archive_stage="archive", archive_roots=archive.roots,
+        watcher_guarded=watcher_guarded, domains=domains)
+    snapshot, hashes = finish(archive.endpoints)
+    if output is None:
+        return {"snapshot": snapshot, "carrier_hashes": hashes}
+    seed = archive.seed
+    snapshot["atoms"].extend(seed.snapshot.atoms)
+    snapshot["relations"].extend(seed.snapshot.relations)
+    if issues := seed.snapshot.ingestion_issues:
+        snapshot.setdefault("ingestion_issues", []).extend(issues)
+    hashes = seed.carrier_hashes | hashes
+    output = Path(output)
+    if (not output.is_absolute() or output.is_symlink() or not output.is_dir()
+            or output.resolve(strict=True) != output or any(output.iterdir())):
+        raise ValueError("Generation directory must be an existing empty canonical directory")
+    return {"batch_artifact": _write_generation_batches(output, snapshot, None, hashes),
+            "snapshot_sha256": digest(snapshot)}

@@ -164,7 +164,7 @@ class _SubjectFacts:
         if link.operator in {"+>", "<+"}:
             kind = "IS_CONTAINED_BY"
         elif link.operator in {">|", "|<"}:
-            kind = "HAS_CLASSIFICATION"
+            kind = "HAS_AXIS"
         elif link.operator == "<-->":
             kind = "HAS_INVERSE"
         elif link.relation_type is not None:

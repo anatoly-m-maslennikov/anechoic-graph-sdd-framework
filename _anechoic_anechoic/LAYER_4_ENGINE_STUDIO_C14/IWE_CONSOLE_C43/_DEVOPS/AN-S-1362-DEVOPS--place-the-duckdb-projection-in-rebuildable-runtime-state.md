@@ -6,14 +6,10 @@ container:
 tier: 4
 context:
   lens: DevOps
-relations:
-  IS_REFERENCE:
-  - AN-S-3116@1
-  - AN-S-1351
 state:
   status: active
   version: 18
-  updated_at: '2026-11-20T16:34:57.901983+00:00'
+  updated_at: '2026-11-26T16:38:31.811088+00:00'
 ---
 
 ## Summary

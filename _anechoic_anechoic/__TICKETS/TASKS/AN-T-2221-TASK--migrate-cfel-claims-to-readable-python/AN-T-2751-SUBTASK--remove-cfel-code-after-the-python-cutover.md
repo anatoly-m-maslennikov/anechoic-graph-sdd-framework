@@ -8,9 +8,9 @@ context:
   template: task
   label: Subtask
 state:
-  status: in_queue
+  status: "in_queue"
   version: 1
-  updated_at: '2026-11-13T17:14:03.749993+00:00'
+  updated_at: "2026-11-26T13:31:56.525755+00:00"
 ---
 ## Summary
 
@@ -19,6 +19,8 @@ Remove CFEL code after the Python cutover
 ## Work
 
 Move the remaining CFEL-dependent Workbench, Lifecycle, graph and build readers to the native Python Model from CA-P-3055 and the migrated Claims in CA-P-3022. Once their replacement inputs are ready, delete CFEL readers, parsers, compilers, Python-to-CFEL translation, and CFEL-only build hooks, tests and fixtures. Verify the image builds, the affected consumers work, and the build and runtime have no CFEL dependency.
+
+**Current scope.** Verify which CFEL-only readers and build paths still have callers. Remove their remaining consumers, implementation, tests, and fixtures. Keep the approved Concern Path notation.
 
 ## Progress
 
@@ -41,3 +43,7 @@ The 76 Scope Unit carrier headers wait for an image with the new Topic reader.
 Isolated image `sha256:46fe79f3d8b61f10c3c5678f3eedeab4ef19aff8d5df080875e5af5d0c59f951`
 built and loaded the generated Model, Lifecycle candidate schema, and
 Workbench schema as the normal runtime user. Deployment verification is pending.
+
+Removed the unused CFEL-to-Python converter and its dedicated tests. CFEL fence and graph branches still share code with current Python Formal Claim consumers. Separate those branches before retirement.
+
+Removed the shared CFEL fence reader and Entity Graph CFEL parser. Python claim fixtures cover projection and source provenance. All 221 Entity Graph tests and 104 Formal Model Engine tests passed. AN-S-3056@63 is the Draft that removes the retired preview export.

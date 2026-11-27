@@ -190,7 +190,7 @@ def project_native(store: QueryStore, capture: NativeCapture, *,
 
 def _native_frontier(store, rows, relation_types, inverses, component_refs):
     return sha256(repr((
-        8, store._schema_mode, sorted(relation_types), sorted(inverses.items()),
+        10, store._schema_mode, sorted(relation_types), sorted(inverses.items()),
         component_refs,
         sorted((row["source_path"], row["_source_sha256"]) for row in rows),
     )).encode()).hexdigest()
@@ -294,11 +294,12 @@ def _apply_native_tables(connection, old, new, rows, components_changed, frontie
 
 def _write_components(connection, rows) -> None:
     from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_component_manifest
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import component_contract_fences
     from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import native_header_view
 
     manifests = []
     for row in rows:
-        if row["status_group"] != "Current" or row["tier"] != 0 or row["id"].split("-")[1] != "S":
+        if row["status_group"] != "Current" or row["tier"] not in (0, 1, 4) or row["id"].split("-")[1] != "S":
             continue
         context = native_header_view(row["header_json"])["context"]
         if context.get("template") != "component_manifest" or context.get("lens") != "SPEC":
@@ -307,7 +308,9 @@ def _write_components(connection, rows) -> None:
         if owner is None:
             continue
         try:
-            fields, purpose = parse_component_manifest(source_markdown(row))
+            body = source_markdown(row)
+            fields, purpose = parse_component_manifest(body, tier=row["tier"] or None)
+            has_contract = row["tier"] == 1 and component_contract_fences(body) is not None
         except ValueError:
             continue
         cid = fields.get("component_id")
@@ -320,14 +323,14 @@ def _write_components(connection, rows) -> None:
             ref = row["_exact_ref"]
             manifests.append((cid, name, owner, layer, lenses,
                               None if boundaries is None else json.dumps(boundaries),
-                              ref, row["source_path"], [ref] if purpose else []))
+                              ref, row["source_path"], [ref] if purpose else [], has_contract))
 
     connection.execute("""CREATE OR REPLACE TABLE main.components (
         component_id VARCHAR, name VARCHAR, parent_component_id VARCHAR, layer BIGINT,
-        lens_whitelist VARCHAR[], boundaries JSON, manifest_ref VARCHAR, manifest_path VARCHAR, purpose_refs VARCHAR[]
+        lens_whitelist VARCHAR[], boundaries JSON, manifest_ref VARCHAR, manifest_path VARCHAR, purpose_refs VARCHAR[], has_contract BOOLEAN
     )""")
     if manifests:
-        connection.executemany("INSERT INTO main.components VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", manifests)
+        connection.executemany("INSERT INTO main.components VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", manifests)
 
 
 def _write_references(connection, rows) -> None:

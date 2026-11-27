@@ -49,8 +49,8 @@ class ProjectBinding:
     def compose_project(self) -> str:
         return "anechoic-mcp-" + self.instance_id[:24]
 
-_MODULE = "IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.project_admission"
-_BETA_MODULE = "FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.project_admission__pub"
+_MODULE = "IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.project_admission"
+_BETA_MODULE = "FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.FEATURE_MODEL_VALIDATION.project_admission__pub"
 _PATH_FIELDS = ("root", "control_root", "control_relative", "manifest_path")
 _TEXT_FIELDS = ("instance_id", "project_name", "project_prefix", "manifest_ref", "manifest_sha256")
 

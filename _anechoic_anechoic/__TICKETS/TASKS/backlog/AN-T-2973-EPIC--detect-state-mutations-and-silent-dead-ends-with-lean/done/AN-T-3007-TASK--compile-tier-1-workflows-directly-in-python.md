@@ -10,10 +10,8 @@ context:
 state:
   status: done
   version: 1
-  updated_at: "2026-11-23T03:56:29.291018+00:00"
-relations:
-  IS_REFERENCE:
-  - AN-S-3387@2
+  updated_at: '2026-11-26T16:39:58.785654+00:00'
+
 ---
 
 ## Summary

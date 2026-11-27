@@ -44,7 +44,7 @@ the exact caller range. Use exact built-in dictionaries with string
 keys and immutable scalar values. Assume stable bindings and state at
 region entry and during the modeled code.
 
-Run `python -m IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.workflow_reuse` with JSON on stdin. Supply the Project root,
+Run `python -m IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IMPORT_GRAPH_C61.workflow_reuse` with JSON on stdin. Supply the Project root,
 control root, exported Beta graph, compiled Structure, and both Code
 Unit keys. Supply `first` and `last` together to select the region.
 The finding includes the source digest, proposed arguments, and the

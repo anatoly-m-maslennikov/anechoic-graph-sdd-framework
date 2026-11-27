@@ -74,6 +74,19 @@ class IncrementalStartupTest(unittest.TestCase):
         with TemporaryDirectory(dir=self.tmp.name) as output:
             return self.run_worker(Path(output).resolve(), request)
 
+    def test_incremental_capture_uses_admitted_status_domains(self):
+        self.reuse["status_domains"] = {
+            "S": ["active", "draft", "archived"], "T": ["active", "draft", "archived", "reviewed"],
+            "P": ["active", "draft", "archived"], "C": ["active", "draft", "archived"],
+        }
+        (self.live / "AN-T-3-task.md").write_text(carrier(3, "reviewed"))
+        (self.live / "AN-T-4-task.md").write_text(carrier(4, "unknown"))
+        result = self.capture()
+        row = next(row for row in result["snapshot"]["atoms"] if row["reference"] == "AN-T-3")
+        self.assertEqual(("reviewed", "Current"), (row["status"], row["status_group"]))
+        self.assertTrue(any(issue["relative_path"].endswith("AN-T-4-task.md")
+                            for issue in result["snapshot"]["ingestion_issues"]))
+
     def test_watcher_replay_requires_managed_foreground_without_explicit_paths(self):
         base = {"binding": {}, "reuse": None, "replay_graph": True,
                 "watcher_guarded": True, "foreground": True}
@@ -99,7 +112,7 @@ class IncrementalStartupTest(unittest.TestCase):
         (self.root / "changed.py").write_text("value = 1\n")
         request = {"binding": self.binding, "reuse": self.reuse, "watcher_guarded": True,
                    "incremental": True, "foreground": True, "defer_graph": True}
-        signature = "IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.import_graph__shared.graph_input_signature"
+        signature = "IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IMPORT_GRAPH_C61.import_graph__shared.graph_input_signature"
         with (patch(signature, side_effect=AssertionError("graph scanned")),
               patch.dict(os.environ, {"ANECHOIC_STARTUP_TIMING": "1"}),
               TemporaryDirectory(dir=self.tmp.name) as output):

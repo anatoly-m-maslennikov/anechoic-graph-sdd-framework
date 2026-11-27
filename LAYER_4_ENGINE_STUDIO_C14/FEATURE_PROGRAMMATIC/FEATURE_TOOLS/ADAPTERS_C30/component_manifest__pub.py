@@ -1,11 +1,17 @@
 """Read native Component claims without executing authored code."""
 
+import ast
 import json
 
 from markdown_it import MarkdownIt
 
-from .native_model_claim__pub import parse_native_model_claim
+from .native_model_claim__pub import parse_manifest_declaration
 from .formal_claim__pub import formal_claim
+from .native_model_claim_values import _dictionary
+
+
+_CANONICAL_SECTIONS = {'component identity', 'component boundaries', 'component contract'}
+_MANIFEST_SECTIONS = _CANONICAL_SECTIONS | {'summary', 'purpose'}
 
 
 def _claim_headings(tokens, body):
@@ -29,13 +35,7 @@ def _formal_component_instance(tokens, body, source=None):
                    for i, token in enumerate(tokens)):
             return None
         source = formal_claim(body)
-    claim = parse_native_model_claim(source)
-    args = claim['arguments'] if claim and claim['kind'] == 'entity' else {}
-    instance = args.get('instance', {})
-    if (set(args) != {'entity_name', 'instance'} or args['entity_name'] != 'Component Manifest'
-            or instance.get('type') != 'ComponentManifest'):
-        raise ValueError('Expected one formal ComponentManifest instance')
-    return instance['fields']
+    return parse_manifest_declaration(source, entity_name='Component Manifest', class_name='ComponentManifest')
 
 
 def _legacy_manifest_fields(tokens, body):
@@ -54,8 +54,7 @@ def _legacy_manifest_fields(tokens, body):
     return sections
 
 
-def parse_component_manifest(body):
-    tokens = MarkdownIt('commonmark').parse(body)
+def _parse_legacy_manifest(tokens, body):
     headings = {}
     for i, token in enumerate(tokens):
         if token.type != 'heading_open':
@@ -92,5 +91,99 @@ def parse_component_manifest(body):
     return _legacy_manifest_fields(tokens, body), purpose
 
 
-def parse_component_manifest_fields(body):
-    return parse_component_manifest(body)[0]
+def _canonical_sections(tokens):
+    headings = [(i, tokens[i + 1].content.strip().casefold())
+                for i, token in enumerate(tokens) if token.type == 'heading_open']
+    if _CANONICAL_SECTIONS.isdisjoint(title for _, title in headings):
+        return None
+    if any(title in {'claim', 'formal manifest'} and tokens[i].level == 0 and tokens[i].tag == 'h2'
+           for i, title in headings):
+        raise ValueError('Ambiguous Component Manifest formal sections')
+    boundaries = [i for i, _ in headings if tokens[i].level == 0 and tokens[i].tag in {'h1', 'h2'}]
+    ends = dict(zip(boundaries, boundaries[1:] + [len(tokens)], strict=True))
+    sections = {}
+    for i, title in headings:
+        if title not in _MANIFEST_SECTIONS:
+            continue
+        if i not in ends or tokens[i].tag != 'h2' or title in sections:
+            raise ValueError(f'Expected unique top-level Component Manifest heading: {title}')
+        sections[title] = tokens[i + 3:ends[i]]
+    if 'component identity' not in sections:
+        raise ValueError('Missing Component Manifest heading: Component Identity')
+    return sections
+
+
+def _section_fences(sections, title):
+    section = sections[title]
+    fences = [token for token in section if token.type == 'fence']
+    if title == 'component contract':
+        if not fences:
+            _require_prose(section, title)
+    elif not fences or any(token.type == 'heading_open' for token in section):
+        raise ValueError(f'Expected nonempty fences directly under {title}')
+    if any(token.level != 0 or not token.info.strip() or not token.content.strip() for token in fences):
+        raise ValueError(f'Expected nonempty fences directly under {title}')
+    return tuple((token.info.strip().casefold(), token.content) for token in fences)
+
+
+def _python_section(sections, title):
+    fences = _section_fences(sections, title)
+    if len(fences) != 1 or fences[0][0] != 'python':
+        raise ValueError(f'Expected one Python fence under {title}')
+    return fences[0][1]
+
+
+def _literal_boundaries(source):
+    try:
+        node = ast.parse(source, mode='eval').body
+    except SyntaxError as error:
+        raise ValueError('Expected a literal mapping under Component Boundaries') from error
+    if not isinstance(node, ast.Dict) or any(isinstance(item, (ast.Name, ast.Call)) for item in ast.walk(node)):
+        raise ValueError('Expected a literal mapping under Component Boundaries')
+    return _dictionary(node, set())
+
+
+def _require_prose(section, title):
+    if not any(token.type == 'paragraph_open' and section[i + 1].content.strip()
+               for i, token in enumerate(section)):
+        raise ValueError(f'Expected prose under {title}')
+
+
+def parse_component_manifest(body, *, tier=None):
+    tokens = MarkdownIt('commonmark').parse(body)
+    sections = _canonical_sections(tokens)
+    if sections is None:
+        if tier == 1:
+            raise ValueError('Tier 1 Component Manifest requires canonical sections')
+        return _parse_legacy_manifest(tokens, body)
+    if tier == 4:
+        raise ValueError('Canonical Component Manifest requires Tier 1')
+    for title in ('summary', 'purpose'):
+        if title in sections:
+            _require_prose(sections[title], title)
+    fields = _formal_component_instance(tokens, body, _python_section(sections, 'component identity'))
+    if (fields.keys() - {'component_id', 'name', 'layer', 'lens_whitelist'}
+            or any(not isinstance(fields.get(key), str) or not fields[key].strip()
+                   for key in ('component_id', 'name'))
+            or (fields.get('layer') is not None and type(fields['layer']) is not int)):
+        raise ValueError('Invalid Component Identity fields')
+    if 'component boundaries' in sections:
+        fields['boundaries'] = _literal_boundaries(_python_section(sections, 'component boundaries'))
+    if 'component contract' in sections:
+        _section_fences(sections, 'component contract')
+    purpose = sections.get('purpose')
+    if purpose is None:
+        return fields, None
+    return fields, '\n'.join(body.splitlines()[purpose[0].map[0]:max(token.map[1] for token in purpose if token.map)]).strip()
+
+
+def parse_component_manifest_fields(body, *, tier=None):
+    return parse_component_manifest(body, tier=tier)[0]
+
+
+def component_contract_fences(body):
+    """Return ordered inline Contract fences when present."""
+    sections = _canonical_sections(MarkdownIt('commonmark').parse(body))
+    if sections is not None and 'component contract' in sections:
+        return _section_fences(sections, 'component contract')
+    return None

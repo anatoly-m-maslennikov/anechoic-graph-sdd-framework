@@ -23,6 +23,10 @@ def launcher_lock(run):
     run.installation_lock.enter_context(_release_lock(run.root, relative, "launcher"))
 
 
+def abort_lock(root, journal_path):
+    return _release_lock(root, journal_path.parent.relative_to(root) / "abort.lock", "abort")
+
+
 def _prefixed(identities, path):
     return {name.removeprefix(path): value for name, value in identities.items() if name.startswith(path)}
 

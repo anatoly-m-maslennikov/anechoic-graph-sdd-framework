@@ -4,6 +4,7 @@ import sys
 import os
 import unittest
 from unittest.mock import patch
+from types import SimpleNamespace
 
 import yaml
 
@@ -12,16 +13,90 @@ sys.path.insert(0, str(TOOLS))
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
     ReadContext, capture_indexed_lifecycle, capture_native,
-    native_carrier_hashes, revalidate_native,
+    native_carrier_hashes, revalidate_native, status_domains,
 )
 
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__tests.ADAPTERS_C30__tests__shared import (
     NativeCaptureFixture,
 )
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model_capture import model_inputs
 
 
 class NativeCaptureTests(NativeCaptureFixture, unittest.TestCase):
+    def test_structure_issue_uses_classification_and_candidate_location(self):
+        alias = self.control / 'AN-S-2-SPEC-OTHER--alias.md'
+        header = {'atom_family': 'SPEC', 'atom_id': 'AN-S-2', 'container': {'component': 'C00'},
+                  'tier': 1, 'context': {'template': 'component_manifest', 'lens': 'SPEC'},
+                  'state': {'status': 'active', 'version': 0, 'updated_at': '2026-11-19T00:00:00Z'}}
+        alias.write_text('---\n' + yaml.safe_dump(header) + '---\n\n## Summary\n\nExample\n')
+        off_path = self.control / '_QA/AN-S-3-SPEC-COMPONENT_MANIFEST--invalid.md'
+        off_path.parent.mkdir()
+        off_path.write_text('---\ninvalid: [\n---\n')
+        capture = capture_native(self.selection)
+        selected = SimpleNamespace(root=self.root, control_root=self.control,
+                                   manifest_path=self.root / 'other', project_prefix='AN')
+        capture_view = SimpleNamespace(atoms=[], ingestion_issues=capture.ingestion_issues,
+                                       errors=capture.errors, classified_templates=capture.classified_templates)
+        result = model_inputs(selected, capture_view, include_spec_rows=True)
+        assert not result['structure_issues']
+        assert result['structure_alias_issues'] == ({'relative_path': alias.relative_to(self.root).as_posix(),
+                                                     'template': 'component_manifest'},)
+        header['state']['version'] = 1
+        alias.write_text('---\n' + yaml.safe_dump(header) + '---\n\n## Summary\n\nExample\n')
+        updated = capture_native(self.selection, previous=capture,
+                                 paths={PurePosixPath(alias.relative_to(self.root).as_posix())})
+        assert alias.relative_to(self.root).as_posix() not in updated.classified_templates
+        assert alias.relative_to(self.root).as_posix() not in updated.errors
+
+    def test_capture_uses_admitted_family_status_domains(self):
+        root = "Graph/Node//Artifact//SSOT//Prescribed/Content/Atom"
+        bindings = {"declarations": [
+            [name, {"arguments": {"entity_name": "Status", "entity_kind": "Property",
+             "relation_name": "IS_PROPERTY_OF", "base_path": root + ".Header.State",
+             "applies_to_entity_classes": [root + "//" + name], "allowed_values": values}}]
+            for name, values in (("Specification", ["draft", "active", "archived"]),
+                                 ("Ticket", ["draft", "active", "archived"]),
+                                 ("project_config", ["draft", "active", "reviewed", "archived"]))
+        ]}
+        for name, class_name in (("Specification", "SpecAtom"), ("Ticket", "TicketAtom"),
+                                 ("project_config", "ProjectConfigAtom")):
+            bindings["declarations"].append([
+                "MODEL//ANECHOIC <+ " + root + "//" + name,
+                {"arguments": {"entity_name": name, "entity_class": class_name}},
+            ])
+        unrelated = "Graph/Other/Atom"
+        bindings["declarations"].append(["other", {"arguments": {
+            "entity_name": "Status", "entity_kind": "Property", "relation_name": "IS_PROPERTY_OF",
+            "base_path": unrelated + ".Header.State", "applies_to_entity_classes": [unrelated + "//Ticket"],
+            "allowed_values": ["unrelated"],
+        }}])
+        for _, claim in bindings["declarations"]:
+            args = claim["arguments"]
+            if "allowed_values" in args:
+                args["allowed_values"] = tuple(args["allowed_values"])
+                args["applies_to_entity_classes"] = tuple(args["applies_to_entity_classes"])
+        valid = self.write("__PROJECT_CONFIG/AN-C-1--valid.md", "AN-C-1", "reviewed", 1)
+        unknown = self.write("__PROJECT_CONFIG/AN-C-2--unknown.md", "AN-C-2", "unknown", 1)
+        result = capture_native(self.selection, domains=status_domains(bindings))
+        row = next(row for row in result.atoms if row["id"] == "AN-C-1")
+        self.assertEqual(("Current", "AN-C-1", "AN-C-1@1"),
+                         (row["status_group"], row["ref"], row["_exact_ref"]))
+        self.assertNotIn(valid.relative_to(self.root).as_posix(), result.errors)
+        self.assertIn(unknown.relative_to(self.root).as_posix(), result.errors)
+        unknown.unlink()
+        result = capture_native(self.selection, domains=status_domains(bindings))
+        domains = status_domains(bindings)
+        self.assertEqual(domains, revalidate_native(self.selection, result).status_domains)
+        descriptor = {"id": "AN-C-1", "ref": "AN-C-1", "_exact_ref": "AN-C-1@1",
+                      "source_path": valid.relative_to(self.root).as_posix(), "version": 1,
+                      "status": "reviewed", "status_group": "Current", "owner_kind": "Component",
+                      "owner_ref": "C0", "read": True}
+        indexed = capture_indexed_lifecycle(self.selection, [descriptor], {}, domains=domains)
+        self.assertEqual(domains, revalidate_native(self.selection, indexed).status_domains)
+        with self.assertRaisesRegex(ValueError, "identity"):
+            capture_indexed_lifecycle(self.selection, [descriptor | {"status": "unknown"}], {}, domains=domains)
+
     def test_ingestion_issues_report_malformed_and_duplicate_carriers(self):
         malformed = self.control / "malformed.md"
         malformed.write_text("---\ninvalid: [\n---\n")
@@ -50,8 +125,7 @@ class NativeCaptureTests(NativeCaptureFixture, unittest.TestCase):
         path = self.write("AN-T-8--task.md", "AN-T-8", "active", 1)
         other = self.write("AN-T-9--other.md", "AN-T-9", "active", 1)
         descriptor = {"id": "AN-T-8", "ref": "AN-T-8", "_exact_ref": "AN-T-8@1",
-                      "source_path": path.relative_to(self.root).as_posix(),
-                      "_source_sha256": sha256(path.read_bytes()).hexdigest(), "version": 1,
+                      "source_path": path.relative_to(self.root).as_posix(), "version": 1,
                       "status": "active", "status_group": "Current", "owner_kind": "Component",
                       "owner_ref": "C0", "read": True}
         original = ReadContext.read
@@ -59,12 +133,17 @@ class NativeCaptureTests(NativeCaptureFixture, unittest.TestCase):
             self.assertNotEqual(source, other)
             return original(reader, source, **kwargs)
         with patch.object(ReadContext, "read", read):
+            path.write_text(path.read_text().replace("Example", "Changed"))
             capture = capture_indexed_lifecycle(self.selection, [descriptor], {"S": "0", "T": "9"}, lenses=["SPEC"])
             self.assertEqual({"S": 0, "T": 9}, capture.max_numbers)
+            self.assertEqual(sha256(path.read_bytes()).hexdigest(), capture.atoms[0]["_source_sha256"])
+            with self.assertRaisesRegex(ValueError, "changed"):
+                stale = descriptor | {"version": 2, "_exact_ref": "AN-T-8@2"}
+                capture_indexed_lifecycle(self.selection, [stale], {})
             with patch.object(ReadContext, "read", side_effect=AssertionError("unexpected content read")):
                 self.assertEqual(capture.atoms, revalidate_native(self.selection, capture).atoms)
             original_stat = path.stat()
-            path.write_text(path.read_text().replace("Example", "Changed"))
+            path.write_text(path.read_text().replace("Changed", "Another"))
             os.utime(path, ns=(original_stat.st_atime_ns, original_stat.st_mtime_ns))
             with self.assertRaisesRegex(ValueError, "changed"):
                 revalidate_native(self.selection, capture)

@@ -146,7 +146,7 @@ class LintPythonModelClaimTests(unittest.TestCase):
         def lint(source, names, **kwargs):
             return lint_python_model_claim(source, declared_addresses=addresses, relation_names=names, **kwargs)
         self.assertIn("CONTAINS", lint('composition(container="Atom", parts=("Atom.Name",))', [])[0])
-        self.assertIn("HAS_CLASSIFICATION", lint('classify(address="Atom", axis="Role", value="Method")', [])[0])
+        self.assertIn("HAS_AXIS", lint('classify(address="Atom", axis="Role", value="Method")', [])[0])
         self.assertIn("IS_ORDERED_RIGHT_BEFORE", lint('order_before(first="Atom", second="Atom.Name")', [])[0])
         delivery = 'deliver(source="Atom", carrier="Atom.Name")'
         self.assertEqual(lint(delivery, []), ())

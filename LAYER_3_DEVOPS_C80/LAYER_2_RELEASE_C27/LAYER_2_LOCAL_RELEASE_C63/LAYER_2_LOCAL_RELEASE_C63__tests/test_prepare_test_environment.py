@@ -21,7 +21,7 @@ class PrepareTestEnvironmentTests(TestCase):
         self.root = Path(temporary.name).resolve() / "selected"
         self.engine = self.root / "LAYER_4_ENGINE_STUDIO_C14"
         self.project = self.root / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine"
-        self.frontend = self.engine / "IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND"
+        self.frontend = self.engine / "IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_FRONTEND"
         self.cache = self.root / ".anechoic_tmp/workbench"
         self.suite = self.engine / "FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/test_suite__pub.py"
         for file in (self.project / "pyproject.toml", self.project / "uv.lock", self.suite,

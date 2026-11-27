@@ -18,6 +18,7 @@ from . import effects
 from .effects import _project_write_lock
 from .common import InputError, SourceChanged, result, saved
 from .native_replacement_promotion import _check_replacement_activation
+from .native_update_selection import _status_bytes
 from .source import bind_query_reader
 
 
@@ -87,16 +88,17 @@ def _change_spec_selected(selection, target, selected, path, digest, root, statu
             raw, bounds = _selected_spec_bytes(selection, selected, path, digest)
             header = selected['header_json']
             body = raw[bounds[2]:].decode('utf-8')
+            candidate = _status_bytes(raw, bounds, path, status)
+            projected = parse_carrier(candidate, path).metadata
             if status == 'active':
                 _check_replacement_activation([selected], capture.atoms)
-                _validate_project_template(header, validate_project_spec_model, body)
+                _validate_project_template(projected, validate_project_spec_model, body)
             parameters = getattr(selection, 'parameters', None)
             expected = native_carrier_path(header, _summary(body), project_root=selection.control_root,
                                            owner_directory=root, parameters=parameters)
             if path != expected and not (
                     expected.parent == selection.root and path == selection.control_root / expected.name):
                 raise InputError('target', 'SPEC path disagrees with its Header and Summary.')
-            projected = {**header, 'state': {**header['state'], 'status': status}}
             destination = native_carrier_path(projected, _summary(body), project_root=selection.control_root,
                                               owner_directory=root, parameters=parameters)
         except (InputError, SourceChanged):
@@ -104,7 +106,7 @@ def _change_spec_selected(selection, target, selected, path, digest, root, statu
         except (OSError, RuntimeError, ValueError, KeyError, TypeError) as error:
             raise SourceChanged('Current SPEC source is unavailable or changed.') from error
         return _move_ticket(selection, target, selected, digest, path, destination, status, lambda: None,
-                            locked=True, preflight=(raw, bounds, None))
+                            locked=True, preflight=(raw, bounds, None), candidate=candidate)
 
 def archive_spec_draft(selection, params, *, current_rows, structure_snapshot=None, previous_capture=None):
     """Archive an exact SPEC Draft without replacing an existing revision."""

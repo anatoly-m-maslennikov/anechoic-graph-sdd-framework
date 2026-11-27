@@ -31,7 +31,7 @@ class DefaultMCPRuntimeTests(unittest.IsolatedAsyncioTestCase):
                 self.assertFalse(gateway.ready)
                 await gateway.initialize()
                 self.assertTrue(gateway.ready)
-                from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.registry_lifecycle_provider import LIFECYCLE_TOOL_NAMES
+                from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.registry_lifecycle_provider import LIFECYCLE_TOOL_NAMES
 
                 names = {tool.name for tool in gateway.tools}
                 self.assertIn("query_run", names)

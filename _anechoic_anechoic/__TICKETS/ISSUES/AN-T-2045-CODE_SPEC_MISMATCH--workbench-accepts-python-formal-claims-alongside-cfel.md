@@ -19,4 +19,4 @@ Workbench accepts Python Formal Claims alongside CFEL
 
 ### Prose Claim
 
-In the ANECHOIC working tree based on `c0b983cb27`, `LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_APPS/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/declaration_cfel.py` reads supported Python-labelled Formal Claim fences in addition to CFEL. CA-M-500@11 and CA-M-509@6 specify CFEL-only declaration facts for the current Workbench assets. The source currently permits both readers. Python migration is tracked separately in CA-P-3022. This observation concerns the checkout, with no claim that the mixed-language reader has been deployed.
+In the ANECHOIC working tree based on `c0b983cb27`, `LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_APPS/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_BACKEND/declaration_cfel.py` reads supported Python-labelled Formal Claim fences in addition to CFEL. CA-M-500@11 and CA-M-509@6 specify CFEL-only declaration facts for the current Workbench assets. The source currently permits both readers. Python migration is tracked separately in CA-P-3022. This observation concerns the checkout, with no claim that the mixed-language reader has been deployed.

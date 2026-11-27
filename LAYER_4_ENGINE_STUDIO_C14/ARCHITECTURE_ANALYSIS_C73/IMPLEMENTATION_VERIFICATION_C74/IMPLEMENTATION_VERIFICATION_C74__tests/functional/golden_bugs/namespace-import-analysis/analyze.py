@@ -17,7 +17,7 @@ def analyze(checkout, lean):
     ts = os.environ.get('TYPESCRIPT_PATH')
     if not ts:
         repo = next(p for p in HERE.parents if (p / '.git').exists())
-        ts = str(repo / 'LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND/node_modules/typescript/lib/typescript.js')
+        ts = str(repo / 'LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_FRONTEND/node_modules/typescript/lib/typescript.js')
     if not Path(ts).is_file():
         raise ValueError('TypeScript compiler unavailable; set TYPESCRIPT_PATH to typescript.js')
     parsed = subprocess.run(['node', str(HERE / 'shape.cts'), str(source)], capture_output=True, text=True, timeout=30)

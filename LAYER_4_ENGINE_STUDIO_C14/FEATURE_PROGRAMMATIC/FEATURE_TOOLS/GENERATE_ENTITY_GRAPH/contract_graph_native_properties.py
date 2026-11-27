@@ -48,7 +48,7 @@ def _bind_native_property_paths(
 
 
 def _pending_property_paths(catalog, _target):
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.cfel_claim_constraints import native_declaration
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.claim_constraints import native_declaration
     pending = []
     for (kind, identity), entries in list(catalog.items()):
         if kind != "property":

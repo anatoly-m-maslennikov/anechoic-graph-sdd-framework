@@ -1,13 +1,16 @@
+from concurrent.futures import ThreadPoolExecutor
 from hashlib import sha256
 import json
 from pathlib import Path
 import tempfile
+from threading import Event
 import unittest
 from unittest.mock import patch
 
 from starlette.testclient import TestClient
 
 from ..DATABASE_SERVER_beta_C71__shared import create_app, open_database
+from .. import generation_batch
 
 from .DATABASE_SERVER_beta_C71__tests__shared import _server
 from .test_native_atoms import _native_generation
@@ -31,6 +34,37 @@ def _frames(data):
 
 
 class BatchGenerationTest(unittest.TestCase):
+    def test_reads_serve_the_admitted_generation_during_batch_preparation(self):
+        data = _native_generation()
+        started, complete = Event(), Event()
+        prepare = generation_batch._prepare_full
+
+        def hold_preparation(*args):
+            started.set()
+            if not complete.wait(5):
+                raise AssertionError("Full preparation blocked the Kernel")
+            return prepare(*args)
+
+        with (tempfile.TemporaryDirectory(prefix="anechoic-generation-") as directory,
+              open_database() as connection,
+              TestClient(create_app(connection, data["instance_id"], data["receipt"]["manifest_sha256"])) as client,
+              ThreadPoolExecutor(max_workers=1) as executor):
+            first = client.put("/generation", json=data)
+            self.assertEqual(200, first.status_code, first.text)
+            descriptor = _stage(directory, _frames(data))
+            request = {key: value for key, value in data.items() if key not in {"snapshot", "graph"}}
+            with patch.object(generation_batch, "_prepare_full", side_effect=hold_preparation):
+                future = executor.submit(client.put, "/generation", json=request | {"batch_artifact": descriptor})
+                try:
+                    self.assertTrue(started.wait(5))
+                    health = client.get("/health").json()["result"]
+                    self.assertEqual(first.json()["result"]["generation"], health["generation"])
+                    self.assertFalse(future.done())
+                finally:
+                    complete.set()
+                reply = future.result(5)
+                self.assertEqual(200, reply.status_code, reply.text)
+
     def test_reject_tampering_and_bad_frames(self):
         data = _native_generation()
         with tempfile.TemporaryDirectory(prefix="anechoic-generation-") as directory, _server() as client:

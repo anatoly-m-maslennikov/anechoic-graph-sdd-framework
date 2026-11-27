@@ -23,7 +23,7 @@ def main():
         if len(paths) != 1 or not paths[0].is_file():
             raise ValueError(f'Expected one browser test file, found {len(paths)}')
         repo = next(p for p in Path(__file__).resolve().parents if (p / '.git').exists())
-        compiler = repo / 'LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND/node_modules/typescript/lib/typescript.js'
+        compiler = repo / 'LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_FRONTEND/node_modules/typescript/lib/typescript.js'
         if not compiler.is_file():
             raise ValueError('TypeScript compiler dependency unavailable')
         run = subprocess.run(['node', str(Path(__file__).with_name('analyze.cts')), str(paths[0]), args.title], capture_output=True, text=True, timeout=30)

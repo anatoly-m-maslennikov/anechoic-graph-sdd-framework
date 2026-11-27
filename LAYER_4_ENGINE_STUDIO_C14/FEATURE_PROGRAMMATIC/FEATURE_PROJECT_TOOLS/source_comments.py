@@ -16,7 +16,7 @@ import tokenize
 CODE_ROOTS = ("LAYER_4_ENGINE_STUDIO_C14", "LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27", "LAYER_5_USER_SETUP_C65")
 ROOT = Path(__file__).resolve().parents[3]
 FRONTEND = (
-    Path(CODE_ROOTS[0]) / "IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND"
+    Path(CODE_ROOTS[0]) / "IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_FRONTEND"
 )
 WEB_SUFFIXES = {".js", ".mjs", ".cjs", ".ts", ".cts", ".svelte", ".css", ".html"}
 DOCKER_FILES = {"Dockerfile", "Dockerfile.dockerignore", ".dockerignore"}

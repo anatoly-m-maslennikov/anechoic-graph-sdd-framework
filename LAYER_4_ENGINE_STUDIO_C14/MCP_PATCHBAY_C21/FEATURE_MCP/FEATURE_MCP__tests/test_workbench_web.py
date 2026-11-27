@@ -13,7 +13,7 @@ from starlette.applications import Starlette
 from starlette.testclient import TestClient
 
 MCP_ROOT = Path(__file__).resolve().parents[1]
-FRONTEND_ROOT = MCP_ROOT.parents[1] / "IWE_CONSOLE_C43" / "APP_WORKBENCH" / "FEATURE_WORKBENCH_FRONTEND"
+FRONTEND_ROOT = MCP_ROOT.parents[1] / "IWE_CONSOLE_C43" / "APP_IWE_CONSOLE" / "FEATURE_IWE_CONSOLE_FRONTEND"
 
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import WORKBENCH_PATH  # noqa: E402
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import ToolProtocolError  # noqa: E402
@@ -21,11 +21,10 @@ from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import workbench_routes as
 
 
 PROJECT_NAME = "anechoic"
-PROJECT_PATH = f"{WORKBENCH_PATH}/{PROJECT_NAME}"
+IWE_CONSOLE_PATH = "/anechoic/iwe-console"
+PROJECT_PATH = f"{IWE_CONSOLE_PATH}/{PROJECT_NAME}"
+LEGACY_PROJECT_PATH = f"{WORKBENCH_PATH}/{PROJECT_NAME}"
 API_PATH = f"/anechoic/{PROJECT_NAME}/api"
-
-
-
 
 from .workbench_web_test_support import FakeGateway  # noqa: E402
 
@@ -37,7 +36,7 @@ class WorkbenchWebTests(unittest.TestCase):
         (frontend / "assets").mkdir()
         (frontend / "assets" / "app.js").write_text("// fixture")
         (frontend / "index.html").write_text(
-            f'<div id="app"></div><script src="{WORKBENCH_PATH}/assets/app.js"></script>'
+            f'<div id="app"></div><script src="{IWE_CONSOLE_PATH}/assets/app.js"></script>'
         )
         self.routes = partial(routes, frontend=frontend)
         self.addCleanup(self._temporary.cleanup)
@@ -46,9 +45,10 @@ class WorkbenchWebTests(unittest.TestCase):
         gateway = FakeGateway()
         gateway.selection.project_name = "assets"
         with TestClient(Starlette(routes=self.routes(gateway))) as client:
-            self.assertEqual(200, client.get(f"{WORKBENCH_PATH}/assets").status_code)
-            self.assertEqual(200, client.post(f"{WORKBENCH_PATH}/assets/check", json={"sql": "SELECT 1"}).status_code)
-            self.assertEqual(200, client.get(f"{WORKBENCH_PATH}/assets/app.js").status_code)
+            for prefix in (IWE_CONSOLE_PATH, WORKBENCH_PATH):
+                self.assertEqual(200, client.get(f"{prefix}/assets").status_code)
+                self.assertEqual(200, client.post(f"{prefix}/assets/check", json={"sql": "SELECT 1"}).status_code)
+                self.assertEqual(200, client.get(f"{prefix}/assets/app.js").status_code)
 
     def test_project_api_and_legacy_routes_share_handlers_and_binding(self):
         gateway = FakeGateway()
@@ -64,9 +64,12 @@ class WorkbenchWebTests(unittest.TestCase):
             for path, arguments in examples.items():
                 body = {**arguments, "project_root": "/project"}
                 canonical = client.post(f"{API_PATH}/{path}", json=body)
-                legacy = client.post(f"{PROJECT_PATH}/{path}", json=body)
                 self.assertEqual(200, canonical.status_code, path)
-                self.assertEqual(canonical.json(), legacy.json(), path)
+                for project_path in (PROJECT_PATH, LEGACY_PROJECT_PATH):
+                    response = client.post(f"{project_path}/{path}", json=body)
+                    self.assertEqual(canonical.json(), response.json(), path)
+                    refused = client.post(f"{project_path}/{path}", json={**body, "project_root": "/invalid"})
+                    self.assertEqual(400, refused.status_code)
                 self.assertEqual(404, client.post(f"/anechoic/other/api/{path}", json=body).status_code)
                 self.assertEqual(400, client.post(f"{API_PATH}/{path}", json={**body, "project_root": "/invalid"}).status_code)
 
@@ -144,7 +147,9 @@ class WorkbenchWebTests(unittest.TestCase):
             page = client.get(PROJECT_PATH)
             self.assertEqual(200, page.status_code)
             self.assertIn('id="app"', page.text)
-            self.assertIn(f"{WORKBENCH_PATH}/assets/", page.text)
+            self.assertIn(f"{IWE_CONSOLE_PATH}/assets/", page.text)
+            old_page = client.get(f"{LEGACY_PROJECT_PATH}?workspace=session-1")
+            self.assertEqual((200, page.text), (old_page.status_code, old_page.text))
             self.assertEqual(1, client.post(f"{PROJECT_PATH}/check", json={"sql": "SELECT 1"}).json()["row_count"])
             result = client.post(f"{PROJECT_PATH}/run", json={"sql": "SELECT 1"})
             self.assertEqual(1, result.json()["row_count"])
@@ -196,7 +201,7 @@ class WorkbenchWebTests(unittest.TestCase):
             })
             self.assertEqual(200, opened.status_code)
             self.assertEqual(
-                "http://workbench.test/anechoic/workbench/anechoic?workspace=session-1",
+                "http://workbench.test/anechoic/iwe-console/anechoic?workspace=session-1",
                 opened.json()["workspace_url"],
             )
             self.assertEqual(PROJECT_NAME, opened.json()["project_name"])
@@ -243,7 +248,7 @@ class WorkbenchWebTests(unittest.TestCase):
             self.assertEqual("view", view["name"])
             saved = client.post(f"{PROJECT_PATH}/run", json={"sql": "SELECT 1", "save": True}).json()
             self.assertEqual(
-                "http://workbench.test/anechoic/workbench/anechoic?query=q_1", saved["saved_query_url"],
+                "http://workbench.test/anechoic/iwe-console/anechoic?query=q_1", saved["saved_query_url"],
             )
             named = client.post(f"{PROJECT_PATH}/run", json={"sql": "SELECT 1", "save": True, "name": "named"}).json()
             self.assertEqual("named", named["name"])
@@ -264,7 +269,7 @@ class WorkbenchWebTests(unittest.TestCase):
             assets = re.findall(r'(?:src|href)="([^"?#]+)', index.read_text())
             self.assertTrue(assets)
             for asset in assets:
-                self.assertTrue(asset.startswith(f"{WORKBENCH_PATH}/assets/"))
+                self.assertTrue(asset.startswith(f"{IWE_CONSOLE_PATH}/assets/"))
                 self.assertNotIn("/assets/assets/", asset)
                 self.assertEqual(200, client.get(asset).status_code, asset)
 

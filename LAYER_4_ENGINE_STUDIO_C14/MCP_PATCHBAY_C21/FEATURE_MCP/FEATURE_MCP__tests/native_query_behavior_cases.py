@@ -255,7 +255,7 @@ class NativeQueryBehaviorCases:
 
 
     def _write_component_queries(self):
-        self._write("AN-S-011-manifest.md", "AN-S-011", "active", 1, template="component_manifest", lens="SPEC",
+        self._write("AN-S-011-manifest.md", "AN-S-011", "active", 1, template="component_manifest", lens="SPEC", tier=1,
                     body="""## Summary
 
 Tools.
@@ -264,7 +264,11 @@ Tools.
 
 Provide project tools.
 
-## Formal manifest
+## Component Contract
+
+Guarantee.
+
+## Component Identity
 
 ```python
 from anechoic.formal_claims import declare_entity
@@ -279,7 +283,7 @@ declare_entity(
                     lens="SPEC", container={"component": "C1"},
                     body="## Claim\n\n### Component ID\n\nC2\n\n### Name\n\nChild\n")
         self._write("AN-S-013-contract.md", "AN-S-013", "active", 1, container={"component": "C1"})
-        self._write("AN-S-014-solution.md", "AN-S-014", "active", 1, container={"component": "C1"}, tier=1)
+        self._write("AN-S-014-solution.md", "AN-S-014", "active", 1, template="solution", container={"component": "C1"}, tier=0)
         self._write("AN-S-016@1-draft-contract.md", "AN-S-016", "draft", 1, container={"component": "C1"})
         self._write("AN-S-017-contract.md", "AN-S-017", "active", 1, template="component_contract",
                     container={"component": "C1"}, structure_tier=1, body="## Guarantee\n\nA guarantee.\n")
@@ -300,8 +304,8 @@ declare_entity(
         ):
             await client.initialize()
             for template, selector, expected in (
-                ("fetch_contracts", "tools", ["AN-S-012@1", "AN-S-013@1", "AN-S-020@1"]),
-                ("fetch_solutions", "c1", ["AN-S-014@1", "AN-S-017@1"]),
+                ("fetch_contracts", "tools", ["AN-S-011@1"]),
+                ("fetch_solutions", "c1", ["AN-S-014@1"]),
                 ("get_component_manifest", "C1", ["AN-S-011@1"]),
                 ("get_component_purpose", " Tools ", ["AN-S-011@1"]),
                 ("get_component_purpose", "Child", []),

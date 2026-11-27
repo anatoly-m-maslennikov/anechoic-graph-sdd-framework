@@ -112,6 +112,11 @@ class GoldenBugsTests(unittest.TestCase):
             ('local-release-result', 'test_analyze.py'),
             ('saved-query-stale-table-rebuild', 'test_analyze.py'),
             ('workflow-guard-validation', 'check_scenarios.py'),
+            ('unreadable-metrics-source', 'test_replay.py'),
+            ('workbench-reply-identity', 'test_replay.py'),
+            ('blocked-lifecycle-reply', 'test_replay.py'),
+            ('model-predecessor-admission', 'test_replay.py'),
+            ('authored-atom-timestamp', 'test_replay.py'),
         ):
             with self.subTest(case=case):
                 run = subprocess.run([sys.executable, '-B', str(CORPUS / case / script)],

@@ -6,15 +6,10 @@ container:
 priority: 2
 context:
   template: problem
-relations:
-  IS_REFERENCE:
-  - AN-T-160
-  - AN-S-1616
-  - AN-S-3160@5
 state:
   status: resolved
   version: 1
-  updated_at: '2026-11-21T09:57:15.502916+00:00'
+  updated_at: '2026-11-26T16:39:56.933741+00:00'
 ---
 ## Summary
 

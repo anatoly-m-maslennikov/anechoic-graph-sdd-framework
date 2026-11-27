@@ -10,10 +10,8 @@ context:
 state:
   status: backlog
   version: 3
-  updated_at: '2026-11-22T09:53:45.225009+00:00'
-relations:
-  IS_REFERENCE:
-  - AN-T-2973
+  updated_at: '2026-11-26T16:38:01.244147+00:00'
+
 ---
 ## Summary
 

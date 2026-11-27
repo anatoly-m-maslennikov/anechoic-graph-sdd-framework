@@ -57,6 +57,59 @@ class ExtendedReleaseCliTests(ReleaseCliFixture, unittest.TestCase):
                 }))
             prepare.assert_called_once_with(root, run_id="prerequisites", mode="prepare")
 
+    def test_generated_run_id_and_scoped_start(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            with patch(_ENTRY + ".run_local_release", return_value={"outcome": "completed"}) as run:
+                code, result = self.invoke(["local", "--project-root", str(root)])
+            self.assertEqual(code, 0)
+            self.assertTrue(result["run_id"])
+            self.assertEqual(result["run_id"], run.call_args.kwargs["run_id"])
+            prepared = {"project_root": str(root / "private"), "revision": _REVISION}
+            with patch(_ENTRY + ".prepare_local", return_value=prepared) as prepare, \
+                 patch(_ENTRY + ".run_snapshot_release", return_value={"outcome": "completed"}) as run:
+                code, result = self.invoke(["local", "--project-root", str(root), "--run-id", "scoped",
+                                            "--base", _REVISION, "--changed-path", "edit.txt"])
+            self.assertEqual(code, 0)
+            prepare.assert_called_once_with(root, run_id="scoped", base=_REVISION, changed_paths=["edit.txt"])
+            run.assert_called_once_with(root / "private", target_root=root, source_revision=_REVISION,
+                                        run_id="scoped", image_mode="refresh")
+            self.assertEqual(result["source_revision"], _REVISION)
+
+    def test_continue_selects_journal_and_abort_refuses_ambiguity_or_delivery(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            runs = root / ".anechoic_runtime/simple_local_release/runs"
+            def journal(name, **extra):
+                path = runs / name / "state.json"
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(json.dumps({"schema": 2, "run_id": name, "binding": [str(root)],
+                                            "options": [None, None], "done": [], "logs": {}, **extra}))
+                return path
+            journal("open")
+            journal("closed", result={"outcome": "completed"})
+            args = ["local", "--project-root", str(root)]
+            status_code, state = self.invoke([*args, "--status"])
+            self.assertEqual((status_code, state["run_id"]), (0, "open"))
+            with patch(_ENTRY + ".run_local_release", side_effect=[state, {"outcome": "completed"}]) as run:
+                code, result = self.invoke([*args, "--continue"])
+            self.assertEqual((code, result["run_id"]), (0, "open"))
+            self.assertEqual(run.call_args_list[-1].kwargs, {"run_id": "open", "resume": True})
+            journal("other")
+            self.assertEqual(self.invoke([*args, "--abort"])[0], 1)
+            marker = runs / "open/abort-requested"
+            self.assertFalse(marker.exists())
+            self.assertEqual(self.invoke([*args, "--abort", "--run-id", "open"])[0], 0)
+            self.assertTrue(marker.is_file())
+            marker.unlink()
+            journal("open", done=["validate inputs", "bump candidate version", "static tests", "functional tests",
+                                  "copy active sources", "build package", "prepare candidate image",
+                                  "verify candidate image", "verify candidate canary"], delivery={})
+            code, result = self.invoke([*args, "--abort", "--run-id", "open"])
+            self.assertEqual(code, 1)
+            self.assertIn("delivery", result["error"])
+            self.assertFalse(marker.exists())
+
     def test_engine_context_applies_to_runtime_commands(self):
         previous = {"DOCKER_CONTEXT": "custom", "DOCKER_HOST": "unix:///custom/docker.sock"}
         cases = (
@@ -101,6 +154,29 @@ class ExtendedReleaseCliTests(ReleaseCliFixture, unittest.TestCase):
             self.assertEqual(status, 0)
             self.assertEqual((payload["source_root"], payload["target_root"], payload["source_revision"]),
                              (str(source), str(target), _REVISION))
+
+    def test_continue_split_accepts_corrected_head_until_delivery(self):
+        with tempfile.TemporaryDirectory() as directory:
+            parent = Path(directory).resolve()
+            source, target = parent / "source", parent / "target"
+            source.mkdir()
+            target.mkdir()
+            changed = "b" * 40
+            state = {"outcome": "completed", "run_id": "split", "docker_context": "orbstack",
+                     "source_root": str(source), "source_revision": _REVISION}
+            args = ["local", "--continue", "--project-root", str(target)]
+            for delivery, revision in ((False, changed), (True, _REVISION)):
+                with (
+                    self.subTest(delivery=delivery),
+                    patch(_ENTRY + ".run_local_release", return_value=state | {"delivery_started": delivery}),
+                    patch(_ENTRY + ".run_snapshot_release", return_value={"outcome": "completed"}) as run,
+                    patch.object(release.subprocess, "check_output", return_value=changed + "\n") as head,
+                ):
+                    code, reply = self.invoke(args)
+                self.assertEqual((code, reply["run_id"]), (0, "split"))
+                run.assert_called_once_with(source, target_root=target, source_revision=revision,
+                                            run_id="split", resume=True)
+                self.assertEqual(head.call_count, 0 if delivery else 1)
 
     def test_split_refuses_missing_or_imprecise_pins(self):
         for args in (

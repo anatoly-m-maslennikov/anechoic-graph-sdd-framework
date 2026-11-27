@@ -30,17 +30,18 @@ declare_entity(
         name='Manifest Runtime',
         lens_whitelist=['SPEC'],
         boundaries={
-            'code': {
-                'imports': [
-                    'FEATURE_MODEL_VALIDATION__shared.open_admitted_model',
-                    'ORCHESTRATOR_C66__shared.Orchestrator',
-                    'ADAPTERS_C30__shared.ARCHIVE_DIRECTORY',
-                    'ADAPTERS_C30__shared.DRAFT_DIRECTORY',
-                    'ADAPTERS_C30__shared.READY_DIRECTORY',
-                    'ADAPTERS_C30__shared.owned_temporary_root',
-                    'source_watcher__pub.SourceWatcher',
-                ],
-            },
+            'code': {'exports': {'MANIFEST_RUNTIME_C62__shared.compile_reviewed_model': {'private': ['CS2']},
+                         'MANIFEST_RUNTIME_C62__shared.run_manifest_runtime': {'private': ['C59',
+                                                                                           'LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_C59/MANIFEST_RUNTIME_C62/MANIFEST_RUNTIME_C62__tests']}},
+             'imports': ['MANIFEST_RUNTIME_C62__shared.run_manifest_runtime',
+                         'structure_host_CS3__shared.publish_structure',
+                         'FEATURE_MODEL_VALIDATION__shared.open_admitted_model',
+                         'ORCHESTRATOR_C66__shared.Orchestrator',
+                         'ADAPTERS_C30__shared.ARCHIVE_DIRECTORY',
+                         'ADAPTERS_C30__shared.DRAFT_DIRECTORY',
+                         'ADAPTERS_C30__shared.READY_DIRECTORY',
+                         'ADAPTERS_C30__shared.owned_temporary_root',
+                         'source_watcher__pub.SourceWatcher']},
             'io': {
                 'server': {
                     'manifest_runtime_start': {'outcomes': {

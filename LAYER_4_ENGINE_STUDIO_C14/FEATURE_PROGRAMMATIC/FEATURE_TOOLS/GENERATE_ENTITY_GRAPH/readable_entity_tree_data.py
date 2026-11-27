@@ -13,7 +13,7 @@ LABELS = {
     "IS_BORNE_BY": ".",
     "IS_PROPERTY_OF": ".",
     "IS_CONTAINED_BY": "<+",
-    "HAS_CLASSIFICATION": ">|",
+    "HAS_AXIS": ">|",
     "IS_ALLOWED_VALUE_OF": ":",
 }
 
@@ -89,7 +89,7 @@ def read_edges(rows: list[Record], nodes: Nodes) -> tuple[Children, set[str], Co
         if kind not in LABELS:
             omitted[kind] += 1
             continue
-        if kind == "HAS_CLASSIFICATION":
+        if kind == "HAS_AXIS":
             child, parent = parent, child
         children[parent].append((child, edge))
         if kind in {"IS_PROPERTY_OF", "IS_BORNE_BY"}:

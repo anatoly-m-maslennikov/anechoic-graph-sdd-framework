@@ -180,7 +180,7 @@ def _build_predecessor(selection) -> str | None:
         raise LocalReleaseError("local-release-predecessor-receipt-invalid") from error
 
 
-def _read_version(root: Path) -> tuple[Path, str]:
+def _read_version(root: Path, *, installed_version: str = "") -> tuple[Path, str]:
     version_path = _project_path(root, Path("version.toml"), label="version-path", require_exists=True)
     if not version_path.is_file():
         raise LocalReleaseError("local-release-version-invalid")
@@ -192,7 +192,11 @@ def _read_version(root: Path) -> tuple[Path, str]:
     match = re.fullmatch(r"([0-9]+)\.([0-9]+)\.([0-9]+)(?:\.([0-9]+))?", version) if isinstance(version, str) else None
     if match is None:
         raise LocalReleaseError("local-release-version-invalid")
-    next_version = ".".join((*match.groups()[:3], str(int(match.group(4) or "0") + 1)))
+    parts = (*map(int, match.groups()[:3]), int(match.group(4) or "0"))
+    if installed_version:
+        installed = tuple(map(int, installed_version.split(".")))
+        parts = max(parts, (*installed, 0) if len(installed) == 3 else installed)
+    next_version = ".".join(map(str, (*parts[:3], parts[3] + 1)))
     return version_path, version_text.replace(f'"{version}"', f'"{next_version}"', 1)
 
 

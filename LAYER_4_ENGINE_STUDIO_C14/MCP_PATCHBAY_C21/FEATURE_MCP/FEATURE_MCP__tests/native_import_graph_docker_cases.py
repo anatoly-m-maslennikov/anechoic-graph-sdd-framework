@@ -12,13 +12,12 @@ from uuid import uuid4
 
 from mcp.client.session import ClientSession
 
-from .FEATURE_MCP__tests__shared import project as make_project
+from .FEATURE_MCP__tests__shared import project as make_project, run_workbench_browser
 from .workbench_docker_support import (
-    IMAGE_DEADLINES, defer_container_cleanup, docker_deadline_env, image_deadline_mode, image_mcp_transport,
-    image_timeout, observing, request, run_browser,
+    defer_container_cleanup, docker_deadline_env, image_mcp_transport, image_timeout, observing, request,
 )
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.work_journal__pub import PROJECT_DATABASE, append_sealed_events
-from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import HEALTH_PATH, MCP_PATH, WORKBENCH_PATH
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import HEALTH_PATH, MCP_PATH
 
 
 _STARTUP_REUSE_RUNS = """
@@ -122,37 +121,7 @@ class WarmProjectionRestartCase:
 
 class DockerBrowserAndMcpCases:
     def test_workbench_browser_flows(self):
-        repository = Path(__file__).resolve().parents[4]
-        frontend = Path(__file__).resolve().parents[3] / "IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND"
-        environment = os.environ | {
-            IMAGE_DEADLINES: image_deadline_mode(os.environ),
-            "WORKBENCH_E2E_URL": f"{self.url}{WORKBENCH_PATH}/Anechoic",
-            "PLAYWRIGHT_BROWSERS_PATH": str(repository / ".anechoic_tmp/workbench/playwright-browsers"),
-        }
-        launch = run_browser(
-            self.container,
-            ["node", str(frontend / "FEATURE_WORKBENCH_FRONTEND__tests/pinned_chromium_probe.ts")],
-            cwd=frontend, env=environment, bounded_timeout=None,
-        )
-        self.assertEqual(0, launch.returncode,
-                         f"Pinned Chromium could not launch. Run the image tests in a host context that permits "
-                         f"Chromium processes.\n{launch.stdout}{launch.stderr}")
-        print(f"Pinned Chromium {launch.stdout.strip()}", flush=True)
-        reports = repository / ".anechoic_tmp/test_reports"
-        reports.mkdir(parents=True, exist_ok=True)
-        output = tempfile.mkdtemp(prefix="workbench-browser-", dir=reports)
-        command = ["node", "node_modules/@playwright/test/cli.js", "test", "--config",
-                   "FEATURE_WORKBENCH_FRONTEND__tests/playwright.config.ts", "--output", output,
-                   "--trace", "retain-on-failure"]
-        if environment[IMAGE_DEADLINES] == "1":
-            command.extend(("--global-timeout", "115000"))
-        try:
-            result = run_browser(self.container, command, cwd=frontend, env=environment)
-        except Exception as error:
-            error.add_note(f"Browser artifacts: {output}")
-            raise
-        self.assertEqual(0, result.returncode, f"{result.stdout}{result.stderr}\nBrowser artifacts: {output}")
-
+        run_workbench_browser(self)
 
     def test_mcp_queries_work_after_a_previous_session_closes(self):
         async def exercise():

@@ -10,14 +10,8 @@ context:
 state:
   status: backlog
   version: 6
-  updated_at: '2026-11-23T03:50:52.802684+00:00'
-relations:
-  IS_REFERENCE:
-  - AN-S-3187@1
-  - AN-S-3188@1
-  - AN-S-3189@1
-  - AN-S-3361@2
-  - AN-S-3387@2
+  updated_at: '2026-11-26T16:38:01.252157+00:00'
+
 ---
 ## Summary
 

@@ -10,7 +10,7 @@ import unittest
 
 
 ENGINE = Path(__file__).resolve().parents[2]
-FRONTEND = ENGINE / 'IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND'
+FRONTEND = ENGINE / 'IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_FRONTEND'
 PY_HELPER = '''_count = 0
 def mutate():
     global _count

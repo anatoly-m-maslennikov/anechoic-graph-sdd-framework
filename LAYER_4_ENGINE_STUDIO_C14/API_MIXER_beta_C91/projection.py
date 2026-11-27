@@ -7,9 +7,12 @@ from typing import Annotated, Literal
 import httpx2
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
-from .admission import failure, peer
+from .admission import Readiness, failure, peer
 from .models import WorkerRuns
 from .schema import ALIASES, FLOWS, TABLES
+
+
+MODEL_TARGETS = ("model_tree", "model_primary_entities")
 
 
 class StrictModel(BaseModel):
@@ -17,7 +20,7 @@ class StrictModel(BaseModel):
 
 
 class StatusArguments(StrictModel):
-    pass
+    include_health: bool = False
 
 
 class AbortArguments(StrictModel):
@@ -70,7 +73,9 @@ class IssueRows(BaseModel):
 
 def descriptors():
     definitions = {
-        "workbench_status": ("Read Project source indexing status and current ingestion issues.", {}, True),
+        "iwe_console_status": ("Read Project source indexing status and current ingestion issues.", {"include_health": {"type": "boolean"}}, True),
+        "iwe_console_abort": ("Abort the active Project Worker run.", {"run_id": {"type": "string", "minLength": 1}}, False),
+        "workbench_status": ("Read Project source indexing status and current ingestion issues.", {"include_health": {"type": "boolean"}}, True),
         "workbench_abort": ("Abort the active Project Worker run.", {"run_id": {"type": "string", "minLength": 1}}, False),
         "query_rebuild": ("Rebuild a Project projection or refresh retained query results.",
                           {"target": {"type": "string", "minLength": 1}}, False),
@@ -93,7 +98,7 @@ def target_scope(arguments):
         raise ValueError("Expected a target table or result selector") from error
     scope = target.removeprefix("main.")
     scope = ALIASES.get(scope, scope)
-    if scope in ("all", "workbench_results", *TABLES, *FLOWS):
+    if scope in ("all", "realization_graph", "workbench_results", *TABLES, *MODEL_TARGETS, *FLOWS):
         return scope, target
     match = re.fullmatch(r"(?:workbench_results\.)?(?:query_)?([0-9a-f]{32})", scope)
     if match is None:
@@ -110,13 +115,16 @@ def peer_error(value):
     return failure(error.code, error.message)
 
 
-async def status(database, orchestrator, instance, arguments):
+async def status(database, orchestrator, instance, arguments, binding=None):
     try:
-        StatusArguments.model_validate(arguments)
+        request = StatusArguments.model_validate(arguments)
     except ValidationError:
         return failure("tool_input_invalid", "The status request has no arguments")
     if orchestrator is None:
-        return response({"mode": "unavailable", "syncing": False, "last_synced_at": None})
+        value = {"mode": "unavailable", "syncing": False, "last_synced_at": None}
+        if request.include_health:
+            value["health"] = {"state": "unavailable"}
+        return response(value)
     raw = (await peer(orchestrator, "GET", "/jobs/worker-runs", params={"instance_id": instance}))["result"]
     runs = WorkerRuns.model_validate(raw)
     latest, active = runs.latest, runs.active
@@ -126,6 +134,12 @@ async def status(database, orchestrator, instance, arguments):
              "run_id": active.run_id if active else None, "worker_alive": active.worker_alive if active else None}
     if "archive" in raw:
         value["archive"] = raw["archive"]
+    if request.include_health:
+        digest = binding.get("manifest_sha256") if binding else None
+        value["health"] = (await Readiness(instance, digest, database, orchestrator).status()
+                           if digest else {"state": "unavailable"})
+        value["watcher_queue_depth"] = raw.get("watcher_queue_depth")
+        value["last_run_state"] = latest.state if latest else None
     try:
         result = (await peer(database, "GET", "/ingestion/issues", params={"instance_id": instance}))["result"]
         admitted = IssueRows.model_validate(result).model_dump(exclude_unset=True, include={"rows"})
@@ -159,7 +173,7 @@ async def rebuild(database, orchestrator, binding, instance, arguments):
         scope, target = target_scope(arguments)
     except ValueError as error:
         return failure("tool_input_invalid", str(error))
-    if scope in ("all", *TABLES):
+    if scope in ("all", "realization_graph", *TABLES, *MODEL_TARGETS):
         if binding is None:
             return failure("workbench_unavailable", "Managed Orchestrator binding is unavailable")
         reply = await peer(orchestrator, "POST", "/jobs/build", timeout=httpx2.Timeout(None, connect=10),
@@ -174,9 +188,9 @@ async def rebuild(database, orchestrator, binding, instance, arguments):
 
 async def invoke(name, arguments, database, orchestrator, binding, instance):
     try:
-        if name == "workbench_status":
-            return await status(database, orchestrator, instance, arguments)
-        if name == "workbench_abort":
+        if name in {"iwe_console_status", "workbench_status"}:
+            return await status(database, orchestrator, instance, arguments, binding)
+        if name in {"iwe_console_abort", "workbench_abort"}:
             return await abort(orchestrator, instance, arguments)
         return await rebuild(database, orchestrator, binding, instance, arguments)
     except (httpx2.HTTPError, ValueError, TypeError, KeyError, AttributeError, OverflowError):

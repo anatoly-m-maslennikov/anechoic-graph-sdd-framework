@@ -165,18 +165,31 @@ class LifecycleSocketTests(unittest.TestCase):
         self.addCleanup(jobs.close)
         return jobs
 
+    def lifecycle_binding(self, root):
+        control, manifest = project(root)
+        manifest.write_text(manifest.read_text().replace("prefix='AN'", "prefix='AN', lens_whitelist=['SPEC']"))
+        self.write_archived_tickets(control)
+        draft_dir = control / "01_draft"
+        draft_dir.mkdir(parents=True)
+        (draft_dir / "AN-S-2@1-draft-SPEC-COMPONENT_CONTRACT--admitted-contract.md").write_text(
+            "---\natom_family: SPEC\natom_id: AN-S-2\ncontainer: {component: C00}\ntier: 0\n"
+            "context: {template: component_contract, lens: SPEC}\n"
+            "state: {status: draft, version: 1, updated_at: '2026-11-23T00:00:00Z'}\n"
+            "---\n\n## Summary\n\nAdmitted Contract.\n\n## Guarantee\n\nReturn results.\n",
+            encoding="utf-8",
+        )
+        binding = {"root": str(root), "control_root": control.name, "manifest_path": manifest.name,
+                   "manifest_sha256": sha256(manifest.read_bytes()).hexdigest(), "project_prefix": "AN"}
+        (root / "binding.json").write_text(json.dumps(binding))
+        return binding
+
     def test_real_lifecycle_and_generation_admission(self):
         engine = Path(__file__).resolve().parents[2]
         env = {**os.environ, "PYTHONPATH": str(engine)}
         env.setdefault("ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY", str(engine.parent / ".anechoic_tmp/workbench/extensions"))
         with tempfile.TemporaryDirectory(prefix="ane-lifecycle-admit-", dir="/tmp") as directory:
             root = Path(directory).resolve()
-            control, manifest = project(root)
-            manifest.write_text(manifest.read_text().replace("prefix='AN'", "prefix='AN', lens_whitelist=['SPEC']"))
-            self.write_archived_tickets(control)
-            binding = {"root": str(root), "control_root": control.name, "manifest_path": manifest.name,
-                       "manifest_sha256": sha256(manifest.read_bytes()).hexdigest(), "project_prefix": "AN"}
-            (root / "binding.json").write_text(json.dumps(binding))
+            binding = self.lifecycle_binding(root)
             db, jobs = str(root / "db.sock"), str(root / "jobs.sock")
             db_module = "KERNEL_MIXER_beta_C67.DATABASE_SERVER_beta_C71.DATABASE_SERVER_beta_C71__shared"
             jobs_module = "ORCHESTRATOR_beta_C68.ORCHESTRATOR_beta_C68__shared"
@@ -196,7 +209,7 @@ class LifecycleSocketTests(unittest.TestCase):
                 self.wait_for_archive(db)
                 self.assert_lifecycle(jobs, binding, "AN-T-101")
                 self.assert_lifecycle(jobs, binding, "AN-T-102")
-                self.assert_visible(db, ["AN-T-101@1-draft", "AN-T-102@1-draft"])
+                self.assert_visible(db, ["AN-S-2@1-draft", "AN-T-101@1-draft", "AN-T-102@1-draft"])
                 self.assert_indexed_transitions(jobs, db, binding)
                 self.assert_allocation_reserves_quarantined_ids(jobs, db, binding, self.wait_for_archive(db))
             finally:
@@ -271,12 +284,11 @@ class LifecycleSocketTests(unittest.TestCase):
         asset = call("create_asset", {"newAtom": {"template": "work_report", "body": asset_body}})["artifact"]
         call("direct_update", {"target": {"ref_id": asset["ref_id"], "version": 1},
                                "changes": {"body": asset_body + "\nUpdated.\n"}})
-        draft = call("create_draft", {"newAtom": {"template": "component_contract", "container": {"component": "C00"},
-                    "lens": "SPEC", "body": "## Summary\n\nAdmitted Contract.\n\n## Guarantee\n\nReturn results.\n"}})["savedDraft"]
-        contract = {"ref_id": draft["atom_id"], "version": 1}
-        call("promote_draft", {"target": contract | {"ref_id": draft["ref_id"]}, "targetStatus": "ready"})
-        call("change_status", {"target": contract, "targetStatus": "active"})
-        call("archive", {"target": contract})
+        draft = call("create_draft", {"newAtom": {"template": "task", "container": {"component": "C00"},
+                    "body": "## Summary\n\nAdmitted Task.\n"}})["savedDraft"]
+        created_task = {"ref_id": draft["atom_id"], "version": 1}
+        call("promote_draft", {"target": created_task | {"ref_id": draft["ref_id"]}, "targetStatus": "backlog"})
+        call("archive", {"target": {"ref_id": "AN-S-2@1-draft", "version": 1}})
         self.assert_visible(database, ["AN-T-101@2-draft", "AN-T-102@1-draft"])
 
     def assert_visible(self, path, refs):

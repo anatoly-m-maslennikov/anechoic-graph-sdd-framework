@@ -1,7 +1,6 @@
 from pathlib import Path
 import sys
 import unittest
-from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import compose_contract_graph
@@ -9,11 +8,11 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GR
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import extract_claim_constraints
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import build_subject_projection_data
 
-def carrier(name, subject, code, label='CFEL', form='Declaration'):
+def carrier(name, subject, code, label='python', form='Declaration'):
     return {'source':{'atom_id':name,'version':1,'path':name+'.md'},'subjects':{'active':subject,'passive':[]},'read_view':{'content_role':'Requirement','type':form},'body':f'## Claim\n\n### Formal Claim\n\n```{label}\n{code}\n```\n\n## Semantics\n\nA relation.\n'}
 
 class GraphParity(unittest.TestCase):
-    def test_native_special_contracts_do_not_compile_cfel(self):
+    def test_native_special_contracts_project_fields_and_classification(self):
         code = '''from dataclasses import dataclass, field
 from anechoic.formal_claims import Cardinality, declare_entity
 @dataclass
@@ -21,10 +20,9 @@ class Workspace:
     name: str = field(metadata={"property_occurrence_cardinality": 1, "value_cardinality": 1})
 declare_entity(entity_name="Workspace", entity_class=Workspace, incoming_model_relations=({"source": "View", "relation": "IS_CONTAINED_BY", "source_cardinality": 1, "target_cardinality": Cardinality(minimum=1, maximum=None)},))'''
         classification = '''from anechoic.formal_claims import declare_entity
-declare_entity(entity_name="Node", allowed_classification_values={"Container": ("yes", "no")})'''
-        with patch('FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.compiler_claim.compiler_model_statements', side_effect=AssertionError('legacy compiler')):
-            fields, errors = extract_claim_constraints(carrier('CA-R-1', 'Workspace', code, 'python'))
-            allowed, more_errors = extract_claim_constraints(carrier('CA-R-2', 'Node', classification, 'python'))
+declare_entity(entity_name="Node", allowed_axis_values={"Container": ("yes", "no")})'''
+        fields, errors = extract_claim_constraints(carrier('CA-R-1', 'Workspace', code, 'python'))
+        allowed, more_errors = extract_claim_constraints(carrier('CA-R-2', 'Node', classification, 'python'))
         self.assertEqual(errors + more_errors, [])
         self.assertEqual([row['kind'] for row in fields], ['property_constraint', 'relation_cardinality'])
         self.assertEqual(fields[0]['value_format'], 'string')
@@ -65,14 +63,14 @@ declare_entity(
             rule['relation']: rule['contract']['target_entity_paths'] for rule in rules
         })
 
-    def test_relation_classifications_are_separate_explicit_conditions(self):
+    def test_relation_axes_are_separate_explicit_conditions(self):
         declaration = carrier('CA-R-1', 'Relation//LINKS', """from anechoic.formal_claims import declare_relation
 declare_relation(relation_name="LINKS", inverse_alias="LINKED_BY",
     source_endpoint={"level": "model_entities"}, target_endpoint={"level": "model_entities"},
-    classifications={"Direction": "Forward"}, inverse_classifications={"Direction": "Reverse"})""", 'python', 'Relation Declaration')
+    axes={"Direction": "Forward"}, inverse_axes={"Direction": "Reverse"})""", 'python', 'Relation Declaration')
         clauses, diagnostics = extract_claim_constraints(declaration)
         self.assertEqual([], diagnostics)
-        conditions = [row for row in clauses if row['kind'] == 'classification_condition']
+        conditions = [row for row in clauses if row['kind'] == 'axis_condition']
         self.assertEqual([(row['subject_selector'], row['axis'], row['operator'], row['value']) for row in conditions], [
             ('Relation//LINKS', 'Direction', '==', 'Forward'),
             ('Relation//LINKED_BY', 'Direction', '==', 'Reverse'),

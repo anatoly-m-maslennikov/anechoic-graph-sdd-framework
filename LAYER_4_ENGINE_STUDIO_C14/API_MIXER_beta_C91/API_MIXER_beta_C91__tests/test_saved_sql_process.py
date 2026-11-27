@@ -1,84 +1,32 @@
 """Exercise saved SQL through the C91 CLIs and a real Kernel."""
 
-from hashlib import sha256
-import json
 import os
-from pathlib import Path
-import socketserver
 import subprocess
 import sys
 import tempfile
 import threading
 import time
 import unittest
-from http.server import BaseHTTPRequestHandler
+from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
 from uuid import UUID
 
 import httpx2
 
-
 ENGINE = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ENGINE))
+from API_MIXER_beta_C91.API_MIXER_beta_C91__tests._package__shared import (
+    Jobs,
+    Owner,
+    Server,
+)
+from API_MIXER_beta_C91.API_MIXER_beta_C91__tests._package__shared import (
+    saved_sql_generation as generation,
+)
+
 DIGEST = "a" * 64
 INSTANCE = "b" * 64
 KERNEL = "KERNEL_MIXER_beta_C67.DATABASE_SERVER_beta_C71.DATABASE_SERVER_beta_C71__shared"
-
-
-def generation():
-    model = json.dumps({"model_sha256": "b" * 64, "binding_schema": 1, "modules": {"__init__.py": "d" * 64},
-                        "module_order": [], "class_modules": {}, "bindings": {}}, indent=2)
-    structure = json.dumps({"model_sha256": "b" * 64, "project": {"ref": "AN-S-1", "sha256": DIGEST},
-                            "components": {}}, indent=2)
-    return {"instance_id": INSTANCE, "snapshot": {"manifest_sha256": DIGEST, "atoms": []}, "model": model,
-            "structure": structure, "graph": None, "receipt": {"manifest_sha256": DIGEST, "model_sha256": "b" * 64,
-            "graph_sha256": sha256(b"null").hexdigest(), "model_descriptor_sha256": sha256(model.encode()).hexdigest(),
-            "structure_sha256": sha256(structure.encode()).hexdigest()}}
-
-
-class Server(socketserver.ThreadingMixIn, socketserver.UnixStreamServer):
-    daemon_threads = True
-
-
-class Jobs(BaseHTTPRequestHandler):
-    def log_message(self, *_args):
-        pass
-
-    def do_GET(self):
-        payload = {"result": {"instance_id": INSTANCE, "pid": os.getpid(), "startup_replay_pending": False, "watcher_active": True}}
-        value = json.dumps(payload).encode()
-        self.send_response(200)
-        self.send_header("Content-Length", str(len(value)))
-        self.end_headers()
-        self.wfile.write(value)
-
-    def do_POST(self):
-        self.server.requests.append((self.path, json.loads(self.rfile.read(int(self.headers["Content-Length"])))))
-        payload = {"result": {"write_state": "known", "projection": {"state": "ready"}, "lifecycle": {"outcome": "completed"}}}
-        value = json.dumps(payload).encode()
-        self.send_response(200)
-        self.send_header("Content-Length", str(len(value)))
-        self.end_headers()
-        self.wfile.write(value)
-
-
-class Owner(socketserver.StreamRequestHandler):
-    def handle(self):
-        request = json.loads(self.rfile.readline())
-        operation = request["operation"]
-        if operation == "select":
-            value = self.server.binding
-        elif operation == "lease":
-            value = self.server.lease
-        else:
-            value = {"loaded_project_count": 1, "max_loaded_projects": 2, "loaded_project_processes": []}
-        self.send(value)
-        if operation == "lease":
-            self.rfile.read(1)
-            self.send(None)
-
-    def send(self, value):
-        self.wfile.write(json.dumps({"result": value}).encode() + b"\n")
-        self.wfile.flush()
 
 
 class SavedSqlProcessTest(unittest.TestCase):
@@ -186,7 +134,7 @@ class SavedSqlProcessTest(unittest.TestCase):
         self.assertEqual([[43]], saved["rows"])
         self.assertEqual(7, UUID(saved["saved_query_id"]).version)
         url = urlsplit(saved["saved_query_url"])
-        self.assertEqual(("example.test", "/anechoic/workbench/Project%20A"), (url.netloc, url.path))
+        self.assertEqual(("example.test", "/anechoic/iwe-console/Project%20A"), (url.netloc, url.path))
         self.assertEqual([str(self.root)], parse_qs(url.query)["project_root"])
         loaded = self.value(False, "query_load", {"reference": saved["saved_query_url"]})
         self.assertEqual((sql, "Bookmark"), (loaded["sql"], loaded["name"]))
@@ -198,10 +146,12 @@ class SavedSqlProcessTest(unittest.TestCase):
 
     def test_shared_links_and_input_refusals(self):
         saved = self.value(True, "query_run", {"sql": "SELECT 7", "save": True, "result_delivery": "inline"})
-        loaded = self.value(True, "query_load", {"reference": saved["saved_query_url"]})
-        self.assertEqual("SELECT 7", loaded["sql"])
-        bad_link = saved["saved_query_url"].replace("example.test", "foreign.test")
-        self.assertEqual("tool_input_invalid", self.call(True, "query_load", {"reference": bad_link})["error"]["code"])
+        url = saved["saved_query_url"]
+        for reference in (url, url.replace("/iwe-console/", "/workbench/")):
+            loaded = self.value(True, "query_load", {"reference": reference})
+            self.assertEqual("SELECT 7", loaded["sql"])
+            bad_link = reference.replace("example.test", "foreign.test")
+            self.assertEqual("tool_input_invalid", self.call(True, "query_load", {"reference": bad_link})["error"]["code"])
         for name, args in (("query_run", {"sql": "SELECT 1", "name": "bad"}),
                            ("query_run", {"sql": "SELECT 1", "save": 1}),
                            ("view_save", {"sql": "SELECT 1", "workspace_id": "x"}),
@@ -244,8 +194,9 @@ class SavedSqlProcessTest(unittest.TestCase):
             opened = self.value(shared, "workspace_open", {}, session=session)
             self.assertEqual(session, opened["workspace_id"])
             self.assertEqual("Project A", opened["project_name"])
-            self.assertEqual({"workspace": [session], "project_root": [str(self.root)]},
-                             parse_qs(urlsplit(opened["workspace_url"]).query))
+            url = urlsplit(opened["workspace_url"])
+            self.assertEqual("/anechoic/iwe-console/Project%20A", url.path)
+            self.assertEqual({"workspace": [session], "project_root": [str(self.root)]}, parse_qs(url.query))
             loaded = self.value(shared, "workspace_get", {"workspace_id": session})
             self.assertEqual(opened, loaded)
             explicit = self.value(shared, "workspace_open", {"session_id": session + "-explicit"}, session=session)
@@ -298,6 +249,14 @@ class SavedSqlProcessTest(unittest.TestCase):
             request = {**self.servers[1].lease["worker_binding"], "instance_id": INSTANCE,
                        "name": "atom_lifecycle_archive", "arguments": args}
             self.assertEqual(("/jobs/lifecycle", request), self.servers[0].requests[-1])
+
+    def test_atom_document_direct_and_shared_binding(self):
+        for shared in (False, True):
+            args = {"ref_id": "AN-S-1@2-draft"}
+            self.assertEqual({"ref_id": "AN-S-1", "body": "text"},
+                             self.value(shared, "iwe_console_atom_document", args))
+            request = {**self.servers[1].lease["worker_binding"], "instance_id": INSTANCE, **args}
+            self.assertEqual(("/jobs/atom-document", request), self.servers[0].requests[-1])
 
     def exercise_views(self, shared):
         session = "views-shared" if shared else "views-direct"

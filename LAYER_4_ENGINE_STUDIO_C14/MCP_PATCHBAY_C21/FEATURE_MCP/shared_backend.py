@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 import os
 from pathlib import Path
+import re
 import sys
 from tempfile import TemporaryDirectory
 from typing import Any
@@ -101,7 +102,7 @@ class SharedBackendGateway:
         socket = Path(self._directory.name).resolve() / "api.sock"
         engine = Path(__file__).resolve().parents[2]
         environment = {**{k: v for k, v in os.environ.items() if k != "PYTHONHOME"}, "PYTHONPATH": str(engine)}
-        module = "IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.shared_backend_process"
+        module = "IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.shared_backend_process"
         command = [sys.executable, "-B", "-P", "-m", module, "--socket", str(socket)]
         source = getattr(self.config, "source_path", self.config)
         if source is not None:
@@ -171,24 +172,37 @@ class SharedBackendGateway:
         return {**status, **self.health_observations.snapshot()}
 
     async def select_project(self, value: object) -> dict[str, Any]:
-        return await self._request("POST", "/selection",
-                                  json={"project_root": value},
-                                  timeout=_operation_timeout(45))
+        selection = await self._request("POST", "/selection", json={"project_root": value},
+                                        timeout=_operation_timeout(45))
+        instance = selection.get("instance_id")
+        if not isinstance(instance, str) or not re.fullmatch(r"[0-9a-f]{64}", instance):
+            raise ToolProtocolError("tool_runtime_failure", "Invalid Shared Backend Project selection")
+        return selection
 
-    async def call_tool(self, name: str, arguments: Any, *, public_base_url: str | None = None) -> dict[str, Any]:
+    async def call_tool(self, name: str, arguments: Any, *, public_base_url: str | None = None,
+                        project_instance_id: str | None = None) -> dict[str, Any]:
         context = current_request_context()
         response = None
         error = None
         project = None
         try:
+            if project_instance_id is None and isinstance(arguments, dict) and "project_root" in arguments:
+                selected = await self.select_project(arguments["project_root"])
+                project_instance_id = selected["instance_id"]
+            headers = {"X-Anechoic-Project-Instance": project_instance_id} if project_instance_id is not None else {}
             succeeded, envelope = await self._exchange("POST", "/tools", json={
                 "name": name, "arguments": arguments,
                 "session_id": context.session_id if context else None,
                 "public_base_url": public_base_url,
-            })
+            }, headers=headers)
             project = envelope.get("project")
             result = envelope.get("result")
             if succeeded and valid_tool_response(result):
+                if (project_instance_id is None or not isinstance(project, dict)
+                        or project.get("instance_id") != project_instance_id):
+                    code = "project_receipt_mismatch"
+                    message = "The API receipt does not identify the selected Project."
+                    raise ToolProtocolError(code, message, {"outcome": "failed", "diagnostics": [f"{code}: {message}"]})
                 response = result["value"]
                 return result
             try:

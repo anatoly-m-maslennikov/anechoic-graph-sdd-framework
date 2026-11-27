@@ -29,7 +29,8 @@ class BetaLifecycleFamilies(unittest.IsolatedAsyncioTestCase):
             make_project(project)
             control = project / "_anechoic_anechoic"
             lens = "_DES/AN-S-2272-DES--declare-evaluation-decision-form.md"
-            source = ENGINE.parent / "_anechoic_anechoic/000_ANECHOIC_framework/LAYER_1_META_ONTOLOGY_C9" / lens
+            source = (ENGINE.parent / "_anechoic_anechoic/000_ANECHOIC_framework/SUPERLAYER_1_METHODOLOGY_SOURCES"
+                      / "LAYER_1_META_ONTOLOGY_C9/__DES" / Path(lens).name)
             shutil.copy2(source, control / ONTOLOGY / lens)
             source = ENGINE.parent / "_anechoic_anechoic/__PROJECT_CONFIG/AN-P-63-ACTION--author-atom-content-before-summary.md"
             shutil.copy2(source, control / "__PROJECT_CONFIG" / source.name)
@@ -168,7 +169,7 @@ class BetaLifecycleFamilies(unittest.IsolatedAsyncioTestCase):
                 "model_class": "Graph/Node//Artifact//SSOT//Prescribed/Content/Atom//Ticket",
                 "status": header["state"]["status"],
                 "tier": header.get("tier"), "priority": header.get("priority")})
-        module = ("FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR."
+        module = ("FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.FEATURE_FORMAL_MODEL_GENERATOR."
                   "manifest_compiler_CS1.manifest_compiler_CS1__tests.functional.model_lean_pilot")
         env = {**os.environ, "PYTHONPATH": str(ENGINE)}
         result = subprocess.run([sys.executable, "-B", "-P", "-m", module, str(control), str(control / ONTOLOGY)],
@@ -209,14 +210,14 @@ class BetaLifecycleFamilies(unittest.IsolatedAsyncioTestCase):
         self.assertEqual([[atom, 1, "active"]], await self._rows(client, atom))
 
     async def _component_contract(self, client):
-        component = await self._call(client, "atom_lifecycle_create_draft", {"newAtom": {
+        reply = await client.call_tool("atom_lifecycle_create_draft", {"newAtom": {
             "template": "component_contract", "container": {"component": "C9"}, "lens": "DES",
-            "body": "## Summary\n\nBeta Component contract canary.\n\n## Guarantee\n\nThe canary works.\n"}}, "completed")
-        component = component["savedDraft"]
-        self.assertEqual([[component["ref_id"], 1, "draft"]], await self._rows(client, component["atom_id"]))
-        await self._call(client, "atom_lifecycle_promote_draft", {"target": {"ref_id": component["ref_id"],
-            "version": 1}, "targetStatus": "ready"}, "completed")
-        self.assertEqual([[component["atom_id"], 1, "ready"]], await self._rows(client, component["atom_id"]))
+            "body": "## Summary\n\nBeta Component contract canary.\n\n## Guarantee\n\nThe canary works.\n"}})
+        result = reply.structured_content
+        self.assertEqual("failed", result["status"], result)
+        self.assertEqual([], result["effects"], result)
+        self.assertEqual("invalid_input", result["errors"][0]["code"])
+        self.assertEqual("Add the Component Contract to the Component Manifest.", result["errors"][0]["message"])
 
     async def _config(self, client, source):
         body = source.read_text(encoding="utf-8").split("---", 2)[2] + "\nBeta config canary.\n"

@@ -14,6 +14,8 @@ from time import sleep
 import httpx2
 from pydantic import BaseModel, ConfigDict
 
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import console_state_path
+
 from .jobs import ENGINE
 from .warm_worker_process import process_environment, stop_process
 
@@ -110,7 +112,7 @@ def database_path(root, storage, manifest_sha256, instance_id, *, local_archives
     if root.resolve(strict=True) != root:
         raise ValueError("project_declarations_stale")
     directory = root
-    for name in (".anechoic_runtime", "workbench", "beta"):
+    for name in (*console_state_path(root).relative_to(root).parts, "beta"):
         directory = directory / name
         directory.mkdir(mode=0o700, exist_ok=True)
         info = directory.lstat()

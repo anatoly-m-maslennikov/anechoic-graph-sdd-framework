@@ -30,9 +30,12 @@ declare_entity(
         name='CODEX_EXTENSION',
         lens_whitelist=['DES', 'DevOps', 'QA', 'SWD'],
         boundaries={
-            'code': {
-                'imports': {'only': []},
-            },
+            'code': {'exports': {'FEATURE_CODEX_EXTENSION__shared': {'private': ['LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_CODEX_EXTENSION/FEATURE_CODEX_EXTENSION__tests']},
+                         'FEATURE_CODEX_EXTENSION__shared.call': None,
+                         'FEATURE_CODEX_EXTENSION__shared.list_resources': None,
+                         'FEATURE_CODEX_EXTENSION__shared.read_resource': None,
+                         'FEATURE_CODEX_EXTENSION__shared.tools': None},
+             'imports': {'only': ['FEATURE_CODEX_EXTENSION__shared']}},
             'io': {
                 'server': {
                     'codex_extension_read_resource': {'outcomes': {

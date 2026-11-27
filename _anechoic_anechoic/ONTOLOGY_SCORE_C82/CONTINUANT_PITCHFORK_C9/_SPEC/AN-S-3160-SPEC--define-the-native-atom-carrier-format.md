@@ -7,9 +7,9 @@ tier: 2
 context:
   lens: SPEC
 state:
-  status: "active"
-  version: 31
-  updated_at: "2026-11-25T22:59:51.523368+00:00"
+  status: active
+  version: 38
+  updated_at: '2026-11-26T18:34:31.644797+00:00'
 ---
 
 ## Summary
@@ -18,7 +18,7 @@ Define the native Atom Carrier format
 
 ## Claim
 
-Each Atom revision has one authoritative Markdown Carrier. It stores a YAML Header followed by Markdown Content. Any additional Carrier follows its applicable declaration and represents the same revision.
+The authoritative Atom Carrier stores a YAML Header followed by Markdown Content. Any additional Carrier follows its applicable declaration and represents the same revision.
 
 Preserve exact IDs, opaque references, authored text, and typed values. The YAML Header carries metadata. Markdown carries Summary and the other Content Properties in their defined sections. Store each property value once at its declared location.
 
@@ -103,19 +103,22 @@ runs joined by hyphens. Preserve the authored Summary.
 
 The Active Tier -1 Project Manifest and any Active Tier -1 Project Goals use the repository root.
 Active Tier 0 SPEC Atoms use their owning root. For Project-owned Tier 0
-Atoms, this is the Project control directory.
+Atoms, this is the Project control directory. A Component's main Solution
+uses Tier 0 and answers the exact revision of its Component Manifest.
 
 The Project Manifest declares the folder layout for Active SPEC Atoms
 in `project.folder_layout.active_spec_by_tier`. Tier 1 uses the declared
 folder in the owning root. The default is `01_TIER_1_ARCHITECTURE/`.
-This Tier contains Applicable Principles at Project scope and Solutions,
-Standards, and Policies at Component scope.
+This Tier contains Applicable Principles at Project scope. At Component
+scope it contains Manifests for child Components, Standards, and Policies.
+The Manifest Header identifies the declaring parent. Component Identity is
+the only required Component Manifest section. Purpose, Component Boundaries,
+and Component Contract are optional.
 
 Active SPEC Atoms at Tier 2 and above use Lens directories in their owning
 root. Prefix the first Lens segment with one underscore. Use plain names
 for sublenses. For example, Lens `DES/DOM` uses `_DES/DOM/` and
 Lens `DES/IO` uses `_DES/IO/`. General SPEC uses `_SPEC/`.
-A Tier 4 Component Manifest uses `_SPEC/` in its parent Component.
 Use the authored Lens in the Header and its final segment as the filename
 Lens token.
 
@@ -135,16 +138,22 @@ The Project Config directory holds configuration files. Keep the repository's `L
     - **Component**, including Project.
     - **Package**.
   - **Custom Relations.** Relation types and inverse names, allowed
-    endpoints, cardinality, and classifications such as transitive
-    and functional.
+    endpoints, cardinality, and Axes such as Transitive
+    and Functional.
 - **Project Workflows.** Local Release and Public Release, with their
   Steps and Actions.
 
 Store Project Custom Model Manifests in `__PROJECT_CONFIG/CUSTOM_MODEL/` with the Project as Container. Admit Active `manifest_node`, `manifest_property`, and `manifest_relation` Templates there. During migration, continue to admit Active `model_manifest` carriers.
 
-Each typed Manifest has one `python anechoic-edsl` fence under `## Formal Manifest`. Use `## Semantics` for meaning when needed; it is optional. C9 SPEC Manifests use normal Tier and Lens placement and retain their canonical Claim scope during migration. Exclude Draft and Archived carriers from active Model admission.
+A Continuant Node may omit its Formal Manifest when its Concern declares containment and its Subject is a Python identifier. For a Node with no formal rules, use `node(Name)` or `node(Name, Base, ...)` if the Concern alone cannot preserve its Python name or bases. Use a class for additional formal rules. Each other typed Manifest has one `python anechoic-edsl` fence under `## Formal Manifest`. A typed Custom Model declaration may use a Concern to locate its Model subject. Use `## Semantics` for meaning when needed; it is optional. Continuant Declarations use DOM/CONT with Declarative Control Flow. Their Header requires one Concern. Use the declared Subject name and its parent Path in the Model tree. The Relation states how the Subject joins that Path. Exclude Draft and Archived carriers from active Model admission.
 
-Attach properties, constraints, and classification axes to their Node
+Use `node.parts` to name a Node’s canonical subparts or link to another
+declared Node. A key prefixed with `=>` links to the target’s canonical
+definition. Use `node.alternatives` to declare the part lists that each
+containment view displays. Use `node.aliases` for alternate names of the
+same canonical Node.
+
+Attach Properties, constraints, and Axes to their Node
 types. Add Node types such as Event Record or Ephemeral when the Project
 extends them. Keep Component and Package Manifests with their owners.
 Keep Project settings in the Project Manifest at the Project root.

@@ -13,7 +13,7 @@ from starlette.responses import JSONResponse
 from starlette.routing import Route
 
 from .API_MIXER_beta_C91__shared import serve, socket_path
-from . import lifecycle, projection, saved_sql
+from . import atom_document, lifecycle, projection, saved_sql
 from .admission import failure, peer
 from .api import LIFECYCLE_TOOLS, PROJECTION_TOOLS, body, descriptors, execute_core
 from .models import JobsHealth, KernelHealth
@@ -122,13 +122,20 @@ class Coordinator:
             if not isinstance(root, str) or not root.strip():
                 return fault("invalid_project_root")
             selected = await self.owner.select(root)
-            if data.name not in self.tools or data.name in selected.tool_blacklist:
+            expected = request.headers.get("X-Anechoic-Project-Instance")
+            if expected is not None and expected != selected.instance_id:
+                return fault("project_declarations_stale")
+            if data.name not in self.tools or any(
+                alias in selected.tool_blacklist for alias in (data.name,
+                    data.name.replace("iwe_console_", "workbench_", 1),
+                    data.name.replace("workbench_", "iwe_console_", 1))
+            ):
                 return fault("tool_unavailable")
             project = {"prefix": selected.project_prefix, "instance_id": selected.instance_id}
             self.known[selected.instance_id] = project
             if len(self.known) > 32:
                 self.known.pop(next(iter(self.known)))
-            async with self.owner.lease(selected, start=data.name not in {"workbench_status", "workbench_abort"}) as lease:
+            async with self.owner.lease(selected, start=data.name not in {"iwe_console_status", "iwe_console_abort", "workbench_status", "workbench_abort"}) as lease:
                 result = await self.execute(selected, lease, data.name, arguments, data.public_base_url, root, data.session_id)
                 await self.revalidate(selected)
             if "error" in result:
@@ -155,9 +162,13 @@ class Coordinator:
         unavailable = await bound_health(selected, lease)
         if unavailable:
             return unavailable
+        if name == atom_document.NAME:
+            return await atom_document.invoke(arguments, lease.orchestrator_socket,
+                                              lease.worker_binding.model_dump(), selected.instance_id)
         if name == "query_schema":
             return await read_schema(lease.database_socket, selected.instance_id, arguments)
-        configured = selected.parameters.get("runtime", {}).get("workbench", {}).get("public_url")
+        runtime = selected.parameters.get("runtime", {})
+        configured = runtime.get("iwe_console", runtime.get("workbench", {})).get("public_url")
         if not isinstance(configured, str):
             configured = None
         context = saved_sql.LinkContext(project_name=selected.project_name, base=base, root=root, configured_url=configured)

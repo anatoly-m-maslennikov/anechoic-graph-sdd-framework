@@ -14,7 +14,7 @@ MCP = Path(__file__).resolve().parents[1]
 TOOLS = MCP.parents[1] / "FEATURE_PROGRAMMATIC" / "FEATURE_TOOLS"
 FIXTURES = Path(__file__).resolve().parent
 
-shared_project_pool = import_module("IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.shared_project_pool")
+shared_project_pool = import_module("IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.shared_project_pool")
 shared_pool_fixtures = import_module(".shared_pool_fixtures", __package__)
 ProjectCapacityError = shared_project_pool.ProjectCapacityError
 SharedProjectPool = shared_project_pool.SharedProjectPool

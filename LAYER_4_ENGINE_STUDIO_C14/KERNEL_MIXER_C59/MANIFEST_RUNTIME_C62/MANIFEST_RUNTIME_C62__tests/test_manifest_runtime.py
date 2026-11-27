@@ -31,11 +31,11 @@ def _runtime_fixture(root):
     source = ROOT / control.name
     owner = Path("ONTOLOGY_SCORE_C82")
     ontology = owner / "CONTINUANT_PITCHFORK_C9"
-    component = Path("_SPEC/AN-S-3039-SPEC-COMPONENT_MANIFEST--declare-engine-studio.md")
-    meta = owner / "_SPEC/AN-S-3040-SPEC-COMPONENT_MANIFEST--declare-meta-ontology.md"
+    component = Path("01_TIER_1_ARCHITECTURE/AN-S-3039-SPEC-COMPONENT_MANIFEST--declare-engine-studio.md")
+    meta = owner / "01_TIER_1_ARCHITECTURE/AN-S-3040-SPEC-COMPONENT_MANIFEST--declare-meta-ontology.md"
     shutil.copyfile(ROOT / "AN-S-3037-SPEC-PROJECT_MANIFEST--declare-anechoic.md",
                     root / "AN-S-3037-SPEC-PROJECT_MANIFEST--declare-anechoic.md")
-    for relative in (component, Path("_SPEC/AN-S-4909-SPEC-COMPONENT_MANIFEST--declare-ontology-score.md"), meta):
+    for relative in (component, Path("01_TIER_1_ARCHITECTURE/AN-S-4909-SPEC-COMPONENT_MANIFEST--declare-ontology-score.md"), meta):
         destination = control / relative
         destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(source / relative, destination)
@@ -69,8 +69,7 @@ def _runtime_observers():
             if module.endswith((".model_host_CS2.host", ".structure_host_CS3.host")):
                 processes.append(process)
             if module == (
-                "FEATURE_PROGRAMMATIC.FEATURE_MODEL."
-                "FEATURE_FORMAL_MODEL_GENERATOR.manifest_compiler_CS1.compiler"
+                "FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.compile_project__pub"
             ):
                 builders.append(process)
                 communicate = process.communicate
@@ -145,7 +144,7 @@ class ManifestRuntimeTests(unittest.TestCase):
         subprocess.run([sys.executable, "-B", "-c", """
 from pathlib import Path
 import sys
-from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.FEATURE_MODEL_VALIDATION__shared import open_admitted_model
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.FEATURE_MODEL_VALIDATION.FEATURE_MODEL_VALIDATION__shared import open_admitted_model
 generation, fingerprint, digest = Path.cwd(), *sys.argv[1:]
 with (open_admitted_model(generation, fingerprint, digest) as first,
       open_admitted_model(generation, fingerprint, digest) as second):

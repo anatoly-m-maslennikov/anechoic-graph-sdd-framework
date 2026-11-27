@@ -1,0 +1,36 @@
+def resolve_native_project(
+    project_root: str | Path, control_root: str | Path, *,
+    validate_manifest: Callable[[dict[str, object], str], ManifestIdentity],
+) -> NativeProjectSelection:
+    """Validate the Manifest with the caller's compiled model and Project container."""
+    root = _project_root(project_root)
+    try:
+        relative = Path(control_root)
+        if (len(relative.parts) != 1 or str(control_root) != relative.as_posix()
+                or not relative.name.startswith(".anechoic_") or relative.name == ".anechoic_"):
+            raise ProjectSelectionError("Native control root must name one explicit direct Project child")
+        control = root / relative
+        reader = ReadContext(roots=[str(control)], limits=dict(CEILINGS))
+        sources = _manifest_carriers(reader, control)
+        selected = next(sources, None)
+        if selected is None or next(sources, None) is not None:
+            raise ProjectSelectionError("Expected one Active Tier -1 Project Manifest at Project root")
+        path, carrier = selected
+        fields, component_id = _manifest_inputs(path, carrier)
+        manifest = validate_manifest(fields, component_id)
+        parameters = getattr(manifest, "parameters", fields.get("parameters", {}))
+        if not isinstance(parameters, dict):
+            raise ProjectSelectionError("Validated Project Manifest parameters must be a mapping")
+        if relative.name != f".anechoic_{manifest.name.casefold()}":
+            raise ProjectSelectionError("Project Manifest name contradicts the native control root")
+        if not str(fields["atom_id"]).startswith(f"{manifest.prefix}-S-"):
+            raise ProjectSelectionError("Project Manifest prefix contradicts its Atom ID")
+        if reader.currentness()["state"] != "unchanged":
+            raise ProjectSelectionError("Project carriers changed during selection")
+        return NativeProjectSelection(root, control, relative, _instance_id(root, relative),
+                                      manifest.name, manifest.prefix, path, str(fields["ref_id"]),
+                                      reader.fingerprints[str(path)], deepcopy(parameters))
+    except ProjectSelectionError:
+        raise
+    except (OSError, RuntimeError, TypeError, ValueError) as error:
+        raise ProjectSelectionError("Native Project Manifest is unavailable, invalid, or unsafe") from error

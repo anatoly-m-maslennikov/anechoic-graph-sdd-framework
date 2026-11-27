@@ -67,6 +67,7 @@ class PrepareLocalTests(unittest.TestCase):
         (self.root / _MANIFEST).write_text(_CLAIM, encoding="utf-8")
         for name in ("edit.txt", "delete.txt", "unrelated.txt"):
             (self.root / name).write_text("base", encoding="utf-8")
+        (self.root / "version.toml").write_text('[framework]\nversion = "1.2.3"\n')
         _git(self.root, "init", "--quiet", "--template=")
         _git(self.root, "config", "user.name", "Anechoic Test")
         _git(self.root, "config", "user.email", "anechoic-test@example.invalid")
@@ -125,6 +126,32 @@ class PrepareLocalTests(unittest.TestCase):
         self.assertEqual(_CLAIM, (self.root / _MANIFEST).read_text(encoding="utf-8"))
         self.assertEqual(source_head, _git(self.root, "rev-parse", "HEAD"))
         self.assertEqual(source_index, (self.root / ".git/index").read_bytes())
+
+    def test_no_port_keeps_manifest_and_base_history_in_private_checkout(self):
+        from unittest.mock import patch
+        from LAYER_2_LOCAL_RELEASE_C63.LAYER_2_LOCAL_RELEASE_C63__shared import prepare_local
+
+        ancestor = self.base
+        (self.root / "history.txt").write_text("base history")
+        _git(self.root, "add", "history.txt")
+        _git(self.root, "commit", "--quiet", "-m", "base descendant")
+        self.base = _git(self.root, "rev-parse", "HEAD").decode().strip()
+        (self.root / "edit.txt").write_text("requested edit")
+        (self.root / "unrelated.txt").write_text("unrelated dirty")
+        installed = self.root / ".anechoic_runtime/simple_local_release/package/version.toml"
+        installed.parent.mkdir(parents=True)
+        installed.write_text('[framework]\nversion = "1.2.3.7"\n')
+        with patch.object(Path, "home", return_value=self.scratch):
+            result = prepare_local(self.root, run_id="no-port", base=self.base, changed_paths=["edit.txt"], port=None)
+        checkout = Path(result["project_root"])
+        self.assertEqual(_CLAIM, (checkout / _MANIFEST).read_text())
+        self.assertIn('"1.2.3.8"', (checkout / "version.toml").read_text())
+        self.assertIn('"1.2.3"', (self.root / "version.toml").read_text())
+        self.assertEqual(self.base, _git(checkout, "rev-parse", "HEAD^").decode().strip())
+        self.assertEqual(ancestor, _git(checkout, "rev-parse", "HEAD^^").decode().strip())
+        self.assertEqual(b"base", (checkout / "unrelated.txt").read_bytes())
+        self.assertEqual("requested edit", (checkout / "edit.txt").read_text())
+        self.assertEqual(b"", _git(checkout, "status", "--porcelain"))
 
     def test_refuses_unsafe_scope_and_existing_stage(self):
         (self.root / "link").symlink_to(self.root / "edit.txt")

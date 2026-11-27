@@ -45,7 +45,7 @@ class ReleaseImagesTests(ReleaseImageFixture):
                 baseline = updated
 
     def test_registry_identity_uses_backend_asset(self):
-        expected = "LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/tool_registry.json"
+        expected = "LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_BACKEND/tool_registry.json"
         self.assertEqual(expected, images.TOOL_REGISTRY)
         manager = self.make_manager()
         before = manager.identity(use_packaged_assets=True)

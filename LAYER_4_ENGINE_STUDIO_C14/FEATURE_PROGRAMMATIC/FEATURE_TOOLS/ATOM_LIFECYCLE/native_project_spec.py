@@ -13,14 +13,23 @@ from .source import bind_query_reader
 PROJECT_SPEC_TIERS = {'project_contract': (0,), 'axiom': (0,), 'applicable_principle': (1, 2)}
 
 
+def project_spec_template(template, validate):
+    model = getattr(validate, '__self__', None)
+    if model is not None and hasattr(model, 'project_spec_template'):
+        return model.project_spec_template(template)
+    tiers = PROJECT_SPEC_TIERS.get(template)
+    return (template, tiers[-1], True) if tiers else None
+
+
 def validate_project_spec(header, validate, body=None):
     view = native_header_view(header)
     context = view['context']
     template = context.get('template')
-    tiers = PROJECT_SPEC_TIERS.get(template)
     container = context.get('container')
-    if (tiers is None or container != {'component': 'C00'} or
-            type(context.get('tier')) is not int or context['tier'] not in tiers):
+    tiers = PROJECT_SPEC_TIERS.get(template)
+    model = getattr(validate, '__self__', None)
+    if (container != {'component': 'C00'} or type(context.get('tier')) is not int
+            or (model is None and (tiers is None or context['tier'] not in tiers))):
         raise common.InputError('newAtom', 'Project SPEC requires its declared Tier and Project C00 container.')
     try:
         validate(template, header, 'C00', body)
@@ -28,22 +37,34 @@ def validate_project_spec(header, validate, body=None):
         raise common.InputError('newAtom', f'Project SPEC does not satisfy the compiled Model: {error}') from error
 
 
-def create_project_spec(selection, values, validate, previous_capture=None):
-    from .native_draft import _first_spec_write_lock, _summary
+def _project_spec_preflight(values, validate):
     if (not isinstance(values, dict) or set(values) - {'tier'} != {'template', 'container', 'lens', 'body'}
-            or values.get('template') not in PROJECT_SPEC_TIERS or values.get('container') != {'component': 'C00'}
+            or not isinstance(values.get('template'), str) or values.get('container') != {'component': 'C00'}
             or not isinstance(values.get('body'), str) or not isinstance(values.get('lens'), str)):
         raise common.InputError('newAtom', 'Supply a Project SPEC template, Project C00, Lens, and Markdown body.')
-    tiers = PROJECT_SPEC_TIERS[values['template']]
-    tier = values.get('tier', tiers[-1])
-    if type(tier) is not int or tier not in tiers:
+    try:
+        declaration = project_spec_template(values['template'], validate)
+    except ValueError as error:
+        raise common.InputError('newAtom', str(error)) from error
+    if declaration is None or not declaration[2]:
+        raise common.InputError('newAtom', 'The compiled Model does not enable this Project SPEC Template for creation.')
+    tiers = PROJECT_SPEC_TIERS.get(values['template'], (declaration[1],))
+    tier = values.get('tier', declaration[1])
+    model = getattr(validate, '__self__', None)
+    if type(tier) is not int or (model is None and tier not in tiers):
         raise common.InputError('tier', 'Tier must match the selected Project SPEC template.')
-    if values['template'] == 'axiom' and values['lens'] != 'SPEC':
+    if model is None and values['template'] == 'axiom' and values['lens'] != 'SPEC':
         raise common.InputError('lens', 'Axiom requires the SPEC Lens.')
     try:
         spec_lens_directories(values['lens'])
     except ValueError as error:
         raise common.InputError('lens', 'Supply a valid Lens.') from error
+    return tier
+
+
+def create_project_spec(selection, values, validate, previous_capture=None):
+    from .native_draft import _first_spec_write_lock, _summary
+    tier = _project_spec_preflight(values, validate)
     summary = _summary(values['body'])
     if (not selection.root.is_absolute() or not selection.control_root.is_relative_to(selection.root)
             or selection.manifest_path.parent not in {selection.root, selection.control_root}):
@@ -69,4 +90,6 @@ def create_project_spec(selection, values, validate, previous_capture=None):
         with bind_query_reader(None):
             outcome = common.write_destination(selection.root, path, raw)
         data = {} if outcome.errors else {'savedDraft': common.saved(selection, path, atom_id, f'{atom_id}@1-draft', 1, 'Draft')}
+        if data:
+            data['savedDraft']['updated_at'] = header['state']['updated_at']
         return common.result(effects=outcome.effects, errors=outcome.errors, **data)

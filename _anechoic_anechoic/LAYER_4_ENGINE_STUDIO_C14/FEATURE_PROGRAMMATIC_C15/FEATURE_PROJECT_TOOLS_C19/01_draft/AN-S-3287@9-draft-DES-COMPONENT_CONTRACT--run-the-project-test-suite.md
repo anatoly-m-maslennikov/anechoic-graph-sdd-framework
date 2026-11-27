@@ -93,9 +93,14 @@ TypeScript source. Use the locked frontend parser for web functions.
 ## Host functional checks
 
 Use `--phase functional` to run the required host Modules configured in
-`tool.anechoic.test_suite.functional_test_modules`. Run them in fresh
-interpreters. Report the selected Modules and results through the normal
-Test Suite output.
+`tool.anechoic.test_suite.functional_test_modules`. Run them locally in fresh
+interpreters from their locked virtual environments.
+
+Full runs the required selection. Fast runs every required Module in a Test
+Package with an observed failure in the last seven days. It also runs all
+required Modules in 10% of the remaining Test Packages, rounded up. Order the
+sample by a hash of the Run ID and Package path. Record and reuse the Package
+selection on continuation. Keep reports for seven days.
 
 Refuse empty, invalid, duplicate, or undiscovered selections.
 
@@ -113,3 +118,7 @@ Run image tests against that candidate. Run the canary only after the image test
 candidate, initialize MCP, and run a representative query. Use MCP ping
 when the Project excludes Run Query. Report the loopback MCP endpoint
 on success and clean up the disposable candidate resources.
+
+Keep checks that can run locally in Functional. Fast image checks cover the
+mounted Project, packaged Workbench, and process supervision. The Fast
+canary copies the live Project inputs and Manifest. Its copy omits Archives.

@@ -10,6 +10,51 @@ from unittest.mock import patch
 from .WORKERS_beta_C69__tests__shared import generation_fixture
 
 
+COMPONENT_MANIFEST = """---
+atom_family: SPEC
+atom_id: AN-S-3039
+container:
+  component: C00
+tier: 4
+context:
+  template: component_manifest
+  lens: SPEC
+state:
+  status: active
+  version: 4
+  updated_at: '2026-11-23T13:46:18.273025+00:00'
+---
+
+## Summary
+
+Declare Engine Studio
+
+## Purpose
+
+Consume Environments. DevOps builds Engine Studio.
+
+This Component delegates implementation to its child Components.
+
+## Formal manifest
+
+```python
+from anechoic.formal_claims import declare_entity
+from anechoic.model import ComponentManifest
+
+declare_entity(
+    entity_name='Component Manifest',
+    instance=ComponentManifest(
+        component_id='C14',
+        name='Engine Studio',
+        layer=4,
+        lens_whitelist=['DES', 'DevOps', 'QA', 'SPEC', 'SWD'],
+        boundaries={'code': {'imports': [], 'exports': {}}},
+    ),
+)
+```
+"""
+
+
 def _build(binding, output, accepted_model=None):
     request = {"binding": binding, "reuse": None, "model_source": {"accepted_model": accepted_model}}
     return run([sys.executable, "-B", "-P", "-m", "WORKERS_beta_C69.WORKERS_beta_C69__shared",
@@ -50,3 +95,31 @@ class ModelStartupTests(unittest.TestCase):
         self.assertEqual("build", reply["ingestion_failure"]["source"])
         self.assertEqual("invalid_model_source", reply["model_diagnostics"][0]["code"])
         self.assertIn("No active Model Claims", reply["model_diagnostics"][0]["message"])
+
+    def test_malformed_component_blocks_managed_spec_staging(self):
+        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import prepare_generation_snapshot
+        from ..spec_staging import _stage_spec_rows
+        from ..WORKERS_beta_C69__shared import _compile_ingested
+        with TemporaryDirectory() as directory:
+            binding, output, _ = generation_fixture(directory)
+            control = Path(binding['root']) / binding['control_root']
+            component = control / '01_TIER_1_ARCHITECTURE/AN-S-3039-SPEC-COMPONENT_MANIFEST--declare-engine-studio.md'
+            component.parent.mkdir()
+            component.write_text(COMPONENT_MANIFEST)
+            baseline = _build(binding, output)
+            self.assertEqual(0, baseline.returncode, baseline.stderr)
+            structure = json.loads((output / 'structure.json').read_bytes())
+            self.assertIn('C14', structure['components'])
+            _, _, inputs = prepare_generation_snapshot(binding, include_model_inputs=True, include_spec_rows=True)
+            stage = Path(directory).resolve() / 'staged'
+            stage.mkdir()
+            staged = {**inputs, 'snapshot_id': 'fixture-snapshot'}
+            receipt, compiled, _, _ = _compile_ingested(binding, stage, staged, {'accepted_model': None})
+            self.assertIn('C14', compiled['components'])
+            self.assertEqual(binding['manifest_sha256'], receipt['manifest_sha256'])
+            component.write_text(COMPONENT_MANIFEST.replace(
+                'context:\n  template: component_manifest\n  lens: SPEC', 'context: malformed'))
+            _, _, inputs = prepare_generation_snapshot(binding, include_model_inputs=True, include_spec_rows=True)
+            self.assertTrue(inputs['structure_issues'])
+            with self.assertRaisesRegex(ValueError, 'Structure source ingestion failed'):
+                _stage_spec_rows(binding, inputs, {'socket': '/tmp/unused', 'instance_id': 'i'})

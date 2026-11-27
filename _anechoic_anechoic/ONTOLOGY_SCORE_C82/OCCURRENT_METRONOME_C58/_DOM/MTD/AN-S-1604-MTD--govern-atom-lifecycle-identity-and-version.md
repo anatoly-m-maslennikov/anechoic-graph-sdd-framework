@@ -7,9 +7,9 @@ tier: 2
 context:
   lens: DOM/MTD
 state:
-  status: "active"
-  version: 38
-  updated_at: "2026-11-25T22:13:47.488555+00:00"
+  status: active
+  version: 39
+  updated_at: '2026-11-27T01:04:20.461163+00:00'
 ---
 ## Summary
 
@@ -29,7 +29,15 @@ A Current Atom update composes creation of a new Draft, archival of its Current 
 
 A Draft can leave Content incomplete and always carries its Atom ID. Check the complete applicable Atom requirements before publishing. A finalized Spec Draft becomes Ready. It becomes Active when implementation starts and Archived when retired.
 
+Validate a Project SPEC against its compiled Template in the destination
+Status before publishing or activating it.
+
 A Ticket moves from Draft to Backlog, then to In Queue. Work in progress keeps Status In Queue. Planning Tasks finish Done or Canceled. Issues finish Resolved or Canceled. A standalone Asset can become Complete.
+
+A Project-defined Current Ticket Status can follow Backlog or a
+working Status. It can lead to In Queue, another project-defined
+working Status, or the applicable terminal Status. Ordinary
+containment and publication rules still apply.
 
 Apply the applicable replacement rule when archiving a replaced Atom.
 

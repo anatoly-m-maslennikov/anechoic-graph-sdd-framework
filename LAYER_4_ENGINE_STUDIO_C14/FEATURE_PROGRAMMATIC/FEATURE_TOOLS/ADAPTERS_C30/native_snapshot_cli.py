@@ -17,6 +17,7 @@ from .native_carrier_inventory import archive_versions as scan_archive_versions,
 from .native_carrier_placement__pub import ARCHIVE_DIRECTORY, TICKET_DIRECTORY, project_goal_filename
 from .native_generation_snapshot import row_summary, snapshot
 from .model_capture import model_inputs
+from .native_status_domains import status_domains
 from .native_source_rows__pub import (
     NativeCapture,
     _native_carrier_hashes,
@@ -119,8 +120,9 @@ def _archive_directories(selection, directories):
 
 def _partition_archived(capture):
     foreground = NativeCapture([], [], capture.errors, ingestion_issues=capture.ingestion_issues,
-                               carrier_hashes=dict(capture.carrier_hashes))
-    archived = NativeCapture([], [], {})
+                               carrier_hashes=dict(capture.carrier_hashes), status_domains=capture.status_domains,
+                               classified_templates=capture.classified_templates)
+    archived = NativeCapture([], [], {}, status_domains=capture.status_domains)
     for row, edge in zip(capture.atoms, capture.containment, strict=True):
         target = archived if row["status_group"] == "Archived" else foreground
         target.atoms.append(row)
@@ -133,7 +135,7 @@ def _partition_archived(capture):
 
 def prepare_generation_snapshot(
     binding, *, include_hashes=False, watcher_guarded=False, archive_stage=None, archive_roots=(),
-    include_model_inputs=False, archive_versions=None,
+    include_model_inputs=False, archive_versions=None, include_spec_rows=False, domains=None,
 ):
     """Capture carriers once and recheck their versions and membership before use.
 
@@ -148,28 +150,37 @@ def prepare_generation_snapshot(
     deferred = set() if archive_stage == "foreground" else None
     directories = _archive_directories(selection, archive_roots) if archive_stage == "archive" else None
     capture = capture_native(selection, reader=reader, defer_currentness=True,
-                             include_content_properties="archive-summary",
-                             defer_archives=deferred, archive_roots=directories)
+                             include_content_properties="summary",
+                             defer_archives=deferred, archive_roots=directories, domains=domains)
     foreground, archived = _partition_archived(capture) if deferred is not None else (capture, None)
     if archive_versions is not None and deferred is not None:
         archive_versions.update(scan_archive_versions(startup_reader(selection.root, archive=True), deferred, archived.atoms,
                                                       selection.project_prefix))
     manifest_path = selection.manifest_path.relative_to(selection.root).as_posix()
 
-    def finish(endpoints):
-        result = snapshot(binding, foreground, endpoints, manifest_path=manifest_path)
+    def finish(endpoints, admitted_domains=None):
+        final_foreground, final_archived = foreground, archived
+        if admitted_domains is not None and admitted_domains != (domains or status_domains({})):
+            recheck = startup_reader(selection.root, archive=archive_stage == "archive")
+            final = capture_native(selection, reader=recheck, defer_currentness=True,
+                                   include_content_properties="summary", domains=admitted_domains,
+                                   defer_archives=set() if deferred is not None else None, archive_roots=directories)
+            if final.carrier_hashes != capture.carrier_hashes or recheck.currentness()["state"] != "unchanged":
+                raise NativeSnapshotChanged("Native Project carriers changed during generation")
+            final_foreground, final_archived = _partition_archived(final) if deferred is not None else (final, None)
+        result = snapshot(binding, final_foreground, endpoints, manifest_path=manifest_path)
         if not watcher_guarded:
             reader.started = monotonic()
             if reader.currentness()["state"] != "unchanged":
                 raise NativeSnapshotChanged("Native Project carriers changed during generation")
         if deferred is not None:
-            return (result, foreground.carrier_hashes,
+            return (result, final_foreground.carrier_hashes,
                     sorted(path.relative_to(selection.root).as_posix() for path in deferred),
-                    snapshot(binding, archived, endpoints, manifest_path=manifest_path), archived.carrier_hashes)
-        return (result, foreground.carrier_hashes) if include_hashes else result
+                    snapshot(binding, final_archived, endpoints, manifest_path=manifest_path), final_archived.carrier_hashes)
+        return (result, final_foreground.carrier_hashes) if include_hashes else result
 
     result = (None if archive_stage == "archive" else _graph_config(selection)), finish
-    return (*result, model_inputs(selection, foreground)) if include_model_inputs else result
+    return (*result, model_inputs(selection, foreground, include_spec_rows=include_spec_rows)) if include_model_inputs else result
 
 
 def _ticket_paths(selection, paths):
@@ -214,10 +225,10 @@ def _ticket_versions(root, relatives):
     return versions
 
 
-def _capture_delta(binding, selection, relatives, endpoints, *, include_hashes, ticket_only, manifest_admitted=False):
+def _capture_delta(binding, selection, relatives, endpoints, *, include_hashes, ticket_only, manifest_admitted=False, domains=None):
     paths_before = _ticket_versions(selection.root, relatives).keys()
     capture = capture_native(selection, previous=NativeCapture([], [], {}), paths=relatives,
-                             manifest_admitted=manifest_admitted)
+                             manifest_admitted=manifest_admitted, include_content_properties="summary", domains=domains)
     versions = _ticket_versions(selection.root, relatives)
     observed = {path: version for path, version in capture.versions.items()
                 if path != str(selection.manifest_path)}
@@ -245,18 +256,18 @@ def _capture_delta(binding, selection, relatives, endpoints, *, include_hashes, 
     return result
 
 
-def capture_ticket_delta(binding, paths, endpoints, *, include_hashes=False, manifest_admitted=False):
+def capture_ticket_delta(binding, paths, endpoints, *, include_hashes=False, manifest_admitted=False, domains=None):
     """Capture only requested Ticket files and retain absent paths for deletion."""
     selection = _selection(binding, manifest_admitted=manifest_admitted)
     return _capture_delta(binding, selection, _ticket_paths(selection, paths), endpoints,
-                          include_hashes=include_hashes, ticket_only=True, manifest_admitted=manifest_admitted)
+                          include_hashes=include_hashes, ticket_only=True, manifest_admitted=manifest_admitted, domains=domains)
 
 
-def capture_carrier_delta(binding, paths, endpoints, *, include_hashes=False, manifest_admitted=False):
+def capture_carrier_delta(binding, paths, endpoints, *, include_hashes=False, manifest_admitted=False, domains=None):
     """Capture addressed canonical carriers and retain absent paths for deletion."""
     selection = _selection(binding, manifest_admitted=manifest_admitted)
     return _capture_delta(binding, selection, _carrier_paths(selection, paths), endpoints,
-                          include_hashes=include_hashes, ticket_only=False, manifest_admitted=manifest_admitted)
+                          include_hashes=include_hashes, ticket_only=False, manifest_admitted=manifest_admitted, domains=domains)
 
 
 def _graph_config(selection):
@@ -265,10 +276,12 @@ def _graph_config(selection):
     path = selection.manifest_path
     fields, _ = manifest_inputs(path, parse_carrier(raw, path))
     config = fields.get("parameters", {})
-    for key in ("runtime", "workbench"):
-        if not isinstance(config, dict):
-            raise ValueError("Invalid runtime Project settings")
-        config = config.get(key, {})
+    if not isinstance(config, dict):
+        raise ValueError("Invalid runtime Project settings")
+    config = config.get("runtime", {})
+    if not isinstance(config, dict):
+        raise ValueError("Invalid import graph Project settings")
+    config = config.get("iwe_console", config.get("workbench", {}))
     if not isinstance(config, dict):
         raise ValueError("Invalid import graph Project settings")
     graph = config.get("import_graph", {})

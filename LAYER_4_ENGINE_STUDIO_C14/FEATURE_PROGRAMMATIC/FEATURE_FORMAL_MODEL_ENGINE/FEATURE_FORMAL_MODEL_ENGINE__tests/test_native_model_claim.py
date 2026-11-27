@@ -24,6 +24,9 @@ class NativeModelClaimTests(unittest.TestCase):
         self.assertEqual('Text\n\n### Details\n\n- Item', purpose)
         self.assertEqual('AN-C-14', fields['component_id'])
         self.assertEqual(fields, parse_component_manifest_fields(body))
+        short = formal.replace('from anechoic.formal_claims import declare_entity\n', '').replace(
+            'declare_entity(entity_name="Component Manifest", instance=', '').replace('None))', 'None)')
+        self.assertEqual(fields, parse_component_manifest_fields(short))
         self.assertIsNone(parse_component_manifest(formal)[1])
         self.assertIsNone(parse_component_manifest('## Purpose\n\n' + formal)[1])
         legacy = '## Claim\n\n### Component ID\n\nAN-C-14\n\n### Name\n\nExample\n'
@@ -32,7 +35,9 @@ class NativeModelClaimTests(unittest.TestCase):
         invalid = (body + '\n## Purpose\nAgain\n', body + '\n' + formal,
                    formal + '\n## Claim\n', formal.replace('## Formal manifest', '### Formal manifest'),
                    formal.replace('```python', '```text'), formal + '\n```python\npass\n```\n',
-                   formal.replace('name="Example"', 'name=load_name()'))
+                   formal.replace('name="Example"', 'name=load_name()'),
+                   short.replace('from anechoic.model import ComponentManifest\n', ''),
+                   short.replace('name="Example"', 'name=load_name()'))
         for value in invalid:
             with self.subTest(value=value), self.assertRaises(ValueError):
                 parse_component_manifest(value)
@@ -242,30 +247,39 @@ from anechoic.formal_claims import declare_relation
 
 declare_relation(
     relation_name="CARRIES",
-    source_endpoint={"level": "model_entities", "classification_axis": True},
+    source_endpoint={"level": "model_entities", "axis": True},
     target_endpoint={"level": "instances", "ephemeral": False},
 )
 '''
         result = parse_native_model_claim(claim)
-        self.assertIs(result["arguments"]["source_endpoint"]["classification_axis"], True)
+        self.assertIs(result["arguments"]["source_endpoint"]["axis"], True)
         self.assertIs(result["arguments"]["target_endpoint"]["ephemeral"], False)
+        legacy = claim.replace('"axis": True', '"classification_axis": True')
+        self.assertEqual(result["arguments"], parse_native_model_claim(legacy)["arguments"])
+        duplicate = claim.replace('"axis": True', '"axis": True, "classification_axis": True')
+        with self.assertRaisesRegex(NativeModelClaimError, "duplicate axis"):
+            parse_native_model_claim(duplicate)
 
-    def test_relation_classifications_require_trimmed_nonempty_mappings(self):
+    def test_relation_axes_require_trimmed_nonempty_mappings(self):
         prefix = ('from anechoic.formal_claims import declare_relation\n'
                   'declare_relation(relation_name="R", source_endpoint={}, target_endpoint={}')
-        metadata = ', inverse_alias="R_INVERSE", classifications={"Axis": "Value"}, inverse_classifications={"Axis": "Other"}'
+        metadata = ', inverse_alias="R_INVERSE", axes={"Axis": "Value"}, inverse_axes={"Axis": "Other"}'
         arguments = parse_native_model_claim(prefix + metadata + ')')["arguments"]
-        self.assertEqual({"Axis": "Value"}, arguments["classifications"])
-        self.assertEqual({"Axis": "Other"}, arguments["inverse_classifications"])
-        self.assertNotIn("classifications", parse_native_model_claim(prefix + ')')["arguments"])
-        for field in ("classifications", "inverse_classifications"):
+        self.assertEqual({"Axis": "Value"}, arguments["axes"])
+        self.assertEqual({"Axis": "Other"}, arguments["inverse_axes"])
+        self.assertNotIn("axes", parse_native_model_claim(prefix + ')')["arguments"])
+        legacy = metadata.replace('inverse_axes', 'inverse_classifications').replace(' axes=', ' classifications=')
+        self.assertEqual(arguments, parse_native_model_claim(prefix + legacy + ')')["arguments"])
+        with self.assertRaisesRegex(NativeModelClaimError, "duplicate axes"):
+            parse_native_model_claim(prefix + metadata + ', classifications={"Axis": "Value"})')
+        for field in ("axes", "inverse_axes"):
             for value in ('{}', '[]', '{"": "Value"}', '{" Axis": "Value"}',
                           '{"Axis": ""}', '{"Axis": " Value"}', '{"Axis": 1}'):
                 claim = prefix + f', inverse_alias="R_INVERSE", {field}={value})'
                 with self.subTest(field=field, value=value), self.assertRaises(NativeModelClaimError):
                     parse_native_model_claim(claim)
         with self.assertRaisesRegex(NativeModelClaimError, "requires inverse_alias"):
-            parse_native_model_claim(prefix + ', inverse_classifications={"Axis": "Value"})')
+            parse_native_model_claim(prefix + ', inverse_axes={"Axis": "Value"})')
 
     def test_legacy_claim_is_identified_for_existing_reader(self):
         self.assertIsNone(parse_native_model_claim('property_rule(address="Atom.Name", values="1")'))

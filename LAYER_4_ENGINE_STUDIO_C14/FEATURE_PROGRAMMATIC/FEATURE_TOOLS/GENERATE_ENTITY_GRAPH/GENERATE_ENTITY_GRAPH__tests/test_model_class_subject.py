@@ -28,16 +28,20 @@ class ModelClassSubjectTests(unittest.TestCase):
                 bindings = class_bindings([carrier(1, subject, name)])
                 self.assertEqual(local, bindings['Element'][0][0])
 
-    def test_double_slash_relation_and_nonclass_selectors_are_not_classes(self):
+    def test_declared_relation_and_format_addresses_keep_their_paths(self):
+        for address, name in [('Relation//RUNS', 'RUNS'), ('Format//markdown', 'markdown')]:
+            with self.subTest(address=address):
+                self.assertEqual(address, model_class_target(f'ANECHOIC_MODEL <+ {address}', name))
+
+    def test_incomplete_or_mismatched_class_addresses_are_rejected(self):
         for subject, name in [
-            ('ANECHOIC_MODEL <+ Relation//RUNS', 'RUNS'),
-            ('ANECHOIC_MODEL <+ Format//markdown', 'markdown'),
             ('ANECHOIC_MODEL <+ Node//Continuant//', 'Continuant'),
             ('ANECHOIC_MODEL <+ Node//Continuant', 'Different'),
             ('ANECHOIC_STRUCTURE <+ Node//Continuant', 'Continuant'),
         ]:
             with self.subTest(subject=subject):
                 self.assertIsNone(model_class_target(subject, name))
+
     def test_component_qualified_and_entity_agree(self):
         for subject,target in [('ANECHOIC_MODEL <+ CFEL <+ Element','Element'),('ANECHOIC_MODEL <+ Element','Element'),('ANECHOIC_MODEL <+ Node/Element','Node/Element')]:
             with self.subTest(subject=subject):

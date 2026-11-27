@@ -60,7 +60,7 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
 
 
     def test_workbench_node_dependencies_are_not_packaged(self):
-        frontend = self.root / "LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND"
+        frontend = self.root / "LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_FRONTEND"
         dependencies = frontend / "node_modules/.bin"
         dependencies.mkdir(parents=True)
         (frontend / "package.json").write_text('{"name":"workbench"}')
@@ -168,7 +168,7 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
     def test_default_tests_log_is_retained_on_interrupt_with_actual_failed_step(self):
         runner, calls = self._runner()
 
-        def interrupted(argv, cwd, log, *, env=None, lock_fd=None):
+        def interrupted(argv, cwd, log, *, env=None, lock_fd=None, check_abort=None):
             self.assertIn("-u", argv)
             self.assertEqual(self.root, cwd)
             if argv[argv.index("--phase") + 1] == "preflight":
@@ -201,7 +201,7 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
     def test_default_test_log_survives_later_failure_without_whole_output_capture(self):
         runner, _ = self._runner()
 
-        def passed(argv, cwd, log, *, env=None, lock_fd=None):
+        def passed(argv, cwd, log, *, env=None, lock_fd=None, check_abort=None):
             phase = argv[argv.index("--phase") + 1]
             status = run_local_release(self.root, run_id="later-failed", mode="status")
             self.assertEqual(status["test_log_paths"][phase], Path(log.name).relative_to(self.root).as_posix())
@@ -299,7 +299,7 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
         runner, _ = self._runner()
         phases = []
 
-        def passed(argv, cwd, log, *, env=None, lock_fd=None):
+        def passed(argv, cwd, log, *, env=None, lock_fd=None, check_abort=None):
             phase = argv[argv.index("--phase") + 1]
             if phase == "preflight":
                 engine = Path(argv[0]).parents[2]

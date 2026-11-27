@@ -19,7 +19,8 @@ from .snapshot_inputs import _assert_source_clean, _source_tree, _source_version
 
 
 class SnapshotReleaseRun(LocalReleaseRun):
-    def __init__(self, source_root, target_root, source_revision, run_id, runner, test_modules, image_mode, *, resume):
+    def __init__(self, source_root, target_root, source_revision, run_id, runner, test_modules, image_mode,
+                 *, resume, functional_suite=None, started_at=None):
         self.source_root = _root(source_root)
         target_root = _root(target_root)
         if self.source_root.is_relative_to(target_root) or target_root.is_relative_to(self.source_root):
@@ -34,7 +35,8 @@ class SnapshotReleaseRun(LocalReleaseRun):
             raise LocalReleaseError("local-release-untracked-source-manifest")
         self.source_version = _source_version(self.source_root)
         self.target_runtime_digest = target_runtime_digest(target_root)
-        super().__init__(target_root, run_id, runner, test_modules, image_mode, resume=resume)
+        super().__init__(target_root, run_id, runner, test_modules, image_mode, resume=resume,
+                         functional_suite=functional_suite, started_at=started_at)
 
     def _product_path(self):
         return None
@@ -206,11 +208,11 @@ class SnapshotReleaseRun(LocalReleaseRun):
 
 
 def run_snapshot_release(source_root, *, target_root, source_revision, run_id, resume=False, runner=None,
-                         test_modules=None, image_mode=None):
+                         test_modules=None, image_mode=None, functional_suite=None, started_at=None):
     """Verify the explicit source and release it into the selected target."""
     try:
         release = SnapshotReleaseRun(source_root, target_root, source_revision, run_id, runner, test_modules,
-                                     image_mode, resume=resume)
+                                     image_mode, resume=resume, functional_suite=functional_suite, started_at=started_at)
     except LocalReleaseError as error:
         step = "validate_project_selection" if str(error).endswith("selection-invalid") else "validate_inputs"
         return {"outcome": "failed", "failed_step": step, "error_type": type(error).__name__,

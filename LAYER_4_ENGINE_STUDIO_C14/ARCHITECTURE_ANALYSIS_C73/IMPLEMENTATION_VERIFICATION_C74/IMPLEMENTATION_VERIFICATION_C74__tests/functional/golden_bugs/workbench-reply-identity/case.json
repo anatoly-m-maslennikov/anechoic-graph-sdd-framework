@@ -1,0 +1,22 @@
+{
+  "title": "Reject a fetched View result from a different query",
+  "invariant": "A successful run accepts a fetched result only when its query ID matches the run reply.",
+  "scope": "Replay complete historical app_actions.ts through performAction using recorded API responses and callbacks. The locked frontend esbuild transforms the fixtures. This does not exercise browser rendering, real HTTP, or prove TypeScript semantics in Lean.",
+  "checks": [
+    {
+      "file": "observations.lean"
+    }
+  ],
+  "before": {
+    "revision": "b43a7c58128e1ca993e66b8996a3a149503a4ca9",
+    "source": "LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND/src/app_actions.ts",
+    "fixture": "before.ts.txt",
+    "sha256": "db52426280c757f6e183e4d9a0e8194628209724cb4d02f6223fb547940b0792"
+  },
+  "fixed": {
+    "revision": "90f703466ff38fb3e8fc656e715ede13c78d1dac",
+    "source": "LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND/src/app_actions.ts",
+    "fixture": "fixed.ts.txt",
+    "sha256": "be9e862bee42df35c8ac09f0a74ca43d889274bde178522f8aef3c00bf3abd66"
+  }
+}

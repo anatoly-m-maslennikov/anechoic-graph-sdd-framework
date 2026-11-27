@@ -12,6 +12,7 @@ from .local_release_state import open_artifacts
 
 
 _TMP = Path(".anechoic_tmp")
+_DAY_NS = 24 * 60 * 60 * 10**9
 _KEEP = {
     INSTALLATION_LOCK_PATH.relative_to(_TMP),
     Path("atom_lifecycle/write.lock"),
@@ -32,7 +33,8 @@ def _prune(directory: int, relative: Path, cutoff: int, device: int, blocked: li
             info = os.stat(name, dir_fd=directory, follow_symlinks=False)
             if info.st_dev != device:
                 continue
-            old = info.st_mtime_ns < cutoff
+            report = child.parent == Path("test_reports") and child.suffix == ".json"
+            old = info.st_mtime_ns < (cutoff - 5 * _DAY_NS if report else cutoff)
             if stat.S_ISDIR(info.st_mode):
                 flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
                 nested = os.open(name, flags, dir_fd=directory)
@@ -60,7 +62,7 @@ def _prune(directory: int, relative: Path, cutoff: int, device: int, blocked: li
 
 
 def prune_temporary_files(root: Path) -> tuple[int, list[str]]:
-    cutoff = time.time_ns() - 48 * 60 * 60 * 10**9
+    cutoff = time.time_ns() - 2 * _DAY_NS
     blocked: list[str] = []
     keep = _KEEP | _open_paths(root)
     with _owned_directory(root, _TMP) as directory:

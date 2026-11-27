@@ -18,8 +18,9 @@ _PATH_OPERATORS = ("//", "/", ".", ":=", ":")
 
 
 class _ExpressionParser:
-    def __init__(self, source: str) -> None:
+    def __init__(self, source: str, *, concern_path: bool = False) -> None:
         self.source = source
+        self.concern_path = concern_path
         self.position = 0
         self.depth = 0
 
@@ -200,7 +201,8 @@ class _ExpressionParser:
                 break
             self.position += len(operator)
             self.whitespace()
-            if operator == "//" and (self.position == len(self.source) or self.at(")") or self.at(",")):
+            if operator == "//" and (self.position == len(self.source) or self.at(")") or self.at(",")
+                                    or (self.concern_path and self.at("."))):
                 operand = SelectionSuffix("", Span(self.position, self.position))
             elif operator == "." and self.at("**"):
                 operand = SelectionSuffix("**", Span(self.position, self.position + 2))

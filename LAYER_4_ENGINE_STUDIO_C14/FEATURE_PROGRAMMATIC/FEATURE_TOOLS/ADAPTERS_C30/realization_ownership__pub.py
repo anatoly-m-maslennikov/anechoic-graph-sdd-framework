@@ -6,6 +6,7 @@ from pathlib import Path, PurePosixPath
 from pydantic import ConfigDict, field_validator
 from pydantic.dataclasses import dataclass
 
+from .native_carrier_placement__pub import component_manifest_parent
 from .structure_snapshot__pub import _preserve_mapping
 
 
@@ -29,12 +30,10 @@ class CodeAccessOwnership:
             path = path.parent
 
 
-def _component_path(control, cid, component, parent, paths):
+def _component_path(control, cid, component, parent, paths, parameters):
     candidates = {path for path in paths if path != parent
                   and path.is_relative_to(parent) and path.name.endswith('_' + cid)}
-    source_parent = PurePosixPath(component.source_path).parent
-    if source_parent.name == '_SPEC':
-        source_parent = source_parent.parent
+    source_parent = component_manifest_parent(PurePosixPath(component.source_path), parameters)
     native_parent = control / source_parent
     native = [p.name for p in native_parent.iterdir()
               if not p.is_symlink() and p.is_dir() and p.name.endswith('_' + cid)]
@@ -50,6 +49,7 @@ def _component_path(control, cid, component, parent, paths):
 
 
 def _add_component_paths(control, snapshot, paths, entries, add):
+    parameters = snapshot.project.get('parameters')
     remaining = dict(snapshot.components)
     while remaining:
         ready = [(cid, component) for cid, component in remaining.items()
@@ -61,7 +61,7 @@ def _add_component_paths(control, snapshot, paths, entries, add):
             if component.parent not in entries:
                 continue
             parent_path = PurePosixPath(entries[component.parent]['path'])
-            path = _component_path(control, cid, component, parent_path, paths)
+            path = _component_path(control, cid, component, parent_path, paths, parameters)
             if path is not None:
                 add(cid, component.parent, path, 'component', component.fields)
 

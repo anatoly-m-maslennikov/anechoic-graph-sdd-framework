@@ -8,8 +8,8 @@ context:
   lens: SWD
 state:
   status: "active"
-  version: 22
-  updated_at: "2026-11-25T23:19:15.485314+00:00"
+  version: 23
+  updated_at: "2026-11-26T15:17:28.862166+00:00"
 ---
 # Summary
 
@@ -43,12 +43,11 @@ implementation of Atom validation checks from source authority for `VALIDATE_ATO
 - use a safe YAML loader with duplicate-key rejection **and** bounded nesting, aliases, **and** input size. do **not** construct arbitrary objects, execute tags, **or** silently discard unsupported syntax. distinguish malformed input from an unsupported check.
 - pin the selected dependencies **in** the root Python configuration under CA-D-250-PROGRAMMATIC-ENG_POLICY--provide-programmatic-software-carriers. dependency adoption does **not** relax read-only execution, protected-input handling, source-bound rule coverage, **or** golden-corpus acceptance.
 
-### Body and Actor adapters
+### Body adapters
 
 - select the body contract by the carried Content Role under CA-D-479-CORE_META_MODEL-DELIVERY--use-stable-headings-for-atom-body-properties; reuse **`=1`** section parser across section, Property-location, **and** Plan-model checks. Use the exact AN-S-1777@33 nesting for the legacy Plan Definition of Done.
 - parse actual heading boundaries outside fenced examples. check required cardinality, order, content, **and** nesting independently; an empty admitted Details section is **not** a missing section. Retain an explicit gap for an unresolved Template or governing source.
-- check Author by exact membership **in** the selected Operator registry under CA-D-274-CORE_META_MODEL-ENG_DECISION--serialize-explicit-atom-revision-author **and** CA-D-494-CORE_META_MODEL-ENG_DECISION--store-operator-registry-in-project-root. read the registry through the bounded, fingerprinted file reader; fail unlisted names **only after** its schema is valid. do **not** infer aliases, Actor records, **or** permissions. retain malformed, stale, unavailable, **or** absent registry context as incomplete coverage.
-- omit effective Plan Assignee resolution for now; retain its deferred coverage explicitly **without** inferring an Assignee from Author **or** from the registry. this does **not** change the optional carried `assignee` encoding.
+- omit effective Plan Assignee resolution for now; retain its deferred coverage explicitly **without** inferring an Assignee from Author. this does **not** change the optional carried `assignee` encoding.
 - refresh an adapter's source binding **only after** reconciling its behavior **and** positive/negative tests with the changed governing Claim. a pin refresh alone is **not** an implementation fix.
 
 ## Details

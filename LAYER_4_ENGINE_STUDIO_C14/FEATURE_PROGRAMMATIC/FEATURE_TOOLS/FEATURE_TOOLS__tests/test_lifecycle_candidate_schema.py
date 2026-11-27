@@ -27,29 +27,18 @@ version: 1
 
 
 def _formal_fixture_source():
-    encoded = source('CA-R-1', status='active', body='''## Claim
+    return source('CA-R-1', status='active', body='''## Claim
 ### Formal Claim
-```CFEL
-# a comment is not a gate
-Atom.Header.Role :: Plan;
-Atom.Header.Role :: Method;
-Atom.Header.Form :: Decision;
-# Atom.Header.Role :: Phantom;
-Atom/(.Header.Role in (Plan)).Header.Form :: Plan;
-FOR EACH $a[<Atom>, (.Header.Form = Decision)]:
-(
-    $a.Header.Role:: [in (Method)]{::1}
-);
-Atom.Header.ID:: [atom id]{::1};
-Atom.Content.Summary:: {::1}; # inline comment
-# Atom.Content.Secret:: {::1};
+```python
+property_rule(address="Atom.Header.ID", value_format="atom id", values="1")
+property_rule(address="Atom.Content.Summary", values="1")
+# property_rule(address="Atom.Content.Secret", values="1")
 ```
 ## Other
-```CFEL
-Atom.Content.Hidden:: {::1};
+```python
+property_rule(address="Atom.Content.Hidden", values="1")
 ```
 ''')
-    return encoded
 
 
 def _native_claim_fixtures():

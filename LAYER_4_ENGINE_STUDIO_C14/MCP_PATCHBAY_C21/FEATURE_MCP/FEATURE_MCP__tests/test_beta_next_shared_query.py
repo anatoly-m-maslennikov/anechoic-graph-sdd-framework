@@ -40,7 +40,8 @@ class SharedProjectQueries(unittest.IsolatedAsyncioTestCase):
             root = Path(directory).resolve()
             projects = root / 'projects'
             first, second = projects / 'alpha', projects / 'beta'
-            project(first)
+            first_task = project(first)
+            first_task.rename(first_task.with_name('EX-T-1-TASK--example-task.md'))
             task = project(second)
             task.write_text(task.read_text().replace('Example task', 'Second task'))
             settings = root / 'host.toml'
@@ -82,6 +83,8 @@ class SharedProjectQueries(unittest.IsolatedAsyncioTestCase):
                 async with ClientSession(*streams) as client:
                     await client.initialize()
                     await self.check_queries(http, client, first, second, task)
+                    await self.check_console_lifecycle(http, first, second)
+                    await self.check_console_document_cases(http, first)
 
     async def query(self, http, client, root):
         arguments = {'sql': SQL, 'result_delivery': 'inline', 'project_root': str(root)}
@@ -111,6 +114,69 @@ class SharedProjectQueries(unittest.IsolatedAsyncioTestCase):
                 await asyncio.sleep(.2)
         for result in await self.query(http, client, first):
             self.assertEqual(first_rows, result['rows'])
+
+    async def check_console_document_cases(self, http, first):
+        driver = ENGINE / 'FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/SPEC_ENGINE_C75__tests/functional/console_case_driver.py'
+        env = {**os.environ, 'PYTHONPATH': str(ENGINE)}
+        output = subprocess.check_output([sys.executable, '-B', str(driver), 'forward_console_document'],
+                                         env=env, text=True, timeout=45)
+        cases = json.loads(output)['forward_console_document']
+        self.assertEqual({'current', 'exact', 'wrong_project'}, {case['name'] for case in cases})
+        for case in cases:
+            with self.subTest(case=case['name']):
+                binding, inputs = case['binding'], case['input']
+                method, route = binding['endpoint'].split(' ', 1)
+                self.assertEqual(('POST', 'http', 'interface'),
+                                 (method, binding['transport'], binding['route_name']))
+                target, outcome, expected = case['effect']
+                self.assertEqual('C21.console_document', target)
+                response = await http.request(method, route.format(project_name=inputs['project_name']), json={
+                    'project_root': str(first), 'operation': binding['tool'],
+                    'arguments': {'ref_id': inputs['ref_id']},
+                })
+                self.assertEqual(expected['status'], response.status_code, response.text)
+                self.assertEqual('returned' if response.is_success else 'refused', outcome)
+                if 'exact_ref' in expected:
+                    self.assertEqual(expected['exact_ref'], response.json()['exact_ref'])
+
+    async def console(self, http, root, operation, arguments):
+        response = await http.post('/anechoic/Example/api/interface', json={
+            'project_root': str(root), 'operation': operation, 'arguments': arguments,
+        })
+        self.assertEqual(200, response.status_code, response.text)
+        return response.json()
+
+    async def check_console_lifecycle(self, http, first, second):
+        ref = {'ref_id': 'EX-T-1'}
+        current = await self.console(http, first, 'iwe_console_atom_document', ref)
+        self.assertEqual(('EX-T-1@1', 1), (current['exact_ref'], current['version']))
+        self.assertIn('Example task', current['body'])
+        self.assertIn('in_queue', current['ticket_statuses'])
+        created = await self.console(http, first, 'atom_lifecycle_create_draft', {
+            'sourceCurrent': ref | {'version': current['version']},
+        })
+        self.assertEqual('completed', created['status'], created)
+        draft_ref = created['savedDraft']['ref_id']
+        draft = await self.console(http, first, 'iwe_console_atom_document', {'ref_id': draft_ref})
+        self.assertEqual((draft_ref, 'draft'), (draft['exact_ref'], draft['status']))
+        self.assertIn(draft_ref, {revision['ref_id'] for revision in draft['history']})
+        updated = await self.console(http, first, 'atom_lifecycle_update', {
+            'target': {'ref_id': draft_ref, 'version': draft['version']},
+            'expectedUpdatedAt': draft['updated_at'],
+            'changes': {'body': draft['body'] + '\n## Work\n\nEdited through IWE Console.\n'},
+        })
+        self.assertEqual('completed', updated['status'], updated)
+        published = await self.console(http, first, 'atom_lifecycle_promote_draft', {
+            'target': {'ref_id': draft_ref, 'version': draft['version']}, 'targetStatus': 'backlog',
+        })
+        self.assertEqual('completed', published['status'], published)
+        after = await self.console(http, first, 'iwe_console_atom_document', ref)
+        self.assertEqual('EX-T-1@2', after['exact_ref'])
+        self.assertIn('Edited through IWE Console.', after['body'])
+        self.assertIn('in_queue', after['ticket_statuses'])
+        other = await self.console(http, second, 'iwe_console_atom_document', ref)
+        self.assertEqual('EX-T-1@1', other['exact_ref'])
+        self.assertIn('Changed second task', other['body'])
 
 
 if __name__ == '__main__':

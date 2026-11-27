@@ -89,12 +89,15 @@ class SimpleReleaseFixture:
         self.engine_bootstrap.write_bytes(b"#!/usr/bin/env python3\n# package bootstrap fixture\n")
         self.engine_bootstrap.chmod(0o755)
         (self.engine_bootstrap.parent / "runtime.py").write_text("# runtime entrypoint fixture\n", encoding="utf-8")
-        backend = self.root / "LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND"
+        backend = self.root / "LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_BACKEND"
         backend.mkdir(parents=True)
         (backend / "tool_providers.json").write_text(
             '{"mcp_blacklist":[],"providers":[]}\n', encoding="utf-8")
 
     def _setup_mocks(self):
+        self.enterContext(patch("LAYER_2_LOCAL_RELEASE_C63.prepare_test_environment.missing_test_environment",
+                                return_value=False))
+        self.enterContext(patch("LAYER_2_LOCAL_RELEASE_C63.local_release_progress.check_locked_engine"))
         self.image_id = "sha256:" + "a" * 64
         self.image = SimpleNamespace(resolve=Mock(return_value=self.image_id),
                                      identity=Mock(return_value=SimpleNamespace(fingerprint="b" * 64)),

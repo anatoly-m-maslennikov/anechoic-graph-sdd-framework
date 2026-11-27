@@ -7,13 +7,10 @@ priority: 2
 context:
   template: task
   label: Task
-relations:
-  IS_REFERENCE:
-  - AN-S-3387@2
 state:
   status: backlog
   version: 1
-  updated_at: '2026-11-23T03:50:52.802684+00:00'
+  updated_at: '2026-11-26T16:38:46.285182+00:00'
 ---
 
 ## Summary

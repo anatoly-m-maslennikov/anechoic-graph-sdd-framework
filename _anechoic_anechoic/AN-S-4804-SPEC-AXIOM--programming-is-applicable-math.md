@@ -10,10 +10,8 @@ context:
 state:
   status: active
   version: 1
-  updated_at: '2026-11-24T10:51:56+00:00'
-relations:
-  IS_REFERENCE:
-  - AN-T-3470
+  updated_at: '2026-11-26T16:36:43.688944+00:00'
+
 ---
 
 ## Summary

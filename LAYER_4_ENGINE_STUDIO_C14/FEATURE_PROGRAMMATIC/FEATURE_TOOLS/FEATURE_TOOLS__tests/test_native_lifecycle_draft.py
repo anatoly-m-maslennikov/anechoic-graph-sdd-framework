@@ -14,7 +14,7 @@ ENGINE = TOOLS.parents[1]
 sys.path[:0] = [str(TOOLS), str(ENGINE / 'IWE_CONSOLE_C43')]
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import capture_native, parse_structure
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import NativeProjectSelection
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import NativeProjectSelection, execute_native_lifecycle
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import InputError, SourceChanged
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import create_draft, promote_draft
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import canonical_native_header
@@ -80,6 +80,42 @@ class NativeDraftTests(unittest.TestCase):
         self.assertEqual(source_header['context'], row['header_json']['context'])
         self.assertEqual(6, row['header_json']['state']['version'])
         self.assertEqual(self.params['changes']['body'].encode(), row['_content_bytes'])
+
+    def test_update_exact_draft_body_and_authored_relation(self):
+        text = self.path.read_text().replace('state:\n', 'relations:\n  RELATES_TO:\n  - AN-T-9\nstate:\n')
+        self.path.write_text(text)
+        capture = capture_native(self.selection)
+        created = create_draft(self.selection, self.params, current_rows=capture.atoms)
+        self.assertEqual('completed', created['outcome'], created)
+        draft = created['savedDraft']
+        capture = capture_native(self.selection)
+        row = next(r for r in capture.atoms if r['_exact_ref'] == draft['ref_id'])
+        updated_at = row['header_json']['state']['updated_at']
+        args = {'target': {'ref_id': draft['ref_id'], 'version': draft['version']},
+                'changes': {'body': self.params['changes']['body'].replace('New', 'Saved'),
+                            'removeRelations': [{'type': 'RELATES_TO', 'ref_id': 'AN-T-9'}]},
+                'expectedUpdatedAt': updated_at}
+        result = execute_native_lifecycle(
+            self.selection, 'atom_lifecycle_update', args, capture, None,
+            previous_capture=None, ticket_labels=(), validate_project_spec=None,
+        )
+        self.assertEqual('completed', result['outcome'], result)
+        self.assertEqual(draft['ref_id'], result['artifact']['ref_id'])
+        self.assertNotEqual(updated_at, result['artifact']['updated_at'])
+        after = capture_native(self.selection)
+        row = next(r for r in after.atoms if r['_exact_ref'] == draft['ref_id'])
+        self.assertEqual(b'\n# Summary\n\nExample\n\n## Details\n\nSaved\n', row['_content_bytes'])
+        self.assertFalse(row['header_json'].get('relations'))
+        stale = execute_native_lifecycle(
+            self.selection, 'atom_lifecycle_update', args, after, None,
+            previous_capture=None, ticket_labels=(), validate_project_spec=None,
+        )
+        self.assertEqual('source_changed', stale['errors'][0]['code'])
+        self.assertFalse(stale['effects'])
+        promoted = promote_draft(self.selection, {'target': args['target'], 'targetStatus': 'backlog'},
+                                 current_rows=after.atoms)
+        self.assertEqual('completed', promoted['outcome'], promoted)
+        self.assertNotIn('AN-T-9', (self.path.parent / 'backlog' / self.path.name).read_text())
 
     def test_indexed_max_and_real_collision_retries(self):
         from unittest.mock import Mock, patch

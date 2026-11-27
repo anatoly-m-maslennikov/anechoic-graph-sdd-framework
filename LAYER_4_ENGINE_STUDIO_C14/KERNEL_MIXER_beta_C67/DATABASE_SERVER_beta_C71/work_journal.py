@@ -13,6 +13,8 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict
 
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import console_state_path
+
 
 TABLE = "journal_store.main.work_journal"
 DATABASE_PATH = Path(".anechoic_runtime/db/project.duckdb")
@@ -187,15 +189,16 @@ def _commit_record(connection, table, record_id, row: _JournalRecord):
 
 def sync_journal(connection: Any, project_root: Path) -> None:
     """Import published records and remove only unchanged committed files."""
-    expected = Path(project_root) / DATABASE_PATH
+    project_root = Path(project_root)
+    expected = project_root / DATABASE_PATH
     attached = connection.execute(
         "SELECT path FROM duckdb_databases() WHERE database_name = 'journal_store'"
     ).fetchall()
     if attached != [(str(expected),)]:
         raise ValueError("Work Journal is not bound to this Project")
+    inbox = console_state_path(project_root) / "journal-inbox"
     try:
-        directory = _open_directory(Path(project_root),
-                                    (".anechoic_runtime", "workbench", "journal-inbox"), create=False)
+        directory = _open_directory(project_root, inbox.relative_to(project_root).parts, create=False)
     except FileNotFoundError:
         return
     try:

@@ -7,28 +7,10 @@ priority: 2
 context:
   template: task
   label: Epic
-relations:
-  IS_REFERENCE:
-  - AN-T-2915
-  - AN-S-3117@1
-  - AN-S-2181@7
-  - AN-S-3116@1
-  - AN-S-1362@18
-  - AN-S-2536@32
-  - AN-S-1363@11
-  - AN-S-1366@19
-  - AN-S-3156@1
-  - AN-S-3157@1
-  - AN-S-3083@2
-  - AN-S-3086@2
-  - AN-S-3087@2
-  - AN-S-3159@1
-  - AN-S-3014@2
-  - AN-T-2928@1-draft
 state:
   status: done
   version: 1
-  updated_at: '2026-11-20T16:34:57.901983+00:00'
+  updated_at: '2026-11-26T16:39:57.137259+00:00'
 ---
 
 ## Summary

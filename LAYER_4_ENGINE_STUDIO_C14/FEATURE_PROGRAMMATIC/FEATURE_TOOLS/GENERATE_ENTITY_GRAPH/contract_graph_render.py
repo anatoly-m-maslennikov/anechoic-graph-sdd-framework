@@ -44,10 +44,6 @@ def _clause(row: Mapping[str, Any]) -> str:
         effective = "conflict" if row.get("occurrence_conflict") else _count(row.get("effective_occurrence_cardinality"))
         written = _count(row["occurrence_cardinality"]) if row.get("occurrence_cardinality") is not None else "omitted"
         return f"`{row.get('property_selector')}` {row.get('selection')}; names={row.get('name_format')}; written names count={written}; effective names count={effective}; values={row.get('value_format')}; values count={_count(row.get('value_cardinality'))}"
-    if row.get("kind") == "property_instance_population_constraint":
-        return f"`{row.get('expression')}`; count={_count(row.get('population_cardinality'))} for each Property schema per bearer"
-    if row.get("kind") == "instance_population_constraint":
-        return f"`{row.get('expression')}`; count={_count(row.get('population_cardinality'))} in project population"
     if row.get("kind") == "effective_value_fallback_chain":
         lookup, project = row["branches"]
         return (f"`{row['property_selector']}` when undefined, null, or empty: nearest `{lookup['lookup_property']}` "
@@ -67,9 +63,9 @@ def _clause(row: Mapping[str, Any]) -> str:
         return f"Class {row.get('class_name')} inherits {', '.join(row.get('bases', ())) }"
     if row.get("kind") == "allowed_literal":
         return f"`{row.get('property_selector')}: {row.get('literal')}`"
-    if row.get("kind") == "classification_allowed_value":
+    if row.get("kind") == "axis_allowed_value":
         return f"`{row.get('subject_selector')} >| {row.get('axis')}: {row.get('value')}`"
-    if row.get("kind") == "classification_condition":
+    if row.get("kind") == "axis_condition":
         return f"`{row.get('subject_selector')} >| {row.get('axis')} {row.get('operator')} {row.get('value')}`"
     return f"`{row.get('expression')}`"
 
@@ -110,8 +106,7 @@ def _render_entry(lines: list[str], entry: Record, label: str) -> None:
     if entry["instance_clauses"]:
         lines.extend(["  - Instance constraints:", *["    - " + _clause(row) for row in entry["instance_clauses"]]])
     for diagnostic in entry["diagnostics"]:
-        kind = "Python Formal Claim" if diagnostic.get("code") == "python-formal-claim-invalid" else "CFEL"
-        lines.append(f"  - Unresolved {kind}: `{diagnostic.get('expression', diagnostic.get('message'))}`")
+        lines.append(f"  - Unresolved Python Formal Claim: `{diagnostic.get('expression', diagnostic.get('message'))}`")
     if entry["semantics"]:
         lines.extend(["  - Semantics:", *["    " + row if row else "" for row in entry["semantics"].splitlines()]])
     if entry["details"]:
@@ -135,10 +130,10 @@ def render_contract_graph(graph: Mapping[str, Any]) -> str:
     """Render complete source-bound Claims and bounded structured contract views."""
 
     lines = ["# Formal Contract Graph", "",
-             "Source-bound extraction of Python and CFEL Formal Claims. Authored blocks are preserved as evidence.",
+             "Source-bound extraction of Python Formal Claims. Authored blocks are preserved as evidence.",
              "", "## Coverage", ""]
     lines.extend(f"- {key.replace('_', ' ')}: {value}" for key, value in graph["coverage"].items())
-    lines.extend([f"- display coverage: {graph['display_coverage']}", f"- structured CFEL extraction: {graph['structured_cfel']}"])
+    lines.extend([f"- display coverage: {graph['display_coverage']}", f"- structured Claim extraction: {graph['structured_claims']}"])
     lines.extend([""] + _tree_lines(graph["narrowing_tree"]))
     _render_entities(lines, graph)
     _render_relations(lines, graph)

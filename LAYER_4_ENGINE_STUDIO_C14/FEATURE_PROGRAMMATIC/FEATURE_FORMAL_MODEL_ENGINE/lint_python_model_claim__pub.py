@@ -94,7 +94,7 @@ def _prepare_addresses(declared_addresses, python_class_bindings, address_bindin
 
 def _check_relations(text, relation_names, relation_aliases, require_declared_aliases, path, first_line):
     known_aliases = {} if require_declared_aliases else {
-        "<+": "CONTAINS", ">|": "HAS_CLASSIFICATION", ";>": "IS_ORDERED_RIGHT_BEFORE",
+        "<+": "CONTAINS", ">|": "HAS_AXIS", ";>": "IS_ORDERED_RIGHT_BEFORE",
     }
     known_aliases.update(relation_aliases or {})
     for item in ast.parse(text).body:
@@ -106,7 +106,7 @@ def _check_relations(text, relation_names, relation_aliases, require_declared_al
         name = args["name"] if helper == "relation" else None
         symbol = {"composition": "<+", "classify": ">|", "order_before": ";>"}.get(helper)
         if helper == "classify" and args.get("notation") == "relation":
-            name, symbol = "HAS_CLASSIFICATION", None
+            name, symbol = "HAS_AXIS", None
         if symbol:
             name = known_aliases.get(symbol)
             if not name:

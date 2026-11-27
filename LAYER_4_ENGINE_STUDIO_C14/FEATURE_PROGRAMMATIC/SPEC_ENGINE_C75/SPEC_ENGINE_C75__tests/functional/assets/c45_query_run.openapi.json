@@ -1,0 +1,644 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "WORKBENCH_BACKEND",
+    "version": "60"
+  },
+  "paths": {
+    "/tools": {
+      "post": {
+        "operationId": "query_run",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "const": "query_run"
+                  },
+                  "arguments": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "cursor_position": {
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "page_size": {
+                        "maximum": 1000,
+                        "minimum": 1,
+                        "type": "integer"
+                      },
+                      "preview": {
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      "result_delivery": {
+                        "default": "auto",
+                        "enum": [
+                          "file",
+                          "inline",
+                          "auto"
+                        ],
+                        "type": "string"
+                      },
+                      "result_format": {
+                        "default": "json_matrix",
+                        "enum": [
+                          "json_matrix",
+                          "csv",
+                          "toon"
+                        ],
+                        "type": "string"
+                      },
+                      "save": {
+                        "default": false,
+                        "type": "boolean"
+                      },
+                      "sql": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "sql"
+                    ],
+                    "type": "object",
+                    "allOf": [
+                      {
+                        "if": {
+                          "required": [
+                            "name"
+                          ]
+                        },
+                        "then": {
+                          "properties": {
+                            "save": {
+                              "const": true
+                            }
+                          },
+                          "required": [
+                            "save"
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "instance_id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "session_id": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "pattern": "\\S"
+                  },
+                  "public_base_url": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "pattern": "\\S"
+                  },
+                  "asserted_project_root": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "pattern": "\\S"
+                  }
+                },
+                "required": [
+                  "name",
+                  "arguments",
+                  "instance_id",
+                  "session_id",
+                  "public_base_url",
+                  "asserted_project_root"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "success, tool_error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "result": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "object",
+                              "properties": {
+                                "query_id": {
+                                  "type": "string",
+                                  "minLength": 1
+                                },
+                                "columns": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "name": {
+                                        "type": "string"
+                                      },
+                                      "type": {
+                                        "type": "string"
+                                      },
+                                      "has_values": {
+                                        "type": "boolean"
+                                      }
+                                    },
+                                    "required": [
+                                      "name",
+                                      "type",
+                                      "has_values"
+                                    ],
+                                    "additionalProperties": false
+                                  }
+                                },
+                                "row_count": {
+                                  "type": "integer",
+                                  "minimum": 0
+                                },
+                                "source_row_count": {
+                                  "type": "integer",
+                                  "minimum": 0
+                                },
+                                "column_count": {
+                                  "type": "integer",
+                                  "minimum": 0
+                                },
+                                "offset": {
+                                  "const": 0
+                                },
+                                "page_size": {
+                                  "type": "integer",
+                                  "minimum": 1,
+                                  "maximum": 1000
+                                },
+                                "has_more": {
+                                  "type": "boolean"
+                                },
+                                "rows": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "array"
+                                  }
+                                },
+                                "csv": {
+                                  "type": "string"
+                                },
+                                "result_file": {
+                                  "type": "object",
+                                  "properties": {
+                                    "path": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "description": "Path relative to the selected Project."
+                                    },
+                                    "format": {
+                                      "enum": [
+                                        "json_matrix",
+                                        "csv",
+                                        "toon"
+                                      ]
+                                    },
+                                    "row_count": {
+                                      "type": "integer",
+                                      "minimum": 0
+                                    },
+                                    "column_count": {
+                                      "type": "integer",
+                                      "minimum": 0
+                                    },
+                                    "offset": {
+                                      "const": 0
+                                    },
+                                    "has_more": {
+                                      "const": false
+                                    }
+                                  },
+                                  "required": [
+                                    "path",
+                                    "format",
+                                    "row_count",
+                                    "column_count",
+                                    "offset",
+                                    "has_more"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "outcome": {
+                                  "const": "partial"
+                                },
+                                "export_error": {
+                                  "type": "string"
+                                },
+                                "save_error": {
+                                  "type": "string"
+                                },
+                                "saved_query_id": {
+                                  "type": "string",
+                                  "minLength": 1
+                                },
+                                "kind": {
+                                  "const": "query"
+                                },
+                                "saved_at": {
+                                  "type": "string",
+                                  "minLength": 1
+                                },
+                                "saved_query_url": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                },
+                                "saved_query_url_reason": {
+                                  "const": "workbench_url_unknown"
+                                },
+                                "name": {
+                                  "type": "string",
+                                  "minLength": 1
+                                }
+                              },
+                              "required": [
+                                "query_id",
+                                "columns",
+                                "row_count",
+                                "source_row_count",
+                                "column_count",
+                                "offset",
+                                "page_size",
+                                "has_more"
+                              ],
+                              "additionalProperties": false,
+                              "oneOf": [
+                                {
+                                  "required": [
+                                    "rows"
+                                  ]
+                                },
+                                {
+                                  "required": [
+                                    "csv"
+                                  ]
+                                },
+                                {
+                                  "required": [
+                                    "result_file"
+                                  ]
+                                },
+                                {
+                                  "required": [
+                                    "export_error"
+                                  ]
+                                }
+                              ],
+                              "dependentRequired": {
+                                "export_error": [
+                                  "outcome"
+                                ],
+                                "save_error": [
+                                  "outcome"
+                                ],
+                                "saved_query_id": [
+                                  "kind",
+                                  "saved_at",
+                                  "saved_query_url"
+                                ],
+                                "kind": [
+                                  "saved_query_id"
+                                ],
+                                "saved_at": [
+                                  "saved_query_id"
+                                ],
+                                "name": [
+                                  "saved_query_id"
+                                ],
+                                "saved_query_url": [
+                                  "saved_query_id"
+                                ],
+                                "saved_query_url_reason": [
+                                  "saved_query_url"
+                                ]
+                              },
+                              "allOf": [
+                                {
+                                  "if": {
+                                    "required": [
+                                      "outcome"
+                                    ]
+                                  },
+                                  "then": {
+                                    "anyOf": [
+                                      {
+                                        "required": [
+                                          "export_error"
+                                        ]
+                                      },
+                                      {
+                                        "required": [
+                                          "save_error"
+                                        ]
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "if": {
+                                    "required": [
+                                      "saved_query_url"
+                                    ],
+                                    "properties": {
+                                      "saved_query_url": {
+                                        "type": "null"
+                                      }
+                                    }
+                                  },
+                                  "then": {
+                                    "required": [
+                                      "saved_query_url_reason"
+                                    ]
+                                  },
+                                  "else": {
+                                    "not": {
+                                      "required": [
+                                        "saved_query_url_reason"
+                                      ]
+                                    }
+                                  }
+                                },
+                                {
+                                  "not": {
+                                    "required": [
+                                      "saved_query_id",
+                                      "save_error"
+                                    ]
+                                  }
+                                }
+                              ]
+                            },
+                            "text": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "value",
+                            "text"
+                          ],
+                          "additionalProperties": false,
+                          "if": {
+                            "properties": {
+                              "value": {
+                                "required": [
+                                  "csv"
+                                ]
+                              }
+                            }
+                          },
+                          "then": {
+                            "properties": {
+                              "text": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "else": {
+                            "properties": {
+                              "text": {
+                                "type": "null"
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "required": [
+                        "result"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "type": "string",
+                              "minLength": 1,
+                              "not": {
+                                "enum": [
+                                  "tool_input_invalid",
+                                  "value_error",
+                                  "internal"
+                                ]
+                              }
+                            },
+                            "message": {
+                              "type": "string"
+                            },
+                            "tool_result": {
+                              "type": "object",
+                              "properties": {
+                                "outcome": {
+                                  "enum": [
+                                    "rejected",
+                                    "failed"
+                                  ]
+                                },
+                                "diagnostics": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  },
+                                  "minItems": 1
+                                }
+                              },
+                              "required": [
+                                "outcome",
+                                "diagnostics"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
+                          "required": [
+                            "code",
+                            "message",
+                            "tool_result"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": [
+                        "error"
+                      ],
+                      "additionalProperties": false
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "invalid_input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "enum": [
+                            "tool_input_invalid",
+                            "value_error"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "tool_result": {
+                          "type": "object",
+                          "properties": {
+                            "outcome": {
+                              "enum": [
+                                "rejected",
+                                "failed"
+                              ]
+                            },
+                            "diagnostics": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              },
+                              "minItems": 1
+                            }
+                          },
+                          "required": [
+                            "outcome",
+                            "diagnostics"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "tool_result"
+                      ],
+                      "additionalProperties": false,
+                      "if": {
+                        "properties": {
+                          "code": {
+                            "const": "tool_input_invalid"
+                          }
+                        }
+                      },
+                      "then": {
+                        "properties": {
+                          "tool_result": {
+                            "properties": {
+                              "outcome": {
+                                "const": "rejected"
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "else": {
+                        "properties": {
+                          "tool_result": {
+                            "properties": {
+                              "outcome": {
+                                "const": "failed"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "internal_error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "const": "internal"
+                        },
+                        "message": {
+                          "const": "Backend Tool operation failed"
+                        },
+                        "tool_result": {
+                          "type": "object",
+                          "properties": {
+                            "outcome": {
+                              "const": "failed"
+                            },
+                            "diagnostics": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              },
+                              "minItems": 1
+                            }
+                          },
+                          "required": [
+                            "outcome",
+                            "diagnostics"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "tool_result"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: "active"
-  version: 20
-  updated_at: "2026-11-25T11:13:54.667837+00:00"
+  version: 21
+  updated_at: "2026-11-26T14:46:18.856719+00:00"
 ---
 
 ## Summary
@@ -29,7 +29,7 @@ declare_entity(
     entity_name='Project Manifest',
     instance=ProjectManifest(
         name='Anechoic',
-        lens_whitelist=['DES', 'DOM/ONT', 'DOM/MTD', 'DevOps', 'QA', 'SPEC', 'SWD'],
+        lens_whitelist=['DES', 'DOM/CONT', 'DOM/ONT', 'DOM/MTD', 'DevOps', 'QA', 'SPEC', 'SWD'],
         prefix='AN',
         parameters={
             'project': {
@@ -49,12 +49,12 @@ declare_entity(
             },
             'runtime': {
                 'journal': {'storage': 'duckdb'},
-                'workbench': {
+                'iwe_console': {
                     'storage': 'disk',
                     'inline_result_limit_kib': 4,
                     'import_graph': {
                         'python_image_imports': {
-                            'LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/native_model_selector.py': [
+                            'LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IWE_CONSOLE_BACKEND/native_model_selector.py': [
                                 'APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.content_schema',
                                 'APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.header_columns',
                                 'APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.query_store',
@@ -73,7 +73,7 @@ declare_entity(
 
 ### Prose Claim
 
-At Workbench startup, `parameters.runtime.workbench.inline_result_limit_kib` is a whole positive KiB value. Workbench automatically sends complete query results up to this limit inline and larger results to files.
+At IWE Console startup, `parameters.runtime.iwe_console.inline_result_limit_kib` is a whole positive KiB value. Workbench automatically sends complete query results up to this limit inline and larger results to files.
 
 ### Domain Lenses
 

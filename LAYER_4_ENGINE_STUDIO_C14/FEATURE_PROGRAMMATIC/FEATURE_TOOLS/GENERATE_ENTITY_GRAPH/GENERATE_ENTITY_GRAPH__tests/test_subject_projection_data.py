@@ -26,7 +26,7 @@ def claim(*lines):
 
 class SubjectProjectionDataTests(unittest.TestCase):
     def test_encoded_roles_and_forms_keep_declaration_evidence(self):
-        body = claim("```CFEL", "Node.Name: [string]{:1};", "```")
+        body = claim("```python", "property_rule(address='Node.Name', value_format='string', values='1')", "```")
         canonical = [carrier("CA-R-1", "Node", claim("Node.")),
                      carrier("CA-R-2", "Node.Name", body)]
         encoded = [carrier("CA-R-1", "Node", claim("Node."), role="requirement", form="declaration"),
@@ -37,18 +37,18 @@ class SubjectProjectionDataTests(unittest.TestCase):
         data = build_subject_projection_data([
             carrier("CA-R-1", "Node", claim("Node declaration.")),
             carrier("CA-R-2", "Node/Child", claim("Child declaration.")),
-            carrier("CA-R-3", "Node.Name", claim("```CFEL", "# model", "Node.Name: [string]{:1};", "# instances", "Node//$n;", "$n.Name: [string]{:1};", "```")),
-            carrier("CA-R-4", "Node.Name", claim("```CFEL", "# model", "Node.Name: [integer]{:1};", "```"), form="Rule"),
+            carrier("CA-R-3", "Node.Name", claim("```python", "# model", "property_rule(address='Node.Name', value_format='string', values='1')", "# instances", "property_rule(address='Node//$n.Name', value_format='string', values='1')", "```")),
+            carrier("CA-R-4", "Node.Name", claim("```python", "# model", "property_rule(address='Node.Name', value_format='integer', values='1')", "```"), form="Rule"),
         ])
         child = next(row for row in data["entities"] if row["identity"] == "Node/Child")
         prop = child["inherited_properties"][0]
         self.assertEqual(["string"], [row["value_format"] for row in prop["contracts"]])
-        self.assertEqual(["instance_binding", "property_constraint"], [row["kind"] for row in prop["instance_constraints"]])
+        self.assertEqual(["property_constraint"], [row["kind"] for row in prop["instance_constraints"]])
         self.assertIn("# model", prop["formal_claims"][0]["block"])
         self.assertIn("# instances", prop["formal_claims"][0]["block"])
         self.assertFalse(any("$n" in row["identity"] for row in data["entities"]))
         inspector = render_primary_projection(data, 4)
-        self.assertIn("# model\nNode.Name: [string]{:1};\n# instances\nNode//$n;\n$n.Name: [string]{:1};", inspector)
+        self.assertIn("# model\nproperty_rule(address='Node.Name', value_format='string', values='1')\n# instances\nproperty_rule(address='Node//$n.Name', value_format='string', values='1')", inspector)
 
     def test_keeps_explicit_new_namespace_roots(self):
         data = build_subject_projection_data([
@@ -84,8 +84,8 @@ class SubjectProjectionDataTests(unittest.TestCase):
 
     def test_keeps_exact_component_declaration_for_a_retained_tree_entity_only(self):
         data = build_subject_projection_data([
-            carrier("CA-R-1", "CFEL", claim("```CFEL", "CFEL: [string]{:1};", "```"), form="Entity Definition"),
-            carrier("CA-R-2", "CFEL <+ Operator", claim("```CFEL", "Operator: [string]{:1};", "```")),
+            carrier("CA-R-1", "CFEL", claim("```python", "property_rule(address='CFEL', value_format='string', values='1')", "```"), form="Entity Definition"),
+            carrier("CA-R-2", "CFEL <+ Operator", claim("```python", "property_rule(address='Operator', value_format='string', values='1')", "```")),
         ])
 
         entities = {row["identity"]: row for row in data["entities"]}
@@ -112,8 +112,8 @@ class SubjectProjectionDataTests(unittest.TestCase):
     def test_surfaces_duplicate_exact_property_declarations_without_merging_them(self):
         data = build_subject_projection_data([
             carrier("CA-R-1", "Node", claim("Node declaration.")),
-            carrier("CA-R-2", "Node.Status", claim("```CFEL", "Node.Status: Draft;", "```")),
-            carrier("CA-R-3", "Node.Status", claim("```CFEL", "Node.Status: Review;", "```")),
+            carrier("CA-R-2", "Node.Status", claim("```python", "from anechoic.formal_claims import declare_entity, Cardinality", "declare_entity(entity_name='Status', relation_name='IS_PROPERTY_OF', base_path='Node', allowed_values=('Draft',))", "```")),
+            carrier("CA-R-3", "Node.Status", claim("```python", "from anechoic.formal_claims import declare_entity, Cardinality", "declare_entity(entity_name='Status', relation_name='IS_PROPERTY_OF', base_path='Node', allowed_values=('Review',))", "```")),
         ])
 
         property = next(row for row in data["entities"] if row["identity"] == "Node")["direct_properties"][0]
@@ -127,10 +127,10 @@ class SubjectProjectionDataTests(unittest.TestCase):
 
     def test_keeps_inherited_original_property_and_all_constraint_channels_without_merging(self):
         data = build_subject_projection_data([
-            carrier("CA-R-1", "Node", claim("```CFEL", "Node.Status[status]{:1}: [string]{:1+};", "```")),
+            carrier("CA-R-1", "Node", claim("```python", "from anechoic.formal_claims import declare_entity, Cardinality", "declare_entity(entity_name='Status', relation_name='IS_PROPERTY_OF', base_path='Node', property_occurrence_cardinality=1, value_format='string', value_cardinality=Cardinality(minimum=1, maximum=None))", "```")),
             carrier("CA-R-2", "Node/Child", claim("Child declaration.")),
-            carrier("CA-R-3", "Node.Status", claim("```CFEL", "Node.Status[status]{:1}: [string]{:1+};", "```")),
-            carrier("CA-R-4", "Node/Child.Status", claim("```CFEL", "Node/Child.Status[child]{:0..1}: [integer]{:2};", "```")),
+            carrier("CA-R-3", "Node.Status", claim("```python", "from anechoic.formal_claims import declare_entity, Cardinality", "declare_entity(entity_name='Status', relation_name='IS_PROPERTY_OF', base_path='Node', property_occurrence_cardinality=1, value_format='string', value_cardinality=Cardinality(minimum=1, maximum=None))", "```")),
+            carrier("CA-R-4", "Node/Child.Status", claim("```python", "from anechoic.formal_claims import declare_entity, Cardinality", "declare_entity(entity_name='Status', relation_name='IS_PROPERTY_OF', base_path='Node/Child', property_occurrence_cardinality=Cardinality(minimum=0, maximum=1), value_format='integer', value_cardinality=2)", "```")),
         ])
 
         child = next(row for row in data["entities"] if row["identity"] == "Node/Child")
@@ -139,7 +139,7 @@ class SubjectProjectionDataTests(unittest.TestCase):
         self.assertEqual("Node.Status", child["inherited_properties"][0]["identity"])
         self.assertTrue(child["direct_properties"][0]["multiple_applicable"])
         contract = child["direct_properties"][0]["contracts"][0]
-        self.assertEqual("child", contract["name_format"])
+        self.assertIsNone(contract["name_format"])
         self.assertEqual({"minimum": 0, "maximum": 1}, contract["occurrence_cardinality"])
         self.assertEqual("integer", contract["value_format"])
         self.assertEqual({"minimum": 2, "maximum": 2}, contract["value_cardinality"])
@@ -148,10 +148,10 @@ class SubjectProjectionDataTests(unittest.TestCase):
     def test_excludes_non_declaration_claims_before_formal_extraction(self):
         carriers = [
             carrier("CA-R-1", "Node", claim("Node declaration.")),
-            carrier("CA-R-2", "Node.Status", claim("```CFEL", "Node.Status: Draft;", "```")),
-            carrier("CA-M-3", "Node.Status", claim("```CFEL", "Node.Status: Poison;", "```"), role="Method", form="Policy"),
-            carrier("CA-R-4", "Node.Status", claim("```CFEL", "Node.Status: Poison;", "```"), form="Rule"),
-            carrier("CA-R-5", "Node.Status", claim("```CFEL", "Node.Status: Poison;", "```"), form="Entity Definition"),
+            carrier("CA-R-2", "Node.Status", claim("```python", "from anechoic.formal_claims import declare_entity, Cardinality", "declare_entity(entity_name='Status', relation_name='IS_PROPERTY_OF', base_path='Node', allowed_values=('Draft',))", "```")),
+            carrier("CA-M-3", "Node.Status", claim("```python", "from anechoic.formal_claims import declare_entity, Cardinality", "declare_entity(entity_name='Status', relation_name='IS_PROPERTY_OF', base_path='Node', allowed_values=('Poison',))", "```"), role="Method", form="Policy"),
+            carrier("CA-R-4", "Node.Status", claim("```python", "from anechoic.formal_claims import declare_entity, Cardinality", "declare_entity(entity_name='Status', relation_name='IS_PROPERTY_OF', base_path='Node', allowed_values=('Poison',))", "```"), form="Rule"),
+            carrier("CA-R-5", "Node.Status", claim("```python", "from anechoic.formal_claims import declare_entity, Cardinality", "declare_entity(entity_name='Status', relation_name='IS_PROPERTY_OF', base_path='Node', allowed_values=('Poison',))", "```"), form="Entity Definition"),
         ]
         for carrier_row in carriers:
             carrier_row["raw"] = repr(carrier_row).encode()

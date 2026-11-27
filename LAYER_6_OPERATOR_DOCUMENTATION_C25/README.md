@@ -1,28 +1,41 @@
 # Operator Documentation
 
-## Resume Local Release
+## Local Release
 
-Start a Local Release with a run ID. If a phase fails, the release stops and
-reports the phase, its error, and the run ID. Fix the cause, then run the
-same [host Release command](../LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/README.md)
-with `local --resume --run-id <id>` from the same checkout.
+From the target checkout, run `./release__public local`. It prints the run ID.
+You can supply `--run-id <id>` to choose one. If a phase fails, fix the cause and
+run `./release__public local --continue`. Use `./release__public local --status` to inspect
+its phase and logs.
 
-Repeat this cycle after each failure with the same run ID. The journal keeps
-the target Project, allocated version, phase evidence, package, and exact
-image. Resume reuses completed phases whose inputs and evidence still match.
-When only the canary inputs change, continue with the same image and its
-passing image tests. Runtime changes require a new image and image checks.
+To request a stop before delivery, run `./release__public local --abort`. A running
+test group stops promptly. Other operations stop at their next checkpoint.
+Logs and the installed runtime are preserved. Continue can resume the run.
+Abort is refused after the delivery claim.
 
-Use `local --status --run-id <id>` to check the run and find its test logs.
-For a split release, pass the target as `--project-root`.
+Controls select the one open, nonsuperseded target run. If more than one is
+eligible, pass `--run-id <id>`. Continue reuses passing phase evidence whose
+inputs still match. Once delivery starts, it uses the accepted artifact.
+If start fails before it records a run, fix the reported input and start again.
 
-Once installation starts, resume with the recorded artifact. Local Release
-checks the files and container before repeating an effect. After verified
-startup, a cleanup failure resumes cleanup alone. Use a new run ID for a
-different target or a separate release.
+Use `./release__public local --suite fast` for recent-failure Test Packages and
+a reproducible 10% sample. Static checks, packaged boundary tests, and the
+MCP canary still run. Continue keeps the recorded suite and selection.
+The receipt measures time from start to production readiness. Ten minutes is
+ideal and fifteen minutes is mandatory. An overrun is a QA performance miss.
+Verification and delivery continue under their normal gates.
 
-If the initial command failed to select a Project, correct the Project
-Manifest and repeat the initial command. Resume needs an existing journal.
+To release selected changes, use `./release__public local --base <full-sha>
+--changed-path <file>`, repeating `--changed-path` for each literal path.
+The base must include the ancestry required by the tests. The private candidate
+alone gets the version bump and keeps the target Manifest port. Commit fixes
+in the exact source checkout reported by the run, then continue from the
+target. Delivery freezes the accepted source SHA.
+
+Missing pinned Engine, frontend, Chromium, and DuckPGQ prerequisites are
+prepared before the first preflight. Release reuses configured prerequisites.
+Use a host context that permits Chromium to launch. Lean must be on `PATH`
+or set by `LEAN_BIN` for its gate. The [Release guide](../LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/README.md)
+also describes the supported lower-level commands and explicit preparation.
 
 ## Verify an image
 

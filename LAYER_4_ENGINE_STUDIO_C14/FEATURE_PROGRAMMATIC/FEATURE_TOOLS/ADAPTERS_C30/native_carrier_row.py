@@ -11,15 +11,21 @@ from .native_carrier_placement__pub import PROJECT_CONFIG_DIRECTORY, TICKET_DIRE
 from .carrier_read__pub import CarrierError, parse_carrier
 
 
-CURRENT_STATUSES = {
-    "S": {"active", "ready"}, "T": {"active", "in_queue", "backlog", "done", "canceled", "resolved", "complete"}, "P": {"active"}, "C": {"active"},
-}
+from .native_status_domains import CURRENT_STATUSES as CURRENT_STATUSES, status_domains
+
+
+def _classify_failed_header(path, root, header, classified):
+    if classified is not None and "atom_family" in header:
+        context = header.get("context")
+        if isinstance(context, dict) and isinstance(context.get("template"), str):
+            classified[path.relative_to(root).as_posix()] = context["template"]
 
 
 def _carrier_row(path: Path, root: Path, family: str, prefix: str, raw: bytes, *,
-                 include_content_properties=True) -> tuple[dict, dict]:
+                 include_content_properties=True, domains=None, classified=None) -> tuple[dict, dict]:
     carrier = parse_carrier(raw, path)
     header = carrier.metadata
+    _classify_failed_header(path, root, header, classified)
     canonical = "atom_family" in header
     try:
         normalized = native_header_view(header)
@@ -36,12 +42,9 @@ def _carrier_row(path: Path, root: Path, family: str, prefix: str, raw: bytes, *
         raise ValueError("Invalid native Atom identity or version")
     if not canonical and match[1] not in family:
         raise ValueError("Native Atom family disagrees with its logical tree")
-    if status in CURRENT_STATUSES[match[1]]:
-        group = "Current"
-    elif status in ("draft", "archived"):
-        group = status.title()
-    else:
+    if status not in (domains or status_domains({}))[match[1]]:
         raise ValueError("Invalid native status for Atom family")
+    group = status.title() if status in ("draft", "archived") else "Current"
     exact = derive_atom_ref(atom_id, version, status)
     marker = atom_id if group == "Current" else exact
     if not canonical and (not path.name.startswith(marker + "-") or (
@@ -74,12 +77,12 @@ def _container(container, atom_id: str, pattern: str) -> tuple[str, str]:
     return kind, target
 
 
-def _parse_captured_carrier(selection, path, tree, raw, include_content_properties):
+def _parse_captured_carrier(selection, path, tree, raw, include_content_properties, domains=None, classified=None):
     family = {"_PMETA": "P", "__TKT": "T", "001_TICKETS": "T", "__TICKETS": "T",
               "002_PROJECT_CONFIG": "PC", "__PROJECT_CONFIG": "PC",
               PROJECT_CONFIG_DIRECTORY: "PC", TICKET_DIRECTORY: "T"}.get(tree, "S")
     row, edge = _carrier_row(path, selection.root, family, selection.project_prefix, raw,
-                             include_content_properties=include_content_properties)
+                             include_content_properties=include_content_properties, domains=domains, classified=classified)
     if tree is None and path != selection.manifest_path:
         context = native_header_view(row["header_json"])["context"]
         if (row["status"] != "active" or context.get("template") != "project_goal"

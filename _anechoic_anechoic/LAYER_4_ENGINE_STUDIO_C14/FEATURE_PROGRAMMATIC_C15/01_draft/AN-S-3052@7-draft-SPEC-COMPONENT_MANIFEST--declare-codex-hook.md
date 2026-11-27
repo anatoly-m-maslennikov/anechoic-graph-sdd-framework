@@ -30,9 +30,8 @@ declare_entity(
         name='CODEX_HOOK',
         lens_whitelist=['DES'],
         boundaries={
-            'code': {
-                'imports': {'only': []},
-            },
+            'code': {'exports': {'FEATURE_CODEX_HOOK__shared': None, 'FEATURE_CODEX_HOOK__shared.main': None},
+             'imports': {'only': []}},
             'io': {
                 'server': {
                     'bind_codex_hook_request': {

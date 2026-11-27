@@ -8,8 +8,8 @@ context:
   lens: DevOps
 state:
   status: "active"
-  version: 19
-  updated_at: "2026-11-25T20:09:41.748845+00:00"
+  version: 20
+  updated_at: "2026-11-26T14:47:16.466812+00:00"
 ---
 ## Summary
 
@@ -27,4 +27,4 @@ Every represented non-ephemeral Entity has at least one declared Carrier or a lo
 
 ## Details
 
-a binding **may** use a shared Carrier **or** a location within it. A carried Property does not require a separate file or authored CARRIES edge. Its representation follows the applicable owner/property Policy. A derived property can be represented in a Projection without making the Projection authoritative for its source. A retained Event uses the Event Record under AN-S-2162.
+a binding **may** use a shared Carrier **or** a location within it. A carried Property does not require a separate file. Its representation follows the applicable owner/property Policy. A derived property can be represented in a Projection without making the Projection authoritative for its source. A retained Event uses the Event Record under AN-S-2162.

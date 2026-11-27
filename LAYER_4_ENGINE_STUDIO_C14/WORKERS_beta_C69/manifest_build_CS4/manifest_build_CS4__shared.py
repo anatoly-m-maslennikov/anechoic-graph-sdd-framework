@@ -12,20 +12,26 @@ from hashlib import sha256
 from pathlib import Path, PurePosixPath
 
 ENGINE = Path(__file__).resolve().parents[2]
-COMPILER = ("FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR."
-            "manifest_compiler_CS1.compiler")
+COMPILER = "FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.compile_project__pub"
 _COMPILER_ENTRY = Path(*COMPILER.split(".")).with_suffix(".py")
+_MODEL_COMPILER_ENTRY = Path("FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/LAYER_2_FORMAL_MODEL_C51/FEATURE_FORMAL_MODEL_GENERATOR/manifest_compiler_CS1/compiler.py")
 _COMPILER_SOURCE_DIRECTORIES = (
     *_COMPILER_ENTRY.parents[:-1],
-    Path("FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_MODEL_VALIDATION"),
+    Path("FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/LAYER_1_SOURCE_ADAPTERS_C95"),
+    Path("FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/LAYER_2_FORMAL_MODEL_C51/FEATURE_FORMAL_MODEL_GENERATOR/manifest_compiler_CS1"),
+    Path("FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/LAYER_2_FORMAL_MODEL_C51/FEATURE_FORMAL_MODEL_GENERATOR"),
+    Path("FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/LAYER_2_FORMAL_MODEL_C51"),
+    Path("FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/LAYER_2_PROJECT_STRUCTURE_C93"),
+    Path("FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/LAYER_2_FORMAL_MODEL_C51/FEATURE_MODEL_VALIDATION"),
     Path("FEATURE_PROGRAMMATIC/FEATURE_FORMAL_MODEL_ENGINE"),
     Path("FEATURE_PROGRAMMATIC/FEATURE_TOOLS"),
     Path("FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ADAPTERS_C30"),
 )
 FIELDS = {"root", "control_root", "manifest_path", "manifest_sha256", "project_prefix"}
 _COMPONENT_DIRECTORY = re.compile(r"(?!__).+_C[0-9]+$")
+_TIER_ONE_DIRECTORY = re.compile(r"01_[A-Z][A-Z0-9_]*$")
 _SPEC_CANDIDATE = re.compile(r"[A-Z]+-S-")
-_REVIEWED_MODEL = ENGINE / "FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_GENERATED_MODEL_C52"
+_REVIEWED_MODEL = ENGINE / "FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/LAYER_2_FORMAL_MODEL_C51/FEATURE_GENERATED_MODEL_C52"
 _REVIEWED_CLAIMS = ("native-graph-claims.json", "native-spec-template-claims.json")
 _FILE_LIMIT = 64 * 1024 * 1024
 
@@ -112,7 +118,8 @@ def _directory_candidates(directory, consume):
         with os.scandir(descriptor) as entries:
             for entry in entries:
                 consume()
-                if entry.name.endswith((".md", ".py")) or _COMPONENT_DIRECTORY.fullmatch(entry.name):
+                if (entry.name.endswith((".md", ".py")) or _COMPONENT_DIRECTORY.fullmatch(entry.name)
+                        or _TIER_ONE_DIRECTORY.fullmatch(entry.name)):
                     names.append(entry.name)
         return names
     finally:
@@ -121,15 +128,23 @@ def _directory_candidates(directory, consume):
 
 def _compiler_sources(inventory):
     yield ENGINE / _COMPILER_ENTRY
+    yield ENGINE / _MODEL_COMPILER_ENTRY
     for relative in _COMPILER_SOURCE_DIRECTORIES:
         directory = ENGINE / relative
         yield from (directory / name for name in inventory(directory)
                     if name.endswith(".py") and not name.startswith("test_"))
 
 
+def _compiler_sha256():
+    sources = set(_compiler_sources(lambda directory: _directory_candidates(directory, lambda: None)))
+    sources.update(_REVIEWED_MODEL / name for name in _REVIEWED_CLAIMS)
+    evidence = [(path.relative_to(ENGINE).as_posix(), _read_digest(path, _FILE_LIMIT)[0])
+                for path in sorted(sources)]
+    return sha256(json.dumps(evidence, separators=(",", ":")).encode()).hexdigest()
+
+
 def _manifest_candidates(root, control, checkpoint):
-    inventories = {}
-    remaining = 1_000_000
+    inventories, remaining = {}, 1_000_000
 
     def consume():
         nonlocal remaining
@@ -163,12 +178,16 @@ def _manifest_candidates(root, control, checkpoint):
         for location, carriers in ((directory, names), (directory / "_SPEC", inventory(directory / "_SPEC"))):
             files.update(location / name for name in carriers
                          if name.endswith(".md") and _SPEC_CANDIDATE.match(name))
+        for folder in names:
+            if _TIER_ONE_DIRECTORY.fullmatch(folder) and not _COMPONENT_DIRECTORY.fullmatch(folder):
+                files.update(directory / folder / name for name in inventory(directory / folder) if name.endswith(".md"))
         if directory != control and directory.name.endswith("_C9"):
-            for location in (directory, directory / "_SPEC", directory / "_DES"):
+            for location in (directory, directory / "_SPEC", directory / "_DES", directory / "_DOM" / "CONT"):
                 files.update(location / name for name in inventory(location) if name.endswith(".md"))
     for directory in (control / "__PROJECT_CONFIG/CUSTOM_MODEL", control / "002_PROJECT_CONFIG/CUSTOM_MODEL"):
         files.update(directory / name for name in inventory(directory) if name.endswith(".md"))
     files.update(_compiler_sources(inventory))
+    files.add(ENGINE / "FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/LAYER_2_PROJECT_STRUCTURE_C93/LAYER_2_PROJECT_STRUCTURE_C93__shared.py")
     files.update(_REVIEWED_MODEL / name for name in _REVIEWED_CLAIMS)
     directories = sorted(str(path) for path, names in inventories.items() if names is not None)
     return project, directories, sorted(files)
@@ -207,7 +226,7 @@ def manifest_input_signature(binding, *, watcher_guarded=False) -> str | None:
         root = Path(binding["root"])
         control = root / binding["control_root"]
         before = sample()
-        return before[0] if before == sample() else None
+        return before[0] if watcher_guarded or before == sample() else None
     except (OSError, RuntimeError, TypeError, ValueError):
         return None
 
@@ -216,6 +235,8 @@ def compile_generation(binding, stage, model_inputs=None):
     env = {key: value for key, value in os.environ.items() if key != "PYTHONHOME"}
     env["PYTHONPATH"] = str(ENGINE)
     model_args = ["--ingested-model"] if model_inputs is not None else ["--build-model"]
+    if model_inputs is not None:
+        model_inputs = {**model_inputs, "compiler_sha256": _compiler_sha256()}
     result = subprocess.run(
         [sys.executable, "-B", "-P", "-m", COMPILER, binding["root"], binding["control_root"],
          binding["manifest_sha256"], str(stage), *model_args, "--attest-model"],
@@ -227,13 +248,17 @@ def compile_generation(binding, stage, model_inputs=None):
         error = ValueError("Manifest compiler failed: " + stderr[-2048:])
         if model_inputs is not None:
             try:
-                error.model_diagnostics = json.loads(stderr)["model_diagnostics"]
+                record = stderr.rstrip().rsplit("\n", 1)[-1]
+                error.model_diagnostics = json.loads(record)["model_diagnostics"]
             except (ValueError, KeyError, TypeError):
                 pass
         raise error
     if os.getenv("ANECHOIC_STARTUP_TIMING") == "1" and result.stderr:
         sys.stderr.write(result.stderr[-8192:].decode(errors="replace"))
     artifact = json.loads(result.stdout)
+    if (model_inputs is not None and model_inputs.get("snapshot_id") is not None
+            and artifact.get("snapshot_id") != model_inputs["snapshot_id"]):
+        raise ValueError("Manifest compiler returned a different Spec snapshot identity")
     compiled = artifact["structure"]
     project = compiled["project"]
     if (project["sha256"] != binding["manifest_sha256"]
@@ -247,7 +272,9 @@ def compile_generation(binding, stage, model_inputs=None):
 def build(binding, output, model_inputs=None):
     output = Path(output)
     validate(binding, output)
-    verify_pin(binding)
+    offline = model_inputs is None or model_inputs.get("spec_rows") is None
+    if offline:
+        verify_pin(binding)
     with tempfile.TemporaryDirectory(prefix=".manifest-build-", dir=output.parent) as temporary:
         stage = Path(temporary) / "generation"
         stage.mkdir()
@@ -255,7 +282,8 @@ def build(binding, output, model_inputs=None):
         structure, descriptor_hash = compiled[:2]
         raw = json.dumps(structure, sort_keys=True, separators=(",", ":")).encode()
         (stage / "structure.json").write_bytes(raw)
-        verify_pin(binding)
+        if offline:
+            verify_pin(binding)
         if output.is_symlink() or not output.is_dir() or any(output.iterdir()):
             raise ValueError("Output directory changed during build")
         os.replace(stage, output)

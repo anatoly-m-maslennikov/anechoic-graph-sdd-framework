@@ -28,7 +28,7 @@ def _carrier_effects(lifecycle):
     return final
 
 
-def _delta(binding, endpoints, base_generation, lifecycle, name, *, manifest_admitted=False):
+def _delta(binding, endpoints, base_generation, lifecycle, name, *, manifest_admitted=False, domains=None):
     from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
         capture_carrier_delta, capture_ticket_delta,
     )
@@ -38,6 +38,8 @@ def _delta(binding, endpoints, base_generation, lifecycle, name, *, manifest_adm
         return None
     capture = capture_ticket_delta if name == "atom_lifecycle_direct_update" else capture_carrier_delta
     options = {"include_hashes": True}
+    if domains is not None:
+        options["domains"] = domains
     if manifest_admitted:
         options["manifest_admitted"] = True
     result = capture(binding, list(final), endpoints, **options)
@@ -83,7 +85,10 @@ def run(request, *, indexed_draft=None):
         payload = {"binding": binding, "name": request.name, "arguments": request.arguments}
         lifecycle = _run_job(_OWNER, {**payload, "generation": str(generation), "receipt": receipt})
         try:
-            delta = _delta(binding, endpoints, request.base_generation, lifecycle, request.name)
+            from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import status_domains
+
+            domains = status_domains(json.loads((generation / "model.json").read_bytes())["bindings"])
+            delta = _delta(binding, endpoints, request.base_generation, lifecycle, request.name, domains=domains)
             if delta is not None and manifest_input_signature(binding) != before:
                 observed = root / "after"
                 observed.mkdir()
@@ -101,7 +106,10 @@ def _run_indexed(request, *, indexed_draft=None):
     payload = {"binding": binding, "name": request.name, "arguments": request.arguments, request.key: indexed}
     lifecycle = _run_job(_OWNER, payload) if indexed_draft is None else indexed_draft(payload)
     try:
-        delta = _delta(binding, endpoints, request.base_generation, lifecycle, request.name, manifest_admitted=True)
+        projected = getattr(request.indexed, "status_domains", None)
+        domains = {family: set(values) for family, values in projected.items()} if projected is not None else None
+        delta = _delta(binding, endpoints, request.base_generation, lifecycle, request.name,
+                       manifest_admitted=True, domains=domains)
         return {"lifecycle": lifecycle, "delta": delta, "projection_error": None}
     except Exception as error:
         return {"lifecycle": lifecycle, "delta": None, "projection_error": str(error) or type(error).__name__}

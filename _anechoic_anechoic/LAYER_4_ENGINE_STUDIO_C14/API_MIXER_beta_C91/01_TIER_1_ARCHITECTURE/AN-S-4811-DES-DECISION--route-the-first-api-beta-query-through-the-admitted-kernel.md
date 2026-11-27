@@ -10,13 +10,11 @@ context:
 state:
   status: "active"
   version: 4
-  updated_at: "2026-11-24T23:05:55.119927+00:00"
+  updated_at: '2026-11-26T16:36:22.647504+00:00'
 relations:
   IS_SOLUTION_FOR:
   - AN-S-4810@3
-  IS_REFERENCE:
-  - AN-S-3361@2
-  - AN-S-3387@2
+
 ---
 
 ## Summary
