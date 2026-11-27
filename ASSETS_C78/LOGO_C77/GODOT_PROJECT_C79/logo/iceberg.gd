@@ -32,13 +32,13 @@ const PROFILE := [
 var rings: Array[PackedVector3Array] = []
 
 func _ready() -> void:
+	var arguments := OS.get_cmdline_user_args()
 	_build_view()
 	var ice := _build_ice()
 	_build_clear_flow()
 	ice.set_shader_parameter("opening_mask", _build_path())
 	_build_summit_figure()
-	_build_title()
-	var arguments := OS.get_cmdline_user_args()
+	_build_title(arguments.has("--icon"))
 	var export_index := arguments.find("--render")
 	if export_index >= 0:
 		if export_index + 1 >= arguments.size():
@@ -419,7 +419,7 @@ func _mesh(label: String, surface: SurfaceTool, color: Color) -> MeshInstance3D:
 	add_child(instance)
 	return instance
 
-func _build_title() -> void:
+func _build_title(icon: bool) -> void:
 	var overlay := CanvasLayer.new()
 	overlay.name = "Wordmark"
 	add_child(overlay)
@@ -428,16 +428,21 @@ func _build_title() -> void:
 	font.font_names = PackedStringArray(["Avenir Next", "DejaVu Sans", "sans-serif"])
 	font.font_weight = 600
 	var title := Label.new()
-	title.text = "Anechoic"
+	title.text = "A" if icon else "Anechoic"
 	title.anchor_right = 1.0
-	title.offset_top = 13.0
-	title.offset_bottom = 76.0
+	title.offset_top = -9.0 if icon else 13.0
+	title.offset_bottom = 107.0 if icon else 76.0
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	title.add_theme_font_override("font", font)
-	title.add_theme_font_size_override("font_size", 46)
-	title.add_theme_color_override("font_color", Color("#173d34"))
+	title.add_theme_font_size_override("font_size", 86 if icon else 46)
+	title.add_theme_color_override("font_color", Color("#eaf1d9") if icon else Color("#173d34"))
+	if icon:
+		title.offset_left = 18.0
+		title.offset_right = 18.0
+		title.add_theme_color_override("font_outline_color", Color("#315c55"))
+		title.add_theme_constant_override("outline_size", 10)
 	overlay.add_child(title)
 
 func _save_png(output: String) -> void:
