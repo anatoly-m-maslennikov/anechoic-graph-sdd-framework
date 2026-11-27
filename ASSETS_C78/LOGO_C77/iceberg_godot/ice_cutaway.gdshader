@@ -1,7 +1,7 @@
 shader_type spatial;
 render_mode unshaded, cull_disabled, fog_disabled;
 
-uniform sampler2D opening_mask : filter_nearest, repeat_disable;
+uniform sampler2D opening_mask : filter_linear, repeat_disable;
 uniform float view_size;
 varying vec3 ice_position;
 
