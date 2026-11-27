@@ -10,9 +10,14 @@ import tempfile
 import threading
 import time
 import unittest
+from copy import deepcopy
 from http.server import BaseHTTPRequestHandler
 
 import httpx2
+from jsonschema import Draft202012Validator
+from openapi_spec_validator import validate
+
+from ..openapi import export_openapi
 
 
 ENGINE = Path(__file__).resolve().parents[2]
@@ -160,6 +165,67 @@ class SharedRuntimeTest(unittest.TestCase):
         self.assertEqual({"prefix": "AN", "instance_id": INSTANCE}, result["project"])
         self.assertEqual([b"R"], self.servers[0].releases)
         self.assertEqual(INSTANCE, self.servers[1].requests[-1]["instance_id"])
+
+    def test_openapi_matches_shared_http(self):
+        document = export_openapi("test")
+        validate(document)
+        self.assertEqual(document, export_openapi("test"))
+        operations = document["paths"]["/tools"]
+        catalog = self.client.get("/tools").json()
+        catalog_contract = operations["get"]["responses"]["200"]["content"][
+            "application/json"
+        ]
+        Draft202012Validator(catalog_contract["schema"]).validate(catalog)
+        self.assertEqual(catalog_contract["example"], catalog)
+
+        post = operations["post"]
+        schema = post["requestBody"]["content"]["application/json"]["schema"]
+        request = Draft202012Validator(schema)
+        branches = {
+            branch["properties"]["name"]["const"]: branch["properties"]
+            for branch in schema["oneOf"]
+        }
+        self.assertEqual(len(branches), len(schema["oneOf"]))
+        self.assertEqual(
+            set(branches),
+            {tool["name"] for tool in catalog["result"]["tools"]},
+        )
+        for tool in catalog["result"]["tools"]:
+            advertised = deepcopy(tool["inputSchema"])
+            del advertised["properties"]["caller_context"]
+            advertised["properties"]["project_root"]["pattern"] = r"\S"
+            self.assertEqual(branches[tool["name"]]["arguments"], advertised)
+
+        call = {
+            "name": "query_run",
+            "arguments": {
+                "project_root": str(self.path),
+                "sql": "SELECT 42",
+                "result_delivery": "inline",
+            },
+            "session_id": None,
+            "public_base_url": None,
+        }
+        request.validate(call)
+        wrong_tool = call | {"name": "query_schema"}
+        self.assertFalse(request.is_valid(wrong_tool))
+        self.assertFalse(request.is_valid(call | {"session_id": "  "}))
+        self.assertFalse(
+            request.is_valid(call | {"arguments": {"sql": "SELECT 42"}})
+        )
+
+        cases = ((call, None), (wrong_tool, "tool_input_invalid"))
+        for payload, code in cases:
+            response = self.client.post("/tools", json=payload)
+            content = post["responses"][str(response.status_code)]["content"]
+            result = response.json()
+            Draft202012Validator(
+                content["application/json"]["schema"]
+            ).validate(result)
+            if code is None:
+                self.assertEqual(result["result"]["value"]["rows"], [[42]])
+            else:
+                self.assertEqual(result["error"]["code"], code)
 
     def test_rebound_project_refuses_lifecycle_before_a_lease_or_write(self):
         owner, database, jobs = self.servers

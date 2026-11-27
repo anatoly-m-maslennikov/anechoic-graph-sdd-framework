@@ -130,6 +130,10 @@ RUN PYTHONPYCACHEPREFIX=/workspace/.anechoic_tmp/python/bytecode \
     /workspace/LAYER_4_ENGINE_STUDIO_C14/API_MIXER_beta_C91 \
     && chmod -R a+rX "$PYTHONPYCACHEPREFIX" \
     /workspace/LAYER_4_ENGINE_STUDIO_C14/API_MIXER_beta_C91
+RUN mkdir -p /usr/local/share/anechoic \
+    && PYTHONPATH=LAYER_4_ENGINE_STUDIO_C14 \
+    /opt/venv/bin/python -B -m API_MIXER_beta_C91.openapi \
+    > /usr/local/share/anechoic/openapi.json
 USER anechoic
 
 FROM runtime_base AS current
