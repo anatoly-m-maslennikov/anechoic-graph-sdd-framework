@@ -15,5 +15,9 @@ void fragment() {
 	if (opening > 0.5 && ice_position.z > 0.0) {
 		discard;
 	}
-	ALBEDO = mix(COLOR.rgb, vec3(0.10, 0.23, 0.27), opening * 0.82);
+	float ceiling = texture(opening_mask, section - vec2(0.0, 0.007)).r;
+	float bevel = max(0.0, ceiling - opening);
+	vec3 ice = mix(COLOR.rgb, vec3(0.92, 0.98, 0.91), bevel * 0.24);
+	vec3 wall = mix(ice, vec3(0.13, 0.24, 0.26), 0.54 + 0.16 * (1.0 - ceiling));
+	ALBEDO = mix(ice, wall, opening);
 }

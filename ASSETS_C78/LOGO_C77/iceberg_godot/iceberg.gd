@@ -5,9 +5,23 @@ const CUTAWAY = preload("res://ice_cutaway.gdshader")
 const VIEW_SIZE := 6.4
 const SECTION_RESOLUTION := 500
 const SIDES := 15
-const PATH_STEPS := 180
 const ICE_WIDTH := 0.876
 const FIGURE_HEAD := Vector3(0.016, 0.35, 0)
+const PASSAGE := [
+	Vector3(-0.37, 1.79, 0.05),
+	Vector3(-0.18, 1.45, 0.17),
+	Vector3(0.48, 1.05, 0.31),
+	Vector3(0.49, 0.78, 0.27),
+	Vector3(-0.62, 0.32, 0.52),
+	Vector3(-0.78, 0.00, 0.44),
+	Vector3(-0.35, -0.33, 0.57),
+	Vector3(0.85, -0.78, 0.35),
+	Vector3(1.00, -1.06, 0.29),
+	Vector3(0.42, -1.40, 0.61),
+	Vector3(-0.78, -1.86, 0.37),
+	Vector3(-0.83, -2.12, 0.21),
+	Vector3(-0.59, -2.51, 0.14),
+]
 const PRISM := [
 	Color("#6654af"), Color("#3e6abb"), Color("#3baebf"), Color("#8ed8bb"),
 	Color("#b3d98e"), Color("#dce27d"), Color("#f9d863"), Color("#f9c848"),
@@ -126,31 +140,36 @@ func _build_clear_flow() -> void:
 	flow.begin(Mesh.PRIMITIVE_TRIANGLE_STRIP)
 	for index in range(41):
 		var progress := float(index) / 40.0
-		var angle := lerpf(-0.76, 0.84, progress)
-		var y := 0.83 + sin(progress * TAU) * 0.095
+		var angle := lerpf(-0.91, 0.37, progress)
+		var y := 1.08 + sin(progress * TAU) * 0.058
 		var half_width := sin(progress * PI) * 0.022
 		for edge: float in [y - half_width, y + half_width]:
 			flow.add_vertex(_wall_point(edge, angle) + Vector3(0, 0, 0.014))
 	_mesh("ClearFlowInsideIce", flow, Color("#fffcdf"))
 
 func _build_path() -> ImageTexture:
-	var top_angle := -0.70
-	var bottom_angle := TAU * 2.0 + 0.90
-	var water_fraction := 1.79 / (1.79 + 2.65)
-	var water_angle := lerpf(top_angle, bottom_angle, water_fraction)
-	var above_steps := roundi(PATH_STEPS * water_fraction)
-	var above := _build_path_section(Vector2(1.79, top_angle), Vector2(0, water_angle), above_steps)
-	var underwater := _build_path_section(
-		Vector2(0, water_angle), Vector2(-2.65, bottom_angle), PATH_STEPS - above_steps
-	)
+	var air := PackedVector3Array()
+	var water := PackedVector3Array()
+	for index in range(PASSAGE.size() - 1):
+		var from: Vector3 = PASSAGE[index]
+		var to: Vector3 = PASSAGE[index + 1]
+		var before: Vector3 = PASSAGE[maxi(index - 1, 0)]
+		var after: Vector3 = PASSAGE[mini(index + 2, PASSAGE.size() - 1)]
+		var samples := air if from.y > 0.0 else water
+		for step in range(16):
+			samples.append(from.cubic_interpolate(to, before, after, float(step) / 16.0))
+	air.append(water[0])
+	water.append(PASSAGE[-1])
+	assert(is_zero_approx(air[-1].y) and air[-1].is_equal_approx(water[0]))
+	var above := _build_path_section(air, false)
+	var underwater := _build_path_section(water, true)
 	_build_oceanarium(underwater)
 	var mask := Image.create_empty(SECTION_RESOLUTION, SECTION_RESOLUTION, false, Image.FORMAT_R8)
-	_cut_passage(mask, above, top_angle, water_angle, 0.31)
-	_cut_passage(mask, underwater, water_angle, bottom_angle, 0.46)
+	_cut_passage(mask, above, 0.24)
+	_cut_passage(mask, underwater, 0.32)
 	return ImageTexture.create_from_image(mask)
 
-func _build_path_section(start: Vector2, finish: Vector2, steps: int) -> Array[PackedVector3Array]:
-	var submerged := finish.x < 0.0
+func _build_path_section(samples: PackedVector3Array, submerged: bool) -> Array[PackedVector3Array]:
 	var track := SurfaceTool.new()
 	var rim := SurfaceTool.new()
 	var rails := SurfaceTool.new()
@@ -159,63 +178,51 @@ func _build_path_section(start: Vector2, finish: Vector2, steps: int) -> Array[P
 		surface.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var sections: Array[PackedVector3Array] = []
 	var distance_since_post := 1.0
-	for index in range(steps + 1):
-		var point := start.lerp(finish, float(index) / steps)
-		var y := point.x
-		var angle := point.y
-		var wall := _wall_point(y, angle)
-		var spine := (_wall_point(y, angle + PI) + wall) * 0.5
-		var spoke := wall - spine
-		var width := lerpf(0.255, 0.36, smoothstep(0.0, 0.42, -y))
-		var inset := lerpf(0.15, 0.43, smoothstep(0.85, 1.72, y))
-		var outer := wall - spoke * inset
-		var inner := outer - spoke.normalized() * minf(width, spoke.length() * 0.60)
-		assert(inner.distance_to(spine) < outer.distance_to(spine))
-		var clearance := -y if submerged else PROFILE[0].x - y - 0.025
-		var rail_height := minf(0.215, clearance)
+	for index in range(samples.size()):
+		var point := samples[index]
+		var width := minf(0.23, PROFILE[0].x - point.y + 0.04)
+		var inner := point - Vector3(0.058, 0, width * 0.5)
+		var outer := point + Vector3(0.058, 0, width * 0.5)
+		var rail_height := minf(0.16, PROFILE[0].x - point.y - 0.021)
 		var guard := outer + Vector3.UP * rail_height
 		var current := PackedVector3Array([inner, outer, guard])
 		if index > 0:
 			var previous := sections.back() as PackedVector3Array
 			_quad(track, previous[0], previous[1], outer, inner)
-			_quad(rim, previous[1], previous[1] + Vector3.DOWN * 0.082, outer + Vector3.DOWN * 0.082, outer)
-			_bar(rails, previous[2], guard, 0.028)
+			_quad(rim, previous[1], previous[1] + Vector3.DOWN * 0.042, outer + Vector3.DOWN * 0.042, outer)
+			_bar(rails, previous[2], guard, 0.012)
 			distance_since_post += outer.distance_to(previous[1])
-		if rail_height > 0 and (distance_since_post >= 0.36 or index == steps):
-			_bar(posts, outer, guard, 0.026)
+		if distance_since_post >= 0.29 or index == samples.size() - 1:
+			_bar(posts, outer, guard, 0.010)
 			distance_since_post = 0.0
 		sections.append(current)
 	if submerged:
-		_mesh("OceanariumWalkway", track, Color("#a0d7d1"))
-		_mesh("OceanariumWalkwayEdge", rim, Color("#285c70"))
-		_mesh("OceanariumGuardrail", rails, Color("#e3f8ec"))
-		_mesh("OceanariumGuardrailPosts", posts, Color("#7fbec8"))
+		_mesh("OceanariumWalkway", track, Color("#8cb8bc"))
+		_mesh("OceanariumWalkwayEdge", rim, Color("#b9e5da"))
+		_mesh("OceanariumGuardrail", rails, Color("#b0d8d3"))
+		_mesh("OceanariumGuardrailPosts", posts, Color("#8bafbe"))
 	else:
-		_mesh("SpiralWalkway", track, Color("#f0c782"))
-		_mesh("WalkwayTimberEdge", rim, Color("#9a5433"))
-		_mesh("Guardrail", rails, Color("#f6bb58"))
-		_mesh("GuardrailPosts", posts, Color("#c36f43"))
+		_mesh("SpiralWalkway", track, Color("#b59f6e"))
+		_mesh("WalkwayTimberEdge", rim, Color("#e9be77"))
+		_mesh("Guardrail", rails, Color("#f6dc97"))
+		_mesh("GuardrailPosts", posts, Color("#dcc48f"))
 	return sections
 
-# Cut the front shell along the camera-facing stretches of the inset path.
-func _cut_passage(mask: Image, sections: Array[PackedVector3Array], start: float,
-		finish: float, roof: float) -> void:
+# A single profile cut follows the floor and ceiling of the interior route.
+func _cut_passage(mask: Image, sections: Array[PackedVector3Array], roof: float) -> void:
 	var previous := PackedVector2Array()
 	for index in range(sections.size()):
-		var phase := lerpf(start, finish, float(index) / (sections.size() - 1))
-		var reveal := smoothstep(0.28, 0.66, cos(phase))
 		var inner := sections[index][0]
 		var outer := sections[index][1]
-		var center := (outer.x + inner.x) * 0.5
-		var radius := (absf(outer.x - inner.x) * 0.5 + 0.052) * reveal
 		var slice := PackedVector2Array()
-		for dx: float in [-radius, radius]:
-			for dy: float in [-0.103 * reveal, minf(roof, PROFILE[0].x - outer.y) * reveal]:
-				var point := Vector2(center + dx, -outer.y - dy) / VIEW_SIZE + Vector2(0.5, 0.5)
+		var ceiling := minf(roof, PROFILE[0].x - outer.y - 0.023)
+		for x: float in [inner.x - 0.023, outer.x + 0.023]:
+			for dy: float in [-0.065, ceiling]:
+				var point := Vector2(x, -outer.y - dy) / VIEW_SIZE + Vector2(0.5, 0.5)
 				slice.append(point * SECTION_RESOLUTION)
-		if reveal > 0.0 and not previous.is_empty():
+		if not previous.is_empty():
 			_fill_passage_mask(mask, Geometry2D.convex_hull(previous + slice))
-		previous = slice if reveal > 0.0 else PackedVector2Array()
+		previous = slice
 
 func _fill_passage_mask(mask: Image, polygon: PackedVector2Array) -> void:
 	var bounds := Rect2(polygon[0], Vector2.ZERO)
@@ -240,7 +247,7 @@ func _build_oceanarium(sections: Array[PackedVector3Array]) -> void:
 		var outer := sections[index][1]
 		var center := (inner + outer) / 2.0
 		var half_width := (outer - inner) * 0.57
-		var height := minf(0.41, -center.y)
+		var height := minf(0.275, -center.y)
 		var arch := PackedVector3Array()
 		for point in range(9):
 			var angle := PI * float(point) / 8.0
@@ -248,18 +255,18 @@ func _build_oceanarium(sections: Array[PackedVector3Array]) -> void:
 		if index > 0:
 			for point in range(8):
 				_quad(glass, previous[point], previous[point + 1], arch[point + 1], arch[point])
-			_bar(seam, previous[4], arch[4], 0.012)
+			_bar(seam, previous[4], arch[4], 0.008)
 			rib_spacing += arch[0].distance_to(previous[0])
-		if rib_spacing >= 0.32 or index == sections.size() - 1:
+		if rib_spacing >= 0.41 or index == sections.size() - 1:
 			for point in range(8):
-				_bar(frame, arch[point], arch[point + 1], 0.015)
+				_bar(frame, arch[point], arch[point + 1], 0.010)
 			rib_spacing = 0.0
 		previous = arch
-	var canopy := _mesh("OceanariumGlass", glass, Color(0.74, 0.96, 1.0, 0.20))
+	var canopy := _mesh("OceanariumGlass", glass, Color(0.60, 0.88, 0.94, 0.20))
 	var material := canopy.material_override as StandardMaterial3D
 	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	_mesh("OceanariumArchedRibs", frame, Color("#a0d9e0"))
-	_mesh("OceanariumRoofSeam", seam, Color("#e0f9ef"))
+	_mesh("OceanariumArchedRibs", frame, Color("#9acbd0"))
+	_mesh("OceanariumRoofSeam", seam, Color("#c2e4e4"))
 
 func _summit() -> Vector3:
 	return Vector3(PROFILE[0].w * ICE_WIDTH, PROFILE[0].x, 0.0)
