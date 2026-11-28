@@ -39,50 +39,34 @@ float rolling_crest(float delta, float front, float back) {
 
 float surface_swell(float x) {
 	// The floating letters follow this profile in iceberg.gd.
-	return 7.0 + 1.5 * sin(x * 0.12)
-		- 25.0 * rolling_crest(x - 53.0, 14.0, 34.0)
-		- 16.0 * rolling_crest(x - 139.0, 11.0, 26.0)
-		- 29.0 * rolling_crest(x - 412.0, 14.0, 41.0)
-		- 14.0 * rolling_crest(x - 488.0, 9.0, 25.0);
-}
-
-float grain(vec2 cell) {
-	return fract(sin(dot(cell, vec2(127.1, 311.7))) * 43758.5453);
-}
-
-float water_noise(vec2 point) {
-	vec2 cell = floor(point);
-	vec2 fade = smoothstep(vec2(0.0), vec2(1.0), fract(point));
-	float top = mix(grain(cell), grain(cell + vec2(1.0, 0.0)), fade.x);
-	float bottom = mix(grain(cell + vec2(0.0, 1.0)), grain(cell + vec2(1.0, 1.0)), fade.x);
-	return mix(top, bottom, fade.y);
+	return 11.0 + 4.5 * sin(x * 0.041 + 0.4)
+		- 46.0 * rolling_crest(x - 74.0, 36.0, 17.0)
+		- 15.0 * rolling_crest(x - 141.0, 23.0, 40.0)
+		- 57.0 * rolling_crest(x - 421.0, 21.0, 49.0)
+		- 13.0 * rolling_crest(x - 488.0, 16.0, 30.0);
 }
 
 vec3 distant_water(vec2 pixel, vec3 sky) {
-	float horizon = 243.0 + 4.2 * sin(pixel.x * 0.051 + 0.48) + 2.0 * sin(pixel.x * 0.10);
+	float horizon = 242.0 + 2.8 * sin(pixel.x * 0.041 + 0.48);
 	float depth = pixel.y - horizon;
 	float seen = smoothstep(-1.1, 0.9, depth);
 	float reflected_light = 1.0 - smoothstep(0.0, 8.0, depth);
-	vec3 mist = mix(vec3(0.15, 0.34, 0.38), vec3(0.37, 0.55, 0.56), reflected_light);
+	vec3 mist = mix(vec3(0.24, 0.45, 0.47), vec3(0.48, 0.61, 0.61), reflected_light);
 	return mix(sky, mist, seen);
 }
 
 vec3 surface_water(vec2 pixel, float swell, float depth, vec3 water) {
-	float crest = 1.0 - smoothstep(-18.0, 1.0, swell);
+	float crest = 1.0 - smoothstep(-43.0, 3.0, swell);
 	float slope = surface_swell(pixel.x + 1.0) - swell;
-	float front = 1.0 - smoothstep(-0.35, 0.42, slope);
-	float face = 1.0 - smoothstep(1.5, 24.0, depth);
-	float rolls = water_noise(vec2(pixel.x * 0.14 + depth * 0.21, depth * 0.34));
-	vec3 glass = mix(vec3(0.06, 0.28, 0.35), vec3(0.37, 0.70, 0.68), crest * (0.55 + 0.45 * rolls));
-	water = mix(water, glass, face * 0.82);
+	float front = 1.0 - smoothstep(-0.85, 0.57, slope);
+	float face = 1.0 - smoothstep(1.0, 27.0, depth);
+	vec3 glass = mix(vec3(0.13, 0.37, 0.43), vec3(0.22, 0.54, 0.56), crest);
+	water = mix(water, glass, face * 0.84);
 
-	float flecks = water_noise(pixel * vec2(0.55, 0.62));
-	float foam = smoothstep(0.3, 0.69, rolls * 0.62 + flecks * 0.38);
-	float spill = (1.0 - smoothstep(1.0, 5.5 + 9.0 * rolls, depth)) * crest * front;
-	float rim = (1.0 - smoothstep(0.2, 1.8 + rolls * 2.0, abs(depth))) * crest;
-	float folds = 1.0 - smoothstep(0.025, 0.12, abs(rolls - 0.54));
-	float lace = folds * face * crest * smoothstep(0.32, 0.66, flecks);
-	return mix(water, vec3(0.88, 0.95, 0.90), clamp(spill * foam + rim * 0.55 + lace * 0.34, 0.0, 1.0));
+	float rim = (1.0 - smoothstep(0.40, 2.7, abs(depth))) * (0.15 + 0.80 * crest);
+	float trough = 4.5 + 7.2 * crest + 4.4 * front;
+	float wake = (1.0 - smoothstep(0.20, 1.65, abs(depth - trough))) * crest * (0.10 + 0.38 * front);
+	return mix(water, vec3(0.78, 0.92, 0.87), rim + wake);
 }
 
 float trace(vec2 pixel, vec2 a, vec2 b, float width) {

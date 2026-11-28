@@ -9,6 +9,7 @@ const ICE_WIDTH := 0.876
 const FIGURE_HEAD := Vector3(0, 0.35, 0)
 const ICON_FIGURE_SCALE := 2.0
 const FIGURE_SPACING := 0.29
+const SUMMIT_TILT := -0.15
 const ROUTE_TOP := 1.79
 const ROUTE_BOTTOM := -2.62
 const ARCH_SEGMENTS := 20
@@ -18,15 +19,15 @@ const PRISM := [
 ]
 # Height, horizontal radius, depth radius, and horizontal center.
 const PROFILE := [
-	Vector4(1.92, 0.55, 0.26, 0.00),
-	Vector4(1.62, 0.57, 0.43, -0.04),
-	Vector4(1.11, 0.98, 0.73, -0.10),
-	Vector4(0.55, 1.37, 0.96, -0.12),
-	Vector4(0.00, 1.58, 1.11, -0.03),
-	Vector4(-0.56, 1.88, 1.28, 0.05),
-	Vector4(-1.18, 2.00, 1.37, 0.06),
-	Vector4(-1.83, 1.63, 1.13, -0.08),
-	Vector4(-2.40, 0.97, 0.67, -0.11),
+	Vector4(1.92, 0.47, 0.22, 0.00),
+	Vector4(1.62, 0.58, 0.43, 0.10),
+	Vector4(1.11, 0.98, 0.70, -0.22),
+	Vector4(0.55, 1.40, 0.92, -0.27),
+	Vector4(0.00, 1.69, 1.11, -0.22),
+	Vector4(-0.56, 1.80, 1.28, -0.08),
+	Vector4(-1.18, 1.91, 1.37, 0.29),
+	Vector4(-1.83, 1.47, 1.10, 0.39),
+	Vector4(-2.40, 0.84, 0.64, 0.14),
 	Vector4(-2.85, 0.055, 0.075, -0.05),
 ]
 
@@ -88,28 +89,7 @@ func _build_view(figure_scale: float, icon: bool) -> void:
 func _build_water_text(icon: bool) -> void:
 	var font := SystemFont.new()
 	font.font_names = PackedStringArray(["Menlo", "DejaVu Sans Mono", "monospace"])
-	var letters := "aWdeIrTpsNoMtyAVeLcgUkn"
-	var rng := RandomNumberGenerator.new()
-	rng.seed = 259
-	for sample in range(250):
-		var x := 2.0 * (sample + rng.randf())
-		var crest := _surface_swell(x)
-		var breaking := 1.0 - smoothstep(-16.0, 3.0, crest)
-		var count := floori(lerpf(0.30, 4.85, breaking) + rng.randf())
-		var slope := (_surface_swell(x + 1.0) - _surface_swell(x - 1.0)) * 0.5
-		for _index in range(count):
-			var spray := rng.randf_range(-7.0 - 22.0 * breaking, 9.0)
-			var pixel := Vector2(x + rng.randf_range(-4.0, 4.0) + minf(spray, 0.0) * 0.52,
-				251.0 + crest + spray)
-			var lip := 1.0 - smoothstep(1.0, 11.0, absf(spray))
-			var size := rng.randi_range(5, 10) + roundi(lip * rng.randf_range(2.0, 9.0))
-			var ink := Color("#e3f8ef").lerp(Color("#648d81"), 1.0 - smoothstep(-9.0, -2.0, spray))
-			ink.a = lerpf(0.46, 1.0, breaking) * rng.randf_range(0.60, 1.0)
-			var glyph := letters[rng.randi_range(0, letters.length() - 1)]
-			var letter := _water_label(font, glyph, pixel, size, ink)
-			letter.rotation.z = -atan(slope) * lip + rng.randf_range(-0.90, 0.90)
-			letter.outline_size = 1 if lip > 0.8 else 0
-			letter.outline_modulate = Color(0.22, 0.39, 0.38, ink.a * 0.6)
+	_build_letter_foam()
 
 	if icon:
 		return
@@ -122,14 +102,61 @@ func _build_water_text(icon: bool) -> void:
 	_water_label(font, "MOV AX, 1\nADD AX, BX", Vector2(55, 350), 11, Color("#e1c78a"))
 	_water_label(font, "DEC CX\nJNZ .loop", Vector2(446, 350), 11, Color("#e1c78a"))
 
+func _build_letter_foam() -> void:
+	var glyph_sets := [
+		"abdeIrTpsNoMtyAVeLcgUkn", "αβΓδεθνΞπςΦω", "БвгЖиКлмпРфЯ",
+		"アイうエかキサナほ風水", "ابتجدهزكمين", "अकगचजतदनमलस",
+	]
+	var families := [
+		["Avenir Next", "DejaVu Sans"], ["Georgia", "DejaVu Serif"],
+		["Menlo", "DejaVu Sans Mono"], ["Hiragino Sans", "Noto Sans CJK JP"],
+		["Geeza Pro", "Noto Sans Arabic"], ["Kohinoor Devanagari", "Noto Sans Devanagari"],
+	]
+	var fonts: Array[SystemFont] = []
+	for names: Array in families:
+		var font := SystemFont.new()
+		font.font_names = PackedStringArray(names)
+		fonts.append(font)
+	var foam_inks := [
+		Color("#fff0cb"), Color("#ccecff"), Color("#e4dcfa"),
+		Color("#d2f4e1"), Color("#f9dfdd"),
+	]
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 259
+	for sample in range(146):
+		var x := (500.0 / 146.0) * (sample + rng.randf_range(0.16, 0.84))
+		var swell := _surface_swell(x)
+		var crest := 1.0 - smoothstep(-43.0, 3.0, swell)
+		var count := floori(lerpf(0.38, 3.20, crest) + rng.randf())
+		var slope := (_surface_swell(x + 1.0) - _surface_swell(x - 1.0)) * 0.5
+		for index in range(count):
+			var spray := rng.randf() < crest * 0.24
+			var lift := rng.randf_range(1.0, 6.0) + float(index) * 4.4
+			if spray:
+				lift = -rng.randf_range(3.2, 18.0 + 10.0 * crest)
+			var drift := rng.randf_range(-2.8, 2.8) - minf(lift, 0.0) * 0.37
+			var pixel := Vector2(x + drift, 250.0 + swell + lift)
+			var size := rng.randi_range(6, 10) if spray else rng.randi_range(6, 12)
+			var ink: Color = foam_inks[rng.randi_range(0, foam_inks.size() - 1)]
+			ink.a = rng.randf_range(0.61, 0.91)
+			var script_index := rng.randi_range(0, glyph_sets.size() - 1)
+			var glyphs: String = glyph_sets[script_index]
+			var glyph := glyphs[rng.randi_range(0, glyphs.length() - 1)]
+			var letter := _water_label(fonts[script_index], glyph, pixel, size, ink)
+			var twist := 1.4 if spray else 0.67
+			letter.rotation.z = -atan(slope) + rng.randf_range(-twist, twist)
+			if spray:
+				letter.outline_size = 1
+				letter.outline_modulate = Color(0.31, 0.50, 0.48, ink.a * 0.54)
+
 func _surface_swell(x: float) -> float:
 	# Match the crest in wind_and_water.gdshader.
 	return (
-		7.0 + 1.5 * sin(x * 0.12)
-		- 25.0 * _rolling_crest(x - 53.0, 14.0, 34.0)
-		- 16.0 * _rolling_crest(x - 139.0, 11.0, 26.0)
-		- 29.0 * _rolling_crest(x - 412.0, 14.0, 41.0)
-		- 14.0 * _rolling_crest(x - 488.0, 9.0, 25.0)
+		11.0 + 4.5 * sin(x * 0.041 + 0.4)
+		- 46.0 * _rolling_crest(x - 74.0, 36.0, 17.0)
+		- 15.0 * _rolling_crest(x - 141.0, 23.0, 40.0)
+		- 57.0 * _rolling_crest(x - 421.0, 21.0, 49.0)
+		- 13.0 * _rolling_crest(x - 488.0, 16.0, 30.0)
 	)
 
 func _rolling_crest(delta: float, front: float, back: float) -> float:
@@ -153,14 +180,18 @@ func _build_ice() -> ShaderMaterial:
 	var rings: Array[PackedVector3Array] = []
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 893
-	for profile: Vector4 in ice_profile:
+	for level in range(ice_profile.size()):
+		var profile: Vector4 = ice_profile[level]
 		var ring := PackedVector3Array()
 		for side in range(SIDES):
 			var angle := TAU * float(side) / SIDES
 			var radial := 1.0 + rng.randf_range(-0.09, 0.09)
 			var x := (profile.w + sin(angle) * profile.y * radial) * ICE_WIDTH
 			var z := cos(angle) * profile.z * radial
-			ring.append(Vector3(x, profile.x, z))
+			var y := profile.x
+			if level == 0:
+				y += tan(SUMMIT_TILT) * (x - _summit().x) + 0.11 * z
+			ring.append(Vector3(x, y, z))
 		rings.append(ring)
 
 	var surface := SurfaceTool.new()
@@ -398,7 +429,9 @@ func _summit() -> Vector3:
 func _build_summit_figure(figure_scale: float, icon: bool, index: int) -> void:
 	var figure := Node3D.new()
 	figure.name = ["LeftFigure", "CenterFigure", "RightFigure"][index + 1]
-	figure.position = _summit() + Vector3.RIGHT * index * FIGURE_SPACING * figure_scale
+	var spacing := Vector3.RIGHT.rotated(Vector3.BACK, SUMMIT_TILT) * FIGURE_SPACING * figure_scale
+	figure.position = _summit() + spacing * index
+	figure.rotation.z = SUMMIT_TILT
 	figure.scale = Vector3.ONE * figure_scale
 	add_child(figure)
 
