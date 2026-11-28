@@ -31,6 +31,24 @@ const PROFILE := [
 	Vector4(-2.85, 0.055, 0.075, -0.05),
 ]
 
+# Artwork coordinates and the slope of the waterline at each point.
+const WATERLINE := [
+	Vector3(0, 254, -0.45), Vector3(15, 241, 0.0),
+	Vector3(31, 247, 0.75), Vector3(44, 252, 0.0),
+	Vector3(57, 231, -2.40), Vector3(72, 210, -0.42),
+	Vector3(83, 208, 0.0), Vector3(94, 212, 0.85),
+	Vector3(106, 237, 0.96), Vector3(111, 241, 0.0),
+	Vector3(121, 233, -0.40), Vector3(130, 232, 0.0),
+	Vector3(149, 249, 0.76), Vector3(214, 259, 0.0),
+	Vector3(324, 254, -0.15), Vector3(351, 248, -0.40),
+	Vector3(364, 226, -0.88), Vector3(373, 224, 0.0),
+	Vector3(387, 234, 0.85), Vector3(393, 237, 0.0),
+	Vector3(404, 222, -2.06), Vector3(418, 202, -0.58),
+	Vector3(430, 199, 0.0), Vector3(447, 203, 0.46),
+	Vector3(467, 217, 0.79), Vector3(487, 236, 0.83),
+	Vector3(500, 244, 0.50),
+]
+
 var ice_profile := PROFILE.duplicate()
 @export var favicon_mode := false
 
@@ -78,18 +96,30 @@ func _build_view(figure_scale: float, icon: bool) -> void:
 	var wind_origin := Vector2(figure_head.x, -figure_head.y) / VIEW_SIZE + Vector2(0.5, 0.5)
 	shader.set_shader_parameter("wind_origin", wind_origin)
 	shader.set_shader_parameter("show_technology", not icon)
+	var waterline := _build_waterline()
+	var profile_texture := CurveTexture.new()
+	profile_texture.width = 512
+	profile_texture.curve = waterline
+	shader.set_shader_parameter("waterline", profile_texture)
 	var panel := MeshInstance3D.new()
 	panel.name = "AnalogSkyDigitalWater"
 	panel.mesh = background
 	panel.material_override = shader
 	panel.position.z = -7.0
 	add_child(panel)
-	_build_water_text(icon)
+	_build_water_text(icon, waterline)
 
-func _build_water_text(icon: bool) -> void:
+func _build_waterline() -> Curve:
+	var waterline := Curve.new()
+	waterline.bake_resolution = 512
+	for knot: Vector3 in WATERLINE:
+		waterline.add_point(Vector2(knot.x, knot.y) / 500.0, knot.z, knot.z)
+	return waterline
+
+func _build_water_text(icon: bool, waterline: Curve) -> void:
 	var font := SystemFont.new()
 	font.font_names = PackedStringArray(["Menlo", "DejaVu Sans Mono", "monospace"])
-	_build_letter_foam()
+	_build_letter_foam(waterline)
 
 	if icon:
 		return
@@ -102,7 +132,7 @@ func _build_water_text(icon: bool) -> void:
 	_water_label(font, "MOV AX, 1\nADD AX, BX", Vector2(55, 350), 11, Color("#e1c78a"))
 	_water_label(font, "DEC CX\nJNZ .loop", Vector2(446, 350), 11, Color("#e1c78a"))
 
-func _build_letter_foam() -> void:
+func _build_letter_foam(waterline: Curve) -> void:
 	var glyph_sets := [
 		"abdeIrTpsNoMtyAVeLcgUkn", "αβΓδεθνΞπςΦω", "БвгЖиКлмпРфЯ",
 		"アイうエかキサナほ風水", "ابتجدهزكمين", "अकगचजतदनमलस",
@@ -125,44 +155,32 @@ func _build_letter_foam() -> void:
 	rng.seed = 259
 	for sample in range(146):
 		var x := (500.0 / 146.0) * (sample + rng.randf_range(0.16, 0.84))
-		var swell := _surface_swell(x)
-		var crest := 1.0 - smoothstep(-43.0, 3.0, swell)
-		var count := floori(lerpf(0.38, 3.20, crest) + rng.randf())
-		var slope := (_surface_swell(x + 1.0) - _surface_swell(x - 1.0)) * 0.5
+		var surface := waterline.sample_baked(x / 500.0) * 500.0
+		var crest := 1.0 - smoothstep(203.0, 249.0, surface)
+		var count := floori(lerpf(0.36, 3.20, crest) + rng.randf())
+		var slope := 250.0 * (waterline.sample_baked((x + 1.0) / 500.0)
+			- waterline.sample_baked((x - 1.0) / 500.0))
 		for index in range(count * FOAM_DENSITY):
-			var spray := rng.randf() < crest * 0.24
-			var lift := rng.randf_range(0.5, 14.0) + float(index) * (4.4 / FOAM_DENSITY)
+			var spray := rng.randf() < crest * 0.19
+			var depth := rng.randf_range(0.5, 11.0) + float(index) * (6.0 / FOAM_DENSITY)
 			if spray:
-				lift = -rng.randf_range(3.2, 18.0 + 10.0 * crest)
-			var drift := rng.randf_range(-4.5, 4.5) - minf(lift, 0.0) * 0.37
-			var pixel := Vector2(x + drift, 250.0 + swell + lift)
-			var size := rng.randi_range(6, 10) if spray else rng.randi_range(6, 12)
+				depth = -rng.randf_range(2.0, 15.0 + 8.0 * crest)
+			# Wind carries spray away from the leading edge.
+			var drift := rng.randf_range(-4.0, 4.0) - absf(depth) * 0.58
+			var pixel := Vector2(x + drift, surface + depth)
+			var size := rng.randi_range(4, 7) if spray else rng.randi_range(6, 11)
 			var ink: Color = foam_inks[rng.randi_range(0, foam_inks.size() - 1)]
-			ink.a = rng.randf_range(0.61, 0.91)
+			var fade := 1.0 - smoothstep(4.0, 25.0, absf(depth))
+			ink.a = rng.randf_range(0.48, 0.9) * lerpf(0.48, 1.0, fade)
 			var script_index := rng.randi_range(0, glyph_sets.size() - 1)
 			var glyphs: String = glyph_sets[script_index]
 			var glyph := glyphs[rng.randi_range(0, glyphs.length() - 1)]
 			var letter := _water_label(fonts[script_index], glyph, pixel, size, ink)
-			var twist := 1.4 if spray else 0.67
+			var twist := 1.4 if spray else 0.52
 			letter.rotation.z = -atan(slope) + rng.randf_range(-twist, twist)
 			if spray:
 				letter.outline_size = 1
 				letter.outline_modulate = Color(0.31, 0.50, 0.48, ink.a * 0.54)
-
-func _surface_swell(x: float) -> float:
-	# Match the crest in wind_and_water.gdshader.
-	return (
-		11.0 + 2.5 * sin(x * 0.032 + 0.4)
-		- 22.0 * _rolling_crest(x - 12.0, 14.0, 9.5)
-		- 49.0 * smoothstep(29.0, 66.0, x) * (1.0 - smoothstep(69.0, 94.0, x))
-		- 26.0 * smoothstep(96.0, 109.0, x) * (1.0 - smoothstep(120.0, 141.0, x))
-		- 35.0 * _rolling_crest(x - 366.0, 17.0, 10.0)
-		- 57.0 * _rolling_crest(x - 424.0, 19.0, 47.0)
-	)
-
-func _rolling_crest(delta: float, front: float, back: float) -> float:
-	var spread := delta / (front if delta < 0.0 else back)
-	return exp(-spread * spread)
 
 func _water_label(font: Font, copy: String, pixel: Vector2, size: int, ink: Color) -> Label3D:
 	var label := Label3D.new()

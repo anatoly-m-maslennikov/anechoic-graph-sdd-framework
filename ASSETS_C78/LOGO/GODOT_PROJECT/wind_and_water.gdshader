@@ -2,6 +2,7 @@ shader_type spatial;
 render_mode unshaded, cull_disabled, fog_disabled;
 
 uniform vec2 wind_origin;
+uniform sampler2D waterline : filter_linear, repeat_disable;
 uniform bool show_technology = true;
 
 float gust(vec2 p, vec2 start, float end, float rise, float bow, float width) {
@@ -32,73 +33,52 @@ vec3 windy_sky(vec2 p) {
 	return mix(tint, vec3(0.66, 0.77, 0.71), clamp(wind * 0.61, 0.0, 1.0));
 }
 
-float rolling_crest(float delta, float front, float back) {
-	float spread = delta / (delta < 0.0 ? front : back);
-	return exp(-spread * spread);
-}
-
-float surface_swell(float x) {
-	// The floating letters follow this profile in iceberg.gd.
-	return 11.0 + 2.5 * sin(x * 0.032 + 0.4)
-		- 22.0 * rolling_crest(x - 12.0, 14.0, 9.5)
-		- 49.0 * smoothstep(29.0, 66.0, x) * (1.0 - smoothstep(69.0, 94.0, x))
-		- 26.0 * smoothstep(96.0, 109.0, x) * (1.0 - smoothstep(120.0, 141.0, x))
-		- 35.0 * rolling_crest(x - 366.0, 17.0, 10.0)
-		- 57.0 * rolling_crest(x - 424.0, 19.0, 47.0);
+float surface_y(float x) {
+	return texture(waterline, vec2(x / 500.0, 0.5)).r * 500.0;
 }
 
 vec3 distant_water(vec2 pixel, vec3 sky) {
-	float horizon = 242.0 + 2.8 * sin(pixel.x * 0.041 + 0.48);
+	float horizon = 241.0 + 3.2 * sin(pixel.x * 0.018 + 0.30)
+		+ 2.4 * sin(pixel.x * 0.043 + 0.82);
 	float depth = pixel.y - horizon;
-	float seen = smoothstep(-1.1, 0.9, depth);
-	float reflected_light = 1.0 - smoothstep(0.0, 8.0, depth);
-	vec3 mist = mix(vec3(0.24, 0.45, 0.47), vec3(0.48, 0.61, 0.61), reflected_light);
+	float seen = smoothstep(-2.0, 4.5, depth);
+	float reflected_light = 1.0 - smoothstep(1.0, 10.0, depth);
+	vec3 mist = mix(vec3(0.27, 0.46, 0.48), vec3(0.47, 0.62, 0.61), reflected_light);
 	return mix(sky, mist, seen);
 }
 
-vec3 surface_water(vec2 pixel, float swell, float depth, vec3 water) {
-	float crest = 1.0 - smoothstep(-43.0, 3.0, swell);
-	float slope = surface_swell(pixel.x + 1.0) - swell;
-	float front = 1.0 - smoothstep(-0.85, 0.57, slope);
-	float face = 1.0 - smoothstep(1.0, 27.0, depth);
-	vec3 glass = mix(vec3(0.13, 0.37, 0.43), vec3(0.22, 0.54, 0.56), crest);
-	water = mix(water, glass, face * 0.84);
+vec3 surface_water(vec2 pixel, float surface, float depth, vec3 water) {
+	float crest = 1.0 - smoothstep(201.0, 249.0, surface);
+	float slope = surface_y(pixel.x + 1.0) - surface;
+	float face = 1.0 - smoothstep(1.0, 29.0, depth);
+	float front = 1.0 - smoothstep(-0.95, 0.15, slope);
+	float drift = pixel.x + depth * 1.08;
+	float folds = 0.56 + 0.29 * sin(drift * 0.19) + 0.15 * sin(drift * 0.42 + depth * 0.17);
+	vec3 underside = mix(vec3(0.09, 0.25, 0.33), vec3(0.14, 0.35, 0.41), 1.0 - front);
+	vec3 glass = mix(underside, vec3(0.36, 0.62, 0.61), crest * folds);
+	water = mix(water, glass, face * 0.89);
 
-	float rim = (1.0 - smoothstep(0.40, 2.7, abs(depth))) * (0.15 + 0.80 * crest);
-	float trough = 7.0 + 6.5 * crest + 3.0 * front;
-	float wake = (1.0 - smoothstep(0.20, 1.65, abs(depth - trough))) * crest * (0.10 + 0.38 * front);
-	return mix(water, vec3(0.78, 0.92, 0.87), rim + wake);
+	float edge = 1.0 - smoothstep(0.35, 2.2 + 2.9 * folds, abs(depth));
+	float patches = smoothstep(0.30, 0.80, folds);
+	float rim = edge * crest * (0.12 + 0.54 * patches);
+
+	float curl = 6.5 + 4.5 * front + 3.7 * sin(drift * 0.071 + 0.5);
+	float ribbon = 1.0 - smoothstep(0.35, 2.0, abs(depth - curl));
+	float trail = 1.0 - smoothstep(0.30, 1.6, abs(depth - curl - 5.5 - 2.4 * folds));
+	float sheen = crest * patches * (ribbon * 0.38 + trail * 0.19);
+	vec2 p = pixel / 500.0;
+	float streaks = gust(p, vec2(-0.04, 0.522), 0.22, 0.037, 0.021, 0.0038)
+		+ gust(p, vec2(0.012, 0.551), 0.25, 0.041, 0.018, 0.0026)
+		+ gust(p, vec2(0.713, 0.541), 1.04, 0.053, 0.014, 0.0035)
+		+ gust(p, vec2(0.762, 0.552), 1.14, 0.034, 0.010, 0.0026);
+	float light = clamp(rim + sheen + streaks * (0.09 + 0.13 * folds), 0.0, 1.0);
+	return mix(water, vec3(0.76, 0.90, 0.86), light);
 }
 
 float trace(vec2 pixel, vec2 a, vec2 b, float width) {
 	vec2 along = b - a;
 	float t = clamp(dot(pixel - a, along) / dot(along, along), 0.0, 1.0);
 	return 1.0 - smoothstep(width * 0.45, width, length(pixel - a - along * t));
-}
-
-vec3 plunging_lip(vec2 pixel, vec3 water) {
-	if (pixel.x < 391.0 || pixel.x > 447.0 || pixel.y < 191.0 || pixel.y > 237.0) {
-		return water;
-	}
-	vec2 outer = vec2(439.0, 210.0);
-	vec2 tip = vec2(402.0, 226.0);
-	vec2 previous = outer;
-	float body = 0.0;
-	float rim = 0.0;
-	for (int step = 1; step <= 12; step++) {
-		float t = float(step) / 12.0;
-		vec2 face = mix(mix(outer, vec2(415.0, 185.0), t),
-			mix(vec2(415.0, 185.0), vec2(388.0, 197.0), t), t);
-		vec2 fold = mix(mix(vec2(415.0, 185.0), vec2(388.0, 197.0), t),
-			mix(vec2(388.0, 197.0), tip, t), t);
-		vec2 next = mix(face, fold, t);
-		float taper = 1.0 - smoothstep(0.4, 1.0, t);
-		body = max(body, trace(pixel, previous, next, 1.6 + 6.4 * taper));
-		rim = max(rim, trace(pixel + vec2(0.0, 1.8 + 2.0 * taper), previous, next, 1.5));
-		previous = next;
-	}
-	water = mix(water, vec3(0.25, 0.54, 0.55), body * 0.90);
-	return mix(water, vec3(0.76, 0.92, 0.86), rim * 0.72);
 }
 
 float box(vec2 p, vec2 half_size) {
@@ -195,13 +175,13 @@ vec3 electricity(vec2 pixel, vec3 water) {
 void fragment() {
 	vec2 p = UV;
 	vec2 pixel = p * 500.0;
-	float swell = surface_swell(pixel.x);
-	float depth_below_swell = pixel.y - 250.0 - swell;
+	float surface = surface_y(pixel.x);
+	float depth_below_swell = pixel.y - surface;
 	vec3 tint = distant_water(pixel, windy_sky(p));
 	if (depth_below_swell > -1.0) {
 		float depth = (p.y - 0.5) * 2.0;
 		vec3 water = mix(vec3(0.236, 0.455, 0.47), vec3(0.057, 0.162, 0.206), smoothstep(0.0, 0.98, depth));
-		water = surface_water(pixel, swell, depth_below_swell, water);
+		water = surface_water(pixel, surface, depth_below_swell, water);
 		if (show_technology) {
 			water = circuitry(pixel, water);
 			water = electricity(pixel, water);
@@ -209,5 +189,5 @@ void fragment() {
 		}
 		tint = mix(tint, water, smoothstep(-1.0, 1.0, depth_below_swell));
 	}
-	ALBEDO = plunging_lip(pixel, tint);
+	ALBEDO = tint;
 }
