@@ -15,7 +15,7 @@ if str(TOOL) not in sys.path:
     sys.path.insert(0, str(TOOL))
 
 sys.path.insert(0, str(HERE.parent.parent))
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carriers.content.content__shared import (  # noqa: E402
     parse_carrier,
 )
 
@@ -30,11 +30,11 @@ DEFAULT_GROUPS = (
     "context_authority",
 )
 GROUP_FOLDERS = {
-    "registry": "authority_checks",
-    "schema_authority": "schema_authority",
-    "graph_authority": "extended_authority",
-    "structure_authority": "structure_authority",
-    "context_authority": "context_authority",
+    "registry": "pinned/authority_checks",
+    "schema_authority": "pinned/schema_authority",
+    "graph_authority": "pinned/extended_authority",
+    "structure_authority": "pinned/structure_authority",
+    "context_authority": "pinned/context_authority",
 }
 
 
@@ -97,7 +97,9 @@ def _frozen_source(
 ) -> dict[str, Any]:
     fixture = FIXTURES / row["fixture"]
     expected_folder = GROUP_FOLDERS[group]
-    if fixture.parent != FIXTURES / expected_folder:
+    if not fixture.parent.resolve().is_relative_to(
+        (FIXTURES / expected_folder).resolve()
+    ):
         raise AssertionError("frozen authority fixture is outside its group")
     raw = fixture.read_bytes()
     if hashlib.sha256(raw).hexdigest() != row["sha256"]:
@@ -134,7 +136,7 @@ def frozen_sources(
     *,
     retain_first: bool = True,
 ) -> list[dict[str, Any]]:
-    """Load the checked-in corpus; production manifests are deliberately not consulted."""
+    """Load the frozen authority corpus from this checkout."""
     selected: dict[str, tuple[str, dict[str, Any]]] = {}
     for group in groups:
         for identifier, row in entries(group).items():

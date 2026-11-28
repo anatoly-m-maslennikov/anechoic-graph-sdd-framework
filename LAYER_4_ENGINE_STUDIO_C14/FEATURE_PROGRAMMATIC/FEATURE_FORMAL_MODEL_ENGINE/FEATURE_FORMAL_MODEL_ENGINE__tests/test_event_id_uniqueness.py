@@ -19,11 +19,9 @@ from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.\
     import (
     EVENT_CLASS,
 )  # fmt: skip
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.\
-    ADAPTERS_C30__shared \
-    import (
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model.claims.claims__shared import (
     parse_native_model_claim,
-)  # fmt: skip
+)
 
 
 class EventIDTests(unittest.TestCase):

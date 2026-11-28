@@ -2,7 +2,7 @@
 
 See [generalized case families](generalized-cases.md) for reusable invariants and evidence limits.
 
-Each case preserves historical code inputs for a found and fixed bug. Its `case.json` records the title, invariant, scope, before and fixed revisions, source paths, fixture filenames, and SHA-256 digests. The inputs are exact historical source files or explicitly identified historical slices.
+Cases are grouped by domain; their directory names remain the case IDs. Each case preserves historical code inputs for a found and fixed bug. Its `case.json` records the title, invariant, scope, before and fixed revisions, source paths, fixture filenames, and SHA-256 digests. The inputs are exact historical source files or explicitly identified historical slices.
 
 Each case also lists frozen Lean demonstrations in `checks`. They test the stated invariant within the case scope. A check may specify an exact expected `stdout_suffix` for its `#eval` output. The runner verifies the input digests and runs the saved Lean files; it does not regenerate them.
 

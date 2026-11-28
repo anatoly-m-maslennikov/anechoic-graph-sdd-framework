@@ -28,7 +28,9 @@ such as `/mnt/c/Users/you/repos/project`. Store host settings in the WSL home di
 
 [Docker Desktop WSL 2 integration](https://docs.docker.com/desktop/features/wsl/)
 
-Run the command below from the Framework checkout root. It uses managed Python 3.14 and a standard-library-only Setup environment. Setup provisions the locked Release and Engine environments as needed.
+Run the command below from the Framework checkout root. It uses managed
+Python 3.14 and the locked Setup environment. Setup provisions the
+locked Release and Engine environments as needed.
 
 ## Install for one Project
 
@@ -66,6 +68,31 @@ The installer uses the saved immutable image when one is set. On first setup it 
 After the user trusts the hook, start a new Codex session inside a mounted Project repository. The hook sends the nearest Git worktree root, including when Codex starts in a subdirectory. With `--projects-root`, the same hook serves every configured Project under that folder.
 
 Re-run the same command to reuse the configuration. If setup fails, report the failure and resolve it without overwriting existing Project settings or changing unrelated services.
+
+## Upgrade an installed Project
+
+For a prior install with only `anechoic/runtime.toml` under
+`XDG_CONFIG_HOME` or `~/.config`, stop the prior shared MCP container
+for that Project or Projects root. Check its mounts and port to select
+the container. Keep the settings file and Project data.
+
+Rerun Setup from the new checkout with the same Project or Projects
+root, configuration directory, and engine. Omit `--port` and the storage
+flags to keep their saved values. Setup builds the image and writes its
+pin to `.anechoic_runtime_config.toml` in the mounted folder.
+
+If the mounted settings file already exists, use the steps below.
+
+From the new Framework checkout, build the image with
+`./release__public build-image --run-id upgrade-v0-5-0`. Pass
+`--engine orbstack` or `--engine docker` to match the installed Project.
+
+Set `[container].image` in the mounted settings file to the new image
+ID. Run Setup again from the new checkout with the existing Project or
+Projects root. Keep the existing port and storage settings.
+
+Check that Setup reports the new image ID. Run an MCP query against
+the same Project to verify the upgrade.
 
 Docker keeps the shared Framework database in the `anechoic-framework-db`
 volume. Each Project keeps its own database at `.anechoic_runtime/db/project.duckdb`

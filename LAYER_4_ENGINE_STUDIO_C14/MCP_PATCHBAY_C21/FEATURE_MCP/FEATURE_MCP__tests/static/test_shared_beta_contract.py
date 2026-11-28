@@ -6,19 +6,20 @@ import unittest
 from jsonschema import Draft202012Validator
 from mcp import types
 
-from API_MIXER_beta_C91.api import descriptors
-from API_MIXER_beta_C91.openapi import export_openapi
-from MCP_PATCHBAY_C21.FEATURE_MCP.backend_client import ToolProtocolError
-from MCP_PATCHBAY_C21.FEATURE_MCP.caller_context import take_caller_context
-from API_MIXER_beta_C91._shared_runtime_support import TOOL_REST_PATH
-from MCP_PATCHBAY_C21.FEATURE_MCP.shared_backend import (
+from API_MIXER_beta_C91.API_MIXER_beta_C91__shared import (
+    descriptors,
+    export_openapi,
+)
+from ...transport_support.transport_support__shared import (
     SharedGatewayRefusal,
     _raise_fault,
-)
-from MCP_PATCHBAY_C21.FEATURE_MCP.shared_gateway_support import (
+    public_tool,
     valid_tool_response,
 )
-from MCP_PATCHBAY_C21.FEATURE_MCP.shared_tool_contract import public_tool
+from ...FEATURE_MCP__shared import (
+    ToolProtocolError,
+    take_caller_context,
+)
 
 
 def _response_contract(operation, status):
@@ -29,7 +30,7 @@ class SharedBetaContractTest(unittest.TestCase):
     def setUp(self):
         paths = export_openapi("test")["paths"]
         self.assertEqual({"/tools"}, set(paths))
-        self.operations = paths[TOOL_REST_PATH]
+        self.operations = paths["/tools"]
         self.post = self.operations["post"]
         self.request_body = self.post["requestBody"]
         self.request_schema = self.request_body["content"]["application/json"][

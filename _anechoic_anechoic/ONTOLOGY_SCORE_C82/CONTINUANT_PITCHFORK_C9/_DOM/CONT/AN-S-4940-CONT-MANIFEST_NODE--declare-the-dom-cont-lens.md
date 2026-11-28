@@ -13,8 +13,8 @@ context:
   lens: DOM/CONT
 state:
   status: active
-  version: 5
-  updated_at: '2026-11-26T18:34:31.644797+00:00'
+  version: 6
+  updated_at: "2026-11-28T11:00:50.522707+00:00"
 ---
 ## Summary
 
@@ -34,7 +34,6 @@ from anechoic.model import DomainLens
 
 class ContinuantLens(DomainLens):
     node.lens_path = value(fixed='DOM/CONT')
-    node.control_flow = value(fixed='Declarative')
     node.axes = {'Control Flow': 'Declarative'}
 ```
 

@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
-    import formal_claim_fences  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carriers.content.content__shared import (
+    formal_claim_fences,
+)
 
 
 def formal_claim_blocks(
@@ -19,9 +20,9 @@ def formal_claim_blocks(
             import compile_python_model_claim  # fmt: skip
 
         if skip_typed_model_properties:
-            from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.\
-                ADAPTERS_C30__shared \
-                import parse_native_model_claim  # fmt: skip
+            from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model.claims.claims__shared import (
+                parse_native_model_claim,
+            )
 
             declaration = parse_native_model_claim(text)
             if (

@@ -13,8 +13,8 @@ context:
   lens: DOM/CONT
 state:
   status: active
-  version: 6
-  updated_at: '2026-11-26T19:10:38.512071+00:00'
+  version: 7
+  updated_at: "2026-11-28T10:28:09.160093+00:00"
 ---
 
 ## Summary
@@ -29,5 +29,5 @@ Declare Derived
 from anechoic.model import Artifact
 
 class Derived(Artifact):
-    node.axes = {'Persistence': 'Artifact', 'Authority': 'Derived'}
+    node.axes = {'Authority': 'Derived'}
 ```

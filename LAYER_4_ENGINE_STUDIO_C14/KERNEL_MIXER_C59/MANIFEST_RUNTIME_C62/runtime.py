@@ -10,21 +10,23 @@ import sys
 from tempfile import TemporaryDirectory
 from threading import Event, Thread
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.source_watcher__pub import (
-    SourceWatcher,
-)
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.\
+    sources.watch.source_watcher__pub import SourceWatcher  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carriers.header.header__shared import (
     ARCHIVE_DIRECTORY,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carriers.header.header__shared import (
     DRAFT_DIRECTORY,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carriers.header.header__shared import (
     READY_DIRECTORY,
 )
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.settings.project.project__shared import (
     owned_temporary_root,
 )
-
-from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.FEATURE_MODEL_VALIDATION.FEATURE_MODEL_VALIDATION__shared import (
-    open_admitted_model,
-)
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.\
+    FEATURE_MODEL_VALIDATION.\
+    FEATURE_MODEL_VALIDATION__shared import open_admitted_model  # fmt: skip
 from ..ORCHESTRATOR_C66.ORCHESTRATOR_C66__shared import Orchestrator
 from .process import _CODE_ROOT, _command, _environment
 from .structure_host_CS3.structure_host_CS3__shared import publish_structure
@@ -35,8 +37,9 @@ _COMPONENT_PATH = re.compile(r"(?!__).+_C[0-9]+$")
 
 def _compile(selection, generation, *options, orchestrator):
     kind = "model_build" if "--build-model" in options else "structure_refresh"
-    timeout = (None if os.getenv("ANECHOIC_TEST_IMAGE_DEADLINES") == "0"
-               else _TIMEOUT)
+    timeout = (
+        None if os.getenv("ANECHOIC_TEST_IMAGE_DEADLINES") == "0" else _TIMEOUT
+    )
     result = orchestrator.run_worker(
         kind,
         (
@@ -99,7 +102,8 @@ def _watch(
         changes = watcher.changes(timeout=0.2)
         if stop.is_set() or not any(
             _relevant(change[key], selection.control_relative, manifest)
-            for change in changes for key in ("old_path", "new_path")
+            for change in changes
+            for key in ("old_path", "new_path")
         ):
             continue
         try:
@@ -124,6 +128,39 @@ def _watch(
             )
 
 
+def _build(selection, generation, orchestrator):
+    compiled = json.loads(
+        _compile(
+            selection,
+            generation,
+            "--build-model",
+            "--attest-model",
+            orchestrator=orchestrator,
+        )
+    )
+    descriptor_sha256 = compiled["model_descriptor_sha256"]
+    structure = compiled["structure"]
+    snapshot = json.dumps(
+        structure, separators=(",", ":"), sort_keys=True
+    ).encode()
+    fingerprint = structure["model_sha256"]
+    return descriptor_sha256, snapshot, fingerprint
+
+
+def _start_watcher(selection):
+    watcher = SourceWatcher(
+        selection.root,
+        selection.control_root,
+        watch_root_files=True,
+        poll_bind_mount=(
+            sys.platform == "darwin"
+            or os.environ.get("ANECHOIC_RUNTIME_NAMESPACE") == "docker"
+        ),
+    )
+    watcher.start()
+    return watcher
+
+
 @contextmanager
 def run_manifest_runtime(selection, *, orchestrator=None):
     """Yield the compiled Model directory, Structure path, and bound Model."""
@@ -132,33 +169,26 @@ def run_manifest_runtime(selection, *, orchestrator=None):
     with TemporaryDirectory(dir=parent, prefix="generation-") as directory:
         generation = Path(directory)
         active = generation / "structure.json"
-        watcher = SourceWatcher(
-            selection.root, selection.control_root, watch_root_files=True,
-            poll_bind_mount=os.environ.get("ANECHOIC_RUNTIME_NAMESPACE") == "docker",
-        )
-        watcher.start()
+        watcher = _start_watcher(selection)
         try:
-            compiled = json.loads(
-                _compile(
-                    selection,
-                    generation,
-                    "--build-model",
-                    "--attest-model",
-                    orchestrator=orchestrator,
-                )
+            digest, snapshot, fingerprint = _build(
+                selection, generation, orchestrator
             )
-            descriptor_sha256 = compiled["model_descriptor_sha256"]
-            structure = compiled["structure"]
-            snapshot = json.dumps(
-                structure, separators=(",", ":"), sort_keys=True
-            ).encode()
-            fingerprint = structure["model_sha256"]
-            with open_admitted_model(generation, fingerprint, descriptor_sha256) as model:
+            with open_admitted_model(generation, fingerprint, digest) as model:
                 publish_structure(active, model.fingerprint, snapshot)
                 stop = Event()
-                reload_thread = Thread(target=_watch,
-                                       args=(stop, watcher, selection, active, model.fingerprint,
-                                             descriptor_sha256, orchestrator))
+                reload_thread = Thread(
+                    target=_watch,
+                    args=(
+                        stop,
+                        watcher,
+                        selection,
+                        active,
+                        model.fingerprint,
+                        digest,
+                        orchestrator,
+                    ),
+                )
                 reload_thread.start()
                 try:
                     yield generation, active, model

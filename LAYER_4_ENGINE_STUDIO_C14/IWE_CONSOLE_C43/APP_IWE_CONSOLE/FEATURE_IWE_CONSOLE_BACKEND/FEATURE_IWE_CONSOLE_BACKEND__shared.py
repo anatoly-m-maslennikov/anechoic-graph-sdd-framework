@@ -19,8 +19,8 @@ from .shared_project_catalog import (
     SharedToolFrontier,
     _candidate_paths,
     discover_frontier,
-    public_tool,
 )
+from .shared_tool_contract import public_tool
 from .source_placement_audit import expected_carrier
 from .source_reader import SourceReader
 from .tool_registry_runtime import (

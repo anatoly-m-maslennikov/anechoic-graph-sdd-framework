@@ -18,7 +18,7 @@ _tools = "FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30."
 _formal = "FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51."
 _generator = _formal + "FEATURE_FORMAL_MODEL_GENERATOR."
 _adapters = import_module(_tools + "ADAPTERS_C30__shared")
-_ontology = import_module(_tools + "model_ontology_path__pub")
+_ontology = import_module(_tools + "model.model_ontology_path__pub")
 _bindings = import_module(
     _generator + "FEATURE_FORMAL_MODEL_GENERATOR__shared"
 )

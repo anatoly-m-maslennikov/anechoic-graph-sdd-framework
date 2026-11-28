@@ -29,3 +29,19 @@ condition:
   maximum: 1
 ```
 """
+
+
+WHITELIST = """# Summary
+Allow evaluation links.
+
+```yaml
+graph_rule_type: whitelist
+applies_to:
+  relation_type: evaluation_for
+condition:
+  source:
+    - "Entity/Node/Continuant/Atom/Content Role: Evaluation"
+  target:
+    - "Entity/Node/Continuant/Atom/Content Role: Requirement"
+```
+"""

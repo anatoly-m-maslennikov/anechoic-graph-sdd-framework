@@ -6,46 +6,18 @@ from unittest.mock import patch
 from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75._package__shared import (
     verify_formal_chain,
 )
-from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_3_LEAN_TRANSLATOR_C84._package__shared import (
-    compile_lean,
+from ....LAYER_3_LEAN_TRANSLATOR_C84._package__shared import compile_lean
+from ..._package__shared import validate_translation
+from ._translation_validation_fixtures import (
+    CONTRACT as CONTRACT,
+    compared as compared,
+    SOLUTION as SOLUTION,
+    model as model,
+    mutate as mutate,
 )
-from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.LAYER_4_TRANSLATION_VALIDATOR_C86._package__shared import (
-    validate_translation,
-)
 
 
-CONTRACT = r'''declare_trace_contract(action='invoke', output='done', must_effect=(
-    ('store', 'saved', {'flag': False, 'zero': 0, 'nothing': None, 'text': 'λ"\\\n\t'}),))'''
-SOLUTION = '''component_workflow(component='C52', action='invoke', machine={
-    'id': 'invoke', 'initial': 'start', 'states': {
-        'start': {'on': {'finish': {'target': 'done', 'guard': {
-            'type': 'matchesTrace', 'params': {'kind': 'output', 'outcome': 'done',
-                                              'detail': {'fraction': 1.0}}}}}},
-        'done': {'type': 'final'}}})'''
-
-
-def model():
-    boundaries = {"state": {"reads": [], "writes": []}}
-    return {
-        "component_id": "C52",
-        "manifest": {
-            "source": {"atom_id": "M"},
-            "fields": {
-                "component_id": "C52",
-                "name": "Core",
-                "boundaries": boundaries,
-            },
-            "boundaries": boundaries,
-        },
-        "contract": {
-            "source": {"atom_id": "C"},
-            "claims": [("python trace", CONTRACT)],
-        },
-        "solution": {
-            "source": {"atom_id": "S"},
-            "claims": [("python", SOLUTION)],
-        },
-    }
+FORMAL_CHAIN = "FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.formal_chain__pub"
 
 
 def lean_path(test):
@@ -60,18 +32,14 @@ def lean_path(test):
     return lean
 
 
-def mutate(program):
-    target = r'flag\": false'
-    if program.count(target) != 1:
-        raise AssertionError('Expected the contract flag in the emitted Lean program')
-    return program.replace(target, r'flag\": true ', 1)
-
-
 class TranslationValidationTests(unittest.TestCase):
-    def test_exact_code_rules_translate_without_resolving_the_import_graph(self):
+    def test_exact_code_rules_translate_without_resolving_the_import_graph(
+        self,
+    ):
         source = model()
-        source['manifest']['boundaries']['code'] = {
-            'imports': ['C30'], 'exports': {'api.run': 'public'},
+        source["manifest"]["boundaries"]["code"] = {
+            "imports": ["C30"],
+            "exports": {"api.run": "public"},
         }
         lean = lean_path(self)
         program = compile_lean(source)
@@ -94,11 +62,11 @@ class TranslationValidationTests(unittest.TestCase):
         lean = lean_path(self)
         with (
             patch(
-                "FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.formal_chain__pub.load_boundary_model",
+                (FORMAL_CHAIN + ".load_boundary_model"),
                 return_value=model(),
             ),
             patch(
-                "FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.formal_chain__pub.compare_trace_spec",
+                (FORMAL_CHAIN + ".compare_trace_spec"),
                 side_effect=ValueError("Lean comparison timed out"),
             ),
         ):
@@ -120,9 +88,9 @@ class TranslationValidationTests(unittest.TestCase):
     def test_json_values_and_unchanged_source_target_mutation(self):
         lean = lean_path(self)
         source = model()
-        program = compile_lean(source)['lean']
+        program = compile_lean(source)["lean"]
         valid = validate_translation(source, program, lean=lean)
-        target = r'fraction\": 1.0'
+        target = r"fraction\": 1.0"
         self.assertEqual(1, program.count(target))
         changed = validate_translation(
             source,
@@ -144,55 +112,75 @@ class TranslationValidationTests(unittest.TestCase):
     def test_chain_compares_only_after_translation_matches(self):
         lean = lean_path(self)
         source = model()
-        source['solution']['claims'] = [
-            ('python', SOLUTION.replace('1.0', '-0.0'))]
-        compiler = 'FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.formal_chain__pub'
-        def compared(loaded, compiled, *, mermaid, **options):
-            return {'status': 'matched', 'mermaid': mermaid,
-                    'sources': {role: loaded[role]['source']
-                                for role in ('manifest', 'contract', 'solution')}}
+        source["solution"]["claims"] = [
+            ("python", SOLUTION.replace("1.0", "-0.0"))
+        ]
+        compiler = "FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.formal_chain__pub"
 
-        with patch('FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.formal_chain__pub.load_boundary_model', return_value=source), \
-             patch('FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.formal_chain__pub.compare_trace_spec',
-                   side_effect=compared) as compare:
+        with (
+            patch(
+                (FORMAL_CHAIN + ".load_boundary_model"),
+                return_value=source,
+            ),
+            patch(
+                (FORMAL_CHAIN + ".compare_trace_spec"),
+                side_effect=compared,
+            ) as compare,
+        ):
             compiled = compile_lean(source)
-            expected = compiled['claims']
-            with patch(compiler + '.compile_lean', return_value=compiled):
-                valid = verify_formal_chain('.', 'C52', {}, {}, {}, lean=lean)
-            self.assertEqual('compared', valid['outcome'])
-            self.assertEqual('matched', valid['translation']['status'])
+            expected = compiled["claims"]
+            with patch(compiler + ".compile_lean", return_value=compiled):
+                valid = verify_formal_chain(".", "C52", {}, {}, {}, lean=lean)
+            self.assertEqual("compared", valid["outcome"])
+            self.assertEqual("matched", valid["translation"]["status"])
             compare.assert_called_once()
-            self.assertEqual(expected, compare.call_args.args[1]['claims'])
+            self.assertEqual(expected, compare.call_args.args[1]["claims"])
             compare.reset_mock()
-            with patch(compiler + '.compile_lean',
-                       return_value={**compiled, 'claims': {}}):
-                changed = verify_formal_chain('.', 'C52', {}, {}, {},
-                                              lean=lean)
-            self.assertEqual('incomplete', changed['outcome'])
-            self.assertIn('Model identities differ',
-                          changed['diagnostics'][0]['message'])
-            compare.assert_not_called()
-            compiled["lean"] = mutate(compiled["lean"])
             with patch(
-                "FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.formal_chain__pub.compile_lean",
-                return_value=compiled,
+                compiler + ".compile_lean",
+                return_value={**compiled, "claims": {}},
             ):
-                rejected = verify_formal_chain(
+                changed = verify_formal_chain(
                     ".", "C52", {}, {}, {}, lean=lean
                 )
-            self.assertEqual("incomplete", rejected["outcome"])
-            self.assertEqual("conflicting", rejected["translation"]["status"])
+            self.assertEqual("incomplete", changed["outcome"])
+            self.assertIn(
+                "Model identities differ", changed["diagnostics"][0]["message"]
+            )
             compare.assert_not_called()
+            self._check_rejected_translation(compiled, lean, compare)
+
+    def _check_rejected_translation(self, compiled, lean, compare):
+        compiled["lean"] = mutate(compiled["lean"])
+        with patch(
+            (FORMAL_CHAIN + ".compile_lean"),
+            return_value=compiled,
+        ):
+            rejected = verify_formal_chain(".", "C52", {}, {}, {}, lean=lean)
+        self.assertEqual("incomplete", rejected["outcome"])
+        self.assertEqual("conflicting", rejected["translation"]["status"])
+        compare.assert_not_called()
 
     def test_framing_witnesses_report_their_bound(self):
         lean = lean_path(self)
         source = model()
-        source['contract']['claims'] = [('python framing',
-            'declare_framing_contract(delimiter=[45,45,45], line_endings=[[10]])')]
-        source['solution']['claims'] = [('python framing',
-            'declare_framing_solution(opening_prefixes=[[45,45,45,10]], '
-            'closing_prefixes=[[10,45,45,45,10]])')]
-        program = compile_lean(source)['lean']
+        source["contract"]["claims"] = [
+            (
+                "python framing",
+                (
+                    "declare_framing_contract(delimiter=[45,"
+                    "45,45], line_endings=[[10]])"
+                ),
+            )
+        ]
+        source["solution"]["claims"] = [
+            (
+                "python framing",
+                "declare_framing_solution(opening_prefixes=[[45,45,45,10]], "
+                "closing_prefixes=[[10,45,45,45,10]])",
+            )
+        ]
+        program = compile_lean(source)["lean"]
         result = validate_translation(source, program, lean=lean)
         self.assertEqual("unresolved", result["status"])
         self.assertEqual(
@@ -240,7 +228,7 @@ class TranslationValidationTests(unittest.TestCase):
                         else source[role]["claims"] + [framing]
                     )
                 program = compile_lean(source)
-                self.assertEqual([], program['unresolved'])
+                self.assertEqual([], program["unresolved"])
                 for role in declarations:
                     self.assertIn("framing", program["claims"][role])
                     self.assertIn(
@@ -258,8 +246,10 @@ class TranslationValidationTests(unittest.TestCase):
                     ".body (raw.drop stop)", ".body (raw.drop (stop + 1))", 1
                 )
                 result = validate_translation(source, changed, lean=lean)
-                self.assertEqual('conflicting', result['status'])
-                self.assertEqual({'atom_id': 'C'}, result['issues'][0]['source'])
+                self.assertEqual("conflicting", result["status"])
+                self.assertEqual(
+                    {"atom_id": "C"}, result["issues"][0]["source"]
+                )
 
     def test_shape_chain_compares_validated_declarations(self):
         lean = lean_path(self)
@@ -267,17 +257,27 @@ class TranslationValidationTests(unittest.TestCase):
         source["contract"]["claims"] = [
             (
                 "python shape",
-                "declare_shape_contract(record='Atom', fields={'header':'Header'}, subtype='Plan')",
+                (
+                    "declare_shape_contract(record='Atom', "
+                    "fields={'header':'Header'}, "
+                    "subtype='Plan')"
+                ),
             )
         ]
         source["solution"]["claims"] = [
             (
                 "python shape",
-                "class Atom:\n    header: Header\n\nclass Plan(Atom):\n    pass\n",
+                (
+                    "class Atom:\n"
+                    "    header: Header\n"
+                    "\n"
+                    "class Plan(Atom):\n"
+                    "    pass\n"
+                ),
             )
         ]
         with patch(
-            "FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.formal_chain__pub.load_boundary_model",
+            (FORMAL_CHAIN + ".load_boundary_model"),
             return_value=source,
         ):
             result = verify_formal_chain(".", "C52", {}, {}, {}, lean=lean)
@@ -302,12 +302,10 @@ class TranslationValidationTests(unittest.TestCase):
         source["manifest"]["boundaries"] = None
         with (
             patch(
-                "FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.formal_chain__pub.load_boundary_model",
+                (FORMAL_CHAIN + ".load_boundary_model"),
                 return_value=source,
             ),
-            patch(
-                "FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.formal_chain__pub.compare_trace_spec"
-            ) as compare,
+            patch((FORMAL_CHAIN + ".compare_trace_spec")) as compare,
         ):
             rejected = verify_formal_chain(".", "C52", {}, {}, {}, lean=lean)
         self.assertEqual("incomplete", rejected["outcome"])

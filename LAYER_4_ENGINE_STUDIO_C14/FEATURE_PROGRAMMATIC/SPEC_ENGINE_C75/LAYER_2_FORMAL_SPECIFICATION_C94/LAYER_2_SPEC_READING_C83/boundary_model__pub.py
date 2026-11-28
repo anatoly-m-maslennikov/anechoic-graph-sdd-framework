@@ -1,8 +1,13 @@
 """Bind a Component's formal Manifest, public Contract and Solution."""
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
-    component_contract_fences, formal_claim_fences, parse_component_manifest,
+
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.structure.components.components__shared import (
+    component_contract_fences,
+    parse_component_manifest,
 )
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.atom_reference__pub import (
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carriers.content.content__shared import (
+    formal_claim_fences,
+)
+from ....FEATURE_TOOLS.ADAPTERS_C30.carriers.content.atom_reference__pub import (
     derive_atom_ref,
 )
 from markdown_it import MarkdownIt
@@ -14,10 +19,40 @@ from ...LAYER_1_SOURCE_ADAPTERS_C95._package__shared import (
 from .boundary_sources__pub import recognized_claim, require_link
 
 
-def load_boundary_model(root, component_id, manifest, contract=None, solution=None):
-    """Load exact source pins; preserve unparsed claims and report unsupported input."""
+def load_boundary_model(
+    root, component_id, manifest, contract=None, solution=None
+):
+    """Load exact pins, retain claims, and report unsupported input."""
     model_manifest = load_manifest(root, component_id, manifest)
     result = {"component_id": component_id, "manifest": model_manifest}
+    solution, embedded, contract_carrier, issues = _load_contract(
+        root, component_id, model_manifest, contract, solution, result
+    )
+    if solution is None:
+        raise SourceError(
+            "solution",
+            solution,
+            "source_pin",
+            "solution: missing Solution source",
+        )
+    solution_carrier, result["solution"], solution_issues = _load_formal_claim(
+        root, component_id, "solution", solution, 0 if embedded else 1
+    )
+    issues.extend(solution_issues)
+    return _finish_boundary(
+        result,
+        issues,
+        model_manifest,
+        manifest,
+        solution_carrier,
+        contract_carrier,
+        embedded,
+    )
+
+
+def _load_contract(
+    root, component_id, model_manifest, contract, solution, result
+):
     embedded = "contract" in model_manifest
     if not embedded and model_manifest["tier"] == 1:
         raise SourceError(
@@ -26,6 +61,7 @@ def load_boundary_model(root, component_id, manifest, contract=None, solution=No
             "claim",
             "manifest: missing Contract claim",
         )
+    contract_carrier = None
     if embedded:
         if solution is None:
             solution = contract
@@ -44,25 +80,49 @@ def load_boundary_model(root, component_id, manifest, contract=None, solution=No
         contract_carrier, result["contract"], issues = load_formal_claim(
             root, component_id, "contract", contract
         )
-    if solution is None:
-        raise SourceError('solution', solution, 'source_pin', 'solution: missing Solution source')
-    solution_carrier, result['solution'], solution_issues = _load_formal_claim(
-        root, component_id, 'solution', solution, 0 if embedded else 1)
-    issues.extend(solution_issues)
-    target = result['contract']['source']
+    return solution, embedded, contract_carrier, issues
+
+
+def _finish_boundary(
+    result,
+    issues,
+    model_manifest,
+    manifest,
+    solution_carrier,
+    contract_carrier,
+    embedded,
+):
+    target = result["contract"]["source"]
     if not embedded:
-        require_link(contract_carrier, 'ANSWERS', manifest['atom_id'], 'contract', target)
-    target_ref = derive_atom_ref(target['atom_id'], target['version'], target['status'])
-    relation = 'ANSWERS' if embedded else 'IS_SOLUTION_FOR'
-    require_link(solution_carrier, relation, target_ref, 'solution', result['solution']['source'])
-    if not isinstance(model_manifest['boundaries'], dict) or not model_manifest['boundaries']:
-        issues.insert(0, 'manifest: missing or unsupported boundaries')
-    result['issues'] = issues
+        require_link(
+            contract_carrier,
+            "ANSWERS",
+            manifest["atom_id"],
+            "contract",
+            target,
+        )
+    target_ref = derive_atom_ref(
+        target["atom_id"], target["version"], target["status"]
+    )
+    relation = "ANSWERS" if embedded else "IS_SOLUTION_FOR"
+    require_link(
+        solution_carrier,
+        relation,
+        target_ref,
+        "solution",
+        result["solution"]["source"],
+    )
+    if (
+        not isinstance(model_manifest["boundaries"], dict)
+        or not model_manifest["boundaries"]
+    ):
+        issues.insert(0, "manifest: missing or unsupported boundaries")
+    result["issues"] = issues
     return result
 
 
 def _require_tier(carrier, role, tier, source):
-    actual = carrier.metadata.get('tier')
+    actual = carrier.metadata.get("tier")
     if type(actual) is not int or actual != tier:
         raise SourceError(
             role, source, "tier", f"{role} must have Tier {tier}"
@@ -79,7 +139,7 @@ def load_formal_claim(root, component_id, role, pin):
 
 
 def _carrier_template(carrier, source, role):
-    context = carrier.metadata.get('context')
+    context = carrier.metadata.get("context")
     if not isinstance(context, dict):
         raise SourceError(
             role, source, "context", "expected a Header context mapping"
@@ -90,7 +150,7 @@ def _carrier_template(carrier, source, role):
 def _load_formal_claim(root, component_id, role, pin, tier):
     carrier, source = read_source(root, pin, role)
     if tier is None:
-        tier = carrier.metadata.get('tier')
+        tier = carrier.metadata.get("tier")
         if type(tier) is not int or tier not in (0, 1):
             raise SourceError(
                 role, source, "tier", "solution must have Tier 0 or Tier 1"
@@ -140,26 +200,61 @@ def _claim_issues(role, claims):
 
 def load_manifest(root, component_id, pin):
     """Read one formal Component Manifest and any embedded public Contract."""
-    carrier, source = read_source(root, pin, 'manifest')
-    if _carrier_template(carrier, source, 'manifest') != 'component_manifest':
-        raise SourceError('manifest', source, 'context.template', 'expected Component Manifest, not a Seed or another template')
+    carrier, source = read_source(root, pin, "manifest")
+    if _carrier_template(carrier, source, "manifest") != "component_manifest":
+        raise SourceError(
+            "manifest",
+            source,
+            "context.template",
+            "expected Component Manifest, not a Seed or another template",
+        )
     try:
         contract_claims = component_contract_fences(carrier.body)
     except ValueError as error:
         raise SourceError(
             "manifest", source, "formal_contract", str(error)
         ) from error
+    tier, fields = _manifest_fields(carrier, source, component_id)
+    manifest = {
+        "source": source,
+        "tier": tier,
+        "fields": fields,
+        "boundaries": fields.get("boundaries"),
+    }
+    if contract_claims is not None:
+        manifest["contract"] = {
+            "source": source,
+            "claims": list(contract_claims),
+            "public": True,
+        }
+        manifest["contract_issues"] = _claim_issues(
+            "contract", contract_claims
+        )
+    return manifest
+
+
+def _manifest_fields(carrier, source, component_id):
     tier = carrier.metadata.get("tier")
     if type(tier) is not int or tier not in (1, 4):
         raise SourceError(
             "manifest", source, "tier", "manifest must have Tier 1 or Tier 4"
         )
     if tier == 4:
-        tokens = MarkdownIt('commonmark').parse(carrier.body)
-        if not any(token.type == 'heading_open' and token.tag == 'h2' and token.level == 0
-                   and tokens[index + 1].content.strip().casefold() == 'formal manifest'
-                   for index, token in enumerate(tokens)):
-            raise SourceError('manifest', source, 'formal_manifest', 'missing Python Formal Manifest')
+        tokens = MarkdownIt("commonmark").parse(carrier.body)
+        if not any(
+            token.type == "heading_open"
+            and token.tag == "h2"
+            and token.level == 0
+            and tokens[index + 1].content.strip().casefold()
+            == "formal manifest"
+            for index, token in enumerate(tokens)
+        ):
+            raise SourceError(
+                "manifest",
+                source,
+                "formal_manifest",
+                "missing Python Formal Manifest",
+            )
     try:
         fields, _ = parse_component_manifest(carrier.body, tier=tier)
     except ValueError as error:
@@ -173,13 +268,4 @@ def load_manifest(root, component_id, pin):
             "component_id",
             "Manifest component does not match",
         )
-    manifest = {
-        "source": source,
-        "tier": tier,
-        "fields": fields,
-        "boundaries": fields.get("boundaries"),
-    }
-    if contract_claims is not None:
-        manifest['contract'] = {'source': source, 'claims': list(contract_claims), 'public': True}
-        manifest['contract_issues'] = _claim_issues('contract', contract_claims)
-    return manifest
+    return tier, fields

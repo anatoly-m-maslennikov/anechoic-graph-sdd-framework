@@ -11,9 +11,9 @@ from starlette.routing import Route
 
 from . import _api_routes
 from ._api_descriptors import query_descriptors
-from ._shared_runtime_support import TOOL_REST_PATH
-from .admission import Readiness, failure, peer
-from .models import (
+from .CORE.CORE__shared import TOOL_REST_PATH
+from .CORE.CORE__shared import Readiness, failure, peer
+from .CORE.CORE__shared import (
     Page,
     PageRequest,
     Query,
@@ -22,16 +22,12 @@ from .models import (
     ToolRequest as ToolRequest,
     WorkerRuns as WorkerRuns,
 )
-from . import (
-    atom_document,
-    lifecycle,
-    projection,
-    saved_sql,
-    view_tools,
-    workspace,
+from .CORE.CORE__shared import atom_document
+from .OPERATIONS.OPERATIONS__shared import (
+    lifecycle, projection, saved_sql, view_tools, workspace,
 )
 from .query_contract import query_schema
-from .schema import read_schema
+from .CORE.CORE__shared import read_schema
 
 PROJECTION_TOOLS = frozenset(
     {

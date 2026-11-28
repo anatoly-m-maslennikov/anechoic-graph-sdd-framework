@@ -1,5 +1,6 @@
 """Check frozen historical inputs and bounded Lean demonstrations."""
 
+import importlib
 import json
 import os
 import shutil
@@ -7,6 +8,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 from hashlib import sha256
 from pathlib import Path
 
@@ -15,9 +17,33 @@ CORPUS = Path(__file__).parent / "golden_bugs"
 
 class GoldenBugsTests(unittest.TestCase):
     def cases(self):
-        paths = sorted(CORPUS.glob("*/case.json"))
+        paths = sorted(CORPUS.glob("*/*/*/case.json"))
         self.assertTrue(paths, "Golden bug corpus is empty")
         return paths
+
+    def test_scan_and_replay_discover_case_ids(self):
+        package = (
+            "ARCHITECTURE_ANALYSIS_C73.IMPLEMENTATION_VERIFICATION_C74."
+            "IMPLEMENTATION_VERIFICATION_C74__tests.functional"
+        )
+        scanner = importlib.import_module(package + ".historical_checkout_scan")
+        replay = importlib.import_module(package + ".historical_checkout_replay")
+        expected = [path.parent.name for path in self.cases()]
+        self.assertEqual(len(expected), len(set(expected)))
+        found = []
+        with patch.object(
+            scanner,
+            "_scan_case",
+            side_effect=lambda case, *args: found.append(case.name),
+        ):
+            scanner.scan(Path("."))
+        self.assertEqual(found, sorted(expected))
+        for case_id in expected:
+            result = replay.collect_cases(case_id)
+            self.assertEqual(
+                [case["case"] for case in result["cases"] + result["gaps"]],
+                [case_id],
+            )
 
     def test_historical_fixtures(self):
         for path in self.cases():
@@ -44,7 +70,7 @@ class GoldenBugsTests(unittest.TestCase):
     def test_editor_case_reuses_rule(self):
         lean = os.environ.get("LEAN_BIN") or shutil.which("lean")
         self.assertTrue(lean, "Lean executable is missing")
-        analyzer = CORPUS / "e2e-editor-before-query" / "analyze.py"
+        analyzer = CORPUS / "workbench/queries" / "e2e-editor-before-query" / "analyze.py"
         body = """test('different scenario', async ({ page }) => {
   const queryBox = page.getByRole('textbox', { name: 'Query editor' });
   await queryBox.click();
@@ -143,7 +169,7 @@ class GoldenBugsTests(unittest.TestCase):
     def test_release_port_domain(self):
         lean = os.environ.get("LEAN_BIN") or shutil.which("lean")
         self.assertTrue(lean, "Lean executable is missing")
-        case = CORPUS / "release-test-fixed-port"
+        case = CORPUS / "delivery/release" / "release-test-fixed-port"
         metadata = json.loads((case / "case.json").read_text(encoding="utf-8"))
         fixed = (case / metadata["fixed"]["fixture"]).read_text(
             encoding="utf-8"
@@ -200,14 +226,14 @@ class GoldenBugsTests(unittest.TestCase):
 
     def test_case_local_controls(self):
         for case, script in (
-            ("local-release-result", "test_analyze.py"),
-            ("saved-query-stale-table-rebuild", "test_analyze.py"),
-            ("workflow-guard-validation", "check_scenarios.py"),
-            ("unreadable-metrics-source", "test_replay.py"),
-            ("workbench-reply-identity", "test_replay.py"),
-            ("blocked-lifecycle-reply", "test_replay.py"),
-            ("model-predecessor-admission", "test_replay.py"),
-            ("authored-atom-timestamp", "test_replay.py"),
+            ("delivery/release/local-release-result", "test_analyze.py"),
+            ("workbench/queries/saved-query-stale-table-rebuild", "test_analyze.py"),
+            ("delivery/release/workflow-guard-validation", "check_scenarios.py"),
+            ("workbench/replies/unreadable-metrics-source", "test_replay.py"),
+            ("workbench/replies/workbench-reply-identity", "test_replay.py"),
+            ("workbench/replies/blocked-lifecycle-reply", "test_replay.py"),
+            ("authoring/publication/model-predecessor-admission", "test_replay.py"),
+            ("authoring/publication/authored-atom-timestamp", "test_replay.py"),
         ):
             with self.subTest(case=case):
                 run = subprocess.run(

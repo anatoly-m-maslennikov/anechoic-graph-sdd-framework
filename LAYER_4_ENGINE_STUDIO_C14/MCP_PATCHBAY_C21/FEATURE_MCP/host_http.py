@@ -5,17 +5,20 @@ import os
 from pathlib import Path
 
 import uvicorn
-from MCP_PATCHBAY_C21.FEATURE_MCP.direct_gateway import (
+from MCP_PATCHBAY_C21.FEATURE_MCP.gateway.gateway__shared import (
     native_runtime_gateway,
     startup_selection,
 )
-from MCP_PATCHBAY_C21.FEATURE_MCP.http_server import create_app
+from MCP_PATCHBAY_C21.FEATURE_MCP.gateway.gateway__shared import (
+    create_http_app as create_app,
+)
 from MCP_PATCHBAY_C21.FEATURE_MCP.mcp_startup_boundary import (
     http_log_config,
     run_startup,
     runtime_log_level,
 )
-from MCP_PATCHBAY_C21.FEATURE_MCP.runtime_stack import runtime_stack
+from MCP_PATCHBAY_C21.FEATURE_MCP.transport_support.\
+    transport_support__shared import runtime_stack
 
 
 def _serve(args):

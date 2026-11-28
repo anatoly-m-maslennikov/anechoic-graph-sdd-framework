@@ -11,9 +11,10 @@ HERE = Path(__file__).resolve().parents[1]
 class PromptContracts(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        paths = [*HERE.glob("*.prompt.md"), *HERE.glob("isolated/*.prompt.md")]
         cls.prompts = {
             p.name.removesuffix(".prompt.md"): p.read_text(encoding="utf-8")
-            for p in HERE.glob("*.prompt.md")
+            for p in paths
         }
 
     def test_prompt_bindings_have_step_action_and_context(self):

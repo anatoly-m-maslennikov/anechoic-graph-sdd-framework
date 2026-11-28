@@ -90,7 +90,7 @@ def _validate_binding_descriptor(descriptor, modules):
 
 @contextmanager
 def _bind_model(descriptor, modules, source_label):
-    from .bound_native_model import BoundNativeModel
+    from .admission._package__shared import BoundNativeModel
 
     fingerprint, order, classes = _validate_binding_descriptor(
         descriptor, modules

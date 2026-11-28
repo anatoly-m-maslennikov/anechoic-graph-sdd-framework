@@ -6,31 +6,63 @@ from pathlib import Path
 from LAYER_3_PUBLIC_RELEASE_C64.LAYER_3_PUBLIC_RELEASE_C64__shared import (
     PublicReleaseError,
 )
-from LAYER_3_PUBLIC_RELEASE_C64.LAYER_3_PUBLIC_RELEASE_C64__tests.LAYER_3_PUBLIC_RELEASE_C64__tests__shared import PublicReleaseFixture
+from .LAYER_3_PUBLIC_RELEASE_C64__tests__shared import (
+    PublicReleaseFixture,
+)
 
 
 class PublicReleaseTest(PublicReleaseFixture, unittest.TestCase):
     def test_comparison_and_rendering_are_read_only(self):
-        before = self.git('status', '--porcelain')
+        before = self.git("status", "--porcelain")
         code, result = self.run_cli()
         self.assertEqual(code, 1)
-        self.assertEqual(result['outcome'], 'input_required')
+        self.assertEqual(result["outcome"], "input_required")
         self.assertEqual(
             (result["base_commit"], result["head_commit"]),
             (self.base, self.head),
         )
-        self.assertEqual(result['version'], '1.2.4')
-        self.assertEqual(result['merge_base'], self.base)
-        self.assertIn('Luna', result['instructions'])
-        self.assertEqual((result['content_draft_schema']['base_commit'], result['content_draft_schema']['head_commit']), (self.base, self.head))
+        self.assertEqual(result["version"], "1.2.4")
+        self.assertEqual(result["merge_base"], self.base)
+        self.assertIn("Luna", result["instructions"])
+        self.assertEqual(
+            (
+                result["content_draft_schema"]["base_commit"],
+                result["content_draft_schema"]["head_commit"],
+            ),
+            (self.base, self.head),
+        )
         self.assertEqual(
             result["diff_argv"],
             ["git", "diff", "--find-renames", self.base, self.head, "--"],
         )
-        self.assertEqual({ticket['path'] for ticket in result['completed_tickets']}, {
-            f'_anechoic_anechoic/{branch}/TASKS/AN-T-{number}-TASK--done.md'
-            for branch, number in (('001_TICKETS', 1), ('__TICKETS', 3), ('__TKT', 4))})
-        draft = {'base_commit': self.base, 'head_commit': self.head, 'changes': [{'title': 'Add feature', 'details': 'Adds a feature.', 'evidence': ['AN-T-1'], 'highlight': True}]}
+        self.assertEqual(
+            {ticket["path"] for ticket in result["completed_tickets"]},
+            {
+                f"_anechoic_anechoic/{branch}/TASKS/"
+                f"AN-T-{number}-TASK--done.md"
+                for branch, number in (
+                    ("001_TICKETS", 1),
+                    ("__TICKETS", 3),
+                    ("__TKT", 4),
+                )
+            },
+        )
+        self._assert_reviewed_draft()
+        self.assertEqual(self.git("status", "--porcelain"), before)
+
+    def _assert_reviewed_draft(self):
+        draft = {
+            "base_commit": self.base,
+            "head_commit": self.head,
+            "changes": [
+                {
+                    "title": "Add feature",
+                    "details": "Adds a feature.",
+                    "evidence": ["AN-T-1"],
+                    "highlight": True,
+                }
+            ],
+        }
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "draft.json"
             payload = json.dumps(draft).encode("utf-8")
@@ -53,7 +85,6 @@ class PublicReleaseTest(PublicReleaseFixture, unittest.TestCase):
                 ("failed", "changelog"),
             )
             self.assertIn("commit pins", rejected["error"])
-        self.assertEqual(self.git('status', '--porcelain'), before)
 
     def test_rejects_stale_pins_and_invalid_entries(self):
         draft = {"base_commit": self.base, "head_commit": "bad", "changes": []}
@@ -72,7 +103,6 @@ class PublicReleaseTest(PublicReleaseFixture, unittest.TestCase):
         ]
         with self.assertRaises(PublicReleaseError):
             self.run_release(content_draft=draft)
-
 
     def test_excludes_archives_snapshots_and_symlinks_and_rejects_duplicates(
         self,
@@ -121,5 +151,5 @@ class PublicReleaseTest(PublicReleaseFixture, unittest.TestCase):
             self.run_release(content_draft=draft)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

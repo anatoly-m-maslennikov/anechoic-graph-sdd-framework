@@ -8,7 +8,7 @@ from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.suite_config import (
     load_suite_config,
 )
 
-from .full_suite_docker import APP
+from .release_image.release_image__shared import APP
 
 WORKBENCH = Path("LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE")
 WORKBENCH_TESTS = WORKBENCH / (WORKBENCH.name + "__tests")
@@ -20,7 +20,7 @@ _FAST_IMAGE_MODULES = (
 )
 _CANARY_TEST_DIRECTORY = (
     "LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEAT"
-    "URE_PROJECT_TOOLS__tests"
+    "URE_PROJECT_TOOLS__tests/release"
 )
 _CANARY_TEST_MODULES = (
     f"{_CANARY_TEST_DIRECTORY}/test_release_canary.py",

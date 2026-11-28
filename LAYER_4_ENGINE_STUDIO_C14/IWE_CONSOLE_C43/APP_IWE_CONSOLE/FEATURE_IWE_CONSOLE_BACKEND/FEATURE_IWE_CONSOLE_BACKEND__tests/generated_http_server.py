@@ -1,4 +1,5 @@
 """Test-only JSON-lines bridge to the production ASGI Tool callback."""
+
 from unittest.mock import NonCallableMock
 import asyncio
 import json
@@ -31,7 +32,9 @@ from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (
 )
 from starlette.applications import Starlette
 from starlette.routing import Route
-from test_backend_tool_status import make_tool_app
+from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.\
+    FEATURE_IWE_CONSOLE_BACKEND__tests.query.test_backend_tool_status \
+    import make_tool_app  # fmt: skip
 
 
 @asynccontextmanager
@@ -85,16 +88,26 @@ async def pilot_app(state):
         yield app
 
 
-@asynccontextmanager
-async def provider_app(root, state):
-    selection = NonCallableMock(
+def _provider_selection(root):
+    return NonCallableMock(
         spec_set=[
-            'root', 'host_root', 'instance_id', 'parameters',
-            'control_relative'
+            "root",
+            "host_root",
+            "instance_id",
+            "parameters",
+            "control_relative",
         ],
-        root=root, host_root=None, instance_id="test", parameters={},
+        root=root,
+        host_root=None,
+        instance_id="test",
+        parameters={},
         control_relative=Path("_anechoic_test"),
     )
+
+
+@asynccontextmanager
+async def provider_app(root, state):
+    selection = _provider_selection(root)
     inputs = NativeQueryInputs(lambda *_: None, frozenset(), {})
     owner = NativeQueryOwner(selection, inputs)
     with duckdb.connect(

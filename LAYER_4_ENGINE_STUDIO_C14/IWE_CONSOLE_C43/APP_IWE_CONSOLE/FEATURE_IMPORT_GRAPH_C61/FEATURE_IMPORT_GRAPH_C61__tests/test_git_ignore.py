@@ -3,10 +3,10 @@ import subprocess
 from tempfile import TemporaryDirectory
 import unittest
 
-from IWE_CONSOLE_C43.APP_IWE_CONSOLE.\
-    FEATURE_IMPORT_GRAPH_C61.import_graph__shared import (
-    git_ignored,
-)
+from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IMPORT_GRAPH_C61.\
+    SOURCE_CAPTURE.SOURCE_CAPTURE__shared import (
+    _git_ignored as git_ignored,
+)  # fmt: skip
 
 
 class GitIgnoreTests(unittest.TestCase):
@@ -61,9 +61,7 @@ class GitIgnoreTests(unittest.TestCase):
         (repo / ".gitignore").write_text("*.py\n!keep.py\nblocked/\n")
         (repo / "project" / ".gitignore").write_text("!nested.py\n")
         (repo / "project" / "tracked.py").write_text("")
-        subprocess.run(
-            ["git", "-C", str(repo), "add", "-f", "."], check=True
-        )
+        subprocess.run(["git", "-C", str(repo), "add", "-f", "."], check=True)
         subprocess.run(
             ["git", "-C", str(repo), "commit", "-qm", "initial"],
             check=True,

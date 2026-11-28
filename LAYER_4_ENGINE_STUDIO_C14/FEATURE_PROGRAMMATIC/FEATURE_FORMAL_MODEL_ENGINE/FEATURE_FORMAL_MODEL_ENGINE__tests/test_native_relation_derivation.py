@@ -3,11 +3,10 @@
 import unittest
 
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
-    import (
-        NativeModelClaimError,
-        parse_native_model_claim,
-    )  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model.claims.claims__shared import (
+    NativeModelClaimError,
+    parse_native_model_claim,
+)
 
 
 def claim(name, base=None):

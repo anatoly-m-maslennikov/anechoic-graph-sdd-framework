@@ -13,8 +13,8 @@ context:
   lens: DOM/CONT
 state:
   status: active
-  version: 5
-  updated_at: '2026-11-26T18:18:17.038231+00:00'
+  version: 7
+  updated_at: "2026-11-28T15:16:37.698017+00:00"
 ---
 
 ## Summary
@@ -31,12 +31,12 @@ A Lens can list canonical sublenses and links to Lenses already declared
 elsewhere in the tree. A link exposes the target in another grouping.
 Each alternative lists the subparts that make up one grouping.
 
-`BACKEND = API + SWE` illustrates another grouping. SYS and BACKEND share
-SWE. Each also covers paths the other omits, so they can serve different
-Components.
+IO groups interactions across the Project runtime boundary. Inbound
+contains Public API, UI, and inbound DTA. UI contains UX and VIZ.
+Outbound contains Consumed API and outbound DTA.
 
-`IO = API + UI`. `API = CLI + REST API + DTA + MCP` groups programmatic
-interfaces. `UI = UX + VIS` groups user experience and visual design.
+SWD contains Internal API, including IPC. Internal data transformation
+rules belong to SWD/DBT.
 
 Each Component selects the Lens scopes for its own Spec Atoms. A Spec Atom
 uses one authored Lens path. Within a Component, expanded scopes can be

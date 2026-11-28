@@ -1,55 +1,60 @@
 """Atom lifecycle family interface."""
 
 from . import common as common_module
-from . import directory_effect as directory_effect_module
+from .updates.tickets import directory_effect as directory_effect_module
 from . import effects as effects_module
-from . import native_update
-from . import source as source_module
-from .atom_population import compile_atom_population_model
-from .carrier import render_carrier
+from .updates import native_update__shared as native_update
+from .sources import source__shared as source_module
+from .carriers.atom_population import compile_atom_population_model
+from .carriers.carrier__shared import render_carrier
 from .common import InputError, SourceChanged, result
-from .content_constraints import (
+from .carriers.content.content_constraints__shared import (
     compile_content_constraints,
     load_content_constraints,
 )
 from .effects import Result
-from .header_constraints import (
+from .carriers.header.header_constraints__shared import (
     compile_header_constraints,
     load_header_constraints,
 )
-from .header_ordering import (
+from .carriers.header_ordering import (
     compile_header_ordering,
     load_header_ordering,
     validate_header_order,
 )
-from .header_relation_rules import (
+from .carriers.header_relation_rules import (
     compile_header_relation_rules,
     load_header_relation_rules,
 )
-from .native_asset import create_asset
-from .native_draft import create_draft, promote_draft
-from .native_draft_source import _revision_root
-from .native_draft_update import update_draft
-from .native_update import change_ticket_status, ticket_status_options
-from .native_update_archive import archive_ticket, direct_update
-from .native_update_spec import archive_spec_draft, change_spec_status
-from .placement import _predecessor_status, _role_root, derive_destination
-from .placement_model import (
+from .drafts.native_asset import create_asset
+from .drafts.native_draft__shared import (
+    create_draft,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.drafts.promotion.native_draft_promotion_dispatch import (
+    promote_draft,
+)
+from .drafts.sources.native_draft_source__shared import _revision_root
+from .drafts.revision.native_draft_update import update_draft
+from .updates.native_update__shared import change_ticket_status, ticket_status_options
+from .updates.native_update_archive import archive_ticket, direct_update
+from .updates.spec.native_update_spec__shared import archive_spec_draft, change_spec_status
+from .sources.placement.placement__shared import _predecessor_status, _role_root, derive_destination
+from .sources.placement.placement_model import (
     active_placement,
     bind_placement,
     compile_placement,
     load_placement,
 )
-from .placement_sources import (
+from .sources.placement.placement_sources import (
     bootstrap_rows,
     inventory,
     pin,
     read_selected,
     validate_selection,
 )
-from .role_form_schema import RoleFormSchema, compile_role_form, load_role_form
-from .source import select_source, select_sources
-from .source_binding import SourceSelectionError, bind_query_reader
+from .carriers.role_form_schema import RoleFormSchema, compile_role_form, load_role_form
+from .sources.source__shared import select_source, select_sources
+from .sources.source_binding import SourceSelectionError, bind_query_reader
 from .status_model import (
     StatusModel,
     _staged_declarations,

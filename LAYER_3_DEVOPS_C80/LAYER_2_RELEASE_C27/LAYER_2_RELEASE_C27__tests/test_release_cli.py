@@ -67,7 +67,9 @@ class ReleaseCliTests(ReleaseCliFixture, unittest.TestCase):
 
     def test_run_image_uses_saved_mounted_settings(self) -> None:
         result = {"mode": "dry-run", "http_port": 7777}
-        with patch(IMAGE_ENTRY + ".launch_shared_image", return_value=result) as launch:
+        with patch(
+            IMAGE_ENTRY + ".launch_shared_image", return_value=result
+        ) as launch:
             self.assertEqual(
                 self.invoke(["run-image", "--mounted-folder", "/mounted"]),
                 (0, {**result, "outcome": "completed"}),

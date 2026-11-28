@@ -6,7 +6,7 @@ from inspect import getsource
 from pydantic import ConfigDict
 from pydantic.dataclasses import dataclass
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.topic_dependencies__pub \
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model.topic_dependencies__pub \
     import DEPENDENCIES_CHECK_SOURCE_SHA256  # fmt: skip
 
 

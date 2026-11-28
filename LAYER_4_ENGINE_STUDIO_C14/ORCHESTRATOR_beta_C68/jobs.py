@@ -14,7 +14,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, InstanceOf
 
-from .retry import COVERAGE_RECOVERED, CurrentnessRetry
+from ORCHESTRATOR_beta_C68.watching.retry import COVERAGE_RECOVERED, CurrentnessRetry
 
 ENGINE = Path(__file__).resolve().parents[1]
 FIELDS = {
@@ -271,7 +271,7 @@ class QueuedJobs:
                 self.watcher.queue.put({})
 
     def _run_queued_generation(self, retry, job, changes, due):
-        from .archive_jobs import ARCHIVE_RECONCILIATION
+        from ORCHESTRATOR_beta_C68.archive_operations.archive_jobs import ARCHIVE_RECONCILIATION
 
         graph_only = job is not None and job.target == "realization_graph"
         if (

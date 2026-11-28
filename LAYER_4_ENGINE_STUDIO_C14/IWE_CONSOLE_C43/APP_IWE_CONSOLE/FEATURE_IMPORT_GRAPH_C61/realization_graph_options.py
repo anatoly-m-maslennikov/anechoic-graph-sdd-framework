@@ -8,7 +8,7 @@ from pathlib import Path
 
 # fmt: off
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30 \
-    .ADAPTERS_C30__shared import (
+    .structure.structure__shared import (
     parse_structure,
     realization_component_paths,
 )

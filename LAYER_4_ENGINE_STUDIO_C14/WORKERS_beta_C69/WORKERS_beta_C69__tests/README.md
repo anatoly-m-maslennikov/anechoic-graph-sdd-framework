@@ -3,7 +3,7 @@
 Use this opt-in diagnostic for the current Beta Worker. Run from the repository root with the Engine environment:
 
 ```sh
-PYTHONPATH="$PWD/LAYER_4_ENGINE_STUDIO_C14" LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/.venv/bin/python -B -m WORKERS_beta_C69.WORKERS_beta_C69__tests.profile_generation --project-root /absolute/path/to/project
+PYTHONPATH="$PWD/LAYER_4_ENGINE_STUDIO_C14" LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/.venv/bin/python -B -m WORKERS_beta_C69.WORKERS_beta_C69__tests.generation.profile_generation --project-root /absolute/path/to/project
 ```
 
 Add `--foreground` to profile the foreground generation with deferred Archive. Project selection uses the existing reviewed Model admission process. An existing native Worker binding JSON may instead be supplied with `--binding`.

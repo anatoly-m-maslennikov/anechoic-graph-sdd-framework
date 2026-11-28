@@ -6,8 +6,8 @@ import re
 from pathlib import Path
 import yaml
 from .release_assets import LocalReleaseError
-from .release_images import ImageManager
-from .release_inputs import read_atom_header
+from .image_builder.image_builder__shared import ImageManager
+from .input_selection.input_selection__shared import read_atom_header
 from .release_package_files import (
     _project_path,
     _walk_regular_files,

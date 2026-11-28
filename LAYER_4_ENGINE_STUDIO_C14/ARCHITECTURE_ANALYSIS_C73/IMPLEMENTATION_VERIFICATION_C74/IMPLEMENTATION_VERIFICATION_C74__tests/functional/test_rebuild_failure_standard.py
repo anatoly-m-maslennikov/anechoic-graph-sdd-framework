@@ -119,12 +119,17 @@ class RebuildFailureStandardTests(unittest.TestCase):
             1,
             "Expected exactly one WorkbenchRebuildFailure Lean block",
         )
+        diagnostic = (
+            "                print(\n"
+            '                    f"Workbench rebuild failed for '
+            '{target!r}: {error}",\n'
+            "                    file=sys.stderr,\n"
+            "                )\n"
+        )
         old = (
-            "            except Exception as "
-            'error:\n                print(f"W'
-            "orkbench rebuild failed for {tar"
-            'get!r}: {error}", file=sys.stder'
-            "r)\n                raise\n"
+            "            except Exception as error:\n"
+            + diagnostic
+            + "                raise\n"
         )
         ready = old.replace(
             "                raise\n",
@@ -134,14 +139,7 @@ class RebuildFailureStandardTests(unittest.TestCase):
                 'sult_ids": {}}\n'
             ),
         )
-        silent = old.replace(
-            (
-                '                print(f"Workbenc'
-                "h rebuild failed for {target!r}:"
-                ' {error}", file=sys.stderr)\n'
-            ),
-            "",
-        )
+        silent = old.replace(diagnostic, "")
         source = SOURCE.read_text()
         self.assertEqual(source.count(old), 1, "Mutation anchor changed")
         return lean, blocks[0], source, old, ready, silent

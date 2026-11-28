@@ -9,8 +9,10 @@ from unittest.mock import patch
 
 from watchdog.events import FileModifiedEvent
 
-from ORCHESTRATOR_beta_C68.ORCHESTRATOR_beta_C68__shared import (
+from ORCHESTRATOR_beta_C68.generation.worker.flow import (
     Flow,
+)
+from ORCHESTRATOR_beta_C68.ORCHESTRATOR_beta_C68__shared import (
     GenerationJobs,
 )
 
@@ -72,7 +74,7 @@ class FlowTests(unittest.TestCase):
                 return {"state": "succeeded"}
 
             with (
-                patch("ORCHESTRATOR_beta_C68.flow.UnixConnection", connection),
+                patch("ORCHESTRATOR_beta_C68.generation.worker.flow.UnixConnection", connection),
                 patch.object(jobs, "_attempt_generation", side_effect=attempt),
             ):
                 self.assertEqual("succeeded", jobs._generate()["state"])
@@ -153,7 +155,7 @@ class FlowTests(unittest.TestCase):
         for _ in range(600):
             flow.input("file_change")
         with patch(
-            "ORCHESTRATOR_beta_C68.flow.UnixConnection", side_effect=OSError
+            "ORCHESTRATOR_beta_C68.generation.worker.flow.UnixConnection", side_effect=OSError
         ):
             flow.finish({"state": "failed"})
         self.assertEqual("generation_result", flow.events[-1]["name"])

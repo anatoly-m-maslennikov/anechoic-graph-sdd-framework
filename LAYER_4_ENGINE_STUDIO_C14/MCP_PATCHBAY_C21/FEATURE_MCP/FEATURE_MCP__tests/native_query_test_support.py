@@ -32,8 +32,10 @@ STUDIO = MCP.parents[1]
 from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.workbench_operations import (  # noqa: E402
     WorkbenchOperations,
 )
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import (  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.PROJECT_SUPPORT.RUNTIME_SUPPORT.RUNTIME_SUPPORT__shared import (  # noqa: E402
     ExplicitBlockingRuntimeFailure,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.PROJECT_SUPPORT.PROJECT_SELECTION.PROJECT_SELECTION__shared import (  # noqa: E402
     resolve_native_project,
 )
 
@@ -184,7 +186,9 @@ class WorkbenchTools:
 
 
 def local_gateway(root, *, native_query):
-    from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import DirectGateway
+    from MCP_PATCHBAY_C21.FEATURE_MCP.gateway.gateway__shared import (
+        DirectGateway,
+    )
 
     gateway = DirectGateway(
         root,

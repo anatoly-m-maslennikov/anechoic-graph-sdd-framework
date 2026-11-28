@@ -8,9 +8,9 @@ context:
   template: workflow
   lens: DOM/MTD
 state:
-  status: "active"
-  version: 3
-  updated_at: "2026-11-25T21:47:24.584448+00:00"
+  status: active
+  version: 4
+  updated_at: '2026-11-28T09:21:26.937336+00:00'
 ---
 ## Summary
 
@@ -36,13 +36,19 @@ This Workflow's Purpose is Runtime; its scheme follows AN-S-1709.
 
 #### Input
 
-One exact Draft selector and an allowed Current `targetStatus`; an optional `savedArchivedAtom` identifies a target already archived by a composed Update.
+An exact source revision selector and an allowed `targetStatus`.
+For SPEC, use Draft to Ready or Ready to Active. An optional
+`savedArchivedAtom` identifies a target already archived by a
+composed Update.
 
 The `projectContext` input port binds the Project and applicable model.
 
 #### Output
 
-Return `savedCurrentAtom` and `removedDraft` on success, with the archived targets and completed effects. A waiting result carries `requested_input`. A failure carries the error and any completed effects. Return warnings separately.
+Return the saved revision and its Status, the removed source carrier,
+and completed effects. Include archived predecessors when the transition
+archives them. A waiting result carries `requested_input`. A failure
+carries the error and any completed effects. Return warnings separately.
 
 #### Step handoffs
 
@@ -55,7 +61,7 @@ Return `savedCurrentAtom` and `removedDraft` on success, with the archived targe
 | Condition | Behavior |
 | --- | --- |
 | Entry | Run Promote the selected Atom Draft. |
-| `savedCurrentAtom` and `removedDraft` are returned | Complete successfully. |
+| The saved revision and removed source carrier are returned | Complete successfully. |
 | A failure result is returned | Stop and report the explicit failure. |
 
 If an Action requests additional input, return its short explanation and requested input dictionary and keep the Workflow pending. Resume with the supplied dictionary; cancellation is allowed while waiting and does not interrupt an Action.

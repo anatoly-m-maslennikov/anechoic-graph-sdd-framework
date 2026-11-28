@@ -3,30 +3,22 @@
 from __future__ import annotations
 
 import argparse
-from dataclasses import asdict
 import json
 import os
 from pathlib import Path
 import stat
+import tempfile
+import tomllib
 import sys
 
 from pydantic import ConfigDict, ValidationError
 from pydantic.dataclasses import dataclass
 
-sys.path.insert(
-    0, str(Path(__file__).resolve().parents[1] / "LAYER_4_ENGINE_STUDIO_C14")
+from _container_settings_client import (
+    CONTAINER_SETTINGS_FILENAME,
+    _container_cli,
 )
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.container_settings__pub import (
-    CONTAINER_SETTINGS_FILENAME,
-    ContainerStartupSettings,
-    parse_container_settings,
-    read_container_settings,
-)
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.settings_carrier__pub import (
-    parse_settings_carrier,
-    write_settings_carrier,
-)
 
 _MAX_SETTINGS_BYTES = 4096
 
@@ -40,7 +32,7 @@ class Settings:
     workbench_storage: str
     journal_storage: str
     log_level: str = "INFO"
-    container: ContainerStartupSettings | None = None
+    container: dict | None = None
 
 
 def _settings(*values: object) -> Settings:
@@ -70,7 +62,7 @@ def _read(path: Path) -> dict | None:
         raw = stream.read(_MAX_SETTINGS_BYTES + 1)
     if len(raw) > _MAX_SETTINGS_BYTES:
         raise ValueError("Runtime settings exceed the size limit")
-    return parse_settings_carrier(raw)
+    return tomllib.loads(raw.decode("utf-8"))
 
 
 def _folder(value: Path | str) -> Path:
@@ -164,30 +156,32 @@ def docker_context(engine: str) -> str:
     return "desktop-linux" if sys.platform == "darwin" else "default"
 
 
-def _mounted_values(path: Path, config: ContainerStartupSettings) -> Settings:
+def _mounted_values(path: Path, config: dict) -> Settings:
     return _settings(
         path,
         _folder(path.parent),
-        config.mode == "project",
-        config.http_port,
-        config.workbench_storage,
-        config.journal_storage,
-        config.log_level,
+        config["mode"] == "project",
+        config["http_port"],
+        config["workbench_storage"],
+        config["journal_storage"],
+        config["log_level"],
         config,
     )
 
 
 def _existing_settings(path: Path) -> Settings | None:
     if path.name == CONTAINER_SETTINGS_FILENAME:
-        config = read_container_settings(path.parent)
+        config = _container_cli("read", path.parent)
         return _mounted_values(path, config) if config is not None else None
     document = _read(path)
     if document is None:
         return None
     legacy = _existing(path, document)
-    mounted = read_container_settings(legacy.folder)
+    mounted = _container_cli("read", legacy.folder)
     if mounted is not None:
-        return _mounted_values(legacy.folder / CONTAINER_SETTINGS_FILENAME, mounted)
+        return _mounted_values(
+            legacy.folder / CONTAINER_SETTINGS_FILENAME, mounted
+        )
     return legacy
 
 
@@ -201,31 +195,38 @@ def _new_settings(path, selected, arguments) -> Settings:
     storage = arguments.workbench_storage or "disk"
     journal = arguments.journal_storage or "files"
     if path.name != CONTAINER_SETTINGS_FILENAME:
-        return _validate(_settings(path, selected, single, port, storage, journal))
+        return _validate(
+            _settings(path, selected, single, port, storage, journal)
+        )
     if path.parent != selected:
-        raise ValueError("Container settings must be in the selected mounted folder")
+        raise ValueError(
+            "Container settings must be in the selected mounted folder"
+        )
     log_level = "INFO"
     if arguments.settings is None:
         legacy_path = _path(None)
         document = _read(legacy_path)
         if document is not None:
             previous = _existing(legacy_path, document)
-            if previous.folder == selected and previous.single_project == single:
+            if (
+                previous.folder == selected
+                and previous.single_project == single
+            ):
                 port = previous.port if arguments.port is None else port
-                storage = arguments.workbench_storage or previous.workbench_storage
+                storage = (
+                    arguments.workbench_storage or previous.workbench_storage
+                )
                 journal = arguments.journal_storage or previous.journal_storage
                 log_level = previous.log_level
-    return _mounted_values(
-        path,
-        ContainerStartupSettings(
-            mode="project" if single else "projects",
-            http_port=port,
-            docker_context=docker_context(arguments.engine),
-            workbench_storage=storage,
-            journal_storage=journal,
-            log_level=log_level,
-        ),
-    )
+    config = {
+        "mode": "project" if single else "projects",
+        "http_port": port,
+        "docker_context": docker_context(arguments.engine),
+        "workbench_storage": storage,
+        "journal_storage": journal,
+        "log_level": log_level,
+    }
+    return _validate(_mounted_values(path, config))
 
 
 def select_settings(arguments: argparse.Namespace) -> tuple[Settings, bool]:
@@ -260,15 +261,7 @@ def select_settings(arguments: argparse.Namespace) -> tuple[Settings, bool]:
 def write_settings(values: Settings) -> None:
     _validate(values)
     if values.container is not None:
-        content = "schema_version = 1\n\n[container]\n" + "".join(
-            f"{key} = {json.dumps(value, ensure_ascii=False)}\n"
-            for key, value in asdict(values.container).items()
-            if value is not None
-        )
-        write_settings_carrier(
-            values.path, content, validate=parse_container_settings,
-            replace_existing=False,
-        )
+        _container_cli("create", values.path.parent, values.container)
         return
     key = "project_root" if values.single_project else "projects_root"
     content = (
@@ -284,8 +277,15 @@ def write_settings(values: Settings) -> None:
     if len(content.encode()) > _MAX_SETTINGS_BYTES:
         raise ValueError("The settings path values exceed the size limit")
     values.path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
-    write_settings_carrier(
-        values.path, content,
-        validate=lambda document: _existing(values.path, document),
-        replace_existing=False,
+    _existing(values.path, tomllib.loads(content))
+    descriptor, temporary = tempfile.mkstemp(
+        prefix=f".{values.path.name}.", dir=values.path.parent
     )
+    try:
+        with os.fdopen(descriptor, "wb") as handle:
+            handle.write(content.encode("utf-8"))
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.link(temporary, values.path, follow_symlinks=False)
+    finally:
+        os.unlink(temporary)

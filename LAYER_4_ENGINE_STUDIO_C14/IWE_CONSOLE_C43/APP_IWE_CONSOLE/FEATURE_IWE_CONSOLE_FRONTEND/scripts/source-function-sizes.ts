@@ -4,7 +4,21 @@ import { readFileSync } from 'node:fs';
 
 type SourceFile = ts.SourceFile & {
   parseDiagnostics: readonly ts.Diagnostic[] };
-type FunctionSize = [number, string, number];
+type FunctionSize = [number, string, number, number];
+
+function nestingDepth(node: ts.Node): number {
+  if (ts.isFunctionLike(node) || ts.isClassLike(node)) return 0;
+  const level = Number(ts.isIfStatement(node) ||
+    ts.isIterationStatement(node, false) || ts.isTryStatement(node) ||
+    ts.isSwitchStatement(node));
+  let maximum = level;
+  ts.forEachChild(node, child => {
+    const elseIf = ts.isIfStatement(node) && child === node.elseStatement &&
+      ts.isIfStatement(child);
+    maximum = Math.max(maximum, level + nestingDepth(child) - Number(elseIf));
+  });
+  return maximum;
+}
 
 function functionSizes({ path, source }: { path:
   string; source: string }): FunctionSize[] {
@@ -42,7 +56,7 @@ function scriptSizes(path: string, source: string,
         /\r\n|[\n\r\u2028\u2029]/).length - 1;
       const range = lines.slice(start, end + 1);
       const size = range.filter(line => line.trim()).length;
-      result.push([start + 1, name, size]);
+      result.push([start + 1, name, size, nestingDepth(node.body)]);
     }
     ts.forEachChild(node, visit);
   }

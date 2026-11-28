@@ -3,7 +3,7 @@
 import re
 from pathlib import Path
 from .release_image_provenance import release_image_provenance
-from .release_inputs import read_release_selection
+from .input_selection.input_selection__shared import read_release_selection
 from .local_release_safety import _new_staging_directory
 from .release_package_files import _root
 from .runtime_support import (

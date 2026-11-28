@@ -17,7 +17,7 @@ from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
     import capture_ticket_delta  # fmt: skip
 
-from .native_refresh import _ReuseHint, _ticket_delta
+from WORKERS_beta_C69.refresh.native_refresh import _ReuseHint, _ticket_delta
 from .lifecycle_worker import _validate_indexed, run as lifecycle_run
 from .lifecycle_request import _Binding
 

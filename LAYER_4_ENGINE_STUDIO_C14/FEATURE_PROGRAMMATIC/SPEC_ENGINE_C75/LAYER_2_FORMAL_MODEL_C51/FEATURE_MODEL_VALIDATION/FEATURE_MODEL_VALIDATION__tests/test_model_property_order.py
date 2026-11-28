@@ -2,10 +2,13 @@
 
 import unittest
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
-    import order_properties  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.structure.structure__shared import (
+    order_properties,
+)
 
-from ..FEATURE_MODEL_VALIDATION__shared import validate_declared_sibling_order
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.FEATURE_MODEL_VALIDATION.model_rules.model_ordering_bindings import (
+    validate_declared_sibling_order,
+)
 
 
 class PropertyOrderTests(unittest.TestCase):

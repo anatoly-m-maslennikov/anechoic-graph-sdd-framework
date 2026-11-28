@@ -136,7 +136,8 @@ def _run(command, project):
         ).returncode
     except subprocess.TimeoutExpired:
         print(
-            "Project MCP launcher timed out; inspect its state before retrying.",
+            "Project MCP launcher timed out; inspect its state before "
+            "retrying.",
             file=os.sys.stderr,
         )
         return 2
@@ -151,6 +152,34 @@ def _run(command, project):
         return 2
 
 
+def _parser(default_root):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--project-root", type=Path, default=default_root)
+    parser.add_argument(
+        "--source-root",
+        type=Path,
+        help="Framework source checkout (defaults to the selected "
+        "installed package)",
+    )
+    parser.add_argument(
+        "--control-root",
+        help="Optional direct _anechoic_<project> or legacy "
+        ".anechoic_<project> folder",
+    )
+    parser.add_argument(
+        "--port", type=int, help="Assert the Project Settings localhost port"
+    )
+    parser.add_argument(
+        "--image", help="Start the specified immutable sha256 image ID"
+    )
+    parser.add_argument(
+        "--no-build",
+        action="store_true",
+        help="Use a matching existing image only",
+    )
+    return parser
+
+
 def main(argv=None):
     script_path = Path(__file__).resolve()
     script_source = (
@@ -159,18 +188,7 @@ def main(argv=None):
         else _source_root(script_path)
     )
     default_root = script_source or script_path.parent.parent
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--project-root", type=Path, default=default_root)
-    parser.add_argument("--source-root", type=Path,
-                        help="Framework source checkout (defaults to the selected installed package)")
-    parser.add_argument("--control-root", help="Optional direct _anechoic_<project> or legacy .anechoic_<project> folder")
-    parser.add_argument(
-        "--port", type=int, help="Assert the Project Settings localhost port"
-    )
-    parser.add_argument(
-        "--image", help="Start the specified immutable sha256 image ID"
-    )
-    parser.add_argument("--no-build", action="store_true", help="Use a matching existing image only")
+    parser = _parser(default_root)
     args = parser.parse_args(argv)
     if args.port is not None and not 1 <= args.port <= 65535:
         parser.error("--port must be between 1 and 65535")
@@ -191,7 +209,10 @@ def main(argv=None):
         parser.error(str(error))
     launcher = source / LAUNCHER_PATH
     if not launcher.is_file():
-        parser.error("Framework launcher not found; pass --source-root with the Framework checkout")
+        parser.error(
+            "Framework launcher not found; pass --source-root with the "
+            "Framework checkout"
+        )
     command = _command(args, source, project, launcher)
     return _run(command, project)
 

@@ -1,6 +1,6 @@
 """Formal Model Engine family interface."""
 
-from .compiler_claim import (
+from .claim_compiler._package__shared import (
     compile_atom_dependencies_with_check,
     compile_scope_level_with_check,
     compiler_model_statements,
@@ -9,6 +9,8 @@ from .formal_claim_blocks__pub import formal_claim_blocks
 from .legacy_claim_compiler__pub import compile_python_model_claim
 from .lint_python_model_claim__pub import (
     lint_python_model_claim,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.claim_lint.lint_python_model_claim_references import (
     resolve_model_claim_reference,
 )
 from .native_model_lint__pub import (

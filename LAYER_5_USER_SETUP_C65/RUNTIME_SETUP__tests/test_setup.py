@@ -121,6 +121,8 @@ class RuntimeSetupTests(unittest.TestCase):
         )
         self.assertIn("--locked", command)
         self.assertIn("--no-env-file", command)
+        self.assertIn("--no-compile-bytecode", command)
+        self.assertNotIn("UV_COMPILE_BYTECODE", call.kwargs["env"])
         self.assertIn("-P", command)
         self.assertEqual(
             str(source / RELEASE), command[command.index("-P") + 1]
@@ -133,6 +135,10 @@ class RuntimeSetupTests(unittest.TestCase):
         self.assertEqual(
             str(source / RELEASE.parent),
             call.kwargs["env"]["PYTHONPATH"],
+        )
+        self.assertEqual(
+            str(source / ".anechoic_tmp/python/bytecode"),
+            call.kwargs["env"]["PYTHONPYCACHEPREFIX"],
         )
 
     def test_install_uses_exact_build_image_and_configured_port(self):

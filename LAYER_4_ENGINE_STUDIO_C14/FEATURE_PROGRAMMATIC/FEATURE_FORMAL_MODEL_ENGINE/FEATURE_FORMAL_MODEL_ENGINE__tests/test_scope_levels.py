@@ -27,12 +27,15 @@ from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.\
         verify_packaged_dependencies_check,
         write_package,
     )  # fmt: skip
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
-    import (
-        ScopeUnitDeclaration,
-        formal_claim,
-        parse_carrier,
-    )  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.structure.scope.scope__shared import (
+    ScopeUnitDeclaration,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model.model__shared import (
+    formal_claim,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carriers.content.content__shared import (
+    parse_carrier,
+)
 
 PROGRAMMATIC = Path(__file__).resolve().parents[2]
 

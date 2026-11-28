@@ -7,9 +7,9 @@ tier: 1
 context:
   lens: SWD
 state:
-  status: active
-  version: 2
-  updated_at: '2026-11-13T12:18:00.694296+00:00'
+  status: "active"
+  version: 3
+  updated_at: "2026-11-27T20:35:14.221449+00:00"
 ---
 ## Summary
 
@@ -25,18 +25,20 @@ and their descendant Scope Units.
 
 ### Prose Claim
 
-Localize each implemented RMED engineering decision in one owning module or
-one cohesive package whenever practical. Many-to-many implementation relations
-remain valid, but an unimplemented Atom receives no invented implementation
-target. Split a decision across modules only for a genuine boundary and record
-the concrete reason; do not hide dispersed behavior behind a facade. Apply
-cross-cutting policies everywhere they are applicable through one shared
-canonical implementation, such as a decorator or common boundary, rather than
-duplicating the policy logic. A caller, adapter or router is not an
-implementation owner unless it contains independent claim-specific logic.
+Localize each implemented RMED engineering decision in one owning Module or one cohesive Package when practical. For R and D, prefer one cohesive Module and as few code units as practical, ideally one. Preserve complete realization of each Claim and truthful many-to-many implementation relations.
+
+Split implementation across Modules only at a genuine responsibility, lifecycle, effect, interface, data, or security boundary. Record the concrete reason. Preserve correctness and cohesion. Avoid scattering or duplicating logic, inflating a Module, or omitting obligations to meet a count.
+
+Implement each cross-cutting policy once at a shared canonical boundary, such as a decorator. Apply it everywhere the policy applies. Count copied policy logic as an implementation site during review.
 
 ## Details
 
-Treat every implemented R, M, E, or D engineering decision as an ownership obligation. Prefer one cohesive module or package for its actual behavior, structure, or evidence; many-to-many realization remains valid, but do not invent an owner from a trace link, caller, dependency, facade, or test invocation. A test owns an Evaluation only when it materially implements its check, fixture, or verification behavior, and its module records that Atom's ID and Version under the implementation trace policy.
+For R, count the implementation of Claim-specific meaning, behavior or enforcement. For D, count the implementation of representation, serialization, storage or placement. Include non-executable implementation when it realizes the Claim.
 
-Split a decision only at a real responsibility, lifecycle, effect, interface, data, or security boundary, record that reason, and do not scatter logic to reduce a size measure. Implement each cross-cutting policy once at its canonical shared boundary and apply it wherever applicable; copied logic remains a real implementation site for review. Callers, adapters, routers, and orchestration layers are consumers unless they contain independent claim-specific logic. Record required citations against actual owning modules or packages under the implementation trace policy; a package initializer or facade is not an owner merely by re-exporting behavior. Use the admitted implementation-trace policy for citation scope and syntax.
+Use code units such as functions or classes to assess implementation granularity.
+
+Assign ownership to the Modules or Packages that realize the Claim. Count a caller, adapter, router, orchestration layer, dependency or facade only when it materially implements part of the Claim. A test owns an Evaluation when it implements its check, fixture or verification behavior.
+
+Record the actual owners and exact revisions under AN-S-2259 and AN-S-2256. Leave unimplemented Atoms without implementation targets.
+
+This Method sets an organization preference. Existing approval and test policies govern their own scope.

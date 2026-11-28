@@ -24,31 +24,48 @@ def parse_workflow(source):
         or len(call.keywords) != len({item.arg for item in call.keywords})
     ):
         raise ValueError(
-            "Expected component_workflow(component=..., action=..., machine=..., startup=...)"
+            "Expected component_workflow(component=..., action=..., "
+            "machine=..., startup=...)"
         )
     for node in ast.walk(call):
         if isinstance(node, ast.Dict):
-            keys = [key.value for key in node.keys if isinstance(key, ast.Constant) and isinstance(key.value, str)]
+            keys = [
+                key.value
+                for key in node.keys
+                if isinstance(key, ast.Constant) and isinstance(key.value, str)
+            ]
             if len(keys) != len(node.keys) or len(set(keys)) != len(keys):
                 raise ValueError("Workflow objects require unique string keys")
     values = {item.arg: ast.literal_eval(item.value) for item in call.keywords}
-    if (not isinstance(values["component"], str) or not re.fullmatch(r"CS?[0-9]+", values["component"])
-            or not isinstance(values["action"], str) or not values["action"].strip()
-            or not isinstance(values["machine"], dict)):
+    if (
+        not isinstance(values["component"], str)
+        or not re.fullmatch(r"CS?[0-9]+", values["component"])
+        or not isinstance(values["action"], str)
+        or not values["action"].strip()
+        or not isinstance(values["machine"], dict)
+    ):
         raise ValueError("Invalid Component, action, or statechart")
     if "startup" in values:
-        startup = values["startup"]
-        if not isinstance(startup, dict) or set(startup) != {
-            "required_arguments"
-        }:
-            raise ValueError("startup must contain only required_arguments")
-        arguments = startup["required_arguments"]
-        if (not isinstance(arguments, list)
-                or any(not isinstance(arg, str) or not re.fullmatch(r"--[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*", arg)
-                       for arg in arguments)
-                or len(set(arguments)) != len(arguments)):
-            raise ValueError("required_arguments must contain unique CLI option names")
+        _validate_startup(values["startup"])
     return values
+
+
+def _validate_startup(startup):
+    if not isinstance(startup, dict) or set(startup) != {"required_arguments"}:
+        raise ValueError("startup must contain only required_arguments")
+    arguments = startup["required_arguments"]
+    if (
+        not isinstance(arguments, list)
+        or any(
+            not isinstance(arg, str)
+            or not re.fullmatch(r"--[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*", arg)
+            for arg in arguments
+        )
+        or len(set(arguments)) != len(arguments)
+    ):
+        raise ValueError(
+            "required_arguments must contain unique CLI option names"
+        )
 
 
 def _fields(value, allowed, where):
@@ -82,9 +99,13 @@ def json_equal(a, b):
 
 def _overlap(a, b):
     def bound(value):
-        if (isinstance(value, dict) and set(value) == {'at_most'}
-                and type(value['at_most']) is int and value['at_most'] >= 0):
-            return value['at_most']
+        if (
+            isinstance(value, dict)
+            and set(value) == {"at_most"}
+            and type(value["at_most"]) is int
+            and value["at_most"] >= 0
+        ):
+            return value["at_most"]
 
     def compatible(left, right):
         left_bound, right_bound = bound(left), bound(right)
@@ -93,8 +114,11 @@ def _overlap(a, b):
         if right_bound is not None:
             left, right, left_bound = right, left, right_bound
         if left_bound is not None:
-            return (type(right) in (int, float) and 0 <= right <= left_bound
-                    and (type(right) is int or right.is_integer()))
+            return (
+                type(right) in (int, float)
+                and 0 <= right <= left_bound
+                and (type(right) is int or right.is_integer())
+            )
         return json_equal(left, right)
 
     details = b.get("detail", {})
@@ -174,7 +198,8 @@ def _transitions(name, events, states, remaining):
             for prior in alternatives:
                 if _overlap(prior["expect"], transition["expect"]):
                     raise ValueError(
-                        f"state {name}, event {event}: overlapping guards for targets "
+                        f"state {name}, event {event}: overlapping guards "
+                        "for targets "
                         f"{prior['target']} and {transition['target']}"
                     )
             alternatives.append(transition)
@@ -283,6 +308,7 @@ def _validate_references(initial, states):
             refs = set(transition["expect"].get("same_as", {}).values())
             if missing := sorted(refs - bound[name]):
                 raise ValueError(
-                    f"state {name}, event {transition['event']}: binding {missing[0]!r} "
+                    f"state {name}, event {transition['event']}: "
+                    f"binding {missing[0]!r} "
                     "must be set on every path by an earlier event"
                 )

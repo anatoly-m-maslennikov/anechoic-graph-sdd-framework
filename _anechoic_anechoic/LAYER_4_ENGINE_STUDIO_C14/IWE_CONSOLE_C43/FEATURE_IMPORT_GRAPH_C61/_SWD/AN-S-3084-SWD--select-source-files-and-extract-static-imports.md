@@ -3,7 +3,7 @@ atom_family: SPEC
 atom_id: AN-S-3084
 concern:
   subject: "Executable File"
-  path: "Model/Carrier/File"
+  path: Model/Carrier/Filesystem/File
   relation: "is_narrower_than"
 container:
   component: C61
@@ -12,8 +12,8 @@ context:
   lens: SWD
 state:
   status: active
-  version: 4
-  updated_at: "2026-11-27T16:16:01.404965+00:00"
+  version: 5
+  updated_at: "2026-11-28T11:52:02.110048+00:00"
 ---
 
 ## Summary

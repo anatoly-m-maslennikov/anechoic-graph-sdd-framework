@@ -99,9 +99,10 @@ def _remember_fingerprint(reader, path, raw):
 
 
 if __package__:
-    from .reader_filesystem import _ReaderFilesystem
+    from .sources.inventory.reader_filesystem import _ReaderFilesystem
 else:
-    from reader_filesystem import _ReaderFilesystem
+    sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.sources.inventory.reader_filesystem import _ReaderFilesystem
 
 
 @dataclass(config=ConfigDict(strict=True, extra="forbid"))

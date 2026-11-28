@@ -28,7 +28,8 @@ Use the full base SHA and include the ancestry required by the tests. Each
 changed path is a literal repository-relative file. Release creates the
 private checkout under your home directory so OrbStack can watch it.
 The candidate version advances past the base and the installed version.
-Delivery uses the target Manifest port.
+Delivery uses the port in the target mount’s `.anechoic_runtime_config.toml`.
+Older Projects can supply the port in their Project Manifest.
 If a gate fails, commit corrections in the reported source checkout and
 continue from the target. Delivery freezes the accepted source SHA.
 
@@ -63,7 +64,7 @@ performance limit. The receipt records both results. An overrun leaves the
 normal verification and delivery gates in effect. Set
 `ANECHOIC_TEST_IMAGE_FANOUT=3` when the host can support three image test workers.
 
-`project.toml` declares `stack = "current"` for image builds.
+Release's `project.toml` declares `stack = "current"` for image builds.
 
 Runtime Images provides the `build-image` and `run-image` commands. User
 Setup uses both commands, and Local Release uses the same image layer for
@@ -109,8 +110,10 @@ with `--port <loopback-port>` to prepare an isolated Local Release checkout.
 Repeat `--changed-path` for each literal repository-relative file.
 An absent source file removes that file from the base.
 
-Preparation commits the specified paths and the isolated Manifest port
-in a private temporary checkout outside the source Project. The JSON
+Preparation commits the specified paths in a private temporary checkout
+outside the source Project. It retains the base history for historical
+tests. When mounted settings are available, it stores
+the isolated port in that checkout’s runtime TOML. The JSON
 result gives its `project_root` and exact `revision`. Run the existing
 `local` command from that checkout with its own Release script.
 For OrbStack watcher checks, set `TMPDIR` to a private directory under

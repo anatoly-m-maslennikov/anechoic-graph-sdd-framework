@@ -8,8 +8,9 @@ from unittest.mock import patch
 
 import duckdb
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
-    import attach_framework  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.settings.project.framework_database__pub import (
+    attach_framework,
+)
 
 
 DELIVERED_LAYERS = ("LAYER_1_META_ONTOLOGY_C9", "LAYER_2_META_METHODOLOGY_C58")

@@ -6,11 +6,20 @@ import unittest
 from unittest.mock import patch
 
 from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IMPORT_GRAPH_C61.\
-    import_graph__shared import (
-        capture,
-        code_access_occurrences,
-        resolve_realization,
+    FEATURE_IMPORT_GRAPH_C61__tests._code_access_fixtures import (
+        _write_child_projects,
+        _write_named_imports,
+        _write_separate_locks,
     )  # fmt: skip
+
+from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IMPORT_GRAPH_C61.\
+    SOURCE_CAPTURE.SOURCE_CAPTURE__shared import capture  # fmt: skip
+from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IMPORT_GRAPH_C61.\
+    RESOLUTION.code_access_occurrences import (
+    code_access_occurrences,
+)  # fmt: skip
+from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IMPORT_GRAPH_C61.\
+    RESOLUTION.RESOLUTION__shared import resolve_realization  # fmt: skip
 
 
 class CodeAccessOccurrenceTests(unittest.TestCase):
@@ -31,23 +40,10 @@ class CodeAccessOccurrenceTests(unittest.TestCase):
             [row[6] for row in occurrences], ["external", "unresolved"]
         )
 
-    def _write_named_imports(self, root):
-        (root / "pkg").mkdir()
-        (root / "pkg" / "__init__.py").write_text("")
-        (root / "pkg" / "api.py").write_text("")
-        (root / "client.py").write_text(
-            "from pkg.api import first as one, second as two\n"
-            "from pkg import api\n"
-            "from pkg.api import *\n"
-            "from missing import unknown\n"
-            "import pkg\n"
-            "import pathlib\n"
-        )
-
     def test_named_imports_and_submodule_keep_their_identity(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            self._write_named_imports(root)
+            _write_named_imports(root)
             fixtures = ("client.py", "pkg/__init__.py", "pkg/api.py")
             packages, facts = code_access_occurrences(
                 root, capture(root, None, fixtures)
@@ -83,20 +79,6 @@ class CodeAccessOccurrenceTests(unittest.TestCase):
             (facts[6].target_path, facts[6].status), (None, "external")
         )
 
-    def _write_child_projects(self, root):
-        for child in ("first", "second"):
-            project = root / child
-            (project / "same").mkdir(parents=True)
-            (project / "pyproject.toml").write_text(
-                '[project]\nname = "' + child + '"\nversion = "1"\n'
-            )
-            (project / "uv.lock").write_text("")
-            (project / "same" / "__init__.py").write_text("")
-            (project / "client.py").write_text(
-                "import same\nimport only_second\n"
-            )
-        (root / "second" / "only_second.py").write_text("")
-
     def test_relative_bases_follow_each_resolution_roots(self):
         root = Path(self.enterContext(tempfile.TemporaryDirectory()))
         package = root / "outer" / "pkg"
@@ -115,9 +97,7 @@ class CodeAccessOccurrenceTests(unittest.TestCase):
         ):
             _, facts = code_access_occurrences(root, sources, roots)
             self.assertEqual([fact.target_path for fact in facts], targets)
-            _, occurrences, _, _, _ = resolve_realization(
-                root, sources, roots
-            )
+            _, occurrences, _, _, _ = resolve_realization(root, sources, roots)
             self.assertEqual(
                 [row[2] for row in occurrences],
                 [f"module:{target}" if target else None for target in targets],
@@ -126,7 +106,7 @@ class CodeAccessOccurrenceTests(unittest.TestCase):
     def test_inferred_child_roots_are_isolated_for_both_resolvers(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            self._write_child_projects(root)
+            _write_child_projects(root)
             sources = capture(
                 root,
                 None,
@@ -211,31 +191,10 @@ class CodeAccessOccurrenceTests(unittest.TestCase):
         self.assertEqual(actual, expected)
         self.assertEqual(graph, expected)
 
-    def _write_separate_locks(self, root):
-        for child, env in (
-            ("LAYER_4_ENGINE_STUDIO_C14", "engine"),
-            ("LAYER_5_USER_SETUP_C65", "setup"),
-            ("LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27", "release"),
-        ):
-            (root / child).mkdir(parents=True, exist_ok=True)
-            (root / child / "client.py").write_text("import engine_alias\n")
-            project = (
-                root / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72" / env
-            )
-            project.mkdir(parents=True, exist_ok=True)
-            (project / "pyproject.toml").write_text(
-                '[project]\nname = "' + env + '"\n'
-            )
-            (project / "uv.lock").write_text(
-                '[[package]]\nname = "engine-dist"\n'
-                if env == "engine"
-                else ""
-            )
-
     def test_inferred_roots_use_separate_environment_locks(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            self._write_separate_locks(root)
+            _write_separate_locks(root)
             sources = capture(
                 root,
                 None,

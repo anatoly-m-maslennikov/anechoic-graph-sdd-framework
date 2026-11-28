@@ -1,0 +1,221 @@
+"""Checks for static Python Formal Claim reading."""
+
+from pathlib import Path
+import sys
+import unittest
+
+TOOLS = Path(__file__).resolve().parents[3]
+sys.path[:0] = [
+    str(TOOLS),
+    str(TOOLS.parent.parent / "IWE_CONSOLE_C43/APP_IWE_CONSOLE"),
+]
+
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model.python.python_claim_values import (  # noqa: E402
+    PythonModelClaimError,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model.python.python_claim__pub import (  # noqa: E402
+    parse_grouped_python_model_claim,
+    parse_python_model_claim,
+    parse_structured_python_model_claim,
+)
+
+
+class PythonModelClaimTests(unittest.TestCase):
+    def test_structured_helpers_do_not_render_and_keep_scope(self):
+        from unittest.mock import patch
+
+        source = """# model
+subject_path(address="Node/Atom")
+# instances
+relation(source="Atom//", name="CONTAINS", target="Event//", target_count="1+")
+"""
+        with patch(
+            (
+                'FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model.python.python_claim_legacy._render'
+            ),
+            side_effect=AssertionError("render called"),
+        ):
+            calls = parse_structured_python_model_claim(source)
+        self.assertEqual(
+            calls,
+            (
+                {
+                    "name": "subject_path",
+                    "arguments": {"address": "Node/Atom"},
+                    "scope": "model",
+                },
+                {
+                    "name": "relation",
+                    "arguments": {
+                        "source": "Atom//",
+                        "name": "CONTAINS",
+                        "target": "Event//",
+                        "target_count": "1+",
+                    },
+                    "scope": "instances",
+                },
+            ),
+        )
+
+    def test_structured_helpers_validate_arguments_and_endpoints(self):
+        with self.assertRaises(PythonModelClaimError):
+            parse_structured_python_model_claim(
+                'relation(source="A", name="REL", target_count="1")'
+            )
+        with self.assertRaises(PythonModelClaimError):
+            parse_structured_python_model_claim(
+                'property_rule(address="A", occurrences="2..1")'
+            )
+        with self.assertRaises(PythonModelClaimError):
+            parse_structured_python_model_claim(
+                'relation(source="A", name="REL", target="B")',
+                validate_relation_endpoint=lambda value, name, key: (
+                    value != "B"
+                ),
+            )
+
+    def test_property_constraints_compile_like_existing_claims(self):
+        source = """
+property_rule(address="Atom.Header.Tier", value_format="int", occurrences="1", values="1")
+property_rule(address="Atom.Header.Context", value_format="", occurrences="1", values="0")
+property_rule(address="Atom.Content.Claim", occurrences="1", value_format="", values="0")
+allowed_children(address="Atom.Content.Claim", names=("Formal Claim", "Prose Claim"), occurrences="1..2", name_format="string")
+"""
+        statements = parse_python_model_claim(source)
+        expected = """
+Atom.Header.Tier{::1}:: [int]{::1};
+Atom.Header.Context{::1}:: []{::0};
+Atom.Content.Claim{::1}:: []{::0};
+Atom.Content.Claim.*[string, in (Formal Claim, Prose Claim)]{::1..2};
+"""
+        self.assertEqual(
+            tuple(
+                line.strip().removesuffix(";")
+                for line in expected.splitlines()
+                if line.strip()
+            ),
+            statements,
+        )
+
+    def test_all_declarations_and_literals(self):
+        source = """
+property_rule(address="Atom.Name", occurrences="1")
+property_rule(address="Atom.Score", value_format="int, 0..100", values="0..1")
+allowed_children(address="Atom.Content", names=("Claim", "Details"), occurrences="1..2")
+order_before(first="Atom.Content.Summary", second="Atom.Content.Claim")
+allowed_values(address="Atom.Header.Status", values=("Draft", "In Progress"))
+allowed_values(address="Atom.Header.Status", values=("Draft", "Active"), occurrences="1")
+relation(source="Workflow", name="CONTAINS", target="Step", source_count="1+", target_count="1")
+relation(source="Workflow", name="IS_CONTAINED_BY", target="Step", reverse=True)
+subject_path(address="Atom/(.Header.Context.Role := Method).Content.Claim")
+set_value(address="Scope Unit.ID", value='"CA-SU-02"')
+set_value(address="Node.Enabled", value=True)
+set_value(address="Node.Count", value=0)
+"""
+        self.assertEqual(
+            parse_python_model_claim(source),
+            (
+                "Atom.Name{::1}",
+                "Atom.Score:: [int, 0..100]{::0..1}",
+                "Atom.Content.*[in (Claim, Details)]{::1..2}",
+                "Atom.Content.Summary ;> Atom.Content.Claim",
+                "Atom.Header.Status :: Draft",
+                "Atom.Header.Status :: In Progress",
+                "Atom.Header.Status:: [in (Draft, Active)]{::1}",
+                "Workflow {::1+}((CONTAINS)){::1} Step",
+                "Workflow <((IS_CONTAINED_BY)) Step",
+                "Atom/(.Header.Context.Role := Method).Content.Claim",
+                'Scope Unit.ID == "CA-SU-02"',
+                "Node.Enabled == true",
+                "Node.Count == 0",
+            ),
+        )
+
+    def test_groups_follow_only_top_level_comment_markers(self):
+        source = """
+subject_path(address="Atom")
+# model
+property_rule(
+    address="Atom.Name",  # instances
+    # instances
+    value_format="string",
+)
+# instances
+relation(source="Atom//$a", name="HAS_VALUE", target="Atom.Name")
+"""
+        self.assertEqual(
+            parse_grouped_python_model_claim(source),
+            (
+                ("Atom", None),
+                ("Atom.Name:: [string]", "model"),
+                ("Atom//$a ((HAS_VALUE)) Atom.Name", "instances"),
+            ),
+        )
+
+    def test_callback_receives_every_reference(self):
+        seen = []
+        self.assertEqual(
+            parse_python_model_claim(
+                'order_before(first="Atom.A", second="Atom.B")',
+                validate_reference=lambda ref: seen.append(ref),
+            ),
+            ("Atom.A ;> Atom.B",),
+        )
+        self.assertEqual(seen, ["Atom.A", "Atom.B"])
+        with self.assertRaisesRegex(
+            PythonModelClaimError, "line 1.*unknown address"
+        ):
+            parse_python_model_claim(
+                'subject_path(address="Unknown")',
+                validate_reference=lambda _ref: False,
+            )
+
+    def test_rejects_code_and_injected_claims(self):
+        invalid = (
+            "import os",
+            'property_rule("Atom.Name", values="1")',
+            'property_rule(address=make_address(), values="1")',
+            'property_rule(**{"address": "Atom.Name", "values": "1"})',
+            'property_rule(address="Atom.Name; Node.X", values="1")',
+            'property_rule(address="Atom.Name:: [string]", values="1")',
+            'property_rule(address="Atom.Name\\nNode.X", values="1")',
+            'property_rule(address="Atom/(.Role := Method", values="1")',
+            'property_rule(address="Atom.Name", value_format="string]; Node")',
+            'property_rule(address="Atom.Name", occurrences="2..1")',
+            'property_rule(address="Atom.Name", occurrences="01")',
+            (
+                'allowed_children(address="Atom.X", names=("A", "A"), '
+                'occurrences="1")'
+            ),
+            'relation(source="Node", name="X)) BAD ((Y")',
+            'relation(source="Node", name="X", target_count="1")',
+            'relation(source="Node", name="X", reverse="yes")',
+            'set_value(address="Node.X", value=1.0)',
+            'subject_path(address="Node ((RUN)) Action")',
+        )
+        for source in invalid:
+            with (
+                self.subTest(source=source),
+                self.assertRaises(PythonModelClaimError),
+            ):
+                parse_python_model_claim(source)
+
+    def test_errors_report_line_and_callback_error(self):
+        with self.assertRaisesRegex(PythonModelClaimError, "line 2, column 1"):
+            parse_python_model_claim('# model\nunknown(address="Node")')
+        with self.assertRaisesRegex(PythonModelClaimError, "line 2"):
+            parse_python_model_claim("# model\nsubject_path(address=")
+
+        def reject(_reference):
+            raise ValueError("unknown model entity")
+
+        with self.assertRaisesRegex(
+            PythonModelClaimError, "unknown model entity"
+        ):
+            parse_python_model_claim(
+                'subject_path(address="Node")', validate_reference=reject
+            )
+
+
+if __name__ == "__main__":
+    unittest.main()

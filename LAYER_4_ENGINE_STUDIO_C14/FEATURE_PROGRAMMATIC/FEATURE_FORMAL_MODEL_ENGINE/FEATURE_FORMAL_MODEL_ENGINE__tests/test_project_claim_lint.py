@@ -3,8 +3,9 @@
 import unittest
 
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
-    import canonical_model_address  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model.model__shared import (
+    canonical_model_address,
+)
 
 
 class ProjectClaimLintTests(unittest.TestCase):

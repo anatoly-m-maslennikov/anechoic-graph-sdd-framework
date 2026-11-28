@@ -44,7 +44,10 @@ class _CaseCollection(BaseModel):
 
 def collect_cases(case_id):
     result = _CaseCollection()
-    for case in sorted(path for path in CORPUS.iterdir() if path.is_dir()):
+    for case in sorted(
+        (path for path in CORPUS.glob("*/*/*") if path.is_dir()),
+        key=lambda path: path.name,
+    ):
         if case_id and case.name != case_id:
             continue
         try:

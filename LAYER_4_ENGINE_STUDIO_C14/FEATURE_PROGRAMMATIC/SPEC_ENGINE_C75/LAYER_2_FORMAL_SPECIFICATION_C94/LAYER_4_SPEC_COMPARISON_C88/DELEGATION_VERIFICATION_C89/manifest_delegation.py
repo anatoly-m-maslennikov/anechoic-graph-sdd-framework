@@ -1,18 +1,18 @@
-"""Resolve a black-box child call from the caller Solution and the child Manifest."""
+"""Resolve a child call from its caller Solution and child Manifest."""
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.atom_reference__pub import (
-    derive_atom_ref,
-)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.\
+    carriers.content.atom_reference__pub import derive_atom_ref  # fmt: skip
 
 from ...LAYER_1_DIAGNOSTICS_C90._package__shared import finding, verdict
 from ...LAYER_2_SPEC_READING_C83._package__shared import (
     load_boundary_model,
     load_manifest,
 )
-from ...LAYER_2_SPEC_READING_C83.SPECIFICATION_MODEL_C85._package__shared import (
+from ...LAYER_2_SPEC_READING_C83.SPECIFICATION_MODEL_C85.\
+    _package__shared import (
     normalize_claim,
     validate_manifest,
-)
+)  # fmt: skip
 from .._package__shared import compare_delegation
 
 CLI_INPUT_FIELDS = (
@@ -46,17 +46,26 @@ def load_manifest_call(
     workflow, caller_error = normalize_claim(
         "solution", parent["solution"], parent_id
     )
-    if "contract" in child:
-        contract, child_error = normalize_claim(
-            "contract", child["contract"], child_id
+    contract, child_error = _child_contract(child, child_id)
+    caller = parent["solution"]["source"]
+    unresolved = [
+        finding(source, field, error)
+        for source, field, error in (
+            (caller, "solution", caller_error),
+            (child["source"], "manifest", child_error),
         )
-    else:
-        contract, child_error = None, 'A black-box child call requires a Manifest with an embedded Contract'
-    unresolved = [finding(source, field, error) for source, field, error in (
-        (parent['solution']['source'], 'solution', caller_error),
-        (child['source'], 'manifest', child_error),
-    ) if error]
-    return parent['solution']['source'], workflow or {}, child, contract or {}, issues, unresolved
+        if error
+    ]
+    return caller, workflow or {}, child, contract or {}, issues, unresolved
+
+
+def _child_contract(child, child_id):
+    if "contract" in child:
+        return normalize_claim("contract", child["contract"], child_id)
+    return (
+        None,
+        "A black-box child call requires a Manifest with an embedded Contract",
+    )
 
 
 def compare_manifest_call(

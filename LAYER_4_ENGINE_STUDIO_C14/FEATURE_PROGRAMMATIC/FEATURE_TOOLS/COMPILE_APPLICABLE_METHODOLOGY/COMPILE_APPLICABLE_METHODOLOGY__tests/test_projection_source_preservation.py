@@ -1,22 +1,15 @@
 from __future__ import annotations
 
-import importlib.util
-import sys
+import importlib
 import unittest
-from pathlib import Path
 from unittest import mock
 
 
-TOOL = (
-    Path(__file__).resolve().parents[1] / "compile_applicable_methodology.py"
-)
-SPEC = importlib.util.spec_from_file_location(
-    "compile_applicable_methodology_projection", TOOL
-)
-assert SPEC and SPEC.loader
-compiler = importlib.util.module_from_spec(SPEC)
-sys.modules[SPEC.name] = compiler
-SPEC.loader.exec_module(compiler)
+compiler = importlib.import_module(
+    "FEATURE_PROGRAMMATIC.FEATURE_TOOLS."
+    "COMPILE_APPLICABLE_METHODOLOGY."
+    "COMPILE_APPLICABLE_METHODOLOGY__tests.methodology_test_support"
+).module
 
 
 class ProjectionSourcePreservationTest(unittest.TestCase):

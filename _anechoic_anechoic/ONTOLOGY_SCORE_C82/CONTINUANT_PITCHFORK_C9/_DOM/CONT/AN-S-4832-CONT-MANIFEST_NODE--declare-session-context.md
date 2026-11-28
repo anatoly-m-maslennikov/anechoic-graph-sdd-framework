@@ -13,8 +13,8 @@ context:
   lens: DOM/CONT
 state:
   status: active
-  version: 5
-  updated_at: '2026-11-26T18:38:58.296902+00:00'
+  version: 6
+  updated_at: "2026-11-28T10:28:09.160093+00:00"
 ---
 
 ## Summary
@@ -29,5 +29,5 @@ Declare Session Context
 from anechoic.model import Ephemeral
 
 class SessionContext(Ephemeral):
-    node.axes = {'Persistence': 'Ephemeral'}
+    pass
 ```

@@ -7,22 +7,23 @@ import argparse
 from pathlib import Path
 import sys
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
-    import read_current_carriers  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.sources.inventory.inventory__shared import (
+    read_current_carriers,
+)
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.\
-    subject_audit_occurrences \
+    subjects.audit.audit__shared \
     import select_model_subjects  # fmt: skip
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.\
-    subject_projection_audits \
+    subjects.audit.audit__shared \
     import (
         build_subject_audits,
         render_subject_audit,
     )  # fmt: skip
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.\
-    subject_projection_data \
+    subjects.projection.projection__shared \
     import build_subject_projection_data  # fmt: skip
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.\
-    subject_projection_views \
+    subjects.views.views__shared \
     import render_primary_projection  # fmt: skip
 
 

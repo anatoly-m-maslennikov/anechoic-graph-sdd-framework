@@ -3,7 +3,7 @@ from ..LAYER_2_SPEC_READING_C83.\
     manifest_shape,
 )  # fmt: skip
 from ..LAYER_3_MERMAID_RENDERER_C87._package__shared import render_solution
-from .direct_comparison import report_comparison
+from ._direct_comparison import comparison_claims, report_comparison
 from .top_down__pub import compare_obligations
 
 _UNRENDERED = object()
@@ -33,9 +33,11 @@ def _shape_facts(shape):
     }
 
 
-def compare_shape_spec(model, compiled, *, lean="lean", mermaid=_UNRENDERED):
+def compare_shape_spec(
+    model, compiled, *, lean="lean", mermaid=_UNRENDERED, observe=None
+):
     """Compare the normalized shape facts in a loaded chain."""
-    claims = compiled["claims"]
+    claims = comparison_claims(compiled, observe, None, "shape")
     if mermaid is _UNRENDERED:
         mermaid = render_solution(model, claims.get("solution"))
     required, observed = claims.get("contract"), claims.get("solution")

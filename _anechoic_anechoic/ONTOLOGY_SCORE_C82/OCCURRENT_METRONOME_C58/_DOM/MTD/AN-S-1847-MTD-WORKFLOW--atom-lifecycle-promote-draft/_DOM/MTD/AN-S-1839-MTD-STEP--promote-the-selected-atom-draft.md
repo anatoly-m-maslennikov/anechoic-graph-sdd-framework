@@ -9,8 +9,8 @@ context:
   lens: DOM/MTD
 state:
   status: active
-  version: 1
-  updated_at: 2026-11-11 14:05:36 +0400
+  version: 2
+  updated_at: '2026-11-28T09:21:26.937336+00:00'
 ---
 ## Summary
 
@@ -28,7 +28,8 @@ Execution.
 
 ### Inputs
 
-Selected Draft, allowed Current `targetStatus`, optional `savedArchivedAtom`, and `projectContext`.
+Selected source revision, allowed `targetStatus`, optional
+`savedArchivedAtom`, and `projectContext`.
 
 ### Fixed parameters
 

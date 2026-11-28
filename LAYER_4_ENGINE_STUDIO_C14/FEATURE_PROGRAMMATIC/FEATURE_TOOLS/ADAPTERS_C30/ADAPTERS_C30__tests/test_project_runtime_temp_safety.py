@@ -18,11 +18,10 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.\
     ADAPTERS_C30__shared import (  # noqa: E402
     TemporaryBoundaryError,
 )  # fmt: skip
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.\
-    ADAPTERS_C30__shared import (  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.settings.project.project_temporary__pub import (  # noqa: E402
     TEMPORARY_DIRECTORY,
     atomic_tempfile,
-)  # fmt: skip
+)
 
 
 TEST_TEMP_ROOT = (

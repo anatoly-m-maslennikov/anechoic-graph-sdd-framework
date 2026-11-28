@@ -56,7 +56,8 @@ def _write_codex_path_fixture(directory: Path) -> None:
     executable = directory / "codex"
     executable.write_text(
         "#!/bin/sh\n"
-        f'exec {shlex.quote(sys.executable)} -B {shlex.quote(str(FIXTURE))} "$@"\n',
+        f"exec {shlex.quote(sys.executable)} -B {shlex.quote(str(FIXTURE))} "
+        '"$@"\n',
         encoding="utf-8",
     )
     executable.chmod(0o755)

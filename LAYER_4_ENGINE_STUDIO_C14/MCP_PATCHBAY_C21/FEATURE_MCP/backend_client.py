@@ -11,13 +11,19 @@ from time import monotonic, sleep
 
 import httpx2
 
-from MCP_PATCHBAY_C21.FEATURE_MCP.http_paths import TOOL_REST_PATH
+from MCP_PATCHBAY_C21.FEATURE_MCP.transport_support.paths.\
+    paths__shared import (
+    TOOL_REST_PATH,
+)
 from MCP_PATCHBAY_C21.FEATURE_MCP.runtime_request_context import (
     current_request_context,
 )
 
 
-_MODULE = "IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.backend_process"
+_MODULE = (
+    "IWE_CONSOLE_C43.APP_IWE_CONSOLE."
+    "FEATURE_IWE_CONSOLE_BACKEND.backend_process"
+)
 _STARTUP_SECONDS = 180
 _DEV_LOCAL_STARTUP_SECONDS = 420
 
@@ -25,8 +31,12 @@ _DEV_LOCAL_STARTUP_SECONDS = 420
 def _validate_kernel_readiness(observed):
     kernel = observed.get("kernel_pid")
     generation = observed.get("generation")
-    if (type(kernel) is not int or kernel <= 1
-            or not isinstance(generation, str) or not generation):
+    if (
+        type(kernel) is not int
+        or kernel <= 1
+        or not isinstance(generation, str)
+        or not generation
+    ):
         raise RuntimeError("Invalid managed Kernel readiness")
 
 
@@ -56,7 +66,6 @@ class ToolProtocolError(RuntimeError):
                 status_code=status_code,
             )
         return cls("tool_runtime_failure", "Invalid Backend response")
-
 
 
 class BackendClient:
@@ -240,9 +249,19 @@ class BackendClient:
 
 
 def _current_arguments(selection, socket, workbench_storage, journal_storage):
-    args = [_MODULE, "--socket", str(socket),
-            "--project-root", str(selection.root), "--control-root", selection.control_relative.as_posix(),
-            "--instance-id", selection.instance_id, "--manifest-sha256", selection.manifest_sha256]
+    args = [
+        _MODULE,
+        "--socket",
+        str(socket),
+        "--project-root",
+        str(selection.root),
+        "--control-root",
+        selection.control_relative.as_posix(),
+        "--instance-id",
+        selection.instance_id,
+        "--manifest-sha256",
+        selection.manifest_sha256,
+    ]
     if selection.host_root is not None:
         args += ["--host-project-root", str(selection.host_root)]
     if workbench_storage is not None:
@@ -259,7 +278,9 @@ def _start(selection, socket, workbench_storage, journal_storage):
         **{k: v for k, v in os.environ.items() if k != "PYTHONHOME"},
         "PYTHONPATH": str(engine),
     }
-    args = _current_arguments(selection, socket, workbench_storage, journal_storage)
+    args = _current_arguments(
+        selection, socket, workbench_storage, journal_storage
+    )
     command = [sys.executable, "-B", "-P", "-m", *args]
     return subprocess.Popen(
         command, cwd=root, env=environment, stdin=subprocess.PIPE, stdout=2
@@ -267,7 +288,13 @@ def _start(selection, socket, workbench_storage, journal_storage):
 
 
 @contextmanager
-def backend_client(selection, *, workbench_storage=None, journal_storage=None, backend_socket=None):
+def backend_client(
+    selection,
+    *,
+    workbench_storage=None,
+    journal_storage=None,
+    backend_socket=None,
+):
     with ExitStack() as stack:
         if backend_socket is None:
             directory = stack.enter_context(
@@ -277,11 +304,23 @@ def backend_client(selection, *, workbench_storage=None, journal_storage=None, b
             transport = httpx2.HTTPTransport(uds=str(socket))
         else:
             socket = backend_socket
-            limits = httpx2.Limits(max_connections=100, max_keepalive_connections=0)
+            limits = httpx2.Limits(
+                max_connections=100, max_keepalive_connections=0
+            )
             transport = httpx2.HTTPTransport(uds=str(socket), limits=limits)
-        http = stack.enter_context(httpx2.Client(transport=transport, base_url="http://anechoic-backend",
-                                               trust_env=False, timeout=None))
-        process = _start(selection, socket, workbench_storage, journal_storage) if backend_socket is None else None
+        http = stack.enter_context(
+            httpx2.Client(
+                transport=transport,
+                base_url="http://anechoic-backend",
+                trust_env=False,
+                timeout=None,
+            )
+        )
+        process = (
+            _start(selection, socket, workbench_storage, journal_storage)
+            if backend_socket is None
+            else None
+        )
         client = BackendClient(selection, process, http)
         try:
             yield client

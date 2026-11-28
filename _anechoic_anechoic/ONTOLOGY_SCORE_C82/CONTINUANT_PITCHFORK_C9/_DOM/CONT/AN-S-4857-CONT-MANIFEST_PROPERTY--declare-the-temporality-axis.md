@@ -3,7 +3,7 @@ atom_family: SPEC
 atom_id: AN-S-4857
 concern:
   subject: Temporality
-  path: Model/Graph/Axis
+  path: Model/Graph/Node
   relation: has_axis
 container:
   component: C9
@@ -13,8 +13,8 @@ context:
   lens: DOM/CONT
 state:
   status: active
-  version: 5
-  updated_at: '2026-11-26T18:38:58.296902+00:00'
+  version: 6
+  updated_at: "2026-11-28T10:28:09.160093+00:00"
 ---
 
 ## Summary
@@ -30,11 +30,11 @@ A Continuant endures through time. An Occurrent unfolds through time.
 ```python anechoic-edsl
 # Anechoic Python eDSL
 
-from anechoic.model import Axis, Property
+from anechoic.model import Node, Property
 
 class Property4857(Property):
     name = 'Temporality'
-    bearer = Axis
+    bearer = Node
     property.axis = True
     property.value.allowed = ('Continuant', 'Occurrent')
 ```

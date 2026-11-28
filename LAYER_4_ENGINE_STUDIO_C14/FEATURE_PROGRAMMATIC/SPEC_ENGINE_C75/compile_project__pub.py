@@ -8,21 +8,22 @@ import json
 from pathlib import Path
 import sys
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import (
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.\
+    PROJECT_SUPPORT.PROJECT_SELECTION.\
+    PROJECT_SELECTION__shared import (
     resolve_native_project,
 )
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
-    import mark_startup_timing  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.sources.sources__shared import (
+    mark_startup_timing,
+)
 from .LAYER_1_SOURCE_ADAPTERS_C95._package__shared import SpecSnapshot
 from .LAYER_2_FORMAL_MODEL_C51.FEATURE_FORMAL_MODEL_GENERATOR.\
-    FEATURE_FORMAL_MODEL_GENERATOR__shared \
-    import load_native_model  # fmt: skip
+    native._package__shared import load_native_model  # fmt: skip
 from .LAYER_2_FORMAL_MODEL_C51.FEATURE_FORMAL_MODEL_GENERATOR.\
     manifest_compiler_CS1.manifest_compiler_CS1__shared \
-    import (
-        compile_ingested_cli,
-        write_model,
-    )  # fmt: skip
+    import write_model  # fmt: skip
+from .LAYER_2_FORMAL_MODEL_C51.FEATURE_FORMAL_MODEL_GENERATOR.\
+    manifest_compiler_CS1.ingestion._package__shared import compile_ingested_cli  # fmt: skip
 from .LAYER_2_FORMAL_MODEL_C51.FEATURE_MODEL_VALIDATION.\
     FEATURE_MODEL_VALIDATION__shared \
     import open_admitted_model  # fmt: skip

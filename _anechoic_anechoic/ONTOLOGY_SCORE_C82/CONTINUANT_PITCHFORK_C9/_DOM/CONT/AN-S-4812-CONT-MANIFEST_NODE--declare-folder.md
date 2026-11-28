@@ -3,7 +3,7 @@ atom_family: SPEC
 atom_id: AN-S-4812
 concern:
   subject: Folder
-  path: Model/Carrier
+  path: Model/Carrier/Filesystem
   relation: is_contained_by
 container:
   component: C9
@@ -13,8 +13,8 @@ context:
   lens: DOM/CONT
 state:
   status: active
-  version: 4
-  updated_at: '2026-11-26T17:13:27.060267+00:00'
+  version: 5
+  updated_at: "2026-11-28T11:52:02.110048+00:00"
 ---
 
 ## Summary
@@ -30,5 +30,5 @@ A Folder represents an entity through a directory assigned to that entity.
 ```python anechoic-edsl
 # Anechoic Python eDSL
 
-node(Folder, Carrier)
+node(Folder, Filesystem)
 ```

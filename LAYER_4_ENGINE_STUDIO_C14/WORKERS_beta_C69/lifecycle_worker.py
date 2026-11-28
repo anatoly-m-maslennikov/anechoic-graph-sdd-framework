@@ -15,7 +15,16 @@ from .managed_parent import watch_managed_parent
 from .manifest_build_CS4.manifest_build_CS4__shared import (
     manifest_input_signature,
 )
-from .WORKERS_beta_C69__shared import _BuildFailure, _compile, _run_job, digest
+from WORKERS_beta_C69.generation.generation__shared import (
+    _BuildFailure,
+    _run_job,
+)
+from .WORKERS_beta_C69__shared import (
+    _compile,
+)
+from WORKERS_beta_C69.refresh.refresh__shared import (
+    digest,
+)
 
 _OWNER = "FEATURE_PROGRAMMATIC.FEATURE_TOOLS.native_lifecycle_cli"
 
@@ -186,8 +195,7 @@ def _project_cold(
 ):
     try:
         # fmt: off
-        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.\
-            ADAPTERS_C30__shared import (
+        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carriers.header.header__shared import (
             status_domains,
         )
         # fmt: on

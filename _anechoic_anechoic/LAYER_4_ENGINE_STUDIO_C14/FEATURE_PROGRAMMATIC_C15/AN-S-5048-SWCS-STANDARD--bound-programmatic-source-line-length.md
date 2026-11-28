@@ -3,7 +3,7 @@ atom_family: SPEC
 atom_id: AN-S-5048
 concern:
   subject: Executable File
-  path: Model/Carrier/File
+  path: Model/Carrier/Filesystem/File
   relation: is_narrower_than
 container:
   component: C15
@@ -12,9 +12,9 @@ context:
   template: STANDARD
   lens: SWD/SWCS
 state:
-  status: active
-  version: 1
-  updated_at: '2026-11-27T10:14:59.835668+00:00'
+  status: "active"
+  version: 3
+  updated_at: "2026-11-28T11:52:02.110048+00:00"
 ---
 
 ## Summary
@@ -38,7 +38,3 @@ def conforms (characters : Nat) : Bool :=
 
 end ProgrammaticLineLength
 ```
-
-### Prose Claim
-
-Limit each physical source line to 79 characters.

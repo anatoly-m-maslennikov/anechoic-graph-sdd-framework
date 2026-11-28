@@ -1,69 +1,30 @@
 from __future__ import annotations
 
-import importlib.util
+import importlib
 import os
-import shutil
-import sys
-import tempfile
 import unittest
 from pathlib import Path
 
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import (
-    SETTINGS_PATH,
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.\
+    COMPILE_APPLICABLE_METHODOLOGY.METHODOLOGY_READING.METHODOLOGY_READING__shared import (
+    DEFAULT_SETTINGS_NAME,
+    INSTANCE_SETTINGS_RELATIVE,
 )
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.COMPILE_APPLICABLE_METHODOLOGY.methodology_paths__shared import DEFAULT_SETTINGS_NAME, INSTANCE_SETTINGS_RELATIVE
 
-TOOL = (
-    Path(__file__).resolve().parents[1] / "compile_applicable_methodology.py"
+support = importlib.import_module(
+    "FEATURE_PROGRAMMATIC.FEATURE_TOOLS."
+    "COMPILE_APPLICABLE_METHODOLOGY."
+    "COMPILE_APPLICABLE_METHODOLOGY__tests.methodology_test_support"
 )
-SPEC = importlib.util.spec_from_file_location(
-    "compile_applicable_methodology_settings", TOOL
-)
-assert SPEC and SPEC.loader
-compiler = importlib.util.module_from_spec(SPEC)
-sys.modules[SPEC.name] = compiler
-SPEC.loader.exec_module(compiler)
+compiler = support.module
 
 
-
-
-class FrameworkSettingsCarrierTest(unittest.TestCase):
+class FrameworkSettingsCarrierTest(support.CompilerFixture):
     def setUp(self) -> None:
-        from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import write_scope_unit_declarations
-
-        temporary = (
-            Path.cwd() / ".anechoic_tmp/framework-settings-carrier-tests"
-        )
-        temporary.mkdir(parents=True, exist_ok=True)
-        self.root = Path(tempfile.mkdtemp(prefix="case-", dir=temporary))
-        self.addCleanup(shutil.rmtree, self.root, True)
+        super().setUp()
+        self.root = self.temp
         self.control = Path(".anechoic_anechoic")
-        (self.root / SETTINGS_PATH).parent.mkdir(parents=True, exist_ok=True)
-        (self.root / SETTINGS_PATH).write_text(
-            (
-                '[project]\nname = "anechoic"\n[paths]\ncontrol_root = '
-                '".anechoic_anechoic"\n'
-            ), encoding="utf-8"
-        )
-        self.declarations = write_scope_unit_declarations(
-            self.root,
-            (
-                {"scope_unit_name": "METHODOLOGY_SOURCES", "parent": "PROJECT", "scope_unit_type": "Unordered"},
-                {"scope_unit_name": "CORE_META_MODEL", "parent": "METHODOLOGY_SOURCES", "scope_unit_type": "Unordered"},
-                {"scope_unit_name": "INSTALLED_EXTENSIONS", "parent": "METHODOLOGY_SOURCES", "scope_unit_type": "Unordered"},
-                {"scope_unit_name": "PROJECT_CONFIGURATION", "parent": "METHODOLOGY_SOURCES", "scope_unit_type": "Unordered"},
-            ),
-        )
-        self.source = Path(
-            self.declarations["METHODOLOGY_SOURCES"]["authority_path"]
-        )
-        self.layers = {
-            name: Path(self.declarations[name]["authority_path"])
-            for name, _, _ in compiler.LAYERS
-        }
-        for path in self.layers.values():
-            path.mkdir(parents=True)
 
     def write(self, relative: Path, content: str) -> Path:
         path = self.root / relative
@@ -74,9 +35,10 @@ class FrameworkSettingsCarrierTest(unittest.TestCase):
     def paths(self) -> compiler.MethodologyPaths:
         return compiler.methodology_paths(self.root)
 
-    def test_nondefault_control_root_uses_canonical_instance_and_merges_default(
+    def \
+    test_nondefault_control_root_uses_canonical_instance_and_merges_default(
         self,
-    ) -> None:
+    ) -> None:  # fmt: skip
         self.write(
             self.layers["CORE_META_MODEL"] / DEFAULT_SETTINGS_NAME,
             (
@@ -109,9 +71,9 @@ class FrameworkSettingsCarrierTest(unittest.TestCase):
         self.assertIn(canonical.relative_to(self.root).as_posix(), bindings)
         self.assertNotIn(legacy.relative_to(self.root).as_posix(), bindings)
 
-    def test_canonical_instance_addition_mutation_and_removal_change_source_snapshot(
-        self,
-    ) -> None:
+    def \
+test_canonical_instance_addition_mutation_and_removal_change_source_snapshot \
+        (self) -> None:  # fmt: skip
         places = self.paths()
         absent = compiler.source_state_snapshot(self.root, places)
         canonical = self.write(

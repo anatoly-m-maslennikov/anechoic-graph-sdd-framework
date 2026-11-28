@@ -3,17 +3,13 @@
 import unittest
 
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.\
-    ADAPTERS_C30__shared \
-    import (
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model.claims.claims__shared import (
     parse_native_model_claim,
     NativeModelClaimError,
-)  # fmt: skip
-from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.\
-    FEATURE_FORMAL_MODEL_ENGINE__shared \
-    import (
+)
+from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.claim_compiler.compiler_claim import (
     compiler_model_statements,
-)  # fmt: skip
+)
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.\
     FEATURE_PROJECT_TOOLS__tests.\
     FEATURE_PROJECT_TOOLS__tests__shared \

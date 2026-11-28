@@ -1,4 +1,4 @@
-"""Prepare public release drafts from pinned Git evidence without side effects."""
+"""Prepare public release drafts from pinned Git evidence."""
 
 from __future__ import annotations
 
@@ -11,6 +11,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict
 
+from ._public_release_draft import PublicReleaseError, _draft, _draft_example
+
 
 _REVIEW_INSTRUCTIONS = (
     "Delegate a Luna review of the pinned Git diff against completed Task "
@@ -19,10 +21,6 @@ _REVIEW_INSTRUCTIONS = (
     "missed changes. Return one UTF-8 JSON object matching "
     "content_draft_schema; use full commit pins."
 )
-
-
-class PublicReleaseError(ValueError):
-    """The release comparison or reviewed content is invalid."""
 
 
 class _CompletedTicket(BaseModel):
@@ -89,82 +87,6 @@ def _commit(root: Path, ref: str) -> str:
     return commit
 
 
-def _validate_change(change):
-    if not isinstance(change, Mapping) or set(change) != {
-        "title",
-        "details",
-        "evidence",
-        "highlight",
-    }:
-        raise PublicReleaseError(
-            "each change must contain title, details, evidence and highlight"
-        )
-    if any(
-        not isinstance(change[key], str)
-        or not change[key].strip()
-        or "\n" in change[key]
-        for key in ("title", "details")
-    ):
-        raise PublicReleaseError(
-            "change title and details must be non-empty single-line strings"
-        )
-    if not isinstance(change["highlight"], bool):
-        raise PublicReleaseError("change highlight must be a boolean")
-    if change["highlight"] and len(change["title"].strip()) > 120:
-        raise PublicReleaseError(
-            "highlight titles must be at most 120 characters"
-        )
-    evidence = change["evidence"]
-    if (
-        not isinstance(evidence, list)
-        or not evidence
-        or any(
-            not isinstance(item, str) or not item.strip() or "\n" in item
-            for item in evidence
-        )
-    ):
-        raise PublicReleaseError(
-            "change evidence must be a non-empty list of single-line strings"
-        )
-
-
-def _draft(
-    draft: Mapping[str, object], base: str, head: str, version: str
-) -> tuple[str, str]:
-    if not isinstance(draft, Mapping) or set(draft) != {
-        "base_commit",
-        "head_commit",
-        "changes",
-    }:
-        raise PublicReleaseError(
-            "content_draft must contain base_commit, head_commit and changes"
-        )
-    if draft["base_commit"] != base or draft["head_commit"] != head:
-        raise PublicReleaseError(
-            "content_draft commit pins do not match the comparison"
-        )
-    changes = draft["changes"]
-    if not isinstance(changes, list) or not changes:
-        raise PublicReleaseError(
-            "content_draft.changes must be a non-empty list"
-        )
-    for change in changes:
-        _validate_change(change)
-    if not 1 <= sum(change["highlight"] for change in changes) <= 5:
-        raise PublicReleaseError(
-            "mark between one and five changes as highlights"
-        )
-    description = f"# ANECHOIC {version}\n\n## Changes\n\n"
-    for change in changes:
-        description += f"### {change['title'].strip()}\n\n{change['details'].strip()}\n\nEvidence: {', '.join(item.strip() for item in change['evidence'])}\n\n"
-    history = f"## {version}\n\n" + "".join(
-        f"- {change['title'].strip()}\n"
-        for change in changes
-        if change["highlight"]
-    )
-    return description, history
-
-
 def _ticket_candidates(root: Path, merge_base: str, head: str):
     raw = _git(
         root,
@@ -213,7 +135,9 @@ def _ticket_blob(output, oid):
     header, separator, output = output.partition(b"\n")
     fields = header.split()
     if (
-        not separator or len(fields) != 3 or fields[0].decode() != oid
+        not separator
+        or len(fields) != 3
+        or fields[0].decode() != oid
         or fields[1] != b"blob"
     ):
         raise PublicReleaseError("invalid Git ticket batch")
@@ -224,22 +148,29 @@ def _ticket_blob(output, oid):
     return content, output[1:]
 
 
+def _ticket_batch(root, candidates):
+    try:
+        batch = subprocess.run(
+            ("git", "cat-file", "--batch"),
+            cwd=root,
+            input="".join(f"{oid}\n" for _, oid, _, _ in candidates).encode(),
+            capture_output=True,
+            check=False,
+            timeout=120,
+        )
+    except (OSError, subprocess.TimeoutExpired) as error:
+        raise PublicReleaseError(
+            "git cat-file could not read the ticket evidence"
+        ) from error
+    if batch.returncode:
+        raise PublicReleaseError("git cat-file failed")
+    return batch.stdout
+
+
 def _ticket_evidence(root: Path, candidates) -> list[_CompletedTicket]:
     tickets = []
     if candidates:
-        try:
-            batch = subprocess.run(
-                ("git", "cat-file", "--batch"), cwd=root,
-                input="".join(f"{oid}\n" for _, oid, _, _ in candidates).encode(),
-                capture_output=True, check=False, timeout=120,
-            )
-        except (OSError, subprocess.TimeoutExpired) as error:
-            raise PublicReleaseError(
-                "git cat-file could not read the ticket evidence"
-            ) from error
-        if batch.returncode:
-            raise PublicReleaseError("git cat-file failed")
-        output = batch.stdout
+        output = _ticket_batch(root, candidates)
         seen = set()
         for path, oid, ticket_id, kind in candidates:
             content, output = _ticket_blob(output, oid)
@@ -255,9 +186,21 @@ def _ticket_evidence(root: Path, candidates) -> list[_CompletedTicket]:
             if header is None:
                 continue
             front = header[1].replace("\r\n", "\n")
-            if (not re.search(rf"""(?m)^atom_id:[ \t]*(['"]?){re.escape(ticket_id)}\1[ \t]*$""", front)
-                    or not re.search(rf"""(?m)^  template:[ \t]*(['"]?){kind}\1[ \t]*$""", front)
-                    or not re.search(r"""(?m)^state:[ \t]*\n(?:  [^\n]*\n)*?  status:[ \t]*(['"]?)done\1[ \t]*$""", front)):
+            if (
+                not re.search(
+                    rf"""(?m)^atom_id:[ \t]*(['"]?){re.escape(ticket_id)}"""
+                    r"""\1[ \t]*$""",
+                    front,
+                )
+                or not re.search(
+                    rf"""(?m)^  template:[ \t]*(['"]?){kind}\1[ \t]*$""", front
+                )
+                or not re.search(
+                    r"""(?m)^state:[ \t]*\n(?:  [^\n]*\n)*?"""
+                    r"""  status:[ \t]*(['"]?)done\1[ \t]*$""",
+                    front,
+                )
+            ):
                 continue
             if ticket_id in seen:
                 raise PublicReleaseError(
@@ -268,24 +211,32 @@ def _ticket_evidence(root: Path, candidates) -> list[_CompletedTicket]:
     return tickets
 
 
-def _draft_example(base: str, head: str) -> dict[str, object]:
-    return {
-        "base_commit": base,
-        "head_commit": head,
-        "changes": [{
-            "title": "brief history bullet",
-            "details": "detailed PR description",
-            "evidence": ["ticket ID or changed path"],
-            "highlight": True,
-        }],
-    }
+def _head_version(root, head):
+    try:
+        version = tomllib.loads(_git(root, "show", f"{head}:version.toml"))[
+            "framework"
+        ]["version"]
+        if (
+            not isinstance(version, str)
+            or re.fullmatch(r"[0-9]+(?:\.[0-9]+){2,3}", version) is None
+        ):
+            raise ValueError
+    except (KeyError, TypeError, ValueError, tomllib.TOMLDecodeError) as error:
+        raise PublicReleaseError(
+            "head version.toml must declare a framework version"
+        ) from error
+    return version
 
 
 def run_public_release(
-    root: Path | str, *, run_id: str, base_ref: str = "origin/main", head_ref: str = "amm/dev",
+    root: Path | str,
+    *,
+    run_id: str,
+    base_ref: str = "origin/main",
+    head_ref: str = "amm/dev",
     content_draft: Mapping[str, object] | None = None,
 ) -> dict[str, object]:
-    """Return evidence for review, or render drafts from a pinned reviewed mapping."""
+    """Return review evidence or render a pinned, reviewed draft."""
     if not isinstance(run_id, str) or not re.fullmatch(
         r"[A-Za-z0-9][A-Za-z0-9._:-]*", run_id
     ):
@@ -300,19 +251,25 @@ def run_public_release(
         raise PublicReleaseError("project root must be the Git checkout root")
     base, head = _commit(root, base_ref), _commit(root, head_ref)
     merge_base = _git(root, "merge-base", base, head).strip()
-    try:
-        version = tomllib.loads(_git(root, "show", f"{head}:version.toml"))["framework"]["version"]
-        if not isinstance(version, str) or re.fullmatch(r"[0-9]+(?:\.[0-9]+){2,3}", version) is None:
-            raise ValueError
-    except (KeyError, TypeError, ValueError, tomllib.TOMLDecodeError) as error:
-        raise PublicReleaseError("head version.toml must declare a framework version") from error
-    fields = dict(run_id=run_id, base_commit=base, head_commit=head,
-                  merge_base=merge_base, version=version)
+    version = _head_version(root, head)
+    fields = dict(
+        run_id=run_id,
+        base_commit=base,
+        head_commit=head,
+        merge_base=merge_base,
+        version=version,
+    )
     if content_draft is not None:
         description, history = _draft(content_draft, base, head, version)
         return _CompletedRelease(
-            **fields, pr_description=description, version_history_entry=history,
+            **fields,
+            pr_description=description,
+            version_history_entry=history,
         ).model_dump()
+    return _review(root, base, head, merge_base, fields)
+
+
+def _review(root, base, head, merge_base, fields):
     candidates = _ticket_candidates(root, merge_base, head)
     return _ReleaseReview(
         **fields,
@@ -321,7 +278,12 @@ def run_public_release(
         instructions=_REVIEW_INSTRUCTIONS,
         diff_stat_argv=["git", "diff", "--stat", merge_base, head, "--"],
         diff_name_status_argv=[
-            "git", "diff", "--name-status", merge_base, head, "--"
+            "git",
+            "diff",
+            "--name-status",
+            merge_base,
+            head,
+            "--",
         ],
         content_draft_schema=_draft_example(base, head),
     ).model_dump()

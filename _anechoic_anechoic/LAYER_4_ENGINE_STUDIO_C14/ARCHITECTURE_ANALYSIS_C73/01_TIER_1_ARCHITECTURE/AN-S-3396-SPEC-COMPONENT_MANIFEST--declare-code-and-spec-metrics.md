@@ -10,7 +10,7 @@ context:
 state:
   status: "active"
   version: 4
-  updated_at: "2026-11-26T15:52:28.140325+00:00"
+  updated_at: "2026-11-28T15:06:14+00:00"
 ---
 ## Summary
 
@@ -35,17 +35,13 @@ ComponentManifest(
 ## Component Boundaries
 
 ```python
-{'code': {'imports': ['metrics__shared.code_rows',
-                      'metrics__shared.spec_rows'],
+{'code': {'imports': ['metrics__shared.code_rows', 'metrics__shared.spec_rows'],
           'exports': {'metrics__shared.code_rows': {'shared': ['C69',
                                                                'LAYER_4_ENGINE_STUDIO_C14/ARCHITECTURE_ANALYSIS_C73/CODE_AND_SPEC_METRICS_C76/CODE_AND_SPEC_METRICS_C76__tests']},
                       'metrics__shared.spec_rows': {'shared': ['C30',
                                                                'LAYER_4_ENGINE_STUDIO_C14/ARCHITECTURE_ANALYSIS_C73/CODE_AND_SPEC_METRICS_C76/CODE_AND_SPEC_METRICS_C76__tests']},
-                      'metrics__shared.is_measurement_input': {'shared': ['C61',
-                                                                          'C68']}}},
- 'state': {'reads': ['captured code inventory and Current Spec '
-                     'measurements'],
-           'writes': []}}
+                      'metrics__shared.is_measurement_input': {'shared': ['C61', 'C68', 'LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_IWE_CONSOLE/FEATURE_IMPORT_GRAPH_C61/RESOLUTION', 'LAYER_4_ENGINE_STUDIO_C14/ORCHESTRATOR_beta_C68/watching']}}},
+ 'state': {'reads': ['captured code inventory and Current Spec measurements'], 'writes': []}}
 ```
 
 ## Component Contract

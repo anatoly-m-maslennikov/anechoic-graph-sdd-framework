@@ -5,7 +5,7 @@ from hashlib import sha256
 import json
 from pathlib import Path
 
-from ..FEATURE_FORMAL_MODEL_GENERATOR__shared import (
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.FEATURE_FORMAL_MODEL_GENERATOR.native.native_manifest_model import (
     compile_native_bindings,
     reviewed_model_records,
 )
@@ -32,7 +32,7 @@ def main():
     if args.staged_control_root is None:
         records, originals, fingerprint = reviewed_model_records()
         if args.verify_lean:
-            from .model_lean import verify_model_lean
+            from .lean._package__shared import verify_model_lean
 
             verify_model_lean(
                 records, compile_native_bindings(records, originals)

@@ -95,11 +95,11 @@ shortcut or use an old Method snapshot after source revisions change.
 | CA-O-231 | CA-O-017 | Integrated | [prepare work](CA-O-231.prompt.md) |
 | CA-O-232 | CA-O-018 | Integrated | [prepare tests](CA-O-232.prompt.md) |
 | CA-O-233 | CA-O-019 | Integrated | [implement requirements](CA-O-233.prompt.md) |
-| CA-O-094 | CA-O-020 | Integrated | [run checks](CA-O-094.prompt.md) |
-| CA-O-234 | CA-O-089 | Integrated | [diagnose](CA-O-234.prompt.md) |
+| CA-O-094 | CA-O-020 | Integrated | [run checks](verification/CA-O-094.prompt.md) |
+| CA-O-234 | CA-O-089 | Integrated | [diagnose](verification/CA-O-234.prompt.md) |
 | CA-O-096 | CA-O-024 | Integrated | [admit retry](CA-O-096.prompt.md) |
 | CA-O-099 | CA-O-021 | Integrated | [repair](CA-O-099.prompt.md) |
-| CA-O-230 | CA-O-225 | Integrated | [review candidate](CA-O-230.prompt.md) |
+| CA-O-230 | CA-O-225 | Integrated | [review candidate](verification/CA-O-230.prompt.md) |
 
 CA-O-230 reuses the CA-O-225 read-only review semantics. Its `final` phase
 keeps CA-O-225's default result behavior. Its explicit `preliminary` phase

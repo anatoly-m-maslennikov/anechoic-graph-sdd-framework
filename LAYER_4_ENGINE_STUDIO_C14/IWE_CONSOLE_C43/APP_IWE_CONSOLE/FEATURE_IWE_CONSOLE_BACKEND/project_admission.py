@@ -4,13 +4,20 @@ from dataclasses import asdict
 import json
 import sys
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import (
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.\
+    PROJECT_SUPPORT.PROJECT_SELECTION.\
+    PROJECT_SELECTION__shared import (
     discover_native_project,
-    mcp_tool_blacklist,
     rebind_native_selection,
 )
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
-    import ProjectSelectionError  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.\
+    PROJECT_SUPPORT.RUNTIME_SUPPORT.\
+    RUNTIME_SUPPORT__shared import (
+    mcp_tool_blacklist,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.settings.project.project__shared import (
+    ProjectSelectionError,
+)
 from KERNEL_MIXER_C59.MANIFEST_RUNTIME_C62.model_host_CS2.\
     model_host_CS2__shared \
     import reviewed_native_model  # fmt: skip

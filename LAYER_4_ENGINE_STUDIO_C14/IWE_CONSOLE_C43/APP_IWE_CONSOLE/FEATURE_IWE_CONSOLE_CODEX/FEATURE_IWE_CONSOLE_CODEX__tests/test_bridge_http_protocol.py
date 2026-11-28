@@ -1,4 +1,3 @@
-
 """Real HTTP/SSE coverage for the one-Project Workbench Codex bridge.
 
 The app-server is an external executable fixture on ``PATH``.  The bridge,
@@ -8,13 +7,26 @@ Workbench business service is mocked here.
 
 from __future__ import annotations
 
+import importlib
 import json
 from pathlib import Path
 import time
 import unittest
 from typing import Any
 
-from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_CODEX.FEATURE_IWE_CONSOLE_CODEX__tests.bridge_http_support import BridgeHTTPFixture
+# fmt: off
+from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_CODEX \
+    import FEATURE_IWE_CONSOLE_CODEX__tests as bridge_tests
+# fmt: on
+
+bridge_http_support = importlib.import_module(
+    bridge_tests.__name__ + ".bridge_http_support"
+)
+bridge_protocol_cases = importlib.import_module(
+    bridge_tests.__name__ + ".bridge_protocol_cases"
+)
+BridgeHTTPFixture = bridge_http_support.BridgeHTTPFixture
+BridgeProtocolCases = bridge_protocol_cases.BridgeProtocolCases
 
 
 CODEX_ROOT = Path(__file__).resolve().parents[1]
@@ -22,25 +34,9 @@ REPOSITORY = CODEX_ROOT.parents[3]
 FIXTURE = Path(__file__).with_name("fake_codex.py")
 ALLOWED_ORIGIN = "http://127.0.0.1:56317"
 MCP_URL = f"{ALLOWED_ORIGIN}/anechoic/mcp"
-FORBIDDEN_OVERRIDE_KEYS = {
-    "model",
-    "modelProvider",
-    "model_provider",
-    "toolConfig",
-    "tool_config",
-    "allowedTools",
-    "allowed_tools",
-    "mcpServers",
-    "mcp_servers",
-    "approvalPolicy",
-    "approval_policy",
-    "sandbox",
-    "auth",
-    "credentials",
-}
 
 
-class BridgeHTTPTests(BridgeHTTPFixture):
+class BridgeHTTPTests(BridgeProtocolCases, BridgeHTTPFixture):
     def test_event_burst_is_drained_in_order(self) -> None:
         connection, response = self.open_turn("event-burst")
         output: dict[str, list[dict[str, Any]]] = {"events": []}
@@ -113,45 +109,6 @@ class BridgeHTTPTests(BridgeHTTPFixture):
             "native-thread-1", completed_native["params"]["threadId"]
         )
         self.assertEqual("completed", finished["status"])
-
-    def _assert_approval_turn(self) -> None:
-        connection, response = self.open_turn("approval")
-        approval_output: dict[str, list[dict[str, Any]]] = {"events": []}
-        approval_reader = self.collect_turn(
-            connection, response, approval_output
-        )
-        self.wait_for_pending("native-approval-request")
-        status, _ = self.json_request(
-            "POST",
-            "/respond",
-            {"id": "native-approval-request", "result": {"approved": True}},
-        )
-        self.assertEqual(200, status)
-        approval_reader.join(timeout=5)
-        self.assertFalse(approval_reader.is_alive())
-        approval_event = next(
-            item
-            for item in approval_output["events"]
-            if item.get("type") == "event"
-            and item.get("event", {}).get("method")
-            == "item/commandExecution/requestApproval"
-        )["event"]
-        self.assertEqual(
-            {"threadId", "turnId", "itemId", "reason"},
-            set(approval_event["params"]),
-        )
-        self.assertEqual(
-            "item/commandExecution/requestApproval",
-            approval_event["method"],
-        )
-        self.assertEqual(
-            "completed",
-            next(
-                item
-                for item in approval_output["events"]
-                if item.get("type") == "finished"
-            )["status"],
-        )
 
     def _assert_user_input_turn(self) -> None:
         connection, response = self.open_turn("user-input")
@@ -295,26 +252,7 @@ class BridgeHTTPTests(BridgeHTTPFixture):
             json.loads(line)
             for line in self.audit.read_text(encoding="utf-8").splitlines()
         ]
-        argv = next(item["argv"] for item in audit if "argv" in item)
-        self.assertEqual("app-server", argv[-1])
-        self.assertIn("-c", argv)
-        self.assertTrue(
-            any(item.startswith("mcp_servers.anechoic.url=") for item in argv)
-        )
-        forbidden_flags = ("--model", "--tool", "--tools", "--auth", "--sandbox", "--approval")
-        self.assertFalse(any(item == flag or item.startswith(flag + "=") for item in argv for flag in forbidden_flags))
-        thread_starts = [
-            item for item in audit
-            if item.get("in", {}).get("method") == "thread/start"
-        ]
-        self.assertEqual(1, len(thread_starts))
-        for packet in audit:
-            incoming = packet.get("in")
-            if not isinstance(incoming, dict):
-                continue
-            params = incoming.get("params")
-            if isinstance(params, dict):
-                self.assertFalse(FORBIDDEN_OVERRIDE_KEYS & set(params))
+        self._assert_launch_audit(audit)
 
 
 if __name__ == "__main__":

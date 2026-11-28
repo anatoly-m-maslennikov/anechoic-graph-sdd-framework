@@ -16,11 +16,11 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, ValidationError
 
-from .project_admission import AdmissionClient, _selection
-from .shared_host_config import load
-from .shared_project_pool import SharedProjectPool
-from .warm_worker_process import open_warm_worker
-from .project_peers import socket_path
+from ORCHESTRATOR_beta_C68.peers.project_admission import AdmissionClient, _selection
+from ORCHESTRATOR_beta_C68.peers.shared_host_config import load
+from ORCHESTRATOR_beta_C68.peers.shared_project_pool import SharedProjectPool
+from ORCHESTRATOR_beta_C68.peers.warm_worker_process import open_warm_worker
+from ORCHESTRATOR_beta_C68.peers.project_peers import socket_path
 
 _LIMIT = 1024 * 1024
 _RELEASE = b"R"

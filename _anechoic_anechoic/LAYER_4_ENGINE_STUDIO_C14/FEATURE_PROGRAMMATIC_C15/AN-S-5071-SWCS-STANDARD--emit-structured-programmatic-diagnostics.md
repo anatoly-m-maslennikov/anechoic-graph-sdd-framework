@@ -15,9 +15,9 @@ relations:
   CONTRIBUTES_TO:
   - AN-S-4741
 state:
-  status: active
-  version: 2
-  updated_at: "2026-11-27T16:29:34.309627+00:00"
+  status: "active"
+  version: 3
+  updated_at: "2026-11-27T20:35:14.221449+00:00"
 ---
 
 ## Summary
@@ -28,6 +28,7 @@ Emit structured PROGRAMMATIC diagnostics
 
 Runtime diagnostics explain an operation's outcome to the Operator.
 The process streams carry that evidence for requests and background work.
+The `protocolStdoutClean` input means protocol stdout carries results only.
 
 ## Claim
 
@@ -36,13 +37,12 @@ The process streams carry that evidence for requests and background work.
 ```lean
 namespace ProgrammaticDiagnostics
 
-def conforms (structured onStderr sanitized protocolStdoutClean : Bool) : Bool :=
-  structured && onStderr && sanitized && protocolStdoutClean
+def conforms (structured sanitized protocolStdoutClean : Bool) : Bool :=
+  structured && sanitized && protocolStdoutClean
 
 end ProgrammaticDiagnostics
 ```
 
 ### Prose Claim
 
-Use the shared diagnostic emitter under AN-S-4741. Reserve protocol
-stdout for results.
+Use the shared diagnostic emitter. Apply AN-S-4741 to stream routing.

@@ -4,7 +4,7 @@ from ..LAYER_3_TEST_GENERATION_C92._package__shared import framing_expectation
 
 
 def framing_checks(claim, role, witnesses):
-    """Return finite Lean Boolean checks for the role's bounds and body projections."""
+    """Return finite Lean checks for the role's bounds and body."""
     namespace = {
         "contract": "CarrierBodyContract",
         "solution": "CarrierBodySolution",
@@ -22,14 +22,17 @@ def framing_checks(claim, role, witnesses):
 
 
 def framing_observations(witnesses):
-    """Project the two Lean framing models onto the same bounds and byte outputs."""
+    """Project both Lean framing models onto common bounds and byte outputs."""
     inputs = [list(raw) for raw in witnesses]
-    return f"""
-def framingResult (bounds : Option (Nat × Nat × Nat)) (body : Option (List Nat)) : Lean.Json :=
-  Lean.Json.mkObj [
-    ("bounds", Lean.toJson (bounds.map fun (opening, start, stop) => [opening, start, stop])),
-    ("body", Lean.toJson body)]
-
+    return (
+        "\n"
+        "def framingResult (bounds : Option (Nat × Nat × Nat)) "
+        "(body : Option (List Nat)) : Lean.Json :=\n"
+        "  Lean.Json.mkObj [\n"
+        '    ("bounds", Lean.toJson (bounds.map fun (opening, start, stop) '
+        "=> [opening, start, stop])),\n"
+        '    ("body", Lean.toJson body)]\n'
+        f"""
 def framingCases : Lean.Json :=
   let inputs : List (List Nat) := {inputs}
   Lean.Json.arr <| inputs.toArray.map fun raw =>
@@ -41,10 +44,12 @@ def framingCases : Lean.Json :=
       | .body bytes => some bytes
     let manifestBounds := CarrierBodyContract.bounds raw
     let solutionBounds := CarrierBodySolution.bounds raw
-    Lean.Json.arr #[
-      Lean.toJson (manifestBounds == solutionBounds && manifestBody == solutionBody),
-      framingResult manifestBounds manifestBody, framingResult solutionBounds solutionBody]
-"""
+    Lean.Json.arr #[\n"""
+        "      Lean.toJson (manifestBounds == solutionBounds && "
+        "manifestBody == solutionBody),\n"
+        "      framingResult manifestBounds manifestBody, "
+        "framingResult solutionBounds solutionBody]\n"
+    )
 
 
 def _valid_projection(row):
@@ -106,13 +111,11 @@ def framing_comparison(witnesses, observed, claims):
         raise ValueError("Unexpected Lean framing comparison output")
     cases, mismatches = [], []
     for raw, values in zip(witnesses, observed, strict=True):
-        expected_manifest = _expected_projection(
-            raw, claims["contract"], "contract"
-        )
-        expected_solution = _expected_projection(
-            raw, claims["solution"], "solution"
-        )
-        if not _valid_comparison(values, expected_manifest, expected_solution):
+        contract = claims["contract"]
+        expected_manifest = _expected_projection(raw, contract, "contract")
+        solution_claim = claims["solution"]
+        solution_value = _expected_projection(raw, solution_claim, "solution")
+        if not _valid_comparison(values, expected_manifest, solution_value):
             raise ValueError("Unexpected Lean framing comparison output")
         matched, manifest, solution = values
         case = {"input": list(raw), "manifest": manifest, "solution": solution}
@@ -120,10 +123,9 @@ def framing_comparison(witnesses, observed, claims):
         if not matched:
             mismatches.append(case)
     status = "conflicting" if mismatches else "bounded_match"
+    direction = {"status": status, "facts": mismatches}
     return {
         "status": status,
         "cases": cases,
-        "directions": {
-            "manifest_solution": {"status": status, "facts": mismatches}
-        },
+        "directions": {"manifest_solution": direction},
     }

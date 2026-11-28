@@ -37,7 +37,7 @@ class ModelHandoffTests(unittest.TestCase):
         self.jobs = GenerationJobs("test", binding, "/tmp/kernel.sock")
         self.enterContext(
             patch(
-                "ORCHESTRATOR_beta_C68.generation_worker.read_accepted_model",
+                "ORCHESTRATOR_beta_C68.generation.worker.generation_worker.read_accepted_model",
                 return_value=None,
             )
         )
@@ -59,7 +59,7 @@ class ModelHandoffTests(unittest.TestCase):
             ),
             patch.object(self.jobs.watcher, "archive_roots", return_value=()),
             patch(
-                "ORCHESTRATOR_beta_C68.generation.UnixConnection"
+                "ORCHESTRATOR_beta_C68.generation.generation.UnixConnection"
             ) as connected,
         ):
             connection = connected.return_value
@@ -148,7 +148,7 @@ class ModelHandoffTests(unittest.TestCase):
             "model_diagnostics": diagnostics,
         }
         with patch(
-            "ORCHESTRATOR_beta_C68.generation_worker.subprocess.Popen"
+            "ORCHESTRATOR_beta_C68.generation.worker.generation_worker.subprocess.Popen"
         ) as popen:
             popen.return_value.returncode = 1
             popen.return_value.communicate.return_value = (
@@ -177,7 +177,7 @@ class ModelSourceTests(unittest.TestCase):
         reply = {"snapshot": {}, "receipt": {}, "graph": None, "reuse": None}
         with (
             patch(
-                "ORCHESTRATOR_beta_C68.generation_worker.read_accepted_model",
+                "ORCHESTRATOR_beta_C68.generation.worker.generation_worker.read_accepted_model",
                 return_value={},
             ),
             patch.object(
@@ -206,7 +206,7 @@ class ModelSourceTests(unittest.TestCase):
         reply = {"snapshot": {}, "receipt": {}, "graph": None, "reuse": None}
         with (
             patch(
-                "ORCHESTRATOR_beta_C68.generation_worker.read_accepted_model",
+                "ORCHESTRATOR_beta_C68.generation.worker.generation_worker.read_accepted_model",
                 return_value=accepted,
             ) as read,
             patch.object(

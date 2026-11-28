@@ -3,8 +3,13 @@
 import subprocess
 import unittest
 
-from ..FEATURE_MCP__tests__shared import run_workbench_browser
-from ..workbench_docker_support import image_timeout
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__tests.integration.\
+    workbench.group_4.workbench_docker_support import (
+    image_timeout,
+)
+from ..FEATURE_MCP__tests__shared import (
+    run_workbench_browser,
+)
 from .test_native_import_graph_docker_e2e import _CanaryProject
 
 

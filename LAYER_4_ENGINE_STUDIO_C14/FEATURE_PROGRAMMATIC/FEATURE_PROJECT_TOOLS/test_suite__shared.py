@@ -1,198 +1,164 @@
-"""Run every source test module in a fresh interpreter; report skips honestly."""
-
+"""Run source test modules in fresh interpreters and report skips."""
 
 from __future__ import annotations
 
-import argparse
+import argparse as argparse
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from contextlib import nullcontext
-import json
+import json as json
 import os
 from pathlib import Path
-import subprocess
+import subprocess as subprocess
 import sys
-import time
+import time as time
 
-from . import (full_suite_docker as full_suite_docker,
-               prune_private_tmp as prune_private_tmp, source_line_length as source_line_length, static_checks as static_checks)
-from . import source_comments as source_comments, suite_preflight as suite_preflight
-from .python_bytecode import (python_findings as python_findings, shell_findings as shell_findings,
-                              unsafe as unsafe, yaml_findings as yaml_findings)
-from .source_sizes import (
+from . import (
+    static_checks as static_checks,
+)
+
+from .source_inventory import (
+    source_inventory__shared as source_comments,  # noqa: F401
+    source_line_length as source_line_length,
+)
+from . import prune_private_tmp as prune_private_tmp
+from .suite_runner import suite_preflight as suite_preflight
+from .release_image import (
+    release_image__shared as full_suite_docker,  # noqa: F401
+)
+from .language_checks.python_bytecode import (
+    python_findings as python_findings,
+    shell_findings as shell_findings,
+    unsafe as unsafe,
+    yaml_findings as yaml_findings,
+)
+from .source_inventory.source_sizes import (
     check_functions as check_functions,
     check_module as check_module,
     python_functions as python_functions,
     web_functions as web_functions,
 )
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.functional_suite import (
-    MCP_TESTS as MCP_TESTS, WORKBENCH, _test_phase, select_phase_modules, valid_test_request,
+    MCP_TESTS as MCP_TESTS,
+    WORKBENCH as WORKBENCH,
+    _test_phase,
+    select_phase_modules,
+    valid_test_request,
 )
-from .full_suite_docker import (APP as APP, IMAGE_DEADLINES, candidate_test_image,
-                                current_code_test_image, image_deadline_mode)
-from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.static_checks import CODE_ROOTS, check as _run_static_checks
-from .suite_cli import run_phase
-from .suite_preflight import run_preflight
-from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.suite_report import record_module, suite_report
+from .release_image.release_image__shared import (
+    APP as APP,
+    IMAGE_DEADLINES as IMAGE_DEADLINES,
+    candidate_test_image,
+    current_code_test_image,
+    image_deadline_mode as image_deadline_mode,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.static_checks import (
+    CODE_ROOTS as CODE_ROOTS,
+    check as _run_static_checks,
+)
+from .suite_runner.suite_runner__shared import run_phase
+from .suite_runner.suite_preflight import run_preflight
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.\
+    suite_runner.suite_report import (
+    record_module,
+    suite_report,
+)
+
+from .suite_runner._suite_runner_module import (
+    discover_selected as _discover_selected,
+    finish_suite as _finish_suite,
+    run_module as _run_module,
+    schedule_modules as _schedule_modules,
+)
+from .suite_runner._suite_runner_inputs import (
+    CHILD as CHILD,
+    _suite_parser as _suite_parser,
+    _module_command as _module_command,
+    _module_environment as _module_environment,
+    _report_scope as _report_scope,
+    discover_test_modules as discover_test_modules,
+)
 
 MODULE_TIMEOUT_SECONDS = 3600
 RESULT_MARKER = "ANECHOIC_TEST_COUNTS "
-CHILD = """
-import json, os, sys, unittest
-sys.path.extend(os.environ.pop("ANECHOIC_TEST_IMPORT_DIRS").split(os.pathsep))
-suite = unittest.defaultTestLoader.loadTestsFromName(sys.argv[1])
-count = suite.countTestCases()
-result = unittest.TextTestRunner(verbosity=2).run(suite)
-required_skips = [(test.id(), reason) for test, reason in result.skipped
-                  if len(sys.argv) > 2 or "_e2e" in sys.argv[1] or "_e2e." in test.id()]
-if required_skips:
-    label = "functional" if len(sys.argv) > 2 else "integration"
-    print("Required " + label + " tests skipped: " + repr(required_skips), file=sys.stderr)
-print("ANECHOIC_TEST_COUNTS " + json.dumps({"tests": result.testsRun, "skipped": len(result.skipped)}))
-if not count:
-    print("No test cases loaded", file=sys.stderr)
-sys.exit(0 if count and result.wasSuccessful() and not required_skips else 1)
-"""
 
 
 def __getattr__(name: str):
     if name == "_release_canary":
-        from . import _release_canary
+        from .release_image import _release_canary
 
         return _release_canary
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
-def discover_test_modules(root: Path) -> list[Path]:
-    """Select source modules, not caches or copied tests inside test fixtures."""
-
-    def failed(error: OSError) -> None:
-        raise error
-
-    modules = []
-    for name in CODE_ROOTS:
-        source = root / name
-        if source.is_symlink() or not source.is_dir():
-            raise OSError(f"source test root is unavailable: {source}")
-        for folder, directories, filenames in os.walk(
-            source, followlinks=False, onerror=failed
-        ):
-            directory = Path(folder)
-            parts = directory.relative_to(source).parts
-            test_package = directory.name == directory.parent.name + "__tests"
-            directories[:] = [
-                entry
-                for entry in directories
-                if not entry.startswith(".")
-                and entry != "__pycache__"
-                and not (test_package and entry == "assets")
-                and not (entry == "tests" and "tests" in parts)
-            ]
-            for entry in directories:
-                if (Path(folder) / entry).is_symlink():
-                    raise OSError(
-                        f"source test directory is a symbolic link: {Path(folder) / entry}"
-                    )
-            for filename in filenames:
-                path = Path(folder) / filename
-                if (
-                    filename.startswith("test_")
-                    and path.suffix == ".py"
-                    and path.stem.isidentifier()
-                    and not path.stem.endswith(("__pub", "__shared"))
-                ):
-                    if path.is_symlink():
-                        raise OSError(
-                            f"test module is a symbolic link: {path}"
-                        )
-                    modules.append(path)
-    return sorted(modules)
-
-
-def _module_environment(child, environment, *, image_module):
-    inherited = os.environ if environment is None else environment
-    environment = {key: value for key, value in inherited.items() if key not in ("PYTHONHOME", IMAGE_DEADLINES)}
-    environment.update(ANECHOIC_DOCKER_E2E="1", ANECHOIC_DOCKER_QUERY_E2E="1", PYTHONPATH=str(child))
-    if image_module:
-        environment[IMAGE_DEADLINES] = image_deadline_mode(inherited)
-    return environment
-
-
-def _module_command(child, module, environment, required):
-    name = ".".join(module.relative_to(child).with_suffix("").parts)
-    command = (sys.executable, "-B")
-    if child.name != CODE_ROOTS[0]:
-        environment.pop("VIRTUAL_ENV", None)
-        environment["UV_PROJECT_ENVIRONMENT"] = (
-            str(child / (".venv-release" if child.as_posix().endswith(CODE_ROOTS[1]) else ".venv-setup"))
-        )
-        command = ("uv", "run", "--project", str((child.parent.parent if child.as_posix().endswith(CODE_ROOTS[1]) else child.parent) / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72" / ("release" if child.as_posix().endswith(CODE_ROOTS[1]) else "setup")), "--locked", "--no-env-file", "--python", "3.14", "--managed-python", "python", "-B")
-    return (*command, "-P", "-c", CHILD, name, *(("required",) if required else ()))
-
-
-def run_module(
-    root: Path, module: Path, environment=None
-) -> tuple[bool, int, int, str, str, float, str | None]:
-    """Return one isolated module's result and output for coherent reporting."""
-    started = time.monotonic()
-    child = next(root / name for name in CODE_ROOTS if module.is_relative_to(root / name))
-    environment = _module_environment(
-        child, environment, image_module=_docker_module(root, module)
-    )
-    environment["ANECHOIC_TEST_IMPORT_DIRS"] = os.pathsep.join((
-        str(module.parent), str(module.parent.parent), str(root / WORKBENCH / "FEATURE_IWE_CONSOLE_BACKEND"),
-    ))
-    required = environment.pop("ANECHOIC_FUNCTIONAL_REQUIRED", None) == "1"
-    print(f"Test module START: {module.relative_to(root)}", flush=True)
-    try:
-        result = subprocess.run(
-            _module_command(child, module, environment, required),
-            cwd=root,
-            capture_output=True,
-            text=True,
-            check=False,
-            timeout=None if environment.get(IMAGE_DEADLINES) == "0" else MODULE_TIMEOUT_SECONDS,
-            env=environment,
-        )
-        counts = [
-            line[len(RESULT_MARKER) :]
-            for line in result.stdout.splitlines()
-            if line.startswith(RESULT_MARKER)
-        ]
-        observed = json.loads(counts[-1]) if counts else {"tests": 0, "skipped": 0}
-        return (
-            result.returncode == 0 and bool(counts), observed["tests"],
-            observed["skipped"], result.stdout, result.stderr,
-            time.monotonic() - started, None,
-        )
-    except (OSError, subprocess.TimeoutExpired, ValueError) as error:
-        stdout = _output_text(error.stdout) if isinstance(error, subprocess.TimeoutExpired) else ""
-        stderr = _output_text(error.stderr) if isinstance(error, subprocess.TimeoutExpired) else ""
-        return False, 0, 0, stdout, stderr, time.monotonic() - started, str(error)
+def run_module(root: Path, module: Path, environment=None):
+    """Run one isolated module and return its result and output."""
+    return _run_module(sys.modules[__name__], root, module, environment)
 
 
 def _docker_module(root: Path, module: Path) -> bool:
     return _test_phase(root, module) == "image"
 
 
-def _discover_for_phase(root, phase, focused, host_gate, functional_suite, image_suite, report):
-    modules = select_phase_modules(root, discover_test_modules(root), phase, focused, host_gate, image_suite=image_suite)
+def _discover_for_phase(
+    root, phase, focused, host_gate, functional_suite, image_suite, report
+):
+    modules = select_phase_modules(
+        root,
+        discover_test_modules(root),
+        phase,
+        focused,
+        host_gate,
+        image_suite=image_suite,
+    )
     if functional_suite == "fast":
-        from .functional_history import select_fast
+        from .suite_runner.functional_history import select_fast
 
         return select_fast(root, modules, report)
     return modules
 
 
-def run_full_suite(root: Path, test_modules: tuple[str, ...] | None = None, *,
-                   image_mode: str = "existing", phase: str = "full",
-                   candidate_image: str | None = None, required: bool = False,
-                   report: dict | None = None, functional_suite: str = "full", image_suite: str = "full") -> int:
-    """Run a source phase; retain legacy Python phase names for existing callers."""
+def _valid_phase_request(
+    phase,
+    candidate_image,
+    test_modules,
+    required,
+    functional_suite,
+    image_suite,
+):
+    if (
+        functional_suite not in ("full", "fast")
+        or functional_suite == "fast"
+        and phase != "functional"
+        or image_suite not in ("full", "fast")
+        or image_suite == "fast"
+        and phase != "image"
+        or not valid_test_request(
+            phase, candidate_image, test_modules, required
+        )
+    ):
+        print(
+            "Invalid test phase or candidate image selection", file=sys.stderr
+        )
+        return False
+    return True
+
+
+def run_full_suite(
+    root: Path,
+    test_modules: tuple[str, ...] | None = None,
+    *,
+    image_mode: str = "existing",
+    phase: str = "full",
+    candidate_image: str | None = None,
+    required: bool = False,
+    report: dict | None = None,
+    functional_suite: str = "full",
+    image_suite: str = "full",
+) -> int:
+    """Run a source phase and retain legacy Python phase names."""
     report = {} if report is None else report
-    if (functional_suite not in ("full", "fast") or functional_suite == "fast" and phase != "functional"
-            or image_suite not in ("full", "fast") or image_suite == "fast" and phase != "image"
-            or not valid_test_request(phase, candidate_image, test_modules, required)):
-        print("Invalid test phase or candidate image selection", file=sys.stderr)
+    request = (phase, candidate_image, test_modules, required)
+    if not _valid_phase_request(*request, functional_suite, image_suite):
         return 1
     if phase == "preflight":
         return run_preflight(root, report)
@@ -202,42 +168,46 @@ def run_full_suite(root: Path, test_modules: tuple[str, ...] | None = None, *,
         if status:
             return status
     host_gate = required or phase in ("functional", "canary")
-    report["step"] = "discovery"
-    try:
-        modules = _discover_for_phase(root, phase, test_modules, host_gate, functional_suite, image_suite, report)
-    except (OSError, ValueError) as error:
-        report["error"] = str(error)
-        label = "Test discovery failed" if isinstance(error, OSError) else "Invalid test selection"
-        print(f"{label}: {error}", file=sys.stderr)
+    selection = (phase, test_modules, host_gate, functional_suite, image_suite)
+    modules = _discover_selected(
+        sys.modules[__name__], root, selection, report
+    )
+    if modules is None:
         return 1
-    scope = phase if test_modules is None else "focused"
-    if test_modules is not None:
-        selection = ", ".join(test_modules)
-    elif host_gate or image_suite == "fast":
-        selection = ", ".join(module.relative_to(root).as_posix() for module in modules)
-    else:
-        selection = "all discovered modules" if phase == "full" else f"{phase} modules"
-    print(f"Test scope: {scope}; selected modules: {selection}")
-    report["selected_modules"] = len(modules)
-    if not modules:
-        if phase == "static":
-            return 0
-        print("No source test modules found", file=sys.stderr)
-        return 1
-    return _run_selected_modules(root, modules, candidate_image, image_mode,
-                                 required=host_gate or phase in ("image", "e2e"), report=report)
+    _report_scope(root, phase, test_modules, host_gate, image_suite, modules)
+    return _finish_suite(
+        sys.modules[__name__],
+        root,
+        modules,
+        phase,
+        host_gate,
+        candidate_image,
+        image_mode,
+        report,
+    )
 
 
-def _run_selected_modules(root, modules, candidate_image, image_mode, *, required, report):
+def _run_selected_modules(
+    root, modules, candidate_image, image_mode, *, required, report
+):
     report["step"] = "environment"
     integration = any(_docker_module(root, module) for module in modules)
-    context = (candidate_test_image(root, candidate_image) if candidate_image is not None else
-               current_code_test_image(root, use_packaged_assets=image_mode == "existing")
-               if integration else nullcontext({}))
+    context = (
+        candidate_test_image(root, candidate_image)
+        if candidate_image is not None
+        else current_code_test_image(
+            root, use_packaged_assets=image_mode == "existing"
+        )
+        if integration
+        else nullcontext({})
+    )
     try:
         with context as additions:
             environment = {**os.environ, **additions}
-            environment.setdefault("ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY", str(root / ".anechoic_tmp/workbench/extensions"))
+            environment.setdefault(
+                "ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY",
+                str(root / ".anechoic_tmp/workbench/extensions"),
+            )
             if required:
                 environment["ANECHOIC_FUNCTIONAL_REQUIRED"] = "1"
             else:
@@ -246,7 +216,9 @@ def _run_selected_modules(root, modules, candidate_image, image_mode, *, require
                 environment.pop("ANECHOIC_RELEASE_E2E_CONTEXT", None)
                 environment.pop("ANECHOIC_CANDIDATE_IMAGE_DIGEST", None)
             report["step"] = "modules"
-            return _run_modules(root, modules, environment, report.setdefault("modules", []))
+            return _run_modules(
+                root, modules, environment, report.setdefault("modules", [])
+            )
     except Exception as error:
         report["error"] = str(error)
         print(f"Required test environment failed: {error}", file=sys.stderr)
@@ -254,7 +226,11 @@ def _run_selected_modules(root, modules, candidate_image, image_mode, *, require
 
 
 def _output_text(output: str | bytes | None) -> str:
-    return output.decode("utf-8", errors="replace") if isinstance(output, bytes) else output or ""
+    return (
+        output.decode("utf-8", errors="replace")
+        if isinstance(output, bytes)
+        else output or ""
+    )
 
 
 def _record_modules(
@@ -276,29 +252,38 @@ def _record_modules(
     return failed, tests, skipped
 
 
-def _run_modules(root: Path, modules: list[Path], environment: dict, modules_report: list) -> int:
-    browser = next((module for module in modules if module.name == "test_native_import_graph_docker_e2e.py"
-                    and _docker_module(root, module)), None)
+def _run_modules(
+    root: Path, modules: list[Path], environment: dict, modules_report: list
+) -> int:
+    browser = next(
+        (
+            module
+            for module in modules
+            if module.name == "test_native_import_graph_docker_e2e.py"
+            and _docker_module(root, module)
+        ),
+        None,
+    )
     failed, tests, skipped = [], 0, 0
     host_workers = int(environment.get("ANECHOIC_TEST_FANOUT", "2"))
     image_workers = int(environment.get("ANECHOIC_TEST_IMAGE_FANOUT", "2"))
     if image_workers not in (2, 3):
         raise ValueError("ANECHOIC_TEST_IMAGE_FANOUT must be 2 or 3")
-    with ThreadPoolExecutor(max_workers=host_workers) as ordinary, ThreadPoolExecutor(max_workers=image_workers) as docker:
+    with (
+        ThreadPoolExecutor(max_workers=host_workers) as ordinary,
+        ThreadPoolExecutor(max_workers=image_workers) as docker,
+    ):
         try:
-            if browser in modules:
-                first = {docker.submit(run_module, root, browser, environment): browser}
-                failed, tests, skipped = _record_modules(root, first, modules_report)
-            pending = {
-                (docker if _docker_module(root, module) else ordinary).submit(
-                    run_module, root, module, environment
-                ): module
-                for module in modules if module != browser
-            }
-            other_failed, other_tests, other_skipped = _record_modules(root, pending, modules_report)
-            failed.extend(other_failed)
-            tests += other_tests
-            skipped += other_skipped
+            failed, tests, skipped = _schedule_modules(
+                sys.modules[__name__],
+                root,
+                modules,
+                browser,
+                environment,
+                modules_report,
+                ordinary,
+                docker,
+            )
         except KeyboardInterrupt:
             for executor in (ordinary, docker):
                 executor.shutdown(wait=False, cancel_futures=True)
@@ -306,29 +291,20 @@ def _run_modules(root: Path, modules: list[Path], environment: dict, modules_rep
     if failed:
         print("Failed test modules: " + ", ".join(failed), file=sys.stderr)
     print(
-        f"Modules: {len(modules)}; tests run: {tests}; skipped: {skipped}; failed modules: {len(failed)}"
+        f"Modules: {len(modules)}; tests run: {tests}; "
+        f"skipped: {skipped}; failed modules: {len(failed)}"
     )
     return int(bool(failed))
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--project-root", type=Path, default=Path.cwd())
-    parser.add_argument("--test-module", action="append", dest="test_modules", metavar="PATH")
-    parser.add_argument("--phase", default="unit",
-                        choices=("preflight", "static", "functional", "unit", "image", "image-tests", "canary"))
-    parser.add_argument("--functional-suite", choices=("full", "fast"), default="full")
-    parser.add_argument("--image-suite", choices=("full", "fast"), default="full")
-    parser.add_argument("--required", action="store_true", help="run the configured required host selection with the unit phase")
-    parser.add_argument("--candidate-image")
-    parser.add_argument("--canary-package", type=Path)
-    parser.add_argument("--canary-project-root", type=Path)
-    parser.add_argument("--canary-selection")
-    parser.add_argument("--run-id")
+    parser = _suite_parser(__doc__)
     arguments = parser.parse_args()
     root = arguments.project_root.resolve(strict=True)
     with suite_report(root, arguments) as report:
-        report["exit_code"] = run_phase(root, arguments, report, run_full_suite)
+        report["exit_code"] = run_phase(
+            root, arguments, report, run_full_suite
+        )
         return report["exit_code"]
 
 

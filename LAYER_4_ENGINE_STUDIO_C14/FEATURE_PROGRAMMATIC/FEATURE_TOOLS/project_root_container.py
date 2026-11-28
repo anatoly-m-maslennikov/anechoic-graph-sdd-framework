@@ -2,18 +2,17 @@
 
 from hashlib import sha256
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
-    import (
-        header_value,
-        project_root_container_view,
-    )  # fmt: skip
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
-    import ScopeDeclarationError  # fmt: skip
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
-    import (
-        ScopeUnitDeclaration,
-        parse_scope_unit_declaration,
-    )  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carriers.content.content__shared import (
+    header_value,
+    project_root_container_view,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.structure.scope.scope__shared import (
+    ScopeDeclarationError,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.structure.scope.scope__shared import (
+    ScopeUnitDeclaration,
+    parse_scope_unit_declaration,
+)
 
 
 def effective_root_container_header(

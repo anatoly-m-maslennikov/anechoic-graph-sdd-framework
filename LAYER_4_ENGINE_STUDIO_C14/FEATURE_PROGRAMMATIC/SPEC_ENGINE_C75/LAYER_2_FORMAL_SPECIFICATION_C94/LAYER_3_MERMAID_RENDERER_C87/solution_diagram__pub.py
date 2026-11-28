@@ -9,7 +9,9 @@ from .workflow_diagram__pub import (
 )
 
 
-def render_solution(model, claim, *, action=None):
+def render_solution(model, claim, *, action=None, observe=None):
+    if observe is not None:
+        observe(claim, action)
     if claim is None:
         return None
     language = model["solution"]["claims"][0][0]

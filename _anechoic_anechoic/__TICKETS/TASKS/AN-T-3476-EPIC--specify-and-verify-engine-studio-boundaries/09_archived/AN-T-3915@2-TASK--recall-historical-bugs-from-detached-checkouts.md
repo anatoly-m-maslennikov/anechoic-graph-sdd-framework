@@ -8,7 +8,7 @@ context:
   template: task
   label: Task
 state:
-  status: in_queue
+  status: archived
   version: 2
   updated_at: '2026-11-24T12:27:35.177938+00:00'
 ---

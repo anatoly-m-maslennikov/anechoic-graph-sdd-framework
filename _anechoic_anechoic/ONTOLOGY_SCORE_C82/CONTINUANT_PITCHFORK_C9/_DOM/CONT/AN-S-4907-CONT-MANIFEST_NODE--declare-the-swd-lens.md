@@ -13,8 +13,8 @@ context:
   lens: DOM/CONT
 state:
   status: active
-  version: 5
-  updated_at: '2026-11-26T18:18:17.056335+00:00'
+  version: 6
+  updated_at: "2026-11-28T15:16:37.698017+00:00"
 ---
 
 ## Summary
@@ -25,7 +25,7 @@ Declare the SWD Lens
 
 Groups engineering rules for implementing and maintaining software.
 
-`SWD = DBT + SWA + SWCS`.
+`SWD = DBT + SWA + SWCS + Internal API`.
 
 ## Formal Manifest
 
@@ -35,7 +35,7 @@ Groups engineering rules for implementing and maintaining software.
 from anechoic.formal_claims import value
 from anechoic.model import (
     SoftwareEngineeringLens, DataBuildToolLens, SoftwareArchitectureLens,
-    SoftwareCodeStandardsLens,
+    InternalAPILens, SoftwareCodeStandardsLens,
 )
 
 class SoftwareDevelopmentLens(SoftwareEngineeringLens):
@@ -44,6 +44,7 @@ class SoftwareDevelopmentLens(SoftwareEngineeringLens):
         'DBT': DataBuildToolLens,
         'SWA': SoftwareArchitectureLens,
         'SWCS': SoftwareCodeStandardsLens,
+        'INTERNAL_API': InternalAPILens,
     }
 ```
 

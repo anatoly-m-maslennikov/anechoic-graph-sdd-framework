@@ -13,10 +13,7 @@ from time import monotonic, sleep
 import httpx2
 
 ENGINE = Path(__file__).resolve().parents[3]
-MODULE = (
-    "KERNEL_MIXER_beta_C67.DATABASE_SERVER_beta_C71.DATABASE_SERVER_beta_C71__"
-    "shared"
-)
+MODULE = "KERNEL_MIXER_beta_C67.DATABASE_SERVER_beta_C71.DATABASE_SERVER_beta_C71__shared"
 PIN = "a" * 64
 BINDING = {"instance_id": "instance"}
 
@@ -61,8 +58,16 @@ def _server(database=None, *arguments):
             ):
                 sleep(0.03)
             if not socket.exists() or os.stat(socket).st_mode & 0o077:
+                mode = (
+                    oct(os.stat(socket).st_mode & 0o777)
+                    if socket.exists()
+                    else None
+                )
                 raise AssertionError(
-                    "Database did not start with a private socket"
+                    "Database did not start with a private socket: "
+                    f"exit status={process.poll()}, "
+                    f"elapsed={monotonic() - (until - 10):.2f}s, "
+                    f"timeout=10s, socket mode={mode}"
                 )
             with httpx2.Client(
                 transport=httpx2.HTTPTransport(uds=str(socket)),

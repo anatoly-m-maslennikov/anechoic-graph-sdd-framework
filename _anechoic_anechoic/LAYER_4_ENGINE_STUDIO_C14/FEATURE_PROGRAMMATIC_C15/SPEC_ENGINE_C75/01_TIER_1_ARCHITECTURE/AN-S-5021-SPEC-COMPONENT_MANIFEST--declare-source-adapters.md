@@ -36,13 +36,14 @@ ComponentManifest(
 ## Component Boundaries
 
 ```python
-{'code': {'imports': ['atom_reference__pub.derive_atom_ref', 'spec_file_reader.read_spec_file'],
-          'exports': {'_package__shared.SpecSnapshot': {'shared': ['C75', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/SPEC_ENGINE_C75__tests/functional']},
+{'code': {'imports': [
+                      'sources.inventory.spec_file_reader.read_spec_file','atom_reference__pub.derive_atom_ref', 'spec_file_reader.read_spec_file'],
+          'exports': {'_package__shared.SpecSnapshot': {'shared': ['C75', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/SPEC_ENGINE_C75__tests/functional', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/SPEC_ENGINE_C75__tests/functional/contracts/boundaries']},
                       '_package__shared.SourceError': {'shared': ['C75', 'C83', 'C85', 'C89', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/SPEC_ENGINE_C75__tests/functional',
-                          'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/LAYER_2_FORMAL_SPECIFICATION_C94/LAYER_2_SPEC_READING_C83']},
+                          'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/LAYER_2_FORMAL_SPECIFICATION_C94/LAYER_2_SPEC_READING_C83', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/SPEC_ENGINE_C75__tests/functional/comparisons/chain', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/SPEC_ENGINE_C75__tests/functional/contracts/boundaries']},
                       '_package__shared.read_source': {'shared': ['C83', 'C89',
                           'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/SPEC_ENGINE_C75__tests/functional',
-                          'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/LAYER_2_FORMAL_SPECIFICATION_C94/LAYER_2_SPEC_READING_C83']}}},
+                          'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/LAYER_2_FORMAL_SPECIFICATION_C94/LAYER_2_SPEC_READING_C83', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/SPEC_ENGINE_C75__tests/functional/comparisons/chain', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/SPEC_ENGINE_C75__tests/functional/contracts/boundaries']}}},
  'state': {'reads': ['ingested Project Spec snapshot'], 'writes': []}}
 ```
 

@@ -7,9 +7,9 @@ tier: 4
 context:
   lens: SWD
 state:
-  status: active
-  version: 16
-  updated_at: 2026-11-10 20:47:54 +0400
+  status: "active"
+  version: 17
+  updated_at: "2026-11-27T20:35:14.221449+00:00"
 ---
 
 ## Summary
@@ -20,57 +20,27 @@ Use uv as the default Python workflow frontend
 
 ### Prose Claim
 
-use uv as the default frontend for **every** admitted Python workflow capability
-that uv provides. this Method owns that tool selection; configuration **and**
-Implementation materialize it, Delivery governs its carriers, Operations defines reusable workflow behavior,
-**and** Journal Records carry the evidence required by the existing business-lifecycle contract.
+Use uv as the default frontend for every admitted Python workflow capability that it provides. Use uv alone for governed Project Python workflows. Follow AN-S-1259 for the isolated execution environment, including development, installed Project Tools and host launchers.
+
+This Method selects the frontend. Configuration and Implementation materialize the selection. Delivery governs its Carriers. Operations defines reusable Workflow behavior. Journal Records supply the evidence required by the business-lifecycle contract.
 
 ## Details
 
-
 ### Applicable when
 
-apply **when** developing, evaluating, building, packaging, **or** executing
-PROGRAMMATIC Python source, including installed Project Tools **and** host launchers.
+Apply when developing, evaluating, building, packaging, or executing PROGRAMMATIC Python source, including installed Project Tools and host launchers.
 
 ### Procedure
 
-1. resolve the supported Python boundary from its accepted Method **and** canonical
-   Project technical-configuration materialization, **then** install **or** select it
-   through `uv python`.
-2. materialize dependencies selected by accepted Methods **in** `pyproject.toml`;
-   change them through `uv add` **or** `uv remove` so the declaration **and** `uv.lock`
-   change together.
-3. reproduce the project environment with `uv sync --locked` **and** execute
-   governed Python commands with `uv run --locked`.
-4. run an isolated Python CLI through `uv tool run` **only** with a pinned tool
-   version **and** command **when** it is **not** an admitted project dependency.
-   unpinned ephemeral execution cannot supply acceptance evidence.
-5. use `uv build` **or** `uv publish` **only** **when** an accepted Delivery authorizes a
-   package **or** publication target.
-6. do **not** mix pip, venv, virtualenv, pipx, Poetry, Conda, a naked/system
-   Python interpreter, system-installed libraries, **or** another overlapping
-   Python workflow manager into the governed Project-Python path. A capability
-   gap or external boundary does not authorize a non-uv fallback for Project Python.
-7. stop rather than record a non-uv fallback exception for Project Python.
-8. apply CA-M-423's uv-managed environment boundary to installed Tools **and**
-   host launchers as well as development commands. Packaged runtimes retain
-   their selected isolated environment **and** locked dependencies; child
-   processes reuse **only** that environment's interpreter. Route uv cache,
-   build, **and** staging state into `.anechoic_tmp/`.
-
-### Outcome
-
-one declared Python boundary **and** one reviewed lockfile reproduce the admitted
-Python environment **and** commands **without** an undeclared manager **or** dependency
-source.
+1. Use the accepted Method and canonical Project technical configuration to identify the supported Python boundary. Preserve the selected isolated environment and locked dependencies in packaged runtimes.
+2. Declare dependencies selected by accepted Methods in `pyproject.toml`. Use `uv add` or `uv remove` so the declaration and the reviewed `uv.lock` change together.
+3. Use `uv tool run` only for an isolated Python CLI outside the admitted Project dependencies. Pin the Tool version and command. Exclude unpinned ephemeral execution from acceptance evidence.
+4. Use `uv build` or `uv publish` only when an accepted Delivery authorizes the package or publication target.
+5. Put uv cache, build and staging state in `.anechoic_tmp/`.
 
 ### Failure or stop
 
-stop **when** the supported interpreter cannot be resolved, the lockfile is stale,
-a command would update the environment implicitly during evidence collection,
-or a Project-Python command would use a non-uv, naked/system, or system-library
-fallback.
+Stop under AN-S-1259. Also stop when the lockfile is stale, a command would implicitly update the environment during evidence collection, or a capability gap or external boundary would require another Python workflow manager.
 
 ### Sources
 

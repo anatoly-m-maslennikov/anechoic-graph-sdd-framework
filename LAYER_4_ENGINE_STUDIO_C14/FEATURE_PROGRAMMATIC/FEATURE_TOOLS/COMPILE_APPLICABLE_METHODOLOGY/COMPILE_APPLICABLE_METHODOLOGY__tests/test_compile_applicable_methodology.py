@@ -3,13 +3,18 @@
 import os
 from pathlib import Path
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.COMPILE_APPLICABLE_METHODOLOGY.COMPILE_APPLICABLE_METHODOLOGY__tests.methodology_test_support import (
-    CompilerFixture,
-    module,
-    carrier,
-    term_definition_carrier,
-)
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.COMPILE_APPLICABLE_METHODOLOGY.methodology_paths__shared import (
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.COMPILE_APPLICABLE_METHODOLOGY.\
+    COMPILE_APPLICABLE_METHODOLOGY__tests.methodology_test_support import (
+        CompilerFixture,
+        module,
+        carrier,
+        term_definition_carrier,
+    )  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.COMPILE_APPLICABLE_METHODOLOGY.\
+    COMPILE_APPLICABLE_METHODOLOGY__tests._scope_fixture \
+    import NESTED_RULE  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.\
+    COMPILE_APPLICABLE_METHODOLOGY.METHODOLOGY_READING.METHODOLOGY_READING__shared import (
     declaration_source_pins,
 )
 
@@ -103,6 +108,10 @@ class CompilerTest(CompilerFixture):
             ),
         )
 
+    def _assert_source_bytes(self, expected):
+        actual = {path: path.read_bytes() for path in expected}
+        self.assertEqual(expected, actual)
+
     def test_dry_run_apply_rerun_and_regeneration_are_deterministic(
         self,
     ) -> None:
@@ -128,13 +137,13 @@ class CompilerTest(CompilerFixture):
         apply_code, applied = self.invoke("--apply")
         self.assertEqual(apply_code, 0)
         first_tree = self.output_digest()
-        self.assertEqual(
-            before, {source: source.read_bytes(), local: local.read_bytes()}
-        )
+        self._assert_source_bytes(before)
         projected = self.temp / self.output / "04_requirement" / source.name
         projected_text = projected.read_text()
+        source_relative = Path(os.path.relpath(source, start=projected.parent))
         self.assertIn(
-            f"projection:\n  source_carrier_path: {Path(os.path.relpath(source, start=projected.parent)).as_posix()}",
+            "projection:\n  source_carrier_path: "
+            f"{source_relative.as_posix()}",
             projected_text,
         )
         self.assertIn("# CA-R-001\n\nclaim", projected_text)
@@ -149,21 +158,13 @@ class CompilerTest(CompilerFixture):
         regenerate_code, regenerated = self.invoke("--apply")
         self.assertEqual(regenerate_code, 0)
         self.assertEqual(first_tree, self.output_digest())
-        self.assertEqual(
-            before, {source: source.read_bytes(), local: local.read_bytes()}
-        )
+        self._assert_source_bytes(before)
 
-    def test_nested_header_compiles_alongside_flat_source_without_rewriting_either(
+    def \
+    test_nested_header_compiles_alongside_flat_source_without_rewriting_either(
         self,
-    ) -> None:
-        nested = (
-            b"---\nidentity:\n  atom_id: CA-R-001\n  ref_id: CA-R-001@2\n"
-            b"context:\n  role: Requirement\n  form: Rule\n  topics:\n    main_subject: Header\n    dependencies: []\n"
-            b"relations: {}\nstate:\n  status: Active\n  version: 2\n"
-            b'  updated_at: "2026-11-06 00:00:00 +0400"\n'
-            b"destination:\n  file:\n    name: CA-R-001--nested\n    path: preserved/path\n"
-            b"---\n# Claim\n\nExact nested source body.\n"
-        )
+    ) -> None:  # fmt: skip
+        nested = NESTED_RULE
         source = self.write(
             "001_CORE_META_MODEL",
             "04_requirement",

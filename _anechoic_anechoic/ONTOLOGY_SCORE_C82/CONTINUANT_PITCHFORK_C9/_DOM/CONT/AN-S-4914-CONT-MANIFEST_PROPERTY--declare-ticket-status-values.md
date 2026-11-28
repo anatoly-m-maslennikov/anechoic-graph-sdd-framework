@@ -12,14 +12,19 @@ context:
   template: manifest_property
   lens: DOM/CONT
 state:
-  status: "active"
-  version: 2
-  updated_at: "2026-11-26T15:52:36.945546+00:00"
+  status: active
+  version: 5
+  updated_at: "2026-11-28T11:00:50.522707+00:00"
 ---
 
 ## Summary
 
 Declare Ticket Status values
+
+## Semantics
+
+Ticket adds its work and outcome statuses to Current. Standalone
+Ticket Assets can use `complete`. A Project can add Current statuses.
 
 ## Formal Manifest
 
@@ -32,5 +37,12 @@ class TicketAtomStatus(Property):
     name = 'Status'
     bearer = Atom.Header.State
     property.applies_to = (TicketAtom,)
-    property.value.allowed = ('draft', 'backlog', 'in_queue', 'done', 'canceled', 'resolved', 'complete', 'archived')
+    property.value.groups = {
+        'backlog': 'Current',
+        'in_queue': 'Current',
+        'done': 'Current',
+        'canceled': 'Current',
+        'resolved': 'Current',
+        'complete': 'Current',
+    }
 ```

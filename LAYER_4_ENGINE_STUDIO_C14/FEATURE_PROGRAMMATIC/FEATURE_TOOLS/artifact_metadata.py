@@ -1,8 +1,6 @@
-
 """Shared metadata reads and atomic artifact writes."""
 
 from __future__ import annotations
-
 
 
 import datetime as dt
@@ -11,17 +9,15 @@ import tomllib
 from pathlib import Path
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.settings.project.project__shared import (
     atomic_tempfile,
 )
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.project_runtime import (
-    repository_root as temporary_project_root,
-)
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.settings.settings__shared import (
     bound_selection,
-)
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
     read_settings_carrier,
+)
+from .PROJECT_SUPPORT.RUNTIME_SUPPORT.RUNTIME_SUPPORT__shared import (
+    repository_root as temporary_project_root,
 )
 from collections.abc import Mapping
 
@@ -31,19 +27,31 @@ TIMESTAMP_FORMAT = "%Y-%m-%d %H:%M:%S %z"
 
 
 def project_identity(root: Path) -> dict[str, dict[str, object]]:
-    """Read Project identity only from the selected Project Settings Carrier."""
+    """Read Project identity from the selected Project Settings Carrier."""
     selection = bound_selection(root)
-    path = selection.settings_path if selection is not None else root / SETTINGS_PATH
+    path = (
+        selection.settings_path
+        if selection is not None
+        else root / SETTINGS_PATH
+    )
     if not path.is_file() or path.is_symlink():
         raise ValueError(
             f"Project Settings Carrier is missing or invalid: {SETTINGS_PATH}"
         )
     try:
-        settings = selection.settings if selection is not None else read_settings_carrier(path)
+        settings = (
+            selection.settings
+            if selection is not None
+            else read_settings_carrier(path)
+        )
     except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError) as error:
         raise ValueError(
             f"invalid Project Settings: {SETTINGS_PATH}"
         ) from error
+    return _project_identity_values(settings)
+
+
+def _project_identity_values(settings):
     project = settings.get("project")
     artifacts = settings.get("artifacts")
     identity = (
@@ -58,7 +66,10 @@ def project_identity(root: Path) -> dict[str, dict[str, object]]:
         if not isinstance(value, str) or not value.strip():
             raise ValueError(f"Project Settings lacks project.{key}")
     if project["name"] != project["name"].strip().lower():
-        raise ValueError("Project Settings project.name must be lowercase without surrounding whitespace")
+        raise ValueError(
+            "Project Settings project.name must be lowercase "
+            "without surrounding whitespace"
+        )
     prefix = identity.get("project_prefix")
     if not isinstance(prefix, str) or not prefix.strip():
         raise ValueError(

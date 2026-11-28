@@ -3,7 +3,7 @@ atom_family: SPEC
 atom_id: AN-S-1146
 concern:
   subject: "TOML"
-  path: "Model/Carrier/File//Non-executable File"
+  path: Model/Carrier/Filesystem/File//Non-executable File
   relation: "is_narrower_than"
 container:
   component: C16
@@ -12,8 +12,8 @@ context:
   lens: SWD
 state:
   status: active
-  version: 22
-  updated_at: "2026-11-27T16:29:34.309627+00:00"
+  version: 23
+  updated_at: "2026-11-28T11:52:02.110048+00:00"
 ---
 ## Summary
 

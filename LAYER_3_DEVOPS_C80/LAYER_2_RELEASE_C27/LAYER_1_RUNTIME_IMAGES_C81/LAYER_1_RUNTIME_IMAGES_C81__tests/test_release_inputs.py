@@ -137,9 +137,7 @@ class ReleaseInputsTests(unittest.TestCase):
         )
         for info in ("python", "python anechoic-edsl"):
             with self.subTest(info=info):
-                body = (
-                    f"## Formal Manifest\n\n```{info}\n{declaration}```\n"
-                )
+                body = f"## Formal Manifest\n\n```{info}\n{declaration}```\n"
                 path.write_text(header + body)
                 selected = release_inputs.read_release_selection(self.root)
                 self.assertEqual(
@@ -149,7 +147,9 @@ class ReleaseInputsTests(unittest.TestCase):
         invalid = (
             declaration.replace("56317", "__import__('os').system('false')"),
             declaration.replace("prefix='AN'", "prefix='AN', prefix='AN'"),
-            declaration.replace("ComponentManifest\n", "ComponentManifest as M\n"),
+            declaration.replace(
+                "ComponentManifest\n", "ComponentManifest as M\n"
+            ),
             declaration + "print('unexpected')\n",
         )
         for source in invalid:
@@ -168,7 +168,9 @@ class ReleaseInputsTests(unittest.TestCase):
         selected = release_inputs.read_release_selection(root)
         self.assertEqual("Anechoic", selected.project_name)
         self.assertEqual("AN", selected.project_prefix)
-        self.assertNotIn("http_port", selected.parameters.get("project_mcp", {}))
+        self.assertNotIn(
+            "http_port", selected.parameters.get("project_mcp", {})
+        )
 
     def test_release_port_is_left_for_the_callers_existing_validation(self):
         for value in (False, 0, 65536, "56317"):

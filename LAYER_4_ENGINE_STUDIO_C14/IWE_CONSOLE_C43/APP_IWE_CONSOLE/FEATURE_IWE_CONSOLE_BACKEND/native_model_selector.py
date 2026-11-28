@@ -41,11 +41,13 @@ def _workbench_types():
         from LAYER_3_ENGINE_STUDIO_C14.KERNEL_MIXER_C59.content_schema import (
             compile_content_schema,
         )
+
         # import-graph: previous-image
         from LAYER_3_ENGINE_STUDIO_C14.KERNEL_MIXER_C59.header_columns import (
             HeaderColumn,
             HeaderSchema,
         )
+
         # import-graph: previous-image
         from LAYER_3_ENGINE_STUDIO_C14.KERNEL_MIXER_C59.query_store import (
             QueryStore,
@@ -55,11 +57,13 @@ def _workbench_types():
         from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.content_schema import (
             compile_content_schema,
         )
+
         # import-graph: previous-image
         from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.header_columns import (
             HeaderColumn,
             HeaderSchema,
         )
+
         # import-graph: previous-image
         from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.query_store import (
             QueryStore,
@@ -69,7 +73,7 @@ def _workbench_types():
 
 def _claim_subject(header, body):
     from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.\
-        markdown_content__pub import (parse_content)  # fmt: skip
+        carriers.content.markdown_content__pub import (parse_content)  # fmt: skip
 
     context = header.get("context", {})
     lens, template = context.get("lens"), context.get("template")
@@ -109,11 +113,11 @@ def _claim_subject(header, body):
 
 def _collect_rows(component: Path):
     from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.\
-        carrier_read__pub import (parse_carrier)  # fmt: skip
+        carriers.content.carrier_read__pub import (parse_carrier)  # fmt: skip
     from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.\
-        native_carrier_header__pub import (native_header_view)  # fmt: skip
+        carriers.header.native_carrier_header__pub import (native_header_view)  # fmt: skip
     from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.\
-        source_row__pub import (atom)  # fmt: skip
+        sources.inventory.source_row__pub import (atom)  # fmt: skip
 
     rows, hashes = [], {}
     paths = (
@@ -191,8 +195,9 @@ def select_claims(component: Path) -> list[list[str]]:
 
 
 def _beta_selected(rows, hashes):
-    from KERNEL_MIXER_beta_C67.DATABASE_SERVER_beta_C71.\
-        DATABASE_SERVER_beta_C71__shared import (connect)  # fmt: skip
+    from KERNEL_MIXER_beta_C67.DATABASE_SERVER_beta_C71.analysis_sql.query.query_engine import (
+        connect,
+    )
 
     connection = connect(":memory:")
     try:

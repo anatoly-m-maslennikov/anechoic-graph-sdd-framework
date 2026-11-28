@@ -9,11 +9,11 @@ context:
   lens: DES
 relations:
   ANSWERS:
-  - AN-S-3065@39
+  - AN-S-3065@41
 state:
-  status: active
-  version: 2
-  updated_at: '2026-11-27T11:43:54.041100+00:00'
+  status: "active"
+  version: 4
+  updated_at: "2026-11-28T08:42:15.519068+00:00"
 ---
 
 ## Summary
@@ -67,7 +67,7 @@ component_workflow(
         }},
         'reuse_open': {'on': {
             'reuse_model_opened': {'to': 'reuse_structure', 'expect': {
-                'kind': 'effect', 'target': 'C53', 'outcome': 'opened', 'detail': {'component': 'C53', 'action': 'open_admitted_model', 'output': 'succeeded', 'manifest': 'AN-S-3067@44', 'interface': 'admitted_model', 'entry': 'FEATURE_MODEL_VALIDATION__shared.open_admitted_model', 'transport': 'in_process'}, 'same_as': {'model_sha256': 'selected_model', 'descriptor_sha256': 'selected_descriptor'}}},
+                'kind': 'effect', 'target': 'C53.admitted_model', 'outcome': 'opened', 'detail': {'component': 'C53', 'action': 'open_admitted_model', 'output': 'succeeded', 'manifest': 'AN-S-3067@44', 'interface': 'admitted_model', 'entry': 'FEATURE_MODEL_VALIDATION__shared.open_admitted_model', 'transport': 'in_process'}, 'same_as': {'model_sha256': 'selected_model', 'descriptor_sha256': 'selected_descriptor'}}},
             'open_rejected': {'to': 'fallback', 'expect': {'kind': 'effect', 'target': 'C50.model_diagnostics', 'outcome': 'recorded'}},
         }},
         'reuse_structure': {'on': {
@@ -78,7 +78,7 @@ component_workflow(
         }},
         'compiled_open': {'on': {
             'compiled_model_opened': {'to': 'compiled_structure', 'expect': {
-                'kind': 'effect', 'target': 'C53', 'outcome': 'opened', 'detail': {'component': 'C53', 'action': 'open_admitted_model', 'output': 'succeeded', 'manifest': 'AN-S-3067@44', 'interface': 'admitted_model', 'entry': 'FEATURE_MODEL_VALIDATION__shared.open_admitted_model', 'transport': 'in_process'}, 'same_as': {'model_sha256': 'selected_model', 'descriptor_sha256': 'selected_descriptor'}}},
+                'kind': 'effect', 'target': 'C53.admitted_model', 'outcome': 'opened', 'detail': {'component': 'C53', 'action': 'open_admitted_model', 'output': 'succeeded', 'manifest': 'AN-S-3067@44', 'interface': 'admitted_model', 'entry': 'FEATURE_MODEL_VALIDATION__shared.open_admitted_model', 'transport': 'in_process'}, 'same_as': {'model_sha256': 'selected_model', 'descriptor_sha256': 'selected_descriptor'}}},
             'open_rejected': {'to': 'fallback', 'expect': {'kind': 'effect', 'target': 'C50.model_diagnostics', 'outcome': 'recorded'}},
         }},
         'compiled_structure': {'on': {
@@ -94,7 +94,7 @@ component_workflow(
         }},
         'fallback_open': {'on': {
             'fallback_model_opened': {'to': 'fallback_structure', 'expect': {
-                'kind': 'effect', 'target': 'C53', 'outcome': 'opened', 'detail': {'component': 'C53', 'action': 'open_admitted_model', 'output': 'succeeded', 'manifest': 'AN-S-3067@44', 'interface': 'admitted_model', 'entry': 'FEATURE_MODEL_VALIDATION__shared.open_admitted_model', 'transport': 'in_process'}, 'same_as': {'model_sha256': 'selected_model', 'descriptor_sha256': 'selected_descriptor'}}},
+                'kind': 'effect', 'target': 'C53.admitted_model', 'outcome': 'opened', 'detail': {'component': 'C53', 'action': 'open_admitted_model', 'output': 'succeeded', 'manifest': 'AN-S-3067@44', 'interface': 'admitted_model', 'entry': 'FEATURE_MODEL_VALIDATION__shared.open_admitted_model', 'transport': 'in_process'}, 'same_as': {'model_sha256': 'selected_model', 'descriptor_sha256': 'selected_descriptor'}}},
             'open_rejected': {'to': 'done', 'expect': {'kind': 'output', 'outcome': 'failed'}},
         }},
         'fallback_structure': {'on': {

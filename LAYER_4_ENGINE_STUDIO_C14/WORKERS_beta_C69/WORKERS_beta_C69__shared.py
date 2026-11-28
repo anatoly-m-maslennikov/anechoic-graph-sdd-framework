@@ -9,34 +9,39 @@ import sys
 import subprocess as subprocess
 
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.\
-    ADAPTERS_C30__shared import (
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.sources.snapshots.snapshots__shared import (
     NativeSnapshotChanged,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carriers.header.header__shared import (
     status_domains,
-)  # fmt: skip
+)
 
-from .spec_staging import _stage_spec_rows
-from .worker_generation import _GenerationOptions, _build_generation
-from .worker_graph import (
+from WORKERS_beta_C69.generation.spec_staging import _stage_spec_rows
+from WORKERS_beta_C69.generation.worker_generation import (
+    _GenerationOptions,
+    _build_generation,
+    _compile_managed_refresh,
+)
+from WORKERS_beta_C69.generation.worker_graph import (
     _build_graph as _build_graph,
     _graph_only,
     _rebuild_graph,
 )
-from .worker_compile import (
+from WORKERS_beta_C69.generation.generation__shared import (
     _BuildFailure as _BuildFailure,
     _compile_ingested,
     _read_compile_receipt,
     _run_job,
 )
-from .graph_consistency import _graph_consistency as _graph_consistency
-from .managed_request import _managed_request
-from .generation_batches import _capture_archive
-from .python_code_units import python_code_units as python_code_units
-from .python_context_restoration import (
+from WORKERS_beta_C69.generation.graph_consistency import _graph_consistency as _graph_consistency
+from WORKERS_beta_C69.generation.managed_request import _managed_request
+from WORKERS_beta_C69.generation.generation_batches import _capture_archive
+from WORKERS_beta_C69.analysis.analysis__shared import python_code_units as python_code_units
+from WORKERS_beta_C69.analysis.analysis__shared import (
     python_context_restoration as python_context_restoration,
 )
-from .python_import_order import python_import_order as python_import_order
-from .native_refresh import (
+from WORKERS_beta_C69.analysis.analysis__shared import python_import_order as python_import_order
+from WORKERS_beta_C69.refresh.native_refresh import (
     _domain_option,
     _reuse_hint,
     _ticket_delta,
@@ -254,7 +259,15 @@ def _deferred_result(
     admitted, binding, reuse, foreground, guarded, incremental, output
 ):
     if admitted.defer_graph and incremental and admitted.paths is None:
-        compile_artifacts = _compile if admitted.model_source is None else None
+        compile_artifacts = _compile
+        if admitted.model_source is not None and reuse is not None:
+            compile_artifacts = partial(
+                _compile_managed_refresh,
+                output,
+                admitted.model_source,
+                _domain_option(reuse).get("domains"),
+                _compile_and_capture,
+            )
         return deferred_incremental(
             binding, reuse, foreground, guarded, output, compile_artifacts
         )

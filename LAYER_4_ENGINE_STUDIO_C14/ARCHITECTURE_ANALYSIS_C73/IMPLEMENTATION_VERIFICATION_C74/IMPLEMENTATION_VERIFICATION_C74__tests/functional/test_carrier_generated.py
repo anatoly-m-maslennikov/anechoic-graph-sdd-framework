@@ -11,11 +11,10 @@ import json
 import unittest
 from pathlib import Path
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
-    import (
-        frontmatter_bounds,
-        source_body,
-    )  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carriers.content.content__shared import (
+    frontmatter_bounds,
+    source_body,
+)
 from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75._package__shared import (
     generate_framing_cases,
 )
@@ -55,7 +54,7 @@ PINS = {
         "container_component": "C30",
     },
 }
-GOLDEN = Path(__file__).parent / "golden_bugs/carrier-crlf-bounds"
+GOLDEN = Path(__file__).parent / "golden_bugs/delivery/source/carrier-crlf-bounds"
 
 
 def result(bounds_fn, body_fn, raw):

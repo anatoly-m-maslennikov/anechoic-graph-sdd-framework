@@ -1,8 +1,4 @@
-
-(
-    'Opt-in, isolated Workbench profiler; it is never a latency or throughput '
-    'gate.'
-)
+"Opt-in, isolated Workbench profiler; it is never a performance gate."
 
 from __future__ import annotations
 
@@ -20,6 +16,14 @@ import time
 import tracemalloc
 import uuid
 from typing import Any
+
+
+if __package__:
+    from ._profiler_observations import _allocation_traces, _native_memory
+    from ._profiler_observations import _digest_sources, _make_report
+else:
+    from _profiler_observations import _allocation_traces, _native_memory
+    from _profiler_observations import _digest_sources, _make_report
 
 
 REBUILD_CYCLES = 3
@@ -43,7 +47,9 @@ def _imports() -> None:
 
 def _temporary_root(project_root: Path) -> Path:
     _imports()
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import (
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.\
+        PROJECT_SUPPORT.PROJECT_SELECTION.\
+        PROJECT_SELECTION__shared import (
         resolve_project,
     )
 
@@ -71,21 +77,14 @@ def output_directory(project_root: Path, requested: Path | None) -> Path:
 
 def _code_hashes() -> dict[str, str]:
     paths = [
-        *(
-            BACKEND_ROOT / name
-            for name in ("source_reader.py", "source_rows.py")
-        ),
-        *(
-            KERNEL_ROOT / name
-            for name in (
-                "query_store.py",
-                "content_schema.py",
-                "projection_delta.py",
-                "relations.py",
-            )
-        ),
+        BACKEND_ROOT / "source_capture/reader/source_reader.py",
+        BACKEND_ROOT / "source_capture/source_rows.py",
+        KERNEL_ROOT / "kernel_query/query_database/query_store.py",
+        KERNEL_ROOT / "kernel_model/schema_state/content_schema.py",
+        KERNEL_ROOT / "kernel_graph/projection_rows/projection_delta.py",
+        KERNEL_ROOT / "kernel_runtime/relations_data/relations.py",
+        TOOLS_ROOT / "ADAPTERS_C30/carriers/content/markdown_content__pub.py",
     ]
-    paths.append(TOOLS_ROOT / "ADAPTERS_C30/markdown_content__pub.py")
     return {
         path.name: hashlib.sha256(path.read_bytes()).hexdigest()
         for path in paths
@@ -97,20 +96,7 @@ def _source_digest(
     atom_rows: list[dict[str, Any]],
     scope_rows: list[dict[str, Any]],
 ) -> dict[str, Any]:
-    paths = {
-        str(row[path_key])
-        for row in [*atom_rows, *scope_rows]
-        for path_key in ("source_path", "declaration_source_path")
-        if isinstance(row.get(path_key), str)
-    }
-    digest = hashlib.sha256()
-    for relative in sorted(paths):
-        digest.update(relative.encode("utf-8"))
-        digest.update(b"\0")
-        digest.update(
-            hashlib.sha256((project_root / relative).read_bytes()).digest()
-        )
-    return {"count": len(paths), "digest": digest.hexdigest()}
+    return _digest_sources(project_root, atom_rows, scope_rows, hashlib)
 
 
 def _peak_rss_bytes() -> int:
@@ -118,33 +104,21 @@ def _peak_rss_bytes() -> int:
     return raw if sys.platform == "darwin" else raw * 1024
 
 
-def _native_memory(connection: Any) -> dict[str, Any]:
-    try:
-        rows = connection.execute(
-            "SELECT tag, memory_usage_bytes FROM duckdb_memory()"
-        ).fetchall()
-    except Exception as error:
-        return {"available": False, "reason": str(error)}
-    return {
-        "available": True,
-        "managed_bytes": sum(int(row[1]) for row in rows),
-        "tags": {str(row[0]): int(row[1]) for row in rows if int(row[1])},
-    }
-
-
-def _allocation_traces(snapshot: tracemalloc.Snapshot) -> list[dict[str, Any]]:
-    return [
-        {
-            "size_bytes": statistic.size,
-            "count": statistic.count,
-            "traceback": [str(frame) for frame in statistic.traceback],
-        }
-        for statistic in snapshot.statistics("lineno")[:20]
-    ]
-
-
-def _measure_rebuilds(store, reader, atom_rows, scope_rows, relation_types, report, initial_started):
-    store.replace(atom_rows, scope_rows, relation_types=relation_types, content_schema=reader.content_schema)
+def _measure_rebuilds(
+    store,
+    reader,
+    atom_rows,
+    scope_rows,
+    relation_types,
+    report,
+    initial_started,
+):
+    store.replace(
+        atom_rows,
+        scope_rows,
+        relation_types=relation_types,
+        content_schema=reader.content_schema,
+    )
     current_bytes, peak_bytes = tracemalloc.get_traced_memory()
     report["measurements"].append(
         {
@@ -161,29 +135,43 @@ def _measure_rebuilds(store, reader, atom_rows, scope_rows, relation_types, repo
         }
     )
     for number in range(1, REBUILD_CYCLES + 1):
-        phase_started = time.perf_counter()
-        store.replace(
+        _measure_rebuild(
+            store,
+            reader,
             atom_rows,
             scope_rows,
-            relation_types=relation_types,
-            content_schema=reader.content_schema,
+            relation_types,
+            report,
+            number,
         )
-        current_bytes, peak_bytes = tracemalloc.get_traced_memory()
-        report["measurements"].append(
-            {
-                "label": f"full_rebuild_{number}",
-                "instrumented_elapsed_seconds": round(
-                    time.perf_counter() - phase_started, 6
-                ),
-                "includes_source_capture_and_materialization": False,
-                "input": "same captured source projection",
-                "python_current_bytes": current_bytes,
-                "python_peak_bytes": peak_bytes,
-                "process_high_water_rss_bytes": _peak_rss_bytes(),
-                "process_high_water_rss_is_current_memory": False,
-                "duckdb_managed_memory": _native_memory(store._connection),
-            }
-        )
+
+
+def _measure_rebuild(
+    store, reader, atom_rows, scope_rows, relation_types, report, number
+):
+    phase_started = time.perf_counter()
+    store.replace(
+        atom_rows,
+        scope_rows,
+        relation_types=relation_types,
+        content_schema=reader.content_schema,
+    )
+    current_bytes, peak_bytes = tracemalloc.get_traced_memory()
+    report["measurements"].append(
+        {
+            "label": f"full_rebuild_{number}",
+            "instrumented_elapsed_seconds": round(
+                time.perf_counter() - phase_started, 6
+            ),
+            "includes_source_capture_and_materialization": False,
+            "input": "same captured source projection",
+            "python_current_bytes": current_bytes,
+            "python_peak_bytes": peak_bytes,
+            "process_high_water_rss_bytes": _peak_rss_bytes(),
+            "process_high_water_rss_is_current_memory": False,
+            "duckdb_managed_memory": _native_memory(store._connection),
+        }
+    )
 
 
 def _capture_and_measure(
@@ -267,22 +255,12 @@ def profile(project_root: Path, output: Path) -> dict[str, Any]:
         QueryStore,
         materialize_with_registry,
     )
-    from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.FEATURE_IWE_CONSOLE_BACKEND__shared import SourceReader
+    from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.\
+        FEATURE_IWE_CONSOLE_BACKEND__shared import SourceReader  # fmt: skip
 
-    report: dict[str, Any] = {
-        "instrumented": True,
-        "not_performance_acceptance_timing": True,
-        "rebuild_cycles": REBUILD_CYCLES,
-        "trace_frames": TRACE_FRAMES,
-        "source_root": str(project_root),
-        "runtime": {
-            "python_version": sys.version,
-            "platform": sys.platform,
-            "duckdb_package_version": metadata.version("duckdb"),
-        },
-        "code_hashes_before": _code_hashes(),
-        "measurements": [],
-    }
+    report = _make_report(
+        project_root, REBUILD_CYCLES, TRACE_FRAMES, sys, metadata, _code_hashes
+    )
     database_directory = output / "disposable-database"
     error: BaseException | None = None
     started = time.perf_counter()
@@ -290,10 +268,20 @@ def profile(project_root: Path, output: Path) -> dict[str, Any]:
     tracemalloc.start(TRACE_FRAMES)
     profiler.enable()
     try:
-        _capture_and_measure(project_root, database_directory, report, SourceReader, QueryStore, materialize_with_registry)
+        _capture_and_measure(
+            project_root,
+            database_directory,
+            report,
+            SourceReader,
+            QueryStore,
+            materialize_with_registry,
+        )
     except BaseException as caught:
         error = caught
-        report["error"] = {"type": type(caught).__name__, "message": str(caught)}
+        report["error"] = {
+            "type": type(caught).__name__,
+            "message": str(caught),
+        }
     finally:
         _write_profile_artifacts(
             profiler, started, output, database_directory, report

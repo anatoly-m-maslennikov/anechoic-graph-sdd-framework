@@ -12,13 +12,20 @@ from tempfile import TemporaryDirectory
 from threading import Lock
 
 from .model_generation__pub import open_admitted_model
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import (
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.\
+    PROJECT_SUPPORT.PROJECT_SELECTION.\
+    PROJECT_SELECTION__shared import (
     discover_native_project,
-    mcp_tool_blacklist,
     rebind_native_selection,
 )
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
-    import ProjectSelectionError  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.\
+    PROJECT_SUPPORT.RUNTIME_SUPPORT.\
+    RUNTIME_SUPPORT__shared import (
+    mcp_tool_blacklist,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.settings.project.project__shared import (
+    ProjectSelectionError,
+)
 
 _ENGINE = Path(__file__).resolve().parents[4]
 _ROOT = _ENGINE.parent

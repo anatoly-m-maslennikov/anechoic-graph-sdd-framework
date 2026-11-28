@@ -43,7 +43,7 @@ declare_entity(
 {
             'code': {'exports': {
                 '_package__shared.finding': {'shared': ['C75', 'C85', 'C86', 'C88', 'C89']},
-                '_package__shared.verdict': {'shared': ['C86', 'C88', 'C89']},
+                '_package__shared.verdict': {'shared': ['C86', 'C88', 'C89', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/LAYER_2_FORMAL_SPECIFICATION_C94/LAYER_4_SPEC_COMPARISON_C88/trace_facts_impl']},
             }},
             'io': {'server': {'finding': {'outcomes': {
                 'reported': {'must_effect': [('C90.source_diagnostic', 'formed')]},

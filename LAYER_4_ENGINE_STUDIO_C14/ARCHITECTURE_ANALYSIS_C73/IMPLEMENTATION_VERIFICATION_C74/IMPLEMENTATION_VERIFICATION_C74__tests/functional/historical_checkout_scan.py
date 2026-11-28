@@ -111,7 +111,10 @@ def _scan_case(case, checkout, lean, result):
 def scan(checkout, corpus=CORPUS):
     result = _ScanResult()
     lean = os.environ.get("LEAN_BIN") or shutil.which("lean") or "lean"
-    for case in sorted(path for path in corpus.iterdir() if path.is_dir()):
+    for case in sorted(
+        (path for path in corpus.glob("*/*/*") if path.is_dir()),
+        key=lambda path: path.name,
+    ):
         _scan_case(case, checkout, lean, result)
     result.counts = {
         key: len(getattr(result, key))

@@ -5,11 +5,11 @@ container:
   component: C68
 tier: 1
 context:
-  lens: IO/API/IPC
+  lens: SWD/INTERNAL_API/IPC
 state:
   status: active
-  version: 1
-  updated_at: '2026-11-27T18:25:19.396090+00:00'
+  version: 2
+  updated_at: "2026-11-28T15:16:37.698017+00:00"
 ---
 
 ## Summary

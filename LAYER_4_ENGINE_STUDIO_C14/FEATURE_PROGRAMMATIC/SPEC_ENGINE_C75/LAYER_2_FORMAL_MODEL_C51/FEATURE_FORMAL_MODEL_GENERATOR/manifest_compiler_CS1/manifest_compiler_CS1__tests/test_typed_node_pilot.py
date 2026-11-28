@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 find_ontology_component = import_module(
-    "FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model_ontology_path__pub"
+    "FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model.model_ontology_path__pub"
 ).find_ontology_component
 read_active_model_sources = import_module(
     "FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75."
@@ -134,7 +134,7 @@ class TypedNodePilotTests(unittest.TestCase):
             "FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75."
             "LAYER_2_FORMAL_MODEL_C51."
             "FEATURE_FORMAL_MODEL_GENERATOR."
-            "manifest_compiler_CS1.typed_node_lowering"
+            "manifest_compiler_CS1.typed.typed_node_lowering"
         ).lower_typed_node
 
         records = read_active_model_sources(self.root, self.ontology)
@@ -157,7 +157,7 @@ class TypedNodePilotTests(unittest.TestCase):
             "FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75."
             "LAYER_2_FORMAL_MODEL_C51."
             "FEATURE_FORMAL_MODEL_GENERATOR."
-            "manifest_compiler_CS1.typed_node_lowering"
+            "manifest_compiler_CS1.typed.typed_node_lowering"
         ).lower_typed_node
 
         records = read_active_model_sources(self.root, self.ontology)

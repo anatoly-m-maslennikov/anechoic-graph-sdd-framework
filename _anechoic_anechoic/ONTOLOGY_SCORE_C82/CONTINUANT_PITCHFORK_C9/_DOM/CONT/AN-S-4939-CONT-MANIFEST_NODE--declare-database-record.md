@@ -3,8 +3,8 @@ atom_family: SPEC
 atom_id: AN-S-4939
 concern:
   subject: Database Record
-  path: Model/Carrier
-  relation: is_narrower_than
+  path: Model/Carrier/Database
+  relation: is_contained_by
 container:
   component: C9
 tier: 2
@@ -13,8 +13,8 @@ context:
   lens: DOM/CONT
 state:
   status: active
-  version: 2
-  updated_at: '2026-11-26T17:13:38.390434+00:00'
+  version: 3
+  updated_at: "2026-11-28T11:52:02.110048+00:00"
 ---
 ## Summary
 
@@ -29,5 +29,5 @@ A Database Record identifies a stored entry by its database, table, and stable r
 ```python anechoic-edsl
 # Anechoic Python eDSL
 
-node(DatabaseRecord, Carrier)
+node(DatabaseRecord, Database)
 ```

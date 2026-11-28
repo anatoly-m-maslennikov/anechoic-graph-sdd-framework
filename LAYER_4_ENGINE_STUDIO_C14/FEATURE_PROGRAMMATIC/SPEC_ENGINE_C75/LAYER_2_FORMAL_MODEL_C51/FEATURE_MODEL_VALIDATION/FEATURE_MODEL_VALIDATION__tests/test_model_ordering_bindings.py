@@ -2,17 +2,17 @@
 
 import unittest
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
-    import parse_native_model_claim  # fmt: skip
-from ..FEATURE_MODEL_VALIDATION__shared import (
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model.claims.claims__shared import (
+    parse_native_model_claim,
+)
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.FEATURE_MODEL_VALIDATION.model_rules.model_ordering_bindings import (
     derive_declared_sibling_links,
     validate_declared_sibling_order,
 )
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
-    import (
-        bind_ordering_declarations,
-        order_properties,
-    )  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.structure.structure__shared import (
+    bind_ordering_declarations,
+    order_properties,
+)
 
 
 def declaration(base, name, pairs, *, imports="", scopes=""):

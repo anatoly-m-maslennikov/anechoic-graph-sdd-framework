@@ -10,33 +10,36 @@ from ..FEATURE_FORMAL_MODEL_GENERATOR__shared import (
 from .....FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
     CEILINGS,
     ReadContext,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model.claims.claims__shared import (
     parse_native_model_claim,
 )
-from .....FEATURE_TOOLS.ADAPTERS_C30.model_ontology_path__pub import (
+from .....FEATURE_TOOLS.ADAPTERS_C30.model.model_ontology_path__pub import (
     ontology_component_path,
 )
-from .....FEATURE_TOOLS.ADAPTERS_C30.carrier_read__pub import (
+from .....FEATURE_TOOLS.ADAPTERS_C30.carriers.content.carrier_read__pub import (
     parse_carrier,
 )
-from .active_source_claims import (
+from .active._package__shared import (
     ModelSourceError,
     _source_error,
     _validate_model_row,
     extend_current_status,
     is_project_model_source,
 )
-from .active_source_selection import (
+from .active._package__shared import (
     _collect_active_source,
     _collect_manifest_claims as _collect_manifest_claims,
 )
-from .active_source_inventory import _inventory_active_sources
-from .active_source_address import _check_continuant_address
-from .active_source_checks import (
+from .active._package__shared import _inherit_status_groups
+from .active._package__shared import _inventory_active_sources
+from .active._package__shared import _check_continuant_address
+from .active._package__shared import (
     _check_entity_parent_anchors,
     _check_continuant_containment,
     _collect_node_metadata,
 )
-from .active_source_nodes import (
+from .active._package__shared import (
     _classify_typed_sources,
     _lower_ready_nodes,
     _resolve_typed_scopes,
@@ -309,6 +312,7 @@ def _lower_active_sources(
         append_claim,
     )
     _lower_ready_nodes(pending, records, append_claim, require_all=True)
+    _inherit_status_groups(records)
     _collect_node_metadata(
         records, node_sources, addresses, node_locations, node_metadata
     )

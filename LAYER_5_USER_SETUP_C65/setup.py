@@ -61,6 +61,7 @@ def _uv(source: Path, script: Path) -> tuple[str, ...]:
     return (
         "uv",
         "run",
+        "--no-compile-bytecode",
         "--project",
         str(project),
         "--locked",
@@ -88,7 +89,9 @@ def _run_json(
     env = os.environ.copy()
     env.pop("PYTHONHOME", None)
     env.pop("VIRTUAL_ENV", None)
+    env.pop("UV_COMPILE_BYTECODE", None)
     env["PYTHONPATH"] = str(source / script.parent)
+    env["PYTHONPYCACHEPREFIX"] = str(source / ".anechoic_tmp/python/bytecode")
     env["UV_PROJECT_ENVIRONMENT"] = str(
         source / script.parent / ".venv-release"
     )
@@ -189,8 +192,8 @@ def _start_image(
     source: Path, engine: str, values: Settings, image: str
 ) -> None:
     config = values.container
-    startup = config.startup_timeout_seconds if config else 420
-    readiness = config.readiness_timeout_seconds if config else 420
+    startup = config.get("startup_timeout_seconds", 420) if config else 420
+    readiness = config.get("readiness_timeout_seconds", 420) if config else 420
     launch = _run_json(
         source,
         RELEASE,
@@ -225,29 +228,47 @@ def _start_image(
 def install(arguments: argparse.Namespace, *, source: Path = SOURCE) -> dict:
     values, create_settings = select_settings(arguments)
     config = values.container
-    context = config.docker_context if config and config.docker_context else docker_context(arguments.engine)
+    context = (
+        config.get("docker_context")
+        if config and config.get("docker_context")
+        else docker_context(arguments.engine)
+    )
     engine = next(
-        (name for name in ("orbstack", "docker") if docker_context(name) == context),
+        (
+            name
+            for name in ("orbstack", "docker")
+            if docker_context(name) == context
+        ),
         None,
     )
-    image = config.image if config else None
-    if image is None and config and not config.build_if_missing:
-        raise ValueError("Set container.image or enable container.build_if_missing")
+    image = config.get("image") if config else None
+    if image is None and config and not config.get("build_if_missing", True):
+        raise ValueError(
+            "Set container.image or enable container.build_if_missing"
+        )
     if image is None and engine is None:
-        raise ValueError("Set container.image to use Setup with a custom Docker context")
+        raise ValueError(
+            "Set container.image to use Setup with a custom Docker context"
+        )
     env = os.environ.copy()
     env.pop("DOCKER_HOST", None)
     env["DOCKER_CONTEXT"] = context
     _preflight(arguments.agent == "codex", env)
     initialized = _initialize(source, values, arguments)
     if image is None:
-        timeout = config.build_timeout_seconds + 300 if config else 900
+        timeout = (
+            config.get("build_timeout_seconds", 600) + 300 if config else 900
+        )
         image = _build_image(source, engine, timeout=timeout)
     if create_settings:
         if config:
-            values = replace(values, container=replace(config, image=image))
+            values = replace(values, container={**config, "image": image})
         write_settings(values)
     _start_image(source, engine or arguments.engine, values, image)
+    return _finish_setup(source, values, image, initialized, arguments.agent)
+
+
+def _finish_setup(source, values, image, initialized, agent):
     base = f"http://127.0.0.1:{values.port}"
     endpoint = base + "/anechoic/mcp"
     result = {
@@ -260,7 +281,7 @@ def install(arguments: argparse.Namespace, *, source: Path = SOURCE) -> dict:
         "health_url": base + "/anechoic/health",
         "project_initialized": initialized,
     }
-    if arguments.agent == "codex":
+    if agent == "codex":
         try:
             result["codex"] = install_codex(source, endpoint)
         except (

@@ -13,8 +13,8 @@ context:
   lens: DOM/CONT
 state:
   status: active
-  version: 9
-  updated_at: '2026-11-26T19:10:38.512071+00:00'
+  version: 10
+  updated_at: "2026-11-28T10:28:09.160093+00:00"
 ---
 
 ## Summary
@@ -29,7 +29,7 @@ Declare SSOT
 from anechoic.model import Artifact
 
 class SSOT(Artifact):
-    node.axes = {'Persistence': 'Artifact', 'Authority': 'SSOT'}
+    node.axes = {'Authority': 'SSOT'}
 ```
 
 ## Semantics

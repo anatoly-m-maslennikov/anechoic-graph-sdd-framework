@@ -7,10 +7,10 @@ from typing import get_type_hints
 from pydantic import TypeAdapter, ValidationError
 from pydantic.dataclasses import is_pydantic_dataclass
 
-from ....FEATURE_TOOLS.ADAPTERS_C30.atom_reference__pub import (
+from ....FEATURE_TOOLS.ADAPTERS_C30.carriers.content.atom_reference__pub import (
     is_native_atom_reference,
 )
-from ....FEATURE_TOOLS.ADAPTERS_C30.cardinality__pub import (
+from ....FEATURE_TOOLS.ADAPTERS_C30.model.cardinality__pub import (
     cardinality_bounds,
 )
 
@@ -202,6 +202,13 @@ def _validate_direct_value(field, field_type, value, ancestors):
     _validate_field_value(field.name, field_type, value, metadata)
 
 
+def _values_in_domain(values, domain):
+    for value in values:
+        if value not in domain:
+            return False
+    return True
+
+
 def _validate_field_value(name, field_type, value, metadata):
     try:
         adapter = (
@@ -220,8 +227,8 @@ def _validate_field_value(name, field_type, value, metadata):
     if not _same_types(value, validated):
         raise ValueError(f"{name}: value requires type conversion")
     values = value if isinstance(value, (list, tuple)) else (value,)
-    if "allowed_values" in metadata and any(
-        item not in metadata["allowed_values"] for item in values
+    if "allowed_values" in metadata and not _values_in_domain(
+        values, metadata["allowed_values"]
     ):
         raise ValueError(
             f"{name}: value must be one of "

@@ -23,7 +23,7 @@ from .group_model__pub import (
     _names as _names,
     parse_group as parse_group,
 )
-from .http_contract import HTTP_CHECKS as HTTP_CHECKS
+from .contract_model._package__shared import HTTP_CHECKS as HTTP_CHECKS
 from .manifest_validation__pub import validate_manifest as validate_manifest
 from .shape_model__pub import (
     manifest_shape as manifest_shape,

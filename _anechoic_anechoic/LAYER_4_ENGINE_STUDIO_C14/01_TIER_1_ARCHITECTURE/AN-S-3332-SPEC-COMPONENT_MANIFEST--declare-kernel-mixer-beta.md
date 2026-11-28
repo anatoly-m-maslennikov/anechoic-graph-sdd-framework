@@ -8,9 +8,9 @@ context:
   template: component_manifest
   lens: SPEC
 state:
-  status: "active"
-  version: 5
-  updated_at: "2026-11-26T15:52:27.322006+00:00"
+  status: active
+  version: 7
+  updated_at: "2026-11-28T15:16:37.698017+00:00"
 ---
 ## Summary
 
@@ -30,7 +30,7 @@ from anechoic.model import ComponentManifest
 ComponentManifest(
     component_id='C67',
     name='Kernel Mixer Beta',
-    lens_whitelist=['DES', 'SPEC'],
+    lens_whitelist=['DES', 'SPEC', 'SWD/INTERNAL_API/IPC'],
 )
 ```
 
@@ -80,9 +80,7 @@ Kernel process. Bind the server to one Project instance. Admit the paired
 artifacts and Project snapshot as one generation; retain the prior generation
 if admission fails.
 
-For a request bound to that instance, serve the accepted Model or Structure
-bytes with their generation ID. Before admission, report that no generation
-is available. Reject a request for another instance.
+Apply AN-S-5191 to the Model and Structure replies.
 
 #### References
 

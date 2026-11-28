@@ -6,12 +6,12 @@ from pathlib import Path, PurePosixPath
 import sys
 
 from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.\
-    FEATURE_MODEL_VALIDATION.FEATURE_MODEL_VALIDATION__shared \
+    FEATURE_MODEL_VALIDATION.access._package__shared \
     import check_code_access  # fmt: skip
 
-from .code_access_occurrences import code_access_occurrences
-from .source import capture
-from .web_imports import _WEB
+from .RESOLUTION.code_access_occurrences import code_access_occurrences
+from .SOURCE_CAPTURE.SOURCE_CAPTURE__shared import capture
+from .SOURCE_CAPTURE.web_imports import _WEB
 
 
 def _provider(site, sources):

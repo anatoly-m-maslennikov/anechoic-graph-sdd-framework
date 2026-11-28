@@ -13,11 +13,11 @@ from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IMPORT_GRAPH_C61.\
     import_graph__shared \
     import run_graph_build  # fmt: skip
 
-from .python_code_units import python_code_units
-from .python_context_restoration import python_context_restoration
-from .python_import_order import python_import_order
-from .web_export_aliases import web_export_aliases
-from .web_import_review import web_import_review
+from WORKERS_beta_C69.analysis.analysis__shared import python_code_units
+from WORKERS_beta_C69.analysis.analysis__shared import python_context_restoration
+from WORKERS_beta_C69.analysis.analysis__shared import python_import_order
+from WORKERS_beta_C69.web_analysis.web_analysis__shared import web_export_aliases
+from WORKERS_beta_C69.web_analysis.web_analysis__shared import web_import_review
 
 
 def _imports(sources, occurrences):
@@ -44,7 +44,7 @@ def _imports(sources, occurrences):
 
 
 def _web_code_units(sources, imports):
-    script = Path(__file__).with_name("web_code_units.ts")
+    script = Path(__file__).parent / "web_analysis" / "web_code_units.ts"
     links = {
         path: [
             [line, written, target]

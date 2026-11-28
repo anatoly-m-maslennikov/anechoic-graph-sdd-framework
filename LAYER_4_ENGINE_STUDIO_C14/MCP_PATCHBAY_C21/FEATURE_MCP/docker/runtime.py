@@ -1,7 +1,5 @@
+"Explicit Project-scoped Docker lifecycle; never creates Workflow requests."
 
-"""Explicit Project-scoped Docker lifecycle; never creates Workflow requests."""
-
-import argparse
 import hashlib
 import json
 import os
@@ -13,14 +11,18 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 try:
-    from .image_reference import IMMUTABLE_IMAGE, image_reference
-    from .mcp_paths import MCP_PATH
+    from .image_runtime.cli.cli__shared import run_cli
+    from .image.image__shared import IMMUTABLE_IMAGE, image_reference
+    from .shared_support.shared_support__shared import MCP_PATH
 except ImportError:
-    from MCP_PATCHBAY_C21.FEATURE_MCP.docker.image_reference import (
+    from MCP_PATCHBAY_C21.FEATURE_MCP.docker.image_runtime.cli.\
+        cli__shared import run_cli
+    from MCP_PATCHBAY_C21.FEATURE_MCP.docker.image.image__shared import (
         IMMUTABLE_IMAGE,
         image_reference,
     )
-    from MCP_PATCHBAY_C21.FEATURE_MCP.docker.mcp_paths import MCP_PATH
+    from MCP_PATCHBAY_C21.FEATURE_MCP.docker.shared_support.\
+        shared_support__shared import MCP_PATH
 
 DIRECTORY = Path(__file__).resolve().parent
 SOURCE_ROOT = DIRECTORY.parents[3]
@@ -41,6 +43,8 @@ def _startup_diagnostic(value: object) -> str:
         r"(?i)\b([a-z][a-z0-9+.-]*://)[^/\s@]+@", r"\1[redacted]@", value
     )
     return value[-_DIAGNOSTIC_LIMIT:]
+
+
 class Runtime:
     def __init__(self, root, *, image=None):
         self.root = Path(root).resolve(strict=True)
@@ -52,7 +56,10 @@ class Runtime:
                 "Runtime image must be an immutable sha256 image ID"
             )
         self.image = image
-        self.project = "anechoic-" + hashlib.sha256(str(self.root).encode()).hexdigest()[:12]
+        self.project = (
+            "anechoic-"
+            + hashlib.sha256(str(self.root).encode()).hexdigest()[:12]
+        )
 
     def environment(self):
         environment = dict(
@@ -99,9 +106,13 @@ class Runtime:
                 path.mkdir(exist_ok=True)
             resolved = path.resolve(strict=True)
         except OSError as error:
-            raise ValueError("Runtime temporary root is unavailable") from error
+            raise ValueError(
+                "Runtime temporary root is unavailable"
+            ) from error
         if not path.is_dir() or resolved != path:
-            raise ValueError("Runtime temporary root must be a project directory")
+            raise ValueError(
+                "Runtime temporary root must be a project directory"
+            )
         return path
 
     def _image_manager(self, *, create_temp=False, timeout=600):
@@ -155,8 +166,14 @@ class Runtime:
 
     def status(self):
         raw = self.call("ps", "--all", "--format", "json")
-        services = [json.loads(line) for line in raw.splitlines() if line.strip()]
-        return {"runtime": "docker", "project_name": self.project, "services": services}
+        services = [
+            json.loads(line) for line in raw.splitlines() if line.strip()
+        ]
+        return {
+            "runtime": "docker",
+            "project_name": self.project,
+            "services": services,
+        }
 
     def _http_port(self):
         value = os.environ.get("ANECHOIC_MCP_HTTP_PORT", "")
@@ -167,16 +184,22 @@ class Runtime:
                 "Set ANECHOIC_MCP_HTTP_PORT to an integer in 1..65535"
             ) from error
         if not 1 <= port <= 65535:
-            raise ValueError("Set ANECHOIC_MCP_HTTP_PORT to an integer in 1..65535")
+            raise ValueError(
+                "Set ANECHOIC_MCP_HTTP_PORT to an integer in 1..65535"
+            )
         return port
 
     @staticmethod
     def _http_publisher_admitted(status, port):
-        """Require the exact host binding before advertising an HTTP endpoint."""
+        "Require the exact host binding before advertising an HTTP endpoint."
         services = status.get("services") if isinstance(status, dict) else None
         if not isinstance(services, list):
             return False
-        rows = [row for row in services if isinstance(row, dict) and row.get("Service") == "mcp-http"]
+        rows = [
+            row
+            for row in services
+            if isinstance(row, dict) and row.get("Service") == "mcp-http"
+        ]
         if len(rows) != 1:
             return False
         row = rows[0]
@@ -198,16 +221,33 @@ class Runtime:
         self.prepare()
         port = self._http_port()
         self._ensure_launch_image()
-        self.call("up", "-d", "--wait", "--wait-timeout", "420", "--force-recreate", "mcp-http",
-                  http=True, timeout=450)
+        self.call(
+            "up",
+            "-d",
+            "--wait",
+            "--wait-timeout",
+            "420",
+            "--force-recreate",
+            "mcp-http",
+            http=True,
+            timeout=450,
+        )
         if not self._http_publisher_admitted(self.mcp_http_status(), port):
             raise RuntimeError("HTTP MCP published listener admission failed")
-        return {"runtime": "docker", "service": "mcp-http", "outcome": "ready",
-                "url": f"http://127.0.0.1:{port}{MCP_PATH}"}
+        return {
+            "runtime": "docker",
+            "service": "mcp-http",
+            "outcome": "ready",
+            "url": f"http://127.0.0.1:{port}{MCP_PATH}",
+        }
 
     def mcp_http_stop(self):
         self.call("stop", "mcp-http", http=True, timeout=60)
-        return {"runtime": "docker", "service": "mcp-http", "outcome": "stopped"}
+        return {
+            "runtime": "docker",
+            "service": "mcp-http",
+            "outcome": "stopped",
+        }
 
     def mcp_http_status(self):
         raw = self.call("ps", "--all", "--format", "json", http=True)
@@ -227,101 +267,8 @@ class Runtime:
         return result
 
 
-def _project_mcp_port(value):
-    try:
-        port = int(value)
-    except (TypeError, ValueError) as error:
-        raise argparse.ArgumentTypeError(
-            "--port must be an integer in 1..65535"
-        ) from error
-    if not 1 <= port <= 65535:
-        raise argparse.ArgumentTypeError(
-            "--port must be an integer in 1..65535"
-        )
-    return port
-
-
-def _parser():
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--project-root", type=Path, default=SOURCE_ROOT)
-    parser.add_argument("--image", help=argparse.SUPPRESS)
-    parser.add_argument("--control-root", help="Direct _anechoic_<project> or legacy .anechoic_<project> folder, when explicit selection is needed")
-    parser.add_argument("--source-root", type=Path, help="Explicit Framework checkout with image build inputs; required for project-mcp")
-    parser.add_argument(
-        "--startup-timeout",
-        type=float,
-        default=420,
-        help="Bound startup/readiness seconds (maximum 420)",
-    )
-    parser.add_argument(
-        "--build-timeout",
-        type=float,
-        default=600,
-        help="Bound image build seconds (maximum 600)",
-    )
-    parser.add_argument(
-        "--no-build",
-        action="store_true",
-        help="Refuse a missing compatible image instead of building",
-    )
-    parser.add_argument("--image-mode", choices=("refresh", "existing"),
-                        help="Asset selection for build (default: refresh)")
-    parser.add_argument("--port", type=_project_mcp_port,
-                        help="Assert the Project Settings HTTP port for project-mcp (1..65535)")
-    parser.add_argument(
-        "--output",
-        choices=["json", "url"],
-        default="json",
-        help="Project MCP result format",
-    )
-    parser.add_argument(
-        "operation", choices=["build", "status", "logs", "mcp",
-                              "mcp-http-start", "mcp-http-stop", "mcp-http-status", "project-mcp"]
-    )
-    return parser
-
-
 def main():
-    parser = _parser()
-    args = parser.parse_args()
-    if args.image_mode is not None and args.operation != "build":
-        parser.error("--image-mode applies to build only")
-    if args.operation == "project-mcp":
-        from MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_launcher import Launcher
-        result = Launcher().launch(args.project_root, None, control_root=args.control_root,
-            image=args.image, source_root=args.source_root, timeout=args.startup_timeout,
-            port=args.port, build_if_missing=not args.no_build, build_timeout=args.build_timeout)
-        ready = result.get("disposition") in ("started", "reused") and result.get("readiness") is True
-        print(result["url"] if args.output == "url" and ready else json.dumps(result, sort_keys=True))
-        return 0 if ready else 1
-    runtime = Runtime(args.project_root, image=args.image)
-    if args.operation == "build":
-        if not 0 < args.build_timeout <= 600:
-            parser.error("--build-timeout must be within (0, 600]")
-        print(
-            runtime.build(
-                use_packaged_assets=args.image_mode == "existing",
-                timeout=args.build_timeout,
-            )
-        )
-    elif args.operation == "status":
-        print(json.dumps(runtime.status()))
-    elif args.operation == "logs":
-        runtime.call("logs", "--tail", "100", capture=False)
-    elif args.operation == "mcp-http-start":
-        print(json.dumps(runtime.mcp_http_start()))
-    elif args.operation == "mcp-http-stop":
-        print(json.dumps(runtime.mcp_http_stop()))
-    elif args.operation == "mcp-http-status":
-        print(json.dumps(runtime.mcp_http_status()))
-    else:
-        runtime.prepare()
-        runtime._ensure_launch_image()
-        os.execvpe(
-            "docker",
-            runtime.command("run", "--rm", "--no-deps", "-T", "mcp"),
-            runtime.environment(),
-        )
+    return run_cli(Runtime, SOURCE_ROOT, __doc__)
 
 
 if __name__ == "__main__":

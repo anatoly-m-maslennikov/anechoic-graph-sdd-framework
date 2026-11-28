@@ -9,8 +9,8 @@ context:
   label: Task
 state:
   status: in_queue
-  version: 23
-  updated_at: '2026-11-27T13:13:16.498406+00:00'
+  version: 41
+  updated_at: "2026-11-28T00:07:21.754170+00:00"
 ---
 ## Summary
 
@@ -395,3 +395,234 @@ characters, literal escape spellings, Unicode, and surrogate rejection.
 The C88 comparison passed with the new encoder pin. Fresh Autoform
 execution of the encoder stops at string join or hexadecimal formatting.
 Translated encoder execution remains unresolved.
+
+### Bounded C88 JSON and worker replay
+
+Fresh translation of the seven pinned implementation files used an
+isolated Autoform model for the exact JSON options in the worker. Four
+inputs produced the same bytes as Python and matched 23 independent
+comparison facts in Lean. The cases cover nested values, Unicode,
+escaping, missing values, and Boolean, null, and integer distinctions.
+The model refuses different JSON options. It excludes floats and other
+unsupported values.
+
+The translated public entry advanced to the Python default argument
+boundary. General JSON, public invocation, and runtime process effects
+remain unresolved.
+
+### C88 public reports with a guarded runner
+
+The translated public entry produced four reports with all 23 facts and
+three direction names in the expected order. Independent typed
+expectations matched each report. Corrupted expectations conflicted.
+Changed worker bytes and an unexpected Lean executable stayed
+unsupported.
+
+The replay used the bounded JSON model and supplied actual Lean worker
+outputs only when the program bytes and executable matched. The
+translated comparison and report bodies ran without substitutions.
+Direct execution through the Python runner, other inputs, and external
+process behavior remain unresolved.
+
+The live Python entry also returned those four reports through the real
+Lean subprocess. The runner rejected invalid JSON and a nonzero Lean
+exit. The Autoform replay still supplies the process result at its
+explicit boundary.
+
+## Current C89 and C95 verification
+
+For the pinned C86-to-C84 call, C89 admitted the declared sibling and
+refused the wrong parent and missing client interface. Six cases passed
+through the translated admission predicate. Lean rejected a control that
+ignored the interface. Other delegated arguments and exact return values
+remain unresolved.
+
+C95 returned the same exact carrier digests in staged and offline reads
+with AN-S-5021@3 and AN-S-5023@2. Both modes refused the stale Manifest
+revision. Lean matched the captured snapshot ID, rejected an empty ID,
+and reported an unobserved ID as unresolved. This uses an in-process
+DuckDB route. Full translated source loading remains unresolved.
+
+## Current C89 module and C84 literal replay
+
+The full pinned C89 module emitted under Python 3.14 and passed all
+six admission cases in Lean. The interface mutation changed only the
+wrong-interface result. The exporter omitted signature metadata under
+Python 3.15 because the generator scope name changed. Other C89
+implementation paths remain unresolved.
+
+The pinned C84 encoder matched Python on seven inputs with a bounded
+join model. Lean rejected a changed opening quote and parsed the
+original Python output for nine inputs. The two translated control
+cases still require the hexadecimal formatting model.
+
+## Current workflow and diagnostic checks
+
+The C75 workflow test now selects AN-S-5022@9 and displays admission
+diagnostics before checking the source receipt. All six workflow tests
+passed. The translated check rejected the renderer receiving the raw
+configuration. The registered C89 full-source admission test also passed.
+
+C90's fresh verdict and finding proofs exceeded the 120-second guard.
+The prior proved Python source and public export have the same ASTs as
+the current files. The formal source digests agree, and 341 native
+verdict cases passed. The fresh proofs remain unresolved.
+
+The scratch C84 hexadecimal model failed to compile in Autoform Stdlib.
+The native round-trip checks passed, and the two translated control
+cases remain unsupported.
+
+## Bounded C84 control-character replay
+
+The C84 encoder passed all nine cases with a scratch-only formatter and
+join model. The formatter matched Python across all 256 byte values
+and refused other values or format specifiers. Lean rejected a change
+to the C1 upper boundary. The emitted encoder body was preserved apart
+from a redirect of the exact formatter call. Native Autoform still
+leaves that call unsupported.
+
+## Current C90 Lean proof
+
+The serial verifier proved the current finding and verdict obligations.
+It left the precedence mutation unresolved. Both runs used the normal
+120-second proof deadline and the current source pins. This resolves
+the earlier timeout for these obligations. Other C90 coverage remains
+as recorded above.
+
+## Current C87 renderer replay
+
+Both pinned public renderer tests passed. The verifier detected a stale
+implementation pin and a dispatcher that dropped its diagram. It left a
+different diagram unresolved. A Solution requiring an unobserved output
+field withheld a passing result even when the observed call forms
+matched. These tests cover the selected shape cases.
+
+## Current C83, C88 and C92 replay
+
+Autoform Lean accepted the exact C83 link to AN-S-4930@2 and refused
+the stale link to @1. Removing the version check from the Python
+source made the translated negative control fail. C83 preserved
+the refused Solution source and relation field in native staged
+execution. Lean exposed the exception type only.
+
+C88's public comparison matched the pinned mixed witness across
+all three directions and refused a stale implementation digest.
+
+C92 generated 134 cases from the pinned C30 framing Specs. Lean
+agreed with both role results for every case. A one-byte slice
+mutation in C92 changed 40 cases, and Lean rejected the output.
+Direct Autoform execution remains unresolved at map.
+
+The selected C75 Functional modules ran 140 tests with three
+skips and no failed modules. The optional C88 replay passed
+separately. The full implementation comparison remains open.
+
+## Frozen implementation replay
+
+The scoped Engine Studio snapshot passed the C75, C87, C88, and C89
+implementation replay cases. C90 passed the shared verdict policy
+case and rejected a wrong diagnostic message. The reordered diagnostic
+case proved all finding values but left the verdict proof unresolved
+after 120 seconds. Six of seven selected tests passed. All pinned
+candidate digests matched after the run.
+
+Keep full implementation comparison open. This replay covers the
+selected witnesses and mutations. The C90 result does not establish
+verdict conformance for the reordered diagnostic case.
+
+## Current C85 normalization replay
+
+The current translated C85 normalizer matched three witnesses with
+Active AN-S-4932@2 and AN-S-5026@3. Lean rejected changing the Solution
+finding's source to the Manifest source. The replay uses captured
+Python parser and validator outputs and a verified prior translation
+of the diagnostic function. Full translated execution of those
+dependencies and external effects remains unresolved.
+
+## C90 reordered diagnostic replay
+
+The instrumented replay proved both the diagnostic values and the
+public verdict for the exact reordered implementation that timed out.
+The Manifest, Solution, authored Lean and verdict proof digests match
+the prior result. The proof deadline was 120 seconds in both runs.
+The full frozen run still records its original timeout.
+
+## C85 authored comparison
+
+The public formal verifier compiled AN-S-4932@2 and AN-S-5026@3.
+A bounded Lean check related the translated nominal return to the
+authored normalization effect and output. Lean rejected changing
+the Contract's model binding or the Solution's terminal output.
+
+The check maps a normalized return to the declared effect. Runtime
+event emission, ordering, full translated dependencies, and Code
+Access context remain unresolved.
+
+## Current C88 implementation pin
+
+The width change to the C88 comparison source required a new
+implementation digest. The public verifier and test request now
+use that digest. All three C88 tests passed. The translated mixed
+witness matched, the changed source was refused, and Lean rejected
+the swapped worker classifications.
+
+## C89 sibling admission and C95 pin validation
+
+Both C89 public checks matched a pair whose pinned parent headers
+contained only whitespace. The C89 Contract requires a nonempty
+common parent. C95 now refuses blank source identity strings before
+loading the carriers. The exact-pin regression failed on both calls
+before the fix and passed after it. Twenty-two native tests passed,
+including the original valid sibling control.
+
+The exact translated C89 predicate accepted an omitted transport for
+an in-process call and refused it for HTTP. The interface mutation
+still failed its comparison. This check covers the admission predicate.
+Full translated C95 loading and C89 orchestration remain unresolved.
+
+## C89 delegated outcome report
+
+The pinned C86 to C84 sibling call returned three matched directions
+through C88. Autoform could not evaluate C89's list unpacking when it
+assembled this report. The report now copies the unresolved rows and
+appends caller diagnostics. The exact translated return helper
+preserved the complete captured report, including both unresolved
+rows. Lean detected a mutation that dropped those rows.
+
+Eighteen native sibling and delegation tests passed. With a missing
+event the public call returns an unresolved report and a caller
+diagnostic. Translation still stops before appending the diagnostic.
+The replay uses the actual C88 result as input. Full C89 orchestration
+and rejected admission effects remain separate coverage limits.
+
+## Missing-event report and source pin coverage
+
+The current C89 report helper copies the provider's unresolved rows
+into a fresh list, then appends caller diagnostics. The real pinned
+sibling calls produced the same matched and missing-event reports.
+Lean reproduced both reports from their captured C88 inputs.
+It detected the mutation that dropped the missing-event diagnostic.
+
+Thirty-three focused tests passed with zero skips. The registered
+canonical sibling suite now has a regression for the caller
+diagnostic and its exact source pin. That regression passed separately
+after placement in the registered suite.
+
+Fresh translation of C95's pin check reached an unsupported subtraction
+when Lean evaluated the pin's key set. The input was the exact Active
+AN-S-5021@3 pin. The emitted string-field generator is also unsupported.
+This leaves full C95 pin execution and C89 orchestration unresolved.
+
+## C95 exact-pin execution limits
+
+Native offline reading accepted the exact Active AN-S-5021@3 pin,
+refused version 2 at state.version, and refused a changed digest at
+sha256. Autoform stopped on key-set subtraction in the exact pin check.
+A scratch field-check version reached Python's str.strip and stopped.
+
+A guarded Lean replay supplied the native carrier metadata and digest
+after checking the observed dependency arguments. All three cases
+reached the exact header code and stopped at Python's type call.
+The optional PastaLean translation of the exact source refused
+re.fullmatch. The native results therefore remain distinct from
+the unresolved translated acceptance and refusal cases.

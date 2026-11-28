@@ -13,8 +13,8 @@ context:
   lens: DOM/CONT
 state:
   status: "active"
-  version: 5
-  updated_at: "2026-11-26T15:52:33.265986+00:00"
+  version: 6
+  updated_at: "2026-11-28T11:00:50.522707+00:00"
 ---
 
 ## Summary
@@ -30,5 +30,5 @@ from anechoic.model import NodeConstraints, Project, ProjectGoal
 
 class Constraints(NodeConstraints):
     bearer = ProjectGoal
-    node.constraints.instance_relations = {'IS_CONTAINED_BY': {'target_entity_paths': (Project,), 'targets_per_source': 1}}
+    node.constraints.instance_relations = {'IS_CONTAINED_BY': {'target_entity_paths': (Project,)}}
 ```

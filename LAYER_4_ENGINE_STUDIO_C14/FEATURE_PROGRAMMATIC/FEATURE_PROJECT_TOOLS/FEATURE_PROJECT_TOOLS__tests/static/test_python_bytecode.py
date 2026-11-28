@@ -7,11 +7,13 @@ import subprocess
 from tempfile import TemporaryDirectory
 import unittest
 
+
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.test_suite__shared import (
     CODE_ROOTS,
     run_full_suite,
 )
-from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.test_suite__shared import (
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.\
+    language_checks.python_bytecode import (
     python_findings,
     shell_findings,
     unsafe,
@@ -20,6 +22,34 @@ from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.test_suite__shared import (
 
 
 class PythonBytecodeTests(unittest.TestCase):
+    def test_static_phase_excludes_generated_state(self):
+        root, _, launcher = self.make_launcher()
+        launcher.touch()
+        unsafe_source = (
+            "import subprocess\n\n"
+            'subprocess.run(["python", "worker.py"], check=True)\n'
+        )
+        for parent in (root, launcher.parent):
+            for name in (".anechoic_runtime", ".anechoic_tmp"):
+                folder = parent / name
+                (folder / "__pycache__").mkdir(parents=True)
+                tracked = folder / "tracked.py"
+                tracked.write_text(unsafe_source)
+                (folder / "untracked.py").write_text(unsafe_source)
+                subprocess.run(
+                    ("git", "add", "--force", "--", str(tracked)),
+                    cwd=root,
+                    check=True,
+                )
+
+        with (
+            redirect_stdout(StringIO()),
+            redirect_stderr(StringIO()) as errors,
+        ):
+            self.assertEqual(
+                0, run_full_suite(root, phase="static"), errors.getvalue()
+            )
+
     def test_interpreter_options_stop_at_target(self):
         self.assertTrue(unsafe(["python", "app.py", "-B"]))
         self.assertTrue(unsafe(["python", "-m", "tool", "-B"]))

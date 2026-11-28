@@ -9,11 +9,11 @@ context:
   lens: DevOps
 relations:
   ANSWERS:
-  - AN-S-3290@15-draft
+  - AN-S-3290@19-draft
 state:
   status: draft
   version: 10
-  updated_at: '2026-11-25T09:38:50.838724+00:00'
+  updated_at: '2026-11-28T10:13:43.794431+00:00'
 ---
 
 ## Summary
@@ -24,20 +24,20 @@ Gate and install a local Framework release.
 
 ### Prose Claim
 
-Validate the inputs and report completion or failure with evidence. C81 builds
-the candidate from the selected checkout through `build_project_image` and
-returns the image. C63 verifies and installs that image.
+Local Release checks prerequisites, runs the host gates, builds the candidate,
+and verifies the image suite and MCP canary as separate phases. Standalone
+image verification ends with verification evidence.
 
-C81 launches the Project runtime through `start_project_runtime` with that image
-and the Project Manifest port, and returns a health-checked MCP endpoint. C81
-uses `start_container` to launch Docker directly for the Project runtime. Report the failed step and observed effects on failure.
-
-A healthy production endpoint promotes the installed Project runtime. Update
-the production image display tag next. If it fails, report cleanup pending and
-skip obsolete image removal, build cache pruning, and temporary file pruning.
-Otherwise apply retention and report incomplete cleanup separately.
+Each continuation keeps the Run ID, target, and candidate version. Before
+delivery, it accepts the corrected exact source revision and reuses each
+passing phase whose inputs and evidence still match. The delivery claim
+pins the accepted revision and exact artifact. Reconcile the artifact before
+repeating an effect. After verified promotion, resume only pending cleanup.
 
 ### Formal Claim
+
+This claim covers a fresh same-Project attempt. The run journal provides
+evidence for continuations.
 
 ```python
 component_workflow(
@@ -54,94 +54,58 @@ component_workflow(
             'preparing': {'on': {
                 'inputs_validated_and_version_bumped': {'target': 'testing', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'effect', 'target': 'C63'}}},
-                'preparation_failed': {'target': 'reporting_failure', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'effect', 'target': 'release_failure', 'outcome': 'reported'}}},
+                'preparation_failed': {'target': 'failed', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'output', 'outcome': 'failed'}}},
             }},
             'testing': {'on': {
                 'static_passed': {'target': 'functional_testing', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'effect', 'target': 'C19', 'outcome': 'passed', 'detail': {'release_stage': 'static',
-                                'component': 'C19', 'action': 'run_release_test_phase',
-                                'output': 'static_passed'}}}},
-                'tests_failed': {'target': 'reporting_failure', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'effect', 'target': 'release_failure', 'outcome': 'reported'}}},
-            }},
-            'functional_testing': {'on': {
-                'host_functional_tests_passed': {'target': 'building', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'effect', 'target': 'C19', 'outcome': 'passed', 'detail': {'release_stage': 'functional',
-                                'component': 'C19', 'action': 'run_release_test_phase',
-                                'output': 'functional_passed'}}}},
-                'tests_failed': {'target': 'reporting_failure', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'effect', 'target': 'release_failure', 'outcome': 'reported'}}},
-            }},
-            'building': {'on': {
-                'candidate_image_prepared': {'target': 'awaiting_candidate_image', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'effect', 'target': 'C81', 'outcome': 'succeeded', 'detail': {'release_stage': 'build', 'image_ref': 'release_candidate'}}}},
-                'build_failed': {'target': 'reporting_failure', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'effect', 'target': 'release_failure', 'outcome': 'reported'}}},
-            }},
-            'awaiting_candidate_image': {'on': {
-                'candidate_image_returned': {'target': 'verifying', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'effect', 'target': 'C81.image', 'outcome': 'built', 'detail': {'component': 'C81', 'action': 'build_project_image', 'output': 'succeeded'}}}},
-                'build_failed': {'target': 'reporting_failure', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'effect', 'target': 'release_failure', 'outcome': 'reported'}}},
-            }},
-            'verifying': {'on': {
-                'candidate_image_verified': {'target': 'installing', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'effect', 'target': 'C19', 'outcome': 'passed', 'detail': {'release_stage': 'verify_image', 'image_ref': 'release_candidate',
-                                'component': 'C19', 'action': 'run_release_test_phase',
-                                'output': 'image_passed'}}}},
-                'verification_failed': {'target': 'reporting_failure', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'effect', 'target': 'release_failure', 'outcome': 'reported'}}},
-            }},
-            'installing': {'on': {
-                'candidate_installed': {'target': 'starting', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'effect', 'target': 'C63', 'outcome': 'succeeded', 'detail': {'release_stage': 'install', 'image_ref': 'release_candidate'}}}},
-                'installation_failed': {'target': 'reporting_failure', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'effect', 'target': 'release_failure', 'outcome': 'reported'}}},
-            }},
-            'starting': {'on': {
-                'project_runtime_started': {'target': 'awaiting_healthy_endpoint', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'effect', 'target': 'C81', 'outcome': 'succeeded', 'detail': {'release_stage': 'start', 'image_ref': 'release_candidate'}}}},
-                'runtime_start_failed': {'target': 'reporting_failure', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'effect', 'target': 'release_failure', 'outcome': 'reported'}}},
-            }},
-            'awaiting_healthy_endpoint': {'on': {
-                'healthy_endpoint_received': {'target': 'promoting', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'effect', 'target': 'C81.mcp_endpoint', 'outcome': 'healthy', 'detail': {'component': 'C81', 'action': 'start_project_runtime', 'output': 'succeeded'}}}},
-                'runtime_start_failed': {'target': 'reporting_failure', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'effect', 'target': 'release_failure', 'outcome': 'reported'}}},
-            }},
-            'promoting': {'on': {
-                'candidate_promoted': {'target': 'tagging', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'effect', 'target': 'project_runtime', 'outcome': 'promoted'}}},
-            }},
-            'tagging': {'on': {
-                'display_tag_updated': {'target': 'cleaning', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'effect', 'target': 'production_image_display_tag', 'outcome': 'updated'}}},
-                'display_tag_failed': {'target': 'tag_failure_pending', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'effect', 'target': 'production_image_display_tag', 'outcome': 'failed'}}},
-            }},
-            'tag_failure_pending': {'on': {
-                'cleanup_pending_after_tag_failure': {'target': 'reporting_cleanup_pending', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'effect', 'target': 'eligible_cleanup', 'outcome': 'pending'}}},
-            }},
-            'cleaning': {'on': {
-                'eligible_cleanup_completed': {'target': 'reporting', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'effect', 'target': 'eligible_cleanup', 'outcome': 'completed'}}},
-                'release_cleanup_pending': {'target': 'reporting_cleanup_pending', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'effect', 'target': 'eligible_cleanup', 'outcome': 'pending'}}},
-            }},
-            'reporting_failure': {'on': {
-                'failure_reported': {'target': 'failed', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'static tests', 'outcome': 'passed'}}},
+                'tests_failed': {'target': 'failed', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'output', 'outcome': 'failed'}}},
             }},
-            'reporting_cleanup_pending': {'on': {
-                'cleanup_pending_reported': {'target': 'cleanup_pending', 'guard': {'type': 'matchesTrace', 'params':
-                    {'kind': 'output', 'outcome': 'completed_with_cleanup_pending'}}},
+            'functional_testing': {'on': {
+                'functional_passed': {'target': 'building', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'functional tests', 'outcome': 'passed'}}},
+                'tests_failed': {'target': 'failed', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'output', 'outcome': 'failed'}}},
+            }},
+            'building': {'on': {
+                'candidate_image_prepared': {'target': 'checking_image_suite', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'prepare candidate image', 'outcome': 'completed'}}},
+                'build_failed': {'target': 'failed', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'output', 'outcome': 'failed'}}},
+            }},
+            'checking_image_suite': {'on': {
+                'image_suite_passed': {'target': 'checking_mcp_canary', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'verify candidate image', 'outcome': 'passed'}}},
+                'image_suite_failed': {'target': 'failed', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'output', 'outcome': 'failed'}}},
+            }},
+            'checking_mcp_canary': {'on': {
+                'mcp_canary_passed': {'target': 'installing', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'verify candidate canary', 'outcome': 'passed'}}},
+                'mcp_canary_failed': {'target': 'failed', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'output', 'outcome': 'failed'}}},
+            }},
+            'installing': {'on': {
+                'package_installed': {'target': 'starting', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'copy product to installed framework', 'outcome': 'completed'}}},
+                'installation_failed': {'target': 'failed', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'output', 'outcome': 'failed'}}},
+            }},
+            'starting': {'on': {
+                'runtime_installed_and_started': {'target': 'reporting', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'effect', 'target': 'C63'}}},
+                'installation_failed': {'target': 'failed', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'output', 'outcome': 'failed'}}},
             }},
             'reporting': {'on': {
+                'finalization_failed': {'target': 'failed', 'guard': {
+                    'type': 'matchesTrace', 'params': {'kind': 'output', 'outcome': 'failed'}}},
                 'release_completed': {'target': 'completed', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'output', 'outcome': 'completed'}}},
+                'release_cleanup_pending': {'target': 'cleanup_pending', 'guard': {'type': 'matchesTrace', 'params':
+                    {'kind': 'output', 'outcome': 'completed_with_cleanup_pending'}}},
             }},
             'completed': {'type': 'final'},
             'failed': {'type': 'final'},
@@ -150,3 +114,8 @@ component_workflow(
     },
 )
 ```
+
+## Details
+
+This Solution defines the expected event sequence for the selected workflow.
+Trace conformance requires recorded evidence.

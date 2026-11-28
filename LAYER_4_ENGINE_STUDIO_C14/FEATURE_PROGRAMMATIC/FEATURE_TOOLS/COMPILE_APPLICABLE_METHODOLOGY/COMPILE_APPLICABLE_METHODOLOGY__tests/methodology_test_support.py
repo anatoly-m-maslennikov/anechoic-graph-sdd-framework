@@ -13,6 +13,11 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import (
     SETTINGS_PATH,
 )
 
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.COMPILE_APPLICABLE_METHODOLOGY.\
+    COMPILE_APPLICABLE_METHODOLOGY__tests._scope_fixture \
+    import write_methodology_scope  # fmt: skip
+
+
 TOOL = (
     Path(__file__).resolve().parents[1] / "compile_applicable_methodology.py"
 )
@@ -23,8 +28,6 @@ assert SPEC and SPEC.loader
 module = importlib.util.module_from_spec(SPEC)
 sys.modules[SPEC.name] = module
 SPEC.loader.exec_module(module)
-
-
 
 
 def carrier(
@@ -59,8 +62,6 @@ def term_definition_carrier(atom_id: str, subject: str) -> bytes:
 
 class CompilerFixture(unittest.TestCase):
     def setUp(self) -> None:
-        from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import write_scope_unit_declarations
-
         temporary = Path.cwd() / ".anechoic_tmp/compiler-tests"
         temporary.mkdir(parents=True, exist_ok=True)
         self.temp = Path(tempfile.mkdtemp(prefix="case-", dir=temporary))
@@ -72,15 +73,7 @@ class CompilerFixture(unittest.TestCase):
                 '".anechoic_anechoic"\n'
             )
         )
-        self.declarations = write_scope_unit_declarations(
-            self.temp,
-            (
-                {"scope_unit_name": "METHODOLOGY_SOURCES", "parent": "PROJECT", "scope_unit_type": "Unordered"},
-                {"scope_unit_name": "CORE_META_MODEL", "parent": "METHODOLOGY_SOURCES", "scope_unit_type": "Unordered"},
-                {"scope_unit_name": "INSTALLED_EXTENSIONS", "parent": "METHODOLOGY_SOURCES", "scope_unit_type": "Unordered"},
-                {"scope_unit_name": "PROJECT_CONFIGURATION", "parent": "METHODOLOGY_SOURCES", "scope_unit_type": "Unordered"},
-            ),
-        )
+        self.declarations = write_methodology_scope(self.temp)
         self.source = Path(
             self.declarations["METHODOLOGY_SOURCES"]["authority_path"]
         )
@@ -91,26 +84,33 @@ class CompilerFixture(unittest.TestCase):
             name: Path(self.declarations[name]["authority_path"])
             for name, _, _ in module.LAYERS
         }
-        self.logical_layers = dict(zip(
-            ("001_CORE_META_MODEL", "002_INSTALLED_EXTENSIONS", "003_PROJECT_CONFIGURATION"),
-            ("CORE_META_MODEL", "INSTALLED_EXTENSIONS", "PROJECT_CONFIGURATION"),
-            strict=True,
-        ))
+        self.logical_layers = dict(
+            zip(
+                (
+                    "001_CORE_META_MODEL",
+                    "002_INSTALLED_EXTENSIONS",
+                    "003_PROJECT_CONFIGURATION",
+                ),
+                (
+                    "CORE_META_MODEL",
+                    "INSTALLED_EXTENSIONS",
+                    "PROJECT_CONFIGURATION",
+                ),
+                strict=True,
+            )
+        )
         for path in self.layers.values():
             path.mkdir(parents=True)
         (self.layers["INSTALLED_EXTENSIONS"] / ".gitkeep").write_text("")
 
-
     def tearDown(self) -> None:
         shutil.rmtree(self.temp, ignore_errors=True)
-
 
     def write(self, layer: str, role: str, name: str, data: bytes) -> Path:
         path = self.layers[self.logical_layers.get(layer, layer)] / role / name
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(data)
         return path
-
 
     def invoke(self, *arguments: str) -> tuple[int, dict[str, object]]:
         self.assertIn(arguments, {(), ("--apply",)})
@@ -121,7 +121,6 @@ class CompilerFixture(unittest.TestCase):
                 module.stage_outputs(self.temp, candidates, snapshot),
             )
         return (0 if report["can_apply"] else 2), report
-
 
     def output_digest(self) -> dict[str, bytes]:
         output = self.temp / self.output

@@ -56,18 +56,21 @@ class ProjectAdmissionTests(unittest.TestCase):
             "from anechoic.model import ComponentManifest\n"
             "ComponentManifest(name='Anechoic', prefix='AN')\n```\n"
         )
-        manifest = _MANIFEST[:_MANIFEST.index("## Claim")] + declaration
+        manifest = _MANIFEST[: _MANIFEST.index("## Claim")] + declaration
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory).resolve()
             control = root / "_anechoic_anechoic"
             control.mkdir()
-            carrier = control / "AN-S-001-PROJECT_MANIFEST--declare-anechoic.md"
-            request = json.dumps({
+            carrier = (
+                control / "AN-S-001-PROJECT_MANIFEST--declare-anechoic.md"
+            )
+            fields = {
                 "project_root": str(root),
                 "control_root": None,
                 "instance_id": None,
                 "host_root": None,
-            }) + "\n"
+            }
+            request = json.dumps(fields) + "\n"
             for content, valid in (
                 (manifest, True),
                 (manifest.replace("prefix='AN'", "prefix=' '"), False),
@@ -86,7 +89,9 @@ class ProjectAdmissionTests(unittest.TestCase):
                 response = json.loads(result.stdout)
                 self.assertEqual(valid, "result" in response, response)
                 if valid:
-                    self.assertEqual("AN", response["result"]["project_prefix"])
+                    self.assertEqual(
+                        "AN", response["result"]["project_prefix"]
+                    )
 
     def test_native_manifest_and_binding_rejection(self):
         with tempfile.TemporaryDirectory() as directory:

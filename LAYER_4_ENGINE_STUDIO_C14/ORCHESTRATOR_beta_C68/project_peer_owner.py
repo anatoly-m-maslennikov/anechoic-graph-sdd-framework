@@ -9,8 +9,8 @@ from threading import Event, Thread
 
 from pydantic import BaseModel, ConfigDict
 
-from .project_peers import ProjectBinding, open_project_peers, socket_path
-from .warm_worker_process import open_warm_worker
+from ORCHESTRATOR_beta_C68.peers.project_peers import ProjectBinding, open_project_peers, socket_path
+from ORCHESTRATOR_beta_C68.peers.warm_worker_process import open_warm_worker
 
 
 class _Options(BaseModel):

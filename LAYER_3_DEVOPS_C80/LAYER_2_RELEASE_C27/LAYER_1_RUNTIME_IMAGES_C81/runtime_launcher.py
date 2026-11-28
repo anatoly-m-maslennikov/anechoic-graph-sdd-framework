@@ -8,18 +8,8 @@ from pathlib import Path
 import subprocess
 
 
-def _launcher_command(
-    root: Path,
-    engine: Path,
-    image: str | None,
-    host_settings: str | Path | None,
-    apply: bool,
-    verify_mcp: bool,
-    startup_timeout: int | None,
-    readiness_timeout: int | None,
-    mounted_folder: str | Path | None,
-) -> list[str]:
-    command = [
+def _base_command(root: Path, engine: Path) -> list[str]:
+    return [
         "uv",
         "run",
         "--no-compile-bytecode",
@@ -41,6 +31,20 @@ def _launcher_command(
             / "MCP_PATCHBAY_C21/FEATURE_MCP/docker/shared_mcp_launcher.py"
         ),
     ]
+
+
+def _launcher_command(
+    root: Path,
+    engine: Path,
+    image: str | None,
+    host_settings: str | Path | None,
+    apply: bool,
+    verify_mcp: bool,
+    startup_timeout: int | None,
+    readiness_timeout: int | None,
+    mounted_folder: str | Path | None,
+) -> list[str]:
+    command = _base_command(root, engine)
     if image is not None:
         command += ["--image", image]
     if startup_timeout is not None:
@@ -73,6 +77,7 @@ def launch_shared_image(
     env = os.environ.copy()
     env.pop("PYTHONHOME", None)
     env.pop("VIRTUAL_ENV", None)
+    env.pop("UV_COMPILE_BYTECODE", None)
     env["UV_PROJECT_ENVIRONMENT"] = str(engine / ".venv-prod")
     env["PYTHONPATH"] = str(engine)
     command = _launcher_command(
@@ -95,6 +100,10 @@ def launch_shared_image(
         check=False,
         timeout=(startup_timeout or 420) + (readiness_timeout or 900) + 480,
     )
+    return _launcher_payload(result)
+
+
+def _launcher_payload(result: subprocess.CompletedProcess[str]) -> dict:
     try:
         payload = json.loads(result.stdout)
     except (ValueError, TypeError) as error:

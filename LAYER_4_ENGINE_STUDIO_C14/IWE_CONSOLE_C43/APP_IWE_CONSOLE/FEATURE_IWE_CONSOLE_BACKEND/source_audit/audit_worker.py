@@ -1,0 +1,310 @@
+"""Compute source diagnostics away from query and lifecycle responses."""
+
+from __future__ import annotations
+
+from collections.abc import Mapping
+from contextlib import contextmanager
+from copy import deepcopy
+from pathlib import Path
+import sys as sys
+import threading
+import time as time
+from types import MappingProxyType
+from typing import Any
+
+from pydantic import ConfigDict, InstanceOf
+from pydantic.dataclasses import dataclass
+
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import TABLES as TABLES
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import collect_issues
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carriers.content.content__shared import (
+    carrier_read_view,
+)
+from ._audit_runner import AuditRunner
+from .source_placement_audit import expected_carrier
+
+
+@dataclass(frozen=True, config=ConfigDict(strict=True, extra="forbid"))
+class AuditSnapshot:
+    root: Path
+    control_root: Path
+    source_paths: InstanceOf[frozenset[Path]]
+    cached: InstanceOf[Mapping[Path, tuple[Any, dict[str, Any]]]]
+    diagnostics: InstanceOf[Mapping[Path, str]]
+    accepted: InstanceOf[frozenset[Path]]
+    references: InstanceOf[Mapping[str, tuple[Path, ...]]]
+    units: InstanceOf[tuple[dict[str, Any], ...]]
+    root_unit_name: str
+    project_scope_id: str
+    schema: Any
+    role_folders: Any
+    audit_model: Any
+    invalid: InstanceOf[frozenset[Path]]
+
+    @classmethod
+    def capture(
+        cls, reader: Any, paths: set[str] | None = None
+    ) -> AuditSnapshot:
+        declarations = reader._declarations
+        if declarations is None:
+            raise ValueError(
+                "Scope Unit declarations are unavailable for Atom audits"
+            )
+        sources, cached_paths, references = _capture_sources(reader, paths)
+        return cls(
+            reader.root,
+            reader.control_root,
+            frozenset(sources),
+            MappingProxyType(
+                deepcopy(
+                    {
+                        path: reader._cached[path]
+                        for path in cached_paths
+                        if path in reader._cached
+                    }
+                )
+            ),
+            MappingProxyType(
+                {
+                    path: reader._diagnostics[path]
+                    for path in sources
+                    if path in reader._diagnostics
+                }
+            ),
+            frozenset(reader._references.accepted_paths(cached_paths)),
+            MappingProxyType(references),
+            tuple(declarations.as_structure()["scope_units"]),
+            declarations.root.name,
+            reader._project_scope_id,
+            reader.content_schema,
+            reader._role_folders,
+            reader._audit_model,
+            frozenset(
+                path
+                for path in sources
+                if path in reader._content_invalid
+                or path in reader._header_invalid
+            ),
+        )
+
+    def current_row(self, reference: str) -> dict[str, Any] | None:
+        for path in self.references.get(reference, ()):
+            if (
+                path in self.accepted
+                and (item := self.cached.get(path)) is not None
+            ):
+                row = item[1]
+                return (
+                    row
+                    if row.get("status_group") not in {"Draft", "Archived"}
+                    else None
+                )
+        return None
+
+    def collect(
+        self,
+        public_atoms: dict[tuple[str, str], dict[str, Any]],
+        paths: set[str],
+    ):
+        schema_audit = placement_audit = None
+        if self.audit_model is not None:
+            schema_audit = self.audit_model.issues
+            placement = self.audit_model.schema.placement
+            if placement is not None:
+                units = {
+                    unit[key]: unit
+                    for unit in self.units
+                    for key in ("scope_unit_name", "scope_unit_id")
+                    if isinstance(unit[key], str)
+                }
+                if (root_unit := units.get(self.root_unit_name)) is not None:
+                    units[self.project_scope_id] = root_unit
+
+                def placement_audit(row):
+                    return expected_carrier(
+                        row, units, self.current_row, placement
+                    )
+
+        return collect_issues(
+            self.root,
+            self.control_root,
+            self.source_paths,
+            paths,
+            self.cached,
+            self.diagnostics,
+            self.accepted,
+            self.units,
+            self.project_scope_id,
+            self.schema,
+            public_atoms,
+            self.role_folders,
+            schema_audit=schema_audit,
+            placement_audit=placement_audit,
+            schema_invalid=self.invalid,
+        )
+
+
+def _capture_sources(reader, paths):
+    selected = (
+        reader._source_paths
+        if paths is None
+        else {reader.root / path for path in paths}
+    )
+    sources = selected & reader._source_paths
+    cached_paths = set(sources)
+    references = {}
+    pending = set(sources)
+    while pending:
+        requested = set()
+        for path in pending:
+            item = reader._cached.get(path)
+            header = item[1].get("header_json") if item is not None else None
+            if not isinstance(header, dict):
+                continue
+            try:
+                container = carrier_read_view(header).get("container")
+            except KeyError, TypeError, ValueError:
+                continue
+            reference = (
+                container.get("atom") if isinstance(container, dict) else None
+            )
+            if isinstance(reference, str) and reference not in references:
+                requested.add(reference)
+        peers_by_reference = (
+            reader._references.paths_by_reference(requested)
+            if requested
+            else {}
+        )
+        pending = set()
+        for reference in requested:
+            peers = tuple(sorted(peers_by_reference.get(reference, ())))
+            references[reference] = peers
+            pending.update(set(peers) - cached_paths)
+        cached_paths.update(pending)
+    return sources, cached_paths, references
+
+
+_EMPTY = object()
+
+
+def _merge_paths(old, new):
+    if old is _EMPTY:
+        return None if new is None else set(new)
+    if old is None or new is None:
+        return None
+    return old | set(new)
+
+
+class AuditWorker(AuditRunner):
+    """Complete a full audit once and coalesce newer work behind it.
+
+    Full results can briefly precede newer deltas; status stays pending until
+    all queued changes have published. Stale partial audits are discarded.
+
+    Call invalidate() before changing the projection. Then call
+    submit(captured_snapshot, audit_delta) after it is updated. A None delta
+    requests a complete audit.
+    close() stops the worker before closing or rebuilding the QueryStore.
+    """
+
+    def __init__(self, store: Any) -> None:
+        self._store = store
+        self._condition = threading.Condition()
+        self._generation = 0
+        self._pending_paths = _EMPTY
+        self._pending_snapshot: AuditSnapshot | None = None
+        self._active_paths = _EMPTY
+        self._awaiting_submit = False
+        self._stopped = False
+        self._error: BaseException | None = None
+        self._last_audit_ms: float | None = None
+        self._thread = threading.Thread(
+            target=self._run, name="workbench-audits", daemon=True
+        )
+        self._thread.start()
+
+    def invalidate(self) -> None:
+        with self._condition:
+            if self._error is not None:
+                return
+            self._generation += 1
+            self._awaiting_submit = True
+            if (
+                self._active_paths is not _EMPTY
+                and self._active_paths is not None
+            ):
+                self._pending_paths = _merge_paths(
+                    self._pending_paths, self._active_paths
+                )
+            self._pending_snapshot = None
+
+    def capture_paths(self, paths: set[str] | None) -> set[str] | None:
+        """Include invalidated and queued deltas in the captured state."""
+        with self._condition:
+            return _merge_paths(self._pending_paths, paths)
+
+    def submit(self, snapshot: AuditSnapshot, paths: set[str] | None) -> None:
+        with self._condition:
+            if self._stopped:
+                raise RuntimeError("Atom audit worker is stopped")
+            if self._error is not None:
+                return
+            self._pending_paths = _merge_paths(self._pending_paths, paths)
+            self._pending_snapshot = snapshot
+            self._awaiting_submit = False
+            self._condition.notify_all()
+
+    def _current(self, generation: int, *, full: bool = False) -> bool:
+        with self._condition:
+            return not self._stopped and (
+                full or generation == self._generation
+            )
+
+    @contextmanager
+    def _publication(self, generation: int, *, full: bool = False):
+        with self._condition:
+            yield not self._stopped and (
+                full or generation == self._generation
+            )
+
+    def wait(self, timeout: float | None = None) -> bool:
+        with self._condition:
+            done = self._condition.wait_for(
+                lambda: (
+                    self._error is not None
+                    or (
+                        not self._awaiting_submit
+                        and self._pending_snapshot is None
+                        and self._active_paths is _EMPTY
+                    )
+                ),
+                timeout,
+            )
+            if self._error is not None:
+                raise RuntimeError("Atom audit worker failed") from self._error
+            return done
+
+    def status(self) -> dict[str, Any]:
+        """Expose pending work and terminal errors without a refresh."""
+        with self._condition:
+            return {
+                "audits_pending": (
+                    self._awaiting_submit
+                    or self._pending_snapshot is not None
+                    or self._active_paths is not _EMPTY
+                ),
+                "last_audit_ms": self._last_audit_ms,
+                "audit_error": None
+                if self._error is None
+                else f"{type(self._error).__name__}: {self._error}",
+            }
+
+    def close(self) -> None:
+        with self._condition:
+            self._stopped = True
+            self._generation += 1
+            self._pending_snapshot = None
+            self._pending_paths = _EMPTY
+            self._awaiting_submit = False
+            self._condition.notify_all()
+        self._thread.join()

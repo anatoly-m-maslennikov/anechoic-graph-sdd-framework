@@ -4,6 +4,8 @@ set -eu
 root=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
 release_dir="$root/LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27"
 export UV_PROJECT_ENVIRONMENT="$release_dir/.venv-release"
+export PYTHONPYCACHEPREFIX="$root/.anechoic_tmp/python/bytecode"
+unset UV_COMPILE_BYTECODE
 exec uv run --no-compile-bytecode --locked --no-env-file \
     --project "$root/LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/release" \
     --python 3.14 --managed-python python -B "$release_dir/release.py" "$@"

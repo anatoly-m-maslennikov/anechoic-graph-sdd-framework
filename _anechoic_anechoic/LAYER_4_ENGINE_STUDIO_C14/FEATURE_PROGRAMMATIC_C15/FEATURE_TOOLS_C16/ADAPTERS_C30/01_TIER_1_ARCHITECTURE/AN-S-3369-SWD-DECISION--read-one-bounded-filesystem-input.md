@@ -3,7 +3,7 @@ atom_family: SPEC
 atom_id: AN-S-3369
 concern:
   subject: "File"
-  path: "Model/Carrier"
+  path: Model/Carrier/Filesystem
   relation: "is_contained_by"
 container:
   component: C30
@@ -16,8 +16,8 @@ relations:
   - AN-S-3303@15
 state:
   status: active
-  version: 4
-  updated_at: "2026-11-27T16:16:01.404965+00:00"
+  version: 5
+  updated_at: "2026-11-28T11:52:02.110048+00:00"
 ---
 
 ## Summary

@@ -33,7 +33,6 @@ from .trace_spec__pub import (
     _binding_directions as _binding_directions,
     _manifest_binding as _manifest_binding,
     _manifest_contract as _manifest_contract,
-    _operation_claims as _operation_claims,
     _solution_binding as _solution_binding,
     _uncovered_outcomes as _uncovered_outcomes,
     check_trace_spec as check_trace_spec,
@@ -42,3 +41,15 @@ from .trace_spec__pub import (
 )
 from .trace_values__pub import compare_trace_values as compare_trace_values
 from .cli_reachability import feasible_terminals as feasible_terminals
+
+
+def _operation_claims(claim):
+    from ._direct_comparison import _operation_claims as implementation
+
+    return implementation(claim)
+
+
+def report_comparison(model, report, *, action=None):
+    from ._direct_comparison import report_comparison as implementation
+
+    return implementation(model, report, action=action)

@@ -13,8 +13,8 @@ context:
   lens: DOM/CONT
 state:
   status: "active"
-  version: 6
-  updated_at: "2026-11-26T15:52:33.143410+00:00"
+  version: 7
+  updated_at: "2026-11-28T11:00:50.522707+00:00"
 ---
 
 ## Summary
@@ -41,5 +41,5 @@ def check_project_manifest(manifest: ProjectManifest) -> bool:
 class Constraints(NodeConstraints):
     bearer = ProjectManifest
     node.constraints.instance_check = check_project_manifest
-    node.constraints.instance_relations = {'IS_CONTAINED_BY': {'target_entity_paths': (Project,), 'targets_per_source': 1}}
+    node.constraints.instance_relations = {'IS_CONTAINED_BY': {'target_entity_paths': (Project,)}}
 ```

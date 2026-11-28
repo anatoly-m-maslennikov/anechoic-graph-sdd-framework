@@ -1,0 +1,43 @@
+---
+atom_family: SPEC
+atom_id: AN-S-122
+container:
+  component: C16
+tier: 4
+context:
+  lens: DevOps
+state:
+  status: archived
+  version: 19
+  updated_at: "2026-11-27T18:09:40.995150+00:00"
+---
+# Summary
+
+Encode the strict governed request boundary for the Applicable Methodology compiler.
+
+## Scope
+
+The strict native request boundary for the Applicable Methodology compiler; it does not define a second Workflow or Journal interface.
+
+## Claim
+
+The delivered compiler **must** accept an explicit mode and exact governed bindings, and **must not** accept caller-supplied source edits, arbitrary conflict winners, or unbound approval text.
+
+## Details
+
+```toml
+[tool_binding]
+name = "COMPILE_APPLICABLE_METHODOLOGY"
+entrypoint = "LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/COMPILE_APPLICABLE_METHODOLOGY/compile_applicable_methodology.py"
+workflow_id = "CA-O-011"
+action_ids = ["CA-O-004", "CA-O-005", "CA-O-006", "CA-O-007", "CA-O-008", "CA-O-009"]
+operations = ["dry_run", "apply", "recover_publication"]
+```
+
+The strict request contains `operation`; `project_root`; expected Project Structure, Framework Settings, and Project Configuration revision/digest bindings; `projection_target`; and, for `apply` or `recover_publication`, the expected assessed frontier digest plus the exact current Operator decision, independently verified admitted Run/effect evidence, and prior-publication evidence references. Optional Journal references are observational and cannot authorize the operation. The Tool resolves all source locations from governed Project Structure/Settings. `apply` refuses a request without a fresh publishable assessment; `recover_publication` accepts only a failed-publication receipt and never a source-change instruction.
+
+Unknown fields, mixed operations, mutable source/output paths outside governed declarations, `edit_source`, raw source patch, arbitrary selected candidate, raw approval text, or a TOML-only approval are explicit errors. Canonical shared Run/Journal handles are references, not caller-authored event payloads; a Journal append is a business-provenance attempt and not a permission or completion gate.
+
+### Sources
+
+- CA-R-1839, CA-R-1840, CA-R-2118; CA-O-011 v12; CA-P-1442 v1.

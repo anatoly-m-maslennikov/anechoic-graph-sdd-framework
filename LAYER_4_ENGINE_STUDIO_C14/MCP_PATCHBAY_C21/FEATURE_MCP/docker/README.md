@@ -33,7 +33,7 @@ Shared Setup passes its configured Workbench and Journal storage values as
 environment overrides. The same variables in the launch environment take
 precedence over those settings.
 
-`DuckPGQ.LICENSE` was copied from `cwida/duckpgq-extension` at commit
+`resources/DuckPGQ.LICENSE` was copied from `cwida/duckpgq-extension` at commit
 `9c11bc192a071c9e44cef16cced90a22d7d7db2c`.
 
 ## MCP

@@ -9,15 +9,16 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.contract_graph \
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.contracts.core.core__shared \
     import compose_contract_graph  # fmt: skip
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.\
     contract_graph_render \
     import render_contract_graph  # fmt: skip
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
-    import read_current_carriers  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.sources.inventory.inventory__shared import (
+    read_current_carriers,
+)
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.\
-    subject_audit_occurrences \
+    subjects.audit.audit__shared \
     import select_model_subjects  # fmt: skip
 
 

@@ -7,12 +7,17 @@ import sys
 
 import yaml
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carriers.content.content__shared \
     import (
         UniqueSafeLoader,
         check_yaml_resources,
     )  # fmt: skip
-from .source import _event_path, _git_ignored, _relative, excluded_source_path
+from .SOURCE_CAPTURE.SOURCE_CAPTURE__shared import (
+    _event_path,
+    _git_ignored,
+    _relative,
+    excluded_source_path,
+)
 
 PIN = re.compile(r"([A-Z]+-[SP]-[0-9]+)@([0-9]+)")
 SUFFIX = ".spec_trace.md"

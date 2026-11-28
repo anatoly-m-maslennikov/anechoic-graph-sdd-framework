@@ -13,8 +13,8 @@ context:
   lens: DOM/CONT
 state:
   status: "active"
-  version: 4
-  updated_at: "2026-11-26T15:52:32.155162+00:00"
+  version: 5
+  updated_at: "2026-11-28T10:14:16.621462+00:00"
 ---
 
 ## Summary
@@ -33,5 +33,4 @@ class Property3121(Property):
     bearer = Atom
     property.applies_to = (SpecAtom,)
     field_options = {'class_var': True, 'default': 'S'}
-    property.value.format = str
 ```

@@ -4,10 +4,10 @@ import tempfile
 from pathlib import Path
 from unittest.mock import NonCallableMock
 
-from ....FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carriers.header.header__shared import (
     native_header_view,
 )
-from ....FEATURE_TOOLS.ADAPTERS_C30.carrier_read__pub import (
+from ....FEATURE_TOOLS.ADAPTERS_C30.carriers.content.carrier_read__pub import (
     parse_carrier,
 )
 

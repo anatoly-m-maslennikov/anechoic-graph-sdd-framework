@@ -6,10 +6,10 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict
 
-from ...FEATURE_TOOLS.ADAPTERS_C30.atom_reference__pub import (
+from ...FEATURE_TOOLS.ADAPTERS_C30.carriers.content.atom_reference__pub import (
     derive_atom_ref,
 )
-from ...FEATURE_TOOLS.ADAPTERS_C30.spec_file_reader import (
+from ...FEATURE_TOOLS.ADAPTERS_C30.sources.inventory.spec_file_reader import (
     read_spec_file,
 )
 
@@ -82,7 +82,7 @@ def _check_pin(pin, role):
         or not isinstance(pin["status"], str)
         or pin["status"] not in {"active", "draft", "ready"}
         or any(
-            not isinstance(pin[key], str) or not pin[key]
+            not isinstance(pin[key], str) or not pin[key].strip()
             for key in ("path", "atom_id", "container_component")
         )
     ):

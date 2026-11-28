@@ -13,8 +13,8 @@ context:
   lens: DOM/CONT
 state:
   status: "active"
-  version: 7
-  updated_at: "2026-11-26T15:52:33.356004+00:00"
+  version: 8
+  updated_at: "2026-11-28T11:00:50.522707+00:00"
 ---
 
 ## Summary
@@ -35,5 +35,5 @@ def check_component_seed_manifest(spec: ComponentSeedManifest) -> bool:
 class Constraints(NodeConstraints):
     bearer = ComponentSeedManifest
     node.constraints.instance_check = check_component_seed_manifest
-    node.constraints.instance_relations = {'IS_CONTAINED_BY': {'target_entity_paths': (Component,), 'targets_per_source': 1}}
+    node.constraints.instance_relations = {'IS_CONTAINED_BY': {'target_entity_paths': (Component,)}}
 ```

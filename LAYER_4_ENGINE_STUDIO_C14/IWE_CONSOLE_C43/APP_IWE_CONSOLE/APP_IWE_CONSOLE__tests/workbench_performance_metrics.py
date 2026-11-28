@@ -56,6 +56,7 @@ def record_performance(
     case.assertLessEqual(
         elapsed,
         budget_seconds,
-        f"{operation}: {items} item(s) took {elapsed:.6f}s; budget {budget_seconds:.3f}s",
+        f"{operation}: {items} item(s) took {elapsed:.6f}s; budget "
+        f"{budget_seconds:.3f}s",
     )
     return metric

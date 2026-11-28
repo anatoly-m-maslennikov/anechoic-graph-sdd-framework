@@ -8,8 +8,8 @@ context:
   lens: DOM/MTD
 state:
   status: active
-  version: 39
-  updated_at: '2026-11-27T01:04:20.461163+00:00'
+  version: 40
+  updated_at: '2026-11-28T09:21:26.937336+00:00'
 ---
 ## Summary
 
@@ -27,7 +27,12 @@ A Current Atom update composes creation of a new Draft, archival of its Current 
 
 ## Status transitions
 
-A Draft can leave Content incomplete and always carries its Atom ID. Check the complete applicable Atom requirements before publishing. A finalized Spec Draft becomes Ready. It becomes Active when implementation starts and Archived when retired.
+A Draft can leave Content incomplete and always carries its Atom ID.
+Check the complete applicable Atom requirements before finalizing it.
+A finalized SPEC Draft becomes Ready in the Draft namespace. It becomes
+Active when implementation starts and Archived when retired. When a
+Ready revision becomes Active, archive its Active predecessor and the
+Active predecessors it names through `IS_REPLACEMENT_FOR`.
 
 Validate a Project SPEC against its compiled Template in the destination
 Status before publishing or activating it.

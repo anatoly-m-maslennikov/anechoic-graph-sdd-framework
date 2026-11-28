@@ -9,7 +9,7 @@ This operational document defines how the repository moves changes from `amm/dev
 - [Policy workflow](workflows/dev-to-main-policy.yml): `PR policy` passes only for a same-repository `dev → main` or `amm/dev → main` pull request authored by the repository owner. A passing non-draft PR is merged automatically.
 - Repository tests and validators are temporarily disabled; no successful PR check currently represents test, evaluation, lint, type-check, cross-platform, or framework-validation evidence.
 - [WSL proof workflow](workflows/wsl-proof.yml) runs Engine Studio static and unit QA on a labeled self-hosted Windows/WSL runner. Dispatch it manually and use a successful run on the tested commit as evidence.
-- [Release publisher](workflows/publish-release.yml): a protected `main` push that changes the coordinated version contract is checked against the committed release declaration, then creates only a missing immutable tag or GitHub Release at the exact merge SHA. Existing collisions stop; the workflow never writes repository content after merge.
+- [Release publisher](workflows/publish-release.yml): on a protected `main` push that changes `version.toml`, verify that the merge tree matches the reviewed PR head. Create or verify the immutable tag and GitHub Release at the exact merge SHA.
 
 Merge commits are deliberate: development branches are long-lived, so preserving their commits as parents of `main` prevents the history divergence caused by repeated squash or rebase merges.
 
@@ -21,7 +21,7 @@ Merge commits are deliberate: development branches are long-lived, so preserving
 4. No automated repository validation runs while the temporary suspension is active.
 5. GitHub Actions enables merge-commit auto-merge.
 6. GitHub updates `main` only after the required checks pass.
-7. When the coordinated version contract changed, the release publisher rechecks the committed transaction at the merge SHA, verifies or creates the immutable tag, and verifies or creates its GitHub Release.
+7. When the Framework Version changes, the publisher checks the version and source tree at the merge SHA. It creates or verifies the tag and GitHub Release.
 
 Pull requests to `main` from any branch other than `dev` or `amm/dev`, or from any other repository or author, are expected to fail `PR policy` and cannot merge.
 
@@ -40,9 +40,11 @@ production Docker build excludes those folders.
 
 For interactive Engine QA, run from the repository root and select
 `LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/pyproject.toml` with Ruff's `--config` or
-mypy's `--config-file`. Use `python -B` for ad hoc uv runs, or pass
-`-X "pycache_prefix=$PWD/.anechoic_tmp/python/bytecode"` to keep bytecode.
-The static phase checks launch commands and reports cache folders outside
+mypy's `--config-file`. For direct Python runs, set
+`PYTHONPYCACHEPREFIX="$PWD/.anechoic_tmp/python/bytecode"` before launch.
+Use `python -B` when the run needs no cache writes. Pass
+`--no-compile-bytecode` to uv to prevent in-place dependency compilation.
+Static checks launch commands and reports cache folders outside
 the Project temporary directory.
 
 ## Local source line length check

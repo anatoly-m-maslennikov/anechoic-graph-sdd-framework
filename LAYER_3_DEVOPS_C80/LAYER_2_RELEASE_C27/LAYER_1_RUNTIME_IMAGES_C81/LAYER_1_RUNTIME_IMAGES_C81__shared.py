@@ -13,15 +13,15 @@ from . import (
 )
 from .runtime_build import build_image
 from .runtime_launcher import launch_shared_image
-from .release_container import (
+from .image_container.image_container__shared import (
     find_release_container,
     reconcile_release_container,
     start_container,
     verify_release_container,
 )
 from .release_assets import LocalReleaseError
-from .release_inputs import read_release_selection
-from .release_image_identity import LICENSE_INPUTS
+from .input_selection.input_selection__shared import read_release_selection
+from .image_identity.image_identity__shared import LICENSE_INPUTS, RETIRED_ASSETS, TOOL_REGISTRY
 from .runtime_support import (
     _RUN_ID,
     _cleanup_staging,
@@ -55,14 +55,12 @@ __all__ = [
     "runtime_support",
 ]
 
-from .release_images import (
+from .image_builder.image_builder__shared import (
     ImageManager,
-    RETIRED_ASSETS,
-    TOOL_REGISTRY,
     ready_predecessor,
 )
 from .release_image_provenance import release_image_provenance
-from .release_inputs import read_atom_header
+from .input_selection.input_selection__shared import read_atom_header
 from .local_release_safety import (
     _git_checkpoint,
     _installation_lock,

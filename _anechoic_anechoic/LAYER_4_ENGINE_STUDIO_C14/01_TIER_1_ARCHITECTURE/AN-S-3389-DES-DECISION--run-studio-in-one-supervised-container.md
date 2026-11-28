@@ -12,8 +12,8 @@ relations:
   - AN-S-4800
 state:
   status: "active"
-  version: 10
-  updated_at: "2026-11-27T18:48:35.765150+00:00"
+  version: 11
+  updated_at: "2026-11-27T20:35:14.221449+00:00"
 ---
 
 ## Summary
@@ -24,7 +24,7 @@ Run Studio in one supervised container
 
 ### Prose Claim
 
-This Decision describes the standalone supervised Studio design.
+This Decision applies to the standalone supervised Beta design.
 For the Current release runtime, apply AN-S-1993.
 
 Run Kernel, Orchestrator, Backend, and MCP as separate long-lived processes in one container. Kernel owns the Project database through Database Server C71. Its read-only Model and Structure Hosts expose the same admitted generation. Kernel commits artifacts and projection rows together. Orchestrator owns the watcher and job state. Isolated Workers build from pinned inputs. Backend serves Web and MCP and keeps durable Project state in Kernel.

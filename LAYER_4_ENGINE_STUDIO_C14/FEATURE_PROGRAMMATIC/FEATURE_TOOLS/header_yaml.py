@@ -12,10 +12,12 @@ from yaml.events import (
 )
 from yaml.nodes import MappingNode, Node, ScalarNode, SequenceNode
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
-    import carrier_read_view  # fmt: skip
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
-    import header_path  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carriers.content.content__shared import (
+    carrier_read_view,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carriers.content.content__shared import (
+    header_path,
+)
 
 
 _STRING = "tag:yaml.org,2002:str"

@@ -3,12 +3,14 @@ from tempfile import TemporaryDirectory
 from unittest import TestCase
 from unittest.mock import patch
 
-from IWE_CONSOLE_C43.APP_IWE_CONSOLE.\
-    FEATURE_IMPORT_GRAPH_C61.import_graph__shared import (
-    capture,
+from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IMPORT_GRAPH_C61.\
+    SOURCE_CAPTURE.SOURCE_CAPTURE__shared import capture  # fmt: skip
+from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IMPORT_GRAPH_C61.\
+    RESOLUTION.code_access_occurrences import (
     code_access_occurrences,
-    resolve_realization,
-)
+)  # fmt: skip
+from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IMPORT_GRAPH_C61.\
+    RESOLUTION.RESOLUTION__shared import resolve_realization  # fmt: skip
 
 
 class WebImportTests(TestCase):
@@ -62,9 +64,7 @@ class WebImportTests(TestCase):
             (row[2], row[4], row[5], row[6], row[7]),
             ("module:pkg/lib/shared.ts", 1, 0, "internal", True),
         )
-        self.assertEqual(
-            rows["module:pkg/entry.ts", "./view.css"][6], "asset"
-        )
+        self.assertEqual(rows["module:pkg/entry.ts", "./view.css"][6], "asset")
         self.assertEqual(
             rows["module:pkg/entry.ts", "missing-alias"][6], "unresolved"
         )
@@ -178,7 +178,7 @@ class WebImportTests(TestCase):
             with patch(
                 (
                     "IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IMPORT_GRAPH_C61."
-                    "web_imports.shutil.which"
+                    "SOURCE_CAPTURE.web_imports.shutil.which"
                 ),
                 return_value=None,
             ):
@@ -206,7 +206,7 @@ class WebImportTests(TestCase):
             with patch(
                 (
                     "IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IMPORT_GRAPH_C61."
-                    "web_imports._FRONTEND"
+                    "SOURCE_CAPTURE.web_imports._FRONTEND"
                 ),
                 root,
             ):

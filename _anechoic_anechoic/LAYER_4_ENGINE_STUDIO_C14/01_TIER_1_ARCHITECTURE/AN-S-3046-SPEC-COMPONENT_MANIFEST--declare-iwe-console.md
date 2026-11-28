@@ -10,7 +10,7 @@ context:
 state:
   status: "active"
   version: 6
-  updated_at: "2026-11-26T15:52:26.910434+00:00"
+  updated_at: "2026-11-28T15:06:14+00:00"
 relations:
   CONTRIBUTES_TO:
   - AN-S-3330
@@ -35,7 +35,8 @@ ComponentManifest(
 ## Component Boundaries
 
 ```python
-{'code': {'imports': ['project_database__pub.console_state_path'], 'exports': {}},
+{'code': {'imports': [
+                      'settings.project.project_database__pub.console_state_path','project_database__pub.console_state_path'], 'exports': {}},
  'io': {'client': {'workbench': {'component': 'C21',
                                  'interface': 'workbench_http'}}},
  'state': {'reads': [], 'writes': []}}

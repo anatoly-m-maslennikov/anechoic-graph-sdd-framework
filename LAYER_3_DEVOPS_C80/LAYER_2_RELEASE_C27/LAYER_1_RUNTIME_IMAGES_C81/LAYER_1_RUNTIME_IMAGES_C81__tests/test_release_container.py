@@ -3,7 +3,7 @@
 import os
 from unittest.mock import patch
 
-from LAYER_1_RUNTIME_IMAGES_C81.LAYER_1_RUNTIME_IMAGES_C81__shared import (
+from LAYER_1_RUNTIME_IMAGES_C81.image_container.image_container__shared import (
     verify_release_container,
 )
 from LAYER_1_RUNTIME_IMAGES_C81.release_assets import LocalReleaseError

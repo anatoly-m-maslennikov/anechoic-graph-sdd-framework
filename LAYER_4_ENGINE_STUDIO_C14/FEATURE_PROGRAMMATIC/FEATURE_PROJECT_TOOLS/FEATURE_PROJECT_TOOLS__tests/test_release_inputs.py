@@ -7,12 +7,16 @@ import sys
 from tempfile import TemporaryDirectory
 import unittest
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.sources.inventory.inventory__shared \
     import capture_native  # fmt: skip
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import (
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.\
+    PROJECT_SUPPORT.PROJECT_SELECTION.\
+    PROJECT_SELECTION__shared import (
     discover_native_project,
 )
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.native_workflow_definition import (
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.\
+    ATOM_LIFECYCLE.NATIVE_LIFECYCLE.\
+    NATIVE_LIFECYCLE__shared import (
     bind_status_specifications,
 )
 from KERNEL_MIXER_C59.MANIFEST_RUNTIME_C62.model_host_CS2.\

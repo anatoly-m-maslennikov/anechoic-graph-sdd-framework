@@ -4,61 +4,8 @@ from ..LAYER_2_SPEC_READING_C83.SPECIFICATION_MODEL_C85._package__shared \
     import normalize_spec  # fmt: skip
 
 
-def _patterns(claim, role):
-    if role == "contract":
-        groups = ([claim["delimiter"]], claim["line_endings"])
-    elif role == "solution":
-        groups = (claim["opening_prefixes"], claim["closing_prefixes"])
-    else:
-        raise ValueError("invalid framing role")
-    _check_witness_budget(groups, role)
-    if role == "contract":
-        delimiter = bytes(claim["delimiter"])
-        endings = [bytes(value) for value in claim["line_endings"]]
-        return (
-            [delimiter + ending for ending in endings],
-            [
-                before + delimiter + after
-                for before in endings
-                for after in endings
-            ],
-        )
-    return (
-        [bytes(value) for value in claim["opening_prefixes"]],
-        [bytes(value) for value in claim["closing_prefixes"]],
-    )
-
-
-def _check_witness_budget(groups, role):
-    if any(len(group) > 8 for group in groups):
-        raise ValueError("framing witness budget exceeded")
-    lengths = [[len(pattern) for pattern in group] for group in groups]
-    if (
-        any(length > 32 for group in lengths for length in group)
-        or sum(map(sum, lengths)) > 128
-    ):
-        raise ValueError("framing witness budget exceeded")
-    if role == "contract":
-        delimiter = lengths[0][0]
-        openings = [delimiter + ending for ending in lengths[1]]
-        closings = [
-            before + delimiter + after
-            for before in lengths[1]
-            for after in lengths[1]
-        ]
-    else:
-        openings, closings = lengths
-    budget = (
-        2
-        + sum(length + 1 for length in openings + closings)
-        + sum(
-            6 + 2 * close + min(opening, close)
-            for opening in openings
-            for close in closings
-        )
-    )
-    if budget > 512:
-        raise ValueError("framing witness budget exceeded")
+from ._framing_patterns import _check_witness_budget as _check_witness_budget
+from ._framing_patterns import _patterns
 
 
 def framing_expectation(raw, claim, role):
@@ -115,11 +62,12 @@ def framing_witnesses(claim, role, *, include_overlap_cases=False):
                     for i in range(len(closing))
                 )
             for overlap in range(1, min(len(opening), len(closing)) + 1):
-                if opening[-overlap:] == closing[:overlap]:
-                    base = opening + closing[overlap:]
-                    cases.add(base + b"\xff")
-                    if include_overlap_cases:
-                        cases.update((base, base[:-1], base + b"\x00\xff"))
+                if opening[-overlap:] != closing[:overlap]:
+                    continue
+                base = opening + closing[overlap:]
+                cases.add(base + b"\xff")
+                if include_overlap_cases:
+                    cases.update((base, base[:-1], base + b"\x00\xff"))
     if len(cases) > 512:
         raise ValueError("framing witness budget exceeded")
     return sorted(cases)

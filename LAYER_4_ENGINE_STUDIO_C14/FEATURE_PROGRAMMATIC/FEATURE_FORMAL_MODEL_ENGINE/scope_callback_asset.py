@@ -1,4 +1,5 @@
 """Build and load the reviewed Scope structural-level callback."""
+
 import ast
 import importlib.util
 import sys
@@ -10,14 +11,25 @@ import py_compile
 import json
 from pathlib import Path
 
-from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.compiler_claim import (
+from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.claim_compiler._package__shared import (
     compile_scope_level_with_check,
 )
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_native_model_claim
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import carrier_read_view, matches_named_value
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_carrier
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model.claims.claims__shared import (
+    parse_native_model_claim,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carriers.content.content__shared import (
+    carrier_read_view,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carriers.carriers__shared import (
+    matches_named_value,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carriers.content.content__shared import (
+    parse_carrier,
+)
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import formal_claim
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model.model__shared import (
+    formal_claim,
+)
 
 
 def _validate_check_dependencies(check):
@@ -58,15 +70,7 @@ def _validate_check_dependencies(check):
         )
 
 
-def generated_assets(raw, *, pin, release_sources):
-    (
-        'Build only a source revision selected by the trusted release '
-        'frontier.'
-    )
-    if pin is None:
-        return None
-    if pin not in release_sources:
-        raise ValueError("No selected release source pin")
+def _selected_claim(raw, pin):
     parsed = parse_carrier(raw, Path("scope-source.md"))
     view = carrier_read_view(parsed.metadata)
     if (
@@ -76,14 +80,25 @@ def generated_assets(raw, *, pin, release_sources):
         or str(view.get("status", "")).casefold() != "active"
     ):
         raise ValueError("Source is not the selected Current revision")
-    if (not matches_named_value(view.get("role"), "Requirement")
-            or not matches_named_value(view.get("form"), "Declaration")):
+    if not matches_named_value(
+        view.get("role"), "Requirement"
+    ) or not matches_named_value(view.get("form"), "Declaration"):
         raise ValueError("Source must be a Requirement Declaration")
     if sha256(raw).hexdigest() != pin["carrier_sha256"]:
         raise ValueError("Source Carrier does not match release pin")
     claim = formal_claim(parsed.body)
     if sha256(claim.encode()).hexdigest() != pin["claim_sha256"]:
         raise ValueError("Claim does not match release pin")
+    return claim
+
+
+def generated_assets(raw, *, pin, release_sources):
+    "Build only a source revision selected by the trusted release frontier."
+    if pin is None:
+        return None
+    if pin not in release_sources:
+        raise ValueError("No selected release source pin")
+    claim = _selected_claim(raw, pin)
     declaration = parse_native_model_claim(claim)
     check = declaration.get("instance_check")
     if check is None or check["parameter_type"] != "ScopeUnit":
@@ -91,7 +106,7 @@ def generated_assets(raw, *, pin, release_sources):
     statements, check = compile_scope_level_with_check(declaration)
     _validate_check_dependencies(check)
 
-    reference = f'{pin["atom_id"]}@{pin["version"]}'
+    reference = f"{pin['atom_id']}@{pin['version']}"
     prefix = (
         "from __future__ import annotations\n"
         f"SOURCE_REFERENCE = {reference!r}\n"
@@ -100,17 +115,26 @@ def generated_assets(raw, *, pin, release_sources):
         "\n"
     )
     source = (prefix + check["source"] + "\n").encode()
-    snapshot = (json.dumps({reference: base64.b64encode(raw).decode("ascii")},
-                           sort_keys=True, separators=(",", ":")) + "\n").encode()
-    return {"source": source, "snapshot": snapshot, "statements": statements,
-            "entry_point": check["name"], "reference": reference, "trusted_artifact_sha256": pin["artifact_sha256"]}
+    snapshot = (
+        json.dumps(
+            {reference: base64.b64encode(raw).decode("ascii")},
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+        + "\n"
+    ).encode()
+    return {
+        "source": source,
+        "snapshot": snapshot,
+        "statements": statements,
+        "entry_point": check["name"],
+        "reference": reference,
+        "trusted_artifact_sha256": pin["artifact_sha256"],
+    }
 
 
 def write_package(directory, generated):
-    (
-        'Create a fixed Python module and reviewed-source snapshot at asset '
-        'refresh.'
-    )
+    """Create the fixed module and reviewed-source snapshot at refresh."""
     directory.mkdir(parents=True, exist_ok=True)
     module = directory / "scope_level_check.py"
     snapshot = directory / "scope_level_sources.json"
@@ -184,10 +208,7 @@ def load_packaged_module(directory, *, release_pin):
 
 
 def verify_packaged_assets(directory, raw, *, pin, release_sources):
-    (
-        'Validate prebuilt release bytes without writing or evaluating a '
-        'callback.'
-    )
+    "Validate prebuilt release bytes without writing or evaluating a callback."
     generated = generated_assets(raw, pin=pin, release_sources=release_sources)
     metadata = json.loads(
         (directory / "scope_level_metadata.json").read_bytes()

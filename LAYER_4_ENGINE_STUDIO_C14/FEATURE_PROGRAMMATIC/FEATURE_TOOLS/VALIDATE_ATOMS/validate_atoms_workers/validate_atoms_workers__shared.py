@@ -2,12 +2,11 @@
 
 from pydantic import BaseModel, ConfigDict
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
-    import (
-        CarrierError,
-        ParsedCarrier,
-        parse_carrier,
-    )  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carriers.content.content__shared import (
+    CarrierError,
+    ParsedCarrier,
+    parse_carrier,
+)
 
 from .authority import AuthorityContext, Obligation, Record
 from .check_sections import GRAPH_RULE_SOURCES

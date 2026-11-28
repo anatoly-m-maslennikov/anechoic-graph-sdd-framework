@@ -6,12 +6,12 @@ from unittest.mock import patch
 from pydantic import ConfigDict
 from pydantic.dataclasses import dataclass, is_pydantic_dataclass
 
-from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.\
-    FEATURE_FORMAL_MODEL_GENERATOR.\
-    FEATURE_FORMAL_MODEL_GENERATOR__shared import (
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.FEATURE_FORMAL_MODEL_GENERATOR.native.native_manifest_model import (
     load_native_model,
+)
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.FEATURE_FORMAL_MODEL_GENERATOR.native import (
     native_manifest_model,
-)  # fmt: skip
+)
 
 
 class NativeManifestModelTests(unittest.TestCase):

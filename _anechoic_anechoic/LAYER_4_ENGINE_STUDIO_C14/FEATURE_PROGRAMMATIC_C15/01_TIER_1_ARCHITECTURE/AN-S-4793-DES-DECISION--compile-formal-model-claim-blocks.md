@@ -12,8 +12,8 @@ relations:
   - AN-S-4792@3
 state:
   status: "active"
-  version: 3
-  updated_at: "2026-11-25T23:05:44.717820+00:00"
+  version: 5
+  updated_at: "2026-11-27T20:43:50.902996+00:00"
 ---
 
 ## Summary
@@ -24,7 +24,8 @@ Compile formal Model Claim blocks
 
 ### Prose Claim
 
-The Formal Model Engine reads Claim fences and compiles Python Model Claims. Its language selection is modeled below; the model does not establish implementation conformance.
+The Formal Model Engine reads Claim fences and compiles the selected
+Model Claims.
 
 ### Formal Claim
 
@@ -39,3 +40,8 @@ def selected : ClaimLanguage → Bool
 
 theorem other_is_not_selected : selected .other = false := by rfl
 ```
+
+## Semantics
+
+The predicate models language selection. Implementation conformance
+requires separate evidence.

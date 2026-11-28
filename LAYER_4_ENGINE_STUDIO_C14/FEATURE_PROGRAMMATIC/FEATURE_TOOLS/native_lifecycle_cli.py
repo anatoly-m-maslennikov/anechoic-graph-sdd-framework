@@ -1,4 +1,5 @@
 """Run an admitted, bounded native Atom lifecycle request."""
+
 from contextlib import ExitStack
 from dataclasses import replace
 from hashlib import sha256
@@ -8,23 +9,32 @@ from pathlib import Path
 import sys
 
 from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.FEATURE_MODEL_VALIDATION.FEATURE_MODEL_VALIDATION__shared import (
-    open_admitted_model, open_serialized_model,
+    open_admitted_model,
+    open_serialized_model,
 )
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.sources.capture.capture__shared import (
     capture_indexed_lifecycle,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.sources.inventory.inventory__shared import (
     capture_native,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.structure.structure__shared import (
     parse_structure,
-    protected,
     read_structure,
 )
-from .native_lifecycle import LIFECYCLE_TOOLS, execute_native_lifecycle
-from .native_project_selection import (
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    protected,
+)
+from .ATOM_LIFECYCLE.NATIVE_LIFECYCLE.NATIVE_LIFECYCLE__shared import (
+    LIFECYCLE_TOOLS, execute_native_lifecycle,
+)
+from .PROJECT_SUPPORT.PROJECT_SELECTION.PROJECT_SELECTION__shared import (
     NativeProjectSelection,
     is_native_control_name,
     resolve_native_project,
 )
-from .project_selection import _instance_id, _project_root
-from .project_runtime import bind_native_runtime
+from .PROJECT_SUPPORT.PROJECT_SELECTION.PROJECT_SELECTION__shared import _instance_id, _project_root
+from .PROJECT_SUPPORT.RUNTIME_SUPPORT.RUNTIME_SUPPORT__shared import bind_native_runtime
 
 _FIELDS = {"binding", "name", "arguments", "generation", "receipt"}
 
@@ -147,37 +157,57 @@ def _run_indexed(request):
         )
 
 
+def _admitted_lifecycle_model(stack, context, structure):
+    descriptor = context["model"]
+    projected = context.get("status_domains")
+    domains = (
+        {family: set(values) for family, values in projected.items()}
+        if projected is not None
+        else None
+    )
+    if descriptor is None:
+        return None, domains
+    if descriptor.get("model_sha256") != structure.model_sha256:
+        raise ValueError("Admitted Model disagrees with the Structure")
+    model = stack.enter_context(open_serialized_model(descriptor))
+    return model.validate_project_spec, model.status_domains
+
+
+def _admitted_lifecycle_context(stack, context, binding):
+    structure = parse_structure(
+        json.dumps(context["structure"]).encode("utf-8")
+    )
+    if structure.project["sha256"] != binding["manifest_sha256"]:
+        raise ValueError(
+            "Admitted Structure disagrees with the Project Manifest"
+        )
+    selection = _indexed_selection(
+        binding, {"manifest_ref": structure.project["ref"]}
+    )
+    selection = replace(
+        selection,
+        parameters=context["structure"]["project"].get("parameters", {}),
+    )
+    validate, domains = _admitted_lifecycle_model(stack, context, structure)
+    capture = capture_indexed_lifecycle(
+        selection,
+        context["carriers"],
+        context["max_numbers"],
+        lenses=context["lenses"],
+        max_archived_version=context.get("max_archived_version", 0),
+        domains=domains,
+    )
+    return selection, structure, validate, capture
+
+
 def _run_context(request):
     from .ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import result
 
     context, binding = request["lifecycle_context"], request["binding"]
     with ExitStack() as stack:
         try:
-            structure = parse_structure(
-                json.dumps(context["structure"]).encode("utf-8")
-            )
-            if structure.project["sha256"] != binding["manifest_sha256"]:
-                raise ValueError("Admitted Structure disagrees with the Project Manifest")
-            selection = _indexed_selection(binding, {"manifest_ref": structure.project["ref"]})
-            selection = replace(selection, parameters=context["structure"]["project"].get("parameters", {}))
-            descriptor = context["model"]
-            projected_domains = context.get("status_domains")
-            domains = ({family: set(values) for family, values in projected_domains.items()}
-                       if projected_domains is not None else None)
-            validate = None
-            if descriptor is not None:
-                if descriptor.get("model_sha256") != structure.model_sha256:
-                    raise ValueError("Admitted Model disagrees with the Structure")
-                model = stack.enter_context(open_serialized_model(descriptor))
-                validate = model.validate_project_spec
-                domains = model.status_domains
-            capture = capture_indexed_lifecycle(
-                selection,
-                context["carriers"],
-                context["max_numbers"],
-                lenses=context["lenses"],
-                max_archived_version=context.get("max_archived_version", 0),
-                domains=domains,
+            selection, structure, validate, capture = (
+                _admitted_lifecycle_context(stack, context, binding)
             )
         except (
             OSError,
@@ -190,9 +220,17 @@ def _run_context(request):
                 errors=[{"code": "source_changed", "message": str(error)}]
             )
         with bind_native_runtime(selection):
-            return execute_native_lifecycle(selection, request["name"], request["arguments"], capture,
-                read_structure, previous_capture=capture, ticket_labels=context["ticket_labels"],
-                validate_project_spec=validate, admitted_structure=structure)
+            return execute_native_lifecycle(
+                selection,
+                request["name"],
+                request["arguments"],
+                capture,
+                read_structure,
+                previous_capture=capture,
+                ticket_labels=context["ticket_labels"],
+                validate_project_spec=validate,
+                admitted_structure=structure,
+            )
 
 
 def run(request):
@@ -212,6 +250,10 @@ def run(request):
         return _run_indexed(request)
     if "lifecycle_context" in request:
         return _run_context(request)
+    return _run_generation(request)
+
+
+def _run_generation(request):
     if not isinstance(request["receipt"], dict):
         raise ValueError("Invalid lifecycle request")
     generation = Path(request["generation"])
@@ -233,12 +275,26 @@ def run(request):
         generation, receipt["model_sha256"], receipt["model_descriptor_sha256"]
     ) as model:
         selection = _selection(request["binding"], model, structure)
-        capture = capture_native(selection, include_content_properties=False, domains=model.status_domains)
+        capture = capture_native(
+            selection,
+            include_content_properties=False,
+            domains=model.status_domains,
+        )
         if capture.errors:
-            raise ValueError("Native Project capture failed before lifecycle operation")
+            raise ValueError(
+                "Native Project capture failed before lifecycle operation"
+            )
         with bind_native_runtime(selection):
-            return execute_native_lifecycle(selection, request["name"], request["arguments"], capture, read_structure,
-                previous_capture=capture, ticket_labels=model.ticket_labels, validate_project_spec=model.validate_project_spec)
+            return execute_native_lifecycle(
+                selection,
+                request["name"],
+                request["arguments"],
+                capture,
+                read_structure,
+                previous_capture=capture,
+                ticket_labels=model.ticket_labels,
+                validate_project_spec=model.validate_project_spec,
+            )
 
 
 def main():

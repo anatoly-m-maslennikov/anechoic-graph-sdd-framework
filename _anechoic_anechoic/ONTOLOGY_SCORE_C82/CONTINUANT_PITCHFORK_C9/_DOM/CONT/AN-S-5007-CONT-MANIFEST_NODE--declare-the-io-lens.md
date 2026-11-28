@@ -9,8 +9,8 @@ context:
   lens: DOM/CONT
 state:
   status: active
-  version: 2
-  updated_at: '2026-11-26T18:18:17.067718+00:00'
+  version: 4
+  updated_at: "2026-11-28T15:16:37.698017+00:00"
 concern:
   subject: IO
   path: Model/Graph/Lens//SPEC//DES
@@ -23,7 +23,7 @@ Declare the IO Lens
 
 ## Semantics
 
-Groups the interfaces through which a system exchanges inputs and outputs.
+Groups interactions across the Project runtime boundary.
 
 ## Formal Manifest
 
@@ -31,10 +31,11 @@ Groups the interfaces through which a system exchanges inputs and outputs.
 # Anechoic Python eDSL
 
 from anechoic.formal_claims import value
-from anechoic.model import DesignLens
+from anechoic.model import DesignLens, InboundLens, OutboundLens
 
 class IOLens(DesignLens):
     node.lens_path = value(fixed='IO')
+    node.parts = {'INBOUND': InboundLens, 'OUTBOUND': OutboundLens}
 ```
 
 ## Sources

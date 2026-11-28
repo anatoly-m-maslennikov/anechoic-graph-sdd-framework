@@ -1,6 +1,8 @@
 """Named Project selection, lifecycle, and runtime operations."""
 
-from . import runtime_process_boundary as runtime_process_boundary_module
+from .PROJECT_SUPPORT.RUNTIME_SUPPORT.RUNTIME_SUPPORT__shared import (
+    runtime_process_boundary as runtime_process_boundary_module,
+)
 from .artifact_metadata import (
     SETTINGS_PATH,
     atomic_write,
@@ -10,28 +12,30 @@ from .artifact_metadata import (
     repository_root,
 )
 from .header_yaml import header_scalar, parse_header
-from .legacy_settings_to_manifest import legacy_settings_to_manifest
-from .native_workflow_definition import (
+from .PROJECT_SUPPORT.PROJECT_SUPPORT__shared import legacy_settings_to_manifest
+from .ATOM_LIFECYCLE.NATIVE_LIFECYCLE.NATIVE_LIFECYCLE__shared import (
     NativeDefinitionPin,
     NativeWorkflowDefinitionError,
     bind_native_workflow,
     bind_status_specifications,
     declared_release_entrypoint,
 )
-from .operation_error_boundary import (
+from .PROJECT_SUPPORT.RUNTIME_SUPPORT.RUNTIME_SUPPORT__shared import (
     ExplicitBlockingRuntimeFailure,
     FailureRecord,
     classify_failure,
     emit_failure_diagnostic,
     operation_error_boundary,
 )
-from .project_mcp_bootstrap import (
+from .PROJECT_SUPPORT.RUNTIME_SUPPORT.RUNTIME_SUPPORT__shared import (
     ProjectMcpBootstrapError,
     deploy_project_mcp_bootstrap,
 )
 from .project_root_container import effective_root_container_header
-from .project_runtime import repository_root as runtime_project_root
-from .project_selection import (
+from .PROJECT_SUPPORT.RUNTIME_SUPPORT.RUNTIME_SUPPORT__shared import (
+    repository_root as runtime_project_root,
+)
+from .PROJECT_SUPPORT.PROJECT_SELECTION.PROJECT_SELECTION__shared import (
     ProjectSelection,
     _declaration_boundary_proof,
     active_selection,
@@ -39,47 +43,71 @@ from .project_selection import (
     rebind_selection,
     resolve_project,
 )
-from .runtime_process_boundary import run_process
-from .technical_diagnostics import (
+from .PROJECT_SUPPORT.RUNTIME_SUPPORT.RUNTIME_SUPPORT__shared import run_process
+from .PROJECT_SUPPORT.RUNTIME_SUPPORT.RUNTIME_SUPPORT__shared import (
     TechnicalDiagnosticLogger,
     make_technical_logger,
 )
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.native_lifecycle import LIFECYCLE_TOOLS
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.native_project_selection import (
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.\
+    ATOM_LIFECYCLE.NATIVE_LIFECYCLE.\
+    NATIVE_LIFECYCLE__shared import LIFECYCLE_TOOLS
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.\
+    PROJECT_SUPPORT.PROJECT_SELECTION.\
+    PROJECT_SELECTION__shared import (
     ManifestIdentity,
 )
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.native_project_selection import (
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.\
+    PROJECT_SUPPORT.PROJECT_SELECTION.\
+    PROJECT_SELECTION__shared import (
     NativeProjectSelection,
 )
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.project_runtime import (
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.\
+    PROJECT_SUPPORT.RUNTIME_SUPPORT.\
+    RUNTIME_SUPPORT__shared import (
     bind_native_runtime,
 )
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.native_project_selection import (
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.\
+    PROJECT_SUPPORT.PROJECT_SELECTION.\
+    PROJECT_SELECTION__shared import (
     discover_native_project,
 )
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.native_lifecycle import (
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.\
+    ATOM_LIFECYCLE.NATIVE_LIFECYCLE.\
+    NATIVE_LIFECYCLE__shared import (
     execute_native_lifecycle,
 )
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.native_project_selection import (
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.\
+    PROJECT_SUPPORT.PROJECT_SELECTION.\
+    PROJECT_SELECTION__shared import (
     is_native_control_name,
 )
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.project_settings_schema import (
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.\
+    PROJECT_SUPPORT.RUNTIME_SUPPORT.\
+    RUNTIME_SUPPORT__shared import (
     mcp_tool_blacklist,
 )
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.native_project_selection import (
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.\
+    PROJECT_SUPPORT.PROJECT_SELECTION.\
+    PROJECT_SELECTION__shared import (
     rebind_native_selection,
 )
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.runtime_failure_diagnostics import (
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.\
+    PROJECT_SUPPORT.RUNTIME_SUPPORT.\
+    RUNTIME_SUPPORT__shared import (
     report_failure,
 )
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.native_project_selection import (
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.\
+    PROJECT_SUPPORT.PROJECT_SELECTION.\
+    PROJECT_SELECTION__shared import (
     resolve_native_project,
 )
 
 
 def indexed_draft_runner():
     """Load the indexed lifecycle path before a worker forks."""
-    from .ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import create_draft  # noqa: F401
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.drafts.native_draft__shared import (
+        create_draft as create_draft,
+    )
     from .native_lifecycle_cli import run
 
     return run

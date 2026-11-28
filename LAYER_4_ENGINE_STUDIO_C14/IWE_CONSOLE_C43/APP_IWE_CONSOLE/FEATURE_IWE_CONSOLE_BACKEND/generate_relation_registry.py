@@ -15,8 +15,9 @@ if __package__:
         compile_registry,
         is_registry_declaration,
     )
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
-        import canonical  # fmt: skip
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.sources.inventory.inventory__shared import (
+        canonical,
+    )
     from .source_reader import SourceReader
 else:  # pragma: no cover - direct build-hook invocation
     sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
@@ -25,8 +26,9 @@ else:  # pragma: no cover - direct build-hook invocation
         compile_registry,
         is_registry_declaration,
     )
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
-        import canonical  # fmt: skip
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.sources.inventory.inventory__shared import (
+        canonical,
+    )
     from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.\
         source_reader \
         import SourceReader  # fmt: skip

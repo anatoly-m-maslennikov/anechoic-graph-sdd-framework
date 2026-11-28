@@ -6,7 +6,9 @@ from hashlib import sha256
 import unittest
 
 
-from ..FEATURE_MODEL_VALIDATION__shared import bind_reviewed_instance_check
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.FEATURE_MODEL_VALIDATION.admission.reviewed_instance_check import (
+    bind_reviewed_instance_check,
+)
 
 
 @dataclass(config=ConfigDict(strict=True, extra="forbid"), frozen=True)

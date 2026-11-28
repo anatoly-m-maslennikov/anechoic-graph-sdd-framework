@@ -13,8 +13,8 @@ context:
   lens: DOM/CONT
 state:
   status: "active"
-  version: 2
-  updated_at: "2026-11-26T15:52:36.974169+00:00"
+  version: 4
+  updated_at: "2026-11-28T11:00:50.522707+00:00"
 ---
 
 ## Summary
@@ -32,5 +32,5 @@ class ProjectConfigAtomStatus(Property):
     name = 'Status'
     bearer = Atom.Header.State
     property.applies_to = (ProjectConfigAtom,)
-    property.value.allowed = ('draft', 'active', 'archived')
+    property.value.groups = {'active': 'Current'}
 ```

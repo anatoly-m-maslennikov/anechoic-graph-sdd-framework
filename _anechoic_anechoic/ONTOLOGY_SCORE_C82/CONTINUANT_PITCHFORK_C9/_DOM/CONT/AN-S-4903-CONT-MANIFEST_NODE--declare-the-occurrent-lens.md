@@ -13,8 +13,8 @@ context:
   lens: DOM/CONT
 state:
   status: active
-  version: 6
-  updated_at: '2026-11-26T18:34:31.644797+00:00'
+  version: 7
+  updated_at: "2026-11-28T11:00:50.522707+00:00"
 ---
 
 ## Summary
@@ -35,7 +35,6 @@ from anechoic.model import DomainLens
 
 class OccurrentLens(DomainLens):
     node.lens_path = value(fixed='DOM/MTD')
-    node.control_flow = value(fixed='Imperative')
     node.axes = {'Control Flow': 'Imperative'}
 ```
 

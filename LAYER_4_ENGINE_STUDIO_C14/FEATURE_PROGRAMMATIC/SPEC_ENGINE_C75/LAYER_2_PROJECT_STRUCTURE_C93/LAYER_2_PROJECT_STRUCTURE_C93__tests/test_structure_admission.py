@@ -6,10 +6,10 @@ from unittest.mock import NonCallableMock
 
 import yaml
 
-from ....FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.sources.inventory.inventory__shared import (
     capture_native,
 )
-from ....FEATURE_TOOLS.ADAPTERS_C30.model_capture import model_inputs
+from ....FEATURE_TOOLS.ADAPTERS_C30.model.model_capture import model_inputs
 from ..LAYER_2_PROJECT_STRUCTURE_C93__rows import (
     StructureAdmissionError,
     compile_structure_rows,
@@ -174,10 +174,8 @@ class StructureTests(StructureFixture, unittest.TestCase):
             result["components"]["C14"]["source_path"],
             f"01_CUSTOM_ARCHITECTURE/{COMPONENT.name}",
         )
-        root_purpose = (
-            project.read_text().split("## Purpose\n", 1)[1]
-            .split("\n## ", 1)[0].strip()
-        )
+        _, purpose = project.read_text().split("## Purpose\n", 1)
+        root_purpose = purpose.split("\n## ", 1)[0].strip()
         self.assertEqual(root_purpose, result["project"]["purpose"])
         self.assertEqual(
             "Provide the engine.", result["components"]["C14"]["purpose"]
@@ -191,8 +189,11 @@ class StructureTests(StructureFixture, unittest.TestCase):
         self.assertEqual(
             result,
             compile_structure_rows(
-                control.parent, control.name, selected.manifest_sha256,
-                Model(), rows,
+                control.parent,
+                control.name,
+                selected.manifest_sha256,
+                Model(),
+                rows,
             ),
         )
 
@@ -206,7 +207,8 @@ class StructureTests(StructureFixture, unittest.TestCase):
         project.write_text(
             PROJECT.read_text().replace(
                 "parameters={",
-                f"parameters={{\n        'project': {{'lens_groups': {groups!r}}},",
+                "parameters={\n        "
+                f"'project': {{'lens_groups': {groups!r}}},",
                 1,
             )
         )

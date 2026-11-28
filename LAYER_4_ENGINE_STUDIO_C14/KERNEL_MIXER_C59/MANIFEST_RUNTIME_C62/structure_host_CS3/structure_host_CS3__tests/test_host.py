@@ -4,8 +4,9 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
-    import read_structure  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.structure.structure__shared import (
+    read_structure,
+)
 from KERNEL_MIXER_C59.MANIFEST_RUNTIME_C62.structure_host_CS3.\
     structure_host_CS3__shared \
     import publish_structure  # fmt: skip

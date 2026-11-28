@@ -8,7 +8,7 @@ lower_typed_node = import_module(
     "FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75."
     "LAYER_2_FORMAL_MODEL_C51."
     "FEATURE_FORMAL_MODEL_GENERATOR."
-    "manifest_compiler_CS1.typed_node_lowering"
+    "manifest_compiler_CS1.typed.typed_node_lowering"
 ).lower_typed_node
 
 
@@ -69,6 +69,8 @@ def test_ticket_subtype_template_uses_inherited_property():
         lowered = lower_typed_node(text, records)
         args = parse_native_model_claim(lowered[1][1])["arguments"]
         assert args["allowed_values"] == (value,)
+        assert args["value_format"] == "str"
+        assert args["field_options"] == {"kw_only": True}
         assert args["applies_to_entity_classes"] == (f"Atom//Ticket//{name}",)
         assert args["base_path"] == "Atom.Header.Context"
     assert records == before
@@ -84,7 +86,7 @@ def test_ready_nodes_reuse_records_across_dependency_retries(monkeypatch):
     nodes = import_module(
         "FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75."
         "LAYER_2_FORMAL_MODEL_C51.FEATURE_FORMAL_MODEL_GENERATOR."
-        "manifest_compiler_CS1.active_source_nodes"
+        "manifest_compiler_CS1.active.active_source_nodes"
     )
     record = nodes._model_record
     parsed = []
@@ -118,7 +120,7 @@ def test_node_marker_is_static_and_lowers_to_a_class():
         "ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared"
     ).InputError
     _validate_c9_typed_manifest = import_module(
-        "FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.native_draft_guards"
+        "FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.drafts.native_draft_guards"
     )._validate_c9_typed_manifest
 
     record = (
@@ -220,7 +222,7 @@ def _ticket_records():
                 "from anechoic.formal_claims import declare_entity\n"
                 "declare_entity(entity_name='Template', "
                 "entity_kind='Property', relation_name='IS_PROPERTY_OF', "
-                "base_path='Atom.Header.Context', value_format=str, "
+                "base_path='Atom.Header.Context', value_format=str | None, "
                 "field_options={'default': None, 'kw_only': True})\n"
             ),
         ),
@@ -233,7 +235,7 @@ def _ticket_records():
                 "entity_kind='Property', relation_name='IS_PROPERTY_OF', "
                 "base_path='Atom.Header.Context', value_format=str, "
                 "applies_to_entity_classes=('Atom//Ticket',), "
-                "fallback_property_name='Form')\n"
+                "field_options={'kw_only': True}, fallback_property_name='Form')\n"
             ),
         ),
     ]

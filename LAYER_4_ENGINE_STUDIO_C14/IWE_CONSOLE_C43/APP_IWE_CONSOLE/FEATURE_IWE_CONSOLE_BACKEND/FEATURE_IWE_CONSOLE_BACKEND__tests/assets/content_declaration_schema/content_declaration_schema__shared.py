@@ -1,5 +1,6 @@
 #!/usr/bin/env -S python3 -B
 """Prepare, but never apply, the Header-group reference migration."""
+
 import hashlib
 import json
 import re
@@ -8,15 +9,29 @@ from pathlib import Path
 
 
 from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.FEATURE_IWE_CONSOLE_BACKEND__tests.assets.content_declaration_schema.reference_impact_patterns import (
-    COMMON, ROLE_FIELDS, ALL_FIELDS, DIRECT_ATOM, DIRECT_VAR, DIRECT_ROLE, RELATIVE,
-    ROLE_QUALIFIED, ATOM_CONTEXT, ATOM_ROLE, ATOM_BINDING, TYPED_ATOM, SUMMARY,
-    E240_BARE, BARE_COMMON, BARE_COMMON_PATHS, E240_PATHS,
+    COMMON,
+    ROLE_FIELDS,
+    ALL_FIELDS,
+    DIRECT_ATOM,
+    DIRECT_VAR,
+    DIRECT_ROLE,
+    RELATIVE,
+    ROLE_QUALIFIED,
+    ATOM_CONTEXT,
+    ATOM_ROLE,
+    ATOM_BINDING,
+    TYPED_ATOM,
+    SUMMARY,
+    E240_BARE,
+    BARE_COMMON,
+    BARE_COMMON_PATHS,
+    E240_PATHS,
 )
+
 ROOT = Path(__file__).resolve().parents[5]
 PLAN = ROOT / ".anechoic_anechoic/02_analysis/draft/header-groups-20261106"
 SNAPSHOT = PLAN / "native-snapshot.json"
 OUT = Path(__file__).with_name("impact.json")
-
 
 
 def sha256(text):
@@ -27,7 +42,14 @@ def protected_summary_spans(text):
     spans = []
     for match in SUMMARY.finditer(text):
         next_heading = re.search(r"(?m)^## (?!#)", text[match.end() :])
-        spans.append((match.start(), match.end() + next_heading.start() if next_heading else len(text)))
+        spans.append(
+            (
+                match.start(),
+                match.end() + next_heading.start()
+                if next_heading
+                else len(text),
+            )
+        )
     return spans
 
 
@@ -48,7 +70,9 @@ def frontmatter(text):
 
 def protected_metadata(text):
     header = frontmatter(text)
-    fields = re.findall(r"(?m)^(?:atom_id|ref_id|status|version|updated_at):[^\n]*$", header)
+    fields = re.findall(
+        r"(?m)^(?:atom_id|ref_id|status|version|updated_at):[^\n]*$", header
+    )
     relations = re.search(r"(?ms)^relations:\n(?:^[ \t].*(?:\n|$))*", header)
     return fields, relations.group(0) if relations else ""
 
@@ -99,7 +123,9 @@ def _rewrite_direct(text, bindings, replace_match):
         mapped = replacement(match.group("field"), match.group("role"))
         return f"{match.group('role')}/(.Header.{mapped}" if mapped else None
 
-    result = replace_match(ROLE_QUALIFIED, result, role_qualified, "role_qualified")
+    result = replace_match(
+        ROLE_QUALIFIED, result, role_qualified, "role_qualified"
+    )
 
     return result
 
@@ -135,6 +161,7 @@ def _rewrite_relative(result, counts):
 
 def _find_holds(result, bindings):
     holds = []
+
     def add_hold(match, reason):
         if in_spans(match.start(), protected_summary_spans(result)):
             return
@@ -144,7 +171,9 @@ def _find_holds(result, bindings):
             {
                 "token": match.group(0),
                 "reason": reason,
-                "snippet": result[line_start : len(result) if line_end < 0 else line_end].strip(),
+                "snippet": result[
+                    line_start : len(result) if line_end < 0 else line_end
+                ].strip(),
             }
         )
 
@@ -157,7 +186,9 @@ def _find_holds(result, bindings):
         if match.group("var") not in bindings:
             add_hold(match, "variable_is_not_proven_Atom")
         elif field not in COMMON and replacement(field, role) is None:
-            add_hold(match, "role_specific_atom_header_has_no_proven_matching_role")
+            add_hold(
+                match, "role_specific_atom_header_has_no_proven_matching_role"
+            )
     for match in DIRECT_ROLE.finditer(result):
         add_hold(match, "role_property_is_not_an_approved_existing_contract")
     for match in ROLE_QUALIFIED.finditer(result):
@@ -230,39 +261,20 @@ def rewrite(path, text):
 
 
 def self_check():
-    assert replacement("Ref ID") == "Identity.Ref ID"
-    assert replacement("RefID") == "Identity.RefID"
-    assert replacement("Updated At") == "State.Updated At"
-    assert replacement("UpdatedAt") == "State.UpdatedAt"
-    assert replacement("Subjects") == "Context.Topics"
-    assert replacement("Subjects.Active") == "Context.Topics.Main Subject"
-    assert replacement("Subjects.Passive") == "Context.Topics.Dependencies"
-    assert replacement("Priority", "Concern") == "Context.Concern.Priority"
-    assert replacement("Priority", "Plan") is None
-    text = "Atom/(.Header.Role: Plan)/(.Header.Form: X);"
-    after, _, holds, _ = migrate(text)
-    assert after == "Atom/(.Header.Context.Role: Plan)/(.Header.Context.Form: X);" and not holds
-    typed = "Atom/(.Header.Role: Plan)//$atom; $atom.Header.Work Sequence Number"
-    after, _, holds, _ = migrate(typed)
-    assert "$atom.Header.Context.Plan.Work Sequence Number" in after and not holds
-    assert transform(after) == after
-    role, _, holds, _ = migrate("Atom/(.Header.Role: Concern).Header.Priority;")
-    assert role == "Atom/(.Header.Context.Role: Concern).Header.Context.Concern.Priority;" and not holds
-    relative, _, holds, _ = migrate("UNIQUE(Atom//$atom, (.Header.ID, .Header.Version));")
-    assert "(.Header.Identity.ID, .Header.State.Version)" in relative and not holds
-    subject, _, holds, _ = migrate("Atom//$atom; $atom.Header.Subjects.Passive")
-    assert "$atom.Header.Context.Topics.Dependencies" in subject and not holds
-    bare = "Header.Subjects.Active"
-    assert transform(bare) == bare
-    assert rewrite(next(iter(E240_PATHS)), bare) == "Header.Context.Topics.Main Subject"
-    reviewed_path = next(iter(BARE_COMMON_PATHS))
-    assert rewrite(reviewed_path, "Header.Container") == "Header.Context.Container"
-    assert rewrite(reviewed_path, "Entity.Header.ID") == "Entity.Header.ID"
-    assert transform("Header.Container") == "Header.Container"
-    sql_columns = "header_context_plan header_context_plan_work_sequence_number"
-    assert transform(sql_columns) == sql_columns
-    unchanged, _, holds, _ = migrate("Atom.Header.Context.Role Entity.Header.ID Entity.Header.Status")
-    assert unchanged == "Atom.Header.Context.Role Entity.Header.ID Entity.Header.Status" and not holds
+    from types import SimpleNamespace
+
+    # fmt: off
+    from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND \
+        .FEATURE_IWE_CONSOLE_BACKEND__tests.assets \
+        .content_declaration_schema.content_declaration_schema_checks import (
+            check_replacements, check_roles, check_unchanged,
+        )
+    # fmt: on
+
+    source = SimpleNamespace(**globals())
+    check_replacements(source)
+    check_roles(source)
+    check_unchanged(source)
 
 
 def _validated_snapshot():
@@ -274,15 +286,13 @@ def _validated_snapshot():
     assert len(carriers) == expected_count
     assert len({row["path"] for row in carriers}) == expected_count
     assert expected_count == baseline_source_count + len(supplemental_sources)
-    assert {
-        (row["path"], row["sha256"]) for row in supplemental_sources
-    } <= {(row["path"], row["sha256"]) for row in carriers}
+    assert {(row["path"], row["sha256"]) for row in supplemental_sources} <= {
+        (row["path"], row["sha256"]) for row in carriers
+    }
     return carriers, supplemental_sources
 
 
-def main():
-    self_check()
-    carriers, supplemental_sources = _validated_snapshot()
+def _collect_operations(carriers):
     operations = []
     holds = []
     counts = Counter(native_current_draft_carriers=len(carriers))
@@ -315,13 +325,35 @@ def main():
                 }
             )
 
+    return operations, holds, counts, snapshot_hash_mismatches
+
+
+def main():
+    self_check()
+    carriers, supplemental_sources = _validated_snapshot()
+    operations, holds, counts, snapshot_hash_mismatches = _collect_operations(
+        carriers
+    )
     counts["operations"] = len(operations)
     counts["reference_spans"] = sum(counts[field] for field in ALL_FIELDS)
     counts["snapshot_hash_mismatches"] = snapshot_hash_mismatches
     counts["supplemental_sources"] = len(supplemental_sources)
-    plan = {"operations": operations, "holds": holds, "counts": dict(sorted(counts.items()))}
+    plan = {
+        "operations": operations,
+        "holds": holds,
+        "counts": dict(sorted(counts.items())),
+    }
     OUT.write_text(json.dumps(plan, indent=2) + "\n")
-    print(json.dumps({"operations": len(operations), "holds": len(holds), "counts": plan["counts"]}, indent=2))
+    print(
+        json.dumps(
+            {
+                "operations": len(operations),
+                "holds": len(holds),
+                "counts": plan["counts"],
+            },
+            indent=2,
+        )
+    )
 
 
 if __name__ == "__main__":

@@ -1,4 +1,5 @@
 """Check native state findings publication and rebuild dependencies."""
+
 from unittest.mock import NonCallableMock
 
 from contextlib import redirect_stderr
@@ -18,33 +19,56 @@ from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (
 
 from .KERNEL_MIXER_C59__tests__shared import state_finding_row
 
-_BOUNDARY_TABLES = 'KERNEL_MIXER_C59.boundary_tables'
+_BOUNDARY_TABLES = "KERNEL_MIXER_C59.boundary_tables"
 
 
 class StateProjectionTests(TestCase):
     def test_publication_rebuild_rollback_and_removal(self):
-        connection = duckdb.connect(':memory:')
+        connection = duckdb.connect(":memory:")
         self.addCleanup(connection.close)
         row = state_finding_row(
             "src/a.py", "<module>", 1, "unresolved", detail="Lean unavailable"
         )
         connection.execute("BEGIN")
         replace_boundaries(connection, ([], [], [row]))
-        connection.execute('COMMIT')
-        self.assertEqual([row], connection.execute('SELECT * FROM state_effect_findings').fetchall())
-        schema = public_schema(connection, NonCallableMock(
-            spec_set=[
-                'status_names'
-            ],
-            status_names=[]))
-        self.assertIn('state_effect_findings', schema['tables'])
+        connection.execute("COMMIT")
+        self.assertEqual(
+            [row],
+            connection.execute(
+                "SELECT * FROM state_effect_findings"
+            ).fetchall(),
+        )
+        schema = public_schema(
+            connection,
+            NonCallableMock(spec_set=["status_names"], status_names=[]),
+        )
+        self.assertIn("state_effect_findings", schema["tables"])
 
+        self._assert_rebuild_scope()
+
+        connection.execute("BEGIN")
+        replace_boundaries(connection, ([], [], []))
+        connection.execute("ROLLBACK")
+        self.assertEqual(
+            [row],
+            connection.execute(
+                "SELECT * FROM state_effect_findings"
+            ).fetchall(),
+        )
+        remove_boundaries(connection)
+        self.assertNotIn(
+            "state_effect_findings",
+            public_schema(
+                connection,
+                NonCallableMock(spec_set=["status_names"], status_names=[]),
+            )["tables"],
+        )
+
+    def _assert_rebuild_scope(self):
         rebuild = NativeQueryRebuild()
         rebuild._realization_options = ()
         store = NonCallableMock(
-            spec_set=[
-                '_projection'
-            ],
+            spec_set=["_projection"],
             _projection=NonCallableMock(
                 spec_set=["graph"],
                 graph=NonCallableMock(spec_set=["tables"], tables={}),
@@ -58,23 +82,12 @@ class StateProjectionTests(TestCase):
         )
         self.assertIn("state_effect_findings", dependencies)
 
-        connection.execute('BEGIN')
-        replace_boundaries(connection, ([], [], []))
-        connection.execute('ROLLBACK')
-        self.assertEqual([row], connection.execute('SELECT * FROM state_effect_findings').fetchall())
-        remove_boundaries(connection)
-        self.assertNotIn('state_effect_findings', public_schema(connection, NonCallableMock(
-            spec_set=[
-                'status_names'
-            ],
-            status_names=[]))['tables'])
-
     def test_analysis_receives_same_ownership_as_access_check(self):
         selection = NonCallableMock(
-            spec_set=[
-                'root', 'control_root'
-            ],
-            root='root', control_root='control')
+            spec_set=["root", "control_root"],
+            root="root",
+            control_root="control",
+        )
         snapshot = NonCallableMock(
             spec_set=["components", "packages"], components={}, packages={}
         )
@@ -136,7 +149,7 @@ class StateProjectionTests(TestCase):
         analyze.assert_called_once_with("root", sources, ownership=None)
 
     def test_lint_reports_denied_and_silent_actions(self):
-        path = 'src/effects.py'
+        path = "src/effects.py"
         rows = [
             state_finding_row(
                 path,
@@ -151,15 +164,15 @@ class StateProjectionTests(TestCase):
                 "action",
                 2,
                 "hasEffects",
-                violations='[{"line": 2, "kind": "write", "name": "REQUEST_CTX"}]',
+                violations=(
+                    '[{"line": 2, "kind": "write", "name": "REQUEST_CTX"}]'
+                ),
             ),
             state_finding_row(path, "declared", 3, "declaredNoOp"),
         ]
         errors = StringIO()
         with redirect_stderr(errors):
             self.assertEqual(1, _report(rows))
-        self.assertIn('silent state action action', errors.getvalue())
-        self.assertIn('state write denied', errors.getvalue())
-        self.assertNotIn('declared', errors.getvalue())
-
-
+        self.assertIn("silent state action action", errors.getvalue())
+        self.assertIn("state write denied", errors.getvalue())
+        self.assertNotIn("declared", errors.getvalue())

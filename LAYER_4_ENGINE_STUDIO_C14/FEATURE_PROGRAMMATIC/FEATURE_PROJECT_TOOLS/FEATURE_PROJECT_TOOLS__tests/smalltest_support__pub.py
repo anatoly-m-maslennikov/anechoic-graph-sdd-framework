@@ -36,7 +36,8 @@ def write_settings(root: Path) -> Path:
     control = root / ".anechoic_anechoic"
     control.mkdir()
     (control / "anechoic_project_settings.toml").write_text(
-        '[project]\nname = "fixture"\n[artifacts.identity]\nproject_prefix = "CA"\n'
+        '[project]\nname = "fixture"\n[artifacts.identity]\nproject_prefix = '
+        '"CA"\n'
         '[paths]\ncontrol_root = ".anechoic_anechoic"\n',
         encoding="utf-8",
     )

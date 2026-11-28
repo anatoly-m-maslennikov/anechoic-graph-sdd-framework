@@ -2,19 +2,25 @@ import json
 import unittest
 from unittest.mock import NonCallableMock, patch
 
-from ....FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carriers.content.content__shared import (
     CarrierError,
+)
+from ....FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
     LimitReached,
     ReadContext,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.structure.structure__shared import (
     read_structure,
 )
-from ....FEATURE_TOOLS.ADAPTERS_C30.carrier_read__pub import (
+from ....FEATURE_TOOLS.ADAPTERS_C30.carriers.content.carrier_read__pub import (
     parse_carrier,
 )
-from ....FEATURE_TOOLS.ADAPTERS_C30.project_manifest__pub import (
+from ....FEATURE_TOOLS.ADAPTERS_C30.settings.project.project_manifest__pub import (
     manifest_summary_fields,
 )
-from ....FEATURE_TOOLS.FEATURE_TOOLS__shared import (
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.\
+    PROJECT_SUPPORT.PROJECT_SELECTION.\
+    PROJECT_SELECTION__shared import (
     resolve_native_project,
 )
 from ..LAYER_2_PROJECT_STRUCTURE_C93__shared import (

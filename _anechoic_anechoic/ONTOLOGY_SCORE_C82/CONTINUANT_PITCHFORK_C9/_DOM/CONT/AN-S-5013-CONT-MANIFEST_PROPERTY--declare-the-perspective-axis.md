@@ -3,7 +3,7 @@ atom_family: SPEC
 atom_id: AN-S-5013
 concern:
   subject: Perspective
-  path: Model/Graph/Axis
+  path: Model/Graph/Node
   relation: has_axis
 container:
   component: C9
@@ -13,8 +13,8 @@ context:
   lens: DOM/CONT
 state:
   status: active
-  version: 1
-  updated_at: '2026-11-26T18:34:31.644797+00:00'
+  version: 2
+  updated_at: "2026-11-28T10:28:09.160093+00:00"
 ---
 
 ## Summary
@@ -30,11 +30,11 @@ To Be states what should hold. As Is describes the realization. Recorded preserv
 ```python anechoic-edsl
 # Anechoic Python eDSL
 
-from anechoic.model import Axis, Property
+from anechoic.model import Node, Property
 
 class PerspectiveAxis(Property):
     name = 'Perspective'
-    bearer = Axis
+    bearer = Node
     property.axis = True
     property.value.allowed = ('To Be', 'As Is', 'Recorded')
 ```

@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 
 from .model_field_validation import _check_count
-from .model_relation_endpoints import validate_relation_endpoint_levels
+from .model_rules._package__shared import validate_relation_endpoint_levels
 
 
 def validate_model_relations(
@@ -79,7 +79,8 @@ def effective_relation_constraints(model_class, declarations):
             raise ValueError(
                 f"Missing Relation Declaration for {current.__name__}"
             )
-        effective.update(declarations[current])
+        for name, rule in declarations[current].items():
+            effective[name] = effective.get(name, {}) | rule
     return effective
 
 

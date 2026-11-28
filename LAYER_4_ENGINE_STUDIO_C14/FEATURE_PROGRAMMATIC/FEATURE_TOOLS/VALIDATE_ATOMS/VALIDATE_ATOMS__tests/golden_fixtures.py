@@ -102,6 +102,13 @@ def copy_fixtures(relative_paths: list[str], root: Path) -> None:
             shutil.copytree(
                 source, destination, dirs_exist_ok=True, symlinks=True
             )
+            governance = destination / "governance"
+            if relative == "fixtures/context" and governance.is_dir():
+                for group in governance.iterdir():
+                    if group.is_dir():
+                        for fixture in group.iterdir():
+                            fixture.rename(governance / fixture.name)
+                        group.rmdir()
         else:
             destination.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(source, destination, follow_symlinks=False)

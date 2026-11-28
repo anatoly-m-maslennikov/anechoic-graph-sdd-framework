@@ -7,10 +7,10 @@ from typing import Any
 
 import re as re
 
-from .contract_graph_common import (
+from .contracts.contracts__shared import (
     _source_ref,
 )
-from .readable_entity_tree_data import (
+from .declarations.views.views__shared import (
     primary_tree,
     read_edges,
     read_nodes,

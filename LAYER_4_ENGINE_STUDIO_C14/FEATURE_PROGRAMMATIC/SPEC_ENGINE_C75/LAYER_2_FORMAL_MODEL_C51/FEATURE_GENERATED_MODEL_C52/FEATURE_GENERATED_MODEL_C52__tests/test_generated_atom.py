@@ -51,9 +51,7 @@ class GeneratedAtomTests(unittest.TestCase):
         )
         self.assertTrue(issubclass(Plan, Atom))
 
-    def test_standalone_dataclasses_validate_without_changing_record_operations(
-        self,
-    ):
+    def test_standalone_records_validate_and_preserve_operations(self):
         content = AtomContent("Dependency")
         self.assertEqual(
             asdict(content), {"summary": "Dependency", "properties": {}}
@@ -82,10 +80,14 @@ class GeneratedAtomTests(unittest.TestCase):
             """{
                 "identity": {"id": "AN-T-1", "ref_id": "AN-T-1@1"},
                 "context": {
-                    "container": {"scope_unit": "C52"}, "role": "Plan", "form": "Plan",
+                    "container": {"scope_unit": "C52"},
+                    "role": "Plan", "form": "Plan",
                     "topics": {"main_subject": "Atom"}, "tier": {"value": 0}
                 },
-                "state": {"status": "active", "version": 1, "updated_at": "2026-11-24T00:00:00Z"},
+                "state": {
+                    "status": "active", "version": 1,
+                    "updated_at": "2026-11-24T00:00:00Z"
+                },
                 "destination": {"file": {"name": "atom.md", "path": "."}}
             }""",
             strict=True,

@@ -19,11 +19,10 @@ if __package__:
     from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (
         declared_header_schema,
     )
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
-        import (
-            formal_claim_fences,
-            source_markdown,
-        )  # fmt: skip
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carriers.content.content__shared import (
+        formal_claim_fences,
+        source_markdown,
+    )
     from .source_reader import SourceReader
     from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import first_reference_rows
     from .workbench_schema_asset import compile_schema, schema_asset
@@ -43,11 +42,10 @@ else:  # pragma: no cover - direct image-build invocation
     from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (
         declared_header_schema,
     )
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
-        import (
-            formal_claim_fences,
-            source_markdown,
-        )  # fmt: skip
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carriers.content.content__shared import (
+        formal_claim_fences,
+        source_markdown,
+    )
     from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.\
         source_reader \
         import SourceReader  # fmt: skip
@@ -59,10 +57,12 @@ else:  # pragma: no cover - direct image-build invocation
             schema_asset,
         )  # fmt: skip
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
-    import is_current_requirement_declaration  # fmt: skip
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
-    import compile_role_folders  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carriers.content.content__shared import (
+    is_current_requirement_declaration,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carriers.content.content__shared import (
+    compile_role_folders,
+)
 
 
 def compile_project_schema(
@@ -81,9 +81,9 @@ def compile_project_schema(
         )
     )
     if model_class_bindings is None:
-        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.\
-            ADAPTERS_C30__shared \
-            import bindings_from_workbench_rows  # fmt: skip
+        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model.model__shared import (
+            bindings_from_workbench_rows,
+        )
 
         model_class_bindings = bindings_from_workbench_rows(selected)
     pins = {}
@@ -114,10 +114,12 @@ def compile_project_schema(
 
 
 def _python_declarations(rows):
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
-        import parse_native_model_claim  # fmt: skip
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
-        import parse_structured_python_model_claim  # fmt: skip
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model.claims.claims__shared import (
+        parse_native_model_claim,
+    )
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model.python.python__shared import (
+        parse_structured_python_model_claim,
+    )
 
     for row in rows:
         if not is_current_requirement_declaration(row):

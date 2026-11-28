@@ -30,3 +30,16 @@ database from source. Show the state and outcome of each operation.
 Verify the healthy and unhealthy states and their available diagnostics.
 Verify that each action requests its intended rebuild and reports
 completion or failure.
+
+## Verification
+
+Current Kernel verified Graph-only rebuild, preservation of Atom and
+Structure facts, failure preservation, and disabled Graph refusal.
+The bound Backend-to-Kernel check returned index health, ingestion
+issues, and Worker Runs. All eight Diagnostics browser cases passed.
+The shared HTTP check returned live Diagnostics for the bound Project
+with the test compiler deadline disabled. The default run timed out
+while compiling the Model.
+Lean matched the Graph-only rebuild Contract and Solution. The two
+generated Kernel cases passed for success and disabled refusal.
+See AN-S-3047@34, AN-S-5194@1, and AN-S-3059@63.

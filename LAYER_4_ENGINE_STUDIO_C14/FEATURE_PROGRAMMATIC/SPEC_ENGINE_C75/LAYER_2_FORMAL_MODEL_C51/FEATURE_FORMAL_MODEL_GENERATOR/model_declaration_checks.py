@@ -1,11 +1,13 @@
 """Validate Model declaration endpoints and axes."""
 
-from ....FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model.notation.notation__shared import (
     Name as _subject_Name,
     Path as _subject_Path,
     RelationChain as _subject_RelationChain,
     namespace_local_expression as _subject_namespace_local_expression,
     parse_subject_expression as _subject_parse_subject_expression,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model.model__shared import (
     simple_model_address,
     canonical_model_address,
     model_class_target,
@@ -205,6 +207,7 @@ def _check_node_axes(records: list, typed_sources: set) -> None:
     for source, subject, declaration in records:
         args = declaration["arguments"]
         if declaration["kind"] != "entity" or args.get("entity_name") not in {
+            "Node",
             "Axis",
             "Classification",
         }:

@@ -1,5 +1,6 @@
 """Verify phase classification and image gate ordering."""
 
+from contextlib import contextmanager
 import io
 import json
 from pathlib import Path
@@ -66,20 +67,10 @@ class PhaseTests(unittest.TestCase):
         image = "sha256:" + "a" * 64
         root = self.enterContext(TemporaryDirectory())
         argv = [
-            "runner",
-            "--project-root",
-            root,
-            "--phase",
-            "image",
-            "--candidate-image",
-            image,
-            "--canary-package",
-            "/tmp/package",
-            "--canary-selection",
-            "{}",
-            "--run-id",
-            "run",
-        ]
+            "runner", "--project-root", root, "--phase", "image",
+            "--candidate-image", image, "--canary-package", "/tmp/package",
+            "--canary-selection", "{}", "--run-id", "run",
+        ]  # fmt: skip
         with (
             patch.object(runner.sys, "argv", argv),
             patch("sys.stderr", new_callable=io.StringIO),
@@ -105,15 +96,10 @@ class PhaseTests(unittest.TestCase):
     def test_image_rejects_incomplete_or_invalid_inputs(self):
         root = self.enterContext(TemporaryDirectory())
         valid = [
-            "--candidate-image",
-            "sha256:" + "a" * 64,
-            "--canary-package",
-            "/tmp/package",
-            "--canary-selection",
-            "{}",
-            "--run-id",
-            "run",
-        ]
+            "--candidate-image", "sha256:" + "a" * 64,
+            "--canary-package", "/tmp/package", "--canary-selection", "{}",
+            "--run-id", "run",
+        ]  # fmt: skip
         for extra in (
             [],
             ["--candidate-image", "latest"],
@@ -205,35 +191,59 @@ class PhaseTests(unittest.TestCase):
         package = target / "package"
         image = "sha256:" + "a" * 64
         selection = {"runtime_settings_sha256": "b" * 64}
-        argv = ["suite", "--project-root", str(source), "--phase", "canary", "--candidate-image", image,
-                "--canary-package", str(package), "--canary-selection", json.dumps(selection), "--run-id", "run",
-                "--canary-project-root", str(target)]
+        argv = [
+            "suite", "--project-root", str(source), "--phase", "canary",
+            "--candidate-image", image, "--canary-package", str(package),
+            "--canary-selection", json.dumps(selection), "--run-id", "run",
+            "--canary-project-root", str(target),
+        ]  # fmt: skip
         location = Path(__file__).resolve()
         tests = source / location.parents[1].relative_to(location.parents[5])
         canary_modules = [
-            tests / name
+            tests / "release" / name
             for name in (
                 "test_release_canary.py",
                 "test_release_canary_retry.py",
             )
         ]
+        modules = [tests / "test_other.py", *canary_modules]
+        expected = (source, canary_modules, None, "existing")
         for status in (1, 0):
-            with (self.subTest(status=status),
-                  patch.object(runner.sys, "argv", argv),
-                  patch("sys.stdout", new_callable=io.StringIO) as stdout,
-                  patch("sys.stderr", new_callable=io.StringIO),
-                  patch.object(runner, "discover_test_modules", return_value=[tests / "test_other.py", *canary_modules]),
-                  patch.object(runner, "_run_selected_modules", return_value=status) as selected,
-                  patch.object(_release_canary, "verify_candidate_image", return_value="endpoint") as canary):
-                self.assertEqual(status, runner.main())
-            self.assertEqual((source, canary_modules, None, "existing"), selected.call_args.args)
+            mocks = self._standalone_canary_mocks(argv, modules.copy(), status)
+            with self.subTest(status=status):
+                with mocks as (stdout, selected, canary):
+                    self.assertEqual(status, runner.main())
+            self.assertEqual(expected, selected.call_args.args)
             self.assertTrue(selected.call_args.kwargs["required"])
+            text = stdout.getvalue()
             if status:
                 canary.assert_not_called()
-                self.assertNotIn("ANECHOIC_CANARY_ENDPOINT", stdout.getvalue())
+                self.assertNotIn("ANECHOIC_CANARY_ENDPOINT", text)
             else:
-                canary.assert_called_once_with(target, package, image, run_id="run", selection=selection)
-                self.assertIn("ANECHOIC_CANARY_ENDPOINT endpoint\n", stdout.getvalue())
+                canary.assert_called_once_with(
+                    target, package, image, run_id="run", selection=selection
+                )
+                self.assertIn("ANECHOIC_CANARY_ENDPOINT endpoint\n", text)
+
+    @contextmanager
+    def _standalone_canary_mocks(self, argv, modules, status):
+        with (
+            patch.object(runner.sys, "argv", argv),
+            patch("sys.stdout", new_callable=io.StringIO) as stdout,
+            patch("sys.stderr", new_callable=io.StringIO),
+            patch.object(
+                runner, "discover_test_modules", return_value=modules
+            ),
+            patch.object(
+                runner, "_run_selected_modules", return_value=status
+            ) as selected,
+            patch.object(
+                _release_canary,
+                "verify_candidate_image",
+                return_value="endpoint",
+            ) as canary,
+        ):
+            yield stdout, selected, canary
 
     def test_canary_root_changes_only_canary_execution(self):
         source = Path(self.enterContext(TemporaryDirectory())).resolve()
@@ -300,5 +310,5 @@ class PhaseTests(unittest.TestCase):
         )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

@@ -4,11 +4,10 @@ import unittest
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.\
     FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared \
     import STATUS_PLAN as PLAN  # fmt: skip
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
-    import (
-        NativeModelClaimError,
-        parse_native_model_claim,
-    )  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model.claims.claims__shared import (
+    NativeModelClaimError,
+    parse_native_model_claim,
+)
 
 
 class NativeStatusQualifiers(unittest.TestCase):

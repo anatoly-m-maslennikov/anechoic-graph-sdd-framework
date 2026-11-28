@@ -13,8 +13,8 @@ context:
   lens: DOM/CONT
 state:
   status: active
-  version: 19
-  updated_at: '2026-11-26T18:38:58.296902+00:00'
+  version: 21
+  updated_at: "2026-11-28T11:52:02.110048+00:00"
 ---
 
 ## Summary
@@ -40,7 +40,7 @@ An Atom Companion Container physically holds an Atom. This physical arrangement 
 from anechoic.model import (
     Asset, Atom, AtomCompanionContainer, AtomFamily, Cardinality, Carrier,
     Axis, Component, ComponentPackage, Continuant, EDSL, EDSLClasses, EDSLFunctions,
-    File, Folder, Format, Graph, Module, Node, Occurrent, Package, Prescribed,
+    Database, DatabaseRecord, File, Filesystem, Folder, Format, Graph, Module, Node, Occurrent, Package, Prescribed,
     PrescribedContent, PrescribedStructure, Prompt, Realization, RealizationContent,
     RealizationStructure, Relation, Temporality, Unit,
     Lens, Model,
@@ -51,7 +51,9 @@ class Relation2715(Relation):
     relation.endpoint_pairs = (
         {'source_endpoint': {'level': 'model_entities', 'entity_paths': (Graph, Carrier)}, 'target_endpoint': {'level': 'model_entities', 'entity_paths': (Model,)}},
         {'source_endpoint': {'level': 'model_entities', 'entity_paths': (Node, Relation, EDSL, Axis, Lens)}, 'target_endpoint': {'level': 'model_entities', 'entity_paths': (Graph,)}},
-        {'source_endpoint': {'level': 'model_entities', 'entity_paths': (Folder, File)}, 'target_endpoint': {'level': 'model_entities', 'entity_paths': (Carrier,)}},
+        {'source_endpoint': {'level': 'model_entities', 'entity_paths': (Filesystem, Database)}, 'target_endpoint': {'level': 'model_entities', 'entity_paths': (Carrier,)}},
+        {'source_endpoint': {'level': 'model_entities', 'entity_paths': (Folder, File)}, 'target_endpoint': {'level': 'model_entities', 'entity_paths': (Filesystem,)}},
+        {'source_endpoint': {'level': 'model_entities', 'entity_paths': (DatabaseRecord,)}, 'target_endpoint': {'level': 'model_entities', 'entity_paths': (Database,)}},
         {'source_endpoint': {'level': 'model_entities', 'entity_paths': (Continuant, Occurrent)}, 'target_endpoint': {'level': 'model_entities', 'entity_paths': (Temporality,)}},
         {'source_endpoint': {'level': 'model_entities', 'entity_paths': (PrescribedContent, PrescribedStructure)}, 'target_endpoint': {'level': 'model_entities', 'entity_paths': (Prescribed,)}},
         {'source_endpoint': {'level': 'model_entities', 'entity_paths': (Atom,)}, 'target_endpoint': {'level': 'model_entities', 'entity_paths': (PrescribedContent,)}},
@@ -64,6 +66,7 @@ class Relation2715(Relation):
         {'source_endpoint': {'level': 'model_entities', 'entity_paths': (Format, Cardinality)}, 'target_endpoint': {'level': 'model_entities', 'entity_paths': (EDSLClasses,)}},
         {'source_endpoint': {'level': 'instances', 'entity_paths': (Atom,)}, 'target_endpoint': {'level': 'instances', 'entity_paths': (Component, Atom)}},
     )
+    relation.acyclic = True
     relation.inverse_alias = 'CONTAINS'
     relation.reverse_written_alias = '<+'
 ```

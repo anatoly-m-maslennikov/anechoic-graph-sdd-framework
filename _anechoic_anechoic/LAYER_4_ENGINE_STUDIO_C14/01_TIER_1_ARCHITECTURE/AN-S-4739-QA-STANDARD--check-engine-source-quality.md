@@ -9,8 +9,8 @@ context:
   lens: QA
 state:
   status: active
-  version: 4
-  updated_at: "2026-11-27T17:35:01.150345+00:00"
+  version: 7
+  updated_at: "2026-11-28T12:06:23+00:00"
 
 ---
 
@@ -51,10 +51,12 @@ under AN-S-3355.
 
 #### Source size
 
-Outside PROGRAMMATIC, where `enforce_source_size` is enabled, limit Python,
-JavaScript and TypeScript modules to 300 nonblank lines and functions to 45.
-Use the locked frontend parser to measure web functions. When the line
-length gate is enabled, check source covered by the root EditorConfig.
+Outside PROGRAMMATIC, when `enforce_source_size` is enabled, limit Python,
+JavaScript, TypeScript, and Svelte modules to 6 KiB (6,144 source bytes).
+Limit functions to 45 nonblank lines and four nested control-flow levels.
+Use the locked frontend parser to measure web functions. Apply the 67 Rule
+(AN-S-5197) to folders in the same scope. When the line length gate is
+enabled, check source covered by the root EditorConfig.
 
 #### Prose comments
 

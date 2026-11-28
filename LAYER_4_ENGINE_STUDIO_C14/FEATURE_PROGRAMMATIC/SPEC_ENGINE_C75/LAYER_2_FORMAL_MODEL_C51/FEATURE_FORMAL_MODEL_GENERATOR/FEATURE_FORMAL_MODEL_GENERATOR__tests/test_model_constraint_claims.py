@@ -170,10 +170,9 @@ class ConstraintClaimMergeTests(unittest.TestCase):
             manifest_property_fields import (
             _index_classes,
         )  # fmt: skip
-        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.\
-            ADAPTERS_C30__shared import (
+        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model.claims.claims__shared import (
             parse_native_model_claim,
-        )  # fmt: skip
+        )
 
         claim = (
             "from anechoic.formal_claims import "

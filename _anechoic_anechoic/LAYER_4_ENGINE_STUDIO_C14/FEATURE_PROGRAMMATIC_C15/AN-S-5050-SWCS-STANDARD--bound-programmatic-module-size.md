@@ -16,8 +16,8 @@ relations:
   - AN-S-5046
 state:
   status: active
-  version: 1
-  updated_at: '2026-11-27T10:52:53.677257+00:00'
+  version: 3
+  updated_at: "2026-11-28T11:41:07+00:00"
 ---
 
 ## Summary
@@ -28,6 +28,8 @@ Bound PROGRAMMATIC Module size
 
 The bound limits authored Python, JavaScript, and TypeScript Modules in
 PROGRAMMATIC, including tests. Count each Svelte file as one Module.
+Measure the source file as stored, including whitespace and line
+endings. The limit is 6 KiB (6,144 bytes).
 
 ## Claim
 
@@ -36,13 +38,8 @@ PROGRAMMATIC, including tests. Count each Svelte file as one Module.
 ```lean
 namespace ProgrammaticModuleBounds
 
-def conforms (moduleLines : Nat) : Bool :=
-  decide (moduleLines ≤ 300)
+def conforms (moduleBytes : Nat) : Bool :=
+  decide (moduleBytes ≤ 6144)
 
 end ProgrammaticModuleBounds
 ```
-
-### Prose Claim
-
-Limit each source Module to 300 nonblank lines. Include authored
-PROGRAMMATIC tests and count each Svelte file as one Module.

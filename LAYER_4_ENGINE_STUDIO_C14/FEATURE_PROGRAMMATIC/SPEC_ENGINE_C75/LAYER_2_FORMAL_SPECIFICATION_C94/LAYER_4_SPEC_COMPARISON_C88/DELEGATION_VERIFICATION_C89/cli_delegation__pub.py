@@ -4,9 +4,13 @@ from ...LAYER_2_SPEC_READING_C83._package__shared import (
     load_boundary_model,
     load_formal_claim,
 )
-from ...LAYER_2_SPEC_READING_C83.SPECIFICATION_MODEL_C85._package__shared import (
+
+# fmt: off
+from ...LAYER_2_SPEC_READING_C83.SPECIFICATION_MODEL_C85.\
+    _package__shared import (
     normalize_claim,
 )
+# fmt: on
 from ...LAYER_3_LEAN_TRANSLATOR_C84._package__shared import compile_lean
 from .._package__shared import (
     _cli_profiles,
@@ -25,19 +29,22 @@ from .manifest_delegation import (
 
 
 def _entry_facts(binding):
-    facts = {key: value for key in ('transport', 'runner')
-             if isinstance(value := binding.get(key), str) and value.strip()}
-    entry = binding.keys() & {'path', 'module'}
+    facts = {
+        key: value
+        for key in ("transport", "runner")
+        if isinstance(value := binding.get(key), str) and value.strip()
+    }
+    entry = binding.keys() & {"path", "module"}
     if len(entry) == 1:
-        kind, = entry
+        (kind,) = entry
         value = binding[kind]
         if isinstance(value, str) and value.strip():
-            facts['entry_point'] = [kind, value]
+            facts["entry_point"] = [kind, value]
     return facts
 
 
 def _caller_facts(workflow, command, *, manifest=False):
-    if 'states' not in workflow:
+    if "states" not in workflow:
         return {}, None
     trigger = _initial_trigger(workflow)
     if trigger is None:
@@ -80,7 +87,7 @@ def _offered_facts(binding, command, component):
             command if command in subcommands else sorted(subcommands)
         )
         if command in subcommands:
-            facts['component'] = subcommands[command]
+            facts["component"] = subcommands[command]
     return facts
 
 
@@ -151,7 +158,8 @@ def _check_manifest_dispatch(
     lean,
 ):
     caller, workflow, child, contract, issues, unresolved = load_manifest_call(
-        root, parent_manifest, parent_solution, child_id, pin)
+        root, parent_manifest, parent_solution, child_id, pin
+    )
     if caller_action is not None:
         workflow = _operation_claims(workflow).get(caller_action, {})
     required, caller_interface = _caller_facts(
@@ -179,9 +187,111 @@ def _check_manifest_dispatch(
     }
 
 
-def check_cli_child_dispatch(root, parent_solution, child_id, child_pins, *, interface, command,
-                             parent_manifest=None, caller_action=None, action=None, lean='lean'):
-    """Check the selected command, first dispatch target and shared CLI entry point."""
+def _child_report(compiled, caller, errors, report, obligations, context):
+    caller_issues, caller_error = errors
+    caller_interface, interface, command = context
+    diagnostics = caller_issues or ([caller_error] if caller_error else [])
+    if not obligations["caller"] and not diagnostics:
+        diagnostics = [
+            "The selected command has no complete caller entry and "
+            "first-dispatch binding"
+        ]
+    return {
+        **report,
+        "caller_interface": caller_interface,
+        "interface": interface,
+        "command": command,
+        "issues": compiled["issues"],
+        "unresolved": [
+            *compiled["unresolved"],
+            *(
+                {
+                    "source": caller["source"],
+                    "field": "solution",
+                    "message": message,
+                }
+                for message in diagnostics
+            ),
+        ],
+        "unmodeled": [
+            "Arguments and results forwarded by the delegation",
+            "Child guarantees relied on beyond the selected CLI binding",
+        ],
+    }
+
+
+def _load_child(root, parent_solution, child_id, child_pins, caller_action):
+    parent_id = parent_solution["container_component"]
+    _, caller, caller_issues = load_formal_claim(
+        root, parent_id, "solution", parent_solution
+    )
+    child = load_boundary_model(root, child_id, *child_pins)
+    if (
+        child["manifest"]["source"]["container_component"] != parent_id
+        or child_id == parent_id
+    ):
+        raise ValueError(f"{child_id} is not a declared child of {parent_id}")
+    workflow, caller_error = normalize_claim("solution", caller, parent_id)
+    workflow = workflow or {}
+    if caller_action is not None:
+        workflow = _operation_claims(workflow).get(caller_action, {})
+        if not workflow and not caller_error:
+            raise ValueError(
+                f"Unknown caller Solution Action {caller_action!r}"
+            )
+    return caller, caller_issues, child, workflow, caller_error
+
+
+def _check_child_dispatch(
+    root, parent_solution, child_id, child_pins, options
+):
+    interface, command, caller_action, action, lean = options
+    if isinstance(child_pins, dict):
+        raise TypeError(
+            "A black-box child call requires the caller Manifest pin"
+        )
+    caller, caller_issues, child, workflow, caller_error = _load_child(
+        root, parent_solution, child_id, child_pins, caller_action
+    )
+    compiled = compile_lean(child)
+    sources = {
+        "caller": caller["source"],
+        **{
+            role: child[role]["source"]
+            for role in ("manifest", "contract", "solution")
+        },
+    }
+    obligations = _child_facts(
+        compiled["claims"], interface, command, child_id, action
+    )
+    obligations["caller"], caller_interface = _caller_facts(workflow, command)
+    report = compare_delegation(sources, obligations, lean=lean)
+    return _child_report(
+        compiled,
+        caller,
+        (caller_issues, caller_error),
+        report,
+        obligations,
+        (caller_interface, interface, command),
+    )
+
+
+def check_cli_child_dispatch(
+    root,
+    parent_solution,
+    child_id,
+    child_pins,
+    *,
+    interface,
+    command,
+    parent_manifest=None,
+    caller_action=None,
+    action=None,
+    lean="lean",
+):
+    """Check the selected command, first dispatch target and shared CLI entry
+    point.
+    """
     if parent_manifest is not None:
         return _check_manifest_dispatch(
             root,
@@ -195,31 +305,10 @@ def check_cli_child_dispatch(root, parent_solution, child_id, child_pins, *, int
             action=action,
             lean=lean,
         )
-    if isinstance(child_pins, dict):
-        raise TypeError('A black-box child call requires the caller Manifest pin')
-    parent_id = parent_solution['container_component']
-    _, caller, caller_issues = load_formal_claim(root, parent_id, 'solution', parent_solution)
-    child = load_boundary_model(root, child_id, *child_pins)
-    if child['manifest']['source']['container_component'] != parent_id or child_id == parent_id:
-        raise ValueError(f'{child_id} is not a declared child of {parent_id}')
-    workflow, caller_error = normalize_claim('solution', caller, parent_id)
-    workflow = workflow or {}
-    if caller_action is not None:
-        workflow = _operation_claims(workflow).get(caller_action, {})
-        if not workflow and not caller_error:
-            raise ValueError(f'Unknown caller Solution Action {caller_action!r}')
-    compiled = compile_lean(child)
-    sources = {'caller': caller['source'],
-               **{role: child[role]['source'] for role in ('manifest', 'contract', 'solution')}}
-    obligations = _child_facts(compiled['claims'], interface, command, child_id, action)
-    obligations['caller'], caller_interface = _caller_facts(workflow, command)
-    report = compare_delegation(sources, obligations, lean=lean)
-    diagnostics = caller_issues or ([caller_error] if caller_error else [])
-    if not obligations['caller'] and not diagnostics:
-        diagnostics = ['The selected command has no complete caller entry and first-dispatch binding']
-    return {**report, 'caller_interface': caller_interface, 'interface': interface,
-            'command': command, 'issues': compiled['issues'],
-            'unresolved': [*compiled['unresolved'], *(
-                {'source': caller['source'], 'field': 'solution', 'message': message} for message in diagnostics)],
-            'unmodeled': ['Arguments and results forwarded by the delegation',
-                          'Child guarantees relied on beyond the selected CLI binding']}
+    return _check_child_dispatch(
+        root,
+        parent_solution,
+        child_id,
+        child_pins,
+        (interface, command, caller_action, action, lean),
+    )

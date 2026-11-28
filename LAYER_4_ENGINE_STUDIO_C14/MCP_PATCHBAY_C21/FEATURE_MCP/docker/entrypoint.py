@@ -14,7 +14,7 @@ from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import (  # noqa: E402
     ExplicitStartupFailure,
 )
 from MCP_PATCHBAY_C21.FEATURE_MCP.docker.\
-    runtime_log_level import (  # noqa: E402
+    shared_support.shared_support__shared import (  # noqa: E402
     direct_log_level,
 )  # fmt: skip
 
@@ -49,7 +49,7 @@ def _shared_mcp_command():
         "-B",
         "-P",
         "-m",
-        "MCP_PATCHBAY_C21.FEATURE_MCP.shared_http_server",
+        "MCP_PATCHBAY_C21.FEATURE_MCP.gateway.shared_http_server",
         "--host-settings",
         settings,
     ]

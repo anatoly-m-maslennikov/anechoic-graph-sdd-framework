@@ -1,0 +1,115 @@
+"""Deliver a cached result inline or as a temporary Project file."""
+
+from __future__ import annotations
+
+from io import StringIO
+import json
+from typing import Any
+
+from .result_files import _write_csv, write_result_file
+
+
+DELIVERY_MODES = ("file", "inline", "auto")
+
+
+def validate_delivery(delivery: str, result_format: str) -> None:
+    if delivery not in DELIVERY_MODES:
+        raise ValueError("result_delivery must be file, inline or auto")
+    if result_format not in {"json_matrix", "csv", "toon"}:
+        raise ValueError("unsupported result format")
+
+
+def deliver(
+    store: Any,
+    root: Any,
+    page: dict[str, Any],
+    delivery: str,
+    result_format: str,
+    *,
+    full: bool = False,
+) -> dict[str, Any]:
+    validate_delivery(delivery, result_format)
+    page.pop("sql", None)
+    if delivery == "inline" and result_format != "csv":
+        return page
+    columns = [column["name"] for column in page["columns"]]
+    auto = delivery == "auto" and (not full or not page["has_more"])
+    if result_format == "csv" and (delivery == "inline" or auto):
+        stream = StringIO(newline="")
+        _write_csv(stream, columns, iter(page["rows"]))
+        csv_text = stream.getvalue()
+        if (
+            delivery == "inline"
+            or len(csv_text.encode("utf-8")) <= store.inline_result_limit_bytes
+        ):
+            page.pop("rows")
+            page["csv"] = csv_text
+            return page
+    elif auto and result_format == "json_matrix":
+        if (
+            len(json.dumps(page).encode("utf-8"))
+            <= store.inline_result_limit_bytes
+        ):
+            return page
+    try:
+        artifact = _write_result(
+            store, root, page, columns, result_format, full
+        )
+        page.pop("rows", None)
+        page["result_file"] = artifact
+    except Exception as error:
+        page.pop("rows", None)
+        page.update(outcome="partial", export_error=str(error))
+    return page
+
+
+def _write_result(store, root, page, columns, result_format, full):
+    if full:
+        with store._lock:
+            return write_result_file(
+                root,
+                columns,
+                _full_rows(store, page),
+                result_format=result_format,
+                offset=0,
+                has_more=False,
+            )
+    else:
+        return write_result_file(
+            root,
+            columns,
+            page["rows"],
+            result_format=result_format,
+            offset=page["offset"],
+            has_more=page["has_more"],
+        )
+
+
+def _full_rows(store, page):
+    offset = 0
+    while offset < page["row_count"]:
+        chunk = store.page(page["query_id"], offset, page_size=1000)
+        yield from chunk["rows"]
+        offset += len(chunk["rows"])
+        if not chunk["rows"]:
+            break
+
+
+def result_metadata(result: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "status": "success",
+        "error": None,
+        "query_id": result["query_id"],
+        "row_count": result["row_count"],
+        "column_count": result["column_count"],
+    }
+
+
+def failed_metadata(error: Exception) -> dict[str, Any]:
+    return {
+        "status": "failed",
+        "error": str(error),
+        "query_id": None,
+        "row_count": None,
+        "column_count": None,
+    }

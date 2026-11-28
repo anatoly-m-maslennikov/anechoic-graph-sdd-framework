@@ -4,9 +4,7 @@ from pathlib import Path
 import subprocess
 import unittest
 
-from LAYER_2_LOCAL_RELEASE_C63.LAYER_2_LOCAL_RELEASE_C63__tests import (
-    test_simple_local_release as fixtures,
-)
+from LAYER_2_LOCAL_RELEASE_C63.LAYER_2_LOCAL_RELEASE_C63__tests.simple import test_simple_local_release as fixtures
 from LAYER_2_LOCAL_RELEASE_C63.LAYER_2_LOCAL_RELEASE_C63__shared import (
     run_local_release,
 )

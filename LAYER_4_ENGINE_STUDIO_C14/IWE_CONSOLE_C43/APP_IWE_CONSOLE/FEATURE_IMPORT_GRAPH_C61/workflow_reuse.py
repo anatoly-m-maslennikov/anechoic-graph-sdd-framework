@@ -8,14 +8,18 @@ import subprocess
 import sys
 import tokenize
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.structure.structure__shared \
     import parse_structure  # fmt: skip
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.\
-    realization_ownership__pub import build_code_access_ownership  # fmt: skip
+    structure.structure__shared import build_code_access_ownership  # fmt: skip
 
-from .source import _event_path, _root_path, _stat_signature
-from .state_effects import _policy
-from .workflow_reuse_source import (
+from .SOURCE_CAPTURE.SOURCE_CAPTURE__shared import (
+    _event_path,
+    _root_path,
+    _stat_signature,
+)
+from .STATE_ANALYSIS.STATE_ANALYSIS__shared import _policy
+from .WORKFLOW_FACTS.WORKFLOW_FACTS__shared import (
     UnsupportedReuse,
     find_reuse_region,
     lower_reuse,
@@ -178,7 +182,7 @@ def check_reuse(
         [
             "lean",
             "--run",
-            str(Path(__file__).with_name("FlowComparison.lean")),
+            str(Path(__file__).parent / "WORKFLOW_FACTS/FlowComparison.lean"),
         ],
         traces,
     )

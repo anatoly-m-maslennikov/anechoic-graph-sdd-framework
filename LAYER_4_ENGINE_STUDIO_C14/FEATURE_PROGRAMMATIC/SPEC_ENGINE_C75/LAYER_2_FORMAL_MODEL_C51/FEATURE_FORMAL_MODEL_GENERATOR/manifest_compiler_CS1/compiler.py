@@ -4,15 +4,17 @@ from hashlib import sha256
 import json
 from pathlib import Path
 
-from ..FEATURE_FORMAL_MODEL_GENERATOR__shared import (
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.FEATURE_FORMAL_MODEL_GENERATOR.native.native_manifest_model import (
     admit_active_model_records,
-    assemble_model_modules,
     compile_native_bindings,
     load_compiled_model,
-    model_module_name,
     reviewed_model_records,
 )
-from .....FEATURE_TOOLS.ADAPTERS_C30.model_ontology_path__pub import (
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.FEATURE_FORMAL_MODEL_GENERATOR.assembly.model_class_assembly import (
+    assemble_model_modules,
+    model_module_name,
+)
+from .....FEATURE_TOOLS.ADAPTERS_C30.model.model_ontology_path__pub import (
     find_ontology_component,
 )
 
@@ -62,7 +64,7 @@ def write_model_records(
     )
     bindings = compile_native_bindings(records, originals)
     if verify_lean:
-        from .model_lean import verify_model_lean
+        from .lean._package__shared import verify_model_lean
 
         verify_model_lean(records, bindings)
     sources = assemble_model_modules(

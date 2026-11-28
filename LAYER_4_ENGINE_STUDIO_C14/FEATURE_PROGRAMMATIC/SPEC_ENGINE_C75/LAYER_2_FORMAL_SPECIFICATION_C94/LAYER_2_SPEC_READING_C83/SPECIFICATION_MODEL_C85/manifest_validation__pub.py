@@ -1,7 +1,7 @@
 """Validate the modeled declarations in one parsed Component Manifest."""
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.\
-    ADAPTERS_C30.code_access_rules__pub import (
+    ADAPTERS_C30.structure.code_access_rules__pub import (
     parse_code_access,
 )  # fmt: skip
 

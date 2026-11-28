@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 1
-  updated_at: '2026-11-25T20:39:08.202192+00:00'
+  version: 2
+  updated_at: "2026-11-28T13:00:07+00:00"
 ---
 ## Summary
 
@@ -37,8 +37,12 @@ declare_entity(
 ## Component Boundaries
 
 ```python
-{'code': {'exports': {'_package__shared.validate_translation': {'shared': ['C75',
-                                                                           'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/LAYER_2_FORMAL_SPECIFICATION_C94/LAYER_4_TRANSLATION_VALIDATOR_C86/LAYER_4_TRANSLATION_VALIDATOR_C86__tests/functional']}}},
+{'code': {'imports': ['LAYER_4_TRANSLATION_VALIDATOR_C86__tests.functional.test_translation_validation.lean_path', 'LAYER_4_TRANSLATION_VALIDATOR_C86__tests.functional.test_translation_validation.model'],
+          'exports': {'LAYER_4_TRANSLATION_VALIDATOR_C86__tests.functional.test_translation_validation.lean_path': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/LAYER_2_FORMAL_SPECIFICATION_C94/LAYER_4_TRANSLATION_VALIDATOR_C86/LAYER_4_TRANSLATION_VALIDATOR_C86__tests/functional/executable_shapes']},
+                      'LAYER_4_TRANSLATION_VALIDATOR_C86__tests.functional.test_translation_validation.model': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/LAYER_2_FORMAL_SPECIFICATION_C94/LAYER_4_TRANSLATION_VALIDATOR_C86/LAYER_4_TRANSLATION_VALIDATOR_C86__tests/functional/executable_shapes']},
+                      '_package__shared.validate_translation': {'shared': ['C75',
+                                                                           'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/LAYER_2_FORMAL_SPECIFICATION_C94/LAYER_4_TRANSLATION_VALIDATOR_C86/LAYER_4_TRANSLATION_VALIDATOR_C86__tests/functional',
+                                                                           'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/LAYER_2_FORMAL_SPECIFICATION_C94/LAYER_4_TRANSLATION_VALIDATOR_C86/LAYER_4_TRANSLATION_VALIDATOR_C86__tests/functional/executable_shapes']}}},
  'io': {'server': {'validate_translation': {'outcomes': {'matched': {'must_effect': [('C86.lean_declarations',
                                                                                       'validated',
                                                                                       {'model': 'request_normalized_model'})],

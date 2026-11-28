@@ -37,6 +37,8 @@ def outcome : EResult → String
 
 def clientList := Val.list [client]
 def clientMap := record [("lean_evaluation", client)]
+def defaultClient := Val.list [record [
+  ("component", .str "C84"), ("interface", .str "run_lean_json")]]
 
 def probe (parent provider interface transport : String) (clients : Val) :
     Lean.Json :=
@@ -50,5 +52,8 @@ def probe (parent provider interface transport : String) (clients : Val) :
   ("wrong_interface",
     probe "C94" "C84" "compile_lean" "in_process" clientList),
   ("wrong_transport", probe "C94" "C84" "run_lean_json" "http" clientList),
-  ("matching_map", probe "C94" "C84" "run_lean_json" "in_process" clientMap)
+  ("matching_map", probe "C94" "C84" "run_lean_json" "in_process" clientMap),
+  ("default_in_process",
+    probe "C94" "C84" "run_lean_json" "in_process" defaultClient),
+  ("no_default_http", probe "C94" "C84" "run_lean_json" "http" defaultClient)
 ]).compress

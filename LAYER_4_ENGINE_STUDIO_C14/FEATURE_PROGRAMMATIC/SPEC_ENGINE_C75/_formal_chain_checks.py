@@ -1,0 +1,179 @@
+"""Check the Model, stage observations, and comparison scope."""
+
+import json
+from decimal import Decimal
+from hashlib import sha256
+
+from .LAYER_2_FORMAL_SPECIFICATION_C94.\
+    LAYER_4_SPEC_COMPARISON_C88._package__shared import (
+    _operation_claims
+)  # fmt: skip
+
+
+def _supports_trace(model, contract):
+    trace = False
+    for language, _ in model["contract"]["claims"]:
+        if language not in ("python trace", "python contract", "python cli"):
+            return False
+        if language == "python trace":
+            trace = True
+    if trace:
+        return True
+    if "operations" not in contract:
+        return contract.get("profile") == "http"
+    for profile in contract["operations"].values():
+        if profile.get("profile") == "http":
+            return True
+    return False
+
+
+def _comparison_gap(contract, action):
+    profiles = _operation_claims(contract)
+    if action is not None and action not in profiles:
+        return f"Unknown Contract Action {action!r}"
+    selected = [profiles[action]] if action is not None else profiles.values()
+    if any(profile.get("transport") == "cli" for profile in selected):
+        return (
+            "Use check_cli_spec for CLI Actions or select an Action "
+            "with a trace or HTTP Contract"
+        )
+    if any(_tool_api(profile) for profile in selected):
+        return (
+            "Use check_tool_api_spec for Tool API Actions or select an Action "
+            "with a trace or HTTP Contract"
+        )
+    return None
+
+
+def _tool_api(profile):
+    return "facts" in profile and profile.get("profile") != "http"
+
+
+def _selected_profile(contract, solution, action):
+    if action is None:
+        return contract
+    profiles = _operation_claims(contract)
+    if action in profiles:
+        return profiles[action]
+    if action in _operation_claims(solution):
+        return next(
+            (profile for profile in profiles.values() if _tool_api(profile)),
+            {},
+        )
+    return {}
+
+
+def _model_pin(value):
+    encoded = json.dumps(
+        value, sort_keys=True, allow_nan=False, separators=(",", ":")
+    ).encode("utf-8")
+    return sha256(encoded).hexdigest()
+
+
+def _coverage(comparison, action):
+    selection = {"action": action} if action is not None else {}
+    return [
+        {"direction": direction, **selection, **fact}
+        for direction, report in comparison.get("directions", {}).items()
+        for fact in report.get("facts", [])
+    ]
+
+
+def _observed_numbers(value, template):
+    if isinstance(value, dict) and isinstance(template, dict):
+        return {
+            key: _observed_numbers(item, template.get(key))
+            for key, item in value.items()
+        }
+    if isinstance(value, list) and isinstance(template, (list, tuple)):
+        return [
+            _observed_numbers(
+                item, template[index] if index < len(template) else None
+            )
+            for index, item in enumerate(value)
+        ]
+    if type(value) in (int, Decimal) and type(template) in (int, float):
+        if value != Decimal(str(template)):
+            raise ValueError("Generated and validated Model identities differ")
+        return template
+    if isinstance(value, Decimal):
+        raise ValueError("Generated and validated Model identities differ")
+    return value
+
+
+def _validated_claims(programs, claims, model, lean_source):
+    if len(programs) != 1:
+        raise ValueError("Missing Lean validation observation")
+    if not programs[0].get("program", "").startswith(lean_source + "\n"):
+        raise ValueError("Lean validation used a different generated program")
+    try:
+        declarations, _, _ = json.loads(
+            programs[0]["stdout"], parse_float=Decimal
+        )[-1]
+        if len(declarations) != len(claims):
+            raise ValueError("Missing Lean declaration observation")
+        actual = {}
+        for role, row in zip(claims, declarations, strict=True):
+            if len(row) != 1 or row[0]["source"] != model[role]["source"]:
+                raise ValueError("Validated declaration source differs")
+            actual[role] = _observed_numbers(row[0]["claim"], claims[role])
+        return actual
+    except (KeyError, IndexError, TypeError) as error:
+        raise ValueError("Missing Lean declaration observation") from error
+
+
+def _validated_pin(programs, claims, generated_pin, model, lean_source):
+    if generated_pin is None:
+        raise ValueError("Missing generated Model observation")
+    pin = _model_pin(_validated_claims(programs, claims, model, lean_source))
+    if generated_pin != pin or _model_pin(claims) != pin:
+        raise ValueError("Generated and validated Model identities differ")
+    return pin
+
+
+def _check_observations(
+    observations, solution_pin, model_pin, framing_pin, action, claims, result
+):
+    rendering = observations.get("rendering", {})
+    if rendering.get("solution_pin") != solution_pin:
+        raise ValueError("Rendering Solution identity is missing or differs")
+    render_action = None if framing_pin is not None else action
+    if rendering.get("action") != render_action:
+        raise ValueError("Rendering Action differs from the selected Action")
+    comparison = observations.get("comparison", {})
+    if (
+        framing_pin is None
+        and (
+            comparison.get("claims_pin") != model_pin
+            or comparison.get("action") != action
+        )
+    ) or _model_pin(claims) != model_pin:
+        raise ValueError("Comparison Model identity is missing or differs")
+    if framing_pin is not None:
+        finite = result.copy()
+        del finite["sources"], finite["mermaid"]
+        pin = _model_pin([claims, finite])
+        if pin != framing_pin:
+            raise ValueError("Framing comparison identity differs")
+        observations["framing_result"] = {"result_pin": pin, "action": action}
+
+
+def _evidence(
+    comparison, action, programs, observations, model_pin, generated_pin
+):
+    coverage = _coverage(comparison, action)
+    actions = {fact["action"] for fact in coverage if fact.get("action")}
+    selected = (
+        next(iter(actions)) if action is None and len(actions) == 1 else action
+    )
+    observations.update(generated_claims=generated_pin, lean_claims=model_pin)
+    return {
+        "sources": comparison["sources"],
+        "model_pin": model_pin,
+        "action": selected,
+        "coverage": coverage,
+        "uncovered_outcomes": comparison.get("uncovered_outcomes", []),
+        "validation_programs": programs[0],
+        "comparison_programs": programs[1],
+        "stages": observations,
+    }

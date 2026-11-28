@@ -11,9 +11,15 @@ _JSON_INTEGER_RULE = """def exactInteger (value : Lean.Json) : Option Int := do
 
 
 def _details(detail):
-    return '[' + ', '.join(
-        f'({lean_string(json.dumps(key))}, {lean_string(json.dumps(value, separators=(",", ":")))})'
-        for key, value in sorted(detail.items())) + ']'
+    return (
+        "["
+        + ", ".join(
+            f"({lean_string(json.dumps(key))}, "
+            f"{lean_string(json.dumps(value, separators=(',', ':')))})"
+            for key, value in sorted(detail.items())
+        )
+        + "]"
+    )
 
 
 def _bindings(values):
@@ -28,42 +34,52 @@ def _bindings(values):
 
 
 def _effect(effect):
-    return f'⟨{lean_string(effect[0])}, {lean_string(effect[1])}, {_details(effect[2] if len(effect) == 3 else {})}⟩'
+    detail = effect[2] if len(effect) == 3 else {}
+    return (
+        f"⟨{lean_string(effect[0])}, {lean_string(effect[1])}, "
+        f"{_details(detail)}⟩"
+    )
 
 
 def _effect_rules():
-    return _JSON_INTEGER_RULE + """def exactNatural (value : Lean.Json) : Option Nat := do
-  let number ← exactInteger value
-  if number < 0 then none else some number.toNat
-def upperBound (value : String) : Option Nat := do
-  let json ← (Lean.Json.parse value).toOption
-  let .obj entries := json | none
-  if entries.foldl (init := 0) (fun n _ _ => n + 1) != 1 then none else do
-    let bound ← (json.getObjVal? "at_most").toOption
-    bound.getNat?.toOption
-def detailImplies (actual required : String) : Bool :=
-  if actual == required then true else
-  if match (Lean.Json.parse actual).toOption, (Lean.Json.parse required).toOption with
-     | some (.num a), some (.num b) => a.normalize == b.normalize
-     | _, _ => false then true else
-  match upperBound required with
-  | none => false
-  | some bound =>
-    let actualBound := upperBound actual <|>
-      ((Lean.Json.parse actual).toOption >>= exactNatural)
-    actualBound.any (fun n => n <= bound)
-structure Effect where
-  observed : String
-  outcome : String
-  detail : List (String × String)
-def implies (actual required : Effect) : Bool :=
-  actual.observed == required.observed && actual.outcome == required.outcome &&
-  required.detail.all (fun pair => actual.detail.any (fun found => found.1 == pair.1 && detailImplies found.2 pair.2))
-"""
+    return _JSON_INTEGER_RULE + (
+        "def exactNatural (value : Lean.Json) : Option Nat := do\n"
+        "  let number ← exactInteger value\n"
+        "  if number < 0 then none else some number.toNat\n"
+        "def upperBound (value : String) : Option Nat := do\n"
+        "  let json ← (Lean.Json.parse value).toOption\n"
+        "  let .obj entries := json | none\n"
+        "  if entries.foldl (init := 0) (fun n _ _ => n + 1) != 1 then "
+        "none else do\n"
+        '    let bound ← (json.getObjVal? "at_most").toOption\n'
+        "    bound.getNat?.toOption\n"
+        "def detailImplies (actual required : String) : Bool :=\n"
+        "  if actual == required then true else\n"
+        "  if match (Lean.Json.parse actual).toOption, (Lean.Json.parse "
+        "required).toOption with\n"
+        "     | some (.num a), some (.num b) => a.normalize == "
+        "b.normalize\n"
+        "     | _, _ => false then true else\n"
+        "  match upperBound required with\n"
+        "  | none => false\n"
+        "  | some bound =>\n"
+        "    let actualBound := upperBound actual <|>\n"
+        "      ((Lean.Json.parse actual).toOption >>= exactNatural)\n"
+        "    actualBound.any (fun n => n <= bound)\n"
+        "structure Effect where\n"
+        "  observed : String\n"
+        "  outcome : String\n"
+        "  detail : List (String × String)\n"
+        "def implies (actual required : Effect) : Bool :=\n"
+        "  actual.observed == required.observed && actual.outcome == "
+        "required.outcome &&\n"
+        "  required.detail.all (fun pair => actual.detail.any (fun found "
+        "=> found.1 == pair.1 && detailImplies found.2 pair.2))\n"
+    )
 
 
 def _edges(states):
-    final = {state['name'] for state in states if state['final']}
+    final = {state["name"] for state in states if state["final"]}
     edges = []
     for state in states:
         for transition in state["transitions"]:
@@ -93,54 +109,66 @@ def _edges(states):
     return ", ".join(edges)
 
 
+_ORDER_RULES = (
+    "def orderStatus (order : Effect × Effect) : String :=\n"
+    '  if hasBindings then "unresolved" else\n'
+    "  let reached := reachable initial (some order.1)\n"
+    '  if !hasReachableSelectedOutput then "unresolved"\n'
+    "  else if edges.any (fun e =>\n"
+    "       let after := reachable e.target none\n"
+    '       e.kind == "effect" && (e.targetWildcard || e.observed == '
+    "order.2.observed) &&\n"
+    "       (e.wildcard || e.outcome == order.2.outcome) &&\n"
+    "       order.2.detail.all (fun pair => !(e.detail.any (fun found => "
+    "found.1 == pair.1)) ||\n"
+    "         e.detail.any (fun found => found.1 == pair.1 &&\n"
+    "           (detailImplies found.2 pair.2 || detailImplies pair.2 "
+    "found.2))) && reached.contains e.source &&\n"
+    "       edges.any (fun terminal => selected terminal && "
+    "after.contains terminal.source))\n"
+    '       then "conflicting" else "matched"\n'
+)
+
+
 def _rules(count):
-    return f'''def selected (e : Edge) : Bool := e.kind == "output" && e.final && (e.wildcard || e.outcome == output)
-def reachable (start : String) (removed : Option Effect) : List String :=
-  (List.range {count}).foldl (fun reached _ =>
-    edges.foldl (fun seen e =>
-      if seen.contains e.source && !(removed.any (fun r => e.kind == "effect" && implies ⟨e.observed, e.outcome, e.detail⟩ r))
-      then if seen.contains e.target then seen else e.target :: seen else seen) reached) [start]
-def initialReachable : List String := reachable initial none
-def hasReachableSelectedOutput : Bool :=
-  edges.any (fun e => selected e && !e.wildcard && initialReachable.contains e.source)
-def effectStatus (effect : Effect) : String :=
-  if hasBindings then "unresolved" else
-  let reached := reachable initial (some effect)
-  if !hasReachableSelectedOutput then "unresolved"
-  else if edges.any (fun e => selected e && reached.contains e.source)
-       then "conflicting" else "matched"
-def forbiddenStatus (target : String) : String :=
-  if hasBindings then "unresolved" else
-  if !actionWide && !hasReachableSelectedOutput then "unresolved"
-  else if edges.any (fun e =>
-       let after := reachable e.target none
-       e.kind == "effect" && (e.targetWildcard || e.observed == target) && initialReachable.contains e.source &&
-       (actionWide || edges.any (fun terminal => selected terminal && after.contains terminal.source)))
-       then "conflicting" else "matched"
-def orderStatus (order : Effect × Effect) : String :=
-  if hasBindings then "unresolved" else
-  let reached := reachable initial (some order.1)
-  if !hasReachableSelectedOutput then "unresolved"
-  else if edges.any (fun e =>
-       let after := reachable e.target none
-       e.kind == "effect" && (e.targetWildcard || e.observed == order.2.observed) &&
-       (e.wildcard || e.outcome == order.2.outcome) &&
-       order.2.detail.all (fun pair => !(e.detail.any (fun found => found.1 == pair.1)) ||
-         e.detail.any (fun found => found.1 == pair.1 &&
-           (detailImplies found.2 pair.2 || detailImplies pair.2 found.2))) && reached.contains e.source &&
-       edges.any (fun terminal => selected terminal && after.contains terminal.source))
-       then "conflicting" else "matched"
-'''
+    return (
+        'def selected (e : Edge) : Bool := e.kind == "output" && e.final && '
+        "(e.wildcard || e.outcome == output)\n"
+        "def reachable (start : String) (removed : Option Effect) : List "
+        "String :=\n"
+        "  (List.range "
+        f"{count}"
+        ").foldl (fun reached _ =>\n"
+        "    edges.foldl (fun seen e =>\n"
+        "      if seen.contains e.source && !(removed.any (fun r => e.kind "
+        '== "effect" && implies ⟨e.observed, e.outcome, e.detail⟩ r))\n'
+        "      then if seen.contains e.target then seen else e.target :: "
+        "seen else seen) reached) [start]\n"
+        "def initialReachable : List String := reachable initial none\n"
+        "def hasReachableSelectedOutput : Bool :=\n"
+        "  edges.any (fun e => selected e && !e.wildcard && "
+        "initialReachable.contains e.source)\n"
+        "def effectStatus (effect : Effect) : String :=\n"
+        '  if hasBindings then "unresolved" else\n'
+        "  let reached := reachable initial (some effect)\n"
+        '  if !hasReachableSelectedOutput then "unresolved"\n'
+        "  else if edges.any (fun e => selected e && reached.contains "
+        "e.source)\n"
+        '       then "conflicting" else "matched"\n'
+        "def forbiddenStatus (target : String) : String :=\n"
+        '  if hasBindings then "unresolved" else\n'
+        '  if !actionWide && !hasReachableSelectedOutput then "unresolved"\n'
+        "  else if edges.any (fun e =>\n"
+        "       let after := reachable e.target none\n"
+        '       e.kind == "effect" && (e.targetWildcard || e.observed == '
+        "target) && initialReachable.contains e.source &&\n"
+        "       (actionWide || edges.any (fun terminal => selected terminal "
+        "&& after.contains terminal.source)))\n"
+        '       then "conflicting" else "matched"\n' + _ORDER_RULES
+    )
 
 
-def _program(contract, workflow):
-    states = workflow['states']
-    effects = ', '.join(_effect(effect) for effect in contract.get('must_effect', []))
-    forbidden = ', '.join(lean_string(target) for target in contract.get('forbid_effect', []))
-    orders = ', '.join(f'({_effect(before)}, {_effect(after)})'
-                       for before, after in contract.get('must_precede', []))
-    return f'''import Lean
-{_effect_rules()}structure Edge where
+_EDGE_TYPE = """structure Edge where
   source : String
   target : String
   kind : String
@@ -155,23 +183,80 @@ def _program(contract, workflow):
   bind : List (String × String)
   sameAs : List (String × String)
 
-def edges : List Edge := [{_edges(states)}]
-def hasBindings : Bool := edges.any (fun e => !e.bind.isEmpty || !e.sameAs.isEmpty)
-def initial : String := {lean_string(workflow['initial'])}
-def actionWide : Bool := {str('output' not in contract).lower()}
-def output : String := {lean_string(contract.get('output', ''))}
-def effects : List Effect := [{effects}]
-def forbidden : List String := [{forbidden}]
-def orders : List (Effect × Effect) := [{orders}]
-{_rules(len(states))}def terminalStatus : String :=
-  if hasBindings then "unresolved" else
-  let reached := reachable initial none
-  if {str(any(state['final'] and state['name'] == workflow['initial'] for state in states)).lower()} ||
-     edges.any (fun e => e.final && reached.contains e.source && e.kind != "output") then "conflicting"
-  else if edges.any (fun e => e.final && reached.contains e.source && e.missingOutcome) then "unresolved"
-  else if edges.any (fun e => (actionWide || selected e) && e.final && reached.contains e.source)
-       then "matched" else "unresolved"
-def actionStatus : String :=
-  if {lean_string(contract['action'])} == {lean_string(workflow['action'])} then "matched" else "conflicting"
-#eval IO.println (Lean.toJson (actionStatus :: effects.map effectStatus ++ forbidden.map forbiddenStatus ++ orders.map orderStatus ++ [terminalStatus])).compress
-'''
+"""
+
+
+def _terminal_program(contract, workflow, states):
+    initial_final = str(
+        any(
+            state["final"] and state["name"] == workflow["initial"]
+            for state in states
+        )
+    ).lower()
+    return (
+        "def terminalStatus : String :=\n"
+        '  if hasBindings then "unresolved" else\n'
+        "  let reached := reachable initial none\n"
+        "  if "
+        f"{initial_final}"
+        " ||\n"
+        "     edges.any (fun e => e.final && reached.contains e.source "
+        '&& e.kind != "output") then "conflicting"\n'
+        "  else if edges.any (fun e => e.final && reached.contains "
+        'e.source && e.missingOutcome) then "unresolved"\n'
+        "  else if edges.any (fun e => (actionWide || selected e) && "
+        "e.final && reached.contains e.source)\n"
+        '       then "matched" else "unresolved"\n'
+        "def actionStatus : String :=\n"
+        "  if "
+        f"{lean_string(contract['action'])}"
+        " == "
+        f"{lean_string(workflow['action'])}"
+        ' then "matched" else "conflicting"\n'
+        "#eval IO.println (Lean.toJson (actionStatus :: effects.map "
+        "effectStatus ++ forbidden.map forbiddenStatus ++ orders.map "
+        "orderStatus ++ [terminalStatus])).compress\n"
+    )
+
+
+def _program(contract, workflow):
+    states = workflow["states"]
+    effects = ", ".join(_effect(e) for e in contract.get("must_effect", []))
+    forbidden = ", ".join(
+        lean_string(target) for target in contract.get("forbid_effect", [])
+    )
+    orders = ", ".join(
+        f"({_effect(before)}, {_effect(after)})"
+        for before, after in contract.get("must_precede", [])
+    )
+    header = "import Lean\n" + _effect_rules() + _EDGE_TYPE
+    return (
+        header
+        + (
+            "def edges : List Edge := ["
+            f"{_edges(states)}"
+            "]\n"
+            "def hasBindings : Bool := edges.any (fun e => !e.bind.isEmpty "
+            "|| !e.sameAs.isEmpty)\n"
+            "def initial : String := "
+            f"{lean_string(workflow['initial'])}"
+            "\n"
+            "def actionWide : Bool := "
+            f"{str('output' not in contract).lower()}"
+            "\n"
+            "def output : String := "
+            f"{lean_string(contract.get('output', ''))}"
+            "\n"
+            "def effects : List Effect := ["
+            f"{effects}"
+            "]\n"
+            "def forbidden : List String := ["
+            f"{forbidden}"
+            "]\n"
+            "def orders : List (Effect × Effect) := ["
+            f"{orders}"
+            "]\n"
+            f"{_rules(len(states))}"
+        )
+        + _terminal_program(contract, workflow, states)
+    )

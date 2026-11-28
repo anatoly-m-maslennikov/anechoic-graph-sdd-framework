@@ -4,7 +4,7 @@ import builtins
 from collections import defaultdict
 from collections.abc import Mapping
 
-from ....FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model.model__shared import (
     model_class_target,
 )
 

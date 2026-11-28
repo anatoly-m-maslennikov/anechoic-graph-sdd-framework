@@ -4,7 +4,8 @@ atom_id: AN-P-72
 structure:
   container:
     component: C9
-context: {}
+context:
+  template: action
 state:
   status: "archived"
   version: 4

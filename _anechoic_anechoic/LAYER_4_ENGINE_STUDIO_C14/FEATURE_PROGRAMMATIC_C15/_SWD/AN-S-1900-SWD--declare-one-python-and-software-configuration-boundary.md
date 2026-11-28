@@ -7,9 +7,9 @@ tier: 4
 context:
   lens: SWD
 state:
-  status: active
-  version: 13
-  updated_at: 2026-11-10 20:47:54 +0400
+  status: "active"
+  version: 14
+  updated_at: "2026-11-27T20:35:14.221449+00:00"
 ---
 
 ## Summary
@@ -23,9 +23,8 @@ Declare one Python and software configuration boundary
 ### Prose Claim
 select the stable CPython `3.14.*` series **and** require one project-owned
 technical configuration boundary for interpreter, formatting, linting, typing,
-evaluation, **and** packaging. CA-D-250 owns the current carrier placement **and**
-encoding **in** the root `pyproject.toml`; configuration **and** Implementation
-materialize this Method's selections there. keep that technical configuration
+evaluation, **and** packaging. Apply AN-S-1514 to configuration carrier placement and encoding.
+Materialize this Method's selections through those carriers. keep that technical configuration
 separate from ANECHOIC project settings.
 
 ## Details

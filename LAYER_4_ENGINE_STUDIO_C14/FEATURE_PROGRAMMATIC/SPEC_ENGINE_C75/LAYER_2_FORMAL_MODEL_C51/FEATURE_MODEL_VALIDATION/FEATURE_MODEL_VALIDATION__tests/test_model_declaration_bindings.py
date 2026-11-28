@@ -5,8 +5,9 @@ import unittest
 from pydantic import ConfigDict
 from pydantic.dataclasses import dataclass
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
-    import parse_native_model_claim  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model.claims.claims__shared import (
+    parse_native_model_claim,
+)
 
 from ..FEATURE_MODEL_VALIDATION__shared import (
     bind_model_declarations,

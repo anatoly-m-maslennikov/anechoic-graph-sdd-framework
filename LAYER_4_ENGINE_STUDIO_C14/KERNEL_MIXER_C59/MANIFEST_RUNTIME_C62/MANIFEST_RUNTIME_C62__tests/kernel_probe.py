@@ -10,48 +10,66 @@ import time
 import httpx2
 
 
+def _reviewed_claim(subject, row, number):
+    claim = (
+        row["claim"]
+        .replace("PMETA Atom", "Project Config Atom")
+        .replace("PMETAAtom", "ProjectConfigAtom")
+    )
+    claim = claim.replace("from caprmedio.", "from anechoic.")
+    if subject.endswith("//Ticket Atom"):
+        claim = claim.replace(
+            "from typing import ClassVar",
+            "from typing import ClassVar\nfrom dataclasses import field",
+        )
+        claim = claim.replace(
+            "    family_marker: ClassVar[str]",
+            "    label: str | None = field(default=None, kw_only=True, "
+            "metadata={'allowed_values': ('Task', 'Subtask', "
+            "'Sub-epic', 'Epic', 'Version')})\n"
+            "    family_marker: ClassVar[str]",
+        )
+    if subject.endswith("//Component Manifest"):
+        number = 3109
+        claim = claim.replace(
+            'tier: int = field(metadata={"allowed_values": (0,)})',
+            'tier: int = field(metadata={"allowed_values": (1,)})',
+        )
+    return claim, number
+
+
 def write_reviewed_declarations(control, root):
     """Create self-contained carriers from the pinned reviewed Model claims."""
-    assets = root / "LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/LAYER_2_FORMAL_MODEL_C51/FEATURE_GENERATED_MODEL_C52"
+    assets = (
+        root
+        / "LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75"
+        / "LAYER_2_FORMAL_MODEL_C51/FEATURE_GENERATED_MODEL_C52"
+    )
     ontology = control / "LAYER_1_META_ONTOLOGY_C9"
     ontology.mkdir()
     rows = []
-    for name in ("native-graph-claims.json", "native-spec-template-claims.json"):
+    for name in (
+        "native-graph-claims.json",
+        "native-spec-template-claims.json",
+    ):
         rows.extend(json.loads((assets / name).read_text(encoding="utf-8")))
     for number, row in enumerate(rows, 10000):
         subject = row["subject"].replace("PMETA Atom", "Project Config Atom")
         if subject.endswith("//Component Purpose"):
             continue
-        claim = (
-            row["claim"]
-            .replace("PMETA Atom", "Project Config Atom")
-            .replace("PMETAAtom", "ProjectConfigAtom")
-        )
-        claim = claim.replace("from caprmedio.", "from anechoic.")
-        if subject.endswith("//Ticket Atom"):
-            claim = claim.replace(
-                "from typing import ClassVar",
-                "from typing import ClassVar\nfrom dataclasses import field",
-            )
-            claim = claim.replace(
-                "    family_marker: ClassVar[str]",
-                "    label: str | None = field(default=None, kw_only=True, metadata={'allowed_values': ('Task', 'Subtask', 'Sub-epic', 'Epic', 'Version')})\n    family_marker: ClassVar[str]",
-            )
-        if subject.endswith("//Component Manifest"):
-            number = 3109
-            claim = claim.replace(
-                'tier: int = field(metadata={"allowed_values": (0,)})',
-                'tier: int = field(metadata={"allowed_values": (1,)})',
-            )
+        claim, number = _reviewed_claim(subject, row, number)
         name = (
             "declare-component-manifest"
             if number == 3109
             else f"reviewed-{number}"
         )
         (ontology / f"AN-S-{number}-SPEC--{name}.md").write_text(
-            f"---\natom_family: SPEC\natom_id: AN-S-{number}\ntier: 2\ncontainer:\n  component: C9\n"
-            f"context:\n  lens: SPEC\nstate:\n  status: active\n  version: 1\n  updated_at: '2026-11-19T00:00:00Z'\n---\n\n"
-            f"## Claim scope\n\n{subject}\n\n## Claim\n\n### Formal Claim\n\n```python\n{claim}\n```\n",
+            f"---\natom_family: SPEC\natom_id: AN-S-{number}\ntier: 2\n"
+            "container:\n  component: C9\ncontext:\n  lens: SPEC\nstate:\n"
+            "  status: active\n  version: 1\n"
+            "  updated_at: '2026-11-19T00:00:00Z'\n---\n\n"
+            f"## Claim scope\n\n{subject}\n\n## Claim\n\n"
+            f"### Formal Claim\n\n```python\n{claim}\n```\n",
             encoding="utf-8",
         )
 
@@ -111,6 +129,6 @@ def wait_ready(process, client, log, socket):
                 return
         except httpx2.TransportError:
             pass
-        time.sleep(.05)
+        time.sleep(0.05)
     log.seek(0)
     raise AssertionError(f"Kernel did not start: {log.read()}")

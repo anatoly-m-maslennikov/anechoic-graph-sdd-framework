@@ -31,7 +31,7 @@ def restore_reuse(jobs, generation):
         "checkpoint_scope": "foreground",
     }
     with (
-        patch("ORCHESTRATOR_beta_C68.generation.UnixConnection") as connection,
+        patch("ORCHESTRATOR_beta_C68.generation.generation.UnixConnection") as connection,
         patch.object(jobs, "_watch_queue"),
     ):
         response = connection.return_value.getresponse.return_value

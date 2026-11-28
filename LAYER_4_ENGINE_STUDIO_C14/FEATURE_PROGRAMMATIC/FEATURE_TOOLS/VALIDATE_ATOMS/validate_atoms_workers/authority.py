@@ -7,8 +7,9 @@ from pydantic import ConfigDict
 from pydantic.dataclasses import dataclass
 from typing import Any
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
-    import carrier_read_view  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carriers.content.content__shared import (
+    carrier_read_view,
+)
 
 
 Record = dict[str, Any]

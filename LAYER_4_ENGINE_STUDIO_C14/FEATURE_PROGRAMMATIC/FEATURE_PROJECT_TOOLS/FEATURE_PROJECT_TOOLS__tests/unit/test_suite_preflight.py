@@ -8,7 +8,7 @@ from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import call, MagicMock, patch
 
-from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.test_suite__shared import (
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.suite_runner import (
     suite_preflight as preflight,
 )
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS import (
@@ -96,7 +96,7 @@ class PreflightTests(unittest.TestCase):
                 call("SET active_grammar_extensions = ['duckpgq']"),
                 call(
                     (
-                        'SELECT extension_version FROM duckdb_extensions() '
+                        "SELECT extension_version FROM duckdb_extensions() "
                         "WHERE extension_name = 'duckpgq' AND loaded"
                     )
                 ),
@@ -150,7 +150,13 @@ class PreflightTests(unittest.TestCase):
         self.assertEqual("1", environment[preflight.IMAGE_DEADLINES])
 
     def test_cli_reports_failed_prerequisites_without_discovering_tests(self):
-        argv = ["suite", "--phase", "preflight", "--project-root", str(self.root)]
+        argv = [
+            "suite",
+            "--phase",
+            "preflight",
+            "--project-root",
+            str(self.root),
+        ]
         extensions = self.root / "custom-extensions"
         with (
             patch.object(runner.sys, "argv", argv),
@@ -181,18 +187,18 @@ class PreflightTests(unittest.TestCase):
         self.assertIn("npm ci", stderr.getvalue())
         self.assertIn(str(extensions), stderr.getvalue())
         self.assertIn("playwright-browsers", stderr.getvalue())
-        (report_path,) = (self.root / ".anechoic_tmp/test_reports").glob(
-            "*.json"
-        )
+        paths = (self.root / ".anechoic_tmp/test_reports").glob("*.json")
+        (report_path,) = paths
         report = json.loads(report_path.read_text(encoding="utf-8"))
         self.assertEqual(
             ("failed", "preflight"), (report["status"], report["step"])
         )
         self.assertIn("load failed", report["error"])
 
-    def test_preflight_uses_project_relative_cache_override_and_reports_success(
-        self,
-    ):
+    # fmt: off
+    def \
+test_preflight_uses_project_relative_cache_override_and_reports_success(self):
+        # fmt: on
         report = {}
         with (
             patch.dict(

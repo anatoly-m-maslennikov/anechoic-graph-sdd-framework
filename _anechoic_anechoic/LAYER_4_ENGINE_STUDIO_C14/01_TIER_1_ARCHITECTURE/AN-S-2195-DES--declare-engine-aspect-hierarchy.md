@@ -8,8 +8,8 @@ context:
   lens: DES
 state:
   status: "active"
-  version: 5
-  updated_at: "2026-11-27T14:43:25.838139+00:00"
+  version: 6
+  updated_at: "2026-11-27T20:35:14.221449+00:00"
 ---
 
 ## Summary
@@ -21,13 +21,6 @@ Declare Engine Aspect hierarchy
 Engineering, UX, Documentation and Product topics used by the ANECHOIC Engine.
 
 ## Claim
-
-### Prose Claim
-
-Read each ` <+ ` as direct containment only. Containment carries
-no narrowing or policy inheritance.
-
-Frontend Engineering covers frontend construction. Libraries and Frameworks covers library, framework and build-tool choices; Component Authoring covers Svelte components and TypeScript; Code Style covers source organization, formatting and responsibility boundaries. Visual Design, query authoring and interface contracts retain their distinct topics.
 
 ### Formal Claim
 
@@ -160,3 +153,16 @@ declare_entity(
     ),
 )
 ```
+
+## Semantics
+
+Read each ` <+ ` as direct containment only. Narrowing and policy
+inheritance are independent of containment.
+
+Frontend Engineering covers frontend construction. Libraries and
+Frameworks covers library, framework and build-tool choices. Component
+Authoring covers Svelte components and TypeScript. Code Style covers
+source organization, formatting and responsibility boundaries.
+
+Visual Design, query authoring and interface contracts retain their
+distinct topics.

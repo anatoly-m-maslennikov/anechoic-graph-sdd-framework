@@ -1,0 +1,282 @@
+"Validation, preparation, and bounded readback for the shared MCP launcher."
+
+from __future__ import annotations
+
+import json
+import os
+from pathlib import Path
+import re
+from typing import Any, Callable, Mapping
+
+from .mcp_paths import HEALTH_PATH
+
+from .host_runtime_settings import load_host_runtime_settings
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30 \
+    .settings.container_settings__pub \
+    import CONTAINER_SETTINGS_FILENAME  # fmt: skip
+
+
+ROOT = Path(__file__).resolve().parents[5]
+
+COMPOSE = Path(__file__).resolve().parent.parent / "shared-mcp.compose.yaml"
+DOCKER_ENV = (
+    "HOME PATH DOCKER_HOST DOCKER_CONTEXT DOCKER_CONFIG "
+    "XDG_RUNTIME_DIR TMPDIR HTTP_PROXY HTTPS_PROXY ALL_PROXY "
+    "NO_PROXY http_proxy https_proxy all_proxy no_proxy"
+).split()
+
+
+class SharedLaunchError(ValueError):
+    """A safe input or observed Docker boundary failure."""
+
+
+def _image(value):
+    if (
+        not isinstance(value, str)
+        or re.fullmatch(r"sha256:[0-9a-f]{64}\Z", value) is None
+    ):
+        raise SharedLaunchError("explicit_immutable_image_required")
+    return value
+
+
+def _path(value):
+    path = Path(value)
+    if path.is_symlink() or not path.is_file() or not path.is_absolute():
+        raise SharedLaunchError("compose_file_unavailable")
+    return path.resolve(strict=True)
+
+
+def _environment(config, image):
+    native = config.source_path.name == CONTAINER_SETTINGS_FILENAME
+    docker = {
+        name: os.environ[name] for name in DOCKER_ENV if name in os.environ
+    }
+    if config.docker_context:
+        docker.pop("DOCKER_HOST", None)
+        docker["DOCKER_CONTEXT"] = config.docker_context
+    return {
+        **docker,
+        "ANECHOIC_IMAGE": image,
+        "ANECHOIC_HOST_SETTINGS": str(config.source_path),
+        "ANECHOIC_PROJECTS_ROOT": str(config.projects_root),
+        "ANECHOIC_MCP_HTTP_PORT": str(config.http_port),
+        "ANECHOIC_MAX_LOADED_PROJECTS": str(config.max_loaded_projects),
+        "ANECHOIC_SHARED_RUNTIME_ID": config.shared_runtime_id,
+        "ANECHOIC_LOG_LEVEL": config.log_level,
+        "ANECHOIC_WORKBENCH_STORAGE": config.workbench_storage
+        if native
+        else os.environ.get(
+            "ANECHOIC_WORKBENCH_STORAGE", config.workbench_storage
+        ),
+        "ANECHOIC_JOURNAL_STORAGE": config.journal_storage
+        if native
+        else os.environ.get(
+            "ANECHOIC_JOURNAL_STORAGE", config.journal_storage
+        ),
+    }
+
+
+def bounded(value, name, default=120):
+    if value is None:
+        return default
+    if type(value) is not int or not 1 <= value <= 900:
+        raise SharedLaunchError(f"invalid_{name}")
+    return value
+
+
+def _prefix(compose, project):
+    return "docker compose --env-file /dev/null --project-name".split() + [
+        project,
+        "-f",
+        str(compose),
+    ]
+
+
+def _load_config(settings_path, mounted_folder):
+    try:
+        return load_host_runtime_settings(
+            settings_path, base=ROOT, mounted_folder=mounted_folder
+        )
+    except (OSError, RuntimeError, ValueError, TypeError) as error:
+        raise SharedLaunchError("invalid_host_settings") from error
+
+
+def prepare_config(
+    settings_path=None,
+    image=None,
+    *,
+    compose_file=None,
+    timeout=None,
+    mounted_folder=None,
+    readiness_timeout=None,
+):
+    config = _load_config(settings_path, mounted_folder)
+    image = _image(image if image is not None else config.image)
+    compose = _path(compose_file or COMPOSE)
+    timeout = bounded(
+        timeout if timeout is not None else config.startup_timeout_seconds,
+        "startup_timeout",
+        420,
+    )
+    project = "anechoic-shared-" + config.shared_runtime_id[:16]
+    environment = _environment(config, image)
+    prefix = _prefix(compose, project)
+    return {
+        "mode": "dry-run",
+        "service": "shared-mcp",
+        "image": image,
+        "settings_path": str(config.source_path),
+        "projects_root": str(config.projects_root),
+        "http_port": config.http_port,
+        "max_loaded_projects": config.max_loaded_projects,
+        "startup_timeout": timeout,
+        "readiness_timeout": bounded(
+            readiness_timeout
+            if readiness_timeout is not None
+            else config.readiness_timeout_seconds,
+            "readiness_timeout",
+            420,
+        ),
+        "shared_runtime_id": config.shared_runtime_id,
+        "compose_file": str(compose),
+        "command": prefix
+        + ["up", "-d", "--wait", "--wait-timeout", str(timeout), "shared-mcp"],
+        "environment": environment,
+        "compose_prefix": prefix,
+        "config": config,
+    }
+
+
+def _mounts_match(row, config):
+    mounts = row.get("Mounts")
+    if not isinstance(mounts, list):
+        return False
+    volumes = [
+        m
+        for m in mounts
+        if isinstance(m, Mapping)
+        and m.get("Type") == "volume"
+        and m.get("Name") == "anechoic-framework-db"
+        and m.get("Destination") == "/var/lib/anechoic"
+        and m.get("RW") is True
+    ]
+    if len(volumes) != 1 or len(mounts) != 3:
+        return False
+    binds = []
+    for mount in mounts:
+        if not isinstance(mount, Mapping) or mount.get("Type") != "bind":
+            continue
+        rw = mount.get("RW")
+        if not isinstance(rw, bool):
+            mode = str(mount.get("Mode", "rw")).split(",", 1)[0]
+            rw = mode != "ro" and not bool(mount.get("ReadOnly", False))
+        binds.append((mount.get("Source"), mount.get("Destination"), rw))
+    expected = {
+        (str(config.projects_root), str(config.projects_root), True),
+        (str(config.source_path), str(config.source_path), False),
+    }
+    return len(binds) == 2 and set(binds) == expected
+
+
+def _ports_match(row, port):
+    network = row.get("NetworkSettings")
+    ports = network.get("Ports") if isinstance(network, Mapping) else None
+    rows = ports.get("8092/tcp") if isinstance(ports, Mapping) else None
+    if (
+        isinstance(rows, list)
+        and len(rows) == 1
+        and isinstance(rows[0], Mapping)
+    ):
+        return rows[0].get("HostIp") == "127.0.0.1" and rows[0].get(
+            "HostPort"
+        ) == str(port)
+    publishers = row.get("Publishers")
+    if (
+        isinstance(publishers, list)
+        and len(publishers) == 1
+        and isinstance(publishers[0], Mapping)
+    ):
+        value = publishers[0]
+        return (
+            value.get("Protocol") == "tcp"
+            and value.get("TargetPort") == 8092
+            and value.get("PublishedPort") == port
+            and value.get("URL") == "127.0.0.1"
+        )
+    return False
+
+
+def _runtime_match(row, prepared):
+    state = row.get("State")
+    return (
+        row.get("Image") == prepared["image"]
+        and isinstance(state, Mapping)
+        and state.get("Status") == "running"
+        and _mounts_match(row, prepared["config"])
+        and _ports_match(row, prepared["config"].http_port)
+    )
+
+
+def inspect_runtime(
+    docker: Callable[..., Any], prepared, deadline, clock: Callable[[], float]
+):
+    prefix = prepared["compose_prefix"]
+    remaining = deadline - clock()
+    if remaining <= 0:
+        return None
+    listed = docker(
+        prefix + ["ps", "--all", "-q", "shared-mcp"],
+        prepared["environment"],
+        min(30, remaining),
+    )
+    identifiers = str(getattr(listed, "stdout", "") or "").split()
+    if (
+        listed is None
+        or getattr(listed, "returncode", 1) != 0
+        or len(identifiers) != 1
+    ):
+        return None
+    remaining = deadline - clock()
+    if remaining <= 0:
+        return None
+    inspected = docker(
+        [
+            "docker",
+            "container",
+            "inspect",
+            "--format",
+            "{{json .}}",
+            identifiers[0],
+        ],
+        prepared["environment"],
+        min(30, remaining),
+    )
+    if inspected is None or getattr(inspected, "returncode", 1) != 0:
+        return False
+    try:
+        row = json.loads(getattr(inspected, "stdout", ""))
+        if isinstance(row, list):
+            row = row[0] if len(row) == 1 else None
+        if not isinstance(row, Mapping):
+            row = None
+    except TypeError, ValueError, json.JSONDecodeError:
+        row = None
+    return bool(row and _runtime_match(row, prepared))
+
+
+def health_ready(opener, port, deadline, clock: Callable[[], float]):
+    remaining = deadline - clock()
+    if remaining <= 0:
+        return False
+    try:
+        response = opener(
+            f"http://127.0.0.1:{port}{HEALTH_PATH}", timeout=min(2, remaining)
+        )
+        try:
+            return json.load(response).get("state") == "ready"
+        finally:
+            close = getattr(response, "close", None)
+            if close:
+                close()
+    except Exception:
+        return False

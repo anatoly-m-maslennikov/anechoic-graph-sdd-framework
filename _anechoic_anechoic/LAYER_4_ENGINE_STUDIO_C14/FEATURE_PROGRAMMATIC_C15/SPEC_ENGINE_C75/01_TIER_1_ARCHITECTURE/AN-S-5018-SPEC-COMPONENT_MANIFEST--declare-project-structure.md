@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 8
-  updated_at: '2026-11-27T17:35:19.540236+00:00'
+  version: 9
+  updated_at: "2026-11-28T15:06:14+00:00"
 ---
 
 ## Summary
@@ -39,6 +39,16 @@ ComponentManifest(
 ```python
 {'code': {
     'imports': [
+                'PROJECT_SUPPORT.PROJECT_SELECTION.PROJECT_SELECTION__shared.resolve_native_project',
+                'carriers.content.atom_reference__pub.COMPONENT_MANIFEST_FILENAME',
+                'carriers.header.header__shared.spec_folder_layout',
+                'model.model_capture.model_inputs',
+                'settings.project.project__shared.manifest_purpose',
+                'settings.project.project_manifest__pub.manifest_summary_fields',
+                'sources.inventory.source_row__pub.json_value',
+                'structure.components.component_manifest__pub.parse_component_manifest',
+                'structure.lens_scopes__pub.compile_lens_groups',
+                'structure.lens_scopes__pub.validate_lens_whitelist',
         'LAYER_2_PROJECT_STRUCTURE_C93__shared._validation_fields',
         'LAYER_2_PROJECT_STRUCTURE_C93__shared.compile_structure',
         'LAYER_2_PROJECT_STRUCTURE_C93__rows.StructureAdmissionError',
@@ -62,7 +72,7 @@ ComponentManifest(
                 'LAYER_2_PROJECT_STRUCTURE_C93__rows.StructureAdmissionError': {'shared': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/LAYER_2_PROJECT_STRUCTURE_C93/LAYER_2_PROJECT_STRUCTURE_C93__tests',
                                                                                            'C75']},
                 'LAYER_2_PROJECT_STRUCTURE_C93__shared.compile_structure': {'shared': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/LAYER_2_PROJECT_STRUCTURE_C93/LAYER_2_PROJECT_STRUCTURE_C93__tests',
-                                                                                       'C75']},
+                                                                                       'C75', 'C19']},
                 'LAYER_2_PROJECT_STRUCTURE_C93__rows.compile_structure_rows': {'shared': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/SPEC_ENGINE_C75/LAYER_2_PROJECT_STRUCTURE_C93/LAYER_2_PROJECT_STRUCTURE_C93__tests',
                                                                                           'C75']}},
 }, 'io': {'server': {'compile_project_structure': {

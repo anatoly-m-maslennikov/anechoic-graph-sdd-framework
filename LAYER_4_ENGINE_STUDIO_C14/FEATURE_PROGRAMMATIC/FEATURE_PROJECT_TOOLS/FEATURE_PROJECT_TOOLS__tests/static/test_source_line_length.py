@@ -7,7 +7,7 @@ from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import patch
 
-from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.test_suite__shared import (
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.source_inventory import (
     source_line_length as lint,
 )
 
@@ -15,7 +15,8 @@ from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.test_suite__shared import (
 def finding(path, start, additional_lines=0):
     return {
         "location": {
-            "path": path, "lines": {"begin": start, "end": additional_lines},
+            "path": path,
+            "lines": {"begin": start, "end": additional_lines},
         },
         "description": "Line too long",
     }
@@ -38,12 +39,9 @@ class SourceLineLengthTests(unittest.TestCase):
                 self.assertEqual(lint.main(), 0)
                 scan.assert_not_called()
 
-                config = (
-                    Path(directory)
-                    / (
-                        'LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/py'
-                        'project.toml'
-                    )
+                config = Path(directory) / (
+                    "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/py"
+                    "project.toml"
                 )
                 config.parent.mkdir(parents=True)
                 config.write_text(
@@ -59,43 +57,59 @@ class SourceLineLengthTests(unittest.TestCase):
     def test_reports_new_and_changed_lines_across_file_types(self):
         with TemporaryDirectory() as directory:
             root = Path(directory)
-            lint.git(root, "init", "--quiet")
-            (root / "LAYER_5_USER_SETUP_C65").mkdir()
-            script = "LAYER_5_USER_SETUP_C65/start.py"
-            old = "LAYER_5_USER_SETUP_C65/old.ts"
-            renamed = "LAYER_5_USER_SETUP_C65/renamed file.ts"
-            new = "LAYER_5_USER_SETUP_C65/panel.svelte"
-            (root / script).write_text("legacy\nold\n")
-            (root / old).write_text("unchanged\n")
-            lint.git(root, "add", "--all")
-            lint.git(
-                root, "-c", "user.name=Test",
-                "-c", "user.email=test@example.org",
-                "commit", "--quiet", "-m", "Baseline",
-            )
-            lint.git(root, "mv", old, renamed)
-            (root / script).write_text("inserted\nlegacy\nedited\n")
-            lint.git(root, "add", script)
-            (root / new).write_bytes(
-                b"untracked\n<!-- " + lint.NEXT_LINE_DIRECTIVE + b" -->\n"
-            )
+            paths = self._make_changed_sources(root)
+            self._assert_changed_findings(root, *paths)
 
-            diagnostics = [
-                finding(script, 1), finding(script, 2, 1),
-                finding(renamed, 1), finding(new, 1),
-            ]
-            with patch.object(
-                lint, "checker_findings", return_value=diagnostics,
-            ):
-                results = lint.line_length_findings(root, "HEAD")
+    def _make_changed_sources(self, root):
+        lint.git(root, "init", "--quiet")
+        (root / "LAYER_5_USER_SETUP_C65").mkdir()
+        script = "LAYER_5_USER_SETUP_C65/start.py"
+        old = "LAYER_5_USER_SETUP_C65/old.ts"
+        renamed = "LAYER_5_USER_SETUP_C65/renamed file.ts"
+        new = "LAYER_5_USER_SETUP_C65/panel.svelte"
+        (root / script).write_text("legacy\nold\n")
+        (root / old).write_text("unchanged\n")
+        lint.git(root, "add", "--all")
+        lint.git(
+            root,
+            "-c",
+            "user.name=Test",
+            "-c",
+            "user.email=test@example.org",
+            "commit",
+            "--quiet",
+            "-m",
+            "Baseline",
+        )
+        lint.git(root, "mv", old, renamed)
+        (root / script).write_text("inserted\nlegacy\nedited\n")
+        lint.git(root, "add", script)
+        (root / new).write_bytes(
+            b"untracked\n<!-- " + lint.NEXT_LINE_DIRECTIVE + b" -->\n"
+        )
+        return script, renamed, new
 
-            self.assertEqual(
-                [(new, 1), (new, 2), (script, 1), (script, 3)],
-                [(path, line) for path, line, _ in results],
-            )
-            self.assertIn(
-                (new, 2, "Next-line suppression is disabled"), results,
-            )
+    def _assert_changed_findings(self, root, script, renamed, new):
+        diagnostics = [
+            finding(script, 1),
+            finding(script, 2, 1),
+            finding(renamed, 1),
+            finding(new, 1),
+        ]
+        with patch.object(
+            lint,
+            "checker_findings",
+            return_value=diagnostics,
+        ):
+            results = lint.line_length_findings(root, "HEAD")
+        self.assertEqual(
+            [(new, 1), (new, 2), (script, 1), (script, 3)],
+            [(path, line) for path, line, _ in results],
+        )
+        self.assertIn(
+            (new, 2, "Next-line suppression is disabled"),
+            results,
+        )
 
     def test_static_checks_all_covered_files_and_reports_tool_errors(self):
         with TemporaryDirectory() as directory:
@@ -136,8 +150,7 @@ class SourceLineLengthTests(unittest.TestCase):
                 "root = true\n\n[*.py]\nmax_line_length = 79\n",
             )
             (root / "example.py").write_text(
-                "\n".join(["x" * 79, "x" * 80, "é" * 79, "é" * 80])
-                + "\n",
+                "\n".join(["x" * 79, "x" * 80, "é" * 79, "é" * 80]) + "\n",
                 encoding="utf-8",
             )
             results = lint.checker_findings(root, ["example.py"])
@@ -148,5 +161,6 @@ class SourceLineLengthTests(unittest.TestCase):
 
     def test_line_endings_do_not_create_changed_lines(self):
         self.assertEqual(
-            {2}, lint.new_lines(b"old\r\nkeep\r\n", b"keep\nnew\n"),
+            {2},
+            lint.new_lines(b"old\r\nkeep\r\n", b"keep\nnew\n"),
         )

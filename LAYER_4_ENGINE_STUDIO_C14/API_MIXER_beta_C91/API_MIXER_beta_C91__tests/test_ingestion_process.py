@@ -10,7 +10,7 @@ from pathlib import Path
 
 import httpx2
 
-from .test_archive_process import ENGINE, write_manifest
+from .archive_cases.archive_cases__shared import ENGINE, write_manifest
 from .test_startup_checkpoint_process import write_ticket
 
 ISSUES = (

@@ -5,13 +5,13 @@ import keyword as keyword
 import re as re
 from inspect import getsource
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.\
-    atom_reference__pub import derive_atom_ref  # fmt: skip
+    carriers.content.atom_reference__pub import derive_atom_ref  # fmt: skip
 
-from ._manifest_property_selection import (
+from .assembly._manifest_property_selection import (
     _property_fields as _property_fields,
     _merge_overrides as _merge_overrides,
 )
-from ._manifest_property_validation import (
+from .assembly._manifest_property_validation import (
     _PATH as _PATH,
     _field_name as _field_name,
     _owner as _owner,

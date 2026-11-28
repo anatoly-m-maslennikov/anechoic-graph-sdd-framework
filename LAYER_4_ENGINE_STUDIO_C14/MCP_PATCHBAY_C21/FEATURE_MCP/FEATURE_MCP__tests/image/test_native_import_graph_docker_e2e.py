@@ -1,22 +1,39 @@
 """Check the native Import Graph through a disposable Docker Workbench."""
 
-import os
-from pathlib import Path
+import os as os
+from pathlib import Path as Path
 import re
 import subprocess
-import tempfile
+import tempfile as tempfile
 from time import monotonic, sleep
 import unittest
-from uuid import uuid4
+from uuid import uuid4 as uuid4
 
 
-from .. import native_import_graph_docker_cases as docker_cases
-from ..native_shared_candidate_cases import SharedCandidateCases
-from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import HEALTH_PATH, WORKBENCH_PATH
-
-from ..FEATURE_MCP__tests__shared import (
-    defer_container_cleanup, docker_deadline_env, image_timeout, observing, request, write_manifest,
+from ..integration.graph.\
+    group_2 import native_import_graph_docker_cases as docker_cases
+from ..integration.shared.group_1.\
+    native_shared_candidate_cases import SharedCandidateCases
+from MCP_PATCHBAY_C21.FEATURE_MCP.transport_support.paths.\
+    paths__shared import (
+    HEALTH_PATH,
+    WORKBENCH_PATH as WORKBENCH_PATH,
 )
+
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__tests.integration.\
+    workbench.group_4.workbench_docker_support import (
+    defer_container_cleanup as defer_container_cleanup,
+    docker_deadline_env as docker_deadline_env,
+    image_timeout,
+    observing,
+    request,
+)
+from ..FEATURE_MCP__tests__shared import (
+    write_manifest as write_manifest,
+)
+
+from .canary._canary_setup_steps import CanarySetupSteps
+from .canary._import_graph_steps import ImportGraphSteps
 
 
 GRAPH_COUNTS = """
@@ -27,60 +44,29 @@ GRAPH_COUNTS = """
 
 
 def _watcher_contents(version, container):
-    return ("---\nidentity: {atom_id: AN-T-9901}\n"
-            f"context: {{container: {{{container}}}}}\n"
-            f"state: {{status: active, version: {version}}}\n"
-            "---\n\n## Summary\n\nWatcher canary.\n")
+    return (
+        "---\nidentity: {atom_id: AN-T-9901}\n"
+        f"context: {{container: {{{container}}}}}\n"
+        f"state: {{status: active, version: {version}}}\n"
+        "---\n\n## Summary\n\nWatcher canary.\n"
+    )
 
 
-
-
-class _CanaryProject:
+class _CanaryProject(CanarySetupSteps):
     @classmethod
     def setUpClass(cls):
-        image = os.environ.get("ANECHOIC_IMAGE", "")
-        if not re.fullmatch(r"sha256:[0-9a-f]{64}", image):
-            raise RuntimeError("ANECHOIC_IMAGE must be the immutable test image ID")
-        cls.root = Path(cls.enterClassContext(tempfile.TemporaryDirectory())).resolve()
-        subprocess.run(["git", "init", "--quiet", str(cls.root)], check=True)
-        control = "_anechoic_anechoic"
-        write_manifest(cls, cls.root / control, component="C00", parameters={
-            "project": {"root": {"prefix": "underscore"}},
-            "runtime": {"journal": {"storage": "duckdb"}, "workbench": {"storage": "disk", "import_graph": {}}},
-        })
-        (cls.root / control / "001_TICKETS/TASKS").mkdir(parents=True)
-        for name, contents in (("app/__init__.py", ""), ("app/main.py", "import dep.helper\nimport dep.helper\n"),
-                               ("app/package.json", '{"name": "app"}\n'), ("app/frontend.js", ""),
-                               ("dep/__init__.py", ""), ("dep/helper.py", "VALUE = 1\n")):
-            cls._write(name, contents)
-        (cls.root / "app/app__tests").mkdir()
-        (cls.root / "app/app__tests/test_app.py").write_text("pass\n", encoding="utf-8")
-        name = f"anechoic-import-graph-canary-{uuid4().hex}"
-        defer_container_cleanup(cls.addClassCleanup, name)
-        cls.container = subprocess.check_output([
-            "docker", "run", "--detach", "--pull=never", "--init",
-            "--name", name,
-            "--label", "anechoic.test=import-graph-canary",
-            "--read-only", "--tmpfs", "/tmp:rw,nosuid,nodev,size=256m",
-            "--pids-limit", "128", "--cpus", "1",
-            "--publish", "127.0.0.1::8092", "--volume", f"{cls.root}:/project:rw",
-            "--env", "ANECHOIC_RUNTIME_NAMESPACE=docker", "--env", f"ANECHOIC_CONTROL_ROOT={control}",
-            "--env", docker_deadline_env(), image, "mcp-http",
-        ], text=True, timeout=image_timeout(60)).strip()
-        cls._wait_ready()
-        deadline = monotonic() + 60
-        while observing(cls.container, deadline):
-            status, payload = request(cls.api + "/schema", method="POST", payload={})
-            if status == 200 and "import_nodes" in payload.get("tables", {}):
-                break
-            sleep(.2)
-        else:
-            raise RuntimeError("Canary Import Graph schema failed to become ready")
+        control, image = cls._prepare_canary_project()
+        name = cls._write_canary_files()
+        cls._start_canary_container(control, image, name)
+        cls._wait_canary_schema()
 
     @classmethod
     def _wait_ready(cls):
-        binding = subprocess.check_output(["docker", "port", cls.container, "8092/tcp"],
-                                          text=True, timeout=image_timeout(10)).strip()
+        binding = subprocess.check_output(
+            ["docker", "port", cls.container, "8092/tcp"],
+            text=True,
+            timeout=image_timeout(10),
+        ).strip()
         if not re.fullmatch(r"127\.0\.0\.1:[0-9]+", binding):
             raise RuntimeError(f"Unexpected canary port binding: {binding!r}")
         cls.url = f"http://{binding}"
@@ -92,10 +78,21 @@ class _CanaryProject:
                     return
             except OSError:
                 pass
-            sleep(.2)
-        logs = subprocess.run(["docker", "logs", "--tail", "12", cls.container],
-                              capture_output=True, text=True, check=True, timeout=image_timeout(10))
-        raise RuntimeError(f"Canary Workbench failed to become ready\n{logs.stdout}{logs.stderr}")
+            sleep(0.2)
+        logs = subprocess.run(
+            ["docker", "logs", "--tail", "12", cls.container],
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=image_timeout(10),
+        )
+        raise RuntimeError(
+            (
+                "Canary Workbench failed to become ready\n"
+                f"{logs.stdout}"
+                f"{logs.stderr}"
+            )
+        )
 
     @classmethod
     def _write(cls, relative, contents):
@@ -105,94 +102,57 @@ class _CanaryProject:
         return path
 
     def _post(self, route, body):
-        status, payload = request(self.api + route, method="POST", payload=body)
+        status, payload = request(
+            self.api + route, method="POST", payload=body
+        )
         self.assertEqual(200, status, payload)
         return payload
 
     def _rows(self, sql):
-        return self._post("/run", {"sql": sql, "result_delivery": "inline"})["rows"]
+        return self._post("/run", {"sql": sql, "result_delivery": "inline"})[
+            "rows"
+        ]
 
     def _wait_rows(self, sql, expected):
         deadline = monotonic() + 10
         actual = self._rows(sql)
         while actual != expected and observing(self.container, deadline):
-            sleep(.1)
+            sleep(0.1)
             actual = self._rows(sql)
         self.assertEqual(expected, actual, sql)
 
 
-class WarmProjectionRestartDockerE2E(_CanaryProject, docker_cases.WarmProjectionRestartCase, unittest.TestCase):
+class WarmProjectionRestartDockerE2E(
+    _CanaryProject, docker_cases.WarmProjectionRestartCase, unittest.TestCase
+):
     """Check warm restart on a fresh Project."""
 
 
 class NativeImportGraphDockerE2E(
-    _CanaryProject, SharedCandidateCases, docker_cases.DockerBrowserAndMcpCases, unittest.TestCase,
+    _CanaryProject,
+    ImportGraphSteps,
+    SharedCandidateCases,
+    docker_cases.DockerBrowserAndMcpCases,
+    unittest.TestCase,
 ):
-    def test_workbench_shows_all_four_relations_and_counts_each_occurrence(self):
-        status, page = request(f"{self.url}{WORKBENCH_PATH}/Anechoic")
-        self.assertEqual(200, status)
-        self.assertIn("Workbench", page)
-        tables = self._post("/schema", {})["tables"]
-        self.assertTrue({"import_nodes", "module_imports", "import_edges", "package_imports"} <= tables.keys())
-        self.assertEqual([["module", "module", 2], ["module", "package", 2],
-                          ["package", "module", 2], ["package", "package", 2]], self._rows("""
-            SELECT s.kind, t.kind, count(*) FROM import_edges e
-            JOIN import_nodes s ON s.node_key = e.source_key
-            JOIN import_nodes t ON t.node_key = e.target_key
-            JOIN module_imports i USING (occurrence_key)
-            WHERE i.source_key = 'module:app/main.py' GROUP BY ALL ORDER BY ALL
-        """))
-        graph = GRAPH_COUNTS + " JOIN module_imports i USING (occurrence_key) WHERE i.source_key = 'module:app/main.py'"
-        self.assertEqual([[8]], self._rows(graph))
-        query = "SELECT occurrence_count FROM package_imports WHERE source_key = 'package:local:app'"
-        workspace = self._post("/interface", {"operation": "workspace_open", "arguments": {"session_id": "imports"}})
-        view = {"workspace_id": workspace["workspace_id"], "view_id": workspace["active_view_id"]}
-        for operation, args in (("view_update", {"sql": query, "expected_revision": 0}), ("view_run", {})):
-            self._post("/interface", {"operation": operation, "arguments": view | args})
-        result = self._post("/interface", {"operation": "view_fetch", "arguments": view | {"result_delivery": "inline"}})
-        self.assertEqual([[2]], result["rows"])
+    def test_workbench_shows_all_four_relations_and_counts_each_occurrence(
+        self,
+    ):
+        self._check_import_relations()
+        view = self._open_occurrence_view()
+        self._check_occurrence_view(view)
 
     def test_realization_test_package_and_rebuild_follows_open_view(self):
-        query = """
-            SELECT parent.node_key, parent.kind, test.node_key, test.kind, test.package_type
-            FROM tested_by_edges e
-            JOIN import_nodes parent ON parent.node_key = e.source_key
-            JOIN import_nodes test ON test.node_key = e.target_key
-            WHERE parent.relative_path = 'app'
-        """
-        expected = [["package:local:app", "package", "package:local:app/app__tests",
-                     "package", "Test Package"]]
-        self.assertEqual(expected, self._rows(query))
-        self.assertEqual([["package:local:app"], ["package:local:app"]], self._rows("""
-            SELECT package_key FROM import_nodes
-            WHERE relative_path IN ('app/main.py', 'app/frontend.js') ORDER BY relative_path
-        """))
-        for label, source, target in (("TESTS", expected[0][2], expected[0][0]),
-                                      ("IS_TESTED_BY", expected[0][0], expected[0][2])):
-            self.assertEqual([[source, target]], self._rows(f"""
-                FROM GRAPH_TABLE (anechoic
-                MATCH (s:ImportNode)-[e:{label}]->(t:ImportNode)
-                COLUMNS (s.node_key AS source_key, t.node_key AS target_key))
-                WHERE source_key = '{source}' AND target_key = '{target}'
-            """))
-        workspace = self._post("/interface", {"operation": "workspace_open",
-                                               "arguments": {"session_id": "realization-canary"}})
-        view = {"workspace_id": workspace["workspace_id"], "view_id": workspace["active_view_id"]}
-        self._post("/interface", {"operation": "view_update",
-                                  "arguments": view | {"sql": query, "expected_revision": 0}})
-        first = self._post("/interface", {"operation": "view_run", "arguments": view})["query_id"]
-        rebuilt = self._post("/rebuild", {"target": "all"})
-        second = rebuilt["result_ids"][first]
-        self.assertNotEqual(first, second)
-        fetched = self._post("/interface", {"operation": "view_fetch",
-                                           "arguments": view | {"result_delivery": "inline"}})
-        self.assertEqual((second, expected), (fetched["query_id"], fetched["rows"]))
-
-
+        expected, query = self._check_test_package()
+        view = self._open_realization_view(expected)
+        self._check_rebuild_view(expected, query, view)
 
     def test_watcher_adds_renames_and_removes_targets(self):
         self._write("consumer.py", "import moving.target\n")
-        sql = "SELECT resolution_status FROM module_imports WHERE source_key = 'module:consumer.py'"
+        sql = (
+            "SELECT resolution_status FROM module_imports WHERE source_key = "
+            "'module:consumer.py'"
+        )
         graph = GRAPH_COUNTS + " WHERE source_key = 'module:consumer.py'"
         self._wait_rows(sql, [["unresolved"]])
         self._write("moving/__init__.py", "")
@@ -202,7 +162,15 @@ class NativeImportGraphDockerE2E(
         moved = target.rename(target.with_name("moved.py"))
         self._wait_rows(sql, [["unresolved"]])
         self.assertEqual([[0]], self._rows(graph))
-        self.assertEqual([], self._rows("SELECT node_key FROM import_nodes WHERE relative_path = 'moving/target.py'"))
+        self.assertEqual(
+            [],
+            self._rows(
+                (
+                    "SELECT node_key FROM import_nodes WHERE relative_path = "
+                    "'moving/target.py'"
+                )
+            ),
+        )
         moved.rename(target)
         self._wait_rows(sql, [["internal"]])
         target.unlink()
@@ -211,9 +179,15 @@ class NativeImportGraphDockerE2E(
 
     def test_dependency_manifest_changes_resolution(self):
         self._write("declared.py", "import canary_dependency\n")
-        sql = "SELECT resolution_status FROM module_imports WHERE source_key = 'module:declared.py'"
+        sql = (
+            "SELECT resolution_status FROM module_imports WHERE source_key = "
+            "'module:declared.py'"
+        )
         self._wait_rows(sql, [["unresolved"]])
-        manifest = self._write("pyproject.toml", '[project]\ndependencies = ["canary-dependency>=1"]\n')
+        manifest = self._write(
+            "pyproject.toml",
+            '[project]\ndependencies = ["canary-dependency>=1"]\n',
+        )
         self._wait_rows(sql, [["external"]])
         manifest.unlink()
         self._wait_rows(sql, [["unresolved"]])
@@ -230,19 +204,24 @@ class NativeImportGraphDockerE2E(
         )
         try:
             self._wait_rows(sql, [["python", "yaml", 2]])
-            self.assertEqual([["unavailable_fixture_module"]], self._rows("""
+            self.assertEqual(
+                [["unavailable_fixture_module"]],
+                self._rows("""
                 SELECT written_specifier FROM module_imports
                 WHERE source_key = 'module:external_fixture/imports.py'
                 AND resolution_status = 'unresolved'
-            """))
+            """),
+            )
         finally:
             source.unlink()
             source.parent.rmdir()
         self._wait_rows(sql, [])
 
     def test_watcher_updates_native_atom_and_relations(self):
-        [relation], = self._rows("SELECT DISTINCT relation_type FROM relations "
-                                 "WHERE relation_type IN ('CONTAINED_BY', 'IS_CONTAINED_BY') AND NOT derived")
+        ([relation],) = self._rows(
+            "SELECT DISTINCT relation_type FROM relations "
+            "WHERE relation_type IN ('CONTAINED_BY', 'IS_CONTAINED_BY') AND NOT derived"
+        )
         graph = f"""
             FROM GRAPH_TABLE (anechoic
             MATCH (s:Reference)-[e:{relation}]->(t:Reference)
@@ -258,27 +237,11 @@ class NativeImportGraphDockerE2E(
         """
 
         def check(label, started, expected):
-            limit = 20.0
-            actual = self._rows(sql)
-            while actual != expected and observing(self.container, started + limit):
-                sleep(.1)
-                actual = self._rows(sql)
-            elapsed = monotonic() - started
-            print(f"native Atom watcher {label}: {elapsed:.3f}s", flush=True)
-            self.assertEqual(expected, actual, label)
-            if image_timeout(limit) is not None:
-                self.assertLessEqual(elapsed, limit, label)
-            self.assertEqual([expected[0][-2:]] if expected else [], self._rows(graph), label)
+            self._check_native_atom_change(
+                sql, graph, label, started, expected
+            )
 
-        started = monotonic()
-        path = self._write("_anechoic_anechoic/001_TICKETS/TASKS/AN-T-9901--watcher.md", _watcher_contents(1, "component: C00"))
-        check("create", started, [[path.name, "AN-T-9901", "AN-T-9901@1", "Component", "C00"]])
-        started = monotonic()
-        path.write_text(_watcher_contents(2, "atom: AN-S-001"), encoding="utf-8")
-        check("edit", started, [[path.name, "AN-T-9901", "AN-T-9901@2", "Atom", "AN-S-001"]])
-        started = monotonic()
-        path = path.rename(path.with_name("AN-T-9901--renamed.md"))
-        check("rename", started, [[path.name, "AN-T-9901", "AN-T-9901@2", "Atom", "AN-S-001"]])
+        path = self._create_edit_rename_atom(check)
         started = monotonic()
         path.unlink()
         sql = """
@@ -293,16 +256,26 @@ class NativeImportGraphDockerE2E(
             (self.root / f"app/churn/branch_{index}").mkdir(parents=True)
         relative = "app/churn/branch_79/main.py"
         target = self._write(relative, "import dep.helper\n")
-        sql = f"SELECT resolution_status FROM module_imports WHERE source_key = 'module:{relative}'"
+        sql = (
+            "SELECT resolution_status FROM module_imports WHERE source_key = "
+            "'module:"
+            f"{relative}"
+            "'"
+        )
         self._wait_rows(sql, [["internal"]])
         target.write_text("import missing_canary_resource\n", encoding="utf-8")
         self._wait_rows(sql, [["unresolved"]])
-        self.assertEqual((200, {"state": "ready"}), request(self.url + HEALTH_PATH))
+        self.assertEqual(
+            (200, {"state": "ready"}), request(self.url + HEALTH_PATH)
+        )
 
     def test_ignored_files_and_parse_errors_appear_as_expected(self):
         self._write("generated/ignored.py", "import dep\n")
         self._write("policy.py", "import\n")
-        sql = "SELECT relative_path, scan_status FROM import_nodes WHERE relative_path IN ('policy.py', 'generated/ignored.py')"
+        sql = (
+            "SELECT relative_path, scan_status FROM import_nodes WHERE "
+            "relative_path IN ('policy.py', 'generated/ignored.py')"
+        )
         self._wait_rows(sql, [["policy.py", "parse_error"]])
         self._write("policy.py", "import dep\n")
         self._wait_rows(sql, [["policy.py", "parsed"]])

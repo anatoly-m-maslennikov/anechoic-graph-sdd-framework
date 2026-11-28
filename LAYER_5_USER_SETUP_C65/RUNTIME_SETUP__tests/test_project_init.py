@@ -66,9 +66,7 @@ class ProjectInitTests(unittest.TestCase):
                 "1": "01_TIER_1_ARCHITECTURE",
                 "2+": "_{lens}/{sublenses}",
             },
-            fields["parameters"]["folder_layout"][
-                "active_spec_by_tier"
-            ],
+            fields["parameters"]["folder_layout"]["active_spec_by_tier"],
         )
         manifest = (
             self.root / "MP-S-1-SPEC-PROJECT_MANIFEST--declare-project.md"

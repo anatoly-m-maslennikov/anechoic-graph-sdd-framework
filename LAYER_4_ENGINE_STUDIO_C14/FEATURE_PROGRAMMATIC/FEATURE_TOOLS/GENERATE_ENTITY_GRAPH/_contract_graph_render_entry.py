@@ -6,7 +6,7 @@ import re
 from collections.abc import Mapping
 from typing import Any
 
-from .contract_graph_common import _source_ref
+from .contracts.contracts__shared import _source_ref
 
 Record = dict[str, Any]
 

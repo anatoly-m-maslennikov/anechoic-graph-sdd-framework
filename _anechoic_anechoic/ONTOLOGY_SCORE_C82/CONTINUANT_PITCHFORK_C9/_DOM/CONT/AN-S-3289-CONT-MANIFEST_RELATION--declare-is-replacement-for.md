@@ -12,9 +12,9 @@ context:
   template: manifest_relation
   lens: DOM/CONT
 state:
-  status: "active"
-  version: 7
-  updated_at: "2026-11-26T16:34:52.398088+00:00"
+  status: active
+  version: 8
+  updated_at: '2026-11-28T09:21:26.937336+00:00'
 ---
 
 ## Summary
@@ -23,8 +23,14 @@ Declare IS_REPLACEMENT_FOR
 
 ## Semantics
 
-This Relation records that the successor supersedes a different predecessor Atom's contribution.
-One successor can replace several predecessors.
+This Relation points from a successor to the stable Atom ID of a different
+predecessor. One successor can replace several predecessors. A new
+revision of the same Atom uses its revision history to identify the
+predecessor.
+
+For SPEC, a Draft or Ready successor can declare the intended
+replacement. Activation completes the replacement and archives the
+Active predecessor.
 
 ## Formal Manifest
 

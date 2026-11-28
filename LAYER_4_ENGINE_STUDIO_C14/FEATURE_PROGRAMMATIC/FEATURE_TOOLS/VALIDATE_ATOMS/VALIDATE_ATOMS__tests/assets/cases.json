@@ -3,7 +3,7 @@
   "cases": [
     {
       "case_id": "request_not_object",
-      "request": "requests/request_not_object.json",
+      "request": "requests/syntax/request_not_object.json",
       "fixture_paths": [
         "fixtures/context"
       ],
@@ -24,12 +24,12 @@
       "check_codes": [
         "request.schema"
       ],
-      "expected_report": "expected/request_not_object.json",
+      "expected_report": "expected/syntax/request_not_object.json",
       "expected_exit_code": 3
     },
     {
       "case_id": "request_duplicate_key",
-      "request": "requests/request_duplicate_key.json",
+      "request": "requests/syntax/request_duplicate_key.json",
       "fixture_paths": [
         "fixtures/context"
       ],
@@ -50,12 +50,12 @@
       "check_codes": [
         "request.schema"
       ],
-      "expected_report": "expected/request_duplicate_key.json",
+      "expected_report": "expected/syntax/request_duplicate_key.json",
       "expected_exit_code": 3
     },
     {
       "case_id": "request_non_finite",
-      "request": "requests/request_non_finite.json",
+      "request": "requests/syntax/request_non_finite.json",
       "fixture_paths": [
         "fixtures/context"
       ],
@@ -76,12 +76,12 @@
       "check_codes": [
         "request.schema"
       ],
-      "expected_report": "expected/request_non_finite.json",
+      "expected_report": "expected/syntax/request_non_finite.json",
       "expected_exit_code": 3
     },
     {
       "case_id": "request_missing_required",
-      "request": "requests/request_missing_required.json",
+      "request": "requests/schema/request_missing_required.json",
       "fixture_paths": [
         "fixtures/context"
       ],
@@ -102,12 +102,12 @@
       "check_codes": [
         "request.schema"
       ],
-      "expected_report": "expected/request_missing_required.json",
+      "expected_report": "expected/schema/request_missing_required.json",
       "expected_exit_code": 3
     },
     {
       "case_id": "request_unknown_top",
-      "request": "requests/request_unknown_top.json",
+      "request": "requests/context/request_unknown_top.json",
       "fixture_paths": [
         "fixtures/context"
       ],
@@ -128,12 +128,12 @@
       "check_codes": [
         "request.schema"
       ],
-      "expected_report": "expected/request_unknown_top.json",
+      "expected_report": "expected/context/request_unknown_top.json",
       "expected_exit_code": 3
     },
     {
       "case_id": "request_schema_boolean",
-      "request": "requests/request_schema_boolean.json",
+      "request": "requests/schema/request_schema_boolean.json",
       "fixture_paths": [
         "fixtures/context"
       ],
@@ -154,12 +154,12 @@
       "check_codes": [
         "request.schema"
       ],
-      "expected_report": "expected/request_schema_boolean.json",
+      "expected_report": "expected/schema/request_schema_boolean.json",
       "expected_exit_code": 3
     },
     {
       "case_id": "request_schema_unsupported",
-      "request": "requests/request_schema_unsupported.json",
+      "request": "requests/schema/request_schema_unsupported.json",
       "fixture_paths": [
         "fixtures/context"
       ],
@@ -180,12 +180,12 @@
       "check_codes": [
         "request.schema"
       ],
-      "expected_report": "expected/request_schema_unsupported.json",
+      "expected_report": "expected/schema/request_schema_unsupported.json",
       "expected_exit_code": 3
     },
     {
       "case_id": "request_source_root_relative",
-      "request": "requests/request_source_root_relative.json",
+      "request": "requests/context/request_source_root_relative.json",
       "fixture_paths": [
         "fixtures/context"
       ],
@@ -206,12 +206,12 @@
       "check_codes": [
         "request.schema"
       ],
-      "expected_report": "expected/request_source_root_relative.json",
+      "expected_report": "expected/context/request_source_root_relative.json",
       "expected_exit_code": 3
     },
     {
       "case_id": "request_duplicate_roots",
-      "request": "requests/request_duplicate_roots.json",
+      "request": "requests/selection/request_duplicate_roots.json",
       "fixture_paths": [
         "fixtures/context"
       ],
@@ -232,12 +232,12 @@
       "check_codes": [
         "request.schema"
       ],
-      "expected_report": "expected/request_duplicate_roots.json",
+      "expected_report": "expected/selection/request_duplicate_roots.json",
       "expected_exit_code": 3
     },
     {
       "case_id": "request_null_selection",
-      "request": "requests/request_null_selection.json",
+      "request": "requests/selection/request_null_selection.json",
       "fixture_paths": [
         "fixtures/context"
       ],
@@ -258,12 +258,12 @@
       "check_codes": [
         "request.schema"
       ],
-      "expected_report": "expected/request_null_selection.json",
+      "expected_report": "expected/selection/request_null_selection.json",
       "expected_exit_code": 3
     },
     {
       "case_id": "request_empty_selection",
-      "request": "requests/request_empty_selection.json",
+      "request": "requests/selection/request_empty_selection.json",
       "fixture_paths": [
         "fixtures/context"
       ],
@@ -284,12 +284,12 @@
       "check_codes": [
         "request.schema"
       ],
-      "expected_report": "expected/request_empty_selection.json",
+      "expected_report": "expected/selection/request_empty_selection.json",
       "expected_exit_code": 3
     },
     {
       "case_id": "request_descendants_without_unit",
-      "request": "requests/request_descendants_without_unit.json",
+      "request": "requests/selection/request_descendants_without_unit.json",
       "fixture_paths": [
         "fixtures/context"
       ],
@@ -310,12 +310,12 @@
       "check_codes": [
         "request.schema"
       ],
-      "expected_report": "expected/request_descendants_without_unit.json",
+      "expected_report": "expected/selection/request_descendants_without_unit.json",
       "expected_exit_code": 3
     },
     {
       "case_id": "request_boolean_tier",
-      "request": "requests/request_boolean_tier.json",
+      "request": "requests/limits/request_boolean_tier.json",
       "fixture_paths": [
         "fixtures/context"
       ],
@@ -336,12 +336,12 @@
       "check_codes": [
         "request.schema"
       ],
-      "expected_report": "expected/request_boolean_tier.json",
+      "expected_report": "expected/limits/request_boolean_tier.json",
       "expected_exit_code": 3
     },
     {
       "case_id": "request_empty_statuses",
-      "request": "requests/request_empty_statuses.json",
+      "request": "requests/selection/request_empty_statuses.json",
       "fixture_paths": [
         "fixtures/context"
       ],
@@ -362,12 +362,12 @@
       "check_codes": [
         "request.schema"
       ],
-      "expected_report": "expected/request_empty_statuses.json",
+      "expected_report": "expected/selection/request_empty_statuses.json",
       "expected_exit_code": 3
     },
     {
       "case_id": "request_selector_version_only",
-      "request": "requests/request_selector_version_only.json",
+      "request": "requests/selection/request_selector_version_only.json",
       "fixture_paths": [
         "fixtures/context"
       ],
@@ -388,12 +388,12 @@
       "check_codes": [
         "request.schema"
       ],
-      "expected_report": "expected/request_selector_version_only.json",
+      "expected_report": "expected/selection/request_selector_version_only.json",
       "expected_exit_code": 3
     },
     {
       "case_id": "request_unknown_selector",
-      "request": "requests/request_unknown_selector.json",
+      "request": "requests/selection/request_unknown_selector.json",
       "fixture_paths": [
         "fixtures/context"
       ],
@@ -414,12 +414,12 @@
       "check_codes": [
         "request.schema"
       ],
-      "expected_report": "expected/request_unknown_selector.json",
+      "expected_report": "expected/selection/request_unknown_selector.json",
       "expected_exit_code": 3
     },
     {
       "case_id": "request_null_version",
-      "request": "requests/request_null_version.json",
+      "request": "requests/schema/request_null_version.json",
       "fixture_paths": [
         "fixtures/context"
       ],
@@ -440,12 +440,12 @@
       "check_codes": [
         "request.schema"
       ],
-      "expected_report": "expected/request_null_version.json",
+      "expected_report": "expected/schema/request_null_version.json",
       "expected_exit_code": 3
     },
     {
       "case_id": "request_boolean_limit",
-      "request": "requests/request_boolean_limit.json",
+      "request": "requests/limits/request_boolean_limit.json",
       "fixture_paths": [
         "fixtures/context"
       ],
@@ -466,12 +466,12 @@
       "check_codes": [
         "request.schema"
       ],
-      "expected_report": "expected/request_boolean_limit.json",
+      "expected_report": "expected/limits/request_boolean_limit.json",
       "expected_exit_code": 3
     },
     {
       "case_id": "request_zero_limit",
-      "request": "requests/request_zero_limit.json",
+      "request": "requests/limits/request_zero_limit.json",
       "fixture_paths": [
         "fixtures/context"
       ],
@@ -492,12 +492,12 @@
       "check_codes": [
         "request.schema"
       ],
-      "expected_report": "expected/request_zero_limit.json",
+      "expected_report": "expected/limits/request_zero_limit.json",
       "expected_exit_code": 3
     },
     {
       "case_id": "request_unknown_limit",
-      "request": "requests/request_unknown_limit.json",
+      "request": "requests/limits/request_unknown_limit.json",
       "fixture_paths": [
         "fixtures/context"
       ],
@@ -518,12 +518,12 @@
       "check_codes": [
         "request.schema"
       ],
-      "expected_report": "expected/request_unknown_limit.json",
+      "expected_report": "expected/limits/request_unknown_limit.json",
       "expected_exit_code": 3
     },
     {
       "case_id": "request_bad_digest",
-      "request": "requests/request_bad_digest.json",
+      "request": "requests/syntax/request_bad_digest.json",
       "fixture_paths": [
         "fixtures/context"
       ],
@@ -544,12 +544,12 @@
       "check_codes": [
         "request.schema"
       ],
-      "expected_report": "expected/request_bad_digest.json",
+      "expected_report": "expected/syntax/request_bad_digest.json",
       "expected_exit_code": 3
     },
     {
       "case_id": "request_unknown_methodology_key",
-      "request": "requests/request_unknown_methodology_key.json",
+      "request": "requests/context/request_unknown_methodology_key.json",
       "fixture_paths": [
         "fixtures/context"
       ],
@@ -570,12 +570,12 @@
       "check_codes": [
         "request.schema"
       ],
-      "expected_report": "expected/request_unknown_methodology_key.json",
+      "expected_report": "expected/context/request_unknown_methodology_key.json",
       "expected_exit_code": 3
     },
     {
       "case_id": "request_invalid_action_version",
-      "request": "requests/request_invalid_action_version.json",
+      "request": "requests/schema/request_invalid_action_version.json",
       "fixture_paths": [
         "fixtures/context"
       ],
@@ -596,12 +596,12 @@
       "check_codes": [
         "request.schema"
       ],
-      "expected_report": "expected/request_invalid_action_version.json",
+      "expected_report": "expected/schema/request_invalid_action_version.json",
       "expected_exit_code": 3
     },
     {
       "case_id": "request_unknown_run_context",
-      "request": "requests/request_unknown_run_context.json",
+      "request": "requests/context/request_unknown_run_context.json",
       "fixture_paths": [
         "fixtures/context"
       ],
@@ -622,12 +622,12 @@
       "check_codes": [
         "request.schema"
       ],
-      "expected_report": "expected/request_unknown_run_context.json",
+      "expected_report": "expected/context/request_unknown_run_context.json",
       "expected_exit_code": 3
     },
     {
       "case_id": "request_executable_bundle",
-      "request": "requests/request_executable_bundle.json",
+      "request": "requests/context/request_executable_bundle.json",
       "fixture_paths": [
         "fixtures/context"
       ],
@@ -648,7 +648,7 @@
       "check_codes": [
         "request.schema"
       ],
-      "expected_report": "expected/request_executable_bundle.json",
+      "expected_report": "expected/context/request_executable_bundle.json",
       "expected_exit_code": 3
     }
   ]

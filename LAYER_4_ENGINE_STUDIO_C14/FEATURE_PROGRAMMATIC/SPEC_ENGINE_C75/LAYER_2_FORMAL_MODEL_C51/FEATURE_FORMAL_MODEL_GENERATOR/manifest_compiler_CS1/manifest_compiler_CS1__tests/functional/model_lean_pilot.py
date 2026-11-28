@@ -13,12 +13,14 @@ import subprocess
 import sys
 import tempfile
 
-from ....FEATURE_FORMAL_MODEL_GENERATOR__shared import (
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.FEATURE_FORMAL_MODEL_GENERATOR.native.native_manifest_model import (
     admit_active_model_records,
     compile_native_bindings,
 )
 from ...manifest_compiler_CS1__shared import (
     read_active_model_sources,
+)
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.FEATURE_FORMAL_MODEL_GENERATOR.manifest_compiler_CS1.lean.model_lean import (
     render_atom_header_lean,
 )
 

@@ -3,7 +3,7 @@ atom_family: SPEC
 atom_id: AN-S-4816
 concern:
   subject: Interpreted
-  path: Model/Carrier/File//Executable File
+  path: Model/Carrier/Filesystem/File//Executable File
   relation: is_narrower_than
 container:
   component: C9
@@ -13,8 +13,8 @@ context:
   lens: DOM/CONT
 state:
   status: active
-  version: 3
-  updated_at: '2026-11-26T17:13:28.948996+00:00'
+  version: 4
+  updated_at: "2026-11-28T11:52:02.110048+00:00"
 ---
 
 ## Summary

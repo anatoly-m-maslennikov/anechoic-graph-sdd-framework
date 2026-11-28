@@ -5,12 +5,12 @@ Seven short prompt implementations for the active Steps of **CA-O-016**. They im
 | Step | Action | Context | Prompt |
 |---|---|---|---|
 | CA-O-091 | CA-O-017 — prepare work | Integrated | [Prepare](CA-O-091.prompt.md) |
-| CA-O-092 | CA-O-018 — prepare tests | Isolated | [Tests](CA-O-092.prompt.md) |
-| CA-O-093 | CA-O-019 — implement | Isolated | [Implement](CA-O-093.prompt.md) |
+| CA-O-092 | CA-O-018 — prepare tests | Isolated | [Tests](isolated/CA-O-092.prompt.md) |
+| CA-O-093 | CA-O-019 — implement | Isolated | [Implement](isolated/CA-O-093.prompt.md) |
 | CA-O-094 | CA-O-020 — run checks | Integrated | [Evaluate](CA-O-094.prompt.md) |
-| CA-O-095 | CA-O-089 — diagnose | Isolated | [Diagnose](CA-O-095.prompt.md) |
+| CA-O-095 | CA-O-089 — diagnose | Isolated | [Diagnose](isolated/CA-O-095.prompt.md) |
 | CA-O-096 | CA-O-024 — admit retry | Integrated | [Retry](CA-O-096.prompt.md) |
-| CA-O-099 | CA-O-021 — repair | Isolated | [Repair](CA-O-099.prompt.md) |
+| CA-O-099 | CA-O-021 — repair | Isolated | [Repair](isolated/CA-O-099.prompt.md) |
 
 ## Invocation
 

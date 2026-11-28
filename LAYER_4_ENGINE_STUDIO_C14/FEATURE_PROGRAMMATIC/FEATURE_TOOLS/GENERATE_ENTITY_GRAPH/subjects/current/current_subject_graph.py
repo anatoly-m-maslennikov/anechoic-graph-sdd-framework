@@ -1,0 +1,13 @@
+"""Compose graphs from supplied current Atom Subjects, without history."""
+
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.\
+    subjects.current.current_subject_base \
+    import compose_current_graph as compose_current_graph  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.\
+    subjects.current.current_subject_narrowing \
+    import compose_narrowing_graph as compose_narrowing_graph  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.\
+    subjects.current.current_subject_enhanced \
+    import (
+        compose_enhanced_current_graph as compose_enhanced_current_graph,
+    )  # fmt: skip

@@ -10,7 +10,7 @@ context:
 state:
   status: in_queue
   version: 1
-  updated_at: '2026-11-24T16:40:34.256033+00:00'
+  updated_at: "2026-11-28T11:42:47+00:00"
 ---
 ## Summary
 
@@ -28,8 +28,8 @@ Apply the decisions in the recorded order. Preserve supported contracts and veri
 - Route cross-Package imports through the owning Package `__shared` entry.
   Permit only the exact bypasses documented in the assessment and Realization
   Graph. Never use a production import from a directory ending in `__tests`.
-- Enforce the existing source-linter limits of 300 lines per module and 45
-  lines per function. Remove unused code and avoid forwarding wrappers.
+- Enforce the source limits of 6 KiB per Module and 45 nonblank lines per
+  function. Remove unused code and avoid forwarding wrappers.
 - Use Pydantic for every structured Python model across the Project. Include
   internal domain and state models, process, CLI, API, configuration, IPC and
   persistence, external adapters, request and result models, and structured
@@ -72,8 +72,8 @@ Apply the decisions in the recorded order. Preserve supported contracts and veri
   violations, including production imports from directories ending in
   `__tests`. Require the zero result after retiring the superseded active
   source at cutover.
-- The existing source linter reports no module over 300 lines and no function
-  over 45 lines. No unused code or forwarding wrapper remains in the changed
+- The source linter reports no Module over 6 KiB and no function over 45
+  nonblank lines. No unused code or forwarding wrapper remains in the changed
   implementation, and supported behavior is preserved.
 - Every structured Python model uses Pydantic, including internal domain and
   state, process, CLI, API, configuration, IPC and persistence, external

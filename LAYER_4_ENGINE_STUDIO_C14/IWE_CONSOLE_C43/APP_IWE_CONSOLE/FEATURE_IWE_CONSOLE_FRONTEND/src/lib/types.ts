@@ -107,6 +107,9 @@ export type SourceSyncStatus = { mode?: 'startup_snapshot' | 'live_index' |
   health?: { state: 'ready' | 'pending' | 'degraded' | 'unavailable'; error?:
     { message?: string } };
   watcher_queue_depth?: number | null; last_run_state?: string | null;
+  indexed_atom_count?: number; ingestion_issue_count?: number;
+  worker_runs?: { active: Array<{ kind: string; status: string }>;
+    latest: Array<{ kind: string; status: string }> };
   archive?: { state?: string }; ingestion_issues?: Array<{ atom_ref?:
     string; message?: string; code?: string; relative_path?: string }>;
 };

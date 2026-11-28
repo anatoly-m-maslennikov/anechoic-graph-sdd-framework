@@ -1,5 +1,5 @@
-
 """Build and load a bounded, source-bound Atom Status declaration asset."""
+
 from __future__ import annotations
 
 import json
@@ -10,22 +10,24 @@ from collections.abc import Iterable
 from pydantic import ConfigDict
 from pydantic.dataclasses import dataclass
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carriers.carriers__shared import (
     StatusModelError,
-    canonical_role_name,
-    carrier_read_view,
     carrier_status_folder,
     matches_named_value,
 )
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_carrier
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carriers.content.content__shared import (
+    canonical_role_name,
+    carrier_read_view,
+    parse_carrier,
+)
 
 
 def status_memberships(body):
-    """Read Status values from native Property Declarations without translating them."""
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    """Read Status values as declared in native Properties."""
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model.model__shared import (
         iter_formal_claims,
     )
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model.claims.claims__shared import (
         parse_native_model_claim,
     )
 
@@ -64,12 +66,9 @@ def _text(value: object) -> bool:
     return isinstance(value, str) and bool(value) and value == value.strip()
 
 
-def _validate(data: object) -> tuple[tuple[str | None, str | None, str], ...]:
-    if not isinstance(data, dict) or set(data) != {'schema', 'sources', 'declarations'} or data['schema'] != 1 or type(data['schema']) is not int:
-        raise StatusModelError('Invalid Status model schema')
-    sources = data['sources']
+def _source_ids(sources):
     if not isinstance(sources, list) or not sources:
-        raise StatusModelError('Status model requires sources')
+        raise StatusModelError("Status model requires sources")
     ids: set[str] = set()
     for source in sources:
         if (
@@ -82,9 +81,21 @@ def _validate(data: object) -> tuple[tuple[str | None, str | None, str], ...]:
         ):
             raise StatusModelError("Invalid or duplicate Status source")
         ids.add(source["atom_id"])
-    declarations = data['declarations']
+    return ids
+
+
+def _validate(data: object) -> tuple[tuple[str | None, str | None, str], ...]:
+    if (
+        not isinstance(data, dict)
+        or set(data) != {"schema", "sources", "declarations"}
+        or data["schema"] != 1
+        or type(data["schema"]) is not int
+    ):
+        raise StatusModelError("Invalid Status model schema")
+    ids = _source_ids(data["sources"])
+    declarations = data["declarations"]
     if not isinstance(declarations, list) or not declarations:
-        raise StatusModelError('Status model requires declarations')
+        raise StatusModelError("Status model requires declarations")
     rows = []
     seen = set()
     for row in declarations:
@@ -106,7 +117,7 @@ def _validate(data: object) -> tuple[tuple[str | None, str | None, str], ...]:
         seen.add(key)
         rows.append((row["role"], row["form"], row["value"]))
     if not any(role is None and form is None for role, form, _ in rows):
-        raise StatusModelError('Status model requires base declarations')
+        raise StatusModelError("Status model requires base declarations")
     return tuple(rows)
 
 
@@ -152,7 +163,8 @@ def compile_status_model(paths: Iterable[Path]) -> bytes:
             or meta.get("status") not in {"Active", "active"}
         ):
             raise StatusModelError(
-                f"{path}: expected an Active Requirement Declaration with ID and version"
+                f"{path}: expected an Active Requirement Declaration "
+                "with ID and version"
             )
         sources.append({"atom_id": atom_id, "version": version})
         declarations.extend(
@@ -196,7 +208,7 @@ def load_status_model(path: Path) -> StatusModel:
 
 
 def _staged_declarations(root: Path) -> list[Path]:
-    """Find current Status declarations solely in the supplied staged sources."""
+    """Find current Status declarations in the supplied staged sources."""
     if not root.is_dir():
         raise StatusModelError(f"{root}: staged model root is not a directory")
     found = []
@@ -245,5 +257,5 @@ def _main() -> None:
         parser.exit(1, f"Status model build failed: {error}\n")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     _main()

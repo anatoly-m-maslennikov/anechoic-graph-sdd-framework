@@ -6,7 +6,10 @@ import tomllib
 from pathlib import Path
 from typing import Any, Mapping
 
-from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.scope_declaration_render__pub import PROJECT, render_scope_declaration
+from .scope_declaration_render__pub import (
+    PROJECT,
+    render_scope_declaration,
+)
 
 
 def _settings(root: Path, control_root: Path | None) -> tuple[Path, str]:
@@ -51,15 +54,7 @@ def _component(row: Mapping[str, Any]) -> str:
     return "_".join(parts)
 
 
-def _derived_rows(root: Path, rows: tuple[Mapping[str, Any], ...], control_root: Path, project_name: str) -> dict[str, dict[str, Any]]:
-    result: dict[str, dict[str, Any]] = {
-        project_name: {
-            "scope_unit_name": project_name, "parent": None, "scope_unit_type": "Unordered",
-            "scope_unit_label": None, "local_order": None, "ordered": False, "scope_id": None,
-            "atom_id": "CA-R-990000", "authority_path": control_root,
-            "delivery_path": root, "project": True,
-        }
-    }
+def _pending_rows(rows):
     pending = list(rows)
     for index, row in enumerate(pending, start=1):
         name = row.get("scope_unit_name")
@@ -70,39 +65,83 @@ def _derived_rows(root: Path, rows: tuple[Mapping[str, Any], ...], control_root:
             raise ValueError(f"fixture declaration {name} needs parent")
         ordered = row.get("scope_unit_type") == "Ordered"
         pending[index - 1] = {
-            "scope_unit_name": name, "parent": parent, "scope_unit_type": "Ordered" if ordered else "Unordered",
+            "scope_unit_name": name,
+            "parent": parent,
+            "scope_unit_type": "Ordered" if ordered else "Unordered",
             "scope_unit_label": row.get("scope_unit_label"),
             "local_order": _order(row.get("local_order")) if ordered else None,
-            "ordered": ordered, "scope_id": f"TEST-SU-{index}", "atom_id": f"CA-R-{990000 + index}",
+            "ordered": ordered,
+            "scope_id": f"TEST-SU-{index}",
+            "atom_id": f"CA-R-{990000 + index}",
             "project": False,
         }
+    return pending
+
+
+def _delivery_path(parent, row):
+    return Path(parent["delivery_path"]) / "_".join(
+        part
+        for part in (
+            [row["scope_unit_label"]] if row["scope_unit_label"] else []
+        )
+        + ([str(row["local_order"])] if row["ordered"] else [])
+        + [row["scope_unit_name"]]
+    )
+
+
+def _derived_rows(
+    root: Path,
+    rows: tuple[Mapping[str, Any], ...],
+    control_root: Path,
+    project_name: str,
+) -> dict[str, dict[str, Any]]:
+    result: dict[str, dict[str, Any]] = {
+        project_name: {
+            "scope_unit_name": project_name,
+            "parent": None,
+            "scope_unit_type": "Unordered",
+            "scope_unit_label": None,
+            "local_order": None,
+            "ordered": False,
+            "scope_id": None,
+            "atom_id": "CA-R-990000",
+            "authority_path": control_root,
+            "delivery_path": root,
+            "project": True,
+        }
+    }
+    pending = _pending_rows(rows)
     while pending:
         remaining: list[dict[str, Any]] = []
         for row in pending:
-            parent_name = project_name if row["parent"] == PROJECT else row["parent"]
+            parent_name = (
+                project_name if row["parent"] == PROJECT else row["parent"]
+            )
             parent = result.get(parent_name)
             if parent is None:
                 remaining.append(row)
                 continue
             authority = Path(parent["authority_path"]) / _component(row)
-            delivery = Path(parent["delivery_path"]) / "_".join(
-                part for part in ([row["scope_unit_label"]] if row["scope_unit_label"] else [])
-                + ([str(row["local_order"])] if row["ordered"] else []) + [row["scope_unit_name"]]
-            )
+            delivery = _delivery_path(parent, row)
             row["authority_path"] = authority
             row["delivery_path"] = delivery
             result[row["scope_unit_name"]] = row
         if len(remaining) == len(pending):
-            raise ValueError("fixture declaration parents are missing or cyclic")
+            raise ValueError(
+                "fixture declaration parents are missing or cyclic"
+            )
         pending = remaining
     return result
 
 
-def write_scope_unit_declarations(root: Path, rows: tuple[Mapping[str, Any], ...] = (), *, control_root: Path | None = None, project_name: str | None = None) -> dict[str, dict[str, Any]]:
-    (
-        'Materialize fixture declarations and return their derived structural '
-        'rows.'
-    )
+def write_scope_unit_declarations(
+    root: Path,
+    rows: tuple[Mapping[str, Any], ...] = (),
+    *,
+    control_root: Path | None = None,
+    project_name: str | None = None,
+) -> dict[str, dict[str, Any]]:
+    """Materialize declarations and return their derived structural rows."""
     resolved_control, settings_name = _settings(root, control_root)
     project_name = project_name or settings_name
     derived = _derived_rows(
@@ -117,7 +156,8 @@ def write_scope_unit_declarations(root: Path, rows: tuple[Mapping[str, Any], ...
             ]["authority_path"]
         )
         filename = (
-            f"{row['atom_id']}-{_slug(row['scope_unit_name'])}-SCOPE_UNIT_DECLARATION--"
+            f"{row['atom_id']}-{_slug(row['scope_unit_name'])}-"
+            "SCOPE_UNIT_DECLARATION--"
             f"declare-{_slug(row['scope_unit_name'])}.md"
         )
         target = (
@@ -126,23 +166,27 @@ def write_scope_unit_declarations(root: Path, rows: tuple[Mapping[str, Any], ...
             else Path(parent_authority) / "04_requirement"
         ) / filename
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(
-            render_scope_declaration(
-                name=row["scope_unit_name"],
-                project_name=project_name,
-                atom_id=row["atom_id"],
-                updated_at="2026-11-02 00:00:00 +0000",
-                scope_id=row["scope_id"],
-                label=row["scope_unit_label"],
-                ordered=row["ordered"],
-                order_number=row["local_order"],
-                parent=row["parent"],
-                project=row["project"],
-            ),
-            encoding="utf-8",
-        )
+        _write_declaration(target, row, project_name)
         row["declaration_path"] = target
     return derived
+
+
+def _write_declaration(target, row, project_name):
+    target.write_text(
+        render_scope_declaration(
+            name=row["scope_unit_name"],
+            project_name=project_name,
+            atom_id=row["atom_id"],
+            updated_at="2026-11-02 00:00:00 +0000",
+            scope_id=row["scope_id"],
+            label=row["scope_unit_label"],
+            ordered=row["ordered"],
+            order_number=row["local_order"],
+            parent=row["parent"],
+            project=row["project"],
+        ),
+        encoding="utf-8",
+    )
 
 
 def read_scope_unit_declarations(

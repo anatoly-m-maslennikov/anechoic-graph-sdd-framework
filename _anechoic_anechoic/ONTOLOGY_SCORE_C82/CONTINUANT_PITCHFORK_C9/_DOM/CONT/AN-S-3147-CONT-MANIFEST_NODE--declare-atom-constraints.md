@@ -12,9 +12,9 @@ context:
   template: manifest_node
   lens: DOM/CONT
 state:
-  status: "active"
-  version: 6
-  updated_at: "2026-11-26T15:52:33.065437+00:00"
+  status: active
+  version: 8
+  updated_at: '2026-11-28T09:45:28.218991+00:00'
 ---
 
 ## Summary
@@ -23,7 +23,12 @@ Declare Atom Constraints
 
 ## Semantics
 
-Each stable Atom ID has at most one Current revision. An exact Ref ID identifies one revision in its applicable state.
+Each stable Atom ID has at most one Current revision. A SPEC Atom ID
+has at most one Active and one Ready revision. It can have several
+`draft` revisions with distinct exact Ref IDs.
+
+An exact Ref ID identifies one revision and uses its Atom ID, Version,
+and the marker specified by the native Carrier format for its Status.
 
 ## Formal Manifest
 
@@ -48,5 +53,11 @@ class Constraints(NodeConstraints):
     bearer = Atom
     node.constraints.instance_check = check_atom_identity
     node.constraints.instance_relations = {'IS_CONTAINED_BY': {'target_entity_paths': (Component, Atom), 'targets_per_source': 1}}
-    node.constraints.population_unique = ({'keys': ('Ref ID',)},)
+    node.constraints.population_unique = (
+        {'keys': ('Ref ID',)},
+        {'keys': ('Header.Atom ID',), 'status': 'Active',
+         'single_value_paths': ('Header.Atom ID',)},
+        {'keys': ('Header.Atom ID',), 'status': 'Ready',
+         'single_value_paths': ('Header.Atom ID',)},
+    )
 ```

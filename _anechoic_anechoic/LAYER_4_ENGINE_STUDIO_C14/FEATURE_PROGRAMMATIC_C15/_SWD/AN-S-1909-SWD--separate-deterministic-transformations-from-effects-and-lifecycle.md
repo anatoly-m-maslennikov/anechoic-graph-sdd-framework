@@ -7,9 +7,9 @@ tier: 4
 context:
   lens: SWD
 state:
-  status: active
-  version: 15
-  updated_at: 2026-11-10 20:47:54 +0400
+  status: "active"
+  version: 16
+  updated_at: "2026-11-27T20:35:14.221449+00:00"
 ---
 
 ## Summary
@@ -20,47 +20,29 @@ Separate deterministic transformations from effects and lifecycle
 
 ### Prose Claim
 
-keep PROGRAMMATIC decisions **in** a function-based deterministic core. apply
-filesystem, process, clock, environment, network, persistence, **or**
-logging-export effects through a specifically named bounded one-shot function
-**when** no identity **or** ownership is required, **or** through a specifically named
-method on an object that owns state, an invariant, a resource, a lifecycle, **or**
-a replaceable adapter.
+Make PROGRAMMATIC decisions in a deterministic core under AN-S-1897.
+
+Apply filesystem, process, clock, environment, network, persistence and logging-export effects through a specifically named, bounded one-shot function or a specifically named method on the owning object. Use AN-S-1898 to determine when the effect requires an object.
 
 ## Details
 
-
 ### Applicable when
 
-apply **when** a Tool, App backend service, **or** MCP component combines a decision
-with an external effect, asynchronous work, **or** lifecycle transition.
+Apply when a Tool, App backend service, or MCP component combines a decision with an external effect, asynchronous work, or a lifecycle transition.
 
 ### Procedure
 
-1. form the decision, target, ordering, **and** expected outcome with deterministic
-   functions from explicit observations **before** applying an effect.
-2. pass the resulting plan **to** one bounded effect boundary.
-3. use a function for a one-shot effect **only** **when** its complete target,
-   dependency, input, outcome, **and** failure boundary are explicit **and** it owns
-   no identity across calls, state, invariant, resource, lifecycle, **or** adapter.
-4. use a specifically named object method **when** the effect **must** own **any** of those
-   responsibilities across calls.
-5. return typed observations **or** completion facts **to** the decision boundary;
-   do **not** let the effect owner invent, reorder, **or** suppress a decision.
+1. Use explicit observations to form the decision, target, order and expected outcome before applying an effect.
+2. Pass the plan to one bounded effect boundary. For a one-shot function, make its complete target, dependencies, input, outcome and failure boundary explicit.
+3. Return typed observations or completion facts to the decision boundary. The effect owner must apply the plan without inventing, reordering or suppressing a decision.
 
 ### Outcome
 
-decision logic is locally readable **and** replayable. **every** effect has a visible,
-bounded function **or** object owner, ordered input, **and** recoverable result
-boundary. objects exist **only** **where** persistent identity **or** ownership requires
-them.
+The decision logic is locally readable and replayable. Each effect has a visible owner, ordered input and a recoverable result boundary.
 
 ### Failure or stop
 
-stop execution **when** the plan is incomplete, an effect owner would make a new
-business decision, a one-shot effect hides a dependency **or** exceeds its declared
-boundary, an object exists **without** owned identity **or** ownership, **or** the effect
-boundary cannot report a typed result.
+Stop if the plan is incomplete, the effect owner would make a new business decision, a one-shot effect hides a dependency or exceeds its declared boundary, or the effect boundary cannot report a typed result.
 
 ### Sources
 

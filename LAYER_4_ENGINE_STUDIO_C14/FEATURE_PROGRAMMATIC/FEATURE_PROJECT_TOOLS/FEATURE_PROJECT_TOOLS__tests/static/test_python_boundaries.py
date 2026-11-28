@@ -6,7 +6,7 @@ import tempfile
 import unittest
 
 
-MODULE = Path(__file__).parents[2] / "python_boundaries.py"
+MODULE = Path(__file__).parents[2] / "language_checks" / "python_boundaries.py"
 spec = importlib.util.spec_from_file_location("python_boundaries", MODULE)
 boundaries = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(boundaries)

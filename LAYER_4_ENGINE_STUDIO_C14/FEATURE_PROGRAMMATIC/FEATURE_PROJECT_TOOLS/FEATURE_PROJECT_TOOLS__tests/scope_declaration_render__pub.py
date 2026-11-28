@@ -39,7 +39,29 @@ def render_scope_declaration(
         if project_name.casefold() == "anechoic"
         else local_subject
     )
-    header = (
+    header = _declaration_header(subject, atom_id, status, version, updated_at)
+    claim = _scope_claim(
+        name,
+        project_name,
+        atom_id,
+        project,
+        scope_id,
+        label,
+        ordered,
+        order_number,
+        parent,
+    )
+    return (
+        header
+        + f"## Summary\n\nDeclare {name}\n\n"
+        + "## Claim\n\n### Formal Claim\n\n```python\n"
+        + claim
+        + "\n```\n"
+    )
+
+
+def _declaration_header(subject, atom_id, status, version, updated_at):
+    return (
         "---\n"
         f"atom_id: {_quoted(atom_id)}\n"
         "role: Requirement\n"
@@ -52,13 +74,6 @@ def render_scope_declaration(
         "  passive: []\n"
         "relations: {}\n"
         "---\n"
-    )
-    claim = _scope_claim(name, project_name, atom_id, project, scope_id, label, ordered, order_number, parent)
-    return (
-        header
-        + f"## Summary\n\nDeclare {name}\n\n## Claim\n\n### Formal Claim\n\n```python\n"
-        + claim
-        + "\n```\n"
     )
 
 
@@ -86,11 +101,11 @@ def _scope_claim(
         if ordered and _positive_int(order_number):
             fields.append(f"order_number={order_number}")
         if parent:
-            fields.append(
-                f"container={_quoted(project_name if parent == PROJECT else parent)}"
-            )
+            container = project_name if parent == PROJECT else parent
+            fields.append(f"container={_quoted(container)}")
     return (
         f"from anechoic.model import {kind}\n"
         "from anechoic.formal_claims import declare_entity\n"
-        f"declare_entity(entity_name={_quoted(name)}, instance={kind}({', '.join(fields)}))"
+        f"declare_entity(entity_name={_quoted(name)}, "
+        f"instance={kind}({', '.join(fields)}))"
     )

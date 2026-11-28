@@ -17,7 +17,17 @@ def _literal(facts):
     return (
         "["
         + ", ".join(
-            f"({lean_string(key)}, {lean_string(json.dumps(value, sort_keys=True, ensure_ascii=False, allow_nan=False, separators=(',', ':')))})"
+            f"({lean_string(key)}, "
+            + lean_string(
+                json.dumps(
+                    value,
+                    sort_keys=True,
+                    ensure_ascii=False,
+                    allow_nan=False,
+                    separators=(",", ":"),
+                )
+            )
+            + ")"
             for key, value in sorted(facts.items())
         )
         + "]"
@@ -41,7 +51,8 @@ def compare (left right : List (String × String)) : List String :=
   left.map fun fact =>
     match right.find? (fun candidate => candidate.1 == fact.1) with
     | none => "unresolved"
-    | some candidate => if sameValue candidate.2 fact.2 then "matched" else "conflicting"
+    | some candidate => if sameValue candidate.2 fact.2 then "matched" else \
+"conflicting"
 #eval IO.println (Lean.toJson [{calls}]).compress
 """
 
@@ -111,7 +122,9 @@ def compare_obligations(sources, obligations, *, lean="lean"):
 def compare_delegation(
     sources, obligations, *, manifest_only=False, lean="lean"
 ):
-    "Compare caller obligations with the provider Manifest or the legacy declarations."
+    """Compare caller obligations with the provider Manifest
+    or the legacy declarations.
+    """
     pairs = (("caller", "manifest"),)
     if not manifest_only:
         pairs += (("caller", "contract"), ("caller", "solution"))

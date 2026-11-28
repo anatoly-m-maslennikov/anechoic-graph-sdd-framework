@@ -10,7 +10,7 @@ context:
 state:
   status: in_queue
   version: 1
-  updated_at: '2026-11-24T16:40:34.256033+00:00'
+  updated_at: "2026-11-28T11:42:47+00:00"
 ---
 ## Summary
 
@@ -94,7 +94,7 @@ thread storage.
   pattern in `caller_context.py`, which rejects extra fields on a closed
   contract. Keep AN-S-1913 as the governing reference.
 - Use TypeScript for project-authored JavaScript, including tests and tooling.
-  Pass the existing 300-line Module and 45-line function checks.
+  Pass the 6 KiB Module and 45-nonblank-line function checks.
 - Run `enforce_source_languages = true` for Beta verification and eventual
   cutover. Run the existing Current baseline in report mode. The mechanical
   checks detect explicit model declarations and authored JavaScript. Review

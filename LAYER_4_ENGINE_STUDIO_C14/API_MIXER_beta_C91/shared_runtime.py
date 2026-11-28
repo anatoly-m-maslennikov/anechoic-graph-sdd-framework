@@ -10,7 +10,7 @@ from starlette.applications import Starlette
 from starlette.responses import JSONResponse
 from starlette.routing import Route
 
-from ._shared_runtime_support import (
+from .CORE.CORE__shared import (
     TOOL_REST_PATH,
     Invocation,
     SelectionRequest,
@@ -20,8 +20,9 @@ from ._shared_runtime_support import (
     tool_unavailable,
 )
 from .API_MIXER_beta_C91__shared import serve, socket_path
-from . import atom_document, lifecycle, projection, saved_sql
-from .admission import failure, peer
+from .CORE.CORE__shared import atom_document
+from .OPERATIONS.OPERATIONS__shared import lifecycle, projection, saved_sql
+from .CORE.CORE__shared import failure, peer
 from .api import (
     LIFECYCLE_TOOLS,
     PROJECTION_TOOLS,
@@ -29,9 +30,9 @@ from .api import (
     descriptors,
     execute_core,
 )
-from .models import JobsHealth, KernelHealth
-from .owner_client import Owner
-from .schema import read_schema
+from .CORE.CORE__shared import JobsHealth, KernelHealth
+from .CORE.CORE__shared import Owner
+from .CORE.CORE__shared import read_schema
 
 
 def bound_binding(binding, lease):

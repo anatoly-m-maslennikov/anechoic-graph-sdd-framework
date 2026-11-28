@@ -1,16 +1,17 @@
 import unittest
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.\
-    ADAPTERS_C30__shared import parse_typed_manifest_node  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.structure.components.components__shared import (
+    parse_typed_manifest_node,
+)
 
 
-AXIOM = '''from anechoic.formal_claims import value
+AXIOM = """from anechoic.formal_claims import value
 from anechoic.model import Lens, Project, SpecAtom
 class Axiom(SpecAtom):
     tier = value(fixed=0)
     lens = value(fixed=Lens.SPEC)
     container_type = value(fixed=Project)
-'''
+"""
 
 
 class TypedManifestNodeTests(unittest.TestCase):
@@ -92,13 +93,21 @@ class TypedManifestNodeTests(unittest.TestCase):
                 parse_typed_manifest_node(source)
 
     def test_node_constraint_uses_imported_types(self):
-        from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.FEATURE_FORMAL_MODEL_GENERATOR.manifest_compiler_CS1.typed_node_constraints import lower_node_constraints
-        text = "from anechoic.model import NodeConstraints, Atom, Project\nclass Constraints(NodeConstraints):\n    bearer = Atom\n    instance_relation_constraints = {'IS_CONTAINED_BY': {'target_entity_paths': (Project,), 'targets_per_source': 1}}\n"
+        from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.FEATURE_FORMAL_MODEL_GENERATOR.manifest_compiler_CS1.typed_node_constraints import (
+            lower_node_constraints,
+        )
+
+        text = (
+            "from anechoic.model import NodeConstraints, Atom, Project\n"
+            "class Constraints(NodeConstraints):\n    bearer = Atom\n    "
+            "instance_relation_constraints = {'IS_CONTAINED_BY': "
+            "{'target_entity_paths': (Project,), 'targets_per_source': 1}}\n"
+        )
         addresses = {
             "Atom": "Node//Artifact//Atom",
             "Project": "Node//Artifact//Component//Project",
         }
-        scope = 'MODEL//ANECHOIC <+ Node//Artifact//Atom.Constraints'
+        scope = "MODEL//ANECHOIC <+ Node//Artifact//Atom.Constraints"
         claim = lower_node_constraints(text, scope, addresses)
         self.assertIn("Node//Artifact//Component//Project", claim)
         flat = text + (
@@ -125,10 +134,20 @@ class TypedManifestNodeTests(unittest.TestCase):
             lower_node_constraints(dotted, scope, addresses),
             lower_node_constraints(flat, scope, addresses),
         )
+        self._check_invalid_constraints(
+            lower_node_constraints, text, scope, addresses, dotted
+        )
+
+    def _check_invalid_constraints(
+        self, lower_node_constraints, text, scope, addresses, dotted
+    ):
         for source in (
-            dotted + '    instance_relation_constraints = {}\n',
-            dotted.replace('node.constraints.instance_relations', 'node.constraints.instance_relation_constraints'),
-            dotted.replace('bearer = Atom', 'node.constraints.bearer = Atom'),
+            dotted + "    instance_relation_constraints = {}\n",
+            dotted.replace(
+                "node.constraints.instance_relations",
+                "node.constraints.instance_relation_constraints",
+            ),
+            dotted.replace("bearer = Atom", "node.constraints.bearer = Atom"),
         ):
             with self.subTest(source=source), self.assertRaises(ValueError):
                 lower_node_constraints(source, scope, addresses)

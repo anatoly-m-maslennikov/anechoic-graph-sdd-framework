@@ -179,3 +179,44 @@ receipt for a different or missing Project. The real two-Project test
 passed with identical Project names. Local Lean translated the revised
 Contracts and Solutions. Static comparison of symbolic bindings remains
 unresolved. The generated browser cases check concrete observations.
+
+## Current verification checkpoint
+
+The Realization Graph for committed revision `1e2588dd54e3d` reports
+44 denied imports and one undeclared bypass across the Project.
+The IWE Console tree has zero violations. The Project has 39
+uncertain occurrences. Static remains red.
+
+C46 Active AN-S-3060@17 and AN-S-3372@10 generate 66 browser cases.
+The 63 earlier case records stayed identical. Their Console suite
+passed across the main run and the focused Diagnostics rerun.
+The shared HTTP test also passed Project isolation, lifecycle writes,
+and the three C21 Draft document forwarding cases.
+
+Lean directly matched seven new C46 actions. Builder Run, lifecycle,
+and Draft editing still have unresolved event bindings. State, I/O,
+and Code Access comparison remains unresolved across Components.
+The Draft guard specifies three outcomes for navigation during a pending
+save. All 13 focused lifecycle browser cases passed. Lean matched all 17
+field comparisons captured for the three new outcomes.
+
+The Graph overlay joins Current Component and Package bindings by
+exact revision. Current Kernel accepts trailing View directives on
+Check and Run and preserves authored SQL on Save.
+
+Current Structure SQL returns exact Component and Seed documents.
+The DuckDB owner test verified watcher refresh with Imports disabled
+and retained-database reuse. All seven Structure browser cases passed.
+Graph-only rebuild preserves Atom and Structure facts. The Project
+rebuild refreshes them from source.
+The C59 Contract and Solution match in Lean for success and disabled
+refusal. Both generated cases passed against the Current Kernel.
+
+Current Diagnostics reads indexed Atom and issue counts from Kernel
+and Worker Runs through its existing route. The bound API checks and
+all eight Diagnostics browser cases passed. The two-Project HTTP test
+verified detailed status and Project isolation with the test compiler
+deadline disabled. The 15-second compiler deadline prevented readiness
+in the default run. All six focused Manifest and OpenAPI checks passed
+with the test compiler deadline disabled. AN-T-3476 still gates Local
+Release.

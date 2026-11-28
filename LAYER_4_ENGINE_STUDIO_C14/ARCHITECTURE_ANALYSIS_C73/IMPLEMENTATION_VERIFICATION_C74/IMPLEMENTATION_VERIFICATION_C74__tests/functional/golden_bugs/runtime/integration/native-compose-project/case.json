@@ -1,0 +1,46 @@
+{
+  "title": "Native Project Compose namespace during canary startup",
+  "invariant": "A valid selected native Project supplies the Compose namespace required by its launcher backend.",
+  "scope": "Uncommitted integration canary reconstructed from byte-evidenced BB events, not a committed production regression. The relevant launcher, startup, backend and selection files are checked; no Docker runtime or general startup behavior is proved.",
+  "before": {
+    "revision": "uncommitted BB thr_8zxi7bmrvv event 16909",
+    "source": "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/native_project_selection.py",
+    "fixture": "before-selection.py.txt",
+    "sha256": "aac6ca8906d16278a8b148a1501a12e8b315f99fc525119960c8d9c56e4b2300"
+  },
+  "fixed": {
+    "revision": "189f7574016c6fa7991b7ed686e52f4ff2333ecb",
+    "source": "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/native_project_selection.py",
+    "fixture": "fixed-selection.py.txt",
+    "sha256": "09fb8a24995cc52bbd831dc01c6407990eb8b206d64d97a867fef3cd4762f2d3"
+  },
+  "checks": [
+    {
+      "file": "check.lean"
+    }
+  ],
+  "analyzer": "analyze.py",
+  "overlay_base": "189f7574016c6fa7991b7ed686e52f4ff2333ecb",
+  "overlay": [
+    {
+      "source": "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/native_project_selection.py",
+      "fixture": "before-selection.py.txt",
+      "sha256": "aac6ca8906d16278a8b148a1501a12e8b315f99fc525119960c8d9c56e4b2300"
+    },
+    {
+      "source": "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MCP/docker/project_mcp_backend.py",
+      "fixture": "before-backend.py.txt",
+      "sha256": "83956a1028c676efc2e4a8cac3f8af194b124a449b52b14b3690d848b142b617"
+    },
+    {
+      "source": "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MCP/docker/project_mcp_launcher.py",
+      "fixture": "fixtures/launcher.py.txt",
+      "sha256": "8f452ac466ea95a1ec3c8833f437e36bbb6804308a08de6b86f9e23b8c2dacb3"
+    },
+    {
+      "source": "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MCP/native_startup.py",
+      "fixture": "fixtures/startup.py.txt",
+      "sha256": "5881c581809a293d20eecfe3dee98efc12c40a05c2f40855010f35adc6259ec5"
+    }
+  ]
+}

@@ -2,8 +2,8 @@
 
 import unittest
 
-from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.test_suite__shared import (
-    source_comments as lint,
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.source_inventory import (
+    source_inventory__shared as lint,
 )
 
 NEXT_LINE_DIRECTIVE = "editorconfig-checker-disable-next-line"
@@ -17,7 +17,7 @@ class SourceCommentsTests(unittest.TestCase):
                 "\n".join(
                     [
                         *findings,
-                        "Run source_comments.py --fix to remove "
+                        "Run source_inventory__shared.py --fix to remove "
                         + "these comments.",
                     ]
                 )
@@ -29,6 +29,8 @@ class SourceCommentsTests(unittest.TestCase):
             "# prose\r\nvalue = 'literal # text'  # inline prose\r\n"
             "# editorconfig-checker-disable-line\r\n"
             f"# {NEXT_LINE_DIRECTIVE}\r\n"
+            "# import-graph: previous-image with a suffix\r\n"
+            "# import-graph: previous-image\r\n"
             "from other import value  # noqa: F401\r\n"
         )
         edits = lint.remove_line_comments(source, lint.python_comments(source))
@@ -38,6 +40,7 @@ class SourceCommentsTests(unittest.TestCase):
             "#!/usr/bin/env python3\r\n# coding: utf-8\r\n"
             "value = 'literal # text'\r\n"
             "# editorconfig-checker-disable-line\r\n"
+            "# import-graph: previous-image\r\n"
             "from other import value  # noqa: F401\r\n",
             source,
         )

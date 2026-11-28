@@ -36,3 +36,7 @@ checks passed.
 Focused checks passed for the affected files. The Static test-module
 check is still blocked by two source comment findings in Model
 Generator. An exact sealed candidate remains pending.
+
+The v0.5.0 candidate passed the required Static gate and Realization Graph.
+See the exact seal and receipts in AN-T-4088. The Operator deferred source
+width for this release.

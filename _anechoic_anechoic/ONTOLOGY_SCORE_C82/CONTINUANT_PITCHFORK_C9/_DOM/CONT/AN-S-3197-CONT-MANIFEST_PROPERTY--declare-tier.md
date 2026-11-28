@@ -13,8 +13,8 @@ context:
   lens: DOM/CONT
 state:
   status: "active"
-  version: 7
-  updated_at: "2026-11-26T15:52:34.045086+00:00"
+  version: 9
+  updated_at: "2026-11-28T11:00:50.522707+00:00"
 ---
 
 ## Summary
@@ -33,8 +33,4 @@ class Property3197(Property):
     bearer = SpecAtom.Header
     property.value.allowed = (1, 2)
     property.applies_to = (ApplicablePrinciple,)
-    field_options = {'kw_only': True}
-    property.cardinality = 1
-    property.value.cardinality = 1
-    property.value.format = int
 ```

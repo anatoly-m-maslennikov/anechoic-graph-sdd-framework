@@ -5,10 +5,11 @@ from hashlib import sha256
 import json
 
 from ..LAYER_1_DIAGNOSTICS_C90._package__shared import finding, verdict
-from ..LAYER_2_SPEC_READING_C83.SPECIFICATION_MODEL_C85._package__shared import (
-    json_equal,
-    normalize_spec,
-)
+
+# fmt: off
+from ..LAYER_2_SPEC_READING_C83.SPECIFICATION_MODEL_C85.\
+    _package__shared import json_equal, normalize_spec
+# fmt: on
 from ..LAYER_3_LEAN_TRANSLATOR_C84._package__shared import run_lean_json
 from ..LAYER_3_TEST_GENERATION_C92._package__shared import framing_witnesses
 from .framing_validation import (
@@ -20,37 +21,48 @@ from .shape_validation import shape_checks
 
 
 def _evaluation(roles, framing, framing_inputs):
-    values = ', '.join(f'AnechoicSpec.{role}' for role in roles)
-    witnesses = ', '.join('[' + ', '.join(checks) + ']' for checks in framing.values())
-    observations = framing_observations(framing_inputs) if framing_inputs else ''
-    return observations + f'''
+    values = ", ".join(f"AnechoicSpec.{role}" for role in roles)
+    witnesses = ", ".join(
+        "[" + ", ".join(checks) + "]" for checks in framing.values()
+    )
+    observations = (
+        framing_observations(framing_inputs) if framing_inputs else ""
+    )
+    return (
+        observations
+        + f"""
 def translationValue : Except String Lean.Json → Lean.Json
   | .ok value => Lean.Json.arr #[value]
   | .error _ => Lean.Json.arr #[]
 #eval IO.println ((Lean.Json.arr #[
   Lean.Json.arr (#[{values}].map translationValue),
   Lean.toJson ([{witnesses}] : List (List Bool)),
-  {'framingCases' if framing_inputs else 'Lean.Json.null'}
+  {"framingCases" if framing_inputs else "Lean.Json.null"}
 ]).compress ++ "]")
-'''
+"""
+    )
 
 
 def _projection_checks(model, claims, unresolved, bounded_framing):
     shape, framing = {}, {}
-    for role in ('contract', 'solution'):
+    for role in ("contract", "solution"):
         if role not in claims:
             continue
         declaration = model[role]
-        languages = [language for language, _ in declaration['claims']]
-        if languages == ['python shape']:
+        languages = [language for language, _ in declaration["claims"]]
+        if languages == ["python shape"]:
             shape[role] = shape_checks(claims[role], role)
         if "python framing" in languages:
             claim = (
                 claims[role]["framing"] if len(languages) > 1 else claims[role]
             )
             try:
-                framing[role] = (claim, framing_witnesses(
-                    claim, role, include_overlap_cases=bounded_framing))
+                framing[role] = (
+                    claim,
+                    framing_witnesses(
+                        claim, role, include_overlap_cases=bounded_framing
+                    ),
+                )
             except ValueError as error:
                 unresolved.append(
                     finding(declaration["source"], role, str(error))
@@ -69,15 +81,18 @@ def _projection_checks(model, claims, unresolved, bounded_framing):
 
 def _check_shape(model, claims, checks, results, issues):
     if not isinstance(results, list) or len(results) != len(checks):
-        raise ValueError('Unexpected Lean shape validation output')
+        raise ValueError("Unexpected Lean shape validation output")
     for role, values in zip(checks, results, strict=True):
         claim = claims[role]
-        fields = ['shape'] + [f'fields.{name}' for name in claim['fields']]
-        if claim['base'] == claim['record']:
-            fields.append('base')
-        if (not isinstance(values, list) or len(values) != len(fields)
-                or any(type(value) is not bool for value in values)):
-            raise ValueError('Unexpected Lean shape validation output')
+        fields = ["shape"] + [f"fields.{name}" for name in claim["fields"]]
+        if claim["base"] == claim["record"]:
+            fields.append("base")
+        if (
+            not isinstance(values, list)
+            or len(values) != len(fields)
+            or any(type(value) is not bool for value in values)
+        ):
+            raise ValueError("Unexpected Lean shape validation output")
         for field, matches in zip(fields, values, strict=True):
             if not matches:
                 issues.append(
@@ -91,12 +106,15 @@ def _check_shape(model, claims, checks, results, issues):
 
 def _check_framing(model, checks, actual, issues, unresolved):
     if not isinstance(actual, list) or len(actual) != len(checks):
-        raise ValueError('Unexpected Lean framing validation output')
+        raise ValueError("Unexpected Lean framing validation output")
     for (role, witnesses), results in zip(checks.items(), actual, strict=True):
-        if (not isinstance(results, list) or len(results) != len(witnesses)
-                or any(type(result) is not bool for result in results)):
-            raise ValueError('Unexpected Lean framing witness output')
-        source = model[role]['source']
+        if (
+            not isinstance(results, list)
+            or len(results) != len(witnesses)
+            or any(type(result) is not bool for result in results)
+        ):
+            raise ValueError("Unexpected Lean framing witness output")
+        source = model[role]["source"]
         if False in results:
             witness = witnesses[results.index(False)]
             issues.append(
@@ -105,16 +123,22 @@ def _check_framing(model, checks, actual, issues, unresolved):
                 )
             )
         else:
-            unresolved.append(finding(source, role,
-                f'Framing passed {len(witnesses) // 2} byte witnesses. Unbounded equivalence remains unverified.'))
+            unresolved.append(
+                finding(
+                    source,
+                    role,
+                    f"Framing passed {len(witnesses) // 2} byte witnesses. "
+                    "Unbounded equivalence remains unverified.",
+                )
+            )
 
 
 def _check_declarations(model, claims, actual, issues):
     if not isinstance(actual, list) or len(actual) != len(claims):
-        raise ValueError('Unexpected Lean translation validation output')
+        raise ValueError("Unexpected Lean translation validation output")
     for (role, claim), observed in zip(claims.items(), actual, strict=True):
-        source = model[role]['source']
-        value = json.dumps({'source': source, 'claim': claim}, allow_nan=False)
+        source = model[role]["source"]
+        value = json.dumps({"source": source, "claim": claim}, allow_nan=False)
         expected = json.loads(value, parse_float=Decimal)
         if not json_equal([expected], observed):
             issues.append(
@@ -128,29 +152,37 @@ def _check_declarations(model, claims, actual, issues):
 
 def _bounded_report(witnesses, pair_results, claims):
     result = framing_comparison(witnesses, pair_results, claims)
-    encoded = json.dumps([claims, result], sort_keys=True, allow_nan=False,
-                         separators=(',', ':')).encode('utf-8')
-    return {'status': 'bounded_match', 'framing_comparison': result,
-            'framing_result_pin': sha256(encoded).hexdigest()}
+    encoded = json.dumps(
+        [claims, result],
+        sort_keys=True,
+        allow_nan=False,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return {
+        "status": "bounded_match",
+        "framing_comparison": result,
+        "framing_result_pin": sha256(encoded).hexdigest(),
+    }
 
 
 def _run_validation(program, claims, shape, framing, witnesses, lean):
     evaluation = run_lean_json(
-        program + '\nrun_cmd liftM <| IO.print "["\n'
-        + ''.join(shape.values()) + _evaluation(claims, framing, witnesses),
-        lean, parse_float=Decimal)
+        program
+        + '\nrun_cmd liftM <| IO.print "["\n'
+        + "".join(shape.values())
+        + _evaluation(claims, framing, witnesses),
+        lean,
+        parse_float=Decimal,
+    )
     if not isinstance(evaluation, list) or len(evaluation) != len(shape) + 1:
-        raise ValueError('Unexpected Lean translation validation output')
+        raise ValueError("Unexpected Lean translation validation output")
     tail = evaluation[-1]
     if not isinstance(tail, list) or len(tail) != 3:
-        raise ValueError('Unexpected Lean translation validation output')
+        raise ValueError("Unexpected Lean translation validation output")
     return evaluation[:-1], *tail
 
 
-def validate_translation(model, program, *, lean='lean', bounded_framing=False):
-    """Check emitted declarations, shape metadata, and bounded framing witnesses."""
-    normalized = normalize_spec(model)
-    claims = normalized["claims"]
+def _unresolved_coverage(model, normalized, bounded_framing):
     comparison_fields = {
         "boundaries.code.imports",
         "boundaries.code.exports",
@@ -159,17 +191,41 @@ def validate_translation(model, program, *, lean='lean', bounded_framing=False):
     if model.get("embedded_contract"):
         comparison_fields.update(("boundaries.process", "boundaries.state"))
     unresolved, coverage_unresolved = [], []
-    for issue in normalized['unresolved']:
-        if issue['field'] not in comparison_fields:
+    for issue in normalized["unresolved"]:
+        if issue["field"] not in comparison_fields:
             unresolved.append(issue)
         elif bounded_framing:
             coverage_unresolved.append(issue)
-    boundaries = claims.get('manifest', {}).get('boundaries') or {}
-    if (bounded_framing and 'io' in boundaries
-            and not any(issue['field'] == 'boundaries.io' for issue in coverage_unresolved)):
-        coverage_unresolved.append(finding(model['manifest']['source'], 'boundaries.io',
-                                           'Framing does not compare Manifest I/O obligations'))
-    issues = list(normalized['issues'])
+    boundaries = (
+        normalized["claims"].get("manifest", {}).get("boundaries") or {}
+    )
+    if (
+        bounded_framing
+        and "io" in boundaries
+        and not any(
+            issue["field"] == "boundaries.io" for issue in coverage_unresolved
+        )
+    ):
+        coverage_unresolved.append(
+            finding(
+                model["manifest"]["source"],
+                "boundaries.io",
+                "Framing does not compare Manifest I/O obligations",
+            )
+        )
+    return unresolved, coverage_unresolved
+
+
+def validate_translation(
+    model, program, *, lean="lean", bounded_framing=False
+):
+    """Check declarations, shape metadata, and bounded framing witnesses."""
+    normalized = normalize_spec(model)
+    claims = normalized["claims"]
+    unresolved, coverage_unresolved = _unresolved_coverage(
+        model, normalized, bounded_framing
+    )
+    issues = list(normalized["issues"])
     witnesses = []
     pair_results = None
     if claims:
@@ -177,17 +233,29 @@ def validate_translation(model, program, *, lean='lean', bounded_framing=False):
             model, claims, unresolved, bounded_framing
         )
         shapes, actual, witness_results, pair_results = _run_validation(
-            program, claims, shape, framing, witnesses, lean)
+            program, claims, shape, framing, witnesses, lean
+        )
         _check_shape(model, claims, shape, shapes, issues)
         _check_declarations(model, claims, actual, issues)
-        _check_framing(model, framing, witness_results, issues,
-                       coverage_unresolved if witnesses else unresolved)
-    statuses = ['conflicting'] if issues else ['unresolved'] if unresolved else ['matched']
-    status = verdict(statuses)
-    report = {'status': status, 'issues': issues, 'unresolved': unresolved,
-              'claims': claims if status == 'matched' else {}}
+        _check_framing(
+            model,
+            framing,
+            witness_results,
+            issues,
+            coverage_unresolved if witnesses else unresolved,
+        )
+    outcome = (
+        "conflicting" if issues else "unresolved" if unresolved else "matched"
+    )
+    status = verdict([outcome])
+    report = {
+        "status": status,
+        "issues": issues,
+        "unresolved": unresolved,
+        "claims": claims if status == "matched" else {},
+    }
     if bounded_framing:
-        report['coverage_unresolved'] = coverage_unresolved
-        if witnesses and status == 'matched':
+        report["coverage_unresolved"] = coverage_unresolved
+        if witnesses and status == "matched":
             report.update(_bounded_report(witnesses, pair_results, claims))
     return report

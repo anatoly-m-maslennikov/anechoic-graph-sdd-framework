@@ -9,11 +9,11 @@ context:
   lens: DevOps
 relations:
   ANSWERS:
-  - AN-S-3038@10-draft
+  - AN-S-3038@12-draft
 state:
   status: draft
   version: 10
-  updated_at: '2026-11-25T10:24:04.712334+00:00'
+  updated_at: '2026-11-28T10:15:18+00:00'
 ---
 
 ## Summary
@@ -57,43 +57,43 @@ component_workflow(
             'dispatching_local': {'on': {
                 'local_invoked': {'target': 'responding', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'effect', 'target': 'C63', 'detail': {
-                        'manifest': 'AN-S-3290@15-draft', 'action': 'run_local_release',
+                        'manifest': 'AN-S-3290@19-draft', 'action': 'run_local_release',
                         'entry': 'run_local_release',
                     }}}},
             }},
             'dispatching_prepare_local': {'on': {
                 'prepare_local_invoked': {'target': 'responding', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'effect', 'target': 'C63', 'detail': {
-                        'manifest': 'AN-S-3290@15-draft', 'action': 'prepare_local',
+                        'manifest': 'AN-S-3290@19-draft', 'action': 'prepare_local',
                         'entry': 'prepare_local',
                     }}}},
             }},
             'dispatching_public': {'on': {
                 'public_invoked': {'target': 'responding', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'effect', 'target': 'C64', 'detail': {
-                        'manifest': 'AN-S-3291@8-draft', 'action': 'prepare_public_release',
+                        'manifest': 'AN-S-3291@10-draft', 'action': 'prepare_public_release',
                         'entry': 'run_public_release',
                     }}}},
             }},
             'dispatching_build_image': {'on': {
                 'build_image_invoked': {'target': 'responding', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'effect', 'target': 'C81', 'detail': {
-                        'manifest': 'AN-S-4704@5-draft', 'action': 'build_and_run_runtime_images',
+                        'manifest': 'AN-S-4704@7', 'action': 'build_and_run_runtime_images',
                         'entry': 'build_image',
                     }}}},
             }},
             'dispatching_verify_image': {'on': {
                 'verify_image_invoked': {'target': 'responding', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'effect', 'target': 'C63', 'detail': {
-                        'manifest': 'AN-S-3290@15-draft', 'action': 'verify_image',
+                        'manifest': 'AN-S-3290@19-draft', 'action': 'verify_image',
                         'entry': 'verify_image',
                     }}}},
             }},
             'dispatching_run_image': {'on': {
                 'run_image_invoked': {'target': 'responding', 'guard': {'type': 'matchesTrace', 'params':
                     {'kind': 'effect', 'target': 'C81', 'detail': {
-                        'manifest': 'AN-S-4704@5-draft', 'action': 'build_and_run_runtime_images',
-                        'entry': 'launch_shared_image', 'apply_flag': '--apply',
+                        'manifest': 'AN-S-4704@7', 'action': 'build_and_run_runtime_images',
+                        'entry': 'launch_shared_image',
                     }}}},
             }},
             'responding': {'on': {

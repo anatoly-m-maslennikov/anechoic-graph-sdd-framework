@@ -1,6 +1,6 @@
 """Merge constraint Declarations into their Model class owners."""
 
-from ....FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model.model__shared import (
     model_class_target,
 )
 

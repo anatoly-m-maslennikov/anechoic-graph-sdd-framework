@@ -13,13 +13,17 @@ context:
   lens: DOM/CONT
 state:
   status: active
-  version: 15
-  updated_at: '2026-11-26T18:34:31.644797+00:00'
+  version: 16
+  updated_at: "2026-11-28T10:28:09.160093+00:00"
 ---
 
 ## Summary
 
 Declare Node
+
+## Semantics
+
+Each Node axis has its own Manifest on Node. A subtype inherits its parent's axis values. An explicit assignment overrides the inherited value for that subtype and its descendants.
 
 ## Formal Manifest
 

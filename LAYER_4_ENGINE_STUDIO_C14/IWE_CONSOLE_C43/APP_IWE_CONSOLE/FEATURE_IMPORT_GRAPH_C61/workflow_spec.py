@@ -7,7 +7,7 @@ from pathlib import Path
 import subprocess
 import sys
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carriers.content.content__shared \
     import formal_claim_fences  # fmt: skip
 from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75._package__shared import (
     compile_workflow,

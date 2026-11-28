@@ -7,20 +7,20 @@ import sys
 import tempfile
 import yaml
 
-from .workbench_docker_support import (
-    IMAGE_DEADLINES,
-    defer_container_cleanup as defer_container_cleanup,
-    docker_deadline_env as docker_deadline_env,
-    image_deadline_mode,
-    image_mcp_transport as image_mcp_transport,
-    image_timeout as image_timeout,
-    observing as observing,
-    request as request,
-    run_browser,
-)
+from .integration.workbench.group_4.workbench_docker_support import IMAGE_DEADLINES
+from .integration.workbench.group_4.workbench_docker_support import defer_container_cleanup as defer_container_cleanup
+from .integration.workbench.group_4.workbench_docker_support import docker_deadline_env as docker_deadline_env
+from .integration.workbench.group_4.workbench_docker_support import image_deadline_mode
+from .integration.workbench.group_4.workbench_docker_support import image_mcp_transport as image_mcp_transport
+from .integration.workbench.group_4.workbench_docker_support import image_timeout as image_timeout
+from .integration.workbench.group_4.workbench_docker_support import observing as observing
+from .integration.workbench.group_4.workbench_docker_support import request as request
+from .integration.workbench.group_4.workbench_docker_support import run_browser
 
-from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import (
+from MCP_PATCHBAY_C21.FEATURE_MCP.transport_support.paths.paths__shared import (
     WORKBENCH_PATH,
+)
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import (
     select_runtime_project,
 )
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__tests.packaged_image_fixture__pub import (
@@ -28,8 +28,8 @@ from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__tests.packaged_image_fixture__pub
 )
 
 ROOT = Path(__file__).resolve().parents[4]
-CONTROL = '_anechoic_anechoic'
-ONTOLOGY = Path('ONTOLOGY_SCORE_C82/CONTINUANT_PITCHFORK_C9')
+CONTROL = "_anechoic_anechoic"
+ONTOLOGY = Path("ONTOLOGY_SCORE_C82/CONTINUANT_PITCHFORK_C9")
 
 
 def project(root):
@@ -105,6 +105,47 @@ def write_manifest(
     return path
 
 
+def _check_browser(case, frontend, environment):
+    launch = run_browser(
+        case.container,
+        [
+            "node",
+            str(
+                frontend
+                / "FEATURE_IWE_CONSOLE_FRONTEND__tests/pinned_chromium_probe.ts"
+            ),
+        ],
+        cwd=frontend,
+        env=environment,
+        bounded_timeout=None,
+    )
+    case.assertEqual(
+        0,
+        launch.returncode,
+        f"Pinned Chromium could not launch. Run the image tests in a host context that permits "
+        f"Chromium processes.\n{launch.stdout}{launch.stderr}",
+    )
+    print(f"Pinned Chromium {launch.stdout.strip()}", flush=True)
+
+
+def _browser_command(output, selection, environment):
+    command = [
+        "node",
+        "node_modules/@playwright/test/cli.js",
+        "test",
+        "--config",
+        "FEATURE_IWE_CONSOLE_FRONTEND__tests/playwright.config.ts",
+        "--output",
+        output,
+        "--trace",
+        "retain-on-failure",
+        *selection,
+    ]
+    if environment[IMAGE_DEADLINES] == "1":
+        command.extend(("--global-timeout", "115000"))
+    return command
+
+
 def run_workbench_browser(case, selection=()):
     repository = Path(__file__).resolve().parents[4]
     frontend = (
@@ -121,23 +162,11 @@ def run_workbench_browser(case, selection=()):
             repository / ".anechoic_tmp/workbench/playwright-browsers"
         ),
     }
-    launch = run_browser(
-        case.container,
-        ["node", str(frontend / "FEATURE_IWE_CONSOLE_FRONTEND__tests/pinned_chromium_probe.ts")],
-        cwd=frontend, env=environment, bounded_timeout=None,
-    )
-    case.assertEqual(0, launch.returncode,
-                     f"Pinned Chromium could not launch. Run the image tests in a host context that permits "
-                     f"Chromium processes.\n{launch.stdout}{launch.stderr}")
-    print(f"Pinned Chromium {launch.stdout.strip()}", flush=True)
+    _check_browser(case, frontend, environment)
     reports = repository / ".anechoic_tmp/test_reports"
     reports.mkdir(parents=True, exist_ok=True)
     output = tempfile.mkdtemp(prefix="workbench-browser-", dir=reports)
-    command = ["node", "node_modules/@playwright/test/cli.js", "test", "--config",
-               "FEATURE_IWE_CONSOLE_FRONTEND__tests/playwright.config.ts", "--output", output,
-               "--trace", "retain-on-failure", *selection]
-    if environment[IMAGE_DEADLINES] == "1":
-        command.extend(("--global-timeout", "115000"))
+    command = _browser_command(output, selection, environment)
     try:
         result = run_browser(
             case.container, command, cwd=frontend, env=environment

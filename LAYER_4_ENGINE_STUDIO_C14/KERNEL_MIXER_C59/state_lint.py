@@ -9,19 +9,30 @@ import subprocess
 import sys
 from tempfile import TemporaryDirectory
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
-    import parse_structure  # fmt: skip
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
-    import build_code_access_ownership  # fmt: skip
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import (
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.structure.\
+    structure__shared import (
+        parse_structure,
+    )  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.structure.\
+    structure__shared import (
+        build_code_access_ownership,
+    )  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.\
+    PROJECT_SUPPORT.PROJECT_SELECTION.\
+    PROJECT_SELECTION__shared import (
     discover_native_project,
     is_native_control_name,
 )
 from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IMPORT_GRAPH_C61.\
-    import_graph__shared \
-    import (
+    STATE_ANALYSIS.STATE_ANALYSIS__shared import (
         analyze_state,
+    )  # fmt: skip
+from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IMPORT_GRAPH_C61.\
+    SOURCE_CAPTURE.SOURCE_CAPTURE__shared import (
         capture,
+    )  # fmt: skip
+from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IMPORT_GRAPH_C61.\
+    RESOLUTION.code_access_occurrences import (
         code_access_occurrences,
     )  # fmt: skip
 
@@ -120,7 +131,8 @@ def _report_imports(ownership, sources, occurrences, component):
             and source.status != "parsed"
         ):
             print(
-                f"{path}: import analysis {source.status}: {source.error_message or 'source unavailable'}",
+                f"{path}: import analysis {source.status}: "
+                f"{source.error_message or 'source unavailable'}",
                 file=sys.stderr,
             )
             failed = True
@@ -134,7 +146,8 @@ def _report_imports(ownership, sources, occurrences, component):
         ):
             continue
         print(
-            f"{path}:{line}:{column + 1}: import {status}: {written} ({reason})",
+            f"{path}:{line}:{column + 1}: import {status}: {written} ({reason}"
+            ")",
             file=sys.stderr,
         )
         failed |= status in {"denied", "undeclared_bypass"}
@@ -168,7 +181,8 @@ def _report(rows):
             failed = True
         for violation in json.loads(violations):
             print(
-                f"{path}:{violation['line']}: state {violation['kind']} denied in "
+                f"{path}:{violation['line']}: state {violation['kind']} "
+                "denied in "
                 f"{action} ({violation['name']})",
                 file=sys.stderr,
             )

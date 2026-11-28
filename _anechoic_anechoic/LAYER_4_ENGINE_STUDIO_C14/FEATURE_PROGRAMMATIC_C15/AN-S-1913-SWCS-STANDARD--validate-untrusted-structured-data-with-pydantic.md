@@ -12,9 +12,9 @@ context:
   template: STANDARD
   lens: SWD/SWCS
 state:
-  status: active
-  version: 18
-  updated_at: '2026-11-27T12:07:53.368595+00:00'
+  status: "active"
+  version: 19
+  updated_at: "2026-11-27T20:35:14.221449+00:00"
 ---
 
 ## Summary
@@ -23,9 +23,9 @@ Validate untrusted structured data with Pydantic
 
 ## Semantics
 
-The rule covers every structured Python record, including internal state and
-test records. Pydantic dataclasses are permitted. Apply the committed Ruff
-formatter and lint/complexity profile and the locked Mypy profile.
+Structured Python records include domain and state records, configuration,
+IPC and persistence records, requests, results, and test models. Pydantic
+dataclasses are permitted.
 
 ## Claim
 
@@ -42,9 +42,7 @@ end ProgrammaticPythonRecords
 
 ### Prose Claim
 
-Use Pydantic for all structured Python models, including domain and state
-records, configuration, IPC and persistence records, requests, results,
-and test models. Keep validated Pydantic models throughout Python code.
+Keep validated Pydantic models throughout Python code.
 Use the committed Ruff formatter and lint/complexity profile, including
 F401, B006 and configured C901 limits. Run the locked Mypy profile against
 its declared targets.

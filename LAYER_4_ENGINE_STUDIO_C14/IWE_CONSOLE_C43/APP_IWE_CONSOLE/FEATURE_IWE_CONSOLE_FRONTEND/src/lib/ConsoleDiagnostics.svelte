@@ -1,6 +1,6 @@
 <script lang="ts">
-  import AtomLink from './AtomLink.svelte';
-  import type { AtomDestination } from './console_document';
+  import { AtomLink } from './features/features__shared';
+  import type { AtomDestination } from './features/features__shared';
   import type { SourceSyncStatus } from './types';
   let { status, rebuild, onOpen }: {
     status: SourceSyncStatus; rebuild: (target: string) => Promise<unknown>;
@@ -31,8 +31,19 @@
     <dt>Archive</dt><dd>{status.archive?.state ?? 'Unknown'}</dd>
     <dt>Watcher events queued</dt><dd>{status.watcher_queue_depth
       ?? 'Unknown'}</dd>
-    <dt>Last Worker run</dt><dd>{status.last_run_state ?? 'Unknown'}</dd>
-    <dt>Ingestion issues</dt><dd>{status.ingestion_issues?.length
+    {#if status.indexed_atom_count !== undefined}
+      <dt>Indexed Atoms</dt><dd>{status.indexed_atom_count}</dd>
+    {/if}
+    {#if status.worker_runs}
+      <dt>Active Workers</dt><dd>{status.worker_runs.active.length}</dd>
+    {/if}
+    <dt>Worker outcomes</dt><dd>{status.worker_runs
+      ? status.worker_runs.latest.map(run =>
+          `${run.kind.replaceAll('_', ' ')} · ${run.status}`).join(', ')
+        || 'None'
+      : status.last_run_state ?? 'Unknown'}</dd>
+    <dt>Ingestion issues</dt><dd>{status.ingestion_issue_count
+      ?? status.ingestion_issues?.length
       ?? 'Unknown'}</dd>
   </dl>
   {#if status.health?.error?.message}<p

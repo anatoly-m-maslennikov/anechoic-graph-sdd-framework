@@ -7,7 +7,7 @@
     "build:standalone": "vite build",
     "build:mcp-app": "node scripts/build-mcp-app.ts",
     "check:types": "tsc --noEmit && svelte-check --tsconfig ./tsconfig.json",
-    "test:workspace": "npm run check:types && node --test FEATURE_IWE_CONSOLE_FRONTEND__tests/*.test.ts",
+    "test:workspace": "npm run check:types && node --test FEATURE_IWE_CONSOLE_FRONTEND__tests/unit/*.test.ts",
     "test:mcp-app": "tsc --noEmit --strict --target ES2022 --module ESNext --moduleResolution bundler --skipLibCheck ../FEATURE_CODEX_EXTENSION/FEATURE_CODEX_EXTENSION__tests/mcp-app.e2e.ts ../FEATURE_CODEX_EXTENSION/FEATURE_CODEX_EXTENSION__tests/mcp_app_probe.ts && npm run build:mcp-app && node --test ../FEATURE_CODEX_EXTENSION/FEATURE_CODEX_EXTENSION__tests/mcp-app.e2e.ts",
     "test:e2e": "playwright test --config FEATURE_IWE_CONSOLE_FRONTEND__tests/playwright.config.ts"
   },

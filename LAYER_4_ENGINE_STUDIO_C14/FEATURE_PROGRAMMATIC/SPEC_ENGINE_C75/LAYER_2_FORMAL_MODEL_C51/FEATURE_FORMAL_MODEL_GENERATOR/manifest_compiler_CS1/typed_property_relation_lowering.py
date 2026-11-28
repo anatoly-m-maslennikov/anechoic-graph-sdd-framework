@@ -1,18 +1,18 @@
 """Lower typed properties and relations without executing authored text."""
 
 import ast
-from .....FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model.claims.claims__shared import (
     parse_native_model_claim,
 )
 
-from ._typed_field_syntax import (
+from .typed._package__shared import (
     _endpoints,
     _field_assignments,
     _parse_field_body,
     _reference,
     _references,
 )
-from ._typed_property_rules import _lower_axis, _lower_property_value
+from .typed._package__shared import _lower_axis, _lower_property_value
 
 
 def typed_property_subject(text, addresses):
@@ -203,6 +203,8 @@ def _lower_field_arguments(
             "base_path": base_path,
         }
         _lower_property_value(fields, has_value_import)
+        if isinstance(groups := fields.get("status_groups"), ast.Dict):
+            fields.setdefault("allowed_values", ast.Tuple(elts=groups.keys))
         _lower_relation_domain(
             fields, name, base_path, imports, addresses, relation_names
         )

@@ -104,6 +104,14 @@ def _valid_bridge_url(value: object) -> str | None:
     return value.rstrip("/")
 
 
+def _healthy(url: str) -> bool:
+    try:
+        with urlopen(f"{url}/health", timeout=0.2) as response:  # noqa: S310 - loopback URL is validated above.
+            return response.status == 200
+    except OSError:
+        return False
+
+
 def _wait_until_ready(path: Path, root: Path, pid: int) -> str:
     deadline = time.monotonic() + _STARTUP_TIMEOUT_SECONDS
     while time.monotonic() < deadline:
@@ -114,13 +122,8 @@ def _wait_until_ready(path: Path, root: Path, pid: int) -> str:
             and state.get("ready") is True
         ):
             url = _valid_bridge_url(state.get("url"))
-            if url is not None:
-                try:
-                    with urlopen(f"{url}/health", timeout=0.2) as response:  # noqa: S310 - loopback URL is validated above.
-                        if response.status == 200:
-                            return url
-                except OSError:
-                    pass
+            if url is not None and _healthy(url):
+                return url
         time.sleep(0.05)
     raise RuntimeError("Workbench Codex bridge did not become ready")
 

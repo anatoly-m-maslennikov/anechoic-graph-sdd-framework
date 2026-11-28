@@ -14,9 +14,9 @@ from pydantic import (
 )
 from starlette.responses import JSONResponse
 
-from .query_results import ProjectGraphPending, query, validate_preview
-from .result_delivery import deliver, validate_delivery
-from .saved_query_runs import save_run_fields, validate_name
+from KERNEL_MIXER_beta_C67.DATABASE_SERVER_beta_C71.analysis_sql.results.results__shared import ProjectGraphPending, query, validate_preview
+from KERNEL_MIXER_beta_C67.DATABASE_SERVER_beta_C71.analysis_sql.results.result_delivery import deliver, validate_delivery
+from .storage.saved_queries.saved_query_runs import save_run_fields, validate_name
 
 
 class _DatabaseRequest(BaseModel):
@@ -140,7 +140,31 @@ def _result(connection, queries, data, root, saved_queries):
     return result
 
 
-def database_route(connection, instance_id, lock, queries, journal_sync, project_root, saved_queries, read_object, error):
+_GENERATION_REQUIRED = (
+    "generation_required",
+    "Generation admission required",
+    409,
+)
+
+
+def _has_generation(connection):
+    return (
+        connection.execute("SELECT id FROM ops_generation").fetchone()
+        is not None
+    )
+
+
+def database_route(
+    connection,
+    instance_id,
+    lock,
+    queries,
+    journal_sync,
+    project_root,
+    saved_queries,
+    read_object,
+    error,
+):
     async def database(request):
         try:
             data = await read_object(request, 65536, *_REQUESTS)
@@ -153,17 +177,8 @@ def database_route(connection, instance_id, lock, queries, journal_sync, project
             if issue is not None and issue[0] in _SAVE_FIELDS:
                 return error("invalid_query", issue[1], 400)
             with lock:
-                if (
-                    connection.execute(
-                        "SELECT id FROM ops_generation"
-                    ).fetchone()
-                    is None
-                ):
-                    return error(
-                        "generation_required",
-                        "Generation admission required",
-                        409,
-                    )
+                if not _has_generation(connection):
+                    return error(*_GENERATION_REQUIRED)
                 if journal_sync is not None and shape is not _PageRequest:
                     journal_sync()
                 if issue is not None:

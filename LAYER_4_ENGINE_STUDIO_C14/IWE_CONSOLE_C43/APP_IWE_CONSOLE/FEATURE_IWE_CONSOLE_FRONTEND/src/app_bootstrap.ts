@@ -2,7 +2,7 @@ import { migrateLegacyDraft, readConsoleStorage,
   restore } from './lib/lib__shared';
 import type { NativeBootstrap, WorkspaceApi,
   WorkspaceState } from './lib/lib__shared';
-import type { Tab } from './app_actions';
+import type { Tab } from './actions/actions__shared';
 import type { standaloneContext } from './standalone_context';
 
 export async function bindWorkspace(options: {

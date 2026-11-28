@@ -72,8 +72,10 @@ def _workflow(initial, edges):
             for key, value in sorted(detail.items())
         )
         guard = (
-            f"⟨.{kind}, {lean_string(event)}, {_option(observed, target_wildcard)}, "
-            f"{_option(outcome, wildcard)}, [{values}], {_binding_pairs(bind)}, {_binding_pairs(same_as)}⟩"
+            f"⟨.{kind}, {lean_string(event)}, "
+            f"{_option(observed, target_wildcard)}, "
+            f"{_option(outcome, wildcard)}, [{values}], {_binding_pairs(bind)}"
+            f", {_binding_pairs(same_as)}⟩"
         )
         rows.append(f"⟨{lean_string(source)}, {lean_string(target)}, {guard}⟩")
         if final:
@@ -98,7 +100,8 @@ open TraceSemantics
 def capturedSource : SourceWorkflow := ⟨{_workflow(*source)}⟩
 def capturedTarget : TargetWorkflow := ⟨{_workflow(*target)}⟩
 theorem capturesPreserveTrace (bound : Nat) (trace : Trace) :
-    sourceTrace capturedSource bound trace ↔ targetTrace capturedTarget bound trace :=
+    sourceTrace capturedSource bound trace ↔ targetTrace capturedTarget\
+ bound trace :=
   check_sound capturedSource capturedTarget (by decide) bound trace
 #eval IO.println "true"
 """

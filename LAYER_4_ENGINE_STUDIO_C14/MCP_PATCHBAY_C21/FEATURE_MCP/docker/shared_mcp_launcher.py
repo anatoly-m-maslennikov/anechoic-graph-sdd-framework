@@ -13,8 +13,10 @@ from urllib.request import urlopen
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
-from MCP_PATCHBAY_C21.FEATURE_MCP.docker.mcp_paths import MCP_PATH  # noqa: E402
-from MCP_PATCHBAY_C21.FEATURE_MCP.docker.shared_mcp_launch_support import (  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.shared_support.\
+    shared_support__shared import MCP_PATH  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.shared_support.\
+    shared_support__shared import (  # noqa: E402
     SharedLaunchError,
     health_ready,
     inspect_runtime,
@@ -64,12 +66,22 @@ class SharedMcpLauncher:
         self.clock = clock
 
     def prepare(
-        self, settings_path=None, image=None, *, compose_file=None, timeout=None,
-        mounted_folder=None, readiness_timeout=None,
+        self,
+        settings_path=None,
+        image=None,
+        *,
+        compose_file=None,
+        timeout=None,
+        mounted_folder=None,
+        readiness_timeout=None,
     ):
         return prepare_config(
-            settings_path, image, compose_file=compose_file, timeout=timeout,
-            mounted_folder=mounted_folder, readiness_timeout=readiness_timeout,
+            settings_path,
+            image,
+            compose_file=compose_file,
+            timeout=timeout,
+            mounted_folder=mounted_folder,
+            readiness_timeout=readiness_timeout,
         )
 
     def _docker(self, command, environment, timeout):
@@ -97,15 +109,29 @@ class SharedMcpLauncher:
         verify_mcp=False,
     ):
         prepared = self.prepare(
-            settings_path, image, compose_file=compose_file, timeout=timeout,
-            mounted_folder=mounted_folder, readiness_timeout=readiness_timeout,
+            settings_path,
+            image,
+            compose_file=compose_file,
+            timeout=timeout,
+            mounted_folder=mounted_folder,
+            readiness_timeout=readiness_timeout,
         )
         readiness_budget = prepared["readiness_timeout"]
-        started = self._docker(prepared["command"], prepared["environment"], prepared["startup_timeout"] + 10)
+        started = self._docker(
+            prepared["command"],
+            prepared["environment"],
+            prepared["startup_timeout"] + 10,
+        )
         if started is None or getattr(started, "returncode", 1) != 0:
             return {
                 key: prepared[key]
-                for key in ("service", "image", "settings_path", "projects_root", "http_port")
+                for key in (
+                    "service",
+                    "image",
+                    "settings_path",
+                    "projects_root",
+                    "http_port",
+                )
             } | {
                 "outcome": "failed",
                 "ready": False,
@@ -114,22 +140,25 @@ class SharedMcpLauncher:
             }
         result = self._await_readiness(prepared, readiness_budget)
         if verify_mcp and result["ready"]:
-            config = prepared["config"]
-            project_root = (
-                config.projects_root if config.single_project else None
-            )
-            try:
-                asyncio.run(
-                    asyncio.wait_for(
-                        _probe(config.http_port, project_root), timeout=420
-                    )
+            return self._verify_mcp(prepared, result)
+        return result
+
+    @staticmethod
+    def _verify_mcp(prepared, result):
+        config = prepared["config"]
+        project_root = config.projects_root if config.single_project else None
+        try:
+            asyncio.run(
+                asyncio.wait_for(
+                    _probe(config.http_port, project_root), timeout=420
                 )
-            except Exception:
-                return result | {
-                    "outcome": "failed",
-                    "ready": False,
-                    "condition": "mcp_verification_failed",
-                }
+            )
+        except Exception:
+            return result | {
+                "outcome": "failed",
+                "ready": False,
+                "condition": "mcp_verification_failed",
+            }
         return result
 
     def _await_readiness(self, prepared, readiness_budget):
@@ -199,7 +228,7 @@ def _public_result(result):
     return public
 
 
-def main(argv=None):
+def _parser():
     parser = argparse.ArgumentParser(description=__doc__)
     locator = parser.add_mutually_exclusive_group()
     locator.add_argument("--host-settings", "--settings", dest="settings_path")
@@ -210,6 +239,11 @@ def main(argv=None):
     parser.add_argument("--readiness-timeout", type=int, default=None)
     parser.add_argument("--apply", action="store_true")
     parser.add_argument("--verify-mcp", action="store_true")
+    return parser
+
+
+def main(argv=None):
+    parser = _parser()
     args = parser.parse_args(argv)
     if args.verify_mcp and not args.apply:
         parser.error("--verify-mcp requires --apply")
@@ -231,7 +265,11 @@ def main(argv=None):
             ),
         )
     except SharedLaunchError as error:
-        result = {"outcome": "refused", "ready": False, "condition": str(error)}
+        result = {
+            "outcome": "refused",
+            "ready": False,
+            "condition": str(error),
+        }
     print(
         json.dumps(
             _public_result(result),

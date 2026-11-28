@@ -15,7 +15,7 @@ import duckdb
 import httpx2
 
 from ._checkpoint_format_fixture import exercise_live_watcher, offline_manifest
-from .test_archive_process import API, ENGINE, OWNER, write_manifest
+from .archive_cases.archive_cases__shared import API, ENGINE, OWNER, write_manifest
 
 
 INSTANCE = "startup-checkpoint"

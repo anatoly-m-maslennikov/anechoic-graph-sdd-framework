@@ -13,8 +13,8 @@ context:
   lens: DOM/CONT
 state:
   status: "active"
-  version: 4
-  updated_at: "2026-11-26T15:52:34.303986+00:00"
+  version: 5
+  updated_at: "2026-11-28T10:14:16.621462+00:00"
 ---
 
 ## Summary
@@ -38,8 +38,6 @@ from anechoic.model import Atom, Contract, Property
 class Property3299(Property):
     name = 'Encapsulation'
     bearer = Atom
-    property.value.allowed = ('white_box', 'black_box')
     property.applies_to = (Contract,)
     field_options = {'class_var': True, 'default': 'black_box'}
-    property.value.format = str
 ```

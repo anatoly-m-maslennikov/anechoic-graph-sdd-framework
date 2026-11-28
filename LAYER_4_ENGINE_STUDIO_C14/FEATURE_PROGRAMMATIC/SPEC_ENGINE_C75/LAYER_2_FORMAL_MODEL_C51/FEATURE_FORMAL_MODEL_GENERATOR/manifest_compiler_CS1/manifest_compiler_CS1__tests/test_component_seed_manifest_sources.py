@@ -7,7 +7,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[7]
 # fmt: off
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.\
-    component_seed_manifest__pub import (  # noqa: E402
+    structure.components.component_seed_manifest__pub import (  # noqa: E402
         read_component_seed_manifest,
     )
 # fmt: on

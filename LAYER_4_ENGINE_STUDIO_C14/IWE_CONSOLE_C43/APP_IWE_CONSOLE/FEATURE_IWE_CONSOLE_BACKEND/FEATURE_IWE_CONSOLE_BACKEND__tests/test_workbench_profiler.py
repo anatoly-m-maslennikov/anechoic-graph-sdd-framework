@@ -1,4 +1,3 @@
-
 """Bounded checks for the explicitly invoked Workbench profiler CLI."""
 
 from __future__ import annotations
@@ -13,9 +12,17 @@ import unittest
 from unittest.mock import patch
 
 
-from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.FEATURE_IWE_CONSOLE_BACKEND__tests.profile_workbench import output_directory, profile
-from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import extension_directory, write_atom
-from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import write_scope_unit_declarations
+from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_BACKEND.FEATURE_IWE_CONSOLE_BACKEND__tests.profile_workbench import (
+    output_directory,
+    profile,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import (
+    extension_directory,
+    write_atom,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import (
+    write_scope_unit_declarations,
+)
 
 
 REPOSITORY = Path(__file__).resolve().parents[5]
@@ -64,29 +71,7 @@ class WorkbenchProfilerTest(unittest.TestCase):
         self.assertIn("--project-root", completed.stdout)
         self.assertIn("--output", completed.stdout)
 
-    def test_profile_isolated_small_project_with_native_duckpgq(self) -> None:
-        declarations = write_scope_unit_declarations(
-            self.project,
-            ({"scope_unit_name": "ENGINE", "scope_unit_type": "Ordered", "scope_unit_label": "LAYER", "local_order": 1},),
-            control_root=self.control,
-        )
-        source = (
-            Path(declarations["ENGINE"]["authority_path"])
-            / "04_requirement"
-            / "source.md"
-        )
-        write_atom(source, "CA-R-501")
-        source_bytes = source.read_bytes()
-        output = output_directory(self.project, None)
-        with patch.dict(
-            os.environ,
-            {
-                "ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY": str(
-                    extension_directory(REPOSITORY)
-                )
-            },
-        ):
-            report = profile(self.project, output)
+    def _assert_profile(self, report, output, source, source_bytes):
         self.assertEqual(3, report["rebuild_cycles"])
         self.assertTrue(report["instrumented"])
         self.assertEqual(
@@ -107,6 +92,38 @@ class WorkbenchProfilerTest(unittest.TestCase):
         self.assertTrue(report["runtime"]["duckdb_package_version"])
         self.assertTrue(report["disposable_database_cleanup"]["succeeded"])
         self.assertEqual(source_bytes, source.read_bytes())
+
+    def test_profile_isolated_small_project_with_native_duckpgq(self) -> None:
+        declarations = write_scope_unit_declarations(
+            self.project,
+            (
+                {
+                    "scope_unit_name": "ENGINE",
+                    "scope_unit_type": "Ordered",
+                    "scope_unit_label": "LAYER",
+                    "local_order": 1,
+                },
+            ),
+            control_root=self.control,
+        )
+        source = (
+            Path(declarations["ENGINE"]["authority_path"])
+            / "04_requirement"
+            / "source.md"
+        )
+        write_atom(source, "CA-R-501")
+        source_bytes = source.read_bytes()
+        output = output_directory(self.project, None)
+        with patch.dict(
+            os.environ,
+            {
+                "ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY": str(
+                    extension_directory(REPOSITORY)
+                )
+            },
+        ):
+            report = profile(self.project, output)
+        self._assert_profile(report, output, source, source_bytes)
 
     def test_failed_database_cleanup_is_confined_to_profile_output(
         self,

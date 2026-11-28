@@ -9,11 +9,13 @@ import sys
 def main():
     engine = Path(__file__).resolve().parents[2] / "LAYER_4_ENGINE_STUDIO_C14"
     env = os.environ.copy()
+    env.pop("UV_COMPILE_BYTECODE", None)
     env["UV_PROJECT_ENVIRONMENT"] = str(engine / ".venv-dev")
     env["PYTHONPATH"] = str(engine)
     command = [
         "uv",
         "run",
+        "--no-compile-bytecode",
         "--project",
         str(
             engine.parent

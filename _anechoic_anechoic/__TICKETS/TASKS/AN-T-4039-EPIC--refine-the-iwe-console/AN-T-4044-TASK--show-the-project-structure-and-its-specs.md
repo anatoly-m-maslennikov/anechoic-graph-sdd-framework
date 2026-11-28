@@ -26,3 +26,12 @@ Manifest and Solution through the shared Document view.
 
 Verify the Structure hierarchy, purpose summaries, and one-click
 Manifest and Solution links for a Component and a Component Seed.
+
+## Verification
+
+Current DuckDB projects Component Purpose and admitted Component
+Seeds. The native owner test verified exact Manifest and Solution
+navigation, rejection of stale Solution pins, watcher publication
+with Imports disabled, and reuse of a retained database.
+All seven Structure browser cases passed.
+Kernel Contract AN-S-3047@33 covers the projection.

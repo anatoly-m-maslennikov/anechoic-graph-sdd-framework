@@ -22,8 +22,14 @@ from starlette.responses import JSONResponse
 from starlette.routing import Route
 import uvicorn
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import (
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.\
+    PROJECT_SUPPORT.RUNTIME_SUPPORT.\
+    RUNTIME_SUPPORT__shared import (
     ExplicitBlockingRuntimeFailure,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.\
+    PROJECT_SUPPORT.PROJECT_SELECTION.\
+    PROJECT_SELECTION__shared import (
     rebind_native_selection,
     resolve_native_project,
 )
@@ -235,10 +241,7 @@ def _worker_runs_route(orchestrator, instance_id):
     return Route("/jobs/worker-runs", worker_runs)
 
 
-def create_app(owner, orchestrator):
-    methods = _operations(owner)
-    instance_id = owner.selection.instance_id
-
+def _health_route(owner, instance_id):
     async def health(_request):
         return JSONResponse(
             {
@@ -248,6 +251,13 @@ def create_app(owner, orchestrator):
                 "pid": os.getpid(),
             }
         )
+
+    return Route("/health", health)
+
+
+def create_app(owner, orchestrator):
+    methods = _operations(owner)
+    instance_id = owner.selection.instance_id
 
     async def database(request: Request):
         try:
@@ -281,7 +291,7 @@ def create_app(owner, orchestrator):
 
     return Starlette(
         routes=[
-            Route("/health", health),
+            _health_route(owner, instance_id),
             Route("/database", database, methods=["POST"]),
             _worker_runs_route(orchestrator, instance_id),
         ]

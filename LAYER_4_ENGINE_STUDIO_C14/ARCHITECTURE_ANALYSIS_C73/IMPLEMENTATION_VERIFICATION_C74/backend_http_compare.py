@@ -11,10 +11,10 @@ from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_SPECIFICATION_C94.\
     LAYER_3_LEAN_TRANSLATOR_C84._package__shared \
     import lean_string  # fmt: skip
 
-from .backend_http_checks import extract_backend_checks
-from .backend_http_contract import contract_to_lean
-from .backend_http_source import extract_http_observations
-from ._backend_http_compare_formal import _compare_formal
+from .http.http__shared import extract_backend_checks
+from .http.backend_http_contract import contract_to_lean
+from .http.backend_http_source import extract_http_observations
+from .http._backend_http_compare_formal import _compare_formal
 
 _CONTRACT = (
     "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/"

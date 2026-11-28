@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 import sys
 
-from LAYER_1_RUNTIME_IMAGES_C81.LAYER_1_RUNTIME_IMAGES_C81__shared import (
+from LAYER_1_RUNTIME_IMAGES_C81.image_builder.image_builder__shared import (
     ImageManager,
 )
 

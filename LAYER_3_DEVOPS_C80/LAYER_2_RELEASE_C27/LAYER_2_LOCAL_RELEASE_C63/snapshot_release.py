@@ -6,6 +6,8 @@ from LAYER_1_RUNTIME_IMAGES_C81.LAYER_1_RUNTIME_IMAGES_C81__shared import (
     _new_staging_directory,
     _project_path,
     _root,
+)
+from LAYER_1_RUNTIME_IMAGES_C81.input_selection.input_selection__shared import (
     read_release_selection,
 )
 
@@ -15,6 +17,7 @@ from .local_release_runner import LocalReleaseRun
 from .local_release_state import _RUNS, _checked, _read, test_environment
 
 from .release_phase_inputs import phase_inputs
+from .snapshot_release_evidence import SnapshotReleaseEvidence
 from .snapshot_inputs import (
     _assert_source_clean,
     _source_tree,
@@ -24,7 +27,7 @@ from .snapshot_inputs import (
 )
 
 
-class SnapshotReleaseRun(LocalReleaseRun):
+class SnapshotReleaseRun(SnapshotReleaseEvidence, LocalReleaseRun):
     def __init__(
         self,
         source_root,
@@ -286,44 +289,45 @@ class SnapshotReleaseRun(LocalReleaseRun):
             tracked=self.tracked,
         )
 
-    def _declared_provenance(self):
-        return {
-            "project_id": self.selection.instance_id,
-            "project_root": str(self.root),
-            "control_root": self.selection.control_relative.as_posix(),
-            "project_name": self.selection.project_name,
-            "head_commit": self.source_revision,
-        }
 
-    def _check_image_provenance(self, provenance):
-        expected = self._declared_provenance()
-        expected["head_commit"] = self.journal.data["build_source_sha"]
-        if provenance != expected:
-            raise LocalReleaseError(
-                "local-release-resume-image-provenance-changed"
-            )
-
-    def _receipt_evidence(self):
-        return {
-            **super()._receipt_evidence(),
-            "source_root": str(self.source_root),
-            "project_root": str(self.root),
-            "project_instance": self.selection.instance_id,
-            "control_root": self.selection.control_relative.as_posix(),
-            "port": self.production_port,
-            "target_manifest_sha256": self.selection.manifest_sha256,
-            "target_runtime_settings_sha256": self.target_runtime_digest,
-        }
-
-
-def run_snapshot_release(source_root, *, target_root, source_revision, run_id, resume=False, runner=None,
-                         test_modules=None, image_mode=None, functional_suite=None, started_at=None):
+def run_snapshot_release(
+    source_root,
+    *,
+    target_root,
+    source_revision,
+    run_id,
+    resume=False,
+    runner=None,
+    test_modules=None,
+    image_mode=None,
+    functional_suite=None,
+    started_at=None,
+):
     """Verify the explicit source and release it into the selected target."""
     try:
-        release = SnapshotReleaseRun(source_root, target_root, source_revision, run_id, runner, test_modules,
-                                     image_mode, resume=resume, functional_suite=functional_suite, started_at=started_at)
+        release = SnapshotReleaseRun(
+            source_root,
+            target_root,
+            source_revision,
+            run_id,
+            runner,
+            test_modules,
+            image_mode,
+            resume=resume,
+            functional_suite=functional_suite,
+            started_at=started_at,
+        )
     except LocalReleaseError as error:
-        step = "validate_project_selection" if str(error).endswith("selection-invalid") else "validate_inputs"
-        return {"outcome": "failed", "failed_step": step, "error_type": type(error).__name__,
-                "error": str(error), "effects": []}
+        step = (
+            "validate_project_selection"
+            if str(error).endswith("selection-invalid")
+            else "validate_inputs"
+        )
+        return {
+            "outcome": "failed",
+            "failed_step": step,
+            "error_type": type(error).__name__,
+            "error": str(error),
+            "effects": [],
+        }
     return release.run()

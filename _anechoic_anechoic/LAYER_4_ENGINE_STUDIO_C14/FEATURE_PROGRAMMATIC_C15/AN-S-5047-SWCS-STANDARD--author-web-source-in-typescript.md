@@ -12,9 +12,9 @@ context:
   template: STANDARD
   lens: SWD/SWCS
 state:
-  status: active
-  version: 1
-  updated_at: '2026-11-27T10:14:59.835668+00:00'
+  status: "active"
+  version: 3
+  updated_at: "2026-11-27T20:35:14.221449+00:00"
 ---
 
 ## Summary
@@ -25,7 +25,7 @@ Author web source in TypeScript
 
 This selection applies to authored PROGRAMMATIC web source, including script
 blocks in Svelte components. It does not make generated outputs authored
-source. Existing typed lint coverage remains governed by AN-S-3359@1.
+source. Existing typed lint coverage remains governed by AN-S-3359@2.
 
 ## Claim
 
@@ -39,7 +39,3 @@ def conforms (authoredWeb : Bool) (language : String) : Bool :=
 
 end ProgrammaticWebLanguage
 ```
-
-### Prose Claim
-
-Write authored web source in TypeScript, including Svelte script blocks.

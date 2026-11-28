@@ -16,6 +16,8 @@ from LAYER_1_RUNTIME_IMAGES_C81.LAYER_1_RUNTIME_IMAGES_C81__shared import (
     _root,
     _target,
     _verify_package,
+)
+from LAYER_1_RUNTIME_IMAGES_C81.input_selection.input_selection__shared import (
     read_release_selection,
 )
 

@@ -4,11 +4,13 @@
   import { onMount, tick } from 'svelte';
   import { bindWorkspace, monitorWorkspace } from './app_bootstrap';
   import { standaloneContext } from './standalone_context';
-  import { performAction, fetchViewResult, resultPager, synchronizeDraft, gridCommands, type Tab } from './app_actions';
-  import { Button, CommandPalette, NameDialog, OpenSavedDialog, Preferences, SavedPanel, SqlEditor, SyncStatus, ViewTabs } from './lib/lib__shared';
-  import { WorkbenchApi, WorkspaceApi, formatSql, cleanAfterSave, newView, persistable, restore, storageKey, workspaceTabs } from './lib/lib__shared';
-  import { AtomActions, AtomModal, ConsoleDiagnostics, ConsoleNavigation, ConsoleQueryPanel, consoleView, readConsoleStorage, setConsoleView, STRUCTURE_SQL } from './lib/lib__shared';
-  import type { AtomDocumentData, ConsoleView } from './lib/lib__shared';
+  import { performAction, fetchViewResult, resultPager, synchronizeDraft, gridCommands, type Tab } from './actions/actions__shared';
+  import { Button, CommandPalette, NameDialog, OpenSavedDialog, Preferences, SavedPanel, SyncStatus, ViewTabs } from './lib/features/controls/controls__shared';
+  import { SqlEditor, formatSql } from './lib/editor/editor__shared';
+  import { WorkbenchApi, WorkspaceApi, cleanAfterSave, newView, persistable, restore, storageKey, workspaceTabs } from './lib/lib__shared';
+  import { ConsoleDiagnostics, readConsoleStorage } from './lib/lib__shared';
+  import { AtomActions, AtomModal, type AtomDocumentData } from './lib/features/features__shared';
+  import { ConsoleNavigation, ConsoleQueryPanel, consoleView, setConsoleView, STRUCTURE_SQL, type ConsoleView } from './lib/features/views/views__shared';
   import type { Command, PreferenceCommand, NativeBootstrap, OperationCaller, GridState, QueryLogItem, QueryResult, ResultDisplayPreferences, SavedIdentity, SavedItem, Schema, SourceSyncStatus, WorkspaceState, WorkspaceView } from './lib/lib__shared';
 
   const props: { caller: OperationCaller; native?: NativeBootstrap } = $props();

@@ -8,15 +8,21 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.\
-    ADAPTERS_C30__shared import (  # fmt: skip
-        manifest_inputs, manifest_purpose, native_header_view, spec_folder_layout,
-    )
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.\
-    atom_reference__pub import derive_atom_ref  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.settings.project.project__shared import (
+    manifest_inputs,
+    manifest_purpose,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carriers.header.header__shared import (
+    native_header_view,
+    spec_folder_layout,
+)
+from ...FEATURE_TOOLS.ADAPTERS_C30.carriers.content.atom_reference__pub import derive_atom_ref
 
 from .LAYER_2_PROJECT_STRUCTURE_C93__shared import (
-    _COMPONENT_DIR, _finish_structure, _record_carrier, _validation_fields,
+    _COMPONENT_DIR,
+    _finish_structure,
+    _record_carrier,
+    _validation_fields,
 )
 
 
@@ -31,6 +37,45 @@ class _Reader(BaseModel):
     fingerprints: dict[str, str]
 
 
+def _row_source(row):
+    if not isinstance(row, dict):
+        raise ValueError("Invalid structure row")
+    source, digest = row.get("source_path"), row.get("sha256")
+    if (
+        not isinstance(source, str)
+        or not source
+        or "\\" in source
+        or Path(source).is_absolute()
+        or any(part in {"", ".", ".."} for part in source.split("/"))
+        or not isinstance(digest, str)
+        or not re.fullmatch(r"[0-9a-f]{64}", digest)
+        or not isinstance(row.get("metadata"), dict)
+        or not isinstance(row.get("body"), str)
+    ):
+        raise ValueError("Invalid structure row")
+    return source, digest
+
+
+def _row_carrier(row):
+    carrier = _Carrier.model_construct(
+        metadata=row["metadata"], body=row["body"]
+    )
+    header = native_header_view(carrier.metadata)
+    identity, state = header.get("identity"), header.get("state")
+    if (
+        not isinstance(identity, dict)
+        or not isinstance(state, dict)
+        or row.get("exact_ref")
+        != derive_atom_ref(
+            identity.get("atom_id"),
+            state.get("version"),
+            state.get("status"),
+        )
+    ):
+        raise ValueError("Invalid structure row reference")
+    return carrier
+
+
 def _row_inputs(project_root, control_root_name, rows):
     root = Path(os.path.abspath(project_root))
     if (
@@ -43,35 +88,19 @@ def _row_inputs(project_root, control_root_name, rows):
     control = root / control_root_name
     carriers, fingerprints = {}, {}
     for row in rows:
-        if not isinstance(row, dict):
-            raise ValueError("Invalid structure row")
-        source, digest = row.get("source_path"), row.get("sha256")
-        if (
-            not isinstance(source, str)
-            or not source
-            or "\\" in source
-            or Path(source).is_absolute()
-            or any(part in {"", ".", ".."} for part in source.split("/"))
-            or not isinstance(digest, str)
-            or not re.fullmatch(r"[0-9a-f]{64}", digest)
-            or not isinstance(row.get("metadata"), dict)
-            or not isinstance(row.get("body"), str)
-        ):
-            raise ValueError("Invalid structure row")
+        source, digest = _row_source(row)
         path = root / source
         if path in carriers:
-            raise ValueError('Duplicate structure source path')
-        carrier = _Carrier.model_construct(metadata=row['metadata'],
-                                           body=row['body'])
-        header = native_header_view(carrier.metadata)
-        identity, state = header.get('identity'), header.get('state')
-        if (not isinstance(identity, dict) or not isinstance(state, dict)
-                or row.get('exact_ref') != derive_atom_ref(
-                    identity.get('atom_id'), state.get('version'), state.get('status'))):
-            raise ValueError('Invalid structure row reference')
+            raise ValueError("Duplicate structure source path")
+        carrier = _row_carrier(row)
         carriers[path], fingerprints[str(path)] = carrier, digest
-    return root, control, carriers, _Reader.model_construct(
-        fingerprints=fingerprints,
+    return (
+        root,
+        control,
+        carriers,
+        _Reader.model_construct(
+            fingerprints=fingerprints,
+        ),
     )
 
 
@@ -102,7 +131,7 @@ def _row_manifest(
                 raise ValueError("Invalid Project Manifest location")
             candidates.append((path, carrier))
     if len(candidates) != 1:
-        raise ValueError('Expected exactly one active Project Manifest')
+        raise ValueError("Expected exactly one active Project Manifest")
     path, carrier = candidates[0]
     if (
         path.parent != (root if root_candidates else control)
@@ -140,31 +169,48 @@ def _inventory(control, carriers):
     return members, children
 
 
-def _walk_rows(control, carriers, reader, project_fields, model):
-    tier_one = spec_folder_layout(project_fields.get("parameters"))["1"]
+def _row_templates(model):
     template = getattr(model, "fixed_property_value", lambda *_: None)(
         "Component Manifest", "template"
     )
     if template is None:
-        template = 'component_manifest'
-    if not isinstance(template, str) or not template or template == 'component_seed_manifest':
-        raise ValueError('Invalid Component Manifest Template in Model')
-    templates = {'component_manifest': template, 'component_seed_manifest': 'component_seed_manifest'}
+        template = "component_manifest"
+    if (
+        not isinstance(template, str)
+        or not template
+        or template == "component_seed_manifest"
+    ):
+        raise ValueError("Invalid Component Manifest Template in Model")
+    return {
+        "component_manifest": template,
+        "component_seed_manifest": "component_seed_manifest",
+    }
+
+
+def _walk_rows(control, carriers, reader, project_fields, model):
+    tier_one = spec_folder_layout(project_fields.get("parameters"))["1"]
+    templates = _row_templates(model)
+    component_only = {"component_manifest": templates["component_manifest"]}
     members, children = _inventory(control, carriers)
-    atoms, packages, components, directory_ids = {project_fields['atom_id']}, {}, {}, set()
-    pending = [(control, 'C00')]
+    atoms, packages, components, directory_ids = (
+        {project_fields["atom_id"]},
+        {},
+        {},
+        set(),
+    )
+    pending = [(control, "C00")]
     while pending:
         root, parent = pending.pop()
         child_dirs = {}
         for cid, directory in children[root]:
             if cid in directory_ids:
-                raise ValueError(f'Duplicate Component directory {cid}')
+                raise ValueError(f"Duplicate Component directory {cid}")
             directory_ids.add(cid)
             child_dirs[cid] = directory
         for directory, allowed in (
             (root, templates),
             (root / "_SPEC", templates),
-            (root / tier_one, {"component_manifest": template}),
+            (root / tier_one, component_only),
         ):
             for path in members[directory]:
                 _record_carrier(
@@ -219,6 +265,10 @@ def compile_structure_rows(
             )
     components, packages = _walk_rows(control, carriers, reader, fields, model)
     return _finish_structure(
-        model, fields, manifest_sha256, components, packages,
+        model,
+        fields,
+        manifest_sha256,
+        components,
+        packages,
         project_purpose=purpose,
     )

@@ -12,6 +12,54 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
+function validFault(error: unknown): error is {
+  message: string;
+  code: string;
+  tool_result?: unknown;
+} {
+  return isRecord(error) && typeof error.message === 'string' &&
+    typeof error.code === 'string' && (error.scope === 'project' ?
+      Object.keys(error).length === 3 : error.scope === 'tool' &&
+      Object.keys(error).length === 4 && 'tool_result' in error &&
+      (error.tool_result === null || isRecord(error.tool_result)));
+}
+
+function validReceipt(project: unknown, instance: string): boolean {
+  return isRecord(project) && Object.keys(project).length === 2 &&
+    typeof project.prefix === 'string' && !!project.prefix &&
+    project.instance_id === instance;
+}
+
+async function readToolResult<T>(response: Response, instance: string) {
+  let envelope: unknown;
+  try { envelope = await response.json(); }
+  catch { throw new Error('Invalid Workbench response: expected JSON.'); }
+  if (!isRecord(envelope)) throw new Error(
+    'Invalid Workbench response: expected an object.');
+  const { error, result, project } = envelope;
+  if (Object.keys(envelope).length !== 2 || !('project' in envelope) ||
+      ('error' in envelope) === ('result' in envelope)) {
+    throw new Error('Invalid Workbench response envelope.');
+  }
+  if (project === null ? 'result' in envelope : !validReceipt(project, instance)) {
+    throw new WorkbenchRequestError(
+      'The API receipt does not identify the selected Project.',
+      'project_receipt_mismatch');
+  }
+  if (!response.ok || 'error' in envelope) {
+    if (!validFault(error)) {
+      throw new Error('Invalid Workbench error response.');
+    }
+    throw toolFailure(error.tool_result, error.message, error.code);
+  }
+  if (!isRecord(result) || Object.keys(result).length !== 2 ||
+      !isRecord(result.value) ||
+      (result.text !== null && typeof result.text !== 'string')) {
+    throw new Error('Invalid Workbench response: expected a Tool result.');
+  }
+  return result.value as T;
+}
+
 export function toolFailure(value: unknown, message?
   : string, code?: string): WorkbenchRequestError {
   const result = isRecord(value) ? value : {};
@@ -48,30 +96,6 @@ export class HttpOperationCaller implements OperationCaller {
         public_base_url: null,
       }),
     });
-    let envelope: unknown;
-    try { envelope = await response.json(); }
-    catch { throw new Error('Invalid Workbench response: expected JSON.'); }
-    if (!isRecord(envelope)) throw new Error(
-      'Invalid Workbench response: expected an object.');
-    const { error, result, project } = envelope;
-    if (!response.ok || 'error' in envelope) {
-      if (!isRecord(error) || typeof error.message !== 'string' ||
-          typeof error.code !== 'string' ||
-          (error.scope !== 'project' && error.scope !== 'tool')) {
-        throw new Error('Invalid Workbench error response.');
-      }
-      throw toolFailure(error.tool_result, error.message, error.code);
-    }
-    if (!isRecord(result) || Object.keys(result).length !== 2 ||
-        !isRecord(result.value) ||
-        (result.text !== null && typeof result.text !== 'string')) {
-      throw new Error('Invalid Workbench response: expected a Tool result.');
-    }
-    if (!isRecord(project) || project.instance_id !== this.projectInstance) {
-      throw new WorkbenchRequestError(
-        'The API receipt does not identify the selected Project.',
-        'project_receipt_mismatch');
-    }
-    return result.value as T;
+    return readToolResult<T>(response, this.projectInstance);
   }
 }

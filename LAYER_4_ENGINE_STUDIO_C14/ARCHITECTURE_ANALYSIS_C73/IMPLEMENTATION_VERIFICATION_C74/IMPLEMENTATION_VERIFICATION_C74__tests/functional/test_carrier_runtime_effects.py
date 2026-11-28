@@ -3,7 +3,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from ARCHITECTURE_ANALYSIS_C73.IMPLEMENTATION_VERIFICATION_C74 import (
+from ARCHITECTURE_ANALYSIS_C73.IMPLEMENTATION_VERIFICATION_C74.carrier import (
     carrier_runtime_effects as MOD,
 )
 
@@ -11,7 +11,7 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[3]
 SOURCE = (
     ROOT
-    / "FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ADAPTERS_C30/carrier_body__pub.py"
+    / "FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ADAPTERS_C30/carriers/content/carrier_body__pub.py"
 )
 
 

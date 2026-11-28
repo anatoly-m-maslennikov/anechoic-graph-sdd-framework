@@ -34,3 +34,11 @@ Verify Draft creation, reuse, five-second autosave, and a relation
 removal. Verify Atom creation and an allowed status change. Confirm
 that selecting Active promotes the edited Draft and that its updated
 content appears as Current.
+
+## Verification
+
+All 13 lifecycle browser cases passed. Three generated cases cover
+navigation during a pending save. Navigation waits for the newer edit
+to save. Refusal of either save retains the newer edit in the editor.
+Lean matched all 17 captured fields for these cases.
+See AN-S-3060@17 and AN-S-3372@10.

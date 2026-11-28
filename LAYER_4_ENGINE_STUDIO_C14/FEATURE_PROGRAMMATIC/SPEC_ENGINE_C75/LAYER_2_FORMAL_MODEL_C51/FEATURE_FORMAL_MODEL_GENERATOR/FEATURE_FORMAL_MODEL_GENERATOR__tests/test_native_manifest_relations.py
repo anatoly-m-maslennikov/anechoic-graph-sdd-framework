@@ -6,13 +6,15 @@ import unittest
 from unittest.mock import patch
 
 
-from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.\
-    FEATURE_FORMAL_MODEL_GENERATOR.\
-    FEATURE_FORMAL_MODEL_GENERATOR__shared import (
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.FEATURE_FORMAL_MODEL_GENERATOR.assembly.model_class_assembly import (
     assemble_model_modules,
+)
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.FEATURE_FORMAL_MODEL_GENERATOR.native.native_manifest_model import (
     load_native_model,
+)
+from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.FEATURE_FORMAL_MODEL_GENERATOR.native import (
     native_manifest_model,
-)  # fmt: skip
+)
 
 
 class NativeManifestModelTests(unittest.TestCase):
@@ -27,6 +29,42 @@ class NativeManifestModelTests(unittest.TestCase):
             "name": "Anechoic",
             "prefix": "AN",
         }
+
+    def test_node_axis_is_inherited_and_can_be_overridden(self):
+        scope = "MODEL//ANECHOIC <+ Graph/Node >| Persistence"
+        domain = (
+            "from anechoic.formal_claims import declare_entity\n"
+            "declare_entity(entity_name='Node', allowed_axis_values="
+            "{'Persistence': ('Artifact', 'Ephemeral')})\n"
+        )
+        rows = [("axis", scope, domain)]
+        for name, parent, fields in (
+            ("Node", "", ""),
+            ("Artifact", "Node", ", axes={'Persistence': 'Artifact'}"),
+            ("Child", "Artifact", ", axes={'Persistence': 'Ephemeral'}"),
+            ("Descendant", "Child", ""),
+            ("Sibling", "Artifact", ""),
+        ):
+            imports = (
+                f"from anechoic.model import {parent}\n" if parent else ""
+            )
+            bases = f"({parent})" if parent else ""
+            claim = (
+                "from anechoic.formal_claims import declare_entity\n"
+                f"{imports}class {name}{bases}:\n    pass\n"
+                f"declare_entity(entity_name={name!r}, entity_class={name}, "
+                f"entity_kind='Primary'{fields})\n"
+            )
+            rows.append((name, f"MODEL//ANECHOIC <+ Graph/{name}", claim))
+        bindings = native_manifest_model.compile_native_bindings(rows, {})
+        axes = {
+            args["entity_class"]: args.get("axes", {})
+            for _, item in bindings["declarations"]
+            if "entity_class" in (args := item["arguments"])
+        }
+        self.assertEqual({}, axes["Node"])
+        self.assertEqual({"Persistence": "Ephemeral"}, axes["Descendant"])
+        self.assertEqual({"Persistence": "Artifact"}, axes["Sibling"])
 
     def _check_compiled_component(self, model):
         component_cls = importlib.import_module(

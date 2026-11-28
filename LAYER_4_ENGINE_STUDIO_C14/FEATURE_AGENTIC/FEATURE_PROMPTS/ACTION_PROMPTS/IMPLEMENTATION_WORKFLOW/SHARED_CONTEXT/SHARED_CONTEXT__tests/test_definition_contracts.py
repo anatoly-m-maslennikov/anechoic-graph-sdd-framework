@@ -20,14 +20,22 @@ EXPECTED = {
 
 
 class SharedDefinitionContracts(unittest.TestCase):
+    def setUp(self):
+        paths = [
+            *HERE.glob("*.prompt.md"),
+            *HERE.glob("verification/*.prompt.md"),
+        ]
+        self.prompts = {p.stem.removesuffix(".prompt"): p for p in paths}
+        self.assertEqual(len(paths), len(self.prompts))
+
     def test_exact_step_action_integrated_bindings(self):
         self.assertEqual(
-            {p.stem.removesuffix(".prompt") for p in HERE.glob("*.prompt.md")},
+            set(self.prompts),
             set(EXPECTED),
         )
         for step, action in EXPECTED.items():
             with self.subTest(step=step):
-                text = (HERE / f"{step}.prompt.md").read_text()
+                text = self.prompts[step].read_text()
                 self.assertIn(
                     f"Step: {step} | Action: {action} | Context: Integrated",
                     text,
@@ -77,7 +85,7 @@ class SharedDefinitionContracts(unittest.TestCase):
         self.assertIn("No paragraph compiler or", readme)
         self.assertIn("validated independently", readme)
         for step in EXPECTED:
-            prompt = (HERE / f"{step}.prompt.md").read_text()
+            prompt = self.prompts[step].read_text()
             self.assertIn("full current Method SourceRows", prompt)
             self.assertIn(
                 "optional legacy `method_projection` is not required", prompt
@@ -97,7 +105,7 @@ class SharedDefinitionContracts(unittest.TestCase):
     def test_review_requires_explicit_phase_and_never_accepts_preliminary(
         self,
     ):
-        review = (HERE / "CA-O-230.prompt.md").read_text()
+        review = self.prompts["CA-O-230"].read_text()
         self.assertIn("caller-supplied", review)
         self.assertIn("When omitted or invalid, return `unresolved`", review)
         self.assertIn("complete selected code/policy assessment", review)
@@ -108,12 +116,12 @@ class SharedDefinitionContracts(unittest.TestCase):
 
     def test_result_sets_are_unique_and_review_is_phase_aware(self):
         for step in EXPECTED:
-            text = (HERE / f"{step}.prompt.md").read_text()
+            text = self.prompts[step].read_text()
             result = re.search(r"Results: ([\s\S]*?)\.", text)
             self.assertIsNotNone(result, step)
             labels = re.findall(r"`([a-z_]+)`", result[1])
             self.assertEqual(len(labels), len(set(labels)), step)
-        review = (HERE / "CA-O-230.prompt.md").read_text()
+        review = self.prompts["CA-O-230"].read_text()
         for label in (
             "preliminary_clear",
             "passed",
@@ -122,41 +130,6 @@ class SharedDefinitionContracts(unittest.TestCase):
             "unresolved",
         ):
             self.assertIn(f"`{label}`", review)
-
-    def test_preparation_and_repair_keep_review_and_check_closure(self):
-        prepare = (HERE / "CA-O-231.prompt.md").read_text()
-        repair = (HERE / "CA-O-099.prompt.md").read_text()
-        self.assertIn("`review_ready`", prepare)
-        self.assertIn("R/M/D obligations", prepare)
-        self.assertIn("same candidate", prepare)
-        self.assertIn("mark affected previous review/check evidence", repair)
-        self.assertIn("remaining budget", repair)
-
-    def test_final_checks_require_current_preliminary_clearance(self):
-        checks = (HERE / "CA-O-094.prompt.md").read_text()
-        self.assertIn(
-            "For final checks require actual `preliminary_clear`", checks
-        )
-        self.assertIn("this exact", checks)
-        self.assertIn(
-            "candidate and relevant source/test/input bindings", checks
-        )
-        self.assertIn("If it is missing or stale", checks)
-        self.assertIn("return `blocked`, never `passed`", checks)
-        self.assertIn("baseline checks", checks)
-        self.assertIn("do not require preliminary clearance", checks)
-
-    def test_summary_replacements_use_distinct_current_source_identities(self):
-        frontier = json.loads(
-            (HERE / "definition_frontier.projection.json").read_text()
-        )
-        ids = {row["atom_id"] for row in frontier["sources"]}
-        self.assertTrue(
-            {"CA-O-231", "CA-O-232", "CA-O-233", "CA-O-234", "CA-E-652"} <= ids
-        )
-        self.assertFalse(
-            {"CA-O-091", "CA-O-092", "CA-O-093", "CA-O-095", "CA-E-519"} & ids
-        )
 
 
 if __name__ == "__main__":

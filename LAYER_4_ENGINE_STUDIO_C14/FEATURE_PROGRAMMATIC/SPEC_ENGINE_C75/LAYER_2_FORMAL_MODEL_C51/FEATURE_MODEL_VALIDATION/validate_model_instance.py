@@ -1,7 +1,7 @@
 """Validate a proposed Model instance before the caller writes it."""
 
 from .model_field_validation import validate_model_fields
-from .model_population_validation import validate_population_uniqueness
+from .model_rules._package__shared import validate_population_uniqueness
 from .model_relation_validation import validate_model_relations
 
 

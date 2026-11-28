@@ -1,4 +1,3 @@
-
 """Loopback HTTP/SSE server for the Workbench Codex bridge."""
 
 from __future__ import annotations
@@ -15,9 +14,14 @@ from urllib.parse import urlsplit
 
 if not __package__:
     import sys
+
     sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
-from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_CODEX.bridge import CodexBridge
-from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_CODEX.state import runtime_directory
+from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_CODEX.bridge import (
+    CodexBridge,
+)
+from IWE_CONSOLE_C43.APP_IWE_CONSOLE.FEATURE_IWE_CONSOLE_CODEX.state import (
+    runtime_directory,
+)
 
 
 def _origin(url: str) -> str:
@@ -35,7 +39,9 @@ class _BridgeHandler(BaseHTTPRequestHandler):
         return False
 
     def _body(self) -> dict[str, Any]:
-        value = json.loads(self.rfile.read(int(self.headers.get("Content-Length", "0"))))
+        value = json.loads(
+            self.rfile.read(int(self.headers.get("Content-Length", "0")))
+        )
         if not isinstance(value, dict):
             raise ValueError("JSON object required")
         return value
@@ -88,7 +94,9 @@ class _BridgeHandler(BaseHTTPRequestHandler):
             self._json({"error": str(error)}, 400)
 
     def _respond(self, body: dict[str, Any]) -> None:
-        if set(body) != {"id", "result"} or not isinstance(body["id"], (int, str)):
+        if set(body) != {"id", "result"} or not isinstance(
+            body["id"], (int, str)
+        ):
             raise ValueError("Expected id and result")
         self.bridge.respond(body["id"], body["result"])
         self._json({"ok": True})
@@ -108,21 +116,45 @@ class _BridgeHandler(BaseHTTPRequestHandler):
         self.send_header("Cache-Control", "no-cache")
         self.send_header("Access-Control-Allow-Origin", self.origin)
         self.end_headers()
-        self._event({"type": "started", "thread_id": self.bridge.thread_id, "turn_id": turn_id})
+        self._event(
+            {
+                "type": "started",
+                "thread_id": self.bridge.thread_id,
+                "turn_id": turn_id,
+            }
+        )
         status = "completed"
         for packet in chain(initial, self.bridge.events()):
-            self._event({"type": "event", "thread_id": self.bridge.thread_id, "turn_id": turn_id, "event": packet})
+            self._event(
+                {
+                    "type": "event",
+                    "thread_id": self.bridge.thread_id,
+                    "turn_id": turn_id,
+                    "event": packet,
+                }
+            )
             status = self._status(packet, status)
-        self._event({"type": "finished", "thread_id": self.bridge.thread_id, "turn_id": turn_id, "status": status})
+        self._event(
+            {
+                "type": "finished",
+                "thread_id": self.bridge.thread_id,
+                "turn_id": turn_id,
+                "status": status,
+            }
+        )
 
     @staticmethod
     def _status(packet: dict[str, Any], default: str) -> str:
         if packet.get("method") == "bridge/failed":
             return "failed"
-        if packet.get("method") != "turn/completed" or not isinstance(packet.get("params"), dict):
+        if packet.get("method") != "turn/completed" or not isinstance(
+            packet.get("params"), dict
+        ):
             return default
         turn = packet["params"].get("turn")
-        return turn.get("status", default) if isinstance(turn, dict) else default
+        return (
+            turn.get("status", default) if isinstance(turn, dict) else default
+        )
 
     def _event(self, value: dict[str, Any]) -> None:
         self.wfile.write(b"data: " + json.dumps(value).encode() + b"\n\n")
@@ -131,9 +163,11 @@ class _BridgeHandler(BaseHTTPRequestHandler):
     def log_message(self, _format: str, *_args: Any) -> None:
         pass
 
-def _handler(bridge: CodexBridge, origin: str) -> type[BaseHTTPRequestHandler]:
-    return type("Handler", (_BridgeHandler,), {"bridge": bridge, "origin": origin})
 
+def _handler(bridge: CodexBridge, origin: str) -> type[BaseHTTPRequestHandler]:
+    return type(
+        "Handler", (_BridgeHandler,), {"bridge": bridge, "origin": origin}
+    )
 
 
 def serve(project_root: Path, mcp_url: str) -> ThreadingHTTPServer:
@@ -144,7 +178,16 @@ def serve(project_root: Path, mcp_url: str) -> ThreadingHTTPServer:
     directory.mkdir(parents=True, exist_ok=True)
     url = f"http://127.0.0.1:{server.server_address[1]}"
     (directory / "bridge.json").write_text(
-        json.dumps({"url": url, "ready": True, "pid": os.getpid(), "owned_pid": os.getpid(), "project_root": str(root)}) + "\n"
+        json.dumps(
+            {
+                "url": url,
+                "ready": True,
+                "pid": os.getpid(),
+                "owned_pid": os.getpid(),
+                "project_root": str(root),
+            }
+        )
+        + "\n"
     )
     server.codex_bridge = bridge  # type: ignore[attr-defined]
     return server

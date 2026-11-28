@@ -74,6 +74,32 @@ def _initialize_flow_actions(connection):
         FROM observations LEFT JOIN trigger_maps USING (component, action)""")
 
 
+def _validate_event(event, sequence):
+    if not isinstance(event, dict) or set(event) != _FIELDS:
+        raise ValueError("Invalid event fields")
+    at, causes = event["at"], event["causes"]
+    if (
+        event["kind"] not in ("input", "trigger", "output", "effect")
+        or not isinstance(event["name"], str)
+        or isinstance(at, bool)
+        or not isinstance(at, (int, float))
+        or not math.isfinite(at)
+        or at < 0
+        or not isinstance(causes, list)
+        or any(
+            type(cause) is not int or cause < 0 or cause >= sequence
+            for cause in causes
+        )
+        or any(
+            event[key] is not None and not isinstance(event[key], str)
+            for key in ("target", "outcome")
+        )
+        or not isinstance(event["detail"], dict)
+    ):
+        raise ValueError("Invalid event values or causes")
+    return at, causes
+
+
 def _validate(data):
     if (
         not isinstance(data["run_id"], str)
@@ -87,22 +113,26 @@ def _validate(data):
     ):
         raise ValueError("Invalid flow snapshot")
     rows = []
-    for sequence, event in enumerate(data['events']):
-        if not isinstance(event, dict) or set(event) != _FIELDS:
-            raise ValueError('Invalid event fields')
-        at, causes = event['at'], event['causes']
-        if (event['kind'] not in ('input', 'trigger', 'output', 'effect')
-                or not isinstance(event['name'], str)
-                or isinstance(at, bool) or not isinstance(at, (int, float))
-                or not math.isfinite(at) or at < 0
-                or not isinstance(causes, list)
-                or any(type(cause) is not int or cause < 0 or cause >= sequence for cause in causes)
-                or any(event[key] is not None and not isinstance(event[key], str) for key in ('target', 'outcome'))
-                or not isinstance(event['detail'], dict)):
-            raise ValueError('Invalid event values or causes')
-        detail = json.dumps(event['detail'], ensure_ascii=False, allow_nan=False)
-        rows.append((data['run_id'], data['component'], data['action'], sequence,
-                     event['kind'], event['name'], at, causes, event['target'], event['outcome'], detail))
+    for sequence, event in enumerate(data["events"]):
+        at, causes = _validate_event(event, sequence)
+        detail = json.dumps(
+            event["detail"], ensure_ascii=False, allow_nan=False
+        )
+        rows.append(
+            (
+                data["run_id"],
+                data["component"],
+                data["action"],
+                sequence,
+                event["kind"],
+                event["name"],
+                at,
+                causes,
+                event["target"],
+                event["outcome"],
+                detail,
+            )
+        )
     return rows
 
 
@@ -129,8 +159,8 @@ def flow_route(connection, instance_id, lock, read_object, error):
                     if rows:
                         connection.executemany(
                             (
-                                'INSERT INTO src_flow_events VALUES (?, ?, ?, '
-                                '?, ?, ?, ?, ?, ?, ?, ?)'
+                                "INSERT INTO src_flow_events VALUES (?, ?, ?, "
+                                "?, ?, ?, ?, ?, ?, ?, ?)"
                             ),
                             rows,
                         )

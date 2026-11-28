@@ -2,6 +2,7 @@
 
 from hashlib import sha256
 from importlib import import_module
+import json
 
 _adapters = import_module(
     "FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared"
@@ -198,6 +199,14 @@ HEADER_CHECKS = (
 
 
 def assert_project_extension(self, stage, fingerprint, accepted, open_model):
+    declarations = json.loads(accepted)["bindings"]["declarations"]
+    (groups,) = (
+        args["status_groups"]
+        for _, declaration in declarations
+        if "triage"
+        in (args := declaration["arguments"]).get("allowed_values", ())
+    )
+    self.assertEqual("Current", groups["triage"])
     with open_model(stage, fingerprint, sha256(accepted).hexdigest()) as model:
         types = {cls.__name__: cls for cls in model._types.values()}
         probe = types["Probe"].__dataclass_fields__

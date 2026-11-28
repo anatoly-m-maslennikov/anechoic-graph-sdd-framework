@@ -8,20 +8,23 @@ PROGRAMMATIC = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(Path(__file__).resolve().parents[4]))
 
 # fmt: off
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import (  # noqa: E402
+    atomic_write,
+)
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.\
-    FEATURE_TOOLS__shared import (  # noqa: E402
-    atomic_write, resolve_project,
+    PROJECT_SUPPORT.PROJECT_SELECTION.\
+    PROJECT_SELECTION__shared import (  # noqa: E402
+    resolve_project,
 )
 # fmt: on
 # fmt: off
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.\
-    ADAPTERS_C30__shared import (  # noqa: E402
-        read_current_model_carriers,
-    )
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.sources.inventory.inventory__shared import (  # noqa: E402
+    read_current_model_carriers,
+)
 # fmt: on
 # fmt: off
 from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75.LAYER_2_FORMAL_MODEL_C51.\
-    FEATURE_FORMAL_MODEL_GENERATOR.model_class_assembly import (  # noqa: E402
+    FEATURE_FORMAL_MODEL_GENERATOR.assembly.model_class_assembly import (  # noqa: E402
         build_model_class_source,
     )
 # fmt: on

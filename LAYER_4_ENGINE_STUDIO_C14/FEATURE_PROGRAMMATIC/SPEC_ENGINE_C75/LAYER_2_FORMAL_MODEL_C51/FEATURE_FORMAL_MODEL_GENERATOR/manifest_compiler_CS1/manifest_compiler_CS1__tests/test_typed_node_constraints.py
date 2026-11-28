@@ -2,7 +2,7 @@
 
 import unittest
 
-from ......FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model.claims.claims__shared import (
     parse_native_model_claim,
 )
 from ..typed_node_constraints import lower_node_constraints

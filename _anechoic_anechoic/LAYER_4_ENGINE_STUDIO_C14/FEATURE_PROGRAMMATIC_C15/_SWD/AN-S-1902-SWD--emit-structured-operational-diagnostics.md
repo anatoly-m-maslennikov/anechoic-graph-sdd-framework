@@ -7,9 +7,9 @@ tier: 4
 context:
   lens: SWD
 state:
-  status: active
-  version: 18
-  updated_at: "2026-11-27T16:29:34.309627+00:00"
+  status: "active"
+  version: 19
+  updated_at: "2026-11-27T20:35:14.221449+00:00"
 ---
 
 ## Summary
@@ -43,23 +43,10 @@ operation, degraded operation, failure, recovery, **or** diagnostic detail.
    action **or** event identity **when** one exists.
 3. include actionable, contextual, sanitized fields **and** keep DEBUG bounded **to**
    diagnosable need.
-4. materialize sink **and** runtime settings **in** configuration **or** Implementation,
-   govern carrier placement **and** encoding through Delivery, **and** preserve actual
-   required business-lifecycle evidence through Journal Records **and** diagnostic evidence through
-   the applicable production-log Carriers. For the selected Docker runtime, write
-   structured technical diagnostics to **stderr** for Docker's local logging driver;
-   Project-bound records carry the validated Project prefix from the existing bound
-   Project selection and canonical prefix-field validation, never a guessed path,
-   container, process or caller identity. Unbound host and service records keep
-   their existing host context without a Project prefix; do not invent a binding.
-   Use AN-S-4741 for the Studio log level in the existing machine settings
-   and its propagation at startup.
-   Configure bounded local rotation as `max-size=10m` and `max-file=3`, with Docker
-   logging `mode=non-blocking` and `max-buffer-size=1m`; when that buffer is full,
-   new technical messages may be dropped so logging cannot stall primary work.
-   Docker logs are removed with the container. Do not create a separate local log
-   directory or place technical diagnostics in the business Journal. Operations
-   defines the reusable behavior; it does **not** make emitted records O Atoms.
+4. Apply AN-S-4741 to Studio stream routing, logging configuration, and
+   Docker retention. For Project-bound records, use the validated prefix from
+   the selected Project. For unbound records, keep the host context and omit
+   the Project prefix. Apply AN-S-2325 to business Journal events.
 5. declare retention, loss, **and** back-pressure behavior at those bounded
    materialization **and** operational boundaries.
 6. make logging failure observable **without** silently breaking primary work.

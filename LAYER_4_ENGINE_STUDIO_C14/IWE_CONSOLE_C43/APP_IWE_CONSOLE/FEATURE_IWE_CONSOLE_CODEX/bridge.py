@@ -86,7 +86,8 @@ class CodexBridge:
                     "thread/start",
                     {
                         "cwd": str(self.root),
-                        "developerInstructions": f"ANECHOIC project_root: {self.root}",
+                        "developerInstructions": "ANECHOIC project_root: "
+                        f"{self.root}",
                     },
                 )
                 thread = value.get("thread", value)

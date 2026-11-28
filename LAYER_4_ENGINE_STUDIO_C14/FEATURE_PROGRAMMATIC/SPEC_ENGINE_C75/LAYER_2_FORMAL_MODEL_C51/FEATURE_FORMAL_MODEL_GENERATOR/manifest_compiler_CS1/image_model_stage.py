@@ -17,7 +17,7 @@ from .....FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
     CEILINGS,
     ReadContext,
 )
-from .....FEATURE_TOOLS.ADAPTERS_C30.model_ontology_path__pub import (
+from .....FEATURE_TOOLS.ADAPTERS_C30.model.model_ontology_path__pub import (
     find_ontology_component,
 )
 

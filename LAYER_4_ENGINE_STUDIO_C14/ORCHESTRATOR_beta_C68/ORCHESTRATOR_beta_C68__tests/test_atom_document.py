@@ -11,9 +11,8 @@ import httpx2
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from ORCHESTRATOR_beta_C68 import ORCHESTRATOR_beta_C68__shared as orchestrator
-from ORCHESTRATOR_beta_C68.ORCHESTRATOR_beta_C68__tests.test_lifecycle_queries import (
-    database,
-)
+from ORCHESTRATOR_beta_C68.ORCHESTRATOR_beta_C68__tests.\
+    lifecycle.test_lifecycle_queries import database  # fmt: skip
 
 
 class Kernel(BaseHTTPRequestHandler):
@@ -89,11 +88,16 @@ class AtomDocumentTests(unittest.TestCase):
         (self.root / name).write_text(
             f"---\natom_family: TKT\natom_id: AN-T-1\ncontainer: {{component: C00}}\n"
             f"priority: 2\ncontext: {{template: task}}\nstate: {{status: {status}, version: {version}, "
-            "updated_at: '2026-11-23T00:00:00Z'}\n---\n\n## Summary\n\nHello.\n", encoding='utf-8')
+            "updated_at: '2026-11-23T00:00:00Z'}\n---\n\n## Summary\n\nHello.\n",
+            encoding="utf-8",
+        )
 
     def test_current_and_exact_draft(self):
         self.db.execute(
-            "INSERT INTO relations VALUES ('Atom', 'AN-T-2', 'Atom', 'AN-T-1', 'CONTAINED_BY', false)"
+            (
+                "INSERT INTO relations VALUES ('Atom', 'AN-T-2', 'Atom', "
+                "'AN-T-1', 'CONTAINED_BY', false)"
+            )
         )
         status, result = self.call()
         self.assertEqual(status, 200)
@@ -161,11 +165,13 @@ class AtomDocumentTests(unittest.TestCase):
             current["result"]["ticket_statuses"],
         )
 
-    def test_incoming_links_follow_selected_revision(self):
-        archive_ref = 'AN-T-1@3'
-        self.write_carrier(archive_ref + '.md', 3, 'archived')
-        self.db.execute("INSERT INTO atoms VALUES (?, '.', ?, 'Archived', 3, 'archived', NULL)",
-                        [archive_ref, archive_ref + '.md'])
+    def _seed_related_revisions(self, archive_ref):
+        self.write_carrier(archive_ref + ".md", 3, "archived")
+        self.db.execute(
+            "INSERT INTO atoms VALUES (?, '.', ?, 'Archived', 3, "
+            "'archived', NULL)",
+            [archive_ref, archive_ref + ".md"],
+        )
         self.db.execute(
             "INSERT INTO native_references VALUES (?, ?)",
             [archive_ref, archive_ref],
@@ -177,10 +183,18 @@ class AtomDocumentTests(unittest.TestCase):
             ("AN-T-2", archive_ref),
         ]:
             self.db.execute(
-                "INSERT INTO relations VALUES ('Atom', ?, 'Atom', ?, 'RELATES_TO', false)",
+                "INSERT INTO relations VALUES "
+                "('Atom', ?, 'Atom', ?, 'RELATES_TO', false)",
                 [source, target],
             )
-        self.db.execute("INSERT INTO relations VALUES ('Atom', 'AN-T-1@1', 'Atom', 'AN-T-3', 'RELATES_TO', true)")
+        self.db.execute(
+            "INSERT INTO relations VALUES "
+            "('Atom', 'AN-T-1@1', 'Atom', 'AN-T-3', 'RELATES_TO', true)"
+        )
+
+    def test_incoming_links_follow_selected_revision(self):
+        archive_ref = "AN-T-1@3"
+        self._seed_related_revisions(archive_ref)
         for ref, expected in [
             ("AN-T-1", {"AN-T-2", "AN-T-3"}),
             ("AN-T-1@1", {"AN-T-2", "AN-T-3"}),
@@ -215,7 +229,10 @@ class AtomDocumentTests(unittest.TestCase):
             )
         )
         self.db.execute(
-            "INSERT INTO relations VALUES ('Atom', 'AN-T-1@2-draft', 'Component', 'C00', 'CONTAINED_BY', false)"
+            (
+                "INSERT INTO relations VALUES ('Atom', 'AN-T-1@2-draft', "
+                "'Component', 'C00', 'CONTAINED_BY', false)"
+            )
         )
         code, result = self.call(ref_id="AN-T-1@2-draft")
         self.assertEqual(code, 200)
@@ -232,7 +249,10 @@ class AtomDocumentTests(unittest.TestCase):
         self.assertEqual(self.call()[0], 503)
         self.db.execute("UPDATE generation SET id='g'")
         self.db.execute(
-            "UPDATE atoms SET relative_path='../outside' WHERE reference='AN-T-1'"
+            (
+                "UPDATE atoms SET relative_path='../outside' WHERE "
+                "reference='AN-T-1'"
+            )
         )
         self.assertEqual(self.call()[0], 503)
         self.db.execute(
@@ -248,5 +268,5 @@ class AtomDocumentTests(unittest.TestCase):
         self.assertEqual(self.call()[0], 503)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

@@ -8,7 +8,7 @@ context:
   template: component_manifest
   lens: SPEC
 state:
-  status: "active"
+  status: "archived"
   version: 36
   updated_at: "2026-11-27T15:10:44.706424+00:00"
 ---

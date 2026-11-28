@@ -1,7 +1,8 @@
 """Build Lean checks for a normalized executable shape claim."""
 
 _PARAMETER_CHECKS = """
-  let rec params (expr : Lean.Expr) (count : Nat) (mode : Lean.BinderInfo) : Option Lean.Expr :=
+  let rec params (expr : Lean.Expr) (count : Nat) (mode : Lean.BinderInfo)\
+ : Option Lean.Expr :=
     match count, expr with
     | 0, _ => some expr
     | n + 1, .forallE _ (.sort (.succ .zero)) body binder =>
@@ -14,9 +15,11 @@ _PARAMETER_CHECKS = """
     | n + 1, .forallE _ _ body .default => fields body n
     | _, _ => false
   let validDecl (d : Lean.InductiveVal) :=
-    params d.type d.numParams .default == some (.sort (.succ .zero)) && match d.ctors with
+    params d.type d.numParams .default == some (.sort (.succ .zero)) &&\
+ match d.ctors with
       | [name] => match env.find? name with
-        | some (.ctorInfo ctor) => match params ctor.type d.numParams .implicit with
+        | some (.ctorInfo ctor) => match params ctor.type d.numParams\
+ .implicit with
           | some tail => fields tail ctor.numFields
           | none => false
         | _ => false
@@ -26,24 +29,26 @@ _PARAMETER_CHECKS = """
 
 def shape_checks(claim, role):
     """Print shape metadata and exact projection type checks as JSON."""
-    namespace = f"Shape_{role}"
-    record = f"{namespace}.«R_{claim['record']}»"
-    subtype = f"{namespace}.«S_{claim['subtype']}»"
+    record = f"Shape_{role}.«R_{claim['record']}»"
+    subtype = f"Shape_{role}.«S_{claim['subtype']}»"
     fields = ", ".join(f"`«f_{name}»" for name in claim["fields"])
     parents = f"#[`{record}]" if claim["base"] == claim["record"] else "#[]"
     subfields = 1 if claim["base"] == claim["record"] else 0
     types = sorted(set(claim["fields"].values()))
-    subtype_params = len(types) if claim["base"] == claim["record"] else 0
     checks = f"""
 run_cmd do
   let env ← Lean.getEnv
 {_PARAMETER_CHECKS}
-  let metadata := match Lean.getStructureInfo? env `{record}, Lean.getStructureInfo? env `{subtype},
+  let metadata := match Lean.getStructureInfo? env `{record},\
+ Lean.getStructureInfo? env `{subtype},
       env.find? `{record}, env.find? `{subtype} with
     | some r, some s, some (.inductInfo rd), some (.inductInfo sd) =>
-      rd.numParams == {len(types)} && sd.numParams == {subtype_params} && validDecl rd && validDecl sd &&
+      rd.numParams == {len(types)} && sd.numParams ==\
+ {len(types) if subfields else 0} &&\
+ validDecl rd && validDecl sd &&
       r.parentInfo.isEmpty && r.fieldNames == #[{fields}] &&
-      s.parentInfo.map (fun (p : Lean.StructureParentInfo) => p.structName) == {parents} && s.fieldNames.size == {subfields}
+      s.parentInfo.map (fun (p : Lean.StructureParentInfo) => p.structName)\
+ == {parents} && s.fieldNames.size == {subfields}
     | _, _, _, _ => false
   let results ← Lean.Elab.Command.liftTermElabM do
     let mut results := #[metadata]
@@ -76,7 +81,8 @@ def _parent_check(record, subtype, name, count):
       | none => Lean.mkConst ``False
     let same ← Lean.Meta.forallTelescope parent fun args result => do
       if args.size != {count + 1} then return false
-      let expected := Lean.mkAppN (Lean.mkConst `{record}) (args.extract 0 {count})
+      let expected := Lean.mkAppN (Lean.mkConst `{record}) (args.extract 0\
+ {count})
       Lean.Meta.isDefEq result expected
     results := results.push same
 """

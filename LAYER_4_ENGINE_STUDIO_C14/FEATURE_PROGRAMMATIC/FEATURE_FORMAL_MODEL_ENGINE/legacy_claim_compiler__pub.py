@@ -1,15 +1,17 @@
 """Compile Python declarations for the legacy schema projection."""
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
-    import parse_python_model_claim  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model.python.python__shared import (
+    parse_python_model_claim,
+)
 
-from .compiler_claim import (
+from .claim_compiler._package__shared import (
     compile_atom_dependencies_with_check,
     compile_scope_level_with_check,
     compiler_model_statements,
 )
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
-    import parse_native_model_claim  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model.claims.claims__shared import (
+    parse_native_model_claim,
+)
 
 
 def compile_python_model_claim(

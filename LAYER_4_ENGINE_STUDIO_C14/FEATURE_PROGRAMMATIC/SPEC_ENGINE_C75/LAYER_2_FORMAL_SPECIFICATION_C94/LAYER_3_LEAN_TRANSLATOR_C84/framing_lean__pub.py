@@ -27,26 +27,41 @@ def _contract_model(claim):
     opening = _prefix_test("raw", [delimiter + ending for ending in endings])
     line_end = _prefix_test("raw", endings)
     delimiter_text = "[" + ", ".join(map(str, delimiter)) + "]"
-    return f"""def openingEnd (raw : List Nat) : Option Nat :=
-  {opening}
-
-def lineEndLength (raw : List Nat) : Option Nat :=
-  {line_end}
-
-def closingEnd (raw : List Nat) (separator : Nat) : Option Nat := do
-  let sep ← lineEndLength (raw.drop separator)
-  let afterSep := separator + sep
-  if (raw.drop afterSep).take {len(delimiter)} != {delimiter_text} then none
-  else do
-    let ending ← lineEndLength (raw.drop (afterSep + {len(delimiter)}))
-    some (afterSep + {len(delimiter)} + ending)
-
-def bounds (raw : List Nat) : Option (Nat × Nat × Nat) := do
-  let opening ← openingEnd raw
-  let start ← ((List.range raw.length).drop (opening - 1)).find? (fun i => (closingEnd raw i).isSome)
-  let stop ← closingEnd raw start
-  some (opening, start, stop)
-"""
+    return (
+        "def openingEnd (raw : List Nat) : Option Nat :=\n"
+        "  "
+        f"{opening}"
+        "\n"
+        "\n"
+        "def lineEndLength (raw : List Nat) : Option Nat :=\n"
+        "  "
+        f"{line_end}"
+        "\n"
+        "\n"
+        "def closingEnd (raw : List Nat) (separator : Nat) : Option Nat := "
+        "do\n"
+        "  let sep ← lineEndLength (raw.drop separator)\n"
+        "  let afterSep := separator + sep\n"
+        "  if (raw.drop afterSep).take "
+        f"{len(delimiter)}"
+        " != "
+        f"{delimiter_text}"
+        " then none\n"
+        "  else do\n"
+        "    let ending ← lineEndLength (raw.drop (afterSep + "
+        f"{len(delimiter)}"
+        "))\n"
+        "    some (afterSep + "
+        f"{len(delimiter)}"
+        " + ending)\n"
+        "\n"
+        "def bounds (raw : List Nat) : Option (Nat × Nat × Nat) := do\n"
+        "  let opening ← openingEnd raw\n"
+        "  let start ← ((List.range raw.length).drop (opening - 1)).find? "
+        "(fun i => (closingEnd raw i).isSome)\n"
+        "  let stop ← closingEnd raw start\n"
+        "  some (opening, start, stop)\n"
+    )
 
 
 def _solution_model(claim):

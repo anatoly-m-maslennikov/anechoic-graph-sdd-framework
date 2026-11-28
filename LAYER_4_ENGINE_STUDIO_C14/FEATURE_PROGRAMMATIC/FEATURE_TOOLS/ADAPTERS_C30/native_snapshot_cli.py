@@ -7,35 +7,35 @@ from time import monotonic
 
 
 from .ADAPTERS_C30__pub import LimitReached
-from .native_carrier_inventory import (
+from .sources.inventory.native_carrier_inventory import (
     archive_versions as scan_archive_versions,
     startup_reader,
 )
-from .native_carrier_placement__pub import (
+from .carriers.header.native_carrier_placement__pub import (
     TICKET_DIRECTORY,
 )
-from .native_generation_snapshot import snapshot
-from .model_capture import model_inputs
-from .native_status_domains import status_domains
-from .native_source_rows__pub import (
+from .sources.snapshots.native_generation_snapshot import snapshot
+from .model.model_capture import model_inputs
+from .carriers.header.native_status_domains import status_domains
+from .sources.inventory.native_source_rows__pub import (
     _native_carrier_hashes,
     capture_native,
 )
 
-from .native_snapshot_delta import (
+from .sources.snapshots.native_snapshot_delta import (
     UnrepresentableCarrierDelta as UnrepresentableCarrierDelta,
     capture_delta,
 )
-from .native_snapshot_prepare import (
+from .sources.snapshots.native_snapshot_prepare import (
     initial_capture,
     make_finish,
     generation_result,
 )
-from .native_snapshot_finish import (
+from .sources.snapshots.native_snapshot_finish import (
     NativeSnapshotChanged as NativeSnapshotChanged,
     finish_snapshot,
 )
-from .native_snapshot_paths import (
+from .sources.snapshots.native_snapshot_paths import (
     _SnapshotSelection as _SnapshotSelection,
     _archive_directories as _archive_directories,
     _carrier_paths as _carrier_paths,
@@ -45,7 +45,7 @@ from .native_snapshot_paths import (
     _ticket_paths as _ticket_paths,
     _ticket_versions as _ticket_versions,
 )
-from .native_snapshot_serialization import (
+from .sources.snapshots.native_snapshot_serialization import (
     _encode as _encode,
     _graph_config as _graph_config,
     _snapshot as _snapshot,

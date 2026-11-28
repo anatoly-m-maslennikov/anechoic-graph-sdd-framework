@@ -24,14 +24,15 @@ class FunctionalSuiteTests(unittest.TestCase):
         self.module = self.root / MODULE
         self.module.parent.mkdir(parents=True)
         self.module.write_text(
-            "import unittest\nclass Test(unittest.TestCase):\n def test_ok(self): self.assertTrue(True)\n"
+            "import unittest\nclass Test(unittest.TestCase):\n"
+            " def test_ok(self): self.assertTrue(True)\n"
         )
         self.config([MODULE])
 
     def test_engine_config_takes_precedence(self):
         engine = (
-            self.root
-            / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/pyproject.toml"
+            self.root / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/"
+            "engine/pyproject.toml"
         )
         engine.parent.mkdir(parents=True)
         engine.write_text("[tool.ruff]\n")
@@ -86,17 +87,22 @@ class FunctionalSuiteTests(unittest.TestCase):
         self.assertIn("not discovered", missing.stderr)
         self.config([MODULE])
         self.module.write_text(
-            "import unittest\nclass Test(unittest.TestCase):\n def test_bad(self): self.fail('required failure')\n"
+            "import unittest\nclass Test(unittest.TestCase):\n"
+            " def test_bad(self): self.fail('required failure')\n"
         )
         failing = self.run_cli()
         self.assertNotEqual(0, failing.returncode)
         self.assertIn("required failure", failing.stderr)
         self.module.write_text(
-            "import unittest\n@unittest.skip('required skip')\nclass Test(unittest.TestCase):\n def test_skip(self): pass\n"
+            "import unittest\n@unittest.skip('required skip')\n"
+            "class Test(unittest.TestCase):\n def test_skip(self): pass\n"
         )
         skipped = self.run_cli()
         self.assertNotEqual(0, skipped.returncode)
         self.assertIn("Required functional tests skipped", skipped.stderr)
+        self._assert_reports()
+
+    def _assert_reports(self):
         paths = (self.root / ".anechoic_tmp/test_reports").glob("*.json")
         passed, absent, failed, skip = sorted(
             (json.loads(path.read_text()) for path in paths),
@@ -127,7 +133,10 @@ class FunctionalSuiteTests(unittest.TestCase):
         self.assertNotEqual(0, self.run_cli().returncode)
         (self.root / "pyproject.toml").unlink()
         self.assertNotEqual(0, self.run_cli().returncode)
-        docker = "LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/FEATURE_MCP__tests/test_one_docker_e2e.py"
+        docker = (
+            "LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/"
+            "FEATURE_MCP__tests/test_one_docker_e2e.py"
+        )
         path = self.root / docker
         path.parent.mkdir(parents=True)
         path.write_text(self.module.read_text())

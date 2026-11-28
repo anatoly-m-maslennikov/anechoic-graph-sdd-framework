@@ -14,27 +14,36 @@ from ARCHITECTURE_ANALYSIS_C73.CODE_AND_SPEC_METRICS_C76 \
 # fmt: on
 # fmt: off
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30 \
-    .realization_ownership__pub import (
+    .structure.structure__shared import (
     build_code_access_ownership,
 )
 # fmt: on
 # fmt: off
 from FEATURE_PROGRAMMATIC.SPEC_ENGINE_C75 \
     .LAYER_2_FORMAL_MODEL_C51.FEATURE_MODEL_VALIDATION \
-    .FEATURE_MODEL_VALIDATION__shared import (
+    .access._package__shared import (
     check_code_access,
 )
 # fmt: on
 
-from .analysis_inputs import analysis_inputs
-from .code_access_occurrences import code_access_occurrences
-from .graph_inputs import _git_selection_witness
+from .RESOLUTION.analysis_inputs import analysis_inputs
+from .RESOLUTION.code_access_occurrences import code_access_occurrences
+from .RESOLUTION.graph_inputs import _git_selection_witness
 from .realization_graph_options import _difference, _first_difference
 from .realization_graph_options import _options as _options
 from .realization_graph_options import _structure
-from .resolution import resolve_realization
-from .source import _iter_files, _RESOLUTION_INPUTS, _stat_signature, capture
-from .state_effects import _SourceVersionChanged, _read, analyze_state
+from .RESOLUTION.RESOLUTION__shared import resolve_realization
+from .SOURCE_CAPTURE.SOURCE_CAPTURE__shared import (
+    _iter_files,
+    _RESOLUTION_INPUTS,
+    _stat_signature,
+    capture,
+)
+from .STATE_ANALYSIS.STATE_ANALYSIS__shared import (
+    _SourceVersionChanged,
+    _read,
+    analyze_state,
+)
 
 
 _CONSISTENCY_CODE = "realization_graph_inputs_changed"

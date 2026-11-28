@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
-    import get_profile  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model.notation.notation__shared import (
+    get_profile,
+)
 
 
 GRAPH_RULE_SOURCES = (

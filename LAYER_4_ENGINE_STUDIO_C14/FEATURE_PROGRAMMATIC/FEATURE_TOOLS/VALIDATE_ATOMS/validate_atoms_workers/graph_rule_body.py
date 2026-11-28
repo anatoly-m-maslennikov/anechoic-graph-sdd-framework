@@ -7,12 +7,30 @@ from pydantic.dataclasses import dataclass
 from typing import Any, cast
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import ConfigDict, ValidationError
 
 from .check_support import Check
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
-    CEILINGS, CarrierError, SubjectNotationError, UniqueSafeLoader, check_yaml_resources, parse_subject_expression,
+from .graph_rule_body_models import (
+    _CardinalityAppliesTo as _CardinalityAppliesTo,
+    _CardinalityCondition as _CardinalityCondition,
+    _GraphRulePayload,
+    _WhitelistAppliesTo,
+    _WhitelistCondition,
+    support_sections_valid,
+    validate_cardinality,
+)
+from ...ADAPTERS_C30.ADAPTERS_C30__shared import (
+    CEILINGS,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carriers.content.content__shared import (
+    CarrierError,
+    UniqueSafeLoader,
+    check_yaml_resources,
     unfenced_atx_headings,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model.notation.notation__shared import (
+    SubjectNotationError,
+    parse_subject_expression,
 )
 
 
@@ -24,44 +42,6 @@ _RULE_TYPES = {
     "topology_constraint",
     "endpoint_constraint",
 }
-
-
-class _GraphRulePayload(BaseModel):
-    model_config = ConfigDict(strict=True, extra="forbid")
-
-    graph_rule_type: str
-    applies_to: dict[str, Any]
-    condition: dict[str, Any]
-    default_value: Any = None
-
-
-class _WhitelistAppliesTo(BaseModel):
-    model_config = ConfigDict(strict=True, extra="forbid")
-
-    relation_type: str
-
-
-class _WhitelistCondition(BaseModel):
-    model_config = ConfigDict(strict=True, extra="forbid")
-
-    source: list[str]
-    target: list[str]
-
-
-class _CardinalityAppliesTo(BaseModel):
-    model_config = ConfigDict(strict=True, extra="forbid")
-
-    node: str
-    relation_type: str
-    direction: str
-
-
-class _CardinalityCondition(BaseModel):
-    model_config = ConfigDict(strict=True, extra="forbid")
-
-    other_endpoint: list[str]
-    minimum: int = Field(ge=0)
-    maximum: int | None = Field(ge=0)
 
 
 @dataclass(
@@ -80,47 +60,23 @@ def _line_content(line: str) -> str:
 
 
 def _support_sections_valid(body: str, closing: int, check: Check) -> bool:
-    lines = body.splitlines()
-    sections: list[tuple[str, int]] = []
-    seen: set[str] = set()
-    active = False
-    for level, title, index in unfenced_atx_headings(body):
-        if index <= closing:
-            continue
-        if level <= 2:
-            active = level == 2 and title in {"Semantics", "Details"} and title not in seen
-            if active:
-                seen.add(title)
-                sections.append((title, index))
-            else:
-                check.fail(
-                    "GRAPH_RULE_BODY",
-                    "body",
-                    "Only one optional ## Semantics and ## Details section may follow the operative block.",
-                )
-                return False
-        elif not active:
-            check.fail(
-                "GRAPH_RULE_BODY", "body", "Unsectioned content may not follow the operative block."
-            )
-            return False
-    if not sections:
-        if any(line.strip() for line in lines[closing + 1 :]):
-            check.fail(
-                "GRAPH_RULE_BODY",
-                "body",
-                "Unsectioned content may not follow the operative block.",
-            )
-            return False
-        return True
-    if any(line.strip() for line in lines[closing + 1 : sections[0][1]]):
-        check.fail(
-            "GRAPH_RULE_BODY",
-            "body",
-            "Only optional ## Semantics or ## Details sections may follow the operative block.",
-        )
-        return False
-    return True
+    return support_sections_valid(body, closing, check, unfenced_atx_headings)
+
+
+def _closing_fence(
+    lines: list[str], opening: int, marker: str, fence_pattern: re.Pattern[str]
+) -> int | None:
+    return next(
+        (
+            i
+            for i in range(opening + 1, len(lines))
+            if (match := fence_pattern.match(_line_content(lines[i])))
+            and match[1][0] == marker[0]
+            and len(match[1]) >= len(marker)
+            and not match[2].strip()
+        ),
+        None,
+    )
 
 
 def _operative_fence(
@@ -146,21 +102,19 @@ def _operative_fence(
     assert opener is not None
     marker, info = opener[1], opener[2].strip()
     if info != "yaml":
-        check.fail("GRAPH_RULE_BODY", "body", "Graph Rule operative block must be fenced as yaml.")
+        check.fail(
+            "GRAPH_RULE_BODY",
+            "body",
+            "Graph Rule operative block must be fenced as yaml.",
+        )
         return None
-    closing = next(
-        (
-            i
-            for i in range(opening + 1, len(lines))
-            if (match := fence_pattern.match(_line_content(lines[i])))
-            and match[1][0] == marker[0]
-            and len(match[1]) >= len(marker)
-            and not match[2].strip()
-        ),
-        None,
-    )
+    closing = _closing_fence(lines, opening, marker, fence_pattern)
     if closing is None:
-        check.fail("GRAPH_RULE_BODY", "body", "Graph Rule yaml block must use one matching fence.")
+        check.fail(
+            "GRAPH_RULE_BODY",
+            "body",
+            "Graph Rule yaml block must use one matching fence.",
+        )
         return None
     return opening, closing
 
@@ -229,15 +183,27 @@ def _valid_subjects(subjects: list[str]) -> bool:
 
 def _within_body_limit(body: str, check: Check) -> bool:
     if len(body) > CEILINGS["max_file_bytes"]:
-        check.fail("GRAPH_RULE_BODY", "body", "Graph Rule body exceeds the host parser byte ceiling.")
+        check.fail(
+            "GRAPH_RULE_BODY",
+            "body",
+            "Graph Rule body exceeds the host parser byte ceiling.",
+        )
         return False
     try:
         body_size = len(body.encode("utf-8"))
     except UnicodeEncodeError:
-        check.fail("GRAPH_RULE_BODY", "body", "Graph Rule body is not valid UTF-8 text.")
+        check.fail(
+            "GRAPH_RULE_BODY",
+            "body",
+            "Graph Rule body is not valid UTF-8 text.",
+        )
         return False
     if body_size > CEILINGS["max_file_bytes"]:
-        check.fail("GRAPH_RULE_BODY", "body", "Graph Rule body exceeds the host parser byte ceiling.")
+        check.fail(
+            "GRAPH_RULE_BODY",
+            "body",
+            "Graph Rule body exceeds the host parser byte ceiling.",
+        )
         return False
     return True
 
@@ -266,42 +232,38 @@ def _validate_whitelist(rule: _GraphRulePayload, check: Check) -> None:
         applies_to = _WhitelistAppliesTo.model_validate(rule.applies_to)
         condition = _WhitelistCondition.model_validate(rule.condition)
     except ValidationError:
-        check.fail("GRAPH_RULE_BODY", "body", "Whitelist fields do not match the declared schema.")
+        check.fail(
+            "GRAPH_RULE_BODY",
+            "body",
+            "Whitelist fields do not match the declared schema.",
+        )
         return
     if not applies_to.relation_type.strip():
-        check.fail("GRAPH_RULE_BODY", "applies_to", "Whitelist relation_type must be a string.")
-    if not _valid_subjects(condition.source) or not _valid_subjects(condition.target):
         check.fail(
-            "GRAPH_RULE_BODY", "condition", "Whitelist source and target must use Subject notation."
+            "GRAPH_RULE_BODY",
+            "applies_to",
+            "Whitelist relation_type must be a string.",
+        )
+    if not _valid_subjects(condition.source) or not _valid_subjects(
+        condition.target
+    ):
+        check.fail(
+            "GRAPH_RULE_BODY",
+            "condition",
+            "Whitelist source and target must use Subject notation.",
         )
 
 
-def _validate_cardinality(rule: _GraphRulePayload, payload: dict[str, Any], check: Check) -> None:
-    if "default_value" in payload:
-        check.fail("GRAPH_RULE_BODY", "default_value", "Cardinality does not allow default_value.")
-        return
-    try:
-        applies_to = _CardinalityAppliesTo.model_validate(rule.applies_to)
-        condition = _CardinalityCondition.model_validate(rule.condition)
-    except ValidationError:
-        check.fail("GRAPH_RULE_BODY", "body", "Cardinality fields do not match the declared schema.")
-        return
-    if not applies_to.node.strip() or not _valid_subjects([applies_to.node]):
-        check.fail("GRAPH_RULE_BODY", "applies_to.node", "Cardinality node must use Subject notation.")
-    if not applies_to.relation_type.strip():
-        check.fail("GRAPH_RULE_BODY", "applies_to.relation_type", "Cardinality relation_type must be nonempty.")
-    if applies_to.direction not in {"outgoing", "incoming"}:
-        check.fail("GRAPH_RULE_BODY", "applies_to.direction", "Cardinality direction must be outgoing or incoming.")
-    if not _valid_subjects(condition.other_endpoint):
-        check.fail("GRAPH_RULE_BODY", "condition.other_endpoint", "Cardinality endpoints must use Subject notation.")
-    if condition.maximum is not None and condition.maximum < condition.minimum:
-        check.fail("GRAPH_RULE_BODY", "condition.maximum", "Cardinality maximum must be at least minimum.")
+def _validate_cardinality(
+    rule: _GraphRulePayload, payload: dict[str, Any], check: Check
+) -> None:
+    validate_cardinality(rule, payload, check, _valid_subjects)
 
 
 def validated_graph_rule_payload(
     body: str, check: Check
 ) -> ValidatedGraphRulePayload | None:
-    """Return source-exact carrier text and parsed data for a supported rule."""
+    """Return source-exact text and parsed data for a supported rule."""
     if not _within_body_limit(body, check):
         return None
     parts = _carrier_parts(body, check)
@@ -314,10 +276,31 @@ def validated_graph_rule_payload(
     try:
         payload_model = _GraphRulePayload.model_validate(rule)
     except ValidationError:
-        check.fail("GRAPH_RULE_BODY", "body", "Graph Rule yaml has an invalid top-level shape.")
+        check.fail(
+            "GRAPH_RULE_BODY",
+            "body",
+            "Graph Rule yaml has an invalid top-level shape.",
+        )
         return None
+    return _validated_rule(
+        payload_model, rule, summary, operative_block, operative_yaml, check
+    )
+
+
+def _validated_rule(
+    payload_model: _GraphRulePayload,
+    rule: dict[str, Any],
+    summary: str,
+    operative_block: str,
+    operative_yaml: str,
+    check: Check,
+) -> ValidatedGraphRulePayload | None:
     if payload_model.graph_rule_type not in _RULE_TYPES:
-        check.fail("GRAPH_RULE_BODY", "graph_rule_type", "Graph Rule type must be one declared string.")
+        check.fail(
+            "GRAPH_RULE_BODY",
+            "graph_rule_type",
+            "Graph Rule type must be one declared string.",
+        )
         return None
     if payload_model.graph_rule_type == "cardinality":
         findings_before = len(check.findings)
@@ -330,7 +313,8 @@ def validated_graph_rule_payload(
     if payload_model.graph_rule_type != "whitelist":
         check.gap(
             "graph_rule_type",
-            "The declared Graph Rule type has no complete structural schema for this validator.",
+            "The declared Graph Rule type has no complete structural schema "
+            "for this validator.",
         )
         return None
     findings_before = len(check.findings)
@@ -343,5 +327,5 @@ def validated_graph_rule_payload(
 
 
 def validate_graph_rule_body(body: str, check: Check) -> None:
-    """Check the declared carrier and supported Type shape, without evaluation."""
+    """Check the carrier and supported Type shape, without evaluation."""
     validated_graph_rule_payload(body, check)

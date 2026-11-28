@@ -13,8 +13,8 @@ context:
   lens: DOM/CONT
 state:
   status: active
-  version: 11
-  updated_at: '2026-11-27T01:04:20.461163+00:00'
+  version: 13
+  updated_at: "2026-11-28T11:00:50.522707+00:00"
 ---
 ## Summary
 
@@ -22,12 +22,16 @@ Declare Atom.Status
 
 ## Semantics
 
-Status records an Atom revision's lifecycle state. The Atom Family supplies its allowed values. AN-S-3160 defines the Carrier representation.
+Status records an Atom revision's lifecycle state. The base Property
+defines Current, Draft, and Archived. Every family inherits `draft` in
+Draft and `archived` in Archived. A family declares only its additional
+Status memberships. The effective membership map supplies the allowed values.
 
 A Project Config Custom Model Property can add Current Ticket statuses.
 Use the same bearer, Concern, and Ticket scope as the base declaration.
 List the new values in `property.value.allowed`. The Model retains the
-base values and reserves Draft, Ready, Active, Archived, and In Progress.
+base values and puts Project-added values in Current. It reserves
+Draft, Ready, Active, Archived, and In Progress.
 
 ## Formal Manifest
 
@@ -43,4 +47,6 @@ class Property2125(Property):
     property.cardinality = 1
     property.value.cardinality = 1
     property.value.format = str
+    property.value.group_names = ('Current', 'Draft', 'Archived')
+    property.value.groups = {'draft': 'Draft', 'archived': 'Archived'}
 ```

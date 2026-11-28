@@ -8,9 +8,9 @@ context:
   template: component_manifest
   lens: SPEC
 state:
-  status: "active"
-  version: 7
-  updated_at: "2026-11-26T15:52:22.843612+00:00"
+  status: active
+  version: 10
+  updated_at: "2026-11-28T15:16:37.698017+00:00"
 ---
 
 ## Summary
@@ -32,7 +32,7 @@ ComponentManifest(
     component_id='C14',
     name='Engine Studio',
     layer=4,
-    lens_whitelist=['DES', 'DevOps', 'QA', 'SPEC', 'SWD'],
+    lens_whitelist=['DES', 'DevOps', 'IO/INBOUND/PUBLIC_API', 'QA', 'SPEC', 'SWD', 'SWE'],
 )
 ```
 

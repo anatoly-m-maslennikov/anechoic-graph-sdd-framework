@@ -4,11 +4,10 @@ from pathlib import Path
 
 import duckdb
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared \
-    import (
-        console_state_path,
-        migrate_project_database,
-    )  # fmt: skip
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.settings.project.project_database__pub import (
+    console_state_path,
+    migrate_project_database,
+)
 
 
 class ProjectDatabaseTests(unittest.TestCase):

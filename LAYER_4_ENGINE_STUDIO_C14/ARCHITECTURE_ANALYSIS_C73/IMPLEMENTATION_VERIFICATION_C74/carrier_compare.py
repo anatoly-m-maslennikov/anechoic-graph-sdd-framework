@@ -8,13 +8,13 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-from .carrier_direct import compare_direct
-from .carrier_formal import formal_inputs
-from .carrier_model import _SOURCE, generate
-from .carrier_observations import lean_bytes as lean_bytes
-from .carrier_observations import observe
-from .carrier_observations import python_checks as python_checks
-from ._carrier_compare_helpers import (
+from .carrier.carrier__shared import compare_direct
+from .carrier.carrier_formal import formal_inputs
+from .carrier.carrier_model import _SOURCE, generate
+from .carrier.carrier_observations import lean_bytes as lean_bytes
+from .carrier.carrier_observations import observe
+from .carrier.carrier_observations import python_checks as python_checks
+from .carrier._carrier_compare_helpers import (
     _CASES,
     _checks,
     _findings,
@@ -22,7 +22,7 @@ from ._carrier_compare_helpers import (
     _formal_report,
     _valid_formal_values,
 )
-from .carrier_runtime_effects import analyze_carrier
+from .carrier.carrier_runtime_effects import analyze_carrier
 
 
 def compare(
@@ -217,7 +217,7 @@ def _compare_pinned(root, path, lean, component):
 
     digests = request["implementation_sha256"]
     if component == "C88":
-        from .c88_compare import compare_c88
+        from .c88.c88__shared import compare_c88
 
         return compare_c88(root, request, verify_formal_chain, lean)
     if component == "C87":
@@ -229,7 +229,7 @@ def _compare_pinned(root, path, lean, component):
             "implementation_sha256 must be a lowercase SHA-256 digest"
         )
     if component == "C90":
-        from .diagnostic_compare import compare_diagnostic
+        from .diagnostics.diagnostics__shared import compare_diagnostic
 
         return compare_diagnostic(root, request, verify_formal_chain, lean)
     return compare(root, lean, formal_verifier=verify_formal_chain, **request)
@@ -237,7 +237,7 @@ def _compare_pinned(root, path, lean, component):
 
 def _compare_renderer_pinned(root, request, verify_formal_chain, lean):
     digests = request["implementation_sha256"]
-    from .renderer_compare import RENDERER_SOURCE_NAMES, compare_renderer
+    from .shape_renderer.shape_renderer__shared import RENDERER_SOURCE_NAMES, compare_renderer
 
     witness = request["witness"]
     if not isinstance(witness, dict) or witness.keys() != {

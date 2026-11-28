@@ -6,13 +6,14 @@ from ....LAYER_1_SOURCE_ADAPTERS_C95._package__shared import (
     read_source,
 )
 from ...LAYER_2_SPEC_READING_C83._package__shared import load_boundary_model
-from ...LAYER_2_SPEC_READING_C83.SPECIFICATION_MODEL_C85._package__shared import (
+from ...LAYER_2_SPEC_READING_C83.\
+    SPECIFICATION_MODEL_C85._package__shared import (
     _IN_PROCESS_TRACE_BINDING,
     http_binding,
     http_routes,
     is_http_route,
     select_formal_claims,
-)
+)  # fmt: skip
 from ...LAYER_3_LEAN_TRANSLATOR_C84._package__shared import compile_lean
 from .._package__shared import compare_delegation
 from .._package__shared import (
@@ -20,16 +21,17 @@ from .._package__shared import (
     _operation_claims,
     _solution_binding,
 )
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.atom_reference__pub import (
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.\
+    carriers.content.atom_reference__pub import (
     derive_atom_ref,
-)
+)  # fmt: skip
 
 
 def _call_binding(
     workflow, event, fields, *, caller_action=None, manifest_pin=False
 ):
     if caller_action is None:
-        profiles = workflow.get('operations', {'': workflow}).values()
+        profiles = workflow.get("operations", {"": workflow}).values()
     else:
         profiles = (_operation_claims(workflow).get(caller_action, {}),)
     transitions = [
@@ -42,8 +44,8 @@ def _call_binding(
     if len(transitions) != 1 or transitions[0]["kind"] != "effect":
         return {}
     expect = transitions[0]
-    detail = expect.get('detail', {})
-    if detail.get('transport') == 'http':
+    detail = expect.get("detail", {})
+    if detail.get("transport") == "http":
         try:
             detail = {**detail, **http_binding(detail)}
         except ValueError:
@@ -64,7 +66,7 @@ def _call_binding(
 
 def _matches_route(routes, route):
     if isinstance(route, dict):
-        endpoint, name = route.get('endpoint'), route.get('route_name')
+        endpoint, name = route.get("endpoint"), route.get("route_name")
         if endpoint and name:
             return routes.get(endpoint) == name
         return (endpoint and endpoint in routes) or (
@@ -98,8 +100,8 @@ def _declares_client(
             ):
                 return True
             continue
-        if client.get('transport') == 'http' and 'routes' in client:
-            routes = http_routes(client['routes'])
+        if client.get("transport") == "http" and "routes" in client:
+            routes = http_routes(client["routes"])
             if _matches_route(routes, route):
                 return True
     return False
@@ -115,7 +117,8 @@ def _require_sibling(caller, provider, interface, route, *, transport=None):
         or caller["component_id"] == provider_id
     ):
         raise ValueError(
-            f"{provider_id} is not a declared sibling of {caller['component_id']}"
+            f"{provider_id} is not a declared sibling of "
+            f"{caller['component_id']}"
         )
     boundaries = caller["manifest"]["boundaries"]
     io = boundaries.get("io") if isinstance(boundaries, dict) else None
@@ -124,7 +127,8 @@ def _require_sibling(caller, provider, interface, route, *, transport=None):
         clients, provider_id, interface, route, transport=transport
     ):
         raise ValueError(
-            f"{caller['component_id']} does not declare client {provider_id}.{interface}"
+            f"{caller['component_id']} does not declare client "
+            f"{provider_id}.{interface}"
         )
 
 
@@ -136,9 +140,9 @@ def _offered_bindings(claims, binding, fields, action):
         contract = _operation_claims(contract).get(action, {})
         solution = _operation_claims(solution).get(action, {})
     return {
-        'manifest': _manifest_binding(claims.get('manifest', {}), binding),
-        'contract': {key: contract[key] for key in fields if key in contract},
-        'solution': _solution_binding(solution, fields),
+        "manifest": _manifest_binding(claims.get("manifest", {}), binding),
+        "contract": {key: contract[key] for key in fields if key in contract},
+        "solution": _solution_binding(solution, fields),
     }
 
 
@@ -154,29 +158,84 @@ def _load_sibling_caller(root, pins):
     return load_boundary_model(root, source["container_component"], *pins)
 
 
-def check_sibling_binding(root, caller_pins, provider_id, provider_pins, *, event,
-                          interface, route=None, action=None, caller_action=None, lean='lean'):
+def check_sibling_binding(
+    root,
+    caller_pins,
+    provider_id,
+    provider_pins,
+    *,
+    event,
+    interface,
+    route=None,
+    action=None,
+    caller_action=None,
+    lean="lean",
+):
     """Compare a selected sibling call on an in-process entry or HTTP route."""
     caller = _load_sibling_caller(root, caller_pins)
     provider = load_boundary_model(root, provider_id, *provider_pins)
-    transport = 'in_process' if route is None else 'http'
+    transport = "in_process" if route is None else "http"
     _require_sibling(caller, provider, interface, route, transport=transport)
-    binding = {'interface': interface, 'transport': transport}
+    binding = {"interface": interface, "transport": transport}
     fields = _IN_PROCESS_TRACE_BINDING
     if route is not None:
-        field = 'endpoint' if is_http_route(route) else 'route_name'
+        field = "endpoint" if is_http_route(route) else "route_name"
         binding[field] = route
-        fields = ('interface', 'transport', field)
-    caller_compiled = compile_lean(select_formal_claims(caller, caller_action) if caller_action else caller)
-    offered = compile_lean(select_formal_claims(provider, action) if action else provider)
-    sources = {'caller': caller['solution']['source'],
-               **{role: provider[role]['source'] for role in ('manifest', 'contract', 'solution')}}
-    offerings = _offered_bindings(offered['claims'], binding, fields, action)
-    obligations = {role: {'component': provider_id, **facts} for role, facts in offerings.items()}
-    call_fields = fields if action is None else (*fields, 'action')
-    selected = _call_binding(caller_compiled['claims'].get('solution', {}), event, call_fields,
-                             caller_action=caller_action, manifest_pin=bool(provider.get('embedded_contract')))
-    if action is not None and selected.pop('action', None) != action:
+        fields = ("interface", "transport", field)
+    caller_compiled = compile_lean(
+        select_formal_claims(caller, caller_action)
+        if caller_action
+        else caller
+    )
+    offered = compile_lean(
+        select_formal_claims(provider, action) if action else provider
+    )
+    report = _sibling_comparison(
+        caller, provider, provider_id, caller_compiled, offered, binding,
+        fields, event, action, caller_action, lean,
+    )  # fmt: skip
+    return _sibling_result(report, event, caller, caller_compiled, offered)
+
+
+def _sibling_result(report, event, caller, caller_compiled, offered):
+    return {
+        **report,
+        "event": event,
+        "declared_client": caller["manifest"]["source"],
+        "issues": [*caller_compiled["issues"], *offered["issues"]],
+        "unresolved": [*caller_compiled["unresolved"], *offered["unresolved"]],
+        "unmodeled": [
+            "Call arguments and response values",
+            "Provider outcome relied on by the caller",
+        ],
+    }
+
+
+def _sibling_comparison(
+    caller, provider, provider_id, caller_compiled, offered, binding,
+    fields, event, action, caller_action, lean,
+):  # fmt: skip
+    sources = {
+        "caller": caller["solution"]["source"],
+        **{
+            role: provider[role]["source"]
+            for role in ("manifest", "contract", "solution")
+        },
+    }
+    offerings = _offered_bindings(offered["claims"], binding, fields, action)
+    obligations = {
+        role: {"component": provider_id, **facts}
+        for role, facts in offerings.items()
+    }
+    call_fields = fields if action is None else (*fields, "action")
+    selected = _call_binding(
+        caller_compiled["claims"].get("solution", {}),
+        event,
+        call_fields,
+        caller_action=caller_action,
+        manifest_pin=bool(provider.get("embedded_contract")),
+    )
+    if action is not None and selected.pop("action", None) != action:
         selected = {}
     if "manifest" in selected:
         source = provider["manifest"]["source"]
@@ -184,15 +243,30 @@ def check_sibling_binding(root, caller_pins, provider_id, provider_pins, *, even
             source["atom_id"], source["version"], source["status"]
         )
         for facts in obligations.values():
-            facts['manifest'] = ref
-    obligations['caller'] = selected
+            facts["manifest"] = ref
+    obligations["caller"] = selected
+    return _sibling_report(
+        provider, sources, obligations, offerings, selected, lean
+    )
+
+
+def _sibling_report(provider, sources, obligations, offerings, selected, lean):
     report = compare_delegation(sources, obligations, lean=lean)
-    if provider.get('embedded_contract') and 'entry' in selected and 'entry' not in offerings['contract']:
-        public = {key: value for key, value in selected.items() if key != 'entry'}
-        contract_report = compare_delegation(sources, {**obligations, 'caller': public}, lean=lean)
-        report['directions']['caller_contract'] = contract_report['directions']['caller_contract']
-        report['status'] = verdict([row['status'] for row in report['directions'].values()])
-    return {**report, 'event': event, 'declared_client': caller['manifest']['source'],
-            'issues': [*caller_compiled['issues'], *offered['issues']],
-            'unresolved': [*caller_compiled['unresolved'], *offered['unresolved']],
-            'unmodeled': ['Call arguments and response values', 'Provider outcome relied on by the caller']}
+    if (
+        provider.get("embedded_contract")
+        and "entry" in selected
+        and "entry" not in offerings["contract"]
+    ):
+        public = {
+            key: value for key, value in selected.items() if key != "entry"
+        }
+        contract_report = compare_delegation(
+            sources, {**obligations, "caller": public}, lean=lean
+        )
+        report["directions"]["caller_contract"] = contract_report[
+            "directions"
+        ]["caller_contract"]
+        report["status"] = verdict(
+            [row["status"] for row in report["directions"].values()]
+        )
+    return report

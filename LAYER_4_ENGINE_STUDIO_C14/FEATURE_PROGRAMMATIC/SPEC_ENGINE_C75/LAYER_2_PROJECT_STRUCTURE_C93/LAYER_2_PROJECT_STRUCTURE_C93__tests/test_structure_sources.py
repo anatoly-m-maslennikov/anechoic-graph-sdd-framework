@@ -10,10 +10,12 @@ import yaml
 
 from ....FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
     ReadContext,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carriers.header.header__shared import (
     canonical_native_header,
     native_header_view,
 )
-from ....FEATURE_TOOLS.ADAPTERS_C30.carrier_read__pub import (
+from ....FEATURE_TOOLS.ADAPTERS_C30.carriers.content.carrier_read__pub import (
     parse_carrier,
 )
 from ..LAYER_2_PROJECT_STRUCTURE_C93__rows import compile_structure_rows

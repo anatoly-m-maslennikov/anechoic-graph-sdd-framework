@@ -24,38 +24,35 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import (
     current_timestamp,
     repository_root,
 )  # noqa: E402
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.\
-    ADAPTERS_C30__shared import (  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carriers.content.content__shared import (  # noqa: E402
     carrier_read_view,
-)  # fmt: skip
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.\
-    ADAPTERS_C30__shared import (  # noqa: E402
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.sources.inventory.inventory__shared import (  # noqa: E402
     read_current_carriers,
     read_current_model_carriers,
-)  # fmt: skip
+)
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.\
-    current_subject_graph import (  # noqa: E402
+    subjects.current.current__shared import (  # noqa: E402
     compose_current_graph,
     compose_enhanced_current_graph,
 )  # fmt: skip
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.\
-    declaration_sources import (  # noqa: E402
+    declarations.declarations__shared import (  # noqa: E402
     compose_declaration_catalog,
 )  # fmt: skip
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.\
-    declaration_view import (  # noqa: E402
+    declarations.views.views__shared import (  # noqa: E402
     render_declarations,
 )  # fmt: skip
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.\
-    readable_entity_tree import (  # noqa: E402
+    declarations.views.views__shared import (  # noqa: E402
     named_selection_reference,
     render_inherency,
     render_model,
 )  # fmt: skip
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.\
-    ADAPTERS_C30__shared import (  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carriers.content.content__shared import (  # noqa: E402
     parse_carrier,
-)  # fmt: skip
+)
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.\
     ADAPTERS_C30__shared import (  # noqa: E402
     CEILINGS,
@@ -273,7 +270,7 @@ def _image_main():
 if __name__ == "__main__":
     import sys
     from pathlib import Path
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import (
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.PROJECT_SUPPORT.RUNTIME_SUPPORT.RUNTIME_SUPPORT__shared import (
         run_process,
     )
 

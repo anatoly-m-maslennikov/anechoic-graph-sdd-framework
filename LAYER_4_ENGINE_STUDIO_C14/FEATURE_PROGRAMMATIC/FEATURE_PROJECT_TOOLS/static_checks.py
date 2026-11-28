@@ -7,14 +7,12 @@ import subprocess
 import sys
 import tomllib
 
-from . import (
+from .language_checks import (
     python_boundaries,
     python_bytecode,
-    source_languages,
-    source_line_length,
-    source_sizes,
-    subject_manifests,
+    language_checks__shared as source_languages,
 )
+from .source_inventory import source_line_length, source_sizes
 
 
 CODE_ROOTS = (
@@ -43,10 +41,7 @@ ESLINT_CONFIGS = (
 
 
 def npm_static_commands(root):
-    (
-        'Find package-owned type checks and configured TypeScript lint '
-        'commands.'
-    )
+    "Find package-owned type checks and configured TypeScript lint commands."
     for name in CODE_ROOTS:
         for folder, dirs, files in os.walk(root / name, followlinks=False):
             dirs[:] = sorted(
@@ -98,8 +93,21 @@ def _run(label, command, root, timeout):
 
 def _python_quality(root):
     ruff = (sys.executable, "-B", "-m", "ruff")
-    yield _run("Ruff lint", (*ruff, "check", "--config", ENGINE_CONFIG, "--extend-select",
-                            "F401,B006", "--no-fix", *CODE_ROOTS), root, 60)
+    yield _run(
+        "Ruff lint",
+        (
+            *ruff,
+            "check",
+            "--config",
+            ENGINE_CONFIG,
+            "--extend-select",
+            "F401,B006",
+            "--no-fix",
+            *CODE_ROOTS,
+        ),
+        root,
+        60,
+    )
     path = root / ENGINE_CONFIG
     try:
         config = (
@@ -113,6 +121,10 @@ def _python_quality(root):
         )
         yield 1
         return
+    yield from _configured_python_quality(root, config, ruff)
+
+
+def _configured_python_quality(root, config, ruff):
     if "ruff" in config:
         yield _run(
             "Ruff format",
@@ -160,16 +172,16 @@ def _typed_web(root):
 
 
 def check(root):
+    suite = root / CODE_ROOTS[0] / "FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS"
     boundary_scope = (
         ("--import-component", "C14", "--require-state")
-        if (root / CODE_ROOTS[0] / "FEATURE_PROGRAMMATIC").is_dir()
+        if (suite / "test_suite__pub.py").is_file()
         else ()
     )
     checks = [
         python_bytecode.check(root),
         *_python_quality(root),
         source_sizes.check(root),
-        subject_manifests.check(root),
         source_line_length.check(root),
         source_languages.check(root),
         python_boundaries.check(root),

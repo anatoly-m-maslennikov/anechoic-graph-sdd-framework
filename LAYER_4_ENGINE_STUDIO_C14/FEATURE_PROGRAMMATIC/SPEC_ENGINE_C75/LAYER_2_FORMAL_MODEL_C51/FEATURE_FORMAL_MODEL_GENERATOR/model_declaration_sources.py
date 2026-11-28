@@ -4,34 +4,35 @@ from collections.abc import Iterable, Mapping
 from functools import cache
 from typing import Any
 from markdown_it import MarkdownIt
-from ....FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carriers.carriers__shared import (
     matches_named_value,
 )
-from ....FEATURE_FORMAL_MODEL_ENGINE.\
-    FEATURE_FORMAL_MODEL_ENGINE__shared import (
-        native_model_claim_linter,
-        resolve_model_claim_reference,
-    )  # fmt: skip
-from ....FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+from ....FEATURE_FORMAL_MODEL_ENGINE.FEATURE_FORMAL_MODEL_ENGINE__shared import (
+    native_model_claim_linter,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.claim_lint.lint_python_model_claim_references import (
+    resolve_model_claim_reference,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model.model__shared import (
     canonical_model_address,
     model_class_target,
     model_declaration_subject,
     simple_model_address,
 )
-from ....FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carriers.content.content__shared import (
     parse_content,
 )
-from ....FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model.claims.claims__shared import (
     NativeModelClaimError,
     parse_native_model_claim,
 )
-from ....FEATURE_TOOLS.ADAPTERS_C30.dataclass_field_contract__pub import (
+from ....FEATURE_TOOLS.ADAPTERS_C30.model.python.dataclass_field_contract__pub import (
     validate_field_contracts,
 )
-from ....FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.structure.structure__shared import (
     order_properties,
 )
-from ....FEATURE_TOOLS.ADAPTERS_C30.relation_declaration_catalog__pub import (
+from ....FEATURE_TOOLS.ADAPTERS_C30.model.relation_declaration_catalog__pub import (
     build_relation_declaration_catalog,
 )
 from .model_property_aliases import (

@@ -1,11 +1,13 @@
 """Generate query wire types from the owning Pydantic models."""
 
-from argparse import ArgumentParser
 import json
+from argparse import ArgumentParser
 from pathlib import Path
 
-from .models import Page, Query
-from MCP_PATCHBAY_C21.FEATURE_MCP.http_paths import TOOL_REST_PATH
+from MCP_PATCHBAY_C21.FEATURE_MCP.transport_support.paths.\
+    paths__shared import TOOL_REST_PATH  # fmt: skip
+
+from .CORE.CORE__shared import Page, Query
 
 ROOT = Path(__file__).resolve().parents[2]
 SCHEMA_PATH = Path(__file__).with_name("query_run.schema.json")

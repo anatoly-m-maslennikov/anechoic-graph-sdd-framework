@@ -101,7 +101,7 @@ class Handler(BaseHTTPRequestHandler):
                 },
             )
         if self.path == "/jobs/atom-document":
-            from .atom_document import document
+            from ORCHESTRATOR_beta_C68.lifecycle.documents.atom_document import document
 
             return self.respond(*document(self.server.jobs, request))
         status, body = (

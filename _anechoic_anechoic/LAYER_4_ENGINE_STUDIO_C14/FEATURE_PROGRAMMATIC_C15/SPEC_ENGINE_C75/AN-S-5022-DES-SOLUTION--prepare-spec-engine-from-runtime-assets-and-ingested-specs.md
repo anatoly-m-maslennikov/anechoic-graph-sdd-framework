@@ -13,11 +13,11 @@ context:
   lens: DES
 relations:
   ANSWERS:
-  - AN-S-3395@6
+  - AN-S-3395@7
 state:
   status: active
-  version: 8
-  updated_at: "2026-11-27T16:19:44.298791+00:00"
+  version: 10
+  updated_at: "2026-11-28T12:01:43.800347+00:00"
 ---
 ## Summary
 
@@ -72,7 +72,7 @@ component_workflow(component='C75', action='prepare_spec_engine', machine={
                          'selected_descriptor': 'model_descriptor_sha256'}}},
         }},
         'compile': {'on': {
-            'compile_structure': {'to': 'candidate', 'expect': {'kind': 'effect', 'detail': {'component': 'C93', 'action': 'compile_pinned_structure', 'output': 'succeeded', 'manifest': 'AN-S-5018@7', 'interface': 'compile_pinned_structure', 'transport': 'in_process'}, 'target': 'C93.structure_snapshot', 'outcome': 'ready',
+            'compile_structure': {'to': 'candidate', 'expect': {'kind': 'effect', 'detail': {'component': 'C93', 'action': 'compile_pinned_structure', 'output': 'succeeded', 'manifest': 'AN-S-5018@8', 'interface': 'compile_pinned_structure', 'transport': 'in_process'}, 'target': 'C93.structure_snapshot', 'outcome': 'ready',
                 'same_as': {'model_sha256': 'selected_model'}}},
             'error': {'to': 'end', 'expect': {'kind': 'output', 'outcome': 'failed'}},
         }},

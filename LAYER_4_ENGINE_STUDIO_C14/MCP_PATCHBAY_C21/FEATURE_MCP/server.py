@@ -7,12 +7,13 @@ import asyncio
 import os
 from pathlib import Path
 
-from MCP_PATCHBAY_C21.FEATURE_MCP.direct_gateway import (
+from MCP_PATCHBAY_C21.FEATURE_MCP.gateway.gateway__shared import (
     native_runtime_gateway,
     startup_selection,
 )
 from MCP_PATCHBAY_C21.FEATURE_MCP.mcp_startup_boundary import run_startup
-from MCP_PATCHBAY_C21.FEATURE_MCP.runtime_stack import runtime_stack
+from MCP_PATCHBAY_C21.FEATURE_MCP.transport_support.\
+    transport_support__shared import runtime_stack
 
 
 def _serve_stdio(args, *, gateway_factory=None):
@@ -60,7 +61,9 @@ def main(argv=None, *, gateway_factory=None):
             operation="mcp_stdio_startup",
         )
     else:
-        from MCP_PATCHBAY_C21.FEATURE_MCP.http_server import main as serve_http
+        from MCP_PATCHBAY_C21.FEATURE_MCP.gateway.gateway__shared import (
+            main as serve_http,
+        )
 
         http_argv = ["--project-root", str(args.project_root)]
         for flag, value in (

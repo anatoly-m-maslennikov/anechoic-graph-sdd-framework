@@ -1,0 +1,70 @@
+---
+atom_family: SPEC
+atom_id: AN-S-1901
+container:
+  component: C15
+tier: 4
+context:
+  lens: SWD
+state:
+  status: archived
+  version: 15
+  updated_at: "2026-11-27T18:09:40.995150+00:00"
+---
+
+## Summary
+
+Define typed contracts at replaceable technical boundaries
+
+## Claim
+
+### Prose Claim
+
+declare an explicit typed contract wherever a PROGRAMMATIC component depends on
+a replaceable technical implementation, adapter, transport, storage mechanism,
+**or** host boundary.
+
+When the boundary carries user-edited or externally applied mutable state, the contract must distinguish a user's requested change, the applied external state and the acknowledged state, including whether a value is unsaved or synced. At a paged or shared-result boundary, it must identify one owner and one snapshot for rows, page counts, complete or source counts, filters, sort order and values, including null, Unicode and hidden values. Delayed or reordered acknowledgements from two clients must not mix snapshots or let one client overwrite the other.
+
+## Details
+
+
+### Applicable when
+
+apply **when** a Tool, App backend service, **or** MCP component can substitute one
+technical implementation for another **or** crosses a host-owned interface.
+
+### Procedure
+
+1. define the accepted inputs, outcomes, failure values, ownership boundary,
+   **and** compatibility expectation at the interface. When the boundary carries
+   user-edited or externally applied mutable state, state how requested,
+   applied and acknowledged changes differ, and whether each value is unsaved
+   or synced.
+2. keep callers dependent on that contract rather than on implementation-only
+   state **or** incidental representation. For paged data, keep rows, counts,
+   filters and sort results tied to one owner and snapshot so delayed or
+   reordered client acknowledgements cannot combine generations.
+3. use a structural `Protocol` **when** consumers need one capability contract
+   **without** requiring implementations **to** inherit from a framework base class.
+4. keep substrate-specific behavior **in** a small adapter **and** keep deterministic
+   semantic decisions outside that adapter.
+5. record an exception **in** its bounded owner **when** a required external interface
+   cannot meet the contract directly.
+
+### Outcome
+
+the component can replace the bounded technical implementation **without**
+silently changing its callers' declared expectations.
+
+### Failure or stop
+
+stop substitution **or** host integration **when** the boundary has no explicit
+contract, its failures cannot be represented, **or** compatibility cannot be
+identified from current authority.
+
+### Sources
+
+- [PEP 544 — Protocols](https://peps.python.org/pep-0544/)
+- [Python documentation: `typing.Protocol`](https://docs.python.org/3.14/library/typing.html#typing.Protocol)
+- [CA-A-053 — Reconcile shared PROGRAMMATIC policy decisions](../02_analysis_and_advisory/CA-A-053-PROGRAMMATIC-ANALYSIS_RPRT--reconcile-shared-programmatic-policy-decisions.md)

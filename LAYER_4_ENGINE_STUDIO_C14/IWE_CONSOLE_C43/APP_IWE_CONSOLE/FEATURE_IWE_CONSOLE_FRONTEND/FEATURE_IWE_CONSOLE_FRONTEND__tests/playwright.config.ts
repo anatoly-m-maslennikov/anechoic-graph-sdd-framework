@@ -1,5 +1,5 @@
 import { defineConfig } from '@playwright/test';
-import { browserTimeout, browserDeadlinesEnabled } from './browser-deadlines';
+import { browserTimeout, browserDeadlinesEnabled } from './unit/support/support__shared';
 
 const baseURL = process.env.WORKBENCH_E2E_URL;
 
