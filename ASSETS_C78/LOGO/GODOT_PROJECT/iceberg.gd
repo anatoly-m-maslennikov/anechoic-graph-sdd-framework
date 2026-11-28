@@ -9,7 +9,7 @@ const ICE_WIDTH := 0.876
 const FIGURE_HEAD := Vector3(0, 0.35, 0)
 const ICON_FIGURE_SCALE := 2.0
 const FIGURE_SPACING := 0.29
-const SUMMIT_TILT := -0.15
+const FOAM_DENSITY := 4
 const ROUTE_TOP := 1.79
 const ROUTE_BOTTOM := -2.62
 const ARCH_SEGMENTS := 20
@@ -129,12 +129,12 @@ func _build_letter_foam() -> void:
 		var crest := 1.0 - smoothstep(-43.0, 3.0, swell)
 		var count := floori(lerpf(0.38, 3.20, crest) + rng.randf())
 		var slope := (_surface_swell(x + 1.0) - _surface_swell(x - 1.0)) * 0.5
-		for index in range(count):
+		for index in range(count * FOAM_DENSITY):
 			var spray := rng.randf() < crest * 0.24
-			var lift := rng.randf_range(1.0, 6.0) + float(index) * 4.4
+			var lift := rng.randf_range(0.5, 14.0) + float(index) * (4.4 / FOAM_DENSITY)
 			if spray:
 				lift = -rng.randf_range(3.2, 18.0 + 10.0 * crest)
-			var drift := rng.randf_range(-2.8, 2.8) - minf(lift, 0.0) * 0.37
+			var drift := rng.randf_range(-4.5, 4.5) - minf(lift, 0.0) * 0.37
 			var pixel := Vector2(x + drift, 250.0 + swell + lift)
 			var size := rng.randi_range(6, 10) if spray else rng.randi_range(6, 12)
 			var ink: Color = foam_inks[rng.randi_range(0, foam_inks.size() - 1)]
@@ -152,11 +152,12 @@ func _build_letter_foam() -> void:
 func _surface_swell(x: float) -> float:
 	# Match the crest in wind_and_water.gdshader.
 	return (
-		11.0 + 4.5 * sin(x * 0.041 + 0.4)
-		- 46.0 * _rolling_crest(x - 74.0, 36.0, 17.0)
-		- 15.0 * _rolling_crest(x - 141.0, 23.0, 40.0)
-		- 57.0 * _rolling_crest(x - 421.0, 21.0, 49.0)
-		- 13.0 * _rolling_crest(x - 488.0, 16.0, 30.0)
+		11.0 + 2.5 * sin(x * 0.032 + 0.4)
+		- 22.0 * _rolling_crest(x - 12.0, 14.0, 9.5)
+		- 49.0 * smoothstep(29.0, 66.0, x) * (1.0 - smoothstep(69.0, 94.0, x))
+		- 26.0 * smoothstep(96.0, 109.0, x) * (1.0 - smoothstep(120.0, 141.0, x))
+		- 35.0 * _rolling_crest(x - 366.0, 17.0, 10.0)
+		- 57.0 * _rolling_crest(x - 424.0, 19.0, 47.0)
 	)
 
 func _rolling_crest(delta: float, front: float, back: float) -> float:
@@ -190,7 +191,7 @@ func _build_ice() -> ShaderMaterial:
 			var z := cos(angle) * profile.z * radial
 			var y := profile.x
 			if level == 0:
-				y += tan(SUMMIT_TILT) * (x - _summit().x) + 0.11 * z
+				y += 0.11 * z
 			ring.append(Vector3(x, y, z))
 		rings.append(ring)
 
@@ -429,9 +430,7 @@ func _summit() -> Vector3:
 func _build_summit_figure(figure_scale: float, icon: bool, index: int) -> void:
 	var figure := Node3D.new()
 	figure.name = ["LeftFigure", "CenterFigure", "RightFigure"][index + 1]
-	var spacing := Vector3.RIGHT.rotated(Vector3.BACK, SUMMIT_TILT) * FIGURE_SPACING * figure_scale
-	figure.position = _summit() + spacing * index
-	figure.rotation.z = SUMMIT_TILT
+	figure.position = _summit() + Vector3.RIGHT * index * FIGURE_SPACING * figure_scale
 	figure.scale = Vector3.ONE * figure_scale
 	add_child(figure)
 

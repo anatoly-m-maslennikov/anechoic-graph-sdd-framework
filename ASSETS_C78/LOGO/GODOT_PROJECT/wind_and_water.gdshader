@@ -39,11 +39,12 @@ float rolling_crest(float delta, float front, float back) {
 
 float surface_swell(float x) {
 	// The floating letters follow this profile in iceberg.gd.
-	return 11.0 + 4.5 * sin(x * 0.041 + 0.4)
-		- 46.0 * rolling_crest(x - 74.0, 36.0, 17.0)
-		- 15.0 * rolling_crest(x - 141.0, 23.0, 40.0)
-		- 57.0 * rolling_crest(x - 421.0, 21.0, 49.0)
-		- 13.0 * rolling_crest(x - 488.0, 16.0, 30.0);
+	return 11.0 + 2.5 * sin(x * 0.032 + 0.4)
+		- 22.0 * rolling_crest(x - 12.0, 14.0, 9.5)
+		- 49.0 * smoothstep(29.0, 66.0, x) * (1.0 - smoothstep(69.0, 94.0, x))
+		- 26.0 * smoothstep(96.0, 109.0, x) * (1.0 - smoothstep(120.0, 141.0, x))
+		- 35.0 * rolling_crest(x - 366.0, 17.0, 10.0)
+		- 57.0 * rolling_crest(x - 424.0, 19.0, 47.0);
 }
 
 vec3 distant_water(vec2 pixel, vec3 sky) {
@@ -64,7 +65,7 @@ vec3 surface_water(vec2 pixel, float swell, float depth, vec3 water) {
 	water = mix(water, glass, face * 0.84);
 
 	float rim = (1.0 - smoothstep(0.40, 2.7, abs(depth))) * (0.15 + 0.80 * crest);
-	float trough = 4.5 + 7.2 * crest + 4.4 * front;
+	float trough = 7.0 + 6.5 * crest + 3.0 * front;
 	float wake = (1.0 - smoothstep(0.20, 1.65, abs(depth - trough))) * crest * (0.10 + 0.38 * front);
 	return mix(water, vec3(0.78, 0.92, 0.87), rim + wake);
 }
@@ -73,6 +74,31 @@ float trace(vec2 pixel, vec2 a, vec2 b, float width) {
 	vec2 along = b - a;
 	float t = clamp(dot(pixel - a, along) / dot(along, along), 0.0, 1.0);
 	return 1.0 - smoothstep(width * 0.45, width, length(pixel - a - along * t));
+}
+
+vec3 plunging_lip(vec2 pixel, vec3 water) {
+	if (pixel.x < 391.0 || pixel.x > 447.0 || pixel.y < 191.0 || pixel.y > 237.0) {
+		return water;
+	}
+	vec2 outer = vec2(439.0, 210.0);
+	vec2 tip = vec2(402.0, 226.0);
+	vec2 previous = outer;
+	float body = 0.0;
+	float rim = 0.0;
+	for (int step = 1; step <= 12; step++) {
+		float t = float(step) / 12.0;
+		vec2 face = mix(mix(outer, vec2(415.0, 185.0), t),
+			mix(vec2(415.0, 185.0), vec2(388.0, 197.0), t), t);
+		vec2 fold = mix(mix(vec2(415.0, 185.0), vec2(388.0, 197.0), t),
+			mix(vec2(388.0, 197.0), tip, t), t);
+		vec2 next = mix(face, fold, t);
+		float taper = 1.0 - smoothstep(0.4, 1.0, t);
+		body = max(body, trace(pixel, previous, next, 1.6 + 6.4 * taper));
+		rim = max(rim, trace(pixel + vec2(0.0, 1.8 + 2.0 * taper), previous, next, 1.5));
+		previous = next;
+	}
+	water = mix(water, vec3(0.25, 0.54, 0.55), body * 0.90);
+	return mix(water, vec3(0.76, 0.92, 0.86), rim * 0.72);
 }
 
 float box(vec2 p, vec2 half_size) {
@@ -183,5 +209,5 @@ void fragment() {
 		}
 		tint = mix(tint, water, smoothstep(-1.0, 1.0, depth_below_swell));
 	}
-	ALBEDO = tint;
+	ALBEDO = plunging_lip(pixel, tint);
 }

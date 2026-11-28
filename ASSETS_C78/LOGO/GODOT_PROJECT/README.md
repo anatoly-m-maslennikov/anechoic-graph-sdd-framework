@@ -1,8 +1,8 @@
 # Anechoic Logo
 
-This Godot 4 project renders the Anechoic logo. The iceberg represents the project. Three people hold hands on its narrow, sloped summit. Wind carries their ideas through the noosphere. The water represents the digital technosphere.
+This Godot 4 project renders the Anechoic logo. The iceberg represents the project. Three people hold hands on its narrow summit ledge. Wind carries their ideas through the noosphere. The water represents the digital technosphere.
 
-Storm waves rise around the midpoint of the image. A cutaway reveals a curved walkway with one guardrail and a consistent deck width. The turns approach the edges of the ice. Below the waterline, a frameless glass canopy covers the route.
+Two storm breakers and three smaller waves rise around the midpoint of the image. A cutaway reveals a curved walkway with one guardrail and a consistent deck width. The turns approach the edges of the ice. Below the waterline, a frameless glass canopy covers the route.
 
 Tiny atoms and molecules form the bottom layer. Above them, sine waves and lightning bolts represent electricity. Then come microcircuits, assembly, C and Rust, then Python, TypeScript, and Java. Letters from six writing systems form the foam in pale colors, with different fonts, sizes, and angles.
 
