@@ -2,9 +2,9 @@
 
 This Godot 4 project renders the Anechoic logo. The iceberg represents the project. Three people hold hands on its narrow summit ledge. Wind carries their ideas through the noosphere. The water represents the digital technosphere.
 
-The logo composites a generated [storm-wave texture](storm_waves.png) behind the ice. Godot places pale letter foam along its crest and renders the rest of the scene.
+The logo composites a generated [storm-wave texture](storm_waves.png) behind the ice. Godot blends the illustrated water into the ocean fill and builds the foam from pale letters.
 
-A cutaway reveals a curved walkway with one guardrail and a consistent deck width. The turns approach the edges of the ice. Below the waterline, a frameless glass canopy covers the route.
+Shaded ice facets and a cast shadow give the cutaway depth. It reveals a curved walkway with one guardrail and a consistent deck width. The turns approach the edges of the ice. Below the waterline, a frameless glass canopy covers the route.
 
 Tiny atoms and molecules form the bottom layer. Above them, sine waves and lightning bolts represent electricity. Then come microcircuits, assembly, C and Rust, then Python, TypeScript, and Java. Letters from six writing systems form the foam in pale colors, with different fonts, sizes, and angles.
 

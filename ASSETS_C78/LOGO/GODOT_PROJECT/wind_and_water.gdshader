@@ -204,7 +204,7 @@ void fragment() {
 		if (layer_y >= 0.0 && layer_y <= 1.0) {
 			vec4 storm = texture(storm_waves, vec2(p.x, layer_y));
 			float alpha = smoothstep(0.04, 0.88, storm.a);
-			float fade = 1.0 - smoothstep(0.76, 0.98, layer_y);
+			float fade = 1.0 - smoothstep(0.57, 0.98, layer_y);
 			tint = mix(tint, storm.rgb, alpha * fade);
 		}
 	}

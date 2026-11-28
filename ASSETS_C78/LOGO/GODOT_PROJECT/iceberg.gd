@@ -10,7 +10,8 @@ const FIGURE_HEAD := Vector3(0, 0.35, 0)
 const ICON_FIGURE_SCALE := 2.0
 const FIGURE_SPACING := 0.29
 const FOAM_DENSITY := 4
-const STORM_TOP := 126.0
+const STORM_BOTTOM := 126.0 + 500.0 / 3.0
+const STORM_HEIGHT_SCALE := 0.8
 const ROUTE_TOP := 1.79
 const ROUTE_BOTTOM := -2.62
 const ARCH_SEGMENTS := 20
@@ -66,7 +67,7 @@ func _ready() -> void:
 			section.y *= 1.34
 			ice_profile[index] = section
 	_build_view(figure_scale, icon)
-	var ice := _build_ice()
+	var ice := _build_ice(icon)
 	ice.set_shader_parameter("opening_mask", _build_path(icon))
 	ice.set_shader_parameter("route_strength", 0.16 if icon else 1.0)
 	for index in range(-1, 2):
@@ -101,11 +102,12 @@ func _build_view(figure_scale: float, icon: bool) -> void:
 	var waterline: Curve
 	if storm_waves != null and not icon:
 		var image := storm_waves.get_image()
-		var height := 500.0 * image.get_height() / image.get_width()
+		var height := 500.0 * image.get_height() / image.get_width() * STORM_HEIGHT_SCALE
+		var layout := Vector2(STORM_BOTTOM - height, height)
 		shader.set_shader_parameter("use_storm_texture", true)
 		shader.set_shader_parameter("storm_waves", storm_waves)
-		shader.set_shader_parameter("storm_layout", Vector2(STORM_TOP, height))
-		waterline = _trace_storm_crest(image, height)
+		shader.set_shader_parameter("storm_layout", layout)
+		waterline = _trace_storm_crest(image, layout)
 	else:
 		waterline = _build_waterline()
 		var profile_texture := CurveTexture.new()
@@ -127,7 +129,7 @@ func _build_waterline() -> Curve:
 		waterline.add_point(Vector2(knot.x, knot.y) / 500.0, knot.z, knot.z)
 	return waterline
 
-func _trace_storm_crest(image: Image, height: float) -> Curve:
+func _trace_storm_crest(image: Image, layout: Vector2) -> Curve:
 	# Trace the solid wave, below the thinner spray, for the letter foam.
 	var waterline := Curve.new()
 	waterline.bake_resolution = 512
@@ -139,7 +141,7 @@ func _trace_storm_crest(image: Image, height: float) -> Curve:
 			var first := image.get_pixel(column, row).a
 			var second := image.get_pixel(column, row + 14).a
 			if minf(first, second) >= 0.82:
-				surface = STORM_TOP + float(row) * height / last_row
+				surface = layout.x + float(row) * layout.y / last_row
 				break
 		waterline.add_point(Vector2(x, surface) / 500.0, 0.0, 0.0,
 			Curve.TANGENT_LINEAR, Curve.TANGENT_LINEAR)
@@ -148,7 +150,7 @@ func _trace_storm_crest(image: Image, height: float) -> Curve:
 func _build_water_text(icon: bool, waterline: Curve) -> void:
 	var font := SystemFont.new()
 	font.font_names = PackedStringArray(["Menlo", "DejaVu Sans Mono", "monospace"])
-	_build_letter_foam(waterline)
+	_build_letter_foam(waterline, storm_waves != null and not icon)
 
 	if icon:
 		return
@@ -161,7 +163,7 @@ func _build_water_text(icon: bool, waterline: Curve) -> void:
 	_water_label(font, "MOV AX, 1\nADD AX, BX", Vector2(55, 350), 11, Color("#e1c78a"))
 	_water_label(font, "DEC CX\nJNZ .loop", Vector2(446, 350), 11, Color("#e1c78a"))
 
-func _build_letter_foam(waterline: Curve) -> void:
+func _build_letter_foam(waterline: Curve, textured: bool) -> void:
 	var glyph_sets := [
 		"abdeIrTpsNoMtyAVeLcgUkn", "αβΓδεθνΞπςΦω", "БвгЖиКлмпРфЯ",
 		"アイうエかキサナほ風水", "ابتجدهزكمين", "अकगचजतदनमलस",
@@ -194,13 +196,20 @@ func _build_letter_foam(waterline: Curve) -> void:
 			var depth := rng.randf_range(0.5, 11.0) + float(index) * (6.0 / FOAM_DENSITY)
 			if spray:
 				depth = -rng.randf_range(2.0, 15.0 + 8.0 * crest)
+			elif textured:
+				depth += float(index) * 0.62
 			# Wind carries spray away from the leading edge.
 			var drift := rng.randf_range(-4.0, 4.0) - absf(depth) * 0.58
 			var pixel := Vector2(x + drift, surface + depth)
 			var size := rng.randi_range(4, 7) if spray else rng.randi_range(6, 11)
+			var accent := index % FOAM_DENSITY == 0
+			if textured:
+				size = size + 3 if accent else maxi(5, size - 2)
 			var ink: Color = foam_inks[rng.randi_range(0, foam_inks.size() - 1)]
 			var fade := 1.0 - smoothstep(4.0, 25.0, absf(depth))
 			ink.a = rng.randf_range(0.48, 0.9) * lerpf(0.48, 1.0, fade)
+			if textured:
+				ink.a = lerpf(0.51 if accent else 0.18, 1.0, ink.a)
 			var script_index := rng.randi_range(0, glyph_sets.size() - 1)
 			var glyphs: String = glyph_sets[script_index]
 			var glyph := glyphs[rng.randi_range(0, glyphs.length() - 1)]
@@ -224,7 +233,7 @@ func _water_label(font: Font, copy: String, pixel: Vector2, size: int, ink: Colo
 	add_child(label)
 	return label
 
-func _build_ice() -> ShaderMaterial:
+func _build_ice(icon: bool) -> ShaderMaterial:
 	var rings: Array[PackedVector3Array] = []
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 893
@@ -249,18 +258,20 @@ func _build_ice() -> ShaderMaterial:
 		var lower := rings[level + 1]
 		for side in range(SIDES):
 			var next := (side + 1) % SIDES
-			_ice_face(surface, upper[side], lower[side], upper[next], rng.randf())
-			_ice_face(surface, upper[next], lower[side], lower[next], rng.randf())
+			_ice_face(surface, upper[side], lower[side], upper[next], rng.randf(), icon)
+			_ice_face(surface, upper[next], lower[side], lower[next], rng.randf(), icon)
 	for side in range(SIDES):
-		_ice_face(surface, _summit(), rings[0][side], rings[0][(side + 1) % SIDES], rng.randf())
+		_ice_face(surface, _summit(), rings[0][side], rings[0][(side + 1) % SIDES], rng.randf(), icon)
 	var ice := _mesh("FacetedIceberg", surface, Color.WHITE)
 	var material := ShaderMaterial.new()
 	material.shader = CUTAWAY
 	material.set_shader_parameter("view_size", VIEW_SIZE)
+	material.set_shader_parameter("cast_shadows", not icon)
 	ice.material_override = material
 	return material
 
-func _ice_face(surface: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, variation: float) -> void:
+func _ice_face(surface: SurfaceTool, a: Vector3, b: Vector3, c: Vector3,
+		variation: float, icon: bool) -> void:
 	var middle := (a + b + c) / 3.0
 	var normal := (c - a).cross(b - a).normalized()
 	if normal.dot(Vector3(middle.x, 0, middle.z)) < 0.0:
@@ -274,8 +285,13 @@ func _ice_face(surface: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, variati
 	var first := mini(int(band), PRISM.size() - 2)
 	var color: Color = PRISM[first].lerp(PRISM[first + 1], band - first)
 	var light := 0.12 + reflection * 0.46 + (variation - 0.5) * 0.24
-	if middle.y < 0.0:
-		light -= 0.20
+	if icon:
+		if middle.y < 0.0:
+			light -= 0.20
+	else:
+		light = (reflection - 0.48) * 1.03 + (variation - 0.5) * 0.15
+		if middle.y < 0.0:
+			light -= 0.12
 	color = color.lerp(Color("#f6f8ee"), light) if light >= 0.0 else color.darkened(-light)
 	for point: Vector3 in [a, b, c]:
 		surface.set_normal(normal)
