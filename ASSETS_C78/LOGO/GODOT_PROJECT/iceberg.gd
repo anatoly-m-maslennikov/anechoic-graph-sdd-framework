@@ -10,6 +10,7 @@ const FIGURE_HEAD := Vector3(0, 0.35, 0)
 const ICON_FIGURE_SCALE := 2.0
 const FIGURE_SPACING := 0.29
 const FOAM_DENSITY := 4
+const STORM_TOP := 126.0
 const ROUTE_TOP := 1.79
 const ROUTE_BOTTOM := -2.62
 const ARCH_SEGMENTS := 20
@@ -51,6 +52,7 @@ const WATERLINE := [
 
 var ice_profile := PROFILE.duplicate()
 @export var favicon_mode := false
+@export var storm_waves: Texture2D
 
 func _ready() -> void:
 	var arguments := OS.get_cmdline_user_args()
@@ -96,11 +98,20 @@ func _build_view(figure_scale: float, icon: bool) -> void:
 	var wind_origin := Vector2(figure_head.x, -figure_head.y) / VIEW_SIZE + Vector2(0.5, 0.5)
 	shader.set_shader_parameter("wind_origin", wind_origin)
 	shader.set_shader_parameter("show_technology", not icon)
-	var waterline := _build_waterline()
-	var profile_texture := CurveTexture.new()
-	profile_texture.width = 512
-	profile_texture.curve = waterline
-	shader.set_shader_parameter("waterline", profile_texture)
+	var waterline: Curve
+	if storm_waves != null and not icon:
+		var image := storm_waves.get_image()
+		var height := 500.0 * image.get_height() / image.get_width()
+		shader.set_shader_parameter("use_storm_texture", true)
+		shader.set_shader_parameter("storm_waves", storm_waves)
+		shader.set_shader_parameter("storm_layout", Vector2(STORM_TOP, height))
+		waterline = _trace_storm_crest(image, height)
+	else:
+		waterline = _build_waterline()
+		var profile_texture := CurveTexture.new()
+		profile_texture.width = 512
+		profile_texture.curve = waterline
+		shader.set_shader_parameter("waterline", profile_texture)
 	var panel := MeshInstance3D.new()
 	panel.name = "AnalogSkyDigitalWater"
 	panel.mesh = background
@@ -114,6 +125,24 @@ func _build_waterline() -> Curve:
 	waterline.bake_resolution = 512
 	for knot: Vector3 in WATERLINE:
 		waterline.add_point(Vector2(knot.x, knot.y) / 500.0, knot.z, knot.z)
+	return waterline
+
+func _trace_storm_crest(image: Image, height: float) -> Curve:
+	# Trace the solid wave, below the thinner spray, for the letter foam.
+	var waterline := Curve.new()
+	waterline.bake_resolution = 512
+	var last_row := image.get_height() - 1
+	for x in range(0, 501, 5):
+		var column := roundi(float(x) * (image.get_width() - 1) / 500.0)
+		var surface := 244.0
+		for row in range(0, last_row - 14, 5):
+			var first := image.get_pixel(column, row).a
+			var second := image.get_pixel(column, row + 14).a
+			if minf(first, second) >= 0.82:
+				surface = STORM_TOP + float(row) * height / last_row
+				break
+		waterline.add_point(Vector2(x, surface) / 500.0, 0.0, 0.0,
+			Curve.TANGENT_LINEAR, Curve.TANGENT_LINEAR)
 	return waterline
 
 func _build_water_text(icon: bool, waterline: Curve) -> void:

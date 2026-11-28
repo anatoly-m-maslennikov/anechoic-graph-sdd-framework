@@ -4,6 +4,9 @@ render_mode unshaded, cull_disabled, fog_disabled;
 uniform vec2 wind_origin;
 uniform sampler2D waterline : filter_linear, repeat_disable;
 uniform bool show_technology = true;
+uniform bool use_storm_texture = false;
+uniform sampler2D storm_waves : source_color, filter_linear_mipmap, repeat_disable;
+uniform vec2 storm_layout;
 
 float gust(vec2 p, vec2 start, float end, float rise, float bow, float width) {
 	float t = clamp((p.x - start.x) / (end - start.x), 0.0, 1.0);
@@ -175,19 +178,35 @@ vec3 electricity(vec2 pixel, vec3 water) {
 void fragment() {
 	vec2 p = UV;
 	vec2 pixel = p * 500.0;
-	float surface = surface_y(pixel.x);
+	float surface = use_storm_texture ? 242.0 : surface_y(pixel.x);
 	float depth_below_swell = pixel.y - surface;
-	vec3 tint = distant_water(pixel, windy_sky(p));
+	vec3 tint = windy_sky(p);
+	if (!use_storm_texture) {
+		tint = distant_water(pixel, tint);
+	}
 	if (depth_below_swell > -1.0) {
 		float depth = (p.y - 0.5) * 2.0;
 		vec3 water = mix(vec3(0.236, 0.455, 0.47), vec3(0.057, 0.162, 0.206), smoothstep(0.0, 0.98, depth));
-		water = surface_water(pixel, surface, depth_below_swell, water);
+		if (!use_storm_texture) {
+			water = surface_water(pixel, surface, depth_below_swell, water);
+		}
 		if (show_technology) {
 			water = circuitry(pixel, water);
 			water = electricity(pixel, water);
 			water = atoms_and_molecules(pixel, water);
 		}
-		tint = mix(tint, water, smoothstep(-1.0, 1.0, depth_below_swell));
+		float water_blend = use_storm_texture ?
+			smoothstep(0.0, 13.0, depth_below_swell) : smoothstep(-1.0, 1.0, depth_below_swell);
+		tint = mix(tint, water, water_blend);
+	}
+	if (use_storm_texture) {
+		float layer_y = (pixel.y - storm_layout.x) / storm_layout.y;
+		if (layer_y >= 0.0 && layer_y <= 1.0) {
+			vec4 storm = texture(storm_waves, vec2(p.x, layer_y));
+			float alpha = smoothstep(0.04, 0.88, storm.a);
+			float fade = 1.0 - smoothstep(0.76, 0.98, layer_y);
+			tint = mix(tint, storm.rgb, alpha * fade);
+		}
 	}
 	ALBEDO = tint;
 }
